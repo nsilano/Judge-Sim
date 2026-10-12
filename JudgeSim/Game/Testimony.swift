@@ -980,3 +980,164 @@ extension Testimony {
         return witness(name: name, role: role, side: .defense, exchanges: ex)
     }
 }
+
+// MARK: - The defendant
+
+extension Testimony {
+
+    /// What the defense says happened, sorted into the kind of story a defendant tells.
+    enum DefenseTheme { case selfDefense, alibi, noKnowledge, approval, misidentification, accident, sober, general
+
+        static func of(_ theory: String) -> DefenseTheme {
+            let t = theory.lowercased()
+            func has(_ words: [String]) -> Bool { words.contains { t.contains($0) } }
+            if has(["self-defense", "defend", "afraid", "feared", "protect", "attacked first", "came at"]) { return .selfDefense }
+            if has(["wasn't there", "alibi", "elsewhere", "across town", "at home", "at work", "in raleigh"]) { return .alibi }
+            if has(["wrong person", "misidentif", "mistaken", "looks like", "someone else", "another person"]) { return .misidentification }
+            if has(["didn't know", "no idea", "wasn't mine", "not mine", "unaware", "never knew", "belonged to"]) { return .noKnowledge }
+            if has(["approved", "consent", "permission", "authorized", "advances", "allowed", "agreed"]) { return .approval }
+            if has(["not impaired", "sober", "wasn't drunk", "fatigue", "tired", "two beers", "glare", "wasn't impaired"]) { return .sober }
+            if has(["accident", "never meant", "unintentional", "fell", "rolled", "mistake"]) { return .accident }
+            return .general
+        }
+
+        /// True when the defense can hardly be made without the defendant's own account.
+        var needsTestimony: Bool { self != .general && self != .misidentification }
+    }
+
+    /// The defendant's own testimony, as a full examination.
+    static func defendant(_ base: Witness, ctx: Context, holds: Bool, sessionDate: Date, rng: inout SeededRNG) -> [TestimonyExchange] {
+        let s = ctx.sheet
+        let dl = ctx.dl
+        let theme = DefenseTheme.of(ctx.defenseTheory)
+        let victim = ctx.victim
+        let profile = ctx.defendant.profile
+        var ex: [TestimonyExchange] = []
+        func d(_ q: String, _ a: String) { ex.append(.init(phase: .direct, examiner: .defense, question: q, answer: a)) }
+        func c(_ q: String, _ a: String) { ex.append(.init(phase: .cross, examiner: .prosecution, question: q, answer: a)) }
+        func r(_ q: String, _ a: String) { ex.append(.init(phase: .redirect, examiner: .defense, question: q, answer: a)) }
+
+        // Who
+        let occupation = ctx.defendant.occupation.lowercased()
+        let work: String
+        if occupation.contains("unemployed") { work = "I'm between jobs right now." }
+        else if occupation.hasPrefix("retired") { work = "I'm \(occupation)." }
+        else if let job = profile?.jobs.first(where: { $0.current }) { work = "I work as \(withArticle(job.title.lowercased())) at \(job.employer)." }
+        else { work = "I work as \(withArticle(occupation))." }
+        d(rng.pick(["Please tell the court your name and a little about yourself.", "Tell the court about yourself.", "Who are you?"]),
+          "\(base.name). I'm \(ctx.defendant.age). " + work + (profile.map { " " + $0.residence.replacingOccurrences(of: "Rents", with: "I rent").replacingOccurrences(of: "Lives", with: "I live").replacingOccurrences(of: "Owns", with: "I own").replacingOccurrences(of: "Has moved", with: "I've moved") } ?? ""))
+        if let family = profile?.family, rng.chance(0.6) {
+            d(rng.pick(["Tell the court about your family.", "Who's at home with you?"]),
+              family.hasPrefix("Married") ? "I'm married." + (family.contains("child") ? " We have kids. They're why I'm fighting this." : "")
+                : family.contains("child") ? "I have kids. Everything I do is for them." : rng.pick(["It's just me right now.", "I'm on my own. My family's nearby."]))
+        }
+        if let victim = victim, ctx.facts.mentions(["partner", "spouse", "ex-", "best friend", "neighbor", "coworker", "roommate", "boyfriend", "girlfriend", "husband", "wife"]) {
+            d(rng.pick(["How do you know \(victim)?", "What was your relationship with \(victim)?"]),
+              rng.pick(["We go back a long way. It's complicated, but I never wanted any of this.", "We were close, once. That's what makes this so hard."]))
+        }
+
+        // That day, from the fact sheet
+        if ctx.setting == .paper {
+            if let org = ctx.organization {
+                d(rng.pick(["What was your role at \(org)?", "How did you come to work with \(org)?"]),
+                  rng.pick(["I handled the books and the day-to-day money. For years nobody had a complaint.", "I did whatever needed doing. Some of it was paperwork I wasn't trained for."]))
+            }
+        } else {
+            let whereLine: String
+            switch theme {
+            case .alibi: whereLine = rng.pick(["I was at home. My \(rng.pick(["partner", "sister", "roommate"])) was there.", "I was at work until close, then I drove straight home.", "Nowhere near \(s.place). I was across town."])
+            case .misidentification: whereLine = rng.pick(["Not \(s.place). I've told everyone that from the start.", "I was out, but I wasn't there."])
+            default: whereLine = rng.pick(["I was \(s.place), yes. I'm not going to deny that.", "I was there. I'll tell you exactly what happened.", "I was \(s.place), around \(s.time ?? "then")."])
+            }
+            d(rng.pick(["Take the court back to \(s.day). Where were you?", "Where were you on the \(Clock.partOfDay(s.time)) of \(s.day)?", "Let's talk about \(s.day). Where were you?"]), whereLine)
+        }
+        if let narrated = base.direct.first {
+            d(rng.pick(["Tell the court what happened.", "In your own words, what happened?", "Walk the court through it."]), narrated)
+        }
+        for line in rng.pick(themeLines(theme, ctx: ctx, rng: &rng), count: rng.int(1...2)) {
+            d(rng.pick(["What were you thinking at that point?", "What happened next?", "Why?", "What do you want the court to understand about that?"]), line)
+        }
+        if let top = ctx.strongest {
+            d(rng.pick(["The State showed the court \(top.exhibit), the \(lower(top.title)). What do you say about that?", "Let's talk about the \(lower(top.title)).", "How do you explain the \(lower(top.title))?"]),
+              holds ? rng.pick(["I'm not going to pretend it isn't there. But it doesn't mean what they say it means.", "I can explain it, and I did explain it, to anyone who would listen.", "It looks bad on paper. Here's what it doesn't show: the rest of that day."])
+                    : rng.pick(["I don't know how to explain that.", "I've thought about that a lot. I can't explain it.", "I don't know. I just know I didn't do this."]))
+        }
+        if let day = s.interview {
+            d(rng.pick(["Did you talk to the police?", "Did you speak with investigators?"]), "I did, on \(CaseDates.day(day)). I told them the truth, without a lawyer, because I had nothing to hide.")
+        } else {
+            d(rng.pick(["Did you talk to the police?", "Why didn't you give a statement?"]), rng.pick(["My lawyer told me not to, so I didn't.", "I asked for a lawyer. I was scared, and I'd been told that's what you do."]))
+        }
+        d(rng.pick(["Did you do what you're charged with?", "Did you commit this crime?"]),
+          theme == .accident || theme == .sober ? "Not the way they say it. I'm sorry for what happened. I didn't commit a crime." : rng.pick(["No.", "No, Your Honor.", "No. I didn't."]))
+        if base.direct.count > 1 {
+            d(rng.pick(["Why did you decide to testify?", "Is there anything else you want the court to know?"]), base.direct[1])
+        }
+
+        // Cross: the prosecutor presses the evidence
+        let months = max(1, CaseDates.days(from: s.arrest, to: sessionDate) / 30)
+        var pool: [(String, String)] = [
+            ("You've had \(months) months to think about this story, haven't you?", holds ? "I've had \(months) months to think about the truth. It hasn't changed." : "That's not fair. I'm telling you what I remember."),
+            ("You'd say whatever you needed to say to walk out of here today?", holds ? "I'd tell the truth. That's all I've got." : "...No. I'm not lying.")
+        ]
+        let byWeight = ctx.state.sorted { $0.weight > $1.weight }
+        for item in byWeight.prefix(2) {
+            pool.append(("Explain \(item.exhibit), then. \(item.detail)",
+                         holds ? rng.pick(["I can. It's not what it looks like, and I told my lawyer the same thing the day I saw it.", "There's an innocent reason for that, and I've given it.", "I explained that already. Nothing about it changes."])
+                               : rng.pick(["I... I don't know how to explain that.", "I can't. I wish I could.", "I don't remember it that way."])))
+        }
+        if let day = s.interview {
+            pool.append(("When you spoke to \(s.lead) on \(CaseDates.day(day)), you didn't say any of this, did you?",
+                         holds ? "I said the same thing. Read the transcript." : "I was nervous. I didn't say it right."))
+        }
+        let impeachable = ctx.defendant.priors.filter { $0.ncClass.isFelony || $0.ncClass == .misdA1 || $0.ncClass == .misd1 }
+        if let prior = impeachable.last {
+            pool.append(("You were convicted of \(prior.offense.lowercased()) in \(prior.year), weren't you?", rng.pick(["Yes. I did my time for that.", "Yes. That was a long time ago.", "Yes. I'm not hiding it."])))
+        }
+        switch ctx.setting {
+        case .paper: pool.append(("You were behind on your own bills that year, weren't you?", holds ? "Some months. Lots of people are." : "...Yes."))
+        case .drugs: pool.append(("Where did the cash come from?", holds ? "Work. I don't trust banks." : "...Some of it was from work."))
+        case .road: if ctx.facts.impaired { pool.append(("How many drinks did you have that night?", holds ? "Two. With dinner, hours before." : "A few. I don't remember exactly.")) }
+        case .scene:
+            if let victim = victim, theme == .selfDefense { pool.append(("\(victim) never touched a weapon, did they?", holds ? "I didn't know that then. I saw a hand go to a pocket." : "...I thought I saw something.")) }
+            else if let victim = victim { pool.append(("You were angry at \(victim), weren't you?", holds ? "I was upset. I wasn't going to hurt anybody." : "...I was angry, yes.")) }
+        }
+        for (q, a) in rng.pick(pool, count: rng.int(4...5)) { c(q, a) }
+        for line in base.cross { c("", line) }
+
+        // Redirect
+        let redirect: [(String, String)] = [
+            ("Have you told the court the truth today?", holds ? "Yes. Every word." : "Yes. As best I can remember."),
+            ("Why did you choose to testify, when you didn't have to?", "Because I wanted you to hear it from me."),
+            ("Is there anything about your account that has changed since \(s.day)?", holds ? "No." : "Only the parts I couldn't remember at first.")
+        ]
+        for (q, a) in rng.pick(redirect, count: rng.int(1...2)) { r(q, a) }
+        return ex
+    }
+
+    private static func themeLines(_ theme: DefenseTheme, ctx: Context, rng: inout SeededRNG) -> [String] {
+        let v = ctx.victim ?? "they"
+        switch theme {
+        case .selfDefense:
+            return ["\(v.capitalizedFirst) came at me. I backed up until I couldn't back up anymore.", "I was scared for my life. I've never been that scared.",
+                    "I only did what I had to do to get away. The second I could stop, I stopped."]
+        case .alibi:
+            return ["I can tell you exactly where I was, and it wasn't \(ctx.sheet.place).", "I didn't even hear about it until the next day, when the police called.",
+                    "There are people who saw me. I gave my lawyer their names."]
+        case .noKnowledge:
+            return ["I didn't know it was there. That's the truth.", "If I'd known, I'd never have let it near my \(ctx.facts.origin == .warrant ? "house" : "car").",
+                    "Other people used that \(ctx.facts.origin == .warrant ? "house" : "car"). I wasn't the only one with a key."]
+        case .approval:
+            return ["Everything I did, somebody above me knew about. Nobody hid anything.", "I was told it was fine. I kept whatever paperwork I could.",
+                    "If I'd thought it was wrong, why would I have put my own name on it?"]
+        case .misidentification:
+            return ["They have the wrong person. I know what the pictures look like. That isn't me.", "Lots of people around here look like me and dress like me."]
+        case .accident:
+            return ["It was an accident. I'd give anything to take it back.", "I never meant for anyone to get hurt. I think about it every day.", "It happened so fast. I've gone over it a thousand times."]
+        case .sober:
+            return ["I'd had two beers with dinner, hours before. I wasn't impaired.", "I'd worked a double shift. I was exhausted, and that's what they saw.",
+                    "I did their tests on the side of the road at night with cars going by. I'd like to see anyone do them perfectly."]
+        case .general:
+            return ["I didn't do what they're saying.", "It didn't happen the way the State says. Not even close.", "I've never been in trouble like this. I don't know how I ended up here."]
+        }
+    }
+}
