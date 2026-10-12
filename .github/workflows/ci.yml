@@ -1,11 +1,14 @@
 name: Build check
 
+# macOS runners bill at 10x on private repos, so this only runs when asked:
+# put "[check]" in a commit message, or start it by hand from the Actions tab.
 on:
   push:
   workflow_dispatch:
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[check]')
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
