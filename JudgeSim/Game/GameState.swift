@@ -267,9 +267,14 @@ final class GameState: ObservableObject {
             if let personID = event.personID, let index = people.firstIndex(where: { $0.id == personID }) {
                 switch event.effect {
                 case .releasePerson:
-                    people[index].status = .free
+                    if let docket = event.vacatesDocket {
+                        people[index].priors.removeAll { $0.docket == docket || $0.docket == docket + " (PV)" }
+                        if people[index].probation?.docket == docket { people[index].probation = nil }
+                    } else {
+                        people[index].probation = nil
+                    }
+                    people[index].status = people[index].probation == nil ? .free : .probation
                     people[index].releaseDate = nil
-                    people[index].probation = nil
                 case .raisePropensity:
                     people[index].propensity = min(0.85, people[index].propensity + 0.15)
                 case .resentence:

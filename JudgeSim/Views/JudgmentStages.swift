@@ -146,10 +146,12 @@ struct SentencingStage: View {
 
             CollapsibleSection(title: "Prior record", icon: "list.number",
                                summary: "Felony level \(SentenceFormat.romanLevels[record.felonyLevel - 1]) (\(record.points) pts) · Misdemeanor level \(SentenceFormat.romanLevels[record.misdemeanorLevel - 1])",
-                               expanded: false) {
+                               expanded: c.background?.disputedPriorID != nil) {
                 PriorRecordCard(record: record, carded: false)
+                PriorRecordRulings(session: session)
             }
 
+            if units.contains(where: { $0.isFelony }) {
             CollapsibleSection(title: "Findings of factors", icon: "list.bullet.clipboard.fill",
                                summary: "\(session.rulings.foundAggravating.count) aggravating, \(session.rulings.foundMitigating.count) mitigating found") {
                 Text("Turn on each factor you find. Under the statute, findings support the aggravated or mitigated range, but you can sentence however you choose.")
@@ -166,9 +168,10 @@ struct SentencingStage: View {
                 }
                 LawLink(lawID: "aggravatingFactors")
             }
+            }
 
             CollapsibleSection(title: "Form of judgment", icon: "doc.badge.gearshape.fill",
-                               summary: session.rulings.special.label) {
+                               summary: session.rulings.special.label, expanded: false) {
                 ForEach(SpecialDisposition.allCases, id: \.self) { option in
                     ChoiceRow(title: option.label, subtitle: formNote(option), selected: session.rulings.special == option) {
                         session.rulings.special = option
@@ -183,7 +186,7 @@ struct SentencingStage: View {
             if session.rulings.special == .none && !(session.needsHabitualDecision && session.rulings.habitualFound == nil) {
                 if convictionCount > 1 {
                     CollapsibleSection(title: "Multiple convictions", icon: "square.stack.3d.up.fill",
-                                       summary: session.rulings.mode.label) {
+                                       summary: session.rulings.mode.label, expanded: false) {
                         ForEach(JudgmentMode.allCases, id: \.self) { mode in
                             ChoiceRow(title: mode.label, selected: session.rulings.mode == mode) {
                                 session.setMode(mode)
@@ -212,6 +215,10 @@ struct SentencingStage: View {
             CustomConditionsCard(session: session)
 
             MoneyCard(session: session)
+
+            if session.sentencingComplete {
+                JudgmentSummaryCard(session: session)
+            }
 
             if !issues.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
@@ -244,9 +251,17 @@ struct SentencingStage: View {
         switch option {
         case .none: return option.detail
         case .prayerForJudgment:
-            return option.detail + (session.pjcAvailable ? "" : " Unusual for a felony.")
+            let barred: [NCClass] = [.A, .B1, .B2, .C, .D, .E]
+            return option.detail + (units.contains { barred.contains($0.offenseClass) } ? " Not allowed for Class A–E felonies (G.S. 15A-1331.2)." : "")
         case .conditionalDischarge:
-            return option.detail + (session.conditionalDischargeAvailable ? "" : " The statute limits this to first-time drug possession.")
+            switch Judgment.dischargeBasis(c, session.rulings) {
+            case .drugPossession: return option.detail + " Eligible under G.S. 90-96."
+            case .jointMotion:
+                return option.detail + (c.background?.stateJoinsDischarge == false
+                    ? " Requires a joint motion under G.S. 15A-1341(a4); the State has not joined."
+                    : " The State joins a motion under G.S. 15A-1341(a4).")
+            case .ineligible: return option.detail + " The defendant doesn't meet the statutory eligibility requirements."
+            }
         }
     }
 }
@@ -339,7 +354,8 @@ struct ProbationConditionsCard: View {
 
     var body: some View {
         CollapsibleSection(title: "Conditions of probation", icon: "checklist",
-                           summary: "\(session.rulings.conditions.supervised ? "Supervised" : "Unsupervised"), \(session.rulings.conditions.specialCount) special conditions") {
+                           summary: "\(session.rulings.conditions.supervised ? "Supervised" : "Unsupervised"), \(session.rulings.conditions.specialCount) special conditions",
+                           expanded: false) {
             Text("Regular conditions always apply: commit no new offense, remain in the jurisdiction, possess no firearm, and pay money owed. Every condition you add is another way to violate. Conditions that address the defendant's real problems make success more likely.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -350,13 +366,15 @@ struct ProbationConditionsCard: View {
 
             Text("Jail and confinement").font(.caption.weight(.bold)).foregroundStyle(.secondary)
             AmountStepper(title: "Special probation: \(session.rulings.conditions.specialProbationDays) days in jail",
-                          caption: "A split sentence served before or during probation. The statute caps it at one-fourth of the maximum (\(session.maxSpecialProbationDays) days here).",
+                          caption: session.anyIntermediate
+                            ? "A split sentence served before or during probation. The statute caps it at one-fourth of the maximum (\(session.maxSpecialProbationDays) days here)."
+                            : "An intermediate condition. With only community punishment chosen, ordering it departs from the statute.",
                           value: $session.rulings.conditions.specialProbationDays, range: 0...3_650,
                           fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
             AmountStepper(title: "House arrest with electronic monitoring: \(session.rulings.conditions.houseArrestDays) days",
                           value: $session.rulings.conditions.houseArrestDays, range: 0...3_650,
                           fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
-            ConditionToggle(title: "Drug Treatment Court", detail: "Intensive court-supervised treatment with frequent review hearings",
+            ConditionToggle(title: "Drug Treatment Court", detail: "Intensive court-supervised treatment with frequent review hearings. An intermediate condition.",
                             isOn: $session.rulings.conditions.drugTreatmentCourt)
             ConditionToggle(title: "Curfew, 9 p.m. to 6 a.m.", isOn: $session.rulings.conditions.curfew)
 
@@ -456,18 +474,20 @@ struct ActiveOrdersCard: View {
         let custodyDays = session.courtCase.background?.custodyDays ?? 0
         let objects = session.courtCase.background?.stateObjectsToASR ?? true
         CollapsibleSection(title: "Commitment & recommendations", icon: "lock.fill",
-                           summary: custodyDays > 0 ? "\(custodyDays) days of credit for time served" : "No pretrial credit") {
+                           summary: custodyDays > 0 ? "\(custodyDays) days of credit for time served" : "No pretrial credit", expanded: false) {
             Label(custodyDays > 0
                   ? "Credit for \(custodyDays) days of pretrial confinement will be applied (G.S. 15-196.1)."
                   : "No pretrial confinement credit: the defendant was out on bond.",
                   systemImage: "calendar.badge.clock")
                 .font(.subheadline)
 
-            ConditionToggle(title: "Advanced Supervised Release (ASR)",
-                            detail: session.askedAboutASR
-                                ? (objects ? "The State objected on the record. Ordering ASR anyway may be reversed." : "The State does not object.")
-                                : "Early release at the low end of the mitigated range after risk-reduction programs. The statute requires that the State not object; ask the prosecutor.",
-                            isOn: $session.rulings.recommendations.advancedSupervisedRelease)
+            if session.asrEligible {
+                ConditionToggle(title: "Advanced Supervised Release (ASR)",
+                                detail: session.askedAboutASR
+                                    ? (objects ? "The State objected on the record. Ordering ASR anyway departs from the statute." : "The State does not object.")
+                                    : "Early release after risk-reduction programs. The statute requires that the State not object; ask the prosecutor.",
+                                isOn: $session.rulings.recommendations.advancedSupervisedRelease)
+            }
             ConditionToggle(title: "Recommend substance abuse treatment in custody", isOn: $session.rulings.recommendations.substanceTreatment)
             ConditionToggle(title: "Recommend mental health treatment in custody", isOn: $session.rulings.recommendations.mentalHealth)
             ConditionToggle(title: "Recommend work release", isOn: $session.rulings.recommendations.workRelease)
@@ -488,7 +508,7 @@ struct MoneyCard: View {
         let items = session.obligations
         let total = items.reduce(0) { $0 + $1.amount }
         CollapsibleSection(title: "Fines, costs & restitution", icon: "dollarsign.circle.fill",
-                           summary: total > 0 ? "Total \(SentenceFormat.dollars(total))" : "Nothing owed") {
+                           summary: total > 0 ? "Total \(SentenceFormat.dollars(total))" : "Nothing owed", expanded: false) {
             AmountStepper(title: "Fine: \(SentenceFormat.dollars(session.rulings.money.fine))",
                           caption: fineNote,
                           value: $session.rulings.money.fine, range: 0...10_000_000,
@@ -622,9 +642,19 @@ struct UnitSentenceCard: View {
                 choice.lifeWithoutParole = false
                 choice.customTerm = true
             }
-            ChoiceRow(title: "Life imprisonment without parole", subtitle: lifeSubtitle, selected: choice.lifeWithoutParole) {
-                choice.lifeWithoutParole = true
-                choice.disposition = .active
+            if unit.sentencingClass == .A || unit.sentencingClass == .B1 {
+                ChoiceRow(title: "Life imprisonment without parole", subtitle: lifeSubtitle, selected: choice.lifeWithoutParole) {
+                    choice.lifeWithoutParole = true
+                    choice.disposition = .active
+                }
+            } else if isCustom || choice.lifeWithoutParole {
+                ConditionToggle(title: "Impose life without parole instead", detail: lifeSubtitle,
+                                isOn: Binding(get: { choice.lifeWithoutParole },
+                                              set: { on in
+                                                  choice.lifeWithoutParole = on
+                                                  choice.customTerm = true
+                                                  if on { choice.disposition = .active }
+                                              }))
             }
 
             if !choice.lifeWithoutParole {
@@ -654,7 +684,7 @@ struct UnitSentenceCard: View {
 
     private var lifeSubtitle: String {
         if unit.isMandatoryLife { return "Required by statute for Class A" }
-        if unit.sentencingClass == .B1 && unit.level >= 5 { return "Authorized only in the aggravated range at this level" }
+        if unit.sentencingClass == .B1 && unit.level >= 5 { return "Authorized at this level if you find an aggravating factor" }
         return "Not authorized for this offense"
     }
 
@@ -687,8 +717,8 @@ struct UnitSentenceCard: View {
             }
         } else {
             let cap = isCustom ? 3_650 : (unit.misdemeanorCell?.maxDays ?? 150)
-            AmountStepper(title: "\(choice.minimum) days",
-                          value: $choice.minimum, range: 1...cap,
+            AmountStepper(title: choice.minimum == 0 ? "No jail time (fine only)" : "\(choice.minimum) days",
+                          value: $choice.minimum, range: 0...cap,
                           fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
         }
     }
@@ -735,7 +765,9 @@ struct ProbationStage: View {
                     }
                     Divider()
                     Text("Alleged violation: commission of a new criminal offense (\(c.docket)).").font(.callout)
-                    Text(session.anyConviction
+                    Text(session.dismissedBySpeedyTrial
+                         ? "You dismissed the new case on speedy-trial grounds. A violation may still be found only if you are reasonably satisfied that the new offense occurred."
+                         : session.anyConviction
                          ? "You have just found the probationer guilty in the new case."
                          : "You have just acquitted the probationer in the new case. A violation still may be found if you are reasonably satisfied, in your discretion, that the new offense occurred.")
                         .font(.callout)
@@ -746,10 +778,21 @@ struct ProbationStage: View {
 
                 ForEach(ProbationDecision.allCases, id: \.self) { decision in
                     ChoiceRow(title: decision.label,
-                              subtitle: decision == .revoke ? "Activates \(probation.suspendedSentence)" : nil,
+                              subtitle: subtitle(for: decision, probation: probation),
                               selected: session.rulings.probationDecision == decision) {
                         session.rulings.probationDecision = decision
                     }
+                }
+
+                if session.anyActive && [.revoke, .crv].contains(session.rulings.probationDecision) {
+                    Toggle(isOn: $session.rulings.revocationConsecutive) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Run consecutively to today's sentence").font(.subheadline.weight(.semibold))
+                            Text("Off: the time runs at the same time as today's active sentence (the default under G.S. 15A-1344(d)).")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .card()
                 }
             }
 
@@ -758,6 +801,18 @@ struct ProbationStage: View {
                 Haptics.gavel()
                 session.advance()
             }
+        }
+    }
+
+    private func subtitle(for decision: ProbationDecision, probation: ProbationTerm) -> String? {
+        let credit = (probation.crvCount ?? 0) * 3
+        switch decision {
+        case .revoke:
+            return "Activates \(probation.suspendedSentence)" + (credit > 0 ? ", less \(credit) months already served on CRV" : "")
+        case .crv:
+            return probation.isFelony ? "90 days for a felony probationer" : "Up to 90 days, or the rest of the suspended sentence if less"
+        default:
+            return nil
         }
     }
 }
@@ -859,5 +914,80 @@ struct NewsCard: View {
             Text(item.body).font(.callout).foregroundStyle(.secondary)
         }
         .card()
+    }
+}
+
+// MARK: - Prior record rulings
+
+struct PriorRecordRulings: View {
+    @ObservedObject var session: CaseSession
+    private var c: CourtCase { session.courtCase }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let id = c.background?.disputedPriorID, let prior = c.defendant.priors.first(where: { $0.id == id }) {
+                Divider()
+                Label("Disputed prior conviction", systemImage: "questionmark.folder.fill").font(.subheadline.weight(.semibold))
+                if let reason = c.background?.disputedPriorReason {
+                    Text("Defense: \"\(reason)\"").font(.caption)
+                }
+                Text("The State must prove each prior by a preponderance of the evidence. A DCI record is one permitted method (G.S. 15A-1340.14(f)).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                RulingPicker(first: "Proven", second: "Not proven",
+                             firstDetail: "Count the \(prior.year) \(prior.offense)", secondDetail: "Leave it out",
+                             selection: Binding(get: { session.rulings.priorsNotProven.contains(id) ? false : true },
+                                                set: { proven in
+                                                    if proven == false { session.rulings.priorsNotProven.insert(id) }
+                                                    else { session.rulings.priorsNotProven.remove(id) }
+                                                    session.rulings.sentences = [:]
+                                                }))
+            }
+            if c.defendant.probation != nil {
+                Divider()
+                let notice = Judgment.probationNoticeGiven(c)
+                ConditionToggle(title: "Count the point for offending while on probation",
+                                detail: notice
+                                    ? "The State served written notice 30 days before trial."
+                                    : "The State did not serve the 30-day notice the statute requires (G.S. 15A-1340.16(a6)).",
+                                isOn: Binding(get: { Judgment.countsProbationPoint(c, session.rulings) },
+                                              set: { session.rulings.countProbationPoint = $0; session.rulings.sentences = [:] }))
+            }
+        }
+    }
+}
+
+// MARK: - Summary before entering judgment
+
+struct JudgmentSummaryCard: View {
+    @ObservedObject var session: CaseSession
+
+    var body: some View {
+        let r = session.rulings
+        VStack(alignment: .leading, spacing: 6) {
+            Label("The judgment you are about to enter", systemImage: "doc.text.fill").font(.headline)
+            switch r.special {
+            case .prayerForJudgment:
+                Text("Prayer for judgment continued. No sentence.").font(.callout)
+            case .conditionalDischarge:
+                Text("Conditional discharge with 12 months of probation.").font(.callout)
+            case .none:
+                ForEach(Array(session.units.enumerated()), id: \.offset) { index, unit in
+                    let choice = session.choice(for: unit)
+                    let disposition = choice.lifeWithoutParole ? "" : (choice.disposition == .active ? ", active" : ", suspended, \(choice.probationMonths) months probation")
+                    let relation = index == 0 ? "" : (r.mode == .consecutive ? " (consecutive)" : " (concurrent)")
+                    Text("• \(unit.title): \(Judgment.termText(for: unit, choice: choice))\(disposition)\(relation)")
+                        .font(.callout)
+                }
+            }
+            let total = session.obligations.reduce(0) { $0 + $1.amount }
+            if total > 0 {
+                Text("• Monetary obligations: \(SentenceFormat.dollars(total))").font(.callout)
+            }
+            if !r.customConditions.isEmpty {
+                Text("• \(r.customConditions.count) order\(r.customConditions.count == 1 ? "" : "s") of your own").font(.callout)
+            }
+        }
+        .card(tint: Theme.gold)
     }
 }

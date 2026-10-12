@@ -590,6 +590,27 @@ enum CaseGenerator {
             pleaRejection = nil
         }
 
+        // Notice, disputed priors, and the posture below
+        let probationNotice: Bool? = defendant.probation == nil ? nil : rng.chance(0.75)
+        var disputedID: UUID?
+        var disputedReason: String?
+        if !defendant.priors.isEmpty && rng.chance(0.2) {
+            let prior = rng.pick(defendant.priors.filter { !$0.fromThisCourt }.isEmpty ? defendant.priors : defendant.priors.filter { !$0.fromThisCourt })
+            disputedID = prior.id
+            disputedReason = rng.pick([
+                "The State's only proof of the \(prior.year) \(prior.offense) conviction is a DCI printout. My client says that was a cousin with the same name, and the date of birth on the printout is off by a year.",
+                "The \(prior.year) \(prior.offense) in \(prior.county) was a plea without counsel, Judge, and there's no waiver of counsel in the file.",
+                "We dispute the \(prior.year) \(prior.offense). The State has no judgment, just a line in a statewide database, and the file number doesn't match."
+            ])
+        }
+        var districtSentence: String?
+        if !isFelony, let cls = primary.law.ncClass {
+            let days = cls == .misdA1 ? rng.int(30...75) : (cls == .misd1 ? rng.int(20...45) : rng.int(10...30))
+            districtSentence = rng.chance(0.5)
+                ? "\(days) days suspended, 12 months supervised probation"
+                : "\(days) days active"
+        }
+
         return CaseBackground(
             pleaOffer: pleaOffer,
             pleaRejection: pleaRejection,
@@ -614,7 +635,12 @@ enum CaseGenerator {
             arrangementPresented: arrangementPresented,
             arrangementLawID: arrangementLawID,
             arrangementTerms: arrangementTerms,
-            arrangementHabitual: arrangementHabitual
+            arrangementHabitual: arrangementHabitual,
+            probationPointNotice: probationNotice,
+            disputedPriorID: disputedID,
+            disputedPriorReason: disputedReason,
+            stateJoinsDischarge: stance == .wantsMaximum ? false : rng.chance(t.hasVictim ? 0.4 : 0.65),
+            districtCourtSentence: districtSentence
         )
     }
 
@@ -634,6 +660,14 @@ enum CaseGenerator {
         var priors: [PriorConviction] = []
         for _ in 0..<count {
             let seed = rng.pick(GenericPools.priorSeeds)
+            if let last = priors.last, rng.chance(0.15) {
+                // Two convictions entered in the same session of court.
+                let key = last.sessionKey ?? UUID().uuidString
+                priors[priors.count - 1].sessionKey = key
+                priors.append(PriorConviction(offense: seed.offense, ncClass: seed.ncClass, year: last.year,
+                                              county: last.county, sentence: rng.pick(seed.sentences), sessionKey: key))
+                continue
+            }
             let where_ = rng.chance(0.55) ? county.name : rng.pick(GenericPools.otherCounties)
             priors.append(PriorConviction(offense: seed.offense, ncClass: seed.ncClass, year: rng.int(earliest...latest),
                                           county: where_, sentence: rng.pick(seed.sentences)))

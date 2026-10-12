@@ -203,6 +203,15 @@ struct CaseBackground: Codable, Hashable {
     var arrangementTerms: String?
     /// nil: no habitual indictment. true: status admitted. false: indictment dismissed.
     var arrangementHabitual: Bool?
+    /// Whether the State served 30 days' notice of the probation point and aggravating factors (G.S. 15A-1340.16(a6)).
+    var probationPointNotice: Bool?
+    /// A prior conviction the defense disputes, and why.
+    var disputedPriorID: UUID?
+    var disputedPriorReason: String?
+    /// Whether the State joins a motion for conditional discharge under G.S. 15A-1341(a4).
+    var stateJoinsDischarge: Bool?
+    /// What the district court imposed before the defendant appealed for a trial de novo.
+    var districtCourtSentence: String?
 }
 
 /// What actually happened. The player never sees this directly; it may surface later in the news.

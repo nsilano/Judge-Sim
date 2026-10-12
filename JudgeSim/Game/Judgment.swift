@@ -22,9 +22,41 @@ enum ProbationDecision: String, CaseIterable, Hashable {
     var label: String {
         switch self {
         case .revoke: return "Revoke probation and activate the suspended sentence"
-        case .crv: return "Find a violation and order a 90-day period of confinement in response to violation (CRV)"
+        case .crv: return "Find a violation and order confinement in response to violation (CRV)"
         case .modify: return "Find a violation, modify conditions, and extend probation 12 months"
         case .continueAsIs: return "Continue probation on the same terms"
+        }
+    }
+}
+
+enum PleaKind: String, CaseIterable, Hashable {
+    case guilty, alford, noContest
+
+    var label: String {
+        switch self {
+        case .guilty: return "Guilty"
+        case .alford: return "Guilty (Alford)"
+        case .noContest: return "No contest"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .guilty: return "The defendant admits guilt."
+        case .alford: return "The defendant maintains innocence but concedes the State's evidence would likely convict (North Carolina v. Alford)."
+        case .noContest: return "The defendant does not contest the charge. Requires the State's consent and the court's approval (G.S. 15A-1011(a)(3))."
+        }
+    }
+}
+
+enum HalftimeRuling: String, CaseIterable, Hashable {
+    case deny, dismiss, lesserOnly
+
+    var label: String {
+        switch self {
+        case .deny: return "Deny"
+        case .dismiss: return "Dismiss"
+        case .lesserOnly: return "Lesser only"
         }
     }
 }
@@ -103,6 +135,8 @@ struct FinancialOrders: Hashable {
     static let courtCosts = 213
     static let supervisionFeePerMonth = 40
     static let communityServiceFee = 250
+    static let labFee = 600
+    static let appointmentFee = 60
 
     var fine = 0
     var courtCosts = true
@@ -163,6 +197,19 @@ struct Rulings {
     /// nil: no plea presented or not yet decided. true: accepted. false: rejected.
     var pleaAccepted: Bool?
     var dismissedByPlea: Set<UUID> = []
+    var pleaKind: PleaKind = .guilty
+    /// The defendant withdrew the plea after the court announced a harsher sentence (G.S. 15A-1024).
+    var pleaWithdrawn = false
+    /// An activated sentence runs at the expiration of today's sentence instead of concurrently.
+    var revocationConsecutive = false
+    /// Whether the court counts the point for committing the offense while on supervision. nil follows the notice.
+    var countProbationPoint: Bool?
+    /// Prior convictions the court found the State did not prove.
+    var priorsNotProven: Set<UUID> = []
+    /// Rulings on the motion to dismiss at the close of the State's evidence (G.S. 15A-1227).
+    var halftime: [UUID: HalftimeRuling] = [:]
+    /// Whether the defendant elected to testify.
+    var defendantTestifies: Bool?
 
     func excludedEvidence(in courtCase: CourtCase) -> Set<UUID> {
         Set(courtCase.motions.compactMap { motion in
@@ -284,13 +331,26 @@ enum Judgment {
 
     static func habitualPredicates(_ c: CourtCase, _ r: Rulings) -> Set<UUID> {
         guard r.habitualFound == true else { return [] }
-        let felonies = c.defendant.priors.filter { $0.ncClass.isFelony }.sorted { $0.year < $1.year }
+        let felonies = c.defendant.priors.filter { $0.ncClass.isFelony && !r.priorsNotProven.contains($0.id) }
+            .sorted { $0.year < $1.year }
         return Set(felonies.prefix(3).map(\.id))
     }
 
+    /// The State must give 30 days' notice before relying on the probation point (G.S. 15A-1340.16(a6)).
+    static func probationNoticeGiven(_ c: CourtCase) -> Bool {
+        c.background?.probationPointNotice ?? true
+    }
+
+    static func countsProbationPoint(_ c: CourtCase, _ r: Rulings) -> Bool {
+        guard c.defendant.probation != nil else { return false }
+        return r.countProbationPoint ?? probationNoticeGiven(c)
+    }
+
     static func priorRecord(_ c: CourtCase, _ r: Rulings) -> PriorRecord {
-        PriorRecord(priors: c.defendant.priors, onSupervision: c.defendant.probation != nil,
-                    habitualPredicates: habitualPredicates(c, r))
+        let offenses = c.charges.compactMap { charge in r.verdicts[charge.id].flatMap { convictedLaw(charge, $0)?.title } }
+        return PriorRecord(priors: c.defendant.priors, onSupervision: countsProbationPoint(c, r),
+                           habitualPredicates: habitualPredicates(c, r), excluded: r.priorsNotProven,
+                           currentOffenses: offenses)
     }
 
     static func anyFelonyConviction(_ c: CourtCase, _ r: Rulings) -> Bool {
@@ -380,24 +440,68 @@ enum Judgment {
         return units(c, r).filter { isSuspended($0, r) }.map { choice($0, r).probationMonths }.max() ?? 0
     }
 
-    /// Advanced Supervised Release: active Class D–H sentences in the presumptive or mitigated range (G.S. 15A-1340.18).
+    /// Advanced Supervised Release (G.S. 15A-1340.18): active sentences in the presumptive or mitigated range for
+    /// Class D (levels I–III), E (I–IV), F (I–V), and G or H (any level).
     static func asrEligible(_ unit: SentencingUnit, _ r: Rulings) -> Bool {
         let selected = choice(unit, r)
-        let classes: [NCClass] = [.D, .E, .F, .G, .H]
-        return selected.disposition == .active && !selected.lifeWithoutParole && selected.range != .aggravated
-            && classes.contains(unit.sentencingClass)
+        guard selected.disposition == .active, !selected.lifeWithoutParole, let cell = unit.felonyCell else { return false }
+        if selected.customTerm ? selected.minimum > cell.presumptive.high : selected.range == .aggravated { return false }
+        switch unit.sentencingClass {
+        case .D: return unit.level <= 3
+        case .E: return unit.level <= 4
+        case .F: return unit.level <= 5
+        case .G, .H: return true
+        default: return false
+        }
     }
 
+    /// Months until ASR release: the bottom of the mitigated range for a presumptive sentence, or 80 percent of a mitigated minimum.
+    static func asrReleaseMonths(_ unit: SentencingUnit, choice selected: SentenceChoice) -> Int {
+        guard let cell = unit.felonyCell else { return selected.minimum }
+        let mitigated = selected.customTerm ? selected.minimum < cell.presumptive.low : selected.range == .mitigated
+        if mitigated { return max(1, Int((Double(selected.minimum) * 0.8).rounded(.up))) }
+        return min(selected.minimum, cell.mitigated.low)
+    }
+
+    static func convictedLaws(_ c: CourtCase, _ r: Rulings) -> [Law] {
+        c.charges.compactMap { charge in r.verdicts[charge.id].flatMap { convictedLaw(charge, $0) } }
+    }
+
+    /// The judge may continue prayer for judgment in any case; the law limits it for serious felonies (flagged separately).
     static func pjcAvailable(_ c: CourtCase, _ r: Rulings) -> Bool {
-        let laws = c.charges.compactMap { charge in r.verdicts[charge.id].flatMap { convictedLaw(charge, $0) } }
-        return !laws.isEmpty && laws.allSatisfy { !($0.ncClass?.isFelony ?? true) }
+        !convictedLaws(c, r).isEmpty
     }
 
+    enum DischargeBasis {
+        /// G.S. 90-96: drug possession, no prior felony or drug conviction.
+        case drugPossession
+        /// G.S. 15A-1341(a4): Class H or I felony or misdemeanor, no prior felony, on joint motion.
+        case jointMotion
+        case ineligible
+    }
+
+    private static let drugWords = ["schedule", "pwisd", "paraphernalia", "cocaine", "drug", "trafficking", "marijuana", "heroin", "fentanyl"]
+
+    static func dischargeBasis(_ c: CourtCase, _ r: Rulings) -> DischargeBasis {
+        let laws = convictedLaws(c, r)
+        guard !laws.isEmpty else { return .ineligible }
+        let priors = c.defendant.priors
+        let priorFelony = priors.contains { $0.ncClass.isFelony }
+        let priorDrug = priors.contains { prior in drugWords.contains { prior.offense.lowercased().contains($0) } }
+        let priorDischarge = priors.contains { $0.sentence.lowercased().contains("conditional discharge") }
+        if priorFelony || priorDischarge { return .ineligible }
+        let possession = ["possSchedII", "possParaphernalia", "simplePossession"]
+        if laws.allSatisfy({ possession.contains($0.id) }) && !priorDrug { return .drugPossession }
+        let lowLevel = laws.allSatisfy { law in
+            guard let cls = law.ncClass else { return false }
+            return !cls.isFelony || cls == .H || cls == .I
+        }
+        return lowLevel ? .jointMotion : .ineligible
+    }
+
+    /// Offered whenever there is a conviction; eligibility is flagged, not enforced.
     static func conditionalDischargeAvailable(_ c: CourtCase, _ r: Rulings) -> Bool {
-        let laws = c.charges.compactMap { charge in r.verdicts[charge.id].flatMap { convictedLaw(charge, $0) } }
-        let drugWords = ["schedule", "pwisd", "paraphernalia", "cocaine", "drug", "trafficking"]
-        let priorDrug = c.defendant.priors.contains { prior in drugWords.contains { prior.offense.lowercased().contains($0) } }
-        return !laws.isEmpty && laws.allSatisfy { $0.id == "possSchedII" } && !priorDrug
+        !convictedLaws(c, r).isEmpty
     }
 
     static func appointedCounsel(_ c: CourtCase) -> Bool {
@@ -424,15 +528,23 @@ enum Judgment {
 
         switch r.special {
         case .prayerForJudgment:
-            if convictedUnits.contains(where: { $0.isFelony }) {
-                issues.append("A PJC on a serious felony is highly unusual and may be challenged by the State.")
+            let barred: [NCClass] = [.A, .B1, .B2, .C, .D, .E]
+            if convictedUnits.contains(where: { barred.contains($0.offenseClass) }) {
+                issues.append("G.S. 15A-1331.2 does not allow a prayer for judgment continued for a Class A through E felony.")
             }
-            if anySuspended(c, r) || r.money.fine > 0 || !r.customConditions.isEmpty {
-                issues.append("Conditions beyond costs turn a PJC into a final judgment.")
+            if r.money.fine > 0 || !r.customConditions.isEmpty {
+                issues.append("Conditions beyond costs and obeying the law (a fine or other orders) turn a PJC into a final judgment.")
             }
         case .conditionalDischarge:
-            if !conditionalDischargeAvailable(c, r) {
-                issues.append("Conditional discharge under G.S. 90-96 is only available for eligible drug possession offenses without prior drug convictions.")
+            switch dischargeBasis(c, r) {
+            case .drugPossession:
+                break
+            case .jointMotion:
+                if c.background?.stateJoinsDischarge == false {
+                    issues.append("A conditional discharge under G.S. 15A-1341(a4) requires a joint motion. The State did not join.")
+                }
+            case .ineligible:
+                issues.append("The defendant is not eligible for a conditional discharge: it requires no prior felony convictions and a Class H or I felony, a misdemeanor, or drug possession (G.S. 90-96, 15A-1341(a4)).")
             }
         case .none:
             for unit in convictedUnits {
@@ -442,7 +554,7 @@ enum Judgment {
                     issues.append("\(title): a Class A felony requires life without parole.")
                 }
                 if selected.lifeWithoutParole && !unit.isMandatoryLife {
-                    let allowedLife = unit.sentencingClass == .B1 && unit.level >= 5 && selected.range == .aggravated && !selected.customTerm
+                    let allowedLife = unit.sentencingClass == .B1 && unit.level >= 5 && !r.foundAggravating.isEmpty
                     if !allowedLife { issues.append("\(title): life without parole is not an authorized punishment for this offense.") }
                     continue
                 }
@@ -469,8 +581,11 @@ enum Judgment {
                         issues.append("\(title): a \(disposition.label) disposition is not authorized in this cell of the punishment chart (allowed: \(cell.dispositionCode)).")
                     }
                 } else if let cell = unit.misdemeanorCell {
-                    if selected.minimum > cell.maxDays || selected.minimum < 1 {
+                    if selected.minimum > cell.maxDays {
                         issues.append("\(title): \(selected.minimum) days exceeds the \(cell.maxDays)-day maximum for this class and level.")
+                    }
+                    if unit.sentencingClass == .misd3 && c.defendant.priors.count <= 3 && selected.minimum > 0 {
+                        issues.append("\(title): with no more than three prior convictions, a Class 3 misdemeanor judgment may consist only of a fine (G.S. 15A-1340.23(d)).")
                     }
                     if let disposition = selected.disposition, !cell.dispositions.contains(disposition) {
                         issues.append("\(title): a \(disposition.label) disposition is not authorized for this class and level (allowed: \(cell.dispositionCode)).")
@@ -483,19 +598,48 @@ enum Judgment {
                     issues.append("\(title): probation may not exceed five years.")
                 }
             }
-            if r.conditions.specialProbationDays > 0 && r.conditions.specialProbationDays > maxSpecialProbationDays(c, r) {
+            if (r.conditions.specialProbationDays > 0 || r.conditions.drugTreatmentCourt) && anySuspended(c, r) && !anyIntermediate(c, r) {
+                issues.append("Special probation and Drug Treatment Court are intermediate conditions; a community punishment cannot include them.")
+            } else if r.conditions.specialProbationDays > 0 && r.conditions.specialProbationDays > maxSpecialProbationDays(c, r) {
                 issues.append("Special probation exceeds one-fourth of the maximum suspended sentence.")
             }
             if anyIntermediate(c, r) && !r.conditions.supervised {
                 issues.append("Intermediate punishment requires supervised probation.")
             }
-            if r.recommendations.advancedSupervisedRelease {
-                if c.background?.stateObjectsToASR ?? false {
-                    issues.append("Advanced Supervised Release was ordered over the State's objection.")
-                }
+            if r.recommendations.advancedSupervisedRelease && anyActive(c, r) {
                 if !convictedUnits.contains(where: { asrEligible($0, r) }) {
-                    issues.append("Advanced Supervised Release isn't available for this sentence.")
+                    issues.append("Advanced Supervised Release isn't available for this class, prior record level, or range.")
+                } else if c.background?.stateObjectsToASR ?? false {
+                    issues.append("Advanced Supervised Release was ordered although the prosecutor objected (G.S. 15A-1340.18(c)).")
                 }
+            }
+            // Consecutive misdemeanors may not exceed twice the maximum for the most serious offense (G.S. 15A-1340.22(a)).
+            let misdemeanors = convictedUnits.filter { !$0.isFelony }
+            if r.mode == .consecutive && misdemeanors.count > 1 && !convictedUnits.contains(where: { $0.isFelony }) {
+                let total = misdemeanors.map { choice($0, r).minimum }.reduce(0, +)
+                let cap = 2 * (misdemeanors.compactMap { $0.misdemeanorCell?.maxDays }.max() ?? 0)
+                if cap > 0 && total > cap {
+                    issues.append("Consecutive misdemeanor sentences total \(total) days, more than twice the \(cap / 2)-day maximum for the most serious offense.")
+                }
+            }
+            // Factors
+            let bg = c.background
+            if let hidden = bg?.hiddenAggravator, r.foundAggravating.contains(hidden) {
+                issues.append("The aggravating factor \"\(hidden)\" was found without the 30 days' written notice the State must give (G.S. 15A-1340.16(a6)).")
+            }
+            if r.foundAggravating.contains(where: { $0.lowercased().contains("remorse") || $0.lowercased().contains("went to trial") }) {
+                issues.append("Lack of remorse or exercising the right to trial is not a proper aggravating factor.")
+            }
+        }
+        if countsProbationPoint(c, r) && !probationNoticeGiven(c) && !convictedUnits.isEmpty {
+            issues.append("The probation point was counted although the State did not give 30 days' notice of its intent to prove it (G.S. 15A-1340.16(a6)).")
+        }
+        if r.money.restitution > 0 {
+            let documented = c.background?.restitution ?? 0
+            if documented == 0 {
+                issues.append("Restitution was ordered with no evidence of the victim's loss in the record.")
+            } else if Double(r.money.restitution) > Double(documented) * 1.1 {
+                issues.append("Restitution of \(SentenceFormat.dollars(r.money.restitution)) exceeds the \(SentenceFormat.dollars(documented)) supported by the evidence.")
             }
         }
         for condition in r.customConditions where conditionLooksUnlawful(condition) {
@@ -512,6 +656,10 @@ enum Judgment {
         if r.money.restitution > 0 { items.append(("Restitution", r.money.restitution)) }
         if r.money.attorneyFees && appointedCounsel(c) {
             items.append(("Appointed attorney fees", c.background?.attorneyFeeEstimate ?? 1_500))
+            items.append(("Attorney appointment fee", FinancialOrders.appointmentFee))
+        }
+        if r.money.courtCosts && c.evidence.contains(where: { $0.kind == .forensic && $0.side == .prosecution }) {
+            items.append(("State Crime Laboratory fee", FinancialOrders.labFee))
         }
         if r.special == .none && anySuspended(c, r) {
             if r.conditions.supervised && !r.money.waiveSupervisionFees {
@@ -616,9 +764,12 @@ enum Judgment {
 
         // Judgments
         let bg = c.background
+        let plea = r.pleaAccepted == true
         var judgments: [JudgmentEntry] = []
         var newPriors: [PriorConviction] = []
         var activeTerms: [Int] = []
+        var activeMaxima: [Int] = []
+        var activeFelony = false
         var suspendedTerms: [Int] = []
         var probationMonths = 0
         var suspendedText: [String] = []
@@ -631,9 +782,17 @@ enum Judgment {
 
         let sentencingUnits = convicted ? units(c, r) : []
         if special == .none {
-            for unit in sentencingUnits {
+            if let findings = findingsEntry(c, r, units: sentencingUnits) { judgments.append(findings) }
+            for (index, unit) in sentencingUnits.enumerated() {
                 let selected = choice(unit, r)
                 var lines = judgmentLines(for: unit, choice: selected)
+                if index > 0 {
+                    let first = sentencingUnits[0].counts.first ?? 1
+                    let previous = sentencingUnits[index - 1].counts.first ?? 1
+                    lines.append(r.mode == .consecutive
+                        ? "This sentence shall begin at the expiration of the sentence imposed in Count \(previous)."
+                        : "This sentence shall run concurrently with the sentence imposed in Count \(first).")
+                }
 
                 var months: Int
                 if selected.lifeWithoutParole {
@@ -643,16 +802,20 @@ enum Judgment {
                     months = unit.isFelony ? selected.minimum : Int((Double(selected.minimum) / 30).rounded(.up))
                 }
                 if selected.lifeWithoutParole || selected.disposition == .active {
-                    if r.recommendations.advancedSupervisedRelease && asrEligible(unit, r), let cell = unit.felonyCell {
-                        if bg?.stateObjectsToASR ?? false {
-                            lines.append("The State objected to Advanced Supervised Release. ASR is not ordered (G.S. 15A-1340.18).")
-                        } else {
-                            months = min(months, cell.mitigated.low)
-                            lines.append("Advanced Supervised Release ordered: eligible for release after \(cell.mitigated.low) months upon completing risk-reduction programming.")
-                            newsExtras.append("Advanced Supervised Release could shorten the term if programming is completed.")
-                        }
+                    if r.recommendations.advancedSupervisedRelease && asrEligible(unit, r) {
+                        let release = asrReleaseMonths(unit, choice: selected)
+                        months = min(months, release)
+                        let objection = (bg?.stateObjectsToASR ?? false) ? " over the prosecutor's objection" : ""
+                        lines.append("Advanced Supervised Release ordered\(objection): eligible for release after \(release) months upon completing risk-reduction programming (G.S. 15A-1340.18).")
+                        newsExtras.append("Advanced Supervised Release could shorten the term if programming is completed.")
                     }
                     activeTerms.append(months)
+                    if unit.isFelony {
+                        activeFelony = true
+                        activeMaxima.append(maximum(for: unit, choice: selected))
+                    } else {
+                        activeMaxima.append(selected.minimum)
+                    }
                 } else {
                     suspendedTerms.append(months)
                     probationMonths = max(probationMonths, selected.probationMonths)
@@ -667,11 +830,17 @@ enum Judgment {
                 if let days = bg?.custodyDays, days > 0 {
                     lines.insert("Credit for \(days) days of pretrial confinement (G.S. 15-196.1).", at: 0)
                 }
+                if activeFelony {
+                    lines.append("Upon release, the defendant will serve a period of post-release supervision (G.S. 15A-1368.2).")
+                }
                 if !lines.isEmpty { judgments.append(JudgmentEntry(title: "Commitment", lines: lines)) }
             }
             if !suspendedTerms.isEmpty {
                 var lines = r.conditions.descriptions(victimName: c.victimName) + r.customConditions
                 lines.insert("Regular conditions of probation under G.S. 15A-1343(b) apply.", at: 0)
+                if !activeTerms.isEmpty {
+                    lines.insert("Probation begins when the defendant is released from the active sentence.", at: 1)
+                }
                 judgments.append(JudgmentEntry(title: "Conditions of probation", lines: lines))
             }
         } else if special == .prayerForJudgment {
@@ -681,7 +850,8 @@ enum Judgment {
             newsSentence = "a prayer for judgment continued, with no sentence imposed"
         } else {
             probationMonths = 12
-            judgments.append(JudgmentEntry(title: "Conditional discharge (G.S. 90-96)",
+            let basis = dischargeBasis(c, r) == .drugPossession ? "G.S. 90-96" : "G.S. 15A-1341(a4)"
+            judgments.append(JudgmentEntry(title: "Conditional discharge (\(basis))",
                                            lines: ["Further proceedings are deferred without entry of judgment.",
                                                    "The defendant is placed on 12 months of supervised probation. On successful completion, the charge will be dismissed."]
                                            + r.conditions.descriptions(victimName: c.victimName).dropFirst() + r.customConditions))
@@ -696,6 +866,10 @@ enum Judgment {
             lines.append("Total: \(SentenceFormat.dollars(totalOwed))")
             if (bg?.indigent ?? false) && !r.money.courtCosts { lines.append("Costs remitted; the defendant was found indigent.") }
             judgments.append(JudgmentEntry(title: "Monetary obligations", lines: lines))
+        }
+        if convicted && c.victimName != nil {
+            judgments.append(JudgmentEntry(title: "Victim notification",
+                                           lines: ["The District Attorney's victim-witness legal assistant will notify the victim of the judgment and of any release, appeal, or post-conviction hearing (N.C. Const. art. I, § 37)."]))
         }
 
         // Record entries
@@ -714,7 +888,7 @@ enum Judgment {
                     sentence = "Consolidated"
                 }
                 newPriors.append(PriorConviction(offense: law.title, ncClass: cls, year: year, county: county.name,
-                                                 sentence: sentence, fromThisCourt: true))
+                                                 sentence: sentence, fromThisCourt: true, docket: c.docket))
             }
         }
 
@@ -729,7 +903,11 @@ enum Judgment {
         // Habitual felon
         var habitualNote: String?
         if c.habitualIndicted {
-            if !anyFelonyConviction(c, r) {
+            if plea, let admitted = bg?.arrangementHabitual {
+                habitualNote = admitted
+                    ? "Under the plea arrangement, the defendant admitted habitual felon status."
+                    : "Under the plea arrangement, the State dismissed the habitual felon indictment."
+            } else if !anyFelonyConviction(c, r) {
                 habitualNote = "Habitual felon status was not reached because there was no felony conviction."
             } else if r.habitualFound == true {
                 habitualNote = "The court found that the defendant has attained the status of habitual felon."
@@ -737,7 +915,6 @@ enum Judgment {
                 habitualNote = "The court found the State did not prove habitual felon status."
             }
         }
-
         // How the conditions bear on what happens next
         let truthGuilty = c.truth.actuallyGuilty
         let need = bg?.treatmentNeed ?? TreatmentNeed.none
@@ -770,43 +947,64 @@ enum Judgment {
 
         // Existing probation
         var probationHearing: String?
-        var newProbation: ProbationTerm?
-        if let existing = d.probation, let decision = r.probationDecision {
-            switch decision {
+        var continuedProbation: ProbationTerm?
+        var revokedMonths = 0
+        if let existing = d.probation {
+            let credit = (existing.crvCount ?? 0) * 3
+            let stacked = r.revocationConsecutive && custodyMonths > 0
+            switch r.probationDecision ?? .continueAsIs {
             case .revoke:
-                custodyMonths += existing.activeMonths
-                probationHearing = "Probation in \(existing.docket) revoked. The suspended sentence of \(existing.suspendedSentence) is activated\(custodyMonths > existing.activeMonths ? ", to run at the expiration of any sentence imposed today" : "")."
+                revokedMonths = max(1, existing.activeMonths - credit)
+                custodyMonths = stacked ? custodyMonths + revokedMonths : max(custodyMonths, revokedMonths)
+                var text = "Probation in \(existing.docket) revoked. The suspended sentence of \(existing.suspendedSentence) is activated"
+                if credit > 0 { text += ", with credit for \(credit) months already served in confinement in response to violation" }
+                if custodyMonths > revokedMonths || stacked {
+                    text += stacked ? ", to begin at the expiration of the sentence imposed today" : ", to run concurrently with the sentence imposed today"
+                }
+                probationHearing = text + "."
             case .crv:
-                custodyMonths += 3
+                let crv = existing.isFelony ? 3 : min(3, max(1, existing.activeMonths - credit))
+                custodyMonths = stacked ? custodyMonths + crv : max(custodyMonths, crv)
                 var continued = existing
                 continued.crvCount = (existing.crvCount ?? 0) + 1
-                newProbation = continued
-                probationHearing = "Violation found in \(existing.docket). The defendant is ordered to serve a 90-day period of confinement in response to violation, after which probation resumes."
+                continuedProbation = continued
+                let days = existing.isFelony ? "90-day" : "\(crv * 30)-day"
+                probationHearing = "Violation found in \(existing.docket). The defendant is ordered to serve a \(days) period of confinement in response to violation (G.S. 15A-1344(d2)), after which probation resumes."
             case .modify:
                 var extended = existing
                 extended.ends = Calendar.current.date(byAdding: .month, value: 12, to: existing.ends) ?? existing.ends
-                newProbation = extended
+                continuedProbation = extended
                 probationHearing = "Violation found in \(existing.docket). Probation modified and extended 12 months."
             case .continueAsIs:
-                newProbation = existing
-                probationHearing = "Probation in \(existing.docket) continued on the same terms."
+                continuedProbation = existing
+                probationHearing = r.probationDecision == nil ? nil : "Probation in \(existing.docket) continued on the same terms."
             }
         }
 
-        // New probation from today's judgment
-        if !life && (activeTerms.isEmpty) && (!suspendedTerms.isEmpty || special == .conditionalDischarge) {
-            let ends = Calendar.current.date(byAdding: .month, value: probationMonths, to: date) ?? date
+        // New probation from today's judgment, including split sentences that begin after release
+        var newProbation = continuedProbation
+        if !life && (!suspendedTerms.isEmpty || special == .conditionalDischarge) {
+            let start = Calendar.current.date(byAdding: .month, value: custodyMonths, to: date) ?? date
+            let ends = Calendar.current.date(byAdding: .month, value: probationMonths, to: start) ?? start
             let fallbackMonths = sentencingUnits.first.flatMap { $0.felonyCell?.presumptive.low } ?? 3
-            newProbation = ProbationTerm(docket: c.docket,
-                                         offense: sentencingUnits.first?.law.title ?? principalTitle,
-                                         isFelony: anyFelonySuspended || special == .conditionalDischarge,
-                                         suspendedSentence: special == .conditionalDischarge ? "conditional discharge (judgment would be entered)" : suspendedText.joined(separator: "; "),
-                                         activeMonths: special == .conditionalDischarge ? fallbackMonths : combine(suspendedTerms),
-                                         ends: ends, imposedInThisCourt: true,
-                                         supervised: k.supervised || special == .conditionalDischarge,
-                                         conditions: Array(k.descriptions(victimName: c.victimName).dropFirst()) + r.customConditions,
-                                         monthlyObligation: probationMonths > 0 ? totalOwed / probationMonths : 0,
-                                         violationRisk: violationRisk, crvCount: 0, treatmentNeed: need)
+            var term = ProbationTerm(docket: c.docket,
+                                     offense: sentencingUnits.first?.law.title ?? principalTitle,
+                                     isFelony: anyFelonySuspended || special == .conditionalDischarge,
+                                     suspendedSentence: special == .conditionalDischarge ? "conditional discharge (judgment would be entered)" : suspendedText.joined(separator: "; "),
+                                     activeMonths: special == .conditionalDischarge ? fallbackMonths : combine(suspendedTerms),
+                                     ends: ends, imposedInThisCourt: true,
+                                     supervised: k.supervised || special == .conditionalDischarge,
+                                     conditions: Array(k.descriptions(victimName: c.victimName).dropFirst()) + r.customConditions,
+                                     monthlyObligation: probationMonths > 0 ? totalOwed / probationMonths : 0,
+                                     violationRisk: violationRisk, crvCount: 0, treatmentNeed: need)
+            if let earlier = continuedProbation {
+                term.ends = max(term.ends, earlier.ends)
+                term.suspendedSentence += "; also on probation in \(earlier.docket) (\(earlier.suspendedSentence))"
+                term.conditions = Array(Set((term.conditions ?? []) + (earlier.conditions ?? []))).sorted()
+                term.supervised = (term.supervised ?? true) || (earlier.supervised ?? true)
+                term.activeMonths = max(term.activeMonths, earlier.activeMonths)
+            }
+            newProbation = term
             if k.specialProbationDays > 0 {
                 newsExtras.append("The sentence includes \(k.specialProbationDays) days in jail as a condition of probation.")
             }
@@ -833,15 +1031,30 @@ enum Judgment {
             // set above
         } else if life {
             newsSentence = "life in prison without the possibility of parole"
-        } else if !activeTerms.isEmpty, let unit = sentencingUnits.first {
-            let selected = choice(unit, r)
-            newsSentence = unit.isFelony
-                ? "\(selected.minimum) to \(maximum(for: unit, choice: selected)) months in prison"
-                : "\(selected.minimum) days in the Hollis County jail"
-        } else if custodyMonths > 0 {
-            newsSentence = "an active sentence after probation in an earlier case was revoked"
+        } else if !activeTerms.isEmpty {
+            let unitLabel = activeFelony ? "months in prison" : "days in the Hollis County jail"
+            let minima = sentencingUnits.filter { choice($0, r).disposition == .active }.map { choice($0, r).minimum }
+            if activeTerms.count == 1, let low = minima.first, let high = activeMaxima.first {
+                newsSentence = activeFelony ? "\(low) to \(high) \(unitLabel)" : "\(low) \(unitLabel)"
+            } else if r.mode == .consecutive {
+                let low = minima.reduce(0, +), high = activeMaxima.reduce(0, +)
+                newsSentence = activeFelony
+                    ? "consecutive sentences totaling \(low) to \(high) months in prison"
+                    : "consecutive sentences totaling \(low) days in jail"
+            } else {
+                let low = minima.max() ?? 0, high = activeMaxima.max() ?? 0
+                newsSentence = activeFelony
+                    ? "concurrent sentences, the longest \(low) to \(high) months in prison"
+                    : "concurrent sentences, the longest \(low) days in jail"
+            }
+            if !suspendedTerms.isEmpty { newsSentence += ", followed by \(probationMonths) months of probation" }
         } else if probationMonths > 0 {
             newsSentence = "a suspended sentence and \(probationMonths) months of probation"
+        }
+        if revokedMonths > 0 {
+            newsSentence += newsSentence.isEmpty
+                ? "an active sentence after probation in an earlier case was revoked"
+                : ", and activated a suspended sentence from an earlier case"
         }
         if totalOwed >= 1_000 && convicted {
             newsExtras.append("The judgment includes \(SentenceFormat.dollars(totalOwed)) in fines, fees, costs, and restitution.")
@@ -849,19 +1062,25 @@ enum Judgment {
 
         // Departures from the law draw appeals and attention, but the judgment stands as entered.
         let issues = convicted ? legalIssues(c, r) : []
+        var appealScheduled = false
+        var appealNotice: String?
+        let harsh = life || custodyMonths > 0
         if !issues.isEmpty {
-            let harsh = life || custodyMonths > 0
             var newRelease: Date?
             if harsh, let unit = sentencingUnits.first {
                 let lawful = unit.felonyCell?.presumptive.low ?? max(1, (unit.misdemeanorCell?.maxDays ?? 30) / 30)
-                newRelease = Calendar.current.date(byAdding: .month, value: unit.isMandatoryLife ? 1_200 : lawful, to: date)
+                newRelease = Calendar.current.date(byAdding: .month, value: unit.isMandatoryLife ? 1_200 : lawful + revokedMonths, to: date)
             }
             if rng.chance(0.9) {
+                appealScheduled = true
                 let appellant = harsh ? "the defendant" : "the State"
+                appealNotice = harsh
+                    ? "The defendant gave notice of appeal to the North Carolina Court of Appeals in open court."
+                    : "The State gave notice of appeal from the judgment (G.S. 15A-1445(a)(3))."
                 pending.append(PendingEvent(due: later(120...300),
                                             news: NewsItem(date: date, kind: .appeal,
                                                            headline: "Appeals court vacates sentence in \(d.name) case",
-                                                           body: "On appeal by \(appellant), the North Carolina Court of Appeals vacated the judgment Judge \(judgeLast) entered in \(c.caption) and remanded for resentencing. The court held: " + issues.prefix(2).joined(separator: " ") ,
+                                                           body: "On appeal by \(appellant), the North Carolina Court of Appeals vacated the judgment Judge \(judgeLast) entered in \(c.caption) and remanded for resentencing. The court held: " + issues.prefix(2).joined(separator: " "),
                                                            docket: c.docket),
                                             personID: d.personID,
                                             effect: newRelease == nil ? .none : .resentence,
@@ -875,24 +1094,20 @@ enum Judgment {
                 pending.append(PendingEvent(due: later(45...150),
                                             news: NewsItem(date: date, kind: .ethics,
                                                            headline: "Judicial Standards Commission reviewing sentence by Judge \(judgeLast)",
-                                                           body: "Following complaints about the judgment in \(c.caption), the Judicial Standards Commission has opened a preliminary inquiry. The Commission does not comment on pending matters.",
+                                                           body: "Following complaints about the judgment in \(c.caption), the Judicial Standards Commission has opened a confidential inquiry. The Commission may issue a private letter of caution or a public reprimand, or recommend censure, suspension, or removal to the Supreme Court.",
                                                            docket: c.docket)))
             }
         }
 
         // Appeal
-        var appealNotice: String?
-        if convicted && special != .conditionalDischarge {
-            let appeals = rng.chance(r.pleaAccepted == true ? 0.1 : (custodyMonths > 0 || life ? 0.7 : 0.3)) || !issues.isEmpty
+        if convicted && special != .conditionalDischarge && !appealScheduled {
+            let appeals = rng.chance(plea ? 0.1 : (harsh ? 0.7 : 0.3))
             if appeals {
-                appealNotice = life
-                    ? "The defendant gave notice of appeal to the Supreme Court of North Carolina in open court."
-                    : "The defendant gave notice of appeal to the North Carolina Court of Appeals in open court."
+                appealNotice = "The defendant gave notice of appeal to the North Carolina Court of Appeals in open court."
                 pending.append(appealEvent(c, r, anyUnsupported: anyUnsupported, proper: proper,
-                                           judgeLast: judgeLast, due: later(150...330), life: life))
+                                           judgeLast: judgeLast, due: later(150...330), plea: plea))
             }
         }
-
         // Things that may surface about what really happened
         switch (convicted, truthGuilty) {
         case (true, false):
@@ -902,7 +1117,7 @@ enum Judgment {
                                                            headline: "New evidence in \(d.name) case",
                                                            body: c.truth.revelation + " The North Carolina Innocence Inquiry Commission has referred the case to a three-judge panel, which declared \(d.name) innocent.",
                                                            docket: c.docket),
-                                            personID: d.personID, effect: .releasePerson))
+                                            personID: d.personID, effect: .releasePerson, vacatesDocket: c.docket))
             }
         case (false, true):
             if rng.chance(0.35) {
@@ -963,7 +1178,15 @@ enum Judgment {
     // MARK: Appeals
 
     private static func appealEvent(_ c: CourtCase, _ r: Rulings, anyUnsupported: Bool, proper: Int,
-                                    judgeLast: String, due: Date, life: Bool) -> PendingEvent {
+                                    judgeLast: String, due: Date, plea: Bool) -> PendingEvent {
+        let court = "The North Carolina Court of Appeals"
+        if plea {
+            let pleaLabel = r.pleaKind == .guilty ? "guilty plea" : (r.pleaKind == .alford ? "Alford plea" : "no-contest plea")
+            let body = "\(court) dismissed the defendant's appeal in \(c.caption). After a \(pleaLabel), a defendant may appeal only limited sentencing issues (G.S. 15A-1444), and the panel found none preserved. The judgment of Judge \(judgeLast) stands."
+            return PendingEvent(due: due,
+                                news: NewsItem(date: due, kind: .appeal, headline: "Appeal dismissed in \(c.defendant.name) plea case", body: body, docket: c.docket),
+                                personID: c.defendant.personID)
+        }
         var errors: [String] = []
         for motion in c.motions where motion.shouldGrant && !(r.motions[motion.id] ?? false) {
             let target = c.evidence(motion.targetEvidenceID)?.title ?? "the evidence"
@@ -973,7 +1196,6 @@ enum Judgment {
             errors.append("the trial court erred in overruling the defendant's \(objection.grounds.lowercased()) objection. \(objection.appellateNote)")
         }
 
-        let court = life ? "The Supreme Court of North Carolina" : "The North Carolina Court of Appeals"
         let headline: String
         var body: String
         let reversed = anyUnsupported
@@ -992,11 +1214,31 @@ enum Judgment {
             headline = "Appeals court finds no error in \(c.defendant.name) conviction"
             body = "\(court) rejected all of the defendant's arguments in \(c.caption) and found no error in Judge \(judgeLast)'s rulings."
         }
-        return PendingEvent(due: due,
-                            news: NewsItem(date: due, kind: .appeal, headline: headline, body: body, docket: c.docket),
-                            personID: c.defendant.personID,
-                            effect: reversed ? .releasePerson : .none,
-                            appealReversed: reversed)
+        var event = PendingEvent(due: due,
+                                 news: NewsItem(date: due, kind: .appeal, headline: headline, body: body, docket: c.docket),
+                                 personID: c.defendant.personID,
+                                 effect: reversed ? .releasePerson : .none,
+                                 appealReversed: reversed)
+        if reversed { event.vacatesDocket = c.docket }
+        return event
+    }
+
+    /// Written findings of aggravating and mitigating factors (form AOC-CR-605).
+    static func findingsEntry(_ c: CourtCase, _ r: Rulings, units: [SentencingUnit]) -> JudgmentEntry? {
+        guard units.contains(where: { $0.isFelony }) else { return nil }
+        guard !r.foundAggravating.isEmpty || !r.foundMitigating.isEmpty else { return nil }
+        var lines: [String] = []
+        lines += r.foundAggravating.sorted().map { "Aggravating: \($0)" }
+        lines += r.foundMitigating.sorted().map { "Mitigating: \($0)" }
+        let ranges = units.filter(\.isFelony).map { choice($0, r).range }
+        if ranges.contains(.aggravated) {
+            lines.append("The court finds that the factors in aggravation outweigh the factors in mitigation and that an aggravated sentence is justified.")
+        } else if ranges.contains(.mitigated) {
+            lines.append("The court finds that the factors in mitigation outweigh the factors in aggravation and that a mitigated sentence is justified.")
+        } else {
+            lines.append("The court finds that a sentence within the presumptive range is justified.")
+        }
+        return JudgmentEntry(title: "Findings of factors (AOC-CR-605)", lines: lines)
     }
 
     // MARK: Press

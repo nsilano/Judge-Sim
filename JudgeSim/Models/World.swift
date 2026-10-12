@@ -190,4 +190,8 @@ struct PendingEvent: Codable, Hashable {
     var appealReversed = false
     /// For resentencing: the release date under the new, lawful sentence.
     var newReleaseDate: Date?
+    /// A conviction from this docket is vacated and removed from the person's record.
+    var vacatesDocket: String?
+    /// A new trial the District Attorney may bring back to this court.
+    var retrial: CourtCase?
 }

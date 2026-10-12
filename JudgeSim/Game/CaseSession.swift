@@ -282,7 +282,9 @@ final class CaseSession: ObservableObject {
             case .briefing:
                 stage = courtCase.motions.isEmpty ? .trial : .motions
             case .motions:
-                if dismissedBySpeedyTrial { finish() } else { stage = .trial }
+                if dismissedBySpeedyTrial {
+                    if courtCase.defendant.probation != nil { stage = .probation } else { finish() }
+                } else { stage = .trial }
             case .trial:
                 stage = .verdict
             case .verdict:
