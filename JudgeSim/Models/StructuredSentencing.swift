@@ -16,8 +16,8 @@ enum Disposition: String, Codable, CaseIterable, Hashable {
 
     var detail: String {
         switch self {
-        case .community: return "Suspended sentence with unsupervised or supervised probation, fines, or community service. No incarceration."
-        case .intermediate: return "Suspended sentence with supervised probation. May include special probation (a short jail split), treatment court, or electronic house arrest."
+        case .community: return "Suspended sentence with supervised or unsupervised probation or a fine. May include house arrest, community service, a short quick-dip jail stay, or treatment."
+        case .intermediate: return "Suspended sentence with supervised probation. May add special probation (a jail split) or Drug Treatment Court."
         case .active: return "The defendant serves the sentence in custody."
         }
     }
@@ -114,7 +114,7 @@ enum StructuredSentencing {
         .G: [cell("I/A", (13, 16), (10, 13), (8, 10)),
              cell("I/A", (15, 19), (12, 15), (9, 12)),
              cell("I/A", (16, 20), (13, 16), (10, 13)),
-             cell("I/A", (20, 25), (16, 20), (12, 16)),
+             cell("A", (20, 25), (16, 20), (12, 16)),
              cell("A", (21, 26), (17, 21), (13, 17)),
              cell("A", (29, 36), (23, 29), (17, 23))],
         .H: [cell("C/I/A", (6, 8), (5, 6), (4, 5)),
@@ -212,6 +212,10 @@ struct PriorConviction: Identifiable, Codable, Hashable {
     var county: String
     var sentence: String
     var fromThisCourt = false
+    /// Docket of the case in this court that produced the conviction (optional for older saves).
+    var docket: String? = nil
+    /// Convictions entered in the same session of court share a key; only one counts (G.S. 15A-1340.14(d)).
+    var sessionKey: String? = nil
 
     var points: Int { ncClass.priorRecordPoints }
 }
@@ -229,16 +233,40 @@ struct PriorRecord: Hashable {
     let misdemeanorLevel: Int
     let priorFelonies: [PriorConviction]
 
-    init(priors: [PriorConviction], onSupervision: Bool, habitualPredicates: Set<UUID> = []) {
+    /// - Parameters:
+    ///   - excluded: priors the court found the State did not prove.
+    ///   - currentOffenses: titles of today's offenses, for the (b)(6) "all elements" point.
+    init(priors allPriors: [PriorConviction], onSupervision: Bool, habitualPredicates: Set<UUID> = [],
+         excluded: Set<UUID> = [], currentOffenses: [String] = []) {
         var lines: [Line] = []
         var points = 0
+        let priors = allPriors.filter { !excluded.contains($0.id) }
+        for prior in allPriors.sorted(by: { $0.year < $1.year }) where excluded.contains(prior.id) {
+            lines.append(Line(text: "\(prior.year) \(prior.offense) (not proven; not counted)", points: 0))
+        }
+        // Only the most serious conviction from any one session of court counts.
+        var bestInSession: [String: UUID] = [:]
+        for prior in priors {
+            guard let key = prior.sessionKey else { continue }
+            if let current = bestInSession[key], let other = priors.first(where: { $0.id == current }), other.points >= prior.points { continue }
+            bestInSession[key] = prior.id
+        }
         for prior in priors.sorted(by: { $0.year < $1.year }) {
             if habitualPredicates.contains(prior.id) {
                 lines.append(Line(text: "\(prior.year) \(prior.offense) (used to establish habitual felon status)", points: 0))
                 continue
             }
+            if let key = prior.sessionKey, bestInSession[key] != prior.id {
+                lines.append(Line(text: "\(prior.year) \(prior.offense) (same session as a more serious conviction; not counted)", points: 0))
+                continue
+            }
             lines.append(Line(text: "\(prior.year) \(prior.offense), \(prior.ncClass.shortLabel)", points: prior.points))
             points += prior.points
+        }
+        let lowered = Set(currentOffenses.map { $0.lowercased() })
+        if priors.contains(where: { !habitualPredicates.contains($0.id) && lowered.contains($0.offense.lowercased()) }) {
+            lines.append(Line(text: "All elements of the present offense are included in a prior offense", points: 1))
+            points += 1
         }
         if onSupervision {
             lines.append(Line(text: "Offense committed while on probation, parole, or post-release supervision", points: 1))

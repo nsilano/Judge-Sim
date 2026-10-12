@@ -67,6 +67,10 @@ struct Witness: Identifiable, Codable, Hashable {
     var direct: [String]
     var cross: [String]
     var weight: Int
+    /// Ordinary eyewitness rather than an officer or expert. Optional for older saves.
+    var lay: Bool? = nil
+    /// The defendant, testifying in their own defense.
+    var isDefendant: Bool? = nil
 }
 
 struct Objection: Identifiable, Codable, Hashable {
@@ -160,6 +164,59 @@ enum PublicMood: String, Codable, Hashable {
     }
 }
 
+enum VictimStance: String, Codable, Hashable {
+    case wantsMaximum, wantsAccountability, wantsLeniency, none
+}
+
+enum TreatmentNeed: String, Codable, Hashable {
+    case none, substance, mentalHealth, both
+
+    var substance: Bool { self == .substance || self == .both }
+    var mentalHealth: Bool { self == .mentalHealth || self == .both }
+}
+
+/// Facts outside the trial record that counsel know about and the judge can ask about.
+struct CaseBackground: Codable, Hashable {
+    var pleaOffer: String?
+    var pleaRejection: String?
+    var custodyDays: Int
+    var bondStatus: String
+    var restitution: Int
+    var restitutionBasis: String?
+    var victimStance: VictimStance
+    var victimStanceDetail: String
+    var treatmentNeed: TreatmentNeed
+    var treatmentDetail: String?
+    var treatmentBedAvailable: Bool
+    var employmentPlan: String?
+    var indigent: Bool
+    var supportPeople: String?
+    var willTestify: Bool
+    var discoveryIssue: String?
+    var stateObjectsToASR: Bool
+    var hiddenMitigator: String?
+    var hiddenAggravator: String?
+    var attorneyFeeEstimate: Int
+    // Plea arrangement presented to the court (optional for older saves).
+    var arrangementPresented: Bool?
+    var arrangementLawID: String?
+    var arrangementTerms: String?
+    /// nil: no habitual indictment. true: status admitted. false: indictment dismissed.
+    var arrangementHabitual: Bool?
+    /// Whether the State served 30 days' notice of the probation point and aggravating factors (G.S. 15A-1340.16(a6)).
+    var probationPointNotice: Bool?
+    /// A prior conviction the defense disputes, and why.
+    var disputedPriorID: UUID?
+    var disputedPriorReason: String?
+    /// Whether the State joins a motion for conditional discharge under G.S. 15A-1341(a4).
+    var stateJoinsDischarge: Bool?
+    /// What the district court imposed before the defendant appealed for a trial de novo.
+    var districtCourtSentence: String?
+    /// "bottom" (bottom of the presumptive range), "suspended", or "open" sentencing.
+    var arrangementKind: String?
+    var stateConsentsNoContest: Bool?
+}
+
 /// What actually happened. The player never sees this directly; it may surface later in the news.
 struct HiddenTruth: Codable, Hashable {
     var actuallyGuilty: Bool
@@ -202,8 +259,24 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var mediaAttention: Int
     var truth: HiddenTruth
     var relatedDoctrines: [String]
+    /// Optional so cases saved by earlier builds still load.
+    var background: CaseBackground?
+    /// Identifies the exact scenario so it is never repeated in a career.
+    var scenarioSignature: String?
+    /// What the defendant would say if they chose to testify.
+    var defendantTestimony: Witness?
 
     var caption: String { "State of North Carolina v. \(defendant.name)" }
+
+    /// The allocution, adjusted so a defendant who pleaded guilty doesn't protest innocence or cite an appeal.
+    func allocution(afterPlea: Bool) -> String {
+        guard afterPlea else { return allocution }
+        let lower = allocution.lowercased()
+        if lower.contains("didn't do it") || lower.contains("pending appeal") || lower.contains("innocent") {
+            return "\(defendant.lastName): \"I pleaded guilty because I'm guilty, Your Honor. I'm not going to stand here and make excuses. I'm sorry.\""
+        }
+        return allocution
+    }
 
     func evidence(_ id: UUID?) -> Evidence? {
         guard let id else { return nil }

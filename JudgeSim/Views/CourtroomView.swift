@@ -5,6 +5,7 @@ struct CourtroomView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var session: CaseSession
     @State private var showLibrary = false
+    @State private var showCounsel = false
     @State private var confirmRecess = false
 
     init(courtCase: CourtCase, judgeName: String, county: County) {
@@ -18,6 +19,10 @@ struct CourtroomView: View {
                     VStack(spacing: 16) {
                         StageTracker(stages: session.visibleStages, current: session.stage)
                             .id("top")
+
+                        if session.stage != .judgment {
+                            CounselPrompt(available: session.unaskedCount) { showCounsel = true }
+                        }
 
                         switch session.stage {
                         case .briefing:
@@ -53,25 +58,34 @@ struct CourtroomView: View {
             .toolbar {
                 if session.stage != .judgment {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Recess") { confirmRecess = true }
+                        Button {
+                            confirmRecess = true
+                        } label: {
+                            Label("Leave", systemImage: "chevron.left")
+                                .labelStyle(.titleAndIcon)
+                        }
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         showLibrary = true
                     } label: {
-                        Label("Law Library", systemImage: "books.vertical.fill")
+                        Label("Laws", systemImage: "books.vertical.fill")
+                            .labelStyle(.titleAndIcon)
                     }
                 }
+            }
+            .sheet(isPresented: $showCounsel) {
+                CounselSheet(provider: session)
             }
             .sheet(isPresented: $showLibrary) {
                 LawLibraryView(highlightIDs: session.courtCase.relevantLawIDs, showsDoneButton: true)
             }
-            .confirmationDialog("Recess court?", isPresented: $confirmRecess, titleVisibility: .visible) {
-                Button("Recess (rulings so far are set aside)", role: .destructive) { dismiss() }
-                Button("Stay in session", role: .cancel) {}
+            .confirmationDialog("Leave the courtroom?", isPresented: $confirmRecess, titleVisibility: .visible) {
+                Button("Leave and start this case over later", role: .destructive) { dismiss() }
+                Button("Stay", role: .cancel) {}
             } message: {
-                Text("The case stays on the calendar. When court resumes, the hearing starts over.")
+                Text("The case stays on your calendar, but rulings you've made so far will not be saved.")
             }
         }
         .interactiveDismissDisabled()
@@ -87,14 +101,16 @@ struct StageTracker: View {
             ForEach(stages) { stage in
                 let reached = stage.rawValue <= current.rawValue
                 VStack(spacing: 4) {
-                    Image(systemName: stage.icon)
+                    Image(systemName: stage.rawValue < current.rawValue ? "checkmark" : stage.icon)
                         .font(.system(size: 13, weight: .semibold))
                         .frame(width: 30, height: 30)
                         .background(Circle().fill(reached ? Theme.gold : Color(.tertiarySystemFill)))
                         .foregroundStyle(reached ? Color.black : Color.secondary)
-                    Capsule()
-                        .fill(stage == current ? Theme.gold : Color.clear)
-                        .frame(width: 16, height: 3)
+                    Text(stage.shortTitle)
+                        .font(.system(size: 10, weight: stage == current ? .bold : .regular))
+                        .foregroundStyle(stage == current ? Color.primary : Color.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
                 .frame(maxWidth: .infinity)
                 .accessibilityLabel(stage.title)
@@ -107,7 +123,13 @@ struct StageTracker: View {
 
 struct BriefingStage: View {
     @ObservedObject var session: CaseSession
+    @State private var showColloquy = false
     private var c: CourtCase { session.courtCase }
+
+    private var deNovoNote: [String] {
+        guard c.court == .misdemeanorAppeal, let sentence = c.background?.districtCourtSentence else { return [] }
+        return ["District court judgment: \(sentence). On a trial de novo you may impose any lawful sentence, including a harsher one."]
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -145,7 +167,7 @@ struct BriefingStage: View {
             }
 
             SectionTitle(text: "Procedural posture", icon: "doc.plaintext")
-            BulletList(items: c.proceduralNotes, symbol: "circle.fill")
+            BulletList(items: c.proceduralNotes + deNovoNote, symbol: "circle.fill")
                 .font(.callout)
                 .card()
 
@@ -172,7 +194,69 @@ struct BriefingStage: View {
             .font(.callout)
             .card()
 
-            PrimaryButton(title: c.motions.isEmpty ? "Call the Case for Trial" : "Hear Pretrial Motions") {
+            if session.pleaPresented, let terms = c.background?.arrangementTerms {
+                SectionTitle(text: "Plea arrangement", icon: "signature")
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("The State and the defense present a negotiated plea for your approval.")
+                        .font(.callout.weight(.semibold))
+                    Text(terms).font(.callout)
+                    Text("If you accept, the case goes straight to sentencing and you may impose whatever sentence you choose. If you reject it, the case goes to trial.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if session.rulings.pleaWithdrawn {
+                        Label(session.pleaWithdrawalNote ?? "The defendant withdrew the plea. The case will be tried.", systemImage: "arrow.uturn.backward.circle.fill")
+                            .font(.callout)
+                            .foregroundStyle(.orange)
+                    } else if session.rulings.pleaAccepted == false {
+                        Label("You rejected the plea. The case will be tried.", systemImage: "xmark.circle.fill")
+                            .font(.callout)
+                            .foregroundStyle(.orange)
+                    } else {
+                        HStack(spacing: 10) {
+                            Button {
+                                Haptics.tap()
+                                showColloquy = true
+                            } label: {
+                                Label("Take the plea", systemImage: "checkmark.seal.fill")
+                                    .font(.subheadline.weight(.bold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(RoundedRectangle(cornerRadius: 12).fill(Theme.gold))
+                                    .foregroundStyle(Color.black)
+                            }
+                            .buttonStyle(.plain)
+                            Button {
+                                Haptics.tap()
+                                session.rejectPlea()
+                            } label: {
+                                Label("Reject, go to trial", systemImage: "xmark")
+                                    .font(.subheadline.weight(.bold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemFill)))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                .card(tint: Theme.gold)
+            }
+
+            Color.clear.frame(height: 0)
+                .sheet(isPresented: $showColloquy) {
+                    PleaColloquySheet(session: session) { kind in
+                        showColloquy = false
+                        Haptics.gavel()
+                        session.acceptPlea(kind: kind)
+                    } onReject: {
+                        showColloquy = false
+                        session.rejectPlea()
+                    }
+                }
+
+            PrimaryButton(title: c.motions.isEmpty ? "Start the Trial" : "Go to Pretrial Motions",
+                          enabled: !session.pleaPresented || session.rulings.pleaAccepted == false,
+                          hint: "Accept or reject the plea arrangement first.") {
                 session.advance()
             }
         }
@@ -308,9 +392,10 @@ struct MotionsStage: View {
                            selection: session.motionBinding(motion))
             }
 
-            PrimaryButton(title: session.dismissedBySpeedyTrial ? "Enter Order of Dismissal" : "Proceed to Trial",
+            PrimaryButton(title: session.dismissedBySpeedyTrial ? "Dismiss the Case" : "Start the Trial",
                           icon: session.dismissedBySpeedyTrial ? "xmark.seal.fill" : "chevron.right",
-                          enabled: session.motionsComplete) {
+                          enabled: session.motionsComplete,
+                          hint: "Grant or deny every motion to continue.") {
                 Haptics.gavel()
                 session.advance()
             }
@@ -340,14 +425,10 @@ struct MotionCard: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack { ForEach(motion.doctrineIDs, id: \.self) { LawLink(lawID: $0) } }
             }
-            RulingPicker(first: "Allow", second: "Deny", selection: $selection)
-            if selection == true {
-                Text(motion.kind == .dismissSpeedyTrial
-                     ? "All charges will be dismissed."
-                     : "This evidence will not be admitted at trial.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            RulingPicker(first: "Grant", second: "Deny",
+                         firstDetail: motion.kind == .dismissSpeedyTrial ? "Case is dismissed" : "Evidence is excluded",
+                         secondDetail: motion.kind == .dismissSpeedyTrial ? "Case goes forward" : "Evidence comes in",
+                         selection: $selection)
         }
         .card(tint: selection == nil ? nil : Theme.gold)
     }
@@ -361,5 +442,117 @@ struct MotionCard: View {
             }
         }
         .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+
+// MARK: - Plea colloquy (G.S. 15A-1022)
+
+struct PleaColloquySheet: View {
+    @ObservedObject var session: CaseSession
+    let onAccept: (PleaKind) -> Void
+    let onReject: () -> Void
+    @State private var kind: PleaKind = .guilty
+    @State private var asked = 0
+    @Environment(\.dismiss) private var dismiss
+
+    private var c: CourtCase { session.courtCase }
+
+    private struct Exchange {
+        let question: String
+        let answer: String
+    }
+
+    private var exchanges: [Exchange] {
+        let dl = c.defendant.lastName
+        var rng = SeededRNG(seed: c.seed ^ 0x1022)
+        let lawTitle = c.background?.arrangementLawID.map { LawLibrary.law($0).title } ?? "the charge"
+        let hesitant = !c.truth.actuallyGuilty && rng.chance(0.5)
+        let noncitizen = rng.chance(0.12)
+        var list = [
+            Exchange(question: "Do you understand that you have the right to remain silent, and that anything you say may be used against you?",
+                     answer: "\(dl): \"Yes, Your Honor.\""),
+            Exchange(question: "Do you understand that by pleading you give up your right to a trial, to confront the witnesses against you, and to make the State prove your guilt beyond a reasonable doubt?",
+                     answer: "\(dl): \"Yes.\""),
+            Exchange(question: "Do you understand that the charge is \(lawTitle), and that the maximum possible punishment is \(session.pleaMaximumText)?",
+                     answer: "\(dl): \"Yes, Your Honor. My lawyer went over that.\""),
+            Exchange(question: "If you are not a citizen of the United States, do you understand this plea may result in deportation, exclusion from admission, or denial of naturalization?",
+                     answer: noncitizen
+                        ? "\(dl): \"Yes. I'm a permanent resident. My lawyer had me talk to an immigration attorney first.\""
+                        : "\(dl): \"I'm a citizen, Your Honor. But yes, I understand.\""),
+            Exchange(question: "Has anyone promised you anything or threatened you in any way to cause you to enter this plea against your wishes, other than the terms of the arrangement?",
+                     answer: "\(dl): \"No, Your Honor.\""),
+            Exchange(question: "Are you satisfied with your lawyer's services?",
+                     answer: "\(dl): \"Yes.\""),
+            Exchange(question: "What is the State's factual basis for the plea?",
+                     answer: "\(c.prosecutor): \"\(c.summary)\"")
+        ]
+        list.append(Exchange(question: "Are you in fact guilty?",
+                             answer: hesitant
+                                ? "\(dl) looks at counsel for a long moment. \"I... I didn't do it the way they say. But I can't risk a trial.\" Defense counsel asks whether the court will accept an Alford plea."
+                                : "\(dl): \"Yes, Your Honor.\""))
+        return list
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Before accepting a plea, the judge must address the defendant personally in open court (G.S. 15A-1022).")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    ForEach(Array(exchanges.prefix(asked).enumerated()), id: \.offset) { _, exchange in
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Court: \(exchange.question)").font(.callout.weight(.semibold))
+                            Text(exchange.answer).font(.system(.callout, design: .serif)).italic()
+                        }
+                        .card()
+                    }
+                    if asked < exchanges.count {
+                        Button {
+                            Haptics.tap()
+                            withAnimation(.snappy) { asked += 1 }
+                        } label: {
+                            Label(asked == 0 ? "Begin the colloquy" : "Next question", systemImage: "text.bubble.fill")
+                                .font(.subheadline.weight(.bold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemFill)))
+                        }
+                        .buttonStyle(.plain)
+                        Button("Skip to the end") { withAnimation { asked = exchanges.count } }
+                            .font(.caption)
+                    } else {
+                        Text("Form of the plea").font(.headline)
+                        ForEach(PleaKind.allCases, id: \.self) { option in
+                            ChoiceRow(title: option.label,
+                                      subtitle: option.detail + (option == .noContest
+                                        ? (c.background?.stateConsentsNoContest == true ? " The State consents." : " The State does not consent.")
+                                        : ""),
+                                      selected: kind == option) {
+                                kind = option
+                            }
+                        }
+                        PrimaryButton(title: "Accept the Plea", icon: "checkmark.seal.fill", enabled: true, hint: nil) {
+                            onAccept(kind)
+                        }
+                        Button(role: .destructive) {
+                            onReject()
+                        } label: {
+                            Text("Reject the plea and set the case for trial").frame(maxWidth: .infinity)
+                        }
+                        .padding(.top, 4)
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Plea Colloquy")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
+                }
+            }
+        }
     }
 }

@@ -32,7 +32,7 @@ struct OnboardingView: View {
                     .padding(.top, 48)
                 Text("Judge Sim")
                     .font(.system(size: 44, weight: .bold, design: .serif))
-                Text("You have been appointed Resident Superior Court Judge for Hollis County, North Carolina. Defendants in your courtroom have waived their right to a jury, so the facts, the law, and the sentence are yours to decide.")
+                Text("You have been elected Resident Superior Court Judge for Hollis County, North Carolina. Defendants in your courtroom have waived their right to a jury, so the facts, the law, and the sentence are yours to decide.")
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
 
@@ -85,7 +85,7 @@ struct OnboardingView: View {
 
 struct ChambersView: View {
     @EnvironmentObject private var game: GameState
-    @State private var activeCase: CourtCase?
+    @State private var activeItem: DocketItem?
 
     var body: some View {
         NavigationStack {
@@ -118,10 +118,19 @@ struct ChambersView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Chambers")
-            .fullScreenCover(item: $activeCase) { courtCase in
+            .fullScreenCover(item: $activeItem) { item in
                 if let county = game.county, let judgeName = game.judgeName {
-                    CourtroomView(courtCase: courtCase, judgeName: judgeName, county: county)
-                        .environmentObject(game)
+                    switch item {
+                    case .trial(let courtCase):
+                        CourtroomView(courtCase: courtCase, judgeName: judgeName, county: county)
+                            .environmentObject(game)
+                    case .hearing(let hearing):
+                        HearingView(hearing: hearing, judgeName: judgeName, county: county)
+                            .environmentObject(game)
+                    case .calendar(let call):
+                        CalendarCallView(call: call)
+                            .environmentObject(game)
+                    }
                 }
             }
         }
@@ -148,9 +157,24 @@ struct ChambersView: View {
 
     private var docketCard: some View {
         let next = game.currentCase
+        let hearing = game.currentHearing
+        let calendar = game.currentCalendar
         return VStack(alignment: .leading, spacing: 12) {
             SectionTitle(text: "Today's calendar", icon: "calendar")
-            if let next {
+            if let calendar {
+                Text("Administrative session").font(.caption.monospaced()).foregroundStyle(.secondary)
+                Text("Calendar call").font(.system(.title3, design: .serif).weight(.bold))
+                Text("\(calendar.matters.count) matters: " + calendar.matters.map { $0.kind.label.lowercased() }.joined(separator: ", "))
+                    .font(.callout)
+            } else if let hearing {
+                Text("\(hearing.probation.docket) · Probation violation").font(.caption.monospaced()).foregroundStyle(.secondary)
+                Text("State v. \(hearing.personName)").font(.system(.title3, design: .serif).weight(.bold))
+                Text("Violation report: \(hearing.violations.count) alleged violation\(hearing.violations.count == 1 ? "" : "s")")
+                    .font(.callout)
+                Label("You placed this person on probation.", systemImage: "arrow.uturn.left")
+                    .font(.caption)
+                    .foregroundStyle(.purple)
+            } else if let next {
                 Text("\(next.docket) · \(next.court.label)").font(.caption.monospaced()).foregroundStyle(.secondary)
                 Text(next.caption).font(.system(.title3, design: .serif).weight(.bold))
                 Text(next.charges.map { $0.law.title }.joined(separator: " · "))
@@ -165,9 +189,9 @@ struct ChambersView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
-            PrimaryButton(title: next == nil ? "Call the Next Case" : "Resume", icon: "hammer.fill") {
+            PrimaryButton(title: next == nil && hearing == nil && calendar == nil ? "Call the Next Case" : "Resume Where You Left Off", icon: "hammer.fill") {
                 Haptics.gavel()
-                activeCase = game.docketCase()
+                activeItem = game.nextDocketItem()
             }
         }
         .card(tint: Theme.gold)
@@ -253,14 +277,33 @@ struct RecordsView: View {
     private var casesSection: some View {
         Section {
             HStack {
-                stat("\(game.casesHeard)", "Cases")
+                stat("\(game.trialsHeard)", "Cases")
                 Spacer()
-                stat("\(game.history.filter { $0.outcome.contains("Guilty") }.count)", "Convictions")
+                stat("\(game.hearingsHeard)", "Hearings")
                 Spacer()
                 stat("\(game.people.filter { $0.status == .incarcerated }.count)", "In custody")
                 Spacer()
                 stat("\(game.people.filter { $0.status == .probation }.count)", "On probation")
             }
+        }
+        Section("Career ledger") {
+            let trials = game.history.filter { $0.resolvedKind == "trial" }
+            let s = game.stats
+            ledgerRow("Convictions", trials.filter { $0.outcome.contains("Guilty") || $0.outcome.contains("No contest") }.count)
+            ledgerRow("Acquittals and dismissals", trials.filter { $0.outcome.contains("Not guilty") || $0.outcome.contains("Dismissed") }.count)
+            ledgerRow("Guilty pleas", trials.filter { $0.outcome.contains("plea") }.count)
+            ledgerRow("Returning defendants", trials.filter(\.returningDefendant).count)
+            ledgerRow("Felony sentences below the presumptive range", s.belowPresumptive)
+            ledgerRow("Felony sentences within the presumptive range", s.withinPresumptive)
+            ledgerRow("Felony sentences above the presumptive range", s.abovePresumptive)
+            ledgerRow("Active sentences", s.activeSentences)
+            ledgerRow("Suspended sentences", s.suspendedSentences)
+            ledgerRow("Probation completed", s.probationCompleted)
+            ledgerRow("Probation revoked", s.probationRevoked)
+            ledgerRow("Released from custody", s.releasedFromPrison)
+            ledgerRow("Affirmed on appeal", trials.filter { $0.appealStatus == "Affirmed on appeal" }.count)
+            ledgerRow("Reversed or vacated on appeal", trials.filter { ($0.appealStatus ?? "").contains("New trial") || ($0.appealStatus ?? "").contains("vacated") }.count)
+            ledgerRow("Exonerations", s.exonerations)
         }
         Section("Docket history") {
             if game.history.isEmpty {
@@ -323,6 +366,14 @@ struct RecordsView: View {
                 }
                 .padding(.vertical, 2)
             }
+        }
+    }
+
+    private func ledgerRow(_ label: String, _ value: Int) -> some View {
+        HStack {
+            Text(label).font(.callout)
+            Spacer()
+            Text("\(value)").font(.callout.monospacedDigit().weight(.semibold))
         }
     }
 
