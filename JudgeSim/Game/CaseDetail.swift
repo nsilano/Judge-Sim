@@ -52,13 +52,106 @@ struct InvestigationReport: Codable, Hashable {
     var lab: [String]
     /// Steps not taken: the gaps both sides will argue about.
     var notDone: [String]
+    /// The fixed facts of the case: when, where, and in what order things happened. Optional for older saves.
+    var facts: CaseFactSheet? = nil
 }
+
+/// The one place a case's dates, times, and places are decided, so every witness, report, and exhibit agrees.
+struct CaseFactSheet: Codable, Hashable {
+    var setting: CaseSetting
+    /// The day of the incident (for records cases, the day the complaint came in).
+    var incident: Date
+    /// Clock time of the incident, such as "11:40 p.m.". Nil when there was no single moment.
+    var time: String?
+    /// Where it happened, as a phrase: "outside The Lantern Row Tavern on Harbor Street in Wexley".
+    var place: String
+    var street: String
+    var town: String
+    /// When the first officer arrived or made the stop.
+    var arrivalTime: String?
+    /// When the lead investigator took the case.
+    var assigned: Date
+    var arrest: Date
+    /// When the defendant was interviewed, if they agreed to talk.
+    var interview: Date?
+    var labSubmitted: Date?
+    var labReturned: Date?
+    /// Who handled the case.
+    var agency: String
+    var lead: String
+    var firstOfficer: String
+
+    var day: String { CaseDates.day(incident) }
+    var when: String { time.map { "\(day), at about \($0)" } ?? day }
+}
+
+/// Formats dates the way people say them in court.
+enum CaseDates {
+    static func day(_ date: Date) -> String { date.formatted(.dateTime.month(.wide).day()) }
+    static func dayYear(_ date: Date) -> String { date.formatted(.dateTime.month(.wide).day().year()) }
+    static func add(_ days: Int, to date: Date) -> Date { Calendar.current.date(byAdding: .day, value: days, to: date) ?? date }
+    static func days(from a: Date, to b: Date) -> Int { Calendar.current.dateComponents([.day], from: a, to: b).day ?? 0 }
+}
+
+/// Clock times written like "11:40 p.m.".
+enum Clock {
+    static func minutes(_ time: String) -> Int? {
+        let lower = time.lowercased()
+        let pm = lower.contains("p.m")
+        let digits = lower.components(separatedBy: CharacterSet(charactersIn: "0123456789:").inverted).joined()
+        let parts = digits.split(separator: ":").compactMap { Int($0) }
+        guard let hour = parts.first else { return nil }
+        let minute = parts.count > 1 ? parts[1] : 0
+        var h = hour % 12
+        if pm { h += 12 }
+        return h * 60 + minute
+    }
+
+    static func format(_ total: Int) -> String {
+        let m = ((total % 1440) + 1440) % 1440
+        let h24 = m / 60
+        let h12 = h24 % 12 == 0 ? 12 : h24 % 12
+        return "\(h12):\(String(format: "%02d", m % 60)) \(h24 < 12 ? "a.m." : "p.m.")"
+    }
+
+    static func shift(_ time: String, by delta: Int) -> String {
+        guard let m = minutes(time) else { return time }
+        return format(m + delta)
+    }
+
+    /// "night", "evening", "morning", or "afternoon".
+    static func partOfDay(_ time: String?) -> String {
+        guard let time, let m = minutes(time) else { return "day" }
+        switch m {
+        case 0..<300, 1260..<1440: return "night"
+        case 300..<720: return "morning"
+        case 720..<1020: return "afternoon"
+        default: return "evening"
+        }
+    }
+}
+
+
 
 // MARK: - Defendant profiles
 
 enum DefendantProfiles {
 
     private static let employersByKeyword: [(String, [String])] = [
+        ("high school", ["Hollis County High School"]),
+        ("student", ["Hollis Community College", "East Carolina University"]),
+        ("police", ["Port Hollis Police Department"]),
+        ("council", ["Port Hollis City Council"]),
+        ("financial", ["Harbor Point Wealth Advisors", "Tidewater Financial Group"]),
+        ("bank", ["First Coastal Bank", "Tidewater Savings and Loan"]),
+        ("restaurant owner", ["self-owned restaurant"]),
+        ("restaurant", ["The Brickyard Grill", "Harbor House Seafood"]),
+        ("programmer", ["self-employed (freelance)"]),
+        ("it ", ["Hollis Regional Medical Center", "Pinewood Analytics", "Tidewater Freight Logistics"]),
+        ("payroll", ["Tidewater Freight Logistics", "Harborview Distribution Center"]),
+        ("store", ["Marlowe Boulevard Home Goods", "Cane Creek Hardware"]),
+        ("caregiver", ["Cane Creek Home Care", "self-employed"]),
+        ("treasurer", ["Ashby & Greer, CPAs"]),
         ("nurs", ["Hollis Regional Medical Center", "Bayard Rehabilitation and Nursing", "Cane Creek Home Care"]),
         ("health", ["Cane Creek Home Care", "Hollis Regional Medical Center"]),
         ("dental", ["Wexley Family Dentistry"]),
@@ -106,7 +199,13 @@ enum DefendantProfiles {
         let unemployed = lower.contains("unemployed")
         let student = lower.contains("student")
 
-        if !unemployed {
+        let retired = lower.hasPrefix("retired ")
+        if retired {
+            let base = String((occupation.components(separatedBy: ",").first ?? occupation).dropFirst("retired ".count))
+            let left = currentYear - rng.int(2...8)
+            jobs.append(Job(title: base.capitalizedFirst, employer: employer(for: base, rng: &rng),
+                            years: "\(left - rng.int(12...25))–\(left) (retired)", current: false))
+        } else if !unemployed {
             let base = occupation.components(separatedBy: ",").first ?? occupation
             let years = max(1, min(defendant.age - 17, rng.int(1...12)))
             jobs.append(Job(title: base.capitalizedFirst, employer: employer(for: base, rng: &rng),
@@ -118,7 +217,7 @@ enum DefendantProfiles {
             }
         }
         var start = currentYear - (jobs.first.map { _ in rng.int(2...12) } ?? rng.int(1...3))
-        for _ in 0..<rng.int(1...2) where defendant.age > 22 {
+        for _ in 0..<rng.int(1...2) where defendant.age > 22 && !retired {
             let length = rng.int(1...4)
             let past = rng.pick(pastJobs)
             jobs.append(Job(title: past.capitalizedFirst, employer: employer(for: past, rng: &rng),
@@ -149,144 +248,540 @@ enum DefendantProfiles {
         ])
         let income: String
         if unemployed { income = "No reported income." }
+        else if retired { income = "Retirement income of about $\(rng.int(24...52)),000 a year." }
         else if student { income = "Part-time income under $12,000 a year." }
         else { income = "Reported income about $\(rng.int(18...68)),000 a year." }
         return DefendantProfile(jobs: jobs, education: education, family: family, residence: residence, income: income)
     }
 }
 
+
 // MARK: - Investigation reports
 
 enum Investigations {
 
+    /// A step the investigation skipped, and how the defense raises it with the lead investigator.
     struct Gap {
         let finding: String
         let question: String
         let answer: String
-        let paper: Bool
     }
 
-    static let gaps: [Gap] = [
-        Gap(finding: "Surveillance video from a business across the street was requested late and had already been recorded over.",
-            question: "You never got the video from the business across the street, did you?",
-            answer: "We requested it. By the time we followed up, it had been recorded over.", paper: false),
-        Gap(finding: "No fingerprints were lifted from the main point of contact.",
-            question: "Nobody dusted for fingerprints where it happened?",
-            answer: "No. In my judgment the surface wouldn't hold a usable print.", paper: false),
-        Gap(finding: "The neighborhood canvass reached only four houses.",
-            question: "Your canvass covered four houses. Out of how many on that block?",
-            answer: "About twenty. We prioritized the ones with a view.", paper: false),
-        Gap(finding: "A second phone found at the scene was never searched.",
-            question: "There was a second phone at the scene. Did anyone ever search it?",
-            answer: "No. We didn't think it was relevant at the time.", paper: false),
-        Gap(finding: "The first responding officer's notes were not preserved; only the typed report survives.",
-            question: "Where are the first officer's handwritten notes?",
-            answer: "They weren't kept. The typed report was written from them.", paper: false),
-        Gap(finding: "An anonymous tip naming a different person was logged but not followed up.",
-            question: "You got a tip naming someone else. What did you do with it?",
-            answer: "It was logged. We had already developed our suspect by then.", paper: false),
-        Gap(finding: "No forensic accountant reviewed the records before the earliest disputed year.",
-            question: "Nobody looked at the books before the first year you're alleging, did they?",
-            answer: "No. We focused on the period where the losses showed up.", paper: true),
-        Gap(finding: "Other employees with the same system access were never interviewed.",
-            question: "How many other people had access to that system? Did you talk to any of them?",
-            answer: "Several did. We interviewed two.", paper: true),
-        Gap(finding: "The defendant's own explanation of the transactions was never checked against company emails.",
-            question: "You never searched the company email for the approvals my client says exist?",
-            answer: "We asked the company for them. They said there weren't any.", paper: true)
+    /// A kind of gap, written with tokens so it reads differently case to case.
+    private struct GapSeed {
+        var settings: Set<CaseSetting> = []
+        var origins: Set<CaseOrigin> = []
+        /// One of these words must appear in the case (empty means any).
+        var needs: [String] = []
+        /// None of these words may appear in the case.
+        var unless: [String] = []
+        /// Only when who did it is in dispute.
+        var identity = false
+        let findings: [String]
+        let questions: [String]
+        /// Any answer must fit any of the questions.
+        let answers: [String]
+    }
+
+    private static let gapSeeds: [GapSeed] = [
+        // Scenes
+        GapSeed(settings: [.scene], origins: [.call, .report], unless: ["surveillance", "footage", "camera"],
+                findings: ["Surveillance video from {NEARBY} was requested {N} days later and had already been recorded over.",
+                           "No one collected camera footage from {NEARBY}, which faces {STREET}.",
+                           "A doorbell camera across {STREET} was noted in the canvass, but the footage was never downloaded."],
+                questions: ["There was a camera at {NEARBY}. Where's that footage?",
+                            "You never got the video from {NEARBY}, did you?",
+                            "Who was responsible for collecting the camera footage near {STREET}?"],
+                answers: ["We asked for it. By the time we followed up, the system had recorded over it.",
+                          "That one slipped. The request went out late and the footage was gone.",
+                          "I noted the camera. Getting the footage didn't happen in time, and I regret that."]),
+        GapSeed(settings: [.scene], identity: true,
+                findings: ["No fingerprints were lifted from {SURFACE}.", "{SURFACE} was never processed for prints or touch DNA."],
+                questions: ["Nobody processed {SURFACE} for fingerprints?", "Did anyone swab or dust {SURFACE}?",
+                            "If {DL} touched {SURFACE}, you'd have prints. Did you even look?"],
+                answers: ["No. In my judgment the surface wouldn't hold a usable print.",
+                          "It wasn't done. The technician thought the surface was too rough.",
+                          "No, and I can't tell you today what it would have shown."]),
+        GapSeed(settings: [.scene], origins: [.call], identity: true,
+                findings: ["The neighborhood canvass reached {N} of about {M} homes and businesses on {STREET}.",
+                           "Officers knocked on {N} doors on {STREET}, then stopped the canvass that night."],
+                questions: ["Your canvass covered {N} doors. Out of how many?", "Why did the canvass stop at {N} doors?",
+                            "So most of {STREET} was never asked what they saw?"],
+                answers: ["About {M}. We prioritized the ones with a view.",
+                          "We went back the next day for a few. Not all of them.",
+                          "We talked to the people closest to it. I won't say it was every door."]),
+        GapSeed(settings: [.scene], origins: [.call], needs: ["phone"],
+                findings: ["A second phone found near {PLACESHORT} was booked into property and never searched."],
+                questions: ["There was a second phone. Did anyone ever search it?", "Whose phone was the second one found that night?"],
+                answers: ["We never established that. It wasn't searched.", "No. We didn't think it was relevant at the time."]),
+        GapSeed(settings: [.scene, .drugs, .road], origins: [.call, .stop],
+                findings: ["{OFF}'s handwritten notes from that night were not kept; only the typed report survives.",
+                           "The first officer's field notes were discarded after the typed report was written."],
+                questions: ["Where are the first officer's handwritten notes?", "The notes written that night are gone, aren't they?"],
+                answers: ["They weren't kept. The typed report was written from them.",
+                          "Department practice at the time was to discard them once the report was typed. That's changed since."]),
+        GapSeed(settings: [.scene, .drugs], identity: true,
+                findings: ["A Crime Stoppers tip naming {ALT} was logged on {TIPDAY} and never followed up.",
+                           "An anonymous caller named {ALT}; the tip sheet shows no follow-up."],
+                questions: ["You got a tip naming {ALT}. What did you do with it?", "Did anyone ever knock on {ALT}'s door?",
+                            "Who is {ALT}, and why didn't you find out?"],
+                answers: ["It was logged. We had already developed our suspect by then.",
+                          "We ran the name. Nothing in it lined up, so we didn't go further.",
+                          "No one interviewed {ALT}. In hindsight we should have."]),
+        GapSeed(settings: [.scene], needs: ["gun", "pistol", "shot", "firearm", "rifle"],
+                findings: ["Gunshot residue samples were never taken from {DL}'s hands or anyone else present.",
+                           "No gunshot residue kit was collected that night."],
+                questions: ["No one tested anyone's hands for gunshot residue?", "Why wasn't a GSR kit collected?"],
+                answers: ["The lab stopped analyzing GSR kits for most cases years ago, so we don't routinely collect them.",
+                          "It wasn't done. By the time we had a suspect, too much time had passed."]),
+        GapSeed(settings: [.scene], origins: [.call], needs: ["911"],
+                findings: ["The full 911 audio was never requested; only the CAD printout is in the file."],
+                questions: ["Did you ever listen to the 911 call itself?", "The file has a CAD printout. Where's the audio?"],
+                answers: ["I read the CAD notes. I didn't pull the audio.", "We have the dispatcher's summary. The recording wasn't requested."]),
+        GapSeed(settings: [.scene], needs: ["lineup", "photo array", "identif"],
+                findings: ["The photo lineup was run by an officer who knew which photo was {DL}'s."],
+                questions: ["The officer who ran the lineup knew who the suspect was, didn't they?",
+                            "Was the lineup administered blind, as the Eyewitness Identification Reform Act requires?"],
+                answers: ["It wasn't a blind administrator. We used a folder shuffle instead.",
+                          "The officer knew. The procedure we used is an allowed alternative under the statute."]),
+        // Roads
+        GapSeed(settings: [.road], needs: ["breath", "blew", "intoxilyzer"],
+                findings: ["The 15-minute observation period before the breath test is logged only as a start and end time.",
+                           "No one documented who watched {DL} during the observation period before the Intoxilyzer test."],
+                questions: ["Who watched {DL} for the fifteen minutes before the breath test?",
+                            "Can you tell the court {DL} didn't belch or put anything in their mouth during the observation period?",
+                            "The observation period is two times on a form. That's all, isn't it?"],
+                answers: ["The operator did. It's documented by the start and end times, which is what the form calls for.",
+                          "I wasn't the operator. The form shows the period was observed.",
+                          "The times are on the form. Beyond that I'd be guessing."]),
+        GapSeed(settings: [.road], needs: ["blood"],
+                findings: ["Blood was drawn about {HOURS} hours after the crash, and no one calculated what the level would have been at the time of driving.",
+                           "No retrograde extrapolation was done to relate the blood result back to the time of the crash."],
+                questions: ["The blood was drawn {HOURS} hours later. What was {DL}'s level at the time of driving?",
+                            "Nobody did a retrograde extrapolation, did they?", "Why did the blood draw take {HOURS} hours?"],
+                answers: ["The draw waited on the search warrant and the hospital. No extrapolation was requested.",
+                          "I can't give you a number at the time of driving. The lab result is what it is at the time of the draw.",
+                          "We got the warrant as fast as we could on a holiday weekend. That's how long it took."]),
+        GapSeed(settings: [.road], needs: ["walk-and-turn", "field sobriety", "sobriety", "hgn", "one-leg", "impair", "weaving"], unless: ["blood"],
+                findings: ["The field sobriety tests were given on the sloped shoulder of {ROADNAME}, in {LIGHT}.",
+                           "The dash camera does not show the walk-and-turn test; {DL} was off-frame."],
+                questions: ["Where exactly did you give the walk-and-turn test?", "The camera never shows the field tests, does it?",
+                            "You'd agree a sloped shoulder at night isn't a standardized testing surface?"],
+                answers: ["On the shoulder. It was the safest flat-ish spot available.",
+                          "Part of it is off-frame. I wrote down what I saw.",
+                          "It wasn't ideal. The clues I saw weren't about balance on a slope."]),
+        GapSeed(settings: [.road], needs: ["crash", "struck", "collision", "rear-ended", "hit"],
+                findings: ["The airbag control module (the car's \"black box\") was never downloaded.",
+                           "No one downloaded the crash data from either vehicle."],
+                questions: ["The car's event data recorder would show speed and braking. Did anyone pull it?",
+                            "Where's the black box data?"],
+                answers: ["It wasn't downloaded. The reconstruction relied on the scene measurements.",
+                          "We didn't have the equipment that night, and the vehicle was released before anyone went back."]),
+        GapSeed(settings: [.road], needs: ["crash", "struck", "collision", "killed", "pedestrian", "cyclist"],
+                findings: ["No one evaluated whether the other driver's speed, lighting, or conduct contributed to the crash.",
+                           "The other vehicle was never inspected for mechanical problems."],
+                questions: ["Did anyone look at what the other driver was doing?", "So the investigation assumed {DL} caused the crash from the start?"],
+                answers: ["The evidence put the cause on {DL}'s side of the road. We didn't go further than that.",
+                          "We looked at the scene. A full reconstruction of the other vehicle wasn't done."]),
+        GapSeed(settings: [.road], needs: ["bar", "tab", "drinks", "drinking"],
+                findings: ["No one interviewed the bartender or matched the receipts to the time {DL} left."],
+                questions: ["Did you ever talk to the bartender?", "When did {DL} actually leave the bar? Do you know?"],
+                answers: ["No. The receipts were enough for our purposes.", "We know when the tab was closed. Not exactly when {DL} walked out."]),
+        GapSeed(settings: [.road], origins: [.stop],
+                findings: ["The dash camera began recording only after the patrol car's blue lights were activated, so the driving that prompted the stop is not on video."],
+                questions: ["The driving you say you saw isn't on the video, is it?", "When did your camera start recording?"],
+                answers: ["It starts with the blue lights. The driving before that is my observation.",
+                          "The camera caught the stop. The weaving before it, no."]),
+        // Drugs
+        GapSeed(settings: [.drugs],
+                findings: ["The bags were never processed for fingerprints or DNA.", "No one swabbed the packaging to show who handled it."],
+                questions: ["Nobody printed or swabbed the bags, did they?", "How do you know {DL}'s hands ever touched that packaging?"],
+                answers: ["No. The lab doesn't process drug packaging for prints in a case like this.",
+                          "We rely on where it was found and who was there. The packaging wasn't swabbed."]),
+        GapSeed(settings: [.drugs],
+                findings: ["Only one of the {N} packages was chemically analyzed; the rest were weighed and described.",
+                           "The laboratory tested a single sample and weighed the rest in aggregate."],
+                questions: ["The lab tested one of {N} bags. The rest are assumptions, aren't they?", "How many of the bags were actually tested?"],
+                answers: ["One was analyzed. The others were consistent in appearance and weighed.",
+                          "That's the lab's sampling practice. I'd defer to the chemist on the rest."]),
+        GapSeed(settings: [.drugs], needs: ["passenger", "three people", "occupant", "others", "inside"],
+                findings: ["The other people present were released at the scene and never interviewed.",
+                           "No one else with access to the {CONTAINER} was ever questioned."],
+                questions: ["Other people had access. Did you interview any of them?", "Why were the others allowed to leave?"],
+                answers: ["Not formally. They weren't charged, and they left.", "We spoke to them briefly at the scene. That's all."]),
+        GapSeed(settings: [.drugs], needs: ["informant", "controlled buy", "controlled buys"],
+                findings: ["The confidential informant's payment and reliability records were not produced to the defense."],
+                questions: ["How much was your informant paid?", "What's your informant's own record?"],
+                answers: ["I'd have to check the file. The informant was paid per buy, which is standard.",
+                          "The informant has a record. That's often how informants come to us."]),
+        GapSeed(settings: [.drugs], needs: ["phone"],
+                findings: ["{DL}'s phone was seized but never searched for messages about sales."],
+                questions: ["You had the phone. Where are the texts showing sales?", "Did anyone get a warrant for the phone?"],
+                answers: ["We seized it. A warrant wasn't sought for its contents.", "It wasn't searched. We felt the physical evidence was enough."]),
+        // Records
+        GapSeed(settings: [.paper], needs: ["account", "invoice", "payroll", "deposit", "transfer", "ledger", "check"],
+                findings: ["No forensic review was done of the records before {EARLY}, the first year charged.",
+                           "Investigators reviewed only the months the complainant flagged."],
+                questions: ["Nobody looked at the books before {EARLY}, did they?", "You reviewed only the months they told you to?"],
+                answers: ["No. We focused on the period where the losses showed up.",
+                          "We started with what was flagged and followed the money from there. Earlier years weren't reviewed."]),
+        GapSeed(settings: [.paper], needs: ["login", "access", "admin", "system", "password", "employee", "staff"],
+                findings: ["Other employees with the same system access were never interviewed.",
+                           "Investigators never established who else knew the shared credentials."],
+                questions: ["How many other people had access to that system? Did you talk to them?",
+                            "Who else knew the password?"],
+                answers: ["Several did. We interviewed {FEW}.", "We didn't pin that down for everyone. The logins pointed to {DL}."]),
+        GapSeed(settings: [.paper], needs: ["approv", "advance", "authoriz", "board", "supervisor"],
+                findings: ["{DL}'s explanation of the transactions was never checked against internal email.",
+                           "No one searched the organization's email for the approvals {DL} says exist."],
+                questions: ["You never searched the email for the approvals my client says exist?",
+                            "Did anyone ask the board for its own records of what it approved?"],
+                answers: ["We asked the organization. They said there weren't any.",
+                          "We relied on what management gave us. We didn't image the mail server."]),
+        GapSeed(settings: [.paper], needs: ["ip", "login", "vpn", "server", "wallet", "online", "email", "account"],
+                findings: ["The internet provider's logs for the key dates were never subpoenaed.",
+                           "No one checked whether {DL}'s credentials had been phished or reused in a data breach."],
+                questions: ["Did anyone check whether my client's password had been stolen?",
+                            "The IP address is a household connection. Who else lived there?"],
+                answers: ["We found no sign of compromise. We didn't run a full breach search.",
+                          "Others could have used the connection. The activity matched {DL}'s devices, though."]),
+        GapSeed(settings: [.paper],
+                findings: ["Investigators worked from records the complainant chose to hand over; the full set was never subpoenaed.",
+                           "No independent accountant reviewed the State's totals before trial."],
+                questions: ["You worked from the records the complaining party gave you, didn't you?", "Did anyone outside your office check the totals?"],
+                answers: ["At first. We subpoenaed more once we had cause.", "No outside review. Our analyst's work was checked internally."])
     ]
 
-    private static let paperCategories: Set<LawCategory> = [.whiteCollar, .cyber]
+    // MARK: Building the file
 
-    static func make(t: CaseTemplate, values: [String: String], detective: CastMember, officer: CastMember,
-                     evidence: [Evidence], witnesses: [Witness], defendant: Defendant, charges: [Charge],
-                     year: Int, rng: inout SeededRNG) -> InvestigationReport {
-        let paper = paperCategories.contains(t.category)
-        let date = values["DATE"] ?? "the date in question"
-        let time = values["TIME"] ?? "night"
-        let street = values["STREET"] ?? "the scene"
-        let town = values["HOOD"] ?? "Port Hollis"
+    static func make(t: CaseTemplate, facts: CaseFacts, values: [String: String], incident: Date, sessionDate: Date,
+                     detective: CastMember, officer: CastMember, evidence: [Evidence], defendant: Defendant,
+                     charges: [Charge], victimName: String?, year: Int, rng: inout SeededRNG) -> (InvestigationReport, [Gap]) {
         let dl = defendant.lastName
+        let street = values["STREET"] ?? "Harbor Street"
+        let town = values["HOOD"] ?? "Port Hollis"
+        let time = facts.setting == .paper ? nil : values["TIME"]
         let state = evidence.filter { $0.side == .prosecution }
         let forensic = state.filter { $0.kind == .forensic }
-        let statement = state.first { $0.kind == .statement }
-        let abbreviation = detective.agency.split(separator: " ").compactMap { $0.first }.map(String.init).joined()
+        let statement = state.first { $0.kind == .statement && ($0.title.lowercased().contains("interview") || $0.title.lowercased().contains("confession") || $0.title.lowercased().contains("statement")) }
+            ?? state.first { $0.kind == .statement }
+        let collected = state.filter { $0.kind == .physical || $0.kind == .forensic }
+        let obtained = state.filter { $0.kind == .digital || $0.kind == .document || $0.kind == .video }
+        let place = placePhrase(values: values, facts: facts, street: street, town: town)
+        let abbreviation = detective.agency.split(separator: " ").compactMap { $0.first }.filter { $0.isLetter }.map(String.init).joined()
+        let latest = CaseDates.add(-21, to: sessionDate)
+        func clamp(_ d: Date) -> Date { min(d, latest) }
 
         var timeline: [InvestigationReport.Entry] = []
-        if paper {
-            timeline.append(.init(when: "\(date)", what: "Complaint received by \(detective.agency) from \(values["V"] ?? "the reporting party")."))
-            timeline.append(.init(when: "Week 1", what: "\(detective.display) assigned as lead investigator; preservation letters sent for bank and business records."))
-            timeline.append(.init(when: "Weeks 2–8", what: "Records obtained by subpoena and search warrant; transactions reconstructed."))
-        } else {
-            timeline.append(.init(when: "\(date), \(time)", what: "Hollis County 911 Communications receives a call reporting an incident near \(street) in \(town)."))
-            timeline.append(.init(when: "\(rng.int(4...14)) minutes later", what: "\(officer.display) arrives, secures the scene, and begins a bodycam recording."))
-            timeline.append(.init(when: "Same night", what: "Scene photographed and processed; \(state.filter { [.physical, .forensic].contains($0.kind) }.map(\.title).prefix(3).joined(separator: ", ").ifEmpty("no physical items")) collected."))
-            timeline.append(.init(when: "Next morning", what: "\(detective.display) assigned as lead investigator."))
+        var stamps: [Date] = []
+        func log(_ date: Date, _ entry: InvestigationReport.Entry) {
+            stamps.append(date)
+            timeline.append(entry)
         }
-        var day = 2
-        for item in state where item.kind == .digital || item.kind == .document || item.kind == .video {
-            day += rng.int(1...9)
-            timeline.append(.init(when: "Day \(day)", what: "\(item.title) obtained."))
-        }
-        if !forensic.isEmpty {
-            day += rng.int(2...6)
-            timeline.append(.init(when: "Day \(day)", what: "Items submitted to the State Crime Laboratory: \(forensic.map(\.title).joined(separator: ", "))."))
-        }
-        day += rng.int(3...20)
-        timeline.append(.init(when: "Day \(day)", what: statement != nil
-            ? "\(defendant.name) interviewed after Miranda warnings; the interview is recorded."
-            : "\(defendant.name) contacted; declined to give a statement and asked for a lawyer."))
-        day += rng.int(0...10)
-        timeline.append(.init(when: "Day \(day)", what: "\(defendant.name) arrested and charged with \(charges.map { $0.law.title }.joined(separator: ", "))."))
-        if !forensic.isEmpty {
-            timeline.append(.init(when: "Week \(rng.int(6...14))", what: "State Crime Laboratory results returned."))
+        let arrival = time.map { Clock.shift($0, by: facts.origin == .stop ? 0 : rng.int(4...14)) }
+        var assigned = CaseDates.add(1, to: incident)
+        var arrest: Date
+        var day = 1
+
+        // How it began
+        switch facts.origin {
+        case .records:
+            let reporter = victimName ?? organization(values) ?? "the reporting party"
+            assigned = CaseDates.add(rng.int(2...9), to: incident)
+            log(incident, .init(when: CaseDates.dayYear(incident), what: rng.pick([
+                "Complaint received by \(detective.agency) from \(reporter).",
+                "\(reporter.capitalizedFirst) reports suspected \(lossNoun(facts)) to \(detective.agency).",
+                "\(detective.agency) opens a file after \(reporter) brings in \(facts.money ? "account statements" : "records and screenshots")."])))
+            log(assigned, .init(when: CaseDates.day(assigned), what: "\(detective.display) assigned as lead investigator; preservation letters sent for \(facts.money ? "bank and business records" : "account, device, and provider records")."))
+            day = CaseDates.days(from: incident, to: assigned)
+            arrest = CaseDates.add(rng.int(45...150), to: incident)
+        case .stop:
+            log(incident, .init(when: "\(CaseDates.dayYear(incident)), \(time ?? "")",
+                                  what: "\(officer.display) \(stopNarrative(facts, street: street, town: town, values: values))"))
+            if !collected.isEmpty {
+                log(incident, .init(when: "\(CaseDates.day(incident)), \(Clock.shift(time ?? "12:00 a.m.", by: rng.int(10...25)))",
+                                      what: "\(collected.map(\.title).prefix(3).joined(separator: ", ")) \(collected.count == 1 ? "is" : "are") recovered from the vehicle and logged."))
+            }
+            if facts.impaired && facts.mentions(["breath", "blew", "intoxilyzer"]) {
+                log(incident, .init(when: "\(CaseDates.day(incident)), \(Clock.shift(time ?? "12:00 a.m.", by: rng.int(48...75)))",
+                                      what: "Breath test administered at the Hollis County Detention Center after a 15-minute observation period."))
+            }
+            arrest = incident
+            assigned = incident
+        case .warrant:
+            let opened = CaseDates.add(-rng.int(18...45), to: incident)
+            log(opened, .init(when: CaseDates.dayYear(opened), what: facts.setting == .drugs
+                ? rng.pick(["Narcotics investigation opens after neighbor complaints about short-stay traffic on \(street).",
+                            "\(detective.display) begins surveillance of a residence on \(street) in \(town)."])
+                : "\(detective.display) develops information tying a residence on \(street) in \(town) to the investigation."))
+            if facts.mentions(["controlled buy", "controlled buys"]) {
+                let firstBuy = CaseDates.add(rng.int(4...9), to: opened)
+                log(firstBuy, .init(when: CaseDates.day(firstBuy), what: "First controlled purchase by a confidential informant, recorded and field-tested."))
+                let secondBuy = CaseDates.add(-rng.int(3...6), to: incident)
+                log(secondBuy, .init(when: CaseDates.day(secondBuy), what: "Second controlled purchase."))
+            }
+            log(CaseDates.add(-1, to: incident), .init(when: CaseDates.day(CaseDates.add(-1, to: incident)), what: "Search warrant for the residence signed by a Superior Court judge."))
+            log(incident, .init(when: "\(CaseDates.day(incident)), \(time ?? "early morning")",
+                                  what: "Warrant executed at the residence on \(street). " + (collected.isEmpty ? "The house is searched." : "Seized: \(collected.map(\.title).prefix(3).joined(separator: ", ")).")))
+            assigned = opened
+            arrest = incident
+        case .report:
+            let reporter = victimName ?? "a member of the public"
+            let reportDay = CaseDates.add(rng.int(0...3), to: incident)
+            log(reportDay, .init(when: CaseDates.dayYear(reportDay), what: rng.pick([
+                "\(reporter.capitalizedFirst) reports the incident to \(detective.agency); \(officer.display) takes the initial report.",
+                "\(officer.display) takes a report from \(reporter) about events in \(town)."])))
+            assigned = CaseDates.add(rng.int(1...3), to: reportDay)
+            log(assigned, .init(when: CaseDates.day(assigned), what: "\(detective.display) assigned as lead investigator."))
+            day = CaseDates.days(from: incident, to: assigned)
+            arrest = CaseDates.add(rng.int(4...30), to: incident)
+        case .call:
+            log(incident, .init(when: "\(CaseDates.dayYear(incident)), \(time ?? "")",
+                                  what: "Hollis County 911 Communications receives a call reporting \(incidentNoun(facts, charges: charges)) \(place)."))
+            log(incident, .init(when: "\(CaseDates.day(incident)), \(arrival ?? "")",
+                                  what: "\(officer.display) arrives, " + rng.pick(["secures the scene, and starts a body-camera recording.",
+                                                                                 "checks on the people present, and calls for a supervisor.",
+                                                                                 "requests EMS, separates the witnesses, and keeps the body camera running."])))
+            if !collected.isEmpty {
+                log(incident, .init(when: "\(CaseDates.day(incident)), overnight",
+                                      what: "Scene photographed and processed; collected: \(collected.map(\.title).prefix(3).joined(separator: ", "))."))
+            }
+            let atScene = facts.setting == .road ? !facts.mentions(["didn't stop", "hit-and-run", "fled the scene", "drove away"]) : rng.chance(0.3)
+            arrest = atScene ? incident : CaseDates.add(rng.int(2...40), to: incident)
+            if atScene { assigned = incident }
+            log(assigned, .init(when: CaseDates.day(assigned), what: "\(detective.display) assigned as lead investigator."))
         }
 
-        let titles = state.map { $0.title.lowercased() }
-        let howIdentified: String
-        if titles.contains(where: { $0.contains("lineup") || $0.contains("identification") }) {
-            howIdentified = "A witness picked \(dl) from a photo lineup."
-        } else if titles.contains(where: { $0.contains("pawn") }) {
-            howIdentified = "Pawn records listed an item under \(dl)'s name."
-        } else if titles.contains(where: { $0.contains("cell") || $0.contains("phone") || $0.contains("text") }) {
-            howIdentified = "Phone records pointed to \(dl)."
-        } else if titles.contains(where: { $0.contains("video") || $0.contains("footage") || $0.contains("camera") }) {
-            howIdentified = "Video from the scene led investigators to \(dl)."
-        } else if paper {
-            howIdentified = "The records traced the transactions to accounts and logins associated with \(dl)."
-        } else if t.hasVictim {
-            howIdentified = rng.pick(["\(values["V"] ?? "The complainant") named \(dl) to the first officer.",
-                                      "A Crime Stoppers tip named \(dl).",
-                                      "\(dl) was found near the scene shortly afterward."])
-        } else {
-            howIdentified = rng.pick(["A Crime Stoppers tip named \(dl).", "\(dl) was stopped nearby shortly afterward."])
+        // What was gathered, in order
+        for item in obtained {
+            day += rng.int(1...7)
+            let when = CaseDates.add(day, to: incident)
+            log(clamp(when), .init(when: CaseDates.day(clamp(when)), what: obtainedPhrase(item, rng: &rng)))
+        }
+        var labSubmitted: Date?
+        var labReturned: Date?
+        if !forensic.isEmpty {
+            day += rng.int(1...4)
+            let sent = clamp(CaseDates.add(day, to: incident))
+            labSubmitted = sent
+            log(sent, .init(when: CaseDates.day(sent), what: "Submitted to the State Crime Laboratory: \(forensic.map(\.title).joined(separator: ", "))."))
+            labReturned = clamp(CaseDates.add(rng.int(18...70), to: sent))
+        }
+        if arrest < CaseDates.add(day, to: incident) && facts.origin != .stop && facts.origin != .warrant && arrest != incident {
+            arrest = CaseDates.add(day + rng.int(1...6), to: incident)
+        }
+        arrest = clamp(arrest)
+
+        // The interview and arrest
+        let interview: Date? = statement == nil ? nil : (facts.origin == .records ? CaseDates.add(-rng.int(5...20), to: arrest) : arrest)
+        if facts.origin == .records {
+            if let interview {
+                log(interview, .init(when: CaseDates.day(interview), what: "\(defendant.name) agrees to a recorded interview after Miranda warnings."))
+            } else {
+                let declined = CaseDates.add(-rng.int(5...20), to: arrest)
+                log(declined, .init(when: CaseDates.day(declined), what: "\(defendant.name), through a lawyer, declines an interview."))
+            }
+        }
+        let chargeList = charges.map { $0.law.title }.uniqued().joined(separator: ", ")
+        log(arrest, .init(when: CaseDates.day(arrest), what: facts.origin == .records
+            ? "\(defendant.name) charged with \(chargeList) and surrenders at the magistrate's office."
+            : "\(defendant.name) arrested and charged with \(chargeList)."))
+        if facts.origin != .records {
+            log(arrest, .init(when: CaseDates.day(arrest), what: interview != nil
+                ? "\(defendant.name) waives Miranda rights and gives a recorded statement to \(facts.origin == .stop ? officer.display : detective.display)."
+                : "\(defendant.name) declines to answer questions and asks for a lawyer."))
+        }
+        if let back = labReturned {
+            log(back, .init(when: CaseDates.day(back), what: "State Crime Laboratory report returned."))
+        }
+        // Keep the file in date order; entries on the same day stay in the order they happened.
+        let order = stamps.indices.sorted { stamps[$0] != stamps[$1] ? stamps[$0] < stamps[$1] : $0 < $1 }
+        timeline = order.map { timeline[$0] }
+
+        let howIdentified = identification(facts: facts, t: t, dl: dl, state: state, victimName: victimName, officer: officer,
+                                           arrestSameDay: arrest == incident, rng: &rng)
+
+        // Gaps both sides will argue about
+        var local = values
+        local["NEARBY"] = rng.pick(["a pharmacy", "a gas station", "a laundromat", "a pawn shop", "an auto parts store", "a corner market", "a church"]) + " on \(street)"
+        local["PLACESHORT"] = street
+        local["SURFACE"] = rng.pick(["the door frame", "the counter", "the car door", "the railing", "the window ledge"])
+        local["N"] = "\(rng.int(3...7))"
+        local["M"] = "\(rng.int(14...30))"
+        local["FEW"] = rng.pick(["two", "three", "one"])
+        local["HOURS"] = rng.pick(["two and a half", "three", "nearly four"])
+        local["ROADNAME"] = values["ROAD"] ?? street
+        local["LIGHT"] = time.map { Clock.partOfDay($0) == "night" ? "the dark, lit by headlights" : "traffic going by" } ?? "traffic going by"
+        local["CONTAINER"] = facts.origin == .stop ? "car" : "house"
+        local["TIPDAY"] = CaseDates.day(CaseDates.add(rng.int(2...9), to: incident))
+        local["EARLY"] = "\(year - rng.int(3...5))"
+        local["OFF"] = officer.display
+        let fill = TextFiller(values: local)
+        let fitting = gapSeeds.filter { seed in
+            (seed.settings.isEmpty || seed.settings.contains(facts.setting))
+                && (seed.origins.isEmpty || seed.origins.contains(facts.origin))
+                && facts.mentions(seed.needs)
+                && !(seed.unless.contains { facts.text.contains($0) })
+                && (!seed.identity || facts.identity)
+        }
+        let fallback = gapSeeds.filter { $0.settings.isEmpty || $0.settings.contains(facts.setting) }
+        let chosen = rng.pick(fitting.count >= 2 ? fitting : fallback, count: rng.int(2...3))
+        let gaps = chosen.map { seed in
+            Gap(finding: fill(rng.pick(seed.findings)), question: fill(rng.pick(seed.questions)), answer: fill(rng.pick(seed.answers)))
         }
 
-        var interviews = witnesses.filter { $0.isDefendant != true }.map { "\($0.name), \($0.role.lowercased())" }
-        interviews.append(statement != nil ? "\(defendant.name) (recorded, after Miranda warnings)" : "\(defendant.name) declined to be interviewed")
+        var interviews: [String] = []
+        interviews.append(interview != nil ? "\(defendant.name) (recorded, after Miranda warnings)" : "\(defendant.name) declined to be interviewed")
         let warrants = state.filter { $0.detail.lowercased().contains("found") || $0.detail.lowercased().contains("recovered") || $0.kind == .digital }
             .prefix(3).map { "Warrant covering \($0.title.lowercased())" }
         let lab = forensic.map { "\($0.title): \($0.detail)" }
-        let notDone = rng.pick(gaps.filter { $0.paper == paper }, count: 2).map(\.finding)
 
         let scene: String
-        switch t.category {
-        case .whiteCollar, .cyber:
-            scene = "No physical scene. The investigation centered on bank, business, and computer records."
-        case .traffic:
-            scene = "Roadway near \(street) in \(town): skid marks measured, vehicle positions photographed, weather and lighting noted."
-        default:
-            scene = "\(street.capitalizedFirst) in \(town). Lighting: \(rng.pick(["one working streetlight", "lit storefronts", "dark, no streetlights", "daylight"])). The area was photographed and measured before evidence was moved."
+        switch facts.setting {
+        case .paper:
+            scene = "No physical scene. The investigation centered on " + (facts.money ? "bank, business, and computer records." : "accounts, devices, and provider records.")
+        case .road:
+            scene = "\((values["ROAD"] ?? street).capitalizedFirst) near \(town): " + rng.pick([
+                "tire marks measured, vehicle positions photographed, weather and lighting noted.",
+                "a two-lane road, posted 45 mph, " + (Clock.partOfDay(time) == "night" ? "no streetlights." : "dry pavement."),
+                "the roadway was photographed and marked before the vehicles were moved."])
+        case .drugs:
+            scene = facts.origin == .warrant
+                ? "A residence on \(street) in \(town). Rooms were photographed before and after the search."
+                : "\(street.capitalizedFirst) in \(town). The vehicle was photographed and inventoried."
+        case .scene:
+            scene = "\(place.capitalizedFirst). Lighting: \(Clock.partOfDay(time) == "night" ? rng.pick(["one working streetlight", "lit storefronts", "dark, no streetlights"]) : "daylight"). The area was photographed and measured before evidence was moved."
         }
 
-        return InvestigationReport(agency: detective.agency, leadInvestigator: detective.display,
-                                   reportNumber: "\(abbreviation)-\(String(format: "%02d", year % 100))-\(String(format: "%05d", rng.int(1_000...99_999)))",
-                                   incident: paper ? "Reported \(date)" : "\(date), about \(time), near \(street), \(town)",
-                                   scene: scene, timeline: timeline, howIdentified: howIdentified,
-                                   interviews: interviews, warrants: Array(warrants), lab: lab, notDone: notDone)
+        let sheet = CaseFactSheet(setting: facts.setting, incident: incident, time: time, place: place, street: street, town: town,
+                                  arrivalTime: facts.origin == .call ? arrival : (facts.origin == .stop ? time : nil),
+                                  assigned: assigned, arrest: arrest, interview: interview,
+                                  labSubmitted: labSubmitted, labReturned: labReturned,
+                                  agency: detective.agency, lead: detective.display, firstOfficer: officer.display)
+        let report = InvestigationReport(agency: detective.agency, leadInvestigator: detective.display,
+                                         reportNumber: "\(abbreviation)-\(String(format: "%02d", year % 100))-\(String(format: "%05d", rng.int(1_000...99_999)))",
+                                         incident: facts.origin == .records ? "Reported \(CaseDates.dayYear(incident))" : "\(CaseDates.dayYear(incident))\(time.map { ", about \($0)" } ?? ""), \(place)",
+                                         scene: scene, timeline: timeline, howIdentified: howIdentified,
+                                         interviews: interviews, warrants: Array(warrants), lab: lab, notDone: gaps.map(\.finding),
+                                         facts: sheet)
+        return (report, gaps)
+    }
+
+    // MARK: Pieces
+
+    private static func organization(_ values: [String: String]) -> String? {
+        for key in ["CHARITY", "BIZ", "HOSP", "PHARM", "STORE2", "STORE"] { if let v = values[key] { return v } }
+        return nil
+    }
+
+    static func placePhrase(values: [String: String], facts: CaseFacts, street: String, town: String) -> String {
+        if facts.setting == .road, let road = values["ROAD"] { return "on \(road) near \(town)" }
+        for key in ["BAR", "STORE", "STORE2", "BIZ", "PHARM", "COMPLEX", "LOT", "SCHOOL", "REST"] {
+            if let v = values[key] { return "at \(v) on \(street) in \(town)" }
+        }
+        if let ch = values["CH"] { return "outside the \(ch) in \(town)" }
+        return "near \(street) in \(town)"
+    }
+
+    private static func lossNoun(_ facts: CaseFacts) -> String {
+        if facts.category == .cyber { return facts.money ? "a computer intrusion and theft" : "a computer crime" }
+        if facts.key == "perjuryTrial" { return "false testimony" }
+        return facts.money ? "theft of funds" : "fraud"
+    }
+
+    static func incidentNoun(_ facts: CaseFacts, charges: [Charge]) -> String {
+        let law = charges.first?.lawID.lowercased() ?? ""
+        switch facts.setting {
+        case .road: return facts.mentions(["pedestrian", "cyclist", "crosswalk"]) ? "a person struck by a vehicle" : "a crash"
+        case .drugs: return facts.mentions(["overdose", "unresponsive", "died"]) ? "an unresponsive person" : "suspected drug activity"
+        default: break
+        }
+        if law.contains("robbery") { return "a robbery" }
+        if law.contains("burglary") || law.contains("feloniousbe") { return "a break-in" }
+        if law.contains("larceny") || law.contains("stolen") { return "a theft" }
+        if law.contains("arson") || law.contains("burning") { return "a fire" }
+        if law.contains("murder") || law.contains("manslaughter") { return facts.mentions(["shot", "gun"]) ? "shots fired and a person down" : "a person seriously hurt" }
+        if law.contains("riot") || law.contains("disorderly") { return "a disturbance" }
+        if facts.category == .violent || facts.category == .family { return facts.mentions(["gun", "shot", "pistol"]) ? "shots fired" : "an assault" }
+        return "a disturbance"
+    }
+
+    private static func stopNarrative(_ facts: CaseFacts, street: String, town: String, values: [String: String]) -> String {
+        let road = values["ROAD"] ?? street
+        if facts.mentions(["fled", "accelerated", "pursuit", "chase", "flee"]) {
+            return "attempts a traffic stop on \(road) near \(town); the vehicle accelerates away and a pursuit begins."
+        }
+        if facts.impaired {
+            return "stops a vehicle on \(road) near \(town) after watching it cross the center line and the fog line; field sobriety tests follow."
+        }
+        return "stops a vehicle on \(road) near \(town) for a traffic violation and speaks with the driver, identified as the defendant."
+    }
+
+    private static func obtainedPhrase(_ item: Evidence, rng: inout SeededRNG) -> String {
+        let title = item.title
+        switch item.kind {
+        case .video: return rng.pick(["\(title) collected and copied to the case file.", "\(title) obtained and preserved.", "\(title) downloaded and reviewed."])
+        case .digital: return rng.pick(["\(title) obtained by search warrant.", "\(title) returned by the provider under a warrant.", "\(title) extracted and reviewed."])
+        case .document: return rng.pick(["\(title) obtained by subpoena.", "\(title) produced to investigators.", "\(title) collected and reviewed."])
+        default: return "\(title) obtained."
+        }
+    }
+
+    private static func identification(facts: CaseFacts, t: CaseTemplate, dl: String, state: [Evidence], victimName: String?,
+                                       officer: CastMember, arrestSameDay: Bool, rng: inout SeededRNG) -> String {
+        let titles = state.map { $0.title.lowercased() }.joined(separator: " ")
+        switch facts.origin {
+        case .stop:
+            return rng.pick(["Identity was never in question: \(dl) was the driver when \(officer.display) stopped the car.",
+                             "\(dl) was behind the wheel at the stop and produced a license.",
+                             "\(officer.display) identified \(dl) at the roadside from a driver's license."])
+        case .warrant:
+            return rng.pick(["Lease and utility records tied \(dl) to the residence, and \(dl) was present when the warrant was served.",
+                             "\(dl) was inside when the warrant was executed; the lease is in \(dl)'s name.",
+                             "Surveillance and records connected \(dl) to the house before the warrant was served."])
+        case .records:
+            if facts.key == "perjuryTrial" { return "Comparing \(dl)'s sworn testimony with phone records and messages showed the testimony was false." }
+            if facts.category == .cyber {
+                return rng.pick(["Server logs and account records traced the activity to devices and accounts associated with \(dl).",
+                                 "Login records, IP addresses, and payment trails led back to \(dl).",
+                                 "The account activity was traced to \(dl)'s credentials and home connection."])
+            }
+            return rng.pick(["The records traced the money to accounts associated with \(dl).",
+                             "Bank records showed the funds landing in accounts \(dl) controlled.",
+                             "An audit flagged the transactions, and the paperwork bore \(dl)'s name or credentials."])
+        case .report:
+            if let victimName { return "\(victimName) named \(dl) in the initial report." }
+            return rng.pick(["The report itself identified \(dl).", "Witnesses named \(dl) when the report was taken."])
+        case .call:
+            if facts.setting == .road {
+                if facts.mentions(["paint", "body shop", "debris"]) { return "Vehicle debris and paint transfer from the scene were matched to \(dl)'s vehicle." }
+                if facts.mentions(["walked into", "came forward", "turned"]) { return "\(dl) came forward the next day with a lawyer." }
+                return rng.pick(["\(dl) was at the scene, identified as the driver of one of the vehicles. Identity was not in dispute.",
+                                 "The first officer identified \(dl) at the scene as the driver.",
+                                 "\(dl) was still at the scene when officers arrived and was identified from a driver's license."])
+            }
+            if titles.contains("lineup") || titles.contains("identification") { return "A witness picked \(dl) from a photo lineup." }
+            if titles.contains("pawn") { return "Pawn records listed an item under \(dl)'s name." }
+            if titles.contains("video") || titles.contains("footage") || titles.contains("camera") {
+                return rng.pick(["Video from the area showed someone matching \(dl); a patrol officer recognized \(dl) from the stills.",
+                                 "Stills from the footage were circulated, and a tip named \(dl)."])
+            }
+            if arrestSameDay { return rng.pick(["\(dl) was detained at the scene when officers arrived.", "\(dl) was still there when the first officer arrived."]) }
+            if let victimName, !facts.identity { return "\(victimName) knew \(dl) and named \(dl) to the first officer." }
+            if titles.contains("phone") || titles.contains("cell") || titles.contains("text") { return "Phone records pointed to \(dl)." }
+            return rng.pick(["A Crime Stoppers tip named \(dl).", "\(dl) was stopped nearby shortly afterward and matched the description."])
+        }
     }
 }
 
 extension String {
     func ifEmpty(_ fallback: String) -> String { isEmpty ? fallback : self }
+}
+
+extension Array where Element: Hashable {
+    /// The elements in order, without repeats.
+    func uniqued() -> [Element] {
+        var seen = Set<Element>()
+        return filter { seen.insert($0).inserted }
+    }
 }

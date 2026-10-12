@@ -34,8 +34,15 @@ struct TrialStage: View {
             if session.halftimeComplete && session.testimonyDecided {
                 caseInChief(for: .defense, title: "The defense case", icon: "shield.fill")
                 if session.rulings.defendantTestifies == true, let testimony = c.defendantTestimony {
-                    WitnessCard(witness: testimony, objections: [], session: session)
+                    SectionTitle(text: "\(c.defendant.name) takes the stand", icon: "person.fill.questionmark")
+                    Text("The defendant testifies in their own defense and is cross-examined by the State. Weigh this testimony like any other witness's.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    WitnessCard(witness: testimony, objections: c.objections(for: testimony), session: session)
                 }
+                Label(session.halftimeMotion.renewal, systemImage: "hand.raised")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             if session.halftimeComplete && session.testimonyDecided {
@@ -259,14 +266,29 @@ struct HalftimeMotionCard: View {
     var body: some View {
         SectionTitle(text: "Motion to dismiss", icon: "hand.raised.fill")
         VStack(alignment: .leading, spacing: 12) {
-            Text("The State rests. \(c.defenseAttorney.components(separatedBy: ",").first ?? "Defense counsel") moves to dismiss every count for insufficient evidence (G.S. 15A-1227).")
+            let motion = session.halftimeMotion
+            Text(motion.opening)
                 .font(.callout)
+            Text(motion.response)
+                .font(.system(.callout, design: .serif))
+                .foregroundStyle(Theme.prosecution)
             Text("The question is whether there is substantial evidence of each element and that the defendant committed the offense, taking the evidence in the light most favorable to the State. A dismissal is an acquittal and cannot be appealed by the State.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            ForEach(c.charges) { charge in
+            let unchallenged = c.charges.filter { !motion.challenged.contains($0.id) }
+            if !unchallenged.isEmpty {
+                Text("Not challenged, and going forward: " + unchallenged.map { "Count \($0.count)" }.joined(separator: ", ") + ".")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(c.charges.filter { motion.challenged.contains($0.id) }) { charge in
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Count \(charge.count): \(charge.law.title)").font(.subheadline.weight(.semibold))
+                    if let argument = motion.arguments[charge.id] {
+                        Text("\u{201C}\(argument)\u{201D}")
+                            .font(.system(.caption, design: .serif))
+                            .foregroundStyle(Theme.defense)
+                    }
                     HStack(spacing: 8) {
                         ForEach(options(for: charge), id: \.self) { option in
                             let selected = session.rulings.halftime[charge.id] == option

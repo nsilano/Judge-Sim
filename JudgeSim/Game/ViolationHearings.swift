@@ -275,6 +275,9 @@ enum ViolationHearings {
         term.violationRisk = min(0.7, max(0.03, risk))
 
         var pending: [PendingEvent] = []
+        // Probationers appeal an unauthorized sanction often, but not always.
+        var appealRNG = SeededRNG(seed: h.seed ^ 0xA_9915)
+        let appeals = appealRNG.chance(0.6)
         let finding = r.finding ?? .established
         let sanction = [HearingDecision.quickDip, .crv, .revoke].contains(decision)
         if finding != .established {
@@ -284,6 +287,7 @@ enum ViolationHearings {
         }
         if sanction && finding != .established {
             lines.append("Note: a sanction was imposed without finding a violation.")
+            if appeals && decision != .quickDip {
             let due = Calendar.current.date(byAdding: .day, value: 140, to: date) ?? date
             pending.append(PendingEvent(due: due,
                                         news: NewsItem(date: due, kind: .appeal,
@@ -291,8 +295,10 @@ enum ViolationHearings {
                                                        body: "The Court of Appeals held that Judge \(judgeLast) could not impose a sanction after finding no willful violation of probation, and vacated the order.",
                                                        docket: term.docket + " (PV)"),
                                         personID: h.personID, effect: .resentence, appealReversed: true, newReleaseDate: due))
+            }
         } else if decision == .revoke && !canRevoke(h) {
             lines.append("Note: the record does not show a new offense, absconding, or two prior CRVs.")
+            if appeals {
             let due = Calendar.current.date(byAdding: .day, value: 150, to: date) ?? date
             pending.append(PendingEvent(due: due,
                                         news: NewsItem(date: due, kind: .appeal,
@@ -300,6 +306,7 @@ enum ViolationHearings {
                                                        body: "The Court of Appeals held that Judge \(judgeLast) lacked statutory authority to revoke probation for technical violations alone under G.S. 15A-1344(a), and remanded. \(h.personName) was released from custody.",
                                                        docket: term.docket + " (PV)"),
                                         personID: h.personID, effect: .resentence, appealReversed: true, newReleaseDate: due))
+            }
         }
 
         let keepsProbation = decision != .revoke && decision != .terminate

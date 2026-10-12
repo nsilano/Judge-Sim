@@ -99,6 +99,8 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     /// Hidden likelihood of being arrested again.
     var propensity: Double
     var appearances: [Appearance] = []
+    /// How the projected release date was figured: minimum and maximum terms, credit, and any revocation (optional for older saves).
+    var releaseNote: String? = nil
 
     func age(on date: Date) -> Int {
         Calendar.current.component(.year, from: date) - birthYear

@@ -181,6 +181,11 @@ final class GameState: ObservableObject {
         var entry = day.entries[index]
         entry.status = .pending
         entry.resume = snapshot ?? entry.resume
+        if case .trial(var c) = entry.matter, c.continuanceMotion != nil {
+            // Any continuance disposes of a pending motion to continue.
+            c.continuanceMotion = nil
+            entry.matter = .trial(c)
+        }
         entry.continuances += 1
         entry.requests = requests.isEmpty ? nil : requests
         entry.note = "Continued from \(SentenceFormat.shortDate(day.date)): \(reason)"
@@ -246,6 +251,56 @@ final class GameState: ObservableObject {
         let marker = news.first?.id
         advanceWorld(to: next)
         today = buildDay(next, kind: kind, sessionDay: sessionDay)
+        digest = Array(news.prefix { $0.id != marker })
+        save()
+    }
+
+    // MARK: Time off
+
+    /// The Monday the judge would return to the bench after `weeks` weeks of leave.
+    func leaveReturnDate(weeks: Int) -> Date {
+        let base = today?.date ?? currentDate
+        let after = Calendar.current.date(byAdding: .day, value: 7 * max(1, weeks), to: base) ?? base
+        return CourtCalendar.monday(onOrAfter: after)
+    }
+
+    /// Steps away from the bench. The world keeps moving: sentences end, appeals come down, people are released.
+    /// Matters continued into the leave are reset to the first day back.
+    func takeLeave(weeks: Int) {
+        guard let day = today, day.isComplete, let judgeName else { return }
+        let back = leaveReturnDate(weeks: weeks)
+        let marker = news.first?.id
+
+        var reset = 0
+        for index in scheduled.indices where scheduled[index].date < back {
+            scheduled[index].date = back
+            scheduled[index].entry.note = (scheduled[index].entry.note ?? "") + " Reset to \(SentenceFormat.shortDate(back)) while the court was on leave."
+            reset += 1
+        }
+
+        // Walk through the leave a week at a time so events land in order.
+        var cursor = day.date
+        let releasedBefore = stats.releasedFromPrison
+        let completedBefore = stats.probationCompleted
+        let appealsBefore = appeals.filter { !$0.isPending }.count
+        while cursor < back {
+            cursor = min(back, Calendar.current.date(byAdding: .day, value: 7, to: cursor) ?? back)
+            advanceWorld(to: cursor)
+        }
+
+        var summary = ["Judge \(lastName(judgeName)) returned to the bench after \(weeks) week\(weeks == 1 ? "" : "s") away."]
+        let released = stats.releasedFromPrison - releasedBefore
+        let completed = stats.probationCompleted - completedBefore
+        let decided = appeals.filter { !$0.isPending }.count - appealsBefore
+        if released > 0 { summary.append("\(released) \(released == 1 ? "person" : "people") you sentenced left custody.") }
+        if completed > 0 { summary.append("\(completed) finished probation.") }
+        if decided > 0 { summary.append("The Court of Appeals decided \(decided) appeal\(decided == 1 ? "" : "s") from your court.") }
+        if reset > 0 { summary.append("\(reset) continued matter\(reset == 1 ? " was" : "s were") reset to your first day back.") }
+        if released == 0 && completed == 0 && decided == 0 && reset == 0 { summary.append("It was a quiet stretch.") }
+        post(NewsItem(date: back, kind: .community, headline: "Judge \(lastName(judgeName)) back from leave", body: summary.joined(separator: " ")))
+
+        sessionEnds = sessionFriday(for: back)
+        today = buildDay(back, kind: .administrative, sessionDay: 1)
         digest = Array(news.prefix { $0.id != marker })
         save()
     }
@@ -429,7 +484,11 @@ final class GameState: ObservableObject {
             let wanted = roll < 0.4 ? 1 : (roll < 0.85 ? 2 : 3)
             let already = entries.filter { if case .trial = $0.matter { return true } else { return false } }.count
             for _ in 0..<max(0, wanted - already) {
-                if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople) {
+                if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople) {
+                    // Some cases are called with a party asking for more time.
+                    if c.background?.arrangementPresented != true && rng.chance(0.25) {
+                        c.continuanceMotion = ContinuanceMotions.make(for: c, rng: &rng)
+                    }
                     entries.append(DocketEntry(matter: .trial(c)))
                 }
             }
@@ -504,6 +563,7 @@ final class GameState: ObservableObject {
         if let index = people.firstIndex(where: { $0.id == hearing.personID }) {
             people[index].status = outcome.status
             people[index].releaseDate = outcome.releaseDate
+            people[index].releaseNote = outcome.releaseDate == nil ? nil : outcome.lines.first
             people[index].probation = outcome.probation
             people[index].propensity = min(0.85, max(0.03, people[index].propensity + outcome.propensityChange))
             people[index].appearances.append(appearance)
@@ -598,6 +658,7 @@ final class GameState: ObservableObject {
             people[index].priors.append(contentsOf: outcome.newPriors)
             people[index].status = outcome.personStatus
             people[index].releaseDate = outcome.releaseDate
+            people[index].releaseNote = outcome.releaseBasis
             people[index].probation = outcome.newProbation
             people[index].propensity = (people[index].propensity + outcome.propensity) / 2 + 0.05
             people[index].appearances.append(appearance)
@@ -607,7 +668,7 @@ final class GameState: ObservableObject {
                                        background: d.background, priors: d.priors + outcome.newPriors,
                                        status: outcome.personStatus, releaseDate: outcome.releaseDate,
                                        probation: outcome.newProbation, propensity: outcome.propensity,
-                                       appearances: [appearance]))
+                                       appearances: [appearance], releaseNote: outcome.releaseBasis))
         }
 
         var verdictNews = outcome.news
@@ -685,10 +746,11 @@ final class GameState: ObservableObject {
                     people[index].propensity = min(0.85, people[index].propensity + 0.15)
                 case .resentence:
                     if people[index].status == .incarcerated, let newRelease = event.newReleaseDate {
+                        // Resentencing on remand can only shorten the term the appeal attacked.
                         if newRelease <= currentDate {
                             people[index].status = people[index].probation == nil ? .free : .probation
                             people[index].releaseDate = nil
-                        } else {
+                        } else if newRelease < (people[index].releaseDate ?? .distantFuture) {
                             people[index].releaseDate = newRelease
                         }
                     }
@@ -742,6 +804,7 @@ final class GameState: ObservableObject {
             case .incarcerated:
                 if let release = person.releaseDate, release <= currentDate {
                     people[index].releaseDate = nil
+                    people[index].releaseNote = nil
                     if let probation = person.probation, probation.ends > currentDate {
                         people[index].status = .probation
                     } else {
