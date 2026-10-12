@@ -1,0 +1,139 @@
+name: TestFlight
+
+# Upload a build by pushing a commit whose message contains "[testflight <build number>]",
+# e.g. "[testflight 1]", or by pushing a tag named testflight-<build number>.
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "testflight-*"
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "Build number (CFBundleVersion)"
+        required: true
+        default: "1"
+
+jobs:
+  upload:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/testflight-') || contains(github.event.head_commit.message, '[testflight ')
+    runs-on: macos-15
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_KEY }}
+      APPLE_TEAM_ID: ${{ secrets.TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then
+            echo "::error::No Xcode 26 found on this runner. Installed: $(ls -d /Applications/Xcode*.app | tr '\n' ' ')"
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE/Contents/Developer"
+          xcodebuild -version
+          echo "::notice::Using $(xcodebuild -version | head -1) with iOS SDK $(xcrun --sdk iphoneos --show-sdk-version)"
+
+      - name: Check secrets
+        run: |
+          missing=0
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_PRIVATE_KEY APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then echo "::error::Missing secret for $name"; missing=1; else echo "Found $name"; fi
+          done
+          exit $missing
+
+      - name: Build number
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BUILD="${{ inputs.build_number }}"
+          elif [[ "$GITHUB_REF" == refs/tags/testflight-* ]]; then
+            BUILD="${GITHUB_REF_NAME#testflight-}"
+          else
+            BUILD=$(printf '%s' "$COMMIT_MESSAGE" | sed -nE 's/.*\[testflight ([0-9]+)\].*/\1/p' | head -1)
+          fi
+          if ! [[ "$BUILD" =~ ^[0-9]+$ ]]; then echo "::error::Could not determine build number"; exit 1; fi
+          echo "Build number: $BUILD"
+          echo "BUILD_NUMBER=$BUILD" >> "$GITHUB_ENV"
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+
+      - name: Install App Store Connect API key
+        run: |
+          KEY_PATH="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
+          printf '%s\n' "$ASC_PRIVATE_KEY" > "$KEY_PATH"
+          # Accept the key either as raw .p8 text or base64-encoded.
+          if ! grep -q "BEGIN PRIVATE KEY" "$KEY_PATH"; then
+            printf '%s' "$ASC_PRIVATE_KEY" | base64 --decode > "$KEY_PATH"
+          fi
+          echo "KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Archive
+        run: |
+          set -o pipefail
+          xcodebuild -project JudgeSim.xcodeproj -scheme JudgeSim \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/JudgeSim.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            archive | tee archive.log | grep -E "error:|ARCHIVE (SUCCEEDED|FAILED)" || true
+          grep -q "ARCHIVE SUCCEEDED" archive.log
+
+      - name: Export and upload to App Store Connect
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+            <key>uploadSymbols</key><true/>
+          </dict>
+          </plist>
+          PLIST
+          set +e
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/JudgeSim.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" 2>&1 | tee export.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            # Surface the real reason as annotations, which show on the run summary.
+            grep -iE "error|fail|denied|not (found|allowed|permitted)|invalid|missing|unable" export.log \
+              | sed 's/^[[:space:]]*//' | awk '!seen[$0]++' | tail -8 \
+              | while IFS= read -r line; do echo "::error::${line:0:900}"; done
+            logdir=$(grep -oE '/[^ ]*\.xcdistributionlogs' export.log | head -1)
+            if [ -n "$logdir" ] && [ -d "$logdir" ]; then
+              cp -R "$logdir" distribution-logs || true
+              grep -rhiE "error|reason|description" "$logdir" 2>/dev/null \
+                | sed 's/^[[:space:]]*//' | awk '!seen[$0]++' | tail -8 \
+                | while IFS= read -r line; do echo "::error::dist: ${line:0:900}"; done
+            fi
+            exit "$code"
+          fi
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testflight-logs
+          path: |
+            *.log
+            distribution-logs
