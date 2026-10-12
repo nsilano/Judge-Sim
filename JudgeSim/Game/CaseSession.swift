@@ -161,6 +161,35 @@ final class CaseSession: ObservableObject {
         }
     }
 
+    /// Every question at this stage, asked or not (used to answer typed questions offline).
+    func allQuestions(_ side: Side) -> [CounselQuestion] {
+        CounselDialogue.questions(courtCase, stage: stage, rulings: rulings, units: units).filter { $0.side == side }
+    }
+
+    func brief(for side: Side, compact: Bool) -> String {
+        CounselBrief.make(for: courtCase, side: side, stage: stage, rulings: rulings, units: units, compact: compact)
+    }
+
+    func heldBackFactor(for side: Side) -> CounselReveal? {
+        guard stage == .sentencing, let bg = courtCase.background else { return nil }
+        if side == .prosecution, let factor = bg.hiddenAggravator, !aggravatingFactors.contains(factor) { return .aggravating(factor) }
+        if side == .defense, let factor = bg.hiddenMitigator, !mitigatingFactors.contains(factor) { return .mitigating(factor) }
+        return nil
+    }
+
+    func record(side: Side, question: String, answer: String, reveal: CounselReveal?) {
+        transcript.append(TranscriptEntry(side: side, speaker: counselName(side), question: question, answer: answer, reveal: reveal))
+        switch reveal {
+        case .mitigating(let factor)?:
+            if !mitigatingFactors.contains(factor) { revealedMitigating.append(factor) }
+        case .aggravating(let factor)?:
+            if !aggravatingFactors.contains(factor) { revealedAggravating.append(factor) }
+        case nil:
+            break
+        }
+        if let preset = allQuestions(side).first(where: { $0.answer == answer }) { askedIDs.insert(preset.id) }
+    }
+
     var aggravatingFactors: [String] { courtCase.aggravating + revealedAggravating }
     var mitigatingFactors: [String] { courtCase.mitigating + revealedMitigating }
 
