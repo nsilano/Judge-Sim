@@ -22,6 +22,8 @@ struct RootView: View {
 struct OnboardingView: View {
     @EnvironmentObject private var game: GameState
     @State private var name = ""
+    @State private var startDay = CourtCalendar.weekday(onOrAfter: Date())
+    @State private var openingTime = CourtCalendar.opening(on: Date(), minutesAfterMidnight: 9 * 60 + 30)
 
     var body: some View {
         ScrollView {
@@ -58,10 +60,23 @@ struct OnboardingView: View {
                         .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
                 }
 
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Your first day on the bench").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                    DatePicker("First court date", selection: $startDay, displayedComponents: .date)
+                    DatePicker("Court opens at", selection: $openingTime, displayedComponents: .hourAndMinute)
+                    Text("Court sits on weekdays. You'll hold week-long criminal sessions, with a few weeks between them.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(14)
+                .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
+
                 PrimaryButton(title: "Take the Oath of Office", icon: "hand.raised.fill",
                               enabled: !name.trimmingCharacters(in: .whitespaces).isEmpty) {
                     Haptics.gavel()
-                    game.startCareer(name: name.trimmingCharacters(in: .whitespaces))
+                    let time = Calendar.current.dateComponents([.hour, .minute], from: openingTime)
+                    let start = Calendar.current.date(bySettingHour: time.hour ?? 9, minute: time.minute ?? 30, second: 0, of: startDay) ?? startDay
+                    game.startCareer(name: name.trimmingCharacters(in: .whitespaces), start: start)
                 }
 
                 Text(LawLibrary.disclaimer)
@@ -139,8 +154,8 @@ struct ChambersView: View {
             .fullScreenCover(item: $activeItem) { item in
                 if let county = game.county, let judgeName = game.judgeName {
                     switch item {
-                    case .trial(let courtCase):
-                        CourtroomView(courtCase: courtCase, judgeName: judgeName, county: county)
+                    case .trial(let courtCase, let resume):
+                        CourtroomView(courtCase: courtCase, judgeName: judgeName, county: county, resume: resume)
                             .environmentObject(game)
                     case .hearing(let hearing):
                         HearingView(hearing: hearing, judgeName: judgeName, county: county)
@@ -165,7 +180,7 @@ struct ChambersView: View {
                 Text("\(game.title) · \(game.county?.name ?? "")")
                     .font(.subheadline)
                     .foregroundStyle(Theme.gold)
-                Text(SentenceFormat.date(game.currentDate))
+                Text(SentenceFormat.date(game.currentDate) + (game.scheduled.isEmpty ? "" : " · \(game.scheduled.count) continued matter\(game.scheduled.count == 1 ? "" : "s") pending"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -174,45 +189,96 @@ struct ChambersView: View {
     }
 
     private var docketCard: some View {
-        let next = game.currentCase
-        let hearing = game.currentHearing
-        let calendar = game.currentCalendar
-        return VStack(alignment: .leading, spacing: 12) {
-            SectionTitle(text: "Today's calendar", icon: "calendar")
-            if let calendar {
-                Text("Administrative session").font(.caption.monospaced()).foregroundStyle(.secondary)
-                Text("Calendar call").font(.system(.title3, design: .serif).weight(.bold))
-                Text("\(calendar.matters.count) matters: " + calendar.matters.map { $0.kind.label.lowercased() }.joined(separator: ", "))
-                    .font(.callout)
-            } else if let hearing {
-                Text("\(hearing.probation.docket) · Probation violation").font(.caption.monospaced()).foregroundStyle(.secondary)
-                Text("State v. \(hearing.personName)").font(.system(.title3, design: .serif).weight(.bold))
-                Text("Violation report: \(hearing.violations.count) alleged violation\(hearing.violations.count == 1 ? "" : "s")")
-                    .font(.callout)
-                Label("You placed this person on probation.", systemImage: "arrow.uturn.left")
-                    .font(.caption)
-                    .foregroundStyle(.purple)
-            } else if let next {
-                Text("\(next.docket) · \(next.court.label)").font(.caption.monospaced()).foregroundStyle(.secondary)
-                Text(next.caption).font(.system(.title3, design: .serif).weight(.bold))
-                Text(next.charges.map { $0.law.title }.joined(separator: " · "))
-                    .font(.callout)
-                if next.defendant.isReturning {
-                    Label("You have seen this defendant before.", systemImage: "arrow.uturn.left")
-                        .font(.caption)
-                        .foregroundStyle(.purple)
+        VStack(alignment: .leading, spacing: 12) {
+            if let day = game.today {
+                HStack(alignment: .firstTextBaseline) {
+                    SectionTitle(text: "Today's calendar", icon: "calendar")
+                    Spacer()
+                    Label(CourtCalendar.time(day.clock), systemImage: "clock.fill")
+                        .font(.subheadline.monospacedDigit().weight(.semibold))
+                        .foregroundStyle(Theme.gold)
                 }
-            } else {
-                Text("The clerk has the next file ready.")
-                    .font(.callout)
+                Text(CourtCalendar.dayTitle(day.date)).font(.system(.title3, design: .serif).weight(.bold))
+                Text(day.kind.label + (day.sessionDay > 0 ? " · Day \(day.sessionDay) of 5" : ""))
+                    .font(.caption)
                     .foregroundStyle(.secondary)
-            }
-            PrimaryButton(title: next == nil && hearing == nil && calendar == nil ? "Call the Next Case" : "Resume Where You Left Off", icon: "hammer.fill") {
-                Haptics.gavel()
-                activeItem = game.nextDocketItem()
+                if Calendar.current.component(.hour, from: day.clock) >= 17 && !day.isComplete {
+                    Label("Court is running late.", systemImage: "moon.fill").font(.caption).foregroundStyle(.orange)
+                }
+
+                ForEach(day.entries) { entry in
+                    Button {
+                        Haptics.tap()
+                        activeItem = game.open(entry.id)
+                    } label: {
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: statusIcon(entry))
+                                .font(.title3)
+                                .foregroundStyle(statusColor(entry))
+                                .frame(width: 26)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(entry.title).font(.subheadline.weight(.semibold)).multilineTextAlignment(.leading)
+                                Text(entry.subtitle).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading)
+                                if let note = entry.note, entry.isOpen {
+                                    Text(note).font(.caption2).foregroundStyle(.purple).multilineTextAlignment(.leading)
+                                }
+                                if let outcome = entry.outcome, !entry.isOpen {
+                                    Text(outcome).font(.caption2).foregroundStyle(.secondary).lineLimit(2).multilineTextAlignment(.leading)
+                                }
+                                if entry.isOpen, case .trial(let c) = entry.matter, c.defendant.isReturning {
+                                    Label("You've seen this defendant before.", systemImage: "arrow.uturn.left")
+                                        .font(.caption2).foregroundStyle(.purple)
+                                }
+                            }
+                            Spacer()
+                            if entry.isOpen {
+                                Text(entry.status == .inProgress ? "Resume" : "~\(entry.estimatedMinutes / 60 > 0 ? "\(entry.estimatedMinutes / 60)h " : "")\(entry.estimatedMinutes % 60)m")
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemFill)).opacity(entry.isOpen ? 1 : 0.5))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!entry.isOpen)
+                }
+
+                if day.isComplete {
+                    let next = game.nextCourtDate
+                    PrimaryButton(title: "Adjourn for the Day", icon: "moon.stars.fill") {
+                        Haptics.gavel()
+                        withAnimation { game.adjourn() }
+                    }
+                    Text("Next court date: \(CourtCalendar.dayTitle(next))" + (next > Calendar.current.date(byAdding: .day, value: 4, to: day.date) ?? next ? ". Your criminal session is over; the next one starts then." : "."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Take the matters in any order. When the calendar is clear, you can adjourn.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .card(tint: Theme.gold)
+    }
+
+    private func statusIcon(_ entry: DocketEntry) -> String {
+        switch entry.status {
+        case .pending: return entry.icon
+        case .inProgress: return "pause.circle.fill"
+        case .done: return "checkmark.circle.fill"
+        case .continued: return "arrow.forward.circle.fill"
+        }
+    }
+
+    private func statusColor(_ entry: DocketEntry) -> Color {
+        switch entry.status {
+        case .pending: return Theme.gold
+        case .inProgress: return .orange
+        case .done: return .green
+        case .continued: return .purple
+        }
     }
 }
 
@@ -259,13 +325,14 @@ struct CourthouseView: View {
 
 struct RecordsView: View {
     @EnvironmentObject private var game: GameState
-    @State private var section = 0
+    @State private var section = 3
     @State private var confirmReset = false
 
     var body: some View {
         NavigationStack {
             List {
                 Picker("Records", selection: $section) {
+                    Text("Calendar").tag(3)
                     Text("Cases").tag(0)
                     Text("People").tag(1)
                     Text("News").tag(2)
@@ -276,6 +343,7 @@ struct RecordsView: View {
                 switch section {
                 case 0: casesSection
                 case 1: peopleSection
+                case 3: calendarSection
                 default: newsSection
                 }
 
@@ -287,6 +355,41 @@ struct RecordsView: View {
             .confirmationDialog("Leave the bench? This erases your county, cases, and records.",
                                 isPresented: $confirmReset, titleVisibility: .visible) {
                 Button("Leave the bench", role: .destructive) { game.resetCareer() }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var calendarSection: some View {
+        Section("Coming up") {
+            if game.scheduled.isEmpty {
+                Text("Nothing has been continued to a later date.").foregroundStyle(.secondary)
+            }
+            ForEach(game.scheduled) { item in
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(CourtCalendar.dayTitle(item.date)).font(.caption.weight(.bold)).foregroundStyle(Theme.gold)
+                    Text(item.entry.title).font(.subheadline.weight(.semibold))
+                    Text(item.entry.subtitle).font(.caption).foregroundStyle(.secondary)
+                    if let note = item.entry.note { Text(note).font(.caption2).foregroundStyle(.purple) }
+                }
+            }
+        }
+        let days = Dictionary(grouping: game.history) { Calendar.current.startOfDay(for: $0.date) }
+        ForEach(days.keys.sorted(by: >), id: \.self) { day in
+            Section(CourtCalendar.dayTitle(day)) {
+                ForEach(days[day] ?? []) { record in
+                    NavigationLink {
+                        CaseRecordDetail(record: record)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(record.caption).font(.subheadline.weight(.semibold))
+                            Text(record.outcome).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                            if let appeal = record.appealStatus {
+                                Text(appeal).font(.caption2.weight(.semibold)).foregroundStyle(.orange)
+                            }
+                        }
+                    }
+                }
             }
         }
     }

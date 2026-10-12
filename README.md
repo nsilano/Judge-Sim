@@ -30,6 +30,14 @@ There is no score and no right answer. You make rulings, and the world responds:
 
 At every stage you can call a bench conference and question the ADA or defense counsel. Type any question you like. Each lawyer answers live, in character, from only what their side knows about the case at that moment. Answers come from Apple Intelligence on the iPhone (free, private, offline; iOS 26 with Apple Intelligence on) or, optionally, from Claude with your own API key (Chambers → Settings, stored in the Keychain; create one at console.anthropic.com). Without either, typed questions are answered from the case file. Suggested questions are also available. They answer from what they know about the case: plea negotiations, custody status, discovery problems, the strength of each exhibit and witness, sentencing recommendations, restitution, the defendant's plan, ability to pay, treatment needs, and support. Asking the right question at sentencing can surface additional aggravating or mitigating factors. Each lawyer in the county has a consistent personality.
 
+## The court calendar
+
+You choose your first court date and the hour court opens. Court sits on weekdays in week-long criminal sessions, with two to three weeks between sessions. A session opens on Monday with an administrative day (a calendar call and probation hearings); the other days are trial days with one to three matters, sometimes with a probation hearing. A courtroom clock moves as you work through the calendar, in any order. When the calendar is clear, you adjourn, and the world moves forward to the next court date: appeals come down, sentences end, probation finishes, and people you've sentenced may come back.
+
+Any case or hearing can be continued to a date you choose, for a reason you give. A continued case comes back on that day's calendar exactly where you left it, with every ruling intact. If the date falls between sessions, it's heard at a special setting. Records → Calendar shows what's coming up and every past court day.
+
+Some indictments charge a whole series of incidents, with 7 to 9 counts to decide one by one.
+
 ## The county
 
 Each career generates one Hollis County, and it stays the same throughout:

@@ -1,6 +1,14 @@
 import Foundation
 import SwiftUI
 
+/// Where a continued case left off.
+struct CaseSnapshot: Codable, Hashable {
+    var stage: Int
+    var rulings: Rulings
+    var revealedAggravating: [String] = []
+    var revealedMitigating: [String] = []
+}
+
 /// Tracks the judge's rulings through a single case.
 final class CaseSession: ObservableObject {
     enum Stage: Int, CaseIterable, Identifiable {
@@ -61,10 +69,23 @@ final class CaseSession: ObservableObject {
     private var askedIDs = Set<String>()
     private var sentencingPrepared = false
 
-    init(courtCase: CourtCase, judgeName: String, county: County) {
+    init(courtCase: CourtCase, judgeName: String, county: County, resume: CaseSnapshot? = nil) {
         self.courtCase = courtCase
         self.judgeName = judgeName
         self.county = county
+        if let resume {
+            rulings = resume.rulings
+            stage = Stage(rawValue: resume.stage) ?? .briefing
+            sentencingPrepared = stage.rawValue >= Stage.sentencing.rawValue
+            revealedAggravating = resume.revealedAggravating
+            revealedMitigating = resume.revealedMitigating
+        }
+    }
+
+    /// Everything needed to pick the case back up after a continuance.
+    var snapshot: CaseSnapshot {
+        CaseSnapshot(stage: stage == .judgment ? Stage.sentencing.rawValue : stage.rawValue, rulings: rulings,
+                     revealedAggravating: revealedAggravating, revealedMitigating: revealedMitigating)
     }
 
     var visibleStages: [Stage] {

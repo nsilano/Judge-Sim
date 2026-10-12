@@ -4,7 +4,7 @@ enum Verdict: String, Codable, Hashable {
     case guilty, lesser, notGuilty
 }
 
-enum JudgmentMode: String, CaseIterable, Hashable {
+enum JudgmentMode: String, CaseIterable, Codable, Hashable {
     case consolidated, concurrent, consecutive
 
     var label: String {
@@ -16,7 +16,7 @@ enum JudgmentMode: String, CaseIterable, Hashable {
     }
 }
 
-enum ProbationDecision: String, CaseIterable, Hashable {
+enum ProbationDecision: String, CaseIterable, Codable, Hashable {
     case revoke, crv, modify, continueAsIs
 
     var label: String {
@@ -29,7 +29,7 @@ enum ProbationDecision: String, CaseIterable, Hashable {
     }
 }
 
-enum PleaKind: String, CaseIterable, Hashable {
+enum PleaKind: String, CaseIterable, Codable, Hashable {
     case guilty, alford, noContest
 
     var label: String {
@@ -49,7 +49,7 @@ enum PleaKind: String, CaseIterable, Hashable {
     }
 }
 
-enum HalftimeRuling: String, CaseIterable, Hashable {
+enum HalftimeRuling: String, CaseIterable, Codable, Hashable {
     case deny, dismiss, lesserOnly
 
     var label: String {
@@ -62,7 +62,7 @@ enum HalftimeRuling: String, CaseIterable, Hashable {
 }
 
 /// Alternatives to entering an ordinary judgment.
-enum SpecialDisposition: String, CaseIterable, Hashable {
+enum SpecialDisposition: String, CaseIterable, Codable, Hashable {
     case none, prayerForJudgment, conditionalDischarge
 
     var label: String {
@@ -83,7 +83,7 @@ enum SpecialDisposition: String, CaseIterable, Hashable {
 }
 
 /// Conditions attached to a suspended sentence (G.S. 15A-1343).
-struct ProbationConditions: Hashable {
+struct ProbationConditions: Codable, Hashable {
     var supervised = true
     var specialProbationDays = 0
     var houseArrestDays = 0
@@ -131,7 +131,7 @@ struct ProbationConditions: Hashable {
 }
 
 /// Money owed under the judgment.
-struct FinancialOrders: Hashable {
+struct FinancialOrders: Codable, Hashable {
     static let courtCosts = 213
     static let supervisionFeePerMonth = 40
     static let communityServiceFee = 250
@@ -146,7 +146,7 @@ struct FinancialOrders: Hashable {
 }
 
 /// Recommendations attached to an active sentence.
-struct ActiveRecommendations: Hashable {
+struct ActiveRecommendations: Codable, Hashable {
     var advancedSupervisedRelease = false
     var substanceTreatment = false
     var mentalHealth = false
@@ -164,7 +164,7 @@ struct ActiveRecommendations: Hashable {
 }
 
 /// One sentence entry: felony months or misdemeanor days, plus disposition.
-struct SentenceChoice: Hashable {
+struct SentenceChoice: Codable, Hashable {
     var range: SentenceRangeKind = .presumptive
     /// Months for felonies, days for misdemeanors.
     var minimum = 0
@@ -178,7 +178,7 @@ struct SentenceChoice: Hashable {
 }
 
 /// Everything the judge decided during a case.
-struct Rulings {
+struct Rulings: Codable, Hashable {
     var motions: [UUID: Bool] = [:]
     var objections: [UUID: Bool] = [:]
     var verdicts: [UUID: Verdict] = [:]

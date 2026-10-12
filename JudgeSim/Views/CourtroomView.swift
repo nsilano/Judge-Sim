@@ -7,9 +7,10 @@ struct CourtroomView: View {
     @State private var showLibrary = false
     @State private var showCounsel = false
     @State private var confirmRecess = false
+    @State private var showContinuance = false
 
-    init(courtCase: CourtCase, judgeName: String, county: County) {
-        _session = StateObject(wrappedValue: CaseSession(courtCase: courtCase, judgeName: judgeName, county: county))
+    init(courtCase: CourtCase, judgeName: String, county: County, resume: CaseSnapshot? = nil) {
+        _session = StateObject(wrappedValue: CaseSession(courtCase: courtCase, judgeName: judgeName, county: county, resume: resume))
     }
 
     var body: some View {
@@ -74,6 +75,22 @@ struct CourtroomView: View {
                             .labelStyle(.titleAndIcon)
                     }
                 }
+                if session.stage != .judgment {
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button {
+                            showContinuance = true
+                        } label: {
+                            Label("Continue the Case…", systemImage: "calendar.badge.clock")
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $showContinuance) {
+                ContinuanceSheet(today: session.courtCase.sessionDate, subject: session.courtCase.caption) { date, reason in
+                    showContinuance = false
+                    game.continueMatter(session.courtCase.id, to: date, reason: reason, snapshot: session.snapshot)
+                    dismiss()
+                }
             }
             .sheet(isPresented: $showCounsel) {
                 CounselSheet(provider: session)
@@ -82,10 +99,11 @@ struct CourtroomView: View {
                 LawLibraryView(highlightIDs: session.courtCase.relevantLawIDs, showsDoneButton: true)
             }
             .confirmationDialog("Leave the courtroom?", isPresented: $confirmRecess, titleVisibility: .visible) {
-                Button("Leave and start this case over later", role: .destructive) { dismiss() }
+                Button("Continue the case to another date") { showContinuance = true }
+                Button("Leave and start this case over later today", role: .destructive) { dismiss() }
                 Button("Stay", role: .cancel) {}
             } message: {
-                Text("The case stays on your calendar, but rulings you've made so far will not be saved.")
+                Text("A continuance keeps every ruling you've made. Leaving without one means starting this case over.")
             }
         }
         .interactiveDismissDisabled()
@@ -551,6 +569,73 @@ struct PleaColloquySheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+
+// MARK: - Continuance
+
+/// Pick a date to reconvene and the reason for the continuance.
+struct ContinuanceSheet: View {
+    let today: Date
+    let subject: String
+    let onContinue: (Date, String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var date: Date
+    @State private var reason = Self.reasons[0]
+
+    static let reasons = [
+        "On the court's own motion.",
+        "On the defense's motion, to prepare.",
+        "On the State's motion: a witness is unavailable.",
+        "Awaiting a State Crime Laboratory report.",
+        "For a pre-sentence report before sentencing.",
+        "So the defendant can complete treatment before sentencing.",
+        "Defense counsel has a conflict in another courtroom."
+    ]
+
+    init(today: Date, subject: String, onContinue: @escaping (Date, String) -> Void) {
+        self.today = today
+        self.subject = subject
+        self.onContinue = onContinue
+        _date = State(initialValue: CourtCalendar.nextWeekday(after: Calendar.current.date(byAdding: .day, value: 6, to: today) ?? today))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text(subject).font(.headline)
+                    DatePicker("Reconvene on", selection: $date,
+                               in: CourtCalendar.nextWeekday(after: today)...,
+                               displayedComponents: .date)
+                    if CourtCalendar.isWeekend(date) {
+                        Text("Court doesn't sit on weekends. The case will be heard \(CourtCalendar.dayTitle(CourtCalendar.weekday(onOrAfter: date))).")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                } footer: {
+                    Text("Every ruling you've made is kept. The case comes back on that day's calendar, right where you left it.")
+                }
+                Section("Reason") {
+                    Picker("Reason", selection: $reason) {
+                        ForEach(Self.reasons, id: \.self) { Text($0).tag($0) }
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                }
+            }
+            .navigationTitle("Continuance")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Continue") { onContinue(date, reason) }
                 }
             }
         }
