@@ -34,12 +34,23 @@ enum CaseGenerator {
             if !fitting.isEmpty { pool = fitting }
         }
 
-        // Work through every kind of case before any repeats: prefer the least-heard templates.
+        // Serious felonies come up most; low-level cases still appear, but rarely.
+        func weight(_ template: CaseTemplate) -> Double {
+            switch LawLibrary.law(template.primaryLaw).ncClass {
+            case .A?, .B1?, .B2?, .C?, .D?, .E?: return 5
+            case .F?, .G?: return 3.5
+            case .H?: return 2
+            case .I?: return 1
+            default: return 0.6
+            }
+        }
+        // Rotate through the kinds of cases in proportion to their weight before any repeats.
         func uses(_ template: CaseTemplate) -> Int {
             context.usedSignatures.filter { $0.hasPrefix(template.key + "|") }.count
         }
-        let fewest = pool.map(uses).min() ?? 0
-        var choices = pool.filter { uses($0) == fewest }
+        func score(_ template: CaseTemplate) -> Double { Double(uses(template) + 1) / weight(template) }
+        let lowest = pool.map(score).min() ?? 0
+        var choices = pool.filter { score($0) <= lowest + 0.0001 }
         let notRecent = choices.filter { !context.recentTemplateKeys.contains($0.key) }
         if !notRecent.isEmpty { choices = notRecent }
         let template = rng.pick(choices)

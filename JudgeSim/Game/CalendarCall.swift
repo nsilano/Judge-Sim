@@ -58,8 +58,8 @@ struct CalendarCall: Identifiable, Codable, Hashable {
 
 enum CalendarCalls {
 
-    private static let pleaLaws = ["misdLarceny", "possSchedII", "breakingVehicle", "larcenyMerchant", "feloniousBE",
-                                   "uttering", "assaultFemale", "resisting", "possStolen", "communicatingThreats"]
+    private static let pleaLaws = ["felonyLarceny", "possSchedII", "breakingVehicle", "larcenyMerchant", "feloniousBE",
+                                   "uttering", "pwisd", "commonLawRobbery", "possStolen", "strangulation", "awdwisi", "burglary2"]
 
     static func make(county: County, date: Date, docketSequence: Int, people: [PersonRecord], seed: UInt64) -> CalendarCall {
         var rng = SeededRNG(seed: seed)

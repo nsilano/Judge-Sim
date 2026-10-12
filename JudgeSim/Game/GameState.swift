@@ -72,6 +72,7 @@ private struct SaveData: Codable {
     var openingMinutes: Int?
     var sessionEnds: Date?
     var digest: [NewsItem]?
+    var appeals: [AppealTracker]?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -90,6 +91,8 @@ final class GameState: ObservableObject {
     @Published private(set) var scheduled: [ScheduledMatter] = []
     /// The hour court opens each day, in minutes after midnight.
     @Published private(set) var openingMinutes = 9 * 60 + 30
+    /// Every appeal taken from this court, pending or decided.
+    @Published private(set) var appeals: [AppealTracker] = []
     /// What happened since the judge last sat: appeals decided, releases, new arrests.
     @Published private(set) var digest: [NewsItem] = []
     /// The last day of the current week-long criminal session.
@@ -232,6 +235,38 @@ final class GameState: ObservableObject {
         today = buildDay(next, kind: kind, sessionDay: sessionDay)
         digest = Array(news.prefix { $0.id != marker })
         save()
+    }
+
+    /// Starts following each appeal taken today, and puts any oral argument on the calendar.
+    private func trackAppeals(_ events: [PendingEvent], docket: String, caption: String, personID: UUID, appellant: String, plea: Bool) {
+        var rng = SeededRNG(seed: seedBase ^ UInt64(abs(docket.hashValue % 1_000_000)) ^ UInt64(appeals.count))
+        let decisions = events.filter { $0.news.kind == .appeal && $0.news.docket == docket && !Appeals.isFollowUp($0) }
+        guard let first = decisions.min(by: { $0.due < $1.due }) else { return }
+        let headline = first.news.headline
+        let issue: String
+        let byState = headline.contains("reinstates") || (first.news.body.contains("On appeal by the State"))
+        if headline.contains("reinstates") {
+            issue = "Whether the trial court erred in dismissing the charges for a speedy-trial violation"
+        } else if first.effect == .resentence || headline.contains("vacates sentence") || first.news.body.contains("remanded for resentencing") {
+            issue = "Whether the sentence is authorized by North Carolina law"
+        } else if docket.hasSuffix("(PV)") {
+            issue = "Whether the court had authority to sanction the probationer as it did"
+        } else if plea {
+            issue = "Sentencing issues following a plea (G.S. 15A-1444)"
+        } else {
+            issue = "The sufficiency of the evidence and the trial court's rulings on motions and objections"
+        }
+        var tracker = Appeals.tracker(for: first, caption: caption, personID: personID, filed: currentDate,
+                                      appellant: byState ? "the State" : appellant, issue: issue, rng: &rng)
+        tracker.docket = docket
+        appeals.insert(tracker, at: 0)
+        if let argument = tracker.argument {
+            pending.append(PendingEvent(due: argument,
+                                        news: NewsItem(date: argument, kind: .community,
+                                                       headline: "Court of Appeals hears argument in \(caption)",
+                                                       body: "A three-judge panel of the North Carolina Court of Appeals heard oral argument in Raleigh in the appeal from Judge \(lastName(judgeName ?? ""))'s judgment in \(caption). The issue: \(issue.prefix(1).lowercased() + issue.dropFirst()). A written opinion typically follows within a few months.",
+                                                       docket: docket)))
+        }
     }
 
     func clearDigest() {
@@ -415,6 +450,8 @@ final class GameState: ObservableObject {
         item.date = currentDate
         post(item)
         pending.append(contentsOf: outcome.pending)
+        trackAppeals(outcome.pending, docket: hearing.probation.docket + " (PV)", caption: "State v. \(hearing.personName) (probation violation)",
+                     personID: hearing.personID, appellant: "the probationer", plea: false)
         finishEntry(matterID: hearing.id, outcome: outcome.appearance)
         save()
     }
@@ -505,6 +542,9 @@ final class GameState: ObservableObject {
         verdictNews.date = currentDate
         post(verdictNews)
         pending.append(contentsOf: outcome.pending)
+        let appellant = (outcome.appealNotice ?? "").contains("The State") ? "the State" : "the defendant"
+        trackAppeals(outcome.pending, docket: courtCase.docket, caption: courtCase.caption, personID: d.personID,
+                     appellant: appellant, plea: outcome.verdictLines.contains { $0.verdictLabel.contains("plea") || $0.verdictLabel.contains("No contest") })
         finishEntry(matterID: courtCase.id, outcome: outcome.appearanceSummary)
         save()
     }
@@ -523,6 +563,7 @@ final class GameState: ObservableObject {
         today = nil
         scheduled = []
         digest = []
+        appeals = []
         retrials = []
         stats = CareerStats()
         recentTemplates = []
@@ -575,6 +616,17 @@ final class GameState: ObservableObject {
                     }
                 case .none:
                     break
+                }
+            }
+            if event.news.kind == .appeal, let docket = event.news.docket,
+               let index = appeals.firstIndex(where: { $0.docket == docket }) {
+                if appeals[index].decided == nil && !Appeals.isFollowUp(event) {
+                    appeals[index].decided = event.due
+                    appeals[index].result = Appeals.status(for: event)
+                    appeals[index].opinion = event.news.body
+                } else {
+                    appeals[index].followUps.append("\(SentenceFormat.shortDate(event.due)): \(event.news.headline)")
+                    if Appeals.isFollowUp(event) { appeals[index].result = Appeals.status(for: event) }
                 }
             }
             if event.news.kind == .appeal, let docket = event.news.docket,
@@ -672,7 +724,7 @@ final class GameState: ObservableObject {
                             usedSignatures: usedSignatures, seedBase: seedBase,
                             currentCalendar: currentCalendar, retrials: retrials, stats: stats,
                             today: today, scheduled: scheduled, openingMinutes: openingMinutes, sessionEnds: sessionEnds,
-                            digest: digest)
+                            digest: digest, appeals: appeals)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -699,6 +751,7 @@ final class GameState: ObservableObject {
         stats = data.stats ?? CareerStats()
         scheduled = data.scheduled ?? []
         digest = data.digest ?? []
+        appeals = data.appeals ?? []
         openingMinutes = data.openingMinutes ?? openingMinutes
         sessionEnds = data.sessionEnds ?? sessionFriday(for: currentDate)
         today = data.today
