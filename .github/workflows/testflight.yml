@@ -93,6 +93,7 @@ jobs:
           </dict>
           </plist>
           PLIST
+          set +e
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/JudgeSim.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
@@ -100,11 +101,28 @@ jobs:
             -allowProvisioningUpdates \
             -authenticationKeyPath "$KEY_PATH" \
             -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" 2>&1 | tee export.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            # Surface the real reason as annotations, which show on the run summary.
+            grep -iE "error|fail|denied|not (found|allowed|permitted)|invalid|missing|unable" export.log \
+              | sed 's/^[[:space:]]*//' | awk '!seen[$0]++' | tail -8 \
+              | while IFS= read -r line; do echo "::error::${line:0:900}"; done
+            logdir=$(grep -oE '/[^ ]*\.xcdistributionlogs' export.log | head -1)
+            if [ -n "$logdir" ] && [ -d "$logdir" ]; then
+              cp -R "$logdir" distribution-logs || true
+              grep -rhiE "error|reason|description" "$logdir" 2>/dev/null \
+                | sed 's/^[[:space:]]*//' | awk '!seen[$0]++' | tail -8 \
+                | while IFS= read -r line; do echo "::error::dist: ${line:0:900}"; done
+            fi
+            exit "$code"
+          fi
 
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: testflight-logs
-          path: "*.log"
+          path: |
+            *.log
+            distribution-logs
