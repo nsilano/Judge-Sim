@@ -2,7 +2,7 @@
 # install XcodeGen (`brew install xcodegen`) and run `xcodegen` in this folder.
 name: JudgeSim
 options:
-  bundleIdPrefix: com.example
+  bundleIdPrefix: com.nsilano
   deploymentTarget:
     iOS: "17.0"
 targets:
@@ -12,7 +12,7 @@ targets:
     sources: [JudgeSim]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.JudgeSim
+        PRODUCT_BUNDLE_IDENTIFIER: com.nsilano.judgesim
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Judge Sim
         INFOPLIST_KEY_UILaunchScreen_Generation: YES

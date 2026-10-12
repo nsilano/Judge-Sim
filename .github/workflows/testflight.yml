@@ -20,14 +20,13 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      BUNDLE_ID: ${{ secrets.BUNDLE_ID }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Check secrets
         run: |
           missing=0
-          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_PRIVATE_KEY APPLE_TEAM_ID BUNDLE_ID; do
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_PRIVATE_KEY APPLE_TEAM_ID; do
             if [ -z "${!name}" ]; then echo "::error::Missing repository secret: $name"; missing=1; else echo "Found $name"; fi
           done
           exit $missing
@@ -62,7 +61,6 @@ jobs:
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
             CODE_SIGN_STYLE=Automatic \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             archive | tee archive.log | grep -E "error:|ARCHIVE (SUCCEEDED|FAILED)" || true

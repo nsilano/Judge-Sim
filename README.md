@@ -42,7 +42,7 @@ Requirements: a Mac with **Xcode 16 or later**. The app targets iOS 17 and later
 
 1. Open `JudgeSim.xcodeproj`.
 2. Pick an iPhone simulator, or your own iPhone, and press **Run**.
-   - To install on a physical device, set your Team under **Signing & Capabilities** and change the bundle identifier (`com.example.JudgeSim`) to something unique.
+   - To install on a physical device, set your Team under **Signing & Capabilities**.
 
 If the project won't open in your Xcode version, install [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`) and run `xcodegen` in this folder.
 
