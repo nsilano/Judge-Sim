@@ -253,7 +253,7 @@ enum CaseGenerator {
         }
 
         // Full testimony, the investigation file, and the witnesses most trials actually hear
-        for index in witnesses.indices {
+        for index in witnesses.indices where witnesses[index].exchanges == nil {
             witnesses[index].exchanges = Testimony.examination(for: witnesses[index], isVictim: witnesses[index].name == victimName,
                                                                defendantLast: defendant.lastName, rng: &rng)
         }
@@ -811,8 +811,25 @@ enum CaseGenerator {
             cross.append(fill(impeachment.text))
             weight = max(0, weight - impeachment.penalty)
         }
-        return Witness(name: name, role: fill(seed.role), calledBy: side, direct: fill(seed.direct), cross: cross, weight: weight,
-                       lay: seed.lay)
+        var witness = Witness(name: name, role: fill(seed.role), calledBy: side, direct: fill(seed.direct), cross: cross, weight: weight,
+                              lay: seed.lay)
+        if !seed.exam.isEmpty {
+            let opposing: Side = side == .prosecution ? .defense : .prosecution
+            var exchanges = seed.exam.map { line in
+                TestimonyExchange(phase: line.phase, examiner: line.phase == .cross ? opposing : side,
+                                  question: fill(line.question), answer: fill(line.answer))
+            }
+            // A generic credibility problem drawn on cross shows up as a narrated moment before redirect.
+            let extra = cross.count > seed.cross.count ? cross.last : nil
+            if let extra {
+                let insertAt = exchanges.firstIndex { $0.phase == .redirect } ?? exchanges.count
+                exchanges.insert(TestimonyExchange(phase: .cross, examiner: opposing, question: "", answer: extra), at: insertAt)
+            }
+            witness.exchanges = exchanges
+            witness.direct = exchanges.filter { $0.phase == .direct }.map(\.answer)
+            witness.cross = exchanges.filter { $0.phase != .direct }.map(\.answer)
+        }
+        return witness
     }
 
     private static func makeMotion(_ seed: MotionSeed, target: UUID?, targetTitle: String?, fill: TextFiller) -> Motion {

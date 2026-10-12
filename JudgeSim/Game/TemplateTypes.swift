@@ -23,6 +23,20 @@ struct EvidenceSeed {
     }
 }
 
+/// One question and answer written for a specific witness. Tokens like {DL} are filled in.
+struct ExamLine {
+    let phase: TestimonyExchange.Phase
+    let question: String
+    let answer: String
+
+    /// Asked by the side that called the witness.
+    static func direct(_ question: String, _ answer: String) -> ExamLine { ExamLine(phase: .direct, question: question, answer: answer) }
+    /// Asked by the other side.
+    static func cross(_ question: String, _ answer: String) -> ExamLine { ExamLine(phase: .cross, question: question, answer: answer) }
+    /// Asked by the side that called the witness, after cross.
+    static func redirect(_ question: String, _ answer: String) -> ExamLine { ExamLine(phase: .redirect, question: question, answer: answer) }
+}
+
 struct WitnessSeed {
     /// A token like "{V}" or "{DET}", or nil for a random new name.
     let name: String?
@@ -32,6 +46,8 @@ struct WitnessSeed {
     let weight: Int
     /// Lay witnesses can be impeached with generic credibility problems.
     let lay: Bool
+    /// Full testimony written for this witness. When present it replaces the generic examination.
+    var exam: [ExamLine] = []
 }
 
 struct SecondaryCharge {
