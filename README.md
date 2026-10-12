@@ -26,6 +26,14 @@ There is no score and no right answer. You make rulings, and the world responds:
 6. **Probation violation hearing:** if the defendant was on probation, you decide whether to revoke (concurrent with today's sentence, or consecutive), order a CRV, modify, or continue it. CRV time is credited.
 7. **Judgment:** the judgment and commitment, written findings of factors (AOC-CR-605), any notice of appeal, reactions in the hallway, and tomorrow's story in the *Port Hollis Ledger*, placed on the front page when the case drew attention.
 
+## The full case
+
+Every case comes with the investigating agency's report: report number, lead investigator, the scene, a timeline from the 911 call to the arrest, how the defendant was identified, who was interviewed, warrants, laboratory work, and what wasn't done. The defendant's profile lists current and past jobs and employers, education, family, residence, and income.
+
+Witnesses testify question by question: direct, cross, and redirect. Most trials also hear from the lead detective, often the first officer on scene, a State Crime Laboratory analyst when there's forensic evidence, and a defense character witness. You can question any witness yourself from the bench (N.C. R. Evid. 614(b)).
+
+When you continue a case, you can order follow-up work: missed camera footage, phone and location records, more lab testing, witnesses and tips that weren't followed up, bank records, or an independent expert. The results come in as new exhibits when the case returns. They follow what really happened, so they may clarify the case, cut the other way, or come back inconclusive.
+
 ## Talking to counsel
 
 At every stage you can call a bench conference and question the ADA or defense counsel. Type any question you like. Each lawyer answers live, in character, from only what their side knows about the case at that moment. Answers come from Apple Intelligence on the iPhone (free, private, offline; iOS 26 with Apple Intelligence on) or, optionally, from Claude with your own API key (Chambers → Settings, stored in the Keychain; create one at console.anthropic.com). Without either, typed questions are answered from the case file. Suggested questions are also available. They answer from what they know about the case: plea negotiations, custody status, discovery problems, the strength of each exhibit and witness, sentencing recommendations, restitution, the defendant's plan, ability to pay, treatment needs, and support. Asking the right question at sentencing can surface additional aggravating or mitigating factors. Each lawyer in the county has a consistent personality.

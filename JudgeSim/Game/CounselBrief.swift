@@ -73,7 +73,18 @@ enum CounselBrief {
         if let probation = d.probation {
             lines.append("On probation at the time in \(probation.docket) for \(probation.offense); suspended sentence \(probation.suspendedSentence).")
         }
+        if let profile = d.profile {
+            lines.append("Defendant's work: " + profile.jobs.map { "\($0.title), \($0.employer) (\($0.years))" }.joined(separator: "; ") + ".")
+            if !compact { lines.append("Defendant's life: \(profile.education) \(profile.family) \(profile.residence) \(profile.income)") }
+        }
         if let victim = c.victimName { lines.append("Victim: \(victim).") }
+        if let report = c.investigation {
+            lines.append("Investigation (\(report.agency), lead \(report.leadInvestigator)): \(report.howIdentified) Not done: \(report.notDone.joined(separator: " "))")
+            if !compact {
+                lines.append("Timeline: " + report.timeline.map { "\($0.when): \($0.what)" }.joined(separator: " | "))
+                if !report.lab.isEmpty { lines.append("Lab: " + report.lab.joined(separator: " ")) }
+            }
+        }
 
         lines.append("Evidence:")
         let excluded = r.excludedEvidence(in: c)
@@ -82,7 +93,11 @@ enum CounselBrief {
         }
         lines.append("Witnesses:")
         for w in c.witnesses {
-            lines.append("- \(w.name), \(w.role), called by the \(w.calledBy.rawValue). Direct: \(clip(w.direct.joined(separator: " "), n)) Cross: \(clip(w.cross.joined(separator: " "), n))")
+            if !compact, let exchanges = w.exchanges {
+                lines.append("- \(w.name), \(w.role), called by the \(w.calledBy.rawValue): " + exchanges.map { $0.question.isEmpty ? $0.answer : "Q: \($0.question) A: \($0.answer)" }.joined(separator: " "))
+            } else {
+                lines.append("- \(w.name), \(w.role), called by the \(w.calledBy.rawValue). Direct: \(clip(w.direct.joined(separator: " "), n)) Cross: \(clip(w.cross.joined(separator: " "), n))")
+            }
         }
         for m in c.motions {
             let ruling = r.motions[m.id].map { $0 ? "GRANTED" : "DENIED" } ?? "not yet ruled on"

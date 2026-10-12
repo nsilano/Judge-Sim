@@ -43,6 +43,8 @@ struct Defendant: Codable, Hashable {
     var priors: [PriorConviction]
     var probation: ProbationTerm?
     var history: [PersonRecord.Appearance]
+    /// Work, education, family, and residence (optional for older saves).
+    var profile: DefendantProfile? = nil
 
     var lastName: String { name.components(separatedBy: " ").last ?? name }
     var isReturning: Bool { !history.isEmpty }
@@ -57,6 +59,8 @@ struct Evidence: Identifiable, Codable, Hashable {
     var kind: EvidenceKind
     /// How strongly this item points toward (State) or away from (defense) guilt. Never shown.
     var weight: Int
+    /// Set when the item came in after a continuance, e.g. "Obtained during the continuance".
+    var supplemental: String? = nil
 }
 
 struct Witness: Identifiable, Codable, Hashable {
@@ -71,6 +75,8 @@ struct Witness: Identifiable, Codable, Hashable {
     var lay: Bool? = nil
     /// The defendant, testifying in their own defense.
     var isDefendant: Bool? = nil
+    /// Question-by-question testimony (optional for older saves; direct and cross hold the key lines).
+    var exchanges: [TestimonyExchange]? = nil
 }
 
 struct Objection: Identifiable, Codable, Hashable {
@@ -265,6 +271,8 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var scenarioSignature: String?
     /// What the defendant would say if they chose to testify.
     var defendantTestimony: Witness?
+    /// The investigating agency's file.
+    var investigation: InvestigationReport?
 
     var caption: String { "State of North Carolina v. \(defendant.name)" }
 

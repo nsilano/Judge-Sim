@@ -94,9 +94,10 @@ struct CourtroomView: View {
                 CaseReviewSheet(session: session, section: section)
             }
             .sheet(isPresented: $showContinuance) {
-                ContinuanceSheet(today: session.courtCase.sessionDate, subject: session.courtCase.caption) { date, reason in
+                ContinuanceSheet(today: session.courtCase.sessionDate, subject: session.courtCase.caption,
+                                 requestOptions: EvidenceRequest.options(for: session.courtCase)) { date, reason, requests in
                     showContinuance = false
-                    game.continueMatter(session.courtCase.id, to: date, reason: reason, snapshot: session.snapshot)
+                    game.continueMatter(session.courtCase.id, to: date, reason: reason, snapshot: session.snapshot, requests: requests)
                     dismiss()
                 }
             }
@@ -215,8 +216,16 @@ struct BriefingStage: View {
                 ChargeCard(charge: charge)
             }
 
+            if let report = c.investigation {
+                CollapsibleSection(title: "Investigation report", icon: "magnifyingglass",
+                                   summary: "\(report.agency) · \(report.timeline.count) entries · lead: \(report.leadInvestigator)",
+                                   expanded: false) {
+                    InvestigationReportView(report: report)
+                }
+            }
+
             CollapsibleSection(title: "The defendant", icon: "person.fill",
-                               summary: "\(c.defendant.name), \(c.defendant.age) · " + (c.defendant.priors.isEmpty ? "no prior record" : "\(c.defendant.priors.count) prior conviction\(c.defendant.priors.count == 1 ? "" : "s")") + (c.defendant.probation != nil ? " · on probation" : ""),
+                               summary: "\(c.defendant.name), \(c.defendant.age) · \(c.defendant.profile?.jobs.first?.title ?? c.defendant.occupation) · " + (c.defendant.priors.isEmpty ? "no prior record" : "\(c.defendant.priors.count) prior conviction\(c.defendant.priors.count == 1 ? "" : "s")") + (c.defendant.probation != nil ? " · on probation" : ""),
                                expanded: false) {
                 DefendantCard(defendant: c.defendant, county: session.county)
             }
@@ -332,6 +341,11 @@ struct DefendantCard: View {
                 }
             }
             Text(defendant.background).font(.callout)
+
+            if let profile = defendant.profile {
+                Divider()
+                DefendantProfileView(profile: profile)
+            }
 
             if defendant.isReturning {
                 Divider()
@@ -615,10 +629,12 @@ struct PleaColloquySheet: View {
 struct ContinuanceSheet: View {
     let today: Date
     let subject: String
-    let onContinue: (Date, String) -> Void
+    var requestOptions: [EvidenceRequest] = []
+    let onContinue: (Date, String, [EvidenceRequest]) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var date: Date
     @State private var reason = Self.reasons[0]
+    @State private var requests = Set<EvidenceRequest>()
 
     static let reasons = [
         "On the court's own motion.",
@@ -630,9 +646,10 @@ struct ContinuanceSheet: View {
         "Defense counsel has a conflict in another courtroom."
     ]
 
-    init(today: Date, subject: String, onContinue: @escaping (Date, String) -> Void) {
+    init(today: Date, subject: String, requestOptions: [EvidenceRequest] = [], onContinue: @escaping (Date, String, [EvidenceRequest]) -> Void) {
         self.today = today
         self.subject = subject
+        self.requestOptions = requestOptions
         self.onContinue = onContinue
         _date = State(initialValue: CourtCalendar.nextWeekday(after: Calendar.current.date(byAdding: .day, value: 6, to: today) ?? today))
     }
@@ -653,6 +670,26 @@ struct ContinuanceSheet: View {
                 } footer: {
                     Text("Every ruling you've made is kept. The case comes back on that day's calendar, right where you left it.")
                 }
+                if !requestOptions.isEmpty {
+                    Section {
+                        ForEach(requestOptions) { option in
+                            Button {
+                                if requests.contains(option) { requests.remove(option) } else { requests.insert(option) }
+                            } label: {
+                                HStack {
+                                    Image(systemName: requests.contains(option) ? "checkmark.square.fill" : "square")
+                                        .foregroundStyle(requests.contains(option) ? Theme.gold : .secondary)
+                                    Label(option.label, systemImage: option.icon).foregroundStyle(.primary)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    } header: {
+                        Text("Order follow-up before you reconvene")
+                    } footer: {
+                        Text("Results arrive as new exhibits when the case comes back. They may help either side, or come back inconclusive.")
+                    }
+                }
                 Section("Reason") {
                     Picker("Reason", selection: $reason) {
                         ForEach(Self.reasons, id: \.self) { Text($0).tag($0) }
@@ -668,7 +705,7 @@ struct ContinuanceSheet: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Continue") { onContinue(date, reason) }
+                    Button("Continue") { onContinue(date, requests.isEmpty ? reason : "For further investigation, on the court's own motion.", Array(requests)) }
                 }
             }
         }
