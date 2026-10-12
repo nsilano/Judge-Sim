@@ -815,9 +815,11 @@ enum CaseGenerator {
                               lay: seed.lay)
         if !seed.exam.isEmpty {
             let opposing: Side = side == .prosecution ? .defense : .prosecution
-            var exchanges = seed.exam.map { line in
+            let versions = seed.exam.map { max($0.answers.count, $0.questions.count) }.max() ?? 1
+            let version = rng.int(0...(max(1, versions) - 1))
+            var exchanges = seed.exam.filter { !$0.optional || rng.chance(0.6) }.map { line in
                 TestimonyExchange(phase: line.phase, examiner: line.phase == .cross ? opposing : side,
-                                  question: fill(line.question), answer: fill(line.answer))
+                                  question: fill(line.question(version)), answer: fill(line.answer(version)))
             }
             // A generic credibility problem drawn on cross shows up as a narrated moment before redirect.
             let extra = cross.count > seed.cross.count ? cross.last : nil

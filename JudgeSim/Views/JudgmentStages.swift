@@ -905,7 +905,8 @@ struct ProbationStage: View {
                 }
             }
 
-            PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.probationDecision != nil,
+            PrimaryButton(title: "Enter Order", icon: "hammer.fill",
+                          enabled: session.rulings.probationDecision != nil || c.defendant.probation == nil,
                           hint: "Choose how to handle the probation violation.") {
                 Haptics.gavel()
                 session.advance()

@@ -79,6 +79,10 @@ final class CaseSession: ObservableObject {
             sentencingPrepared = stage.rawValue >= Stage.sentencing.rawValue
             revealedAggravating = resume.revealedAggravating
             revealedMitigating = resume.revealedMitigating
+            // The probation may have ended while the case was continued; pick up at the step before it.
+            if stage == .probation && courtCase.defendant.probation == nil {
+                stage = anyConviction ? .sentencing : .verdict
+            }
         }
     }
 

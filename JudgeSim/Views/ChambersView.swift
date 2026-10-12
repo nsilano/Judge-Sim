@@ -253,7 +253,10 @@ struct ChambersView: View {
                         Haptics.gavel()
                         withAnimation { game.adjourn() }
                     }
-                    Text("Next court date: \(CourtCalendar.dayTitle(next))" + (next > Calendar.current.date(byAdding: .day, value: 4, to: day.date) ?? next ? ". Your criminal session is over; the next one starts then." : "."))
+                    let plan = game.nextCourtDayKind
+                    Text("Next court date: \(CourtCalendar.dayTitle(next))"
+                         + (plan.newSession ? ". Your criminal session is over; the next one starts then."
+                            : (plan.kind == .specialSetting ? ", a special setting for continued matters." : ".")))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else {
@@ -477,8 +480,8 @@ struct RecordsView: View {
             let trials = game.history.filter { $0.resolvedKind == "trial" }
             let s = game.stats
             ledgerRow("Convictions", trials.filter { $0.outcome.contains("Guilty") || $0.outcome.contains("No contest") }.count)
-            ledgerRow("Acquittals and dismissals", trials.filter { $0.outcome.contains("Not guilty") || $0.outcome.contains("Dismissed") }.count)
-            ledgerRow("Guilty pleas", trials.filter { $0.outcome.contains("plea") }.count)
+            ledgerRow("Acquittals and dismissals", trials.filter { $0.outcome.hasPrefix("Not guilty") || $0.outcome.hasPrefix("Dismissed") }.count)
+            ledgerRow("Guilty pleas", trials.filter { $0.outcome.contains("plea)") || $0.outcome.contains("No contest") }.count)
             ledgerRow("Returning defendants", trials.filter(\.returningDefendant).count)
             ledgerRow("Felony sentences below the presumptive range", s.belowPresumptive)
             ledgerRow("Felony sentences within the presumptive range", s.withinPresumptive)
@@ -489,7 +492,7 @@ struct RecordsView: View {
             ledgerRow("Probation revoked", s.probationRevoked)
             ledgerRow("Released from custody", s.releasedFromPrison)
             ledgerRow("Affirmed on appeal", trials.filter { $0.appealStatus == "Affirmed on appeal" }.count)
-            ledgerRow("Reversed or vacated on appeal", trials.filter { ($0.appealStatus ?? "").contains("New trial") || ($0.appealStatus ?? "").contains("vacated") }.count)
+            ledgerRow("Reversed or vacated on appeal", trials.filter { ($0.appealStatus ?? "").contains("New trial") || ($0.appealStatus ?? "").contains("vacated") || ($0.appealStatus ?? "").contains("reversed") }.count)
             ledgerRow("Exonerations", s.exonerations)
         }
         Section("Docket history") {

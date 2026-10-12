@@ -232,9 +232,13 @@ enum ViolationHearings {
 
         switch decision {
         case .continueAsIs:
-            lines.insert("The court \(h.willful ? "declines to find a willful violation" : "finds no willful violation"). Probation continues on the same terms.", at: 0)
+            lines.insert((r.finding ?? .established) == .established
+                ? "The court finds a violation but, in its discretion, continues probation on the same terms."
+                : "The court finds no willful violation. Probation continues on the same terms.", at: 0)
         case .modify:
-            lines.insert("The court finds the probationer in willful violation and modifies the judgment.", at: 0)
+            lines.insert((r.finding ?? .established) == .established
+                ? "The court finds the probationer in willful violation and modifies the judgment."
+                : "For good cause shown, the court modifies the conditions of probation (G.S. 15A-1344(d)).", at: 0)
             if r.addTreatment { addedConditions.append("Obtain a substance abuse and mental health assessment and complete recommended treatment."); risk -= 0.08; propensityChange -= 0.05 }
             if r.addTesting { addedConditions.append("Submit to random drug testing."); risk += 0.03 }
             if r.addCurfew { addedConditions.append("Curfew from 9:00 p.m. to 6:00 a.m."); risk += 0.02; propensityChange -= 0.02 }

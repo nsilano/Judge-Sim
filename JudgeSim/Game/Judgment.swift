@@ -566,6 +566,13 @@ enum Judgment {
         let convictedUnits = units(c, r)
         guard !convictedUnits.isEmpty else { return [] }
 
+        if r.habitualFound == true && convictedUnits.contains(where: { $0.offenseClass.isFelony }) {
+            let proven = c.defendant.priors.filter { $0.ncClass.isFelony && !r.priorsNotProven.contains($0.id) }.count
+            if proven < 3 {
+                issues.append("Habitual felon status requires three prior felony convictions (G.S. 14-7.1); the record shows \(proven).")
+            }
+        }
+
         switch r.special {
         case .prayerForJudgment:
             let barred: [NCClass] = [.A, .B1, .B2, .C, .D, .E]
@@ -820,7 +827,6 @@ enum Judgment {
         var judgments: [JudgmentEntry] = []
         var newPriors: [PriorConviction] = []
         var activeTerms: [Int] = []
-        var activeMaxima: [Int] = []
         var activeFelony = false
         var suspendedTerms: [Int] = []
         var probationMonths = 0
@@ -862,12 +868,7 @@ enum Judgment {
                         newsExtras.append("Advanced Supervised Release could shorten the term if programming is completed.")
                     }
                     activeTerms.append(months)
-                    if unit.isFelony {
-                        activeFelony = true
-                        activeMaxima.append(maximum(for: unit, choice: selected))
-                    } else {
-                        activeMaxima.append(selected.minimum)
-                    }
+                    if unit.isFelony { activeFelony = true }
                 } else {
                     suspendedTerms.append(months)
                     probationMonths = max(probationMonths, selected.probationMonths)
@@ -949,8 +950,15 @@ enum Judgment {
         }
         var custodyMonths = combine(activeTerms)
         if custodyMonths > 0, let days = bg?.custodyDays, days > 0 {
-            custodyMonths = max(1, custodyMonths - days / 30)
+            // Credit for time already served can satisfy the active term entirely (G.S. 15-196.1).
+            custodyMonths = max(0, custodyMonths - days / 30)
+            if custodyMonths == 0, let index = judgments.firstIndex(where: { $0.title == "Commitment" }) {
+                judgments[index] = JudgmentEntry(title: "Commitment",
+                                                 lines: judgments[index].lines + ["Pretrial confinement credit satisfies the active term; the defendant is released from custody on this judgment."])
+            }
         }
+        /// An active term was imposed, even if jail credit has already satisfied it.
+        let activeImposed = life || !activeTerms.isEmpty
 
         // Habitual felon
         var habitualNote: String?
@@ -1085,16 +1093,20 @@ enum Judgment {
             newsSentence = "life in prison without the possibility of parole"
         } else if !activeTerms.isEmpty {
             let unitLabel = activeFelony ? "months in prison" : "days in the Hollis County jail"
-            let minima = sentencingUnits.filter { choice($0, r).disposition == .active }.map { choice($0, r).minimum }
-            if activeTerms.count == 1, let low = minima.first, let high = activeMaxima.first {
+            // Felony months and misdemeanor days aren't added together; when a felony is active, report the felony terms.
+            let activeUnits = sentencingUnits.filter { choice($0, r).disposition == .active && !choice($0, r).lifeWithoutParole }
+                .filter { !activeFelony || $0.isFelony }
+            let minima = activeUnits.map { choice($0, r).minimum }
+            let maxima = activeUnits.map { $0.isFelony ? maximum(for: $0, choice: choice($0, r)) : choice($0, r).minimum }
+            if activeUnits.count == 1, let low = minima.first, let high = maxima.first {
                 newsSentence = activeFelony ? "\(low) to \(high) \(unitLabel)" : "\(low) \(unitLabel)"
             } else if r.mode == .consecutive {
-                let low = minima.reduce(0, +), high = activeMaxima.reduce(0, +)
+                let low = minima.reduce(0, +), high = maxima.reduce(0, +)
                 newsSentence = activeFelony
                     ? "consecutive sentences totaling \(low) to \(high) months in prison"
                     : "consecutive sentences totaling \(low) days in jail"
             } else {
-                let low = minima.max() ?? 0, high = activeMaxima.max() ?? 0
+                let low = minima.max() ?? 0, high = maxima.max() ?? 0
                 newsSentence = activeFelony
                     ? "concurrent sentences, the longest \(low) to \(high) months in prison"
                     : "concurrent sentences, the longest \(low) days in jail"
@@ -1116,7 +1128,7 @@ enum Judgment {
         let issues = convicted ? legalIssues(c, r) : []
         var appealScheduled = false
         var appealNotice: String?
-        let harsh = life || custodyMonths > 0
+        let harsh = activeImposed || custodyMonths > 0
         if !issues.isEmpty {
             var newRelease: Date?
             if harsh, let unit = sentencingUnits.first {
@@ -1198,11 +1210,11 @@ enum Judgment {
         }
 
         // The local paper
-        let reactions = makeReactions(c, county: county, convicted: convicted, dismissed: dismissed, active: custodyMonths > 0 || life,
+        let reactions = makeReactions(c, county: county, convicted: convicted, dismissed: dismissed, active: custodyMonths > 0 || activeImposed,
                                       plea: plea ? r.pleaKind : nil, rng: &rng)
         var news = makeNews(c, county: county, judgeLast: judgeLast, date: date, convicted: convicted, dismissed: dismissed,
                             plea: plea ? r.pleaKind : nil, pleaLaw: plea ? sentencingUnits.first?.law : nil,
-                            sentence: newsSentence, active: custodyMonths > 0 || life, reactions: reactions)
+                            sentence: newsSentence, active: custodyMonths > 0 || activeImposed, reactions: reactions)
         if !newsExtras.isEmpty { news.body += " " + newsExtras.joined(separator: " ") }
 
         let appearance: String
@@ -1215,6 +1227,7 @@ enum Judgment {
         }
 
         if dismissed && c.motions.contains(where: { $0.kind == .dismissSpeedyTrial && !$0.shouldGrant }) && rng.chance(0.6) {
+            appealNotice = "The State gave notice of appeal from the order of dismissal (G.S. 15A-1445(a)(1))."
             pending.append(PendingEvent(due: later(150...300),
                                         news: NewsItem(date: date, kind: .appeal,
                                                        headline: "Court of Appeals reinstates charges against \(d.name)",

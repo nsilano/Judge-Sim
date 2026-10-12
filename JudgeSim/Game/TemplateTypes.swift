@@ -24,17 +24,30 @@ struct EvidenceSeed {
 }
 
 /// One question and answer written for a specific witness. Tokens like {DL} are filled in.
+/// Each witness testifies in one of several versions: version k uses the k-th question and answer
+/// (wrapping around when a line has fewer), so the same kind of case plays out differently each time.
 struct ExamLine {
     let phase: TestimonyExchange.Phase
-    let question: String
-    let answer: String
+    let questions: [String]
+    let answers: [String]
+    /// Optional lines are asked in some trials and not others.
+    var optional = false
 
-    /// Asked by the side that called the witness.
-    static func direct(_ question: String, _ answer: String) -> ExamLine { ExamLine(phase: .direct, question: question, answer: answer) }
+    /// Asked by the side that called the witness. Extra answers are alternate versions.
+    static func direct(_ question: String, _ answers: String...) -> ExamLine { ExamLine(phase: .direct, questions: [question], answers: answers) }
+    static func direct(_ questions: [String], _ answers: String...) -> ExamLine { ExamLine(phase: .direct, questions: questions, answers: answers) }
     /// Asked by the other side.
-    static func cross(_ question: String, _ answer: String) -> ExamLine { ExamLine(phase: .cross, question: question, answer: answer) }
+    static func cross(_ question: String, _ answers: String...) -> ExamLine { ExamLine(phase: .cross, questions: [question], answers: answers) }
+    static func cross(_ questions: [String], _ answers: String...) -> ExamLine { ExamLine(phase: .cross, questions: questions, answers: answers) }
     /// Asked by the side that called the witness, after cross.
-    static func redirect(_ question: String, _ answer: String) -> ExamLine { ExamLine(phase: .redirect, question: question, answer: answer) }
+    static func redirect(_ question: String, _ answers: String...) -> ExamLine { ExamLine(phase: .redirect, questions: [question], answers: answers) }
+    static func redirect(_ questions: [String], _ answers: String...) -> ExamLine { ExamLine(phase: .redirect, questions: questions, answers: answers) }
+
+    /// The same line, asked only in some trials.
+    var sometimes: ExamLine { var copy = self; copy.optional = true; return copy }
+
+    func question(_ version: Int) -> String { questions.isEmpty ? "" : questions[version % questions.count] }
+    func answer(_ version: Int) -> String { answers.isEmpty ? "" : answers[version % answers.count] }
 }
 
 struct WitnessSeed {

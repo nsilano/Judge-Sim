@@ -114,7 +114,7 @@ final class GameState: ObservableObject {
         load()
     }
 
-    var casesHeard: Int { history.count }
+    var casesHeard: Int { history.filter { $0.resolvedKind != "continuance" }.count }
     var trialsHeard: Int { history.filter { $0.resolvedKind == "trial" }.count }
     var hearingsHeard: Int { history.filter { $0.resolvedKind == "hearing" }.count }
 
@@ -214,23 +214,34 @@ final class GameState: ObservableObject {
         return next
     }
 
+    /// What the next court date will be: a day of the current session, the first day of a new session, or a special setting.
+    var nextCourtDayKind: (kind: CourtDay.Kind, newSession: Bool) {
+        let next = nextCourtDate
+        guard today != nil else { return (.trial, false) }
+        if next <= sessionEnds {
+            var rng = SeededRNG(seed: seedBase ^ UInt64(abs(Int(next.timeIntervalSince1970)) / 3_600))
+            return (rng.chance(0.15) ? .administrative : .trial, false)
+        }
+        if CourtCalendar.calendar.component(.weekday, from: next) == 2 && !scheduled.contains(where: { $0.date <= next && !CourtCalendar.isSameDay($0.date, next) }) {
+            return (.administrative, true)
+        }
+        return (.specialSetting, false)
+    }
+
     /// Closes the day and opens the next court date.
     func adjourn() {
         guard let day = today, day.isComplete else { return }
         let next = nextCourtDate
-        let kind: CourtDay.Kind
+        let plan = nextCourtDayKind
+        let kind = plan.kind
         let sessionDay: Int
-        if next <= sessionEnds {
-            sessionDay = day.sessionDay + 1
-            var rng = SeededRNG(seed: seedBase ^ UInt64(abs(Int(next.timeIntervalSince1970)) / 3_600))
-            kind = rng.chance(0.15) ? .administrative : .trial
-        } else if CourtCalendar.calendar.component(.weekday, from: next) == 2 && !scheduled.contains(where: { $0.date <= next && !CourtCalendar.isSameDay($0.date, next) }) {
+        if plan.newSession {
             sessionEnds = sessionFriday(for: next)
             sessionDay = 1
-            kind = .administrative
-        } else {
+        } else if kind == .specialSetting {
             sessionDay = 0
-            kind = .specialSetting
+        } else {
+            sessionDay = day.sessionDay + 1
         }
         let marker = news.first?.id
         advanceWorld(to: next)
@@ -355,6 +366,15 @@ final class GameState: ObservableObject {
         scheduled.removeAll { Calendar.current.startOfDay(for: $0.date) <= date }
         for item in due {
             var entry = item.entry
+            if case .hearing(var h) = entry.matter {
+                // A continued hearing is heard, and any confinement runs, from the day it is actually held.
+                h.date = date
+                if let person = person(h.personID) {
+                    h.personAge = person.age(on: date)
+                    if let current = person.probation { h.probation = current }
+                }
+                entry.matter = .hearing(h)
+            }
             if case .trial(var c) = entry.matter {
                 c.sessionDate = date
                 refreshDefendant(&c)
@@ -376,15 +396,24 @@ final class GameState: ObservableObject {
             entries.append(DocketEntry(matter: .trial(retrial), note: "Returned from the Court of Appeals"))
         }
 
+        // Anyone already on today's calendar, or holding a continued matter, isn't given a second matter.
         var usedPeople = Set<UUID>()
+        for entry in entries + scheduled.map(\.entry) {
+            switch entry.matter {
+            case .trial(let c): usedPeople.insert(c.defendant.personID)
+            case .hearing(let h): usedPeople.insert(h.personID)
+            case .calendar(let call): call.matters.forEach { usedPeople.insert($0.personID) }
+            }
+        }
         switch kind {
         case .specialSetting:
             break
         case .administrative:
             if let county {
                 let call = CalendarCalls.make(county: county, date: date, docketSequence: docketSequence, people: people,
-                                              seed: rng.next())
+                                              excluding: usedPeople, seed: rng.next())
                 docketSequence += 200
+                call.matters.forEach { usedPeople.insert($0.personID) }
                 entries.append(DocketEntry(matter: .calendar(call)))
             }
             for _ in 0..<rng.int(1...2) {
@@ -482,7 +511,9 @@ final class GameState: ObservableObject {
         history.insert(CaseRecord(docket: hearing.probation.docket + " (PV)", caption: "Probation violation: \(hearing.personName)",
                                   headline: "Probation violation hearing", category: .procedure, date: currentDate,
                                   defendantID: hearing.personID, outcome: outcome.appearance, judgments: outcome.lines,
-                                  returningDefendant: true, appealStatus: nil, kind: "hearing"), at: 0)
+                                  returningDefendant: true,
+                                  appealStatus: outcome.pending.contains(where: { $0.news.kind == .appeal }) ? "Appeal pending" : nil,
+                                  kind: "hearing"), at: 0)
         if outcome.status == .incarcerated && outcome.probation == nil { stats.probationRevoked += 1 }
         var item = outcome.news
         item.date = currentDate
@@ -545,7 +576,8 @@ final class GameState: ObservableObject {
                                   category: courtCase.category, date: currentDate, defendantID: d.personID,
                                   outcome: outcome.appearanceSummary, judgments: judgmentText,
                                   returningDefendant: d.isReturning,
-                                  appealStatus: outcome.appealNotice == nil ? nil : "Appeal pending", kind: "trial"), at: 0)
+                                  appealStatus: outcome.appealNotice == nil && !outcome.pending.contains(where: { $0.news.kind == .appeal && $0.news.docket == courtCase.docket }) ? nil : "Appeal pending",
+                                  kind: "trial"), at: 0)
         if let position = outcome.sentencePosition {
             switch position {
             case .below: stats.belowPresumptive += 1
@@ -553,7 +585,9 @@ final class GameState: ObservableObject {
             case .above: stats.abovePresumptive += 1
             }
         }
-        if outcome.custodyMonths > 0 { stats.activeSentences += 1 } else if outcome.newProbation != nil && outcome.convicted { stats.suspendedSentences += 1 }
+        let activeImposed = outcome.custodyMonths > 0
+            || outcome.newPriors.contains { $0.sentence.hasSuffix(" active") || $0.sentence.hasPrefix("Life") }
+        if activeImposed { stats.activeSentences += 1 } else if outcome.newProbation != nil && outcome.convicted { stats.suspendedSentences += 1 }
         if courtCase.defendant.probation != nil && outcome.probationHearing?.contains("revoked") == true { stats.probationRevoked += 1 }
 
         // Update the person's record
@@ -633,14 +667,20 @@ final class GameState: ObservableObject {
             if let personID = event.personID, let index = people.firstIndex(where: { $0.id == personID }) {
                 switch event.effect {
                 case .releasePerson:
+                    var custodyFromThisCase = true
                     if let docket = event.vacatesDocket {
                         people[index].priors.removeAll { $0.docket == docket || $0.docket == docket + " (PV)" }
                         if people[index].probation?.docket == docket { people[index].probation = nil }
+                        // Custody imposed later in another case continues.
+                        let lastDocket = people[index].appearances.last?.docket
+                        custodyFromThisCase = lastDocket == nil || lastDocket == docket || lastDocket == docket + " (PV)"
                     } else {
                         people[index].probation = nil
                     }
-                    people[index].status = people[index].probation == nil ? .free : .probation
-                    people[index].releaseDate = nil
+                    if people[index].status != .incarcerated || custodyFromThisCase {
+                        people[index].status = people[index].probation == nil ? .free : .probation
+                        people[index].releaseDate = nil
+                    }
                 case .raisePropensity:
                     people[index].propensity = min(0.85, people[index].propensity + 0.15)
                 case .resentence:
@@ -790,10 +830,11 @@ final class GameState: ObservableObject {
         scheduled = data.scheduled ?? []
         digest = data.digest ?? []
         appeals = data.appeals ?? []
-        backfillAppeals()
         openingMinutes = data.openingMinutes ?? openingMinutes
         sessionEnds = data.sessionEnds ?? sessionFriday(for: currentDate)
         today = data.today
+        // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
+        backfillAppeals()
         if today == nil && judgeName != nil {
             // An older save: start the calendar today, keeping any matter left open.
             currentDate = CourtCalendar.weekday(onOrAfter: currentDate)
