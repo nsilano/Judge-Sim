@@ -7,6 +7,7 @@ struct HearingView: View {
     @State private var showCounsel = false
     @State private var showLibrary = false
     @State private var confirmLeave = false
+    @State private var showContinuance = false
 
     init(hearing: ViolationHearing, judgeName: String, county: County) {
         _session = StateObject(wrappedValue: HearingSession(hearing: hearing, judgeName: judgeName, county: county))
@@ -46,13 +47,21 @@ struct HearingView: View {
                 }
             }
             .sheet(isPresented: $showCounsel) { CounselSheet(provider: session) }
+            .sheet(isPresented: $showContinuance) {
+                ContinuanceSheet(today: h.date, subject: "Probation violation: \(h.personName)") { date, reason in
+                    showContinuance = false
+                    game.continueMatter(h.id, to: date, reason: reason, snapshot: nil)
+                    dismiss()
+                }
+            }
             .sheet(isPresented: $showLibrary) {
                 LawLibraryView(highlightIDs: ["probationViolation", "crv", "probationConditions", "dispositions"], showsDoneButton: true)
             }
         }
         .interactiveDismissDisabled()
         .confirmationDialog("Leave the hearing?", isPresented: $confirmLeave, titleVisibility: .visible) {
-            Button("Leave; resume later") { dismiss() }
+            Button("Continue the hearing to another date") { showContinuance = true }
+            Button("Leave; resume later today") { dismiss() }
             Button("Stay", role: .cancel) {}
         } message: {
             Text("The hearing stays on your docket. Your rulings so far won't be kept.")
@@ -120,6 +129,8 @@ struct HearingView: View {
                 .font(.callout)
             if h.probation.imposedInThisCourt {
                 Text("You imposed this sentence.").font(.caption).foregroundStyle(.purple)
+            } else {
+                Text(h.probation.origin ?? "Another judge imposed this sentence.").font(.caption).foregroundStyle(.secondary)
             }
             if let conditions = h.probation.conditions, !conditions.isEmpty {
                 Divider()

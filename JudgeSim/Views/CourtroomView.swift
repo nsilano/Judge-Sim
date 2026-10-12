@@ -7,9 +7,11 @@ struct CourtroomView: View {
     @State private var showLibrary = false
     @State private var showCounsel = false
     @State private var confirmRecess = false
+    @State private var showContinuance = false
+    @State private var reviewSection: CaseReviewSheet.Section?
 
-    init(courtCase: CourtCase, judgeName: String, county: County) {
-        _session = StateObject(wrappedValue: CaseSession(courtCase: courtCase, judgeName: judgeName, county: county))
+    init(courtCase: CourtCase, judgeName: String, county: County, resume: CaseSnapshot? = nil) {
+        _session = StateObject(wrappedValue: CaseSession(courtCase: courtCase, judgeName: judgeName, county: county, resume: resume))
     }
 
     var body: some View {
@@ -17,11 +19,15 @@ struct CourtroomView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: 16) {
-                        StageTracker(stages: session.visibleStages, current: session.stage)
-                            .id("top")
+                        StageTracker(stages: session.visibleStages, current: session.stage) { tapped in
+                            reviewSection = section(for: tapped)
+                        }
+                        .id("top")
 
                         if session.stage != .judgment {
-                            CounselPrompt(available: session.unaskedCount) { showCounsel = true }
+                            CourtActionBar(counselCount: session.unaskedCount, next: session.nextStep,
+                                           onCounsel: { showCounsel = true },
+                                           onReview: { reviewSection = session.stage == .briefing ? .file : .evidence })
                         }
 
                         switch session.stage {
@@ -74,6 +80,25 @@ struct CourtroomView: View {
                             .labelStyle(.titleAndIcon)
                     }
                 }
+                if session.stage != .judgment {
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button {
+                            showContinuance = true
+                        } label: {
+                            Label("Continue the Case…", systemImage: "calendar.badge.clock")
+                        }
+                    }
+                }
+            }
+            .sheet(item: $reviewSection) { section in
+                CaseReviewSheet(session: session, section: section)
+            }
+            .sheet(isPresented: $showContinuance) {
+                ContinuanceSheet(today: session.courtCase.sessionDate, subject: session.courtCase.caption) { date, reason in
+                    showContinuance = false
+                    game.continueMatter(session.courtCase.id, to: date, reason: reason, snapshot: session.snapshot)
+                    dismiss()
+                }
             }
             .sheet(isPresented: $showCounsel) {
                 CounselSheet(provider: session)
@@ -82,19 +107,33 @@ struct CourtroomView: View {
                 LawLibraryView(highlightIDs: session.courtCase.relevantLawIDs, showsDoneButton: true)
             }
             .confirmationDialog("Leave the courtroom?", isPresented: $confirmRecess, titleVisibility: .visible) {
-                Button("Leave and start this case over later", role: .destructive) { dismiss() }
+                Button("Continue the case to another date") { showContinuance = true }
+                Button("Leave and start this case over later today", role: .destructive) { dismiss() }
                 Button("Stay", role: .cancel) {}
             } message: {
-                Text("The case stays on your calendar, but rulings you've made so far will not be saved.")
+                Text("A continuance keeps every ruling you've made. Leaving without one means starting this case over.")
             }
         }
         .interactiveDismissDisabled()
     }
 }
 
+extension CourtroomView {
+    /// Tapping a finished step opens that part of the case file.
+    func section(for stage: CaseSession.Stage) -> CaseReviewSheet.Section {
+        switch stage {
+        case .briefing: return .file
+        case .motions: return .motions
+        case .trial: return .testimony
+        default: return .evidence
+        }
+    }
+}
+
 struct StageTracker: View {
     let stages: [CaseSession.Stage]
     let current: CaseSession.Stage
+    var onReview: ((CaseSession.Stage) -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 4) {
@@ -113,7 +152,12 @@ struct StageTracker: View {
                         .minimumScaleFactor(0.7)
                 }
                 .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if stage.rawValue < current.rawValue { onReview?(stage) }
+                }
                 .accessibilityLabel(stage.title)
+                .accessibilityHint(stage.rawValue < current.rawValue ? "Review this part of the case" : "")
             }
         }
     }
@@ -166,20 +210,27 @@ struct BriefingStage: View {
                     .card(tint: .orange)
             }
 
-            SectionTitle(text: "Procedural posture", icon: "doc.plaintext")
-            BulletList(items: c.proceduralNotes + deNovoNote, symbol: "circle.fill")
-                .font(.callout)
-                .card()
-
-            SectionTitle(text: "The defendant", icon: "person.fill")
-            DefendantCard(defendant: c.defendant, county: session.county)
-
-            SectionTitle(text: "Charges", icon: "list.bullet.rectangle.fill")
+            SectionTitle(text: c.charges.count == 1 ? "The charge" : "\(c.charges.count) charges", icon: "list.bullet.rectangle.fill")
             ForEach(c.charges) { charge in
                 ChargeCard(charge: charge)
             }
 
-            SectionTitle(text: "Counsel & investigation", icon: "person.2.fill")
+            CollapsibleSection(title: "The defendant", icon: "person.fill",
+                               summary: "\(c.defendant.name), \(c.defendant.age) · " + (c.defendant.priors.isEmpty ? "no prior record" : "\(c.defendant.priors.count) prior conviction\(c.defendant.priors.count == 1 ? "" : "s")") + (c.defendant.probation != nil ? " · on probation" : ""),
+                               expanded: false) {
+                DefendantCard(defendant: c.defendant, county: session.county)
+            }
+
+            CollapsibleSection(title: "Procedural posture", icon: "doc.plaintext",
+                               summary: c.habitualIndicted ? "Jury waived · habitual felon indictment" : (c.court == .misdemeanorAppeal ? "Appeal from district court" : "Jury waived"),
+                               expanded: false) {
+                BulletList(items: c.proceduralNotes + deNovoNote, symbol: "circle.fill")
+                    .font(.callout)
+            }
+
+            CollapsibleSection(title: "Counsel & investigation", icon: "person.2.fill",
+                               summary: "\(c.prosecutor) for the State · \(c.defenseAttorney.components(separatedBy: ",").first ?? c.defenseAttorney) for the defense",
+                               expanded: false) {
             VStack(alignment: .leading, spacing: 8) {
                 Label { Text("For the State: ").bold() + Text(c.prosecutor) } icon: {
                     Image(systemName: "building.columns").foregroundStyle(Theme.prosecution)
@@ -192,7 +243,7 @@ struct BriefingStage: View {
                 }
             }
             .font(.callout)
-            .card()
+            }
 
             if session.pleaPresented, let terms = c.background?.arrangementTerms {
                 SectionTitle(text: "Plea arrangement", icon: "signature")
@@ -551,6 +602,73 @@ struct PleaColloquySheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+
+// MARK: - Continuance
+
+/// Pick a date to reconvene and the reason for the continuance.
+struct ContinuanceSheet: View {
+    let today: Date
+    let subject: String
+    let onContinue: (Date, String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var date: Date
+    @State private var reason = Self.reasons[0]
+
+    static let reasons = [
+        "On the court's own motion.",
+        "On the defense's motion, to prepare.",
+        "On the State's motion: a witness is unavailable.",
+        "Awaiting a State Crime Laboratory report.",
+        "For a pre-sentence report before sentencing.",
+        "So the defendant can complete treatment before sentencing.",
+        "Defense counsel has a conflict in another courtroom."
+    ]
+
+    init(today: Date, subject: String, onContinue: @escaping (Date, String) -> Void) {
+        self.today = today
+        self.subject = subject
+        self.onContinue = onContinue
+        _date = State(initialValue: CourtCalendar.nextWeekday(after: Calendar.current.date(byAdding: .day, value: 6, to: today) ?? today))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text(subject).font(.headline)
+                    DatePicker("Reconvene on", selection: $date,
+                               in: CourtCalendar.nextWeekday(after: today)...,
+                               displayedComponents: .date)
+                    if CourtCalendar.isWeekend(date) {
+                        Text("Court doesn't sit on weekends. The case will be heard \(CourtCalendar.dayTitle(CourtCalendar.weekday(onOrAfter: date))).")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                } footer: {
+                    Text("Every ruling you've made is kept. The case comes back on that day's calendar, right where you left it.")
+                }
+                Section("Reason") {
+                    Picker("Reason", selection: $reason) {
+                        ForEach(Self.reasons, id: \.self) { Text($0).tag($0) }
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                }
+            }
+            .navigationTitle("Continuance")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Continue") { onContinue(date, reason) }
                 }
             }
         }

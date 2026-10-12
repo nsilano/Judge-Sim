@@ -125,6 +125,8 @@ struct ProbationTerm: Codable, Hashable {
     var violationRisk: Double?
     var crvCount: Int?
     var treatmentNeed: TreatmentNeed?
+    /// Where the sentence came from, when it wasn't this court.
+    var origin: String?
 }
 
 /// A probation violation report on a probationer, heard on the court's calendar.

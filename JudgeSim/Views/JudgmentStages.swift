@@ -173,8 +173,8 @@ struct SentencingStage: View {
         let issues = session.legalIssues
         VStack(alignment: .leading, spacing: 16) {
             Text(session.rulings.pleaAccepted == true
-                 ? "You accepted the plea. The sentence is entirely up to you."
-                 : "The sentence is entirely up to you. The punishment chart and counsel's recommendations are guidance, not limits.")
+                 ? "You accepted the plea. The sentence is up to you."
+                 : "The sentence is up to you. The chart and counsel's recommendations are guidance, not limits.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
@@ -184,6 +184,7 @@ struct SentencingStage: View {
                     .foregroundStyle(.secondary)
             }
 
+            StepHeader(number: 1, title: "Hear from the parties", detail: "The victim's statement and the defendant's words to the court.")
             CollapsibleSection(title: "Victim & defendant", icon: "person.2.fill",
                                summary: "Victim impact statement and allocution", expanded: true) {
                 if let impact = c.victimImpact {
@@ -194,6 +195,7 @@ struct SentencingStage: View {
                 Text(c.allocution(afterPlea: session.rulings.pleaAccepted == true)).font(.system(.callout, design: .serif)).italic()
             }
 
+            StepHeader(number: 2, title: "Record & factors", detail: "Prior record level and any aggravating or mitigating factors you find.")
             if session.needsHabitualDecision {
                 VStack(alignment: .leading, spacing: 10) {
                     Label("Habitual felon status", systemImage: "exclamationmark.triangle.fill").font(.headline)
@@ -237,6 +239,8 @@ struct SentencingStage: View {
             }
             }
 
+            StepHeader(number: 3, title: "The sentence",
+                       detail: units.count > 1 ? "One sentence per judgment. Choose a term and a disposition for each." : "Choose a term and a disposition.")
             CollapsibleSection(title: "Form of judgment", icon: "doc.badge.gearshape.fill",
                                summary: session.rulings.special.label, expanded: false) {
                 ForEach(SpecialDisposition.allCases, id: \.self) { option in
@@ -275,6 +279,7 @@ struct SentencingStage: View {
                 }
             }
 
+            StepHeader(number: 4, title: "Conditions & money", detail: "Optional. Probation conditions, orders of your own, fines, costs, and restitution.")
             if session.anySuspended && session.rulings.special != .prayerForJudgment {
                 ProbationConditionsCard(session: session)
             }
@@ -283,6 +288,7 @@ struct SentencingStage: View {
 
             MoneyCard(session: session)
 
+            StepHeader(number: 5, title: "Enter judgment")
             if session.sentencingComplete {
                 JudgmentSummaryCard(session: session)
             }

@@ -45,12 +45,13 @@ enum CaseGenerator {
         let template = rng.pick(choices)
 
         let roll = Double.random(in: 0..<1, using: &rng)
-        let band: Band = roll < 0.38 ? .strong : (roll < 0.75 ? .close : .weak)
+        // Some cases are clear one way or the other; about half sit on the line.
+        let band: Band = roll < 0.32 ? .strong : (roll < 0.82 ? .close : .weak)
 
         // Never repeat an exact scenario (same template, set-up, headline, and details).
         var fallback: CourtCase?
         var unheard: CourtCase?
-        for _ in 0..<40 {
+        for _ in 0..<60 {
             let candidate = build(template, seed: seed, band: band, context: context, rng: &rng)
             let fresh = !context.usedSignatures.contains(candidate.scenarioSignature ?? "")
             if fresh && matches(candidate, band: band) { return candidate }
@@ -65,9 +66,9 @@ enum CaseGenerator {
         let s = Judgment.properStrength(courtCase)
         let floor = primary.lesserLawID == nil ? primary.threshold : primary.lesserThreshold
         switch band {
-        case .strong: return s >= primary.threshold + 2
-        case .close: return s >= floor - 2 && s <= primary.threshold + 1
-        case .weak: return s <= floor - 2
+        case .strong: return s >= primary.threshold + 3
+        case .close: return s >= min(floor, primary.threshold - 1) && s <= primary.threshold + 1
+        case .weak: return s <= floor - 3
         }
     }
 
@@ -163,14 +164,54 @@ enum CaseGenerator {
                                   specification: fill(extra.specification), threshold: threshold,
                                   lesserThreshold: threshold))
         }
+        // Extra counts the facts support
+        let addOns = CaseComplexity.pickAddOns(for: t, hasFelonyPrior: defendant.priors.contains { $0.ncClass.isFelony },
+                                               existing: Set(charges.map(\.lawID)), rng: &rng)
+
+        // Sometimes the State indicts a whole series of incidents: a big case with 7 to 9 counts.
+        var seriesCount = 0
+        let seriesCategories: Set<LawCategory> = [.property, .drugs, .whiteCollar, .cyber]
+        if seriesCategories.contains(t.category) && rng.chance(0.22) {
+            let target = rng.int(7...9)
+            let extraIncidents = max(2, target - charges.count - addOns.count)
+            seriesCount = extraIncidents + 1
+            charges[0].specification += " (Incident 1 of \(seriesCount).)"
+            var day = Calendar.current.date(byAdding: .day, value: -rng.int(200...320), to: context.date) ?? context.date
+            for index in 2...seriesCount {
+                day = Calendar.current.date(byAdding: .day, value: rng.int(9...40), to: day) ?? day
+                let when = day.formatted(.dateTime.month(.wide).day().year())
+                let threshold = max(3, t.threshold + rng.int(-1...1))
+                let lesserThreshold = max(3, t.lesserThreshold + rng.int(-1...1))
+                charges.append(Charge(count: charges.count + 1, lawID: t.primaryLaw, lesserLawID: t.lesserLaw,
+                                      specification: "A separate incident on or about \(when), of the same kind as Count 1. (Incident \(index) of \(seriesCount).)",
+                                      threshold: threshold, lesserThreshold: lesserThreshold))
+            }
+        }
+        for addOn in addOns {
+            let threshold = max(3, t.threshold + addOn.thresholdDelta)
+            charges.append(Charge(count: charges.count + 1, lawID: addOn.lawID, lesserLawID: nil,
+                                  specification: fill(addOn.specification), threshold: threshold, lesserThreshold: threshold))
+        }
         let isFelonyCase = charges.contains { $0.law.ncClass?.isFelony ?? false }
         let court: CourtKind = isFelonyCase ? .felony : .misdemeanorAppeal
 
         // Evidence
-        let prosecutionCount = min(t.prosecutionEvidence.count, band == .weak ? 3 : rng.int(3...4))
-        let defenseCount = min(t.defenseEvidence.count, band == .weak ? 2 : (band == .strong ? 1 : rng.int(1...2)))
-        let prosecutionSeeds = rng.pick(t.prosecutionEvidence, count: prosecutionCount)
-        let defenseSeeds = rng.pick(t.defenseEvidence, count: defenseCount)
+        let prosecutionCount = min(t.prosecutionEvidence.count, band == .weak ? rng.int(2...3) : (band == .strong ? rng.int(4...5) : rng.int(3...4)))
+        let defenseCount = min(t.defenseEvidence.count, band == .weak ? rng.int(2...3) : (band == .strong ? rng.int(0...1) : 2))
+        var prosecutionSeeds = rng.pick(t.prosecutionEvidence, count: prosecutionCount) + addOns.map(\.evidence)
+        var defenseSeeds = rng.pick(t.defenseEvidence, count: defenseCount)
+        if seriesCount > 0 {
+            prosecutionSeeds.append(EvidenceSeed(.document, 2, "Pattern Chart",
+                                                 "A chart the lead investigator prepared, linking \(seriesCount) separate incidents to {DL} by date, method, and location. Some links are stronger than others."))
+            defenseSeeds.append(EvidenceSeed(.document, 2, "Gaps in the Pattern",
+                                             "For several of the \(seriesCount) incidents, the State has no witness, no video, and no physical evidence tying {DL} to that date."))
+        }
+        if band == .close {
+            // A case on the line pulls both ways: something real for each side.
+            for complication in CaseComplexity.pickComplications(for: t, rng: &rng) {
+                if complication.side == .prosecution { prosecutionSeeds.append(complication.evidence) } else { defenseSeeds.append(complication.evidence) }
+            }
+        }
 
         var evidence: [Evidence] = []
         var searchable: [(UUID, EvidenceKind, SearchPlace)] = []
@@ -196,7 +237,7 @@ enum CaseGenerator {
         for item in rng.pick(t.prosecutionWitnesses, count: prosecutionWitnessCount) {
             witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used))
         }
-        if !t.defenseWitnesses.isEmpty && (band == .weak || rng.chance(0.75)) {
+        if !t.defenseWitnesses.isEmpty && (band != .strong || rng.chance(0.3)) {
             witnesses.append(makeWitness(rng.pick(t.defenseWitnesses), side: .defense, fill: fill, rng: &rng, used: &used))
         }
 
@@ -336,7 +377,8 @@ enum CaseGenerator {
         let summaryIndex = rng.int(0...(t.summaries.count - 1))
         let headlineIndex = rng.int(0...(t.headlines.count - 1))
         let extrasSignature = t.extras.keys.sorted().compactMap { values[$0] }.joined(separator: ",")
-        let signature = "\(t.key)|s\(summaryIndex)|h\(headlineIndex)|\(extrasSignature)"
+        let addOnSignature = addOns.map(\.lawID).joined(separator: ",") + (seriesCount > 0 ? ",x\(seriesCount)" : "")
+        let signature = "\(t.key)|s\(summaryIndex)|h\(headlineIndex)|\(extrasSignature)" + (addOnSignature.isEmpty ? "" : "|+\(addOnSignature)")
 
         let yy = String(format: "%02d", currentYear % 100)
         let docket = "\(yy) \(isFelonyCase ? "CRS" : "CR") \(String(format: "%06d", context.docketSequence))"
