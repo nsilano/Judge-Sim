@@ -321,6 +321,70 @@ final class CaseSession: ObservableObject {
 
     var legalIssues: [String] { Judgment.legalIssues(courtCase, rulings) }
 
+    // MARK: Questions from the bench (N.C. R. Evid. 614(b))
+
+    @Published private(set) var witnessTranscripts: [UUID: [TranscriptEntry]] = [:]
+
+    func witnessTranscript(for witness: Witness) -> [TranscriptEntry] {
+        witnessTranscripts[witness.id] ?? []
+    }
+
+    /// What a witness knows: their testimony, their role, and the outline of the case. Never what really happened.
+    func witnessBrief(_ witness: Witness, compact: Bool) -> String {
+        let c = courtCase
+        let limit = compact ? 140 : 1_000
+        var lines = [
+            "You are \(witness.name), \(witness.role), a witness called by the \(witness.calledBy == .prosecution ? "State" : "defense") in \(c.caption) in Hollis County Superior Court, North Carolina.",
+            "The judge is now asking you questions directly from the bench, as North Carolina Rule of Evidence 614 allows. Answer as this witness: first person, plain speech, one to three sentences, addressing the judge as \"Your Honor.\"",
+            "You know only what this witness would know: your own testimony below, and what someone in your role would know about the case. If you don't know, say so. Don't invent new evidence or change your story. Stay consistent with your testimony, including anything conceded on cross. Never mention being an AI or a game, and use no stage directions.",
+            "",
+            "CASE: \(CounselBrief.clip(c.summary, limit * 2))",
+            "YOUR TESTIMONY SO FAR:"
+        ]
+        let exchanges = witness.exchanges ?? witness.direct.map { TestimonyExchange(phase: .direct, examiner: witness.calledBy, question: "", answer: $0) }
+        for e in exchanges.prefix(compact ? 10 : 30) {
+            lines.append(e.question.isEmpty ? "- \(CounselBrief.clip(e.answer, limit))" : "Q: \(e.question) A: \(CounselBrief.clip(e.answer, limit))")
+        }
+        if Testimony.isOfficial(witness.role), let report = c.investigation {
+            lines.append("WHAT YOU KNOW OF THE INVESTIGATION: \(report.howIdentified) Steps not taken: \(report.notDone.joined(separator: " "))")
+            if !compact {
+                lines.append("Timeline: " + report.timeline.map { "\($0.when): \($0.what)" }.joined(separator: " | "))
+            }
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    /// Ask a witness a question from the bench. Returns an error message if the answer couldn't be produced.
+    @MainActor
+    func askWitness(_ question: String, witness: Witness) async -> String? {
+        let engine = AISettings.shared.activeEngine
+        let history = witnessTranscript(for: witness).map { (question: $0.question, answer: $0.answer) }
+        var answer: String
+        if engine == .offline {
+            let options = (witness.exchanges ?? []).enumerated().map { index, e in
+                CounselQuestion(id: "w\(index)", side: witness.calledBy, question: e.question.isEmpty ? e.answer : e.question, answer: e.answer)
+            }
+            answer = OfflineCounsel.answer(question, from: options, style: .methodical).0
+        } else {
+            do {
+                let reply = engine == .onDevice
+                    ? try await OnDeviceCounsel.reply(instructions: witnessBrief(witness, compact: true), history: history, question: question)
+                    : try await ClaudeClient.counselReply(system: witnessBrief(witness, compact: false), history: history, question: question)
+                answer = reply.answer
+            } catch OnDeviceCounsel.Failure.guardrail {
+                answer = "Your Honor, I'm not comfortable answering that."
+            } catch ClaudeError.refusal {
+                answer = "Your Honor, I'm not comfortable answering that."
+            } catch {
+                return error.localizedDescription
+            }
+        }
+        var list = witnessTranscripts[witness.id] ?? []
+        list.append(TranscriptEntry(side: witness.calledBy, speaker: witness.name, question: question, answer: answer, reveal: nil))
+        witnessTranscripts[witness.id] = list
+        return nil
+    }
+
     /// One line telling the judge what this screen needs.
     var nextStep: String? {
         switch stage {

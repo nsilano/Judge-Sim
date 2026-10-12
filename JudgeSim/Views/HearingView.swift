@@ -48,7 +48,7 @@ struct HearingView: View {
             }
             .sheet(isPresented: $showCounsel) { CounselSheet(provider: session) }
             .sheet(isPresented: $showContinuance) {
-                ContinuanceSheet(today: h.date, subject: "Probation violation: \(h.personName)") { date, reason in
+                ContinuanceSheet(today: h.date, subject: "Probation violation: \(h.personName)") { date, reason, _ in
                     showContinuance = false
                     game.continueMatter(h.id, to: date, reason: reason, snapshot: nil)
                     dismiss()

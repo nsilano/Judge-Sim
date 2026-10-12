@@ -252,6 +252,45 @@ enum CaseGenerator {
             witnesses.append(makeWitness(rng.pick(t.defenseWitnesses), side: .defense, fill: fill, rng: &rng, used: &used))
         }
 
+        // Full testimony, the investigation file, and the witnesses most trials actually hear
+        for index in witnesses.indices {
+            witnesses[index].exchanges = Testimony.examination(for: witnesses[index], isVictim: witnesses[index].name == victimName,
+                                                               defendantLast: defendant.lastName, rng: &rng)
+        }
+        var profiledDefendant = defendant
+        profiledDefendant.profile = DefendantProfiles.make(for: defendant, county: county)
+        var investigation = Investigations.make(t: t, values: values, detective: detective, officer: officer,
+                                                evidence: evidence, witnesses: witnesses, defendant: defendant,
+                                                charges: charges, year: currentYear, rng: &rng)
+        let roles = witnesses.map { $0.role.lowercased() }
+        let stateEvidence = evidence.filter { $0.side == .prosecution }
+        var added: [Witness] = []
+        if !roles.contains(where: { $0.contains("detective") || $0.contains("investigator") || $0.contains("agent") }) {
+            added.append(Testimony.detective(name: detective.display, agency: detective.agency, report: investigation,
+                                             statementTaken: stateEvidence.contains { $0.kind == .statement },
+                                             stateEvidence: stateEvidence, defendantLast: defendant.lastName,
+                                             alternateSuspectInDefense: evidence.contains { $0.side == .defense && $0.title.lowercased().contains("tip") },
+                                             rng: &rng))
+        }
+        if t.category != .whiteCollar && t.category != .cyber && !roles.contains(where: { $0.contains("officer") || $0.contains("deputy") || $0.contains("trooper") }) && rng.chance(0.6) {
+            added.append(Testimony.firstOfficer(name: officer.display, agency: officer.agency, report: investigation,
+                                                defendantLast: defendant.lastName, rng: &rng))
+        }
+        let forensic = stateEvidence.filter { $0.kind == .forensic }
+        if !forensic.isEmpty && !roles.contains(where: { $0.contains("analyst") || $0.contains("examiner") || $0.contains("scientist") || $0.contains("chemist") }) {
+            added.append(Testimony.analyst(name: NameBank.person(using: &rng, excluding: &used), forensic: forensic,
+                                           defendantLast: defendant.lastName, rng: &rng))
+        }
+        if rng.chance(0.55) {
+            added.append(Testimony.characterWitness(name: NameBank.person(using: &rng, excluding: &used), profile: profiledDefendant.profile,
+                                                    defendantLast: defendant.lastName, rng: &rng))
+        }
+        // State witnesses first, then the defense's.
+        witnesses = added.filter { $0.calledBy == .prosecution } + witnesses.filter { $0.calledBy == .prosecution }
+            + witnesses.filter { $0.calledBy == .defense } + added.filter { $0.calledBy == .defense }
+        investigation.interviews = witnesses.filter { $0.isDefendant != true && !$0.role.contains("State Crime Laboratory") }
+            .map { "\($0.name), \($0.role.lowercased())" } + [investigation.interviews.last ?? ""]
+
         // Objections
         var objections: [Objection] = []
         var usedQuestions = Set<String>()
@@ -408,6 +447,9 @@ enum CaseGenerator {
                 : ["On cross, \(defendant.lastName) has no explanation for \(strongestState.map { "\"\($0.title)\"" } ?? "the State's evidence") and contradicts an earlier statement."],
             weight: testimonyHolds ? 2 : -2,
             lay: true, isDefendant: true)
+        var fullTestimony = testimony
+        fullTestimony.exchanges = Testimony.defendant(testimony, defendantLast: defendant.lastName, holds: testimonyHolds,
+                                                      strongestState: strongestState?.title)
 
         var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                         publicDefender: usePublicDefender, mitigating: mitigating,
@@ -436,7 +478,7 @@ enum CaseGenerator {
             headline: fill(t.headlines[headlineIndex]),
             category: t.category,
             summary: fill(t.summaries[summaryIndex]),
-            defendant: defendant,
+            defendant: profiledDefendant,
             victimName: victimName,
             charges: charges,
             habitualIndicted: habitual,
@@ -464,7 +506,8 @@ enum CaseGenerator {
             relatedDoctrines: doctrines,
             background: background,
             scenarioSignature: signature,
-            defendantTestimony: testimony
+            defendantTestimony: fullTestimony,
+            investigation: investigation
         )
     }
 

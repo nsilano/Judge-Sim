@@ -119,6 +119,8 @@ struct EvidenceCard: View {
                     Spacer()
                     if suppressed {
                         Pill(text: "Suppressed", color: Theme.bad, icon: "nosign")
+                    } else if evidence.supplemental != nil {
+                        Pill(text: "New", color: .purple, icon: "sparkles")
                     } else {
                         Text(evidence.kind.label).font(.caption).foregroundStyle(.secondary)
                     }
@@ -140,6 +142,7 @@ struct WitnessCard: View {
     let witness: Witness
     let objections: [Objection]
     @ObservedObject var session: CaseSession
+    @State private var askingWitness = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -154,20 +157,21 @@ struct WitnessCard: View {
                 }
             }
 
-            Text("Direct examination").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-            ForEach(Array(witness.direct.enumerated()), id: \.offset) { _, line in
-                Text(line).font(.system(.callout, design: .serif))
-            }
-            ForEach(objections.filter { $0.raisedBy != witness.calledBy }) { objection in
+            ExaminationTranscript(witness: witness)
+            ForEach(objections) { objection in
                 ObjectionView(objection: objection, selection: session.objectionBinding(objection))
             }
-
-            Text("Cross-examination").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-            ForEach(Array(witness.cross.enumerated()), id: \.offset) { _, line in
-                Text(line).font(.system(.callout, design: .serif))
+            Button {
+                Haptics.tap()
+                askingWitness = true
+            } label: {
+                Label("Question this witness yourself", systemImage: "questionmark.bubble.fill")
+                    .font(.subheadline.weight(.semibold))
             }
-            ForEach(objections.filter { $0.raisedBy == witness.calledBy }) { objection in
-                ObjectionView(objection: objection, selection: session.objectionBinding(objection))
+            .buttonStyle(.bordered)
+            .tint(Theme.gold)
+            .sheet(isPresented: $askingWitness) {
+                WitnessQuestionSheet(session: session, witness: witness)
             }
         }
         .card()
@@ -317,6 +321,69 @@ struct RightToTestifyCard: View {
                 }
             }
             .card(tint: session.rulings.defendantTestifies == nil ? nil : Theme.gold)
+        }
+    }
+}
+
+// MARK: - Testimony transcript
+
+/// A witness's testimony, question by question, grouped into direct, cross, and redirect.
+struct ExaminationTranscript: View {
+    let witness: Witness
+    var struckAnswers: Set<String> = []
+
+    private var exchanges: [TestimonyExchange] {
+        if let exchanges = witness.exchanges, !exchanges.isEmpty { return exchanges }
+        let opposing: Side = witness.calledBy == .prosecution ? .defense : .prosecution
+        return witness.direct.map { TestimonyExchange(phase: .direct, examiner: witness.calledBy, question: "", answer: $0) }
+            + witness.cross.map { TestimonyExchange(phase: .cross, examiner: opposing, question: "", answer: $0) }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach([TestimonyExchange.Phase.direct, .cross, .redirect], id: \.self) { phase in
+                let lines = exchanges.filter { $0.phase == phase }
+                if !lines.isEmpty {
+                    PhaseBlock(phase: phase, lines: lines, expandedByDefault: phase != .redirect)
+                }
+            }
+        }
+    }
+
+    private struct PhaseBlock: View {
+        let phase: TestimonyExchange.Phase
+        let lines: [TestimonyExchange]
+        @State var expanded: Bool
+
+        init(phase: TestimonyExchange.Phase, lines: [TestimonyExchange], expandedByDefault: Bool) {
+            self.phase = phase
+            self.lines = lines
+            _expanded = State(initialValue: expandedByDefault)
+        }
+
+        var body: some View {
+            DisclosureGroup(isExpanded: $expanded) {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                        VStack(alignment: .leading, spacing: 2) {
+                            if !line.question.isEmpty {
+                                Text("Q (\(line.examiner == .prosecution ? "State" : "Defense")): \(line.question)")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(Theme.color(for: line.examiner))
+                            }
+                            Text(line.question.isEmpty ? line.answer : "A: \(line.answer)")
+                                .font(.system(.callout, design: .serif))
+                                .italic(line.question.isEmpty)
+                        }
+                    }
+                }
+                .padding(.top, 6)
+            } label: {
+                Text("\(phase.rawValue) · \(lines.count) question\(lines.count == 1 ? "" : "s")")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+            }
+            .tint(.secondary)
         }
     }
 }

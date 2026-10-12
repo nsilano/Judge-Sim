@@ -83,9 +83,7 @@ struct RecordReview: View {
             ForEach(witnesses) { witness in
                 CollapsibleSection(title: witness.name, icon: witness.isDefendant == true ? "person.fill.questionmark" : "person.fill",
                                    summary: witness.role, expanded: false) {
-                    ForEach(Array((witness.direct + witness.cross).enumerated()), id: \.offset) { _, line in
-                        Text(line).font(.system(.caption, design: .serif))
-                    }
+                    ExaminationTranscript(witness: witness)
                     ForEach(c.objections(for: witness)) { objection in
                         let sustained = session.rulings.objections[objection.id] == true
                         VStack(alignment: .leading, spacing: 2) {
@@ -406,6 +404,38 @@ struct ConditionToggle: View {
 }
 
 /// Adjusts a number with a fine stepper and a coarse stepper.
+/// A dollar amount the judge types in.
+struct DollarField: View {
+    let title: String
+    var caption: String? = nil
+    @Binding var value: Int
+    var limit = 100_000_000
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.subheadline.weight(.semibold))
+            if let caption {
+                Text(caption).font(.caption).foregroundStyle(.secondary)
+            }
+            HStack(spacing: 6) {
+                Text("$").font(.title3.weight(.semibold)).foregroundStyle(.secondary)
+                TextField("0", value: Binding(get: { value }, set: { value = min(limit, max(0, $0)) }),
+                          format: .number.grouping(.automatic))
+                    .keyboardType(.numberPad)
+                    .font(.title3.monospacedDigit().weight(.semibold))
+                    .focused($focused)
+                if focused {
+                    Button("Done") { focused = false }
+                        .font(.subheadline.weight(.semibold))
+                }
+            }
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color(.tertiarySystemFill)))
+        }
+    }
+}
+
 struct AmountStepper: View {
     let title: String
     var caption: String? = nil
@@ -592,14 +622,10 @@ struct MoneyCard: View {
         let total = items.reduce(0) { $0 + $1.amount }
         CollapsibleSection(title: "Fines, costs & restitution", icon: "dollarsign.circle.fill",
                            summary: total > 0 ? "Total \(SentenceFormat.dollars(total))" : "Nothing owed", expanded: false) {
-            AmountStepper(title: "Fine: \(SentenceFormat.dollars(session.rulings.money.fine))",
-                          caption: fineNote,
-                          value: $session.rulings.money.fine, range: 0...10_000_000,
-                          fine: 100, coarse: 5_000, fineLabel: "± $100", coarseLabel: "± $5,000")
-            AmountStepper(title: "Restitution: \(SentenceFormat.dollars(session.rulings.money.restitution))",
-                          caption: bg.map { $0.restitution > 0 ? "State's figure: \(SentenceFormat.dollars($0.restitution)) for \($0.restitutionBasis ?? "losses")" : "The State hasn't requested restitution" },
-                          value: $session.rulings.money.restitution, range: 0...100_000_000,
-                          fine: 100, coarse: 10_000, fineLabel: "± $100", coarseLabel: "± $10,000")
+            DollarField(title: "Fine", caption: fineNote, value: $session.rulings.money.fine, limit: 10_000_000)
+            DollarField(title: "Restitution",
+                        caption: bg.map { $0.restitution > 0 ? "State's figure: \(SentenceFormat.dollars($0.restitution)) for \($0.restitutionBasis ?? "losses")" : "The State hasn't requested restitution" },
+                        value: $session.rulings.money.restitution)
             ConditionToggle(title: "Tax court costs", detail: "About \(SentenceFormat.dollars(FinancialOrders.courtCosts)). Off remits costs.",
                             isOn: $session.rulings.money.courtCosts)
             if Judgment.appointedCounsel(session.courtCase) {

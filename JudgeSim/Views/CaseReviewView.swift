@@ -7,7 +7,7 @@ struct CaseReviewSheet: View {
     @State var section: Section = .file
 
     enum Section: String, CaseIterable, Identifiable {
-        case file = "File", motions = "Motions", evidence = "Evidence", testimony = "Testimony", arguments = "Arguments", notes = "Notes"
+        case file = "File", investigation = "Investigation", motions = "Motions", evidence = "Evidence", testimony = "Testimony", arguments = "Arguments", notes = "Notes"
         var id: String { rawValue }
     }
 
@@ -39,6 +39,12 @@ struct CaseReviewSheet: View {
                     VStack(alignment: .leading, spacing: 14) {
                         switch section {
                         case .file: fileSection
+                        case .investigation:
+                            if let report = c.investigation {
+                                InvestigationReportView(report: report).card()
+                            } else {
+                                empty("No investigation report in this file.")
+                            }
                         case .motions: motionsSection
                         case .evidence: evidenceSection
                         case .testimony: testimonySection
@@ -133,14 +139,11 @@ struct CaseReviewSheet: View {
                         Text("\(witness.role) · called by the \(witness.calledBy.rawValue)").font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                Text("Direct").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-                ForEach(Array(witness.direct.enumerated()), id: \.offset) { _, line in
-                    Text(line).font(.system(.callout, design: .serif))
-                }
-                if !witness.cross.isEmpty {
-                    Text("Cross").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-                    ForEach(Array(witness.cross.enumerated()), id: \.offset) { _, line in
-                        Text(line).font(.system(.callout, design: .serif))
+                ExaminationTranscript(witness: witness)
+                ForEach(session.witnessTranscript(for: witness)) { entry in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Court: \(entry.question)").font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
+                        Text(entry.answer).font(.system(.callout, design: .serif))
                     }
                 }
                 ForEach(c.objections(for: witness)) { objection in
@@ -219,6 +222,73 @@ struct CaseReviewSheet: View {
         case .guilty: return "Verdict: guilty."
         case .lesser: return "Verdict: guilty of \(charge.lesserLaw?.title ?? "the lesser offense")."
         case .notGuilty: return "Verdict: not guilty."
+        }
+    }
+}
+
+// MARK: - Investigation report and defendant profile
+
+struct InvestigationReportView: View {
+    let report: InvestigationReport
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(report.agency) · Report \(report.reportNumber)").font(.caption.monospaced()).foregroundStyle(.secondary)
+                Text("Lead investigator: \(report.leadInvestigator)").font(.callout.weight(.semibold))
+                Text("Incident: \(report.incident)").font(.callout)
+            }
+            group("The scene") { Text(report.scene).font(.callout) }
+            group("Timeline") {
+                ForEach(Array(report.timeline.enumerated()), id: \.offset) { _, entry in
+                    HStack(alignment: .top, spacing: 8) {
+                        Text(entry.when).font(.caption.weight(.bold)).foregroundStyle(Theme.gold).frame(width: 96, alignment: .leading)
+                        Text(entry.what).font(.callout)
+                    }
+                }
+            }
+            group("How the defendant was identified") { Text(report.howIdentified).font(.callout) }
+            group("People interviewed") { BulletList(items: report.interviews).font(.callout) }
+            if !report.warrants.isEmpty {
+                group("Search warrants") { BulletList(items: report.warrants).font(.callout) }
+            }
+            if !report.lab.isEmpty {
+                group("Laboratory work") { BulletList(items: report.lab).font(.callout) }
+            }
+            group("Not done") {
+                BulletList(items: report.notDone, symbol: "exclamationmark.circle.fill", color: .orange).font(.callout)
+            }
+        }
+    }
+
+    private func group<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased()).font(.caption2.weight(.heavy)).tracking(0.5).foregroundStyle(.secondary)
+            content()
+        }
+    }
+}
+
+struct DefendantProfileView: View {
+    let profile: DefendantProfile
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("WORK HISTORY").font(.caption2.weight(.heavy)).tracking(0.5).foregroundStyle(.secondary)
+            ForEach(Array(profile.jobs.enumerated()), id: \.offset) { _, job in
+                HStack(alignment: .firstTextBaseline) {
+                    Image(systemName: job.current ? "briefcase.fill" : "briefcase").foregroundStyle(job.current ? Theme.gold : .secondary)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(job.title).font(.callout.weight(.semibold))
+                        Text("\(job.employer) · \(job.years)").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            Divider()
+            Label(profile.education, systemImage: "graduationcap.fill").font(.callout)
+            Label(profile.family, systemImage: "house.fill").font(.callout)
+            Label(profile.residence, systemImage: "mappin.and.ellipse").font(.callout)
+            Label(profile.income, systemImage: "dollarsign.circle").font(.callout)
         }
     }
 }

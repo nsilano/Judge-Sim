@@ -19,6 +19,8 @@ struct DocketEntry: Identifiable, Codable {
     var resume: CaseSnapshot?
     /// How many times this matter has been continued.
     var continuances = 0
+    /// Follow-up work the judge asked for before the case resumes.
+    var requests: [EvidenceRequest]? = nil
     var note: String?
     var outcome: String?
 

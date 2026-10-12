@@ -175,14 +175,16 @@ final class GameState: ObservableObject {
     }
 
     /// Continues a matter to a later date. A trial picks up exactly where it left off.
-    func continueMatter(_ matterID: UUID, to date: Date, reason: String, snapshot: CaseSnapshot?) {
+    func continueMatter(_ matterID: UUID, to date: Date, reason: String, snapshot: CaseSnapshot?, requests: [EvidenceRequest] = []) {
         guard var day = today, let index = day.entries.firstIndex(where: { $0.matterID == matterID }) else { return }
         let target = max(CourtCalendar.weekday(onOrAfter: date), CourtCalendar.nextWeekday(after: day.date))
         var entry = day.entries[index]
         entry.status = .pending
         entry.resume = snapshot ?? entry.resume
         entry.continuances += 1
+        entry.requests = requests.isEmpty ? nil : requests
         entry.note = "Continued from \(SentenceFormat.shortDate(day.date)): \(reason)"
+            + (requests.isEmpty ? "" : " Follow-up ordered: \(requests.count) request\(requests.count == 1 ? "" : "s").")
         scheduled.append(ScheduledMatter(date: target, entry: entry))
         scheduled.sort { $0.date < $1.date }
         day.entries[index].status = .continued
@@ -269,6 +271,37 @@ final class GameState: ObservableObject {
         }
     }
 
+    /// Appeals taken before the tracker existed still have pending decisions; give each one a tracker.
+    private func backfillAppeals() {
+        var added = false
+        for event in pending where event.news.kind == .appeal && !Appeals.isFollowUp(event) {
+            guard let docket = event.news.docket, !appeals.contains(where: { $0.docket == docket }) else { continue }
+            let record = history.first { $0.docket == docket }
+            let filed = record?.date ?? currentDate
+            var rng = SeededRNG(seed: seedBase ^ UInt64(abs(docket.hashValue % 1_000_000)))
+            let byState = event.news.headline.contains("reinstates") || event.news.body.contains("On appeal by the State")
+            let issue: String
+            if event.news.headline.contains("reinstates") {
+                issue = "Whether the trial court erred in dismissing the charges for a speedy-trial violation"
+            } else if event.effect == .resentence || event.news.body.contains("remanded for resentencing") {
+                issue = "Whether the sentence is authorized by North Carolina law"
+            } else if docket.hasSuffix("(PV)") {
+                issue = "Whether the court had authority to sanction the probationer as it did"
+            } else {
+                issue = "The sufficiency of the evidence and the trial court's rulings"
+            }
+            let tracker = Appeals.tracker(for: event, caption: record?.caption ?? "State v. \(docket)",
+                                          personID: event.personID ?? record?.defendantID ?? UUID(), filed: filed,
+                                          appellant: byState ? "the State" : "the defendant", issue: issue, rng: &rng)
+            appeals.append(tracker)
+            added = true
+        }
+        if added {
+            appeals.sort { ($0.isPending ? 0 : 1, $1.filed) < ($1.isPending ? 0 : 1, $0.filed) }
+            save()
+        }
+    }
+
     func clearDigest() {
         digest = []
         save()
@@ -325,6 +358,11 @@ final class GameState: ObservableObject {
             if case .trial(var c) = entry.matter {
                 c.sessionDate = date
                 refreshDefendant(&c)
+                if let requests = entry.requests, !requests.isEmpty {
+                    let added = SupplementalEvidence.gather(for: &c, requests: requests, rng: &rng)
+                    entry.note = (entry.note ?? "") + " New evidence is in: " + added.joined(separator: "; ") + "."
+                    entry.requests = nil
+                }
                 entry.matter = .trial(c)
             }
             entries.append(entry)
@@ -752,6 +790,7 @@ final class GameState: ObservableObject {
         scheduled = data.scheduled ?? []
         digest = data.digest ?? []
         appeals = data.appeals ?? []
+        backfillAppeals()
         openingMinutes = data.openingMinutes ?? openingMinutes
         sessionEnds = data.sessionEnds ?? sessionFriday(for: currentDate)
         today = data.today
