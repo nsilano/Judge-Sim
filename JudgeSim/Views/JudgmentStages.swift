@@ -109,7 +109,7 @@ struct SentencingStage: View {
         let record = session.priorRecord
         let units = session.units
         VStack(alignment: .leading, spacing: 16) {
-            Text("The court proceeds to sentencing under the Structured Sentencing Act.")
+            Text("The court proceeds to sentencing under the Structured Sentencing Act. You can ask counsel for their recommendations, restitution figures, and anything else the court should know.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
@@ -142,66 +142,60 @@ struct SentencingStage: View {
             }
 
             SectionTitle(text: "Prior record", icon: "list.number")
-            VStack(alignment: .leading, spacing: 8) {
-                if record.lines.isEmpty {
-                    Text("No prior convictions.").font(.callout).foregroundStyle(.secondary)
-                }
-                ForEach(Array(record.lines.enumerated()), id: \.offset) { _, line in
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(line.text).font(.caption)
-                        Spacer()
-                        Text("\(line.points)").font(.caption.monospacedDigit().weight(.bold))
-                    }
-                }
-                Divider()
-                HStack {
-                    Text("Felony prior record level").font(.subheadline.weight(.semibold))
-                    Spacer()
-                    Text("\(record.points) pts · Level \(SentenceFormat.romanLevels[record.felonyLevel - 1])")
-                        .font(.subheadline.monospacedDigit())
-                }
-                HStack {
-                    Text("Misdemeanor prior conviction level").font(.subheadline.weight(.semibold))
-                    Spacer()
-                    Text("Level \(SentenceFormat.romanLevels[record.misdemeanorLevel - 1])")
-                        .font(.subheadline.monospacedDigit())
-                }
-                LawLink(lawID: "priorRecord")
-            }
-            .card()
+            PriorRecordCard(record: record)
 
             SectionTitle(text: "Findings of factors", icon: "list.bullet.clipboard.fill")
             VStack(alignment: .leading, spacing: 12) {
                 Text("Aggravating factors offered by the State").font(.caption.weight(.bold)).foregroundStyle(Theme.prosecution)
-                ForEach(c.aggravating, id: \.self) { factor in
+                ForEach(session.aggravatingFactors, id: \.self) { factor in
                     Toggle(factor, isOn: session.factorBinding(factor, aggravating: true)).font(.callout)
                 }
                 Divider()
                 Text("Mitigating factors offered by the defense").font(.caption.weight(.bold)).foregroundStyle(Theme.defense)
-                ForEach(c.mitigating, id: \.self) { factor in
+                ForEach(session.mitigatingFactors, id: \.self) { factor in
                     Toggle(factor, isOn: session.factorBinding(factor, aggravating: false)).font(.callout)
                 }
-                Text("Finding an aggravating factor permits the aggravated range; finding a mitigating factor permits the mitigated range. Whether to depart is your decision.")
+                Text("Finding an aggravating factor permits the aggravated range; finding a mitigating factor permits the mitigated range. Counsel may offer more factors if asked.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 LawLink(lawID: "aggravatingFactors")
             }
             .card()
 
-            if convictionCount > 1 {
-                SectionTitle(text: "Multiple convictions", icon: "square.stack.3d.up.fill")
+            if session.pjcAvailable || session.conditionalDischargeAvailable {
+                SectionTitle(text: "Form of judgment", icon: "doc.badge.gearshape.fill")
                 VStack(alignment: .leading, spacing: 8) {
-                    ForEach(JudgmentMode.allCases, id: \.self) { mode in
-                        ChoiceRow(title: mode.label, selected: session.rulings.mode == mode) {
-                            session.setMode(mode)
+                    ForEach(SpecialDisposition.allCases, id: \.self) { option in
+                        if option == .none
+                            || (option == .prayerForJudgment && session.pjcAvailable)
+                            || (option == .conditionalDischarge && session.conditionalDischargeAvailable) {
+                            ChoiceRow(title: option.label, subtitle: option.detail, selected: session.rulings.special == option) {
+                                session.rulings.special = option
+                            }
                         }
                     }
-                    LawLink(lawID: "consolidation")
+                    HStack {
+                        LawLink(lawID: "pjc")
+                        if session.conditionalDischargeAvailable { LawLink(lawID: "conditionalDischarge") }
+                    }
                 }
                 .card()
             }
 
-            if !(session.needsHabitualDecision && session.rulings.habitualFound == nil) {
+            if session.rulings.special == .none && !(session.needsHabitualDecision && session.rulings.habitualFound == nil) {
+                if convictionCount > 1 {
+                    SectionTitle(text: "Multiple convictions", icon: "square.stack.3d.up.fill")
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(JudgmentMode.allCases, id: \.self) { mode in
+                            ChoiceRow(title: mode.label, selected: session.rulings.mode == mode) {
+                                session.setMode(mode)
+                            }
+                        }
+                        LawLink(lawID: "consolidation")
+                    }
+                    .card()
+                }
+
                 SectionTitle(text: units.count == 1 ? "Judgment" : "Judgments", icon: "doc.text.fill")
                 ForEach(units) { unit in
                     UnitSentenceCard(unit: unit,
@@ -209,16 +203,16 @@ struct SentencingStage: View {
                                      choice: session.choiceBinding(for: unit))
                 }
 
-                VStack(alignment: .leading) {
-                    Stepper(value: $session.rulings.fine, in: 0...maxFine, step: fineStep) {
-                        VStack(alignment: .leading) {
-                            Text("Fine: \(SentenceFormat.dollars(session.rulings.fine))").font(.subheadline.weight(.semibold))
-                            Text("Plus court costs").font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
+                if session.anyActive {
+                    ActiveOrdersCard(session: session)
                 }
-                .card()
             }
+
+            if session.anySuspended && session.rulings.special != .prayerForJudgment {
+                ProbationConditionsCard(session: session)
+            }
+
+            MoneyCard(session: session)
 
             PrimaryButton(title: "Enter Judgment", icon: "hammer.fill", enabled: session.sentencingComplete) {
                 Haptics.gavel()
@@ -231,16 +225,248 @@ struct SentencingStage: View {
     private var convictionCount: Int {
         c.charges.filter { (session.rulings.verdicts[$0.id] ?? .notGuilty) != .notGuilty }.count
     }
+}
+
+struct PriorRecordCard: View {
+    let record: PriorRecord
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if record.lines.isEmpty {
+                Text("No prior convictions.").font(.callout).foregroundStyle(.secondary)
+            }
+            ForEach(Array(record.lines.enumerated()), id: \.offset) { _, line in
+                HStack(alignment: .firstTextBaseline) {
+                    Text(line.text).font(.caption)
+                    Spacer()
+                    Text("\(line.points)").font(.caption.monospacedDigit().weight(.bold))
+                }
+            }
+            Divider()
+            HStack {
+                Text("Felony prior record level").font(.subheadline.weight(.semibold))
+                Spacer()
+                Text("\(record.points) pts · Level \(SentenceFormat.romanLevels[record.felonyLevel - 1])")
+                    .font(.subheadline.monospacedDigit())
+            }
+            HStack {
+                Text("Misdemeanor prior conviction level").font(.subheadline.weight(.semibold))
+                Spacer()
+                Text("Level \(SentenceFormat.romanLevels[record.misdemeanorLevel - 1])")
+                    .font(.subheadline.monospacedDigit())
+            }
+            LawLink(lawID: "priorRecord")
+        }
+        .card()
+    }
+}
+
+struct ConditionToggle: View {
+    let title: String
+    var detail: String? = nil
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Toggle(isOn: $isOn) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.subheadline)
+                if let detail {
+                    Text(detail).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+}
+
+struct ProbationConditionsCard: View {
+    @ObservedObject var session: CaseSession
+
+    var body: some View {
+        let intermediate = session.anyIntermediate || session.rulings.special == .conditionalDischarge
+        let maxSplit = session.maxSpecialProbationDays
+        SectionTitle(text: "Conditions of probation", icon: "checklist")
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Regular conditions (G.S. 15A-1343(b)) always apply: commit no new offense, remain in the jurisdiction, possess no firearm, and pay money owed.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if intermediate {
+                Label("Intermediate punishment requires supervised probation.", systemImage: "eye.fill")
+                    .font(.subheadline)
+            } else {
+                ConditionToggle(title: "Supervised probation",
+                                detail: "Off means unsupervised: no probation officer, fewer violations detected.",
+                                isOn: $session.rulings.conditions.supervised)
+            }
+
+            Group {
+                Text("Intermediate conditions").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                if session.anyIntermediate {
+                    if maxSplit > 0 {
+                        Stepper(value: $session.rulings.conditions.specialProbationDays, in: 0...maxSplit, step: maxSplit > 60 ? 5 : 1) {
+                            VStack(alignment: .leading) {
+                                Text("Special probation: \(session.rulings.conditions.specialProbationDays) days in jail").font(.subheadline)
+                                Text("Split sentence, up to \(maxSplit) days (one-fourth of the maximum)").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    Stepper(value: $session.rulings.conditions.houseArrestDays, in: 0...180, step: 15) {
+                        VStack(alignment: .leading) {
+                            Text("House arrest with electronic monitoring: \(session.rulings.conditions.houseArrestDays) days").font(.subheadline)
+                            Text("The defendant may leave only for work, treatment, and court").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    ConditionToggle(title: "Drug Treatment Court", detail: "Intensive court-supervised treatment with frequent review hearings",
+                                    isOn: $session.rulings.conditions.drugTreatmentCourt)
+                } else {
+                    Text("Special probation, house arrest, and Drug Treatment Court require an Intermediate disposition.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Divider()
+            Text("Community service & treatment").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+            Stepper(value: $session.rulings.conditions.communityServiceHours, in: 0...250, step: 10) {
+                VStack(alignment: .leading) {
+                    Text("Community service: \(session.rulings.conditions.communityServiceHours) hours").font(.subheadline)
+                    Text("Adds the $250 community service fee").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            ConditionToggle(title: "Substance abuse assessment and treatment (TASC)", isOn: $session.rulings.conditions.substanceTreatment)
+            ConditionToggle(title: "Mental health evaluation and treatment", isOn: $session.rulings.conditions.mentalHealthTreatment)
+            ConditionToggle(title: "Random drug and alcohol testing", isOn: $session.rulings.conditions.randomTesting)
+            ConditionToggle(title: "Abstain from alcohol", isOn: $session.rulings.conditions.abstainAlcohol)
+            ConditionToggle(title: "Anger management / abuser treatment", isOn: $session.rulings.conditions.angerManagement)
+
+            Divider()
+            Text("Restrictions").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+            ConditionToggle(title: "Curfew, 9 p.m. to 6 a.m.", isOn: $session.rulings.conditions.curfew)
+            if session.courtCase.victimName != nil {
+                ConditionToggle(title: "No contact with the victim or their family", isOn: $session.rulings.conditions.noContactVictim)
+            }
+            ConditionToggle(title: "Stay away from the scene of the offense", isOn: $session.rulings.conditions.stayAway)
+            ConditionToggle(title: "Surrender all firearms", isOn: $session.rulings.conditions.surrenderFirearms)
+
+            Divider()
+            Text("Rehabilitation").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+            ConditionToggle(title: "Maintain employment or full-time school", isOn: $session.rulings.conditions.maintainEmployment)
+            ConditionToggle(title: "Obtain a high school equivalency diploma", isOn: $session.rulings.conditions.education)
+
+            Text("Every condition is another way to violate probation. Conditions that address the defendant's actual problems make success more likely.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            HStack {
+                LawLink(lawID: "probationConditions")
+                LawLink(lawID: "specialProbation")
+            }
+        }
+        .card()
+    }
+}
+
+struct ActiveOrdersCard: View {
+    @ObservedObject var session: CaseSession
+
+    var body: some View {
+        let custodyDays = session.courtCase.background?.custodyDays ?? 0
+        let objects = session.courtCase.background?.stateObjectsToASR ?? true
+        SectionTitle(text: "Commitment", icon: "lock.fill")
+        VStack(alignment: .leading, spacing: 14) {
+            Label(custodyDays > 0
+                  ? "Credit for \(custodyDays) days of pretrial confinement will be applied (G.S. 15-196.1)."
+                  : "No pretrial confinement credit: the defendant was released on bond.",
+                  systemImage: "calendar.badge.clock")
+                .font(.subheadline)
+
+            if session.asrEligible {
+                ConditionToggle(title: "Advanced Supervised Release (ASR)",
+                                detail: session.askedAboutASR
+                                    ? (objects ? "The State has objected. ASR cannot be ordered over the State's objection." : "The State does not object. Release at the low end of the mitigated range after risk-reduction programming.")
+                                    : "Release at the low end of the mitigated range after risk-reduction programming. Requires that the State not object; ask the prosecutor.",
+                                isOn: $session.rulings.recommendations.advancedSupervisedRelease)
+                    .disabled(session.askedAboutASR && objects)
+            }
+            ConditionToggle(title: "Recommend substance abuse treatment in custody", isOn: $session.rulings.recommendations.substanceTreatment)
+            ConditionToggle(title: "Recommend mental health treatment in custody", isOn: $session.rulings.recommendations.mentalHealth)
+            ConditionToggle(title: "Recommend work release", isOn: $session.rulings.recommendations.workRelease)
+            ConditionToggle(title: "Recommend vocational and educational programs", isOn: $session.rulings.recommendations.vocational)
+            Text("Recommendations are not binding on the Department of Adult Correction.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            LawLink(lawID: "asr")
+        }
+        .card()
+    }
+}
+
+struct MoneyCard: View {
+    @ObservedObject var session: CaseSession
+
+    var body: some View {
+        let bg = session.courtCase.background
+        let restitutionCap = max(5_000, (bg?.restitution ?? 0) * 2)
+        let restitutionStep = restitutionCap > 1_000_000 ? 50_000 : (restitutionCap > 100_000 ? 5_000 : (restitutionCap > 10_000 ? 500 : 100))
+        let items = session.obligations
+        let total = items.reduce(0) { $0 + $1.amount }
+        SectionTitle(text: "Monetary obligations", icon: "dollarsign.circle.fill")
+        VStack(alignment: .leading, spacing: 14) {
+            Stepper(value: $session.rulings.money.fine, in: 0...maxFine, step: maxFine <= 1_000 ? 50 : 250) {
+                VStack(alignment: .leading) {
+                    Text("Fine: \(SentenceFormat.dollars(session.rulings.money.fine))").font(.subheadline)
+                    Text(fineNote).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Stepper(value: $session.rulings.money.restitution, in: 0...restitutionCap, step: restitutionStep) {
+                VStack(alignment: .leading) {
+                    Text("Restitution: \(SentenceFormat.dollars(session.rulings.money.restitution))").font(.subheadline)
+                    Text(bg.map { $0.restitution > 0 ? "State's figure: \(SentenceFormat.dollars($0.restitution)) (\($0.restitutionBasis ?? "losses"))" : "The State has not requested restitution" } ?? "")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            ConditionToggle(title: "Tax court costs", detail: "About \(SentenceFormat.dollars(FinancialOrders.courtCosts)). Turn off to remit costs.",
+                            isOn: $session.rulings.money.courtCosts)
+            if Judgment.appointedCounsel(session.courtCase) {
+                ConditionToggle(title: "Enter judgment for appointed attorney fees",
+                                detail: "Estimated \(SentenceFormat.dollars(bg?.attorneyFeeEstimate ?? 1_500)) for court-appointed counsel",
+                                isOn: $session.rulings.money.attorneyFees)
+            }
+            if session.anySuspended && session.rulings.conditions.supervised {
+                ConditionToggle(title: "Waive the $40/month supervision fee", isOn: $session.rulings.money.waiveSupervisionFees)
+            }
+            if !items.isEmpty {
+                Divider()
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    HStack {
+                        Text(item.label).font(.caption)
+                        Spacer()
+                        Text(SentenceFormat.dollars(item.amount)).font(.caption.monospacedDigit())
+                    }
+                }
+                HStack {
+                    Text("Total").font(.subheadline.weight(.semibold))
+                    Spacer()
+                    Text(SentenceFormat.dollars(total)).font(.subheadline.monospacedDigit().weight(.semibold))
+                }
+                if bg?.indigent ?? false {
+                    Label("Defense counsel says the defendant is indigent. Ask about ability to pay.", systemImage: "exclamationmark.circle")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+            }
+            LawLink(lawID: "monetaryObligations")
+        }
+        .card()
+    }
 
     private var maxFine: Int {
         let units = session.units
         if units.contains(where: { $0.isFelony }) { return 50_000 }
-        let caps = units.map { $0.sentencingClass.maxFine ?? 10_000 }
-        return caps.max() ?? 1_000
+        return units.map { $0.sentencingClass.maxFine ?? 10_000 }.max() ?? 1_000
     }
 
-    private var fineStep: Int {
-        maxFine <= 1_000 ? 50 : (maxFine <= 10_000 ? 250 : 1_000)
+    private var fineNote: String {
+        maxFine <= 1_000 ? "Statutory maximum \(SentenceFormat.dollars(maxFine))" : "In the court's discretion"
     }
 }
 

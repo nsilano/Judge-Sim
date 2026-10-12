@@ -5,6 +5,7 @@ struct CourtroomView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var session: CaseSession
     @State private var showLibrary = false
+    @State private var showCounsel = false
     @State private var confirmRecess = false
 
     init(courtCase: CourtCase, judgeName: String, county: County) {
@@ -18,6 +19,10 @@ struct CourtroomView: View {
                     VStack(spacing: 16) {
                         StageTracker(stages: session.visibleStages, current: session.stage)
                             .id("top")
+
+                        if session.stage != .judgment {
+                            CounselPrompt(available: session.unaskedCount) { showCounsel = true }
+                        }
 
                         switch session.stage {
                         case .briefing:
@@ -56,13 +61,23 @@ struct CourtroomView: View {
                         Button("Recess") { confirmRecess = true }
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    if session.stage != .judgment {
+                        Button {
+                            showCounsel = true
+                        } label: {
+                            Label("Ask counsel", systemImage: "bubble.left.and.bubble.right.fill")
+                        }
+                    }
                     Button {
                         showLibrary = true
                     } label: {
                         Label("Law Library", systemImage: "books.vertical.fill")
                     }
                 }
+            }
+            .sheet(isPresented: $showCounsel) {
+                CounselSheet(provider: session)
             }
             .sheet(isPresented: $showLibrary) {
                 LawLibraryView(highlightIDs: session.courtCase.relevantLawIDs, showsDoneButton: true)

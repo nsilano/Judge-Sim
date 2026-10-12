@@ -85,7 +85,7 @@ struct OnboardingView: View {
 
 struct ChambersView: View {
     @EnvironmentObject private var game: GameState
-    @State private var activeCase: CourtCase?
+    @State private var activeItem: DocketItem?
 
     var body: some View {
         NavigationStack {
@@ -118,10 +118,16 @@ struct ChambersView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Chambers")
-            .fullScreenCover(item: $activeCase) { courtCase in
+            .fullScreenCover(item: $activeItem) { item in
                 if let county = game.county, let judgeName = game.judgeName {
-                    CourtroomView(courtCase: courtCase, judgeName: judgeName, county: county)
-                        .environmentObject(game)
+                    switch item {
+                    case .trial(let courtCase):
+                        CourtroomView(courtCase: courtCase, judgeName: judgeName, county: county)
+                            .environmentObject(game)
+                    case .hearing(let hearing):
+                        HearingView(hearing: hearing, judgeName: judgeName, county: county)
+                            .environmentObject(game)
+                    }
                 }
             }
         }
@@ -148,9 +154,18 @@ struct ChambersView: View {
 
     private var docketCard: some View {
         let next = game.currentCase
+        let hearing = game.currentHearing
         return VStack(alignment: .leading, spacing: 12) {
             SectionTitle(text: "Today's calendar", icon: "calendar")
-            if let next {
+            if let hearing {
+                Text("\(hearing.probation.docket) · Probation violation").font(.caption.monospaced()).foregroundStyle(.secondary)
+                Text("State v. \(hearing.personName)").font(.system(.title3, design: .serif).weight(.bold))
+                Text("Violation report: \(hearing.violations.count) alleged violation\(hearing.violations.count == 1 ? "" : "s")")
+                    .font(.callout)
+                Label("You placed this person on probation.", systemImage: "arrow.uturn.left")
+                    .font(.caption)
+                    .foregroundStyle(.purple)
+            } else if let next {
                 Text("\(next.docket) · \(next.court.label)").font(.caption.monospaced()).foregroundStyle(.secondary)
                 Text(next.caption).font(.system(.title3, design: .serif).weight(.bold))
                 Text(next.charges.map { $0.law.title }.joined(separator: " · "))
@@ -165,9 +180,9 @@ struct ChambersView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
-            PrimaryButton(title: next == nil ? "Call the Next Case" : "Resume", icon: "hammer.fill") {
+            PrimaryButton(title: next == nil && hearing == nil ? "Call the Next Case" : "Resume", icon: "hammer.fill") {
                 Haptics.gavel()
-                activeCase = game.docketCase()
+                activeItem = game.nextDocketItem()
             }
         }
         .card(tint: Theme.gold)

@@ -118,6 +118,35 @@ struct ProbationTerm: Codable, Hashable {
     var activeMonths: Int
     var ends: Date
     var imposedInThisCourt: Bool
+    // Added in build 2; optional so earlier saves still load.
+    var supervised: Bool?
+    var conditions: [String]?
+    var monthlyObligation: Int?
+    var violationRisk: Double?
+    var crvCount: Int?
+    var treatmentNeed: TreatmentNeed?
+}
+
+/// A probation violation report on a probationer, heard on the court's calendar.
+struct ViolationHearing: Identifiable, Codable, Hashable {
+    var id = UUID()
+    var seed: UInt64
+    var date: Date
+    var personID: UUID
+    var personName: String
+    var personAge: Int
+    var probation: ProbationTerm
+    var violations: [String]
+    var absconded: Bool
+    var newCriminalConduct: Bool
+    var officerName: String
+    var officerReport: String
+    var defenseExplanation: String
+    var prosecutor: String
+    var defenseAttorney: String
+    /// Hidden: whether the violations were truly willful.
+    var willful: Bool
+    var circumstances: String
 }
 
 struct NewsItem: Identifiable, Codable, Hashable {

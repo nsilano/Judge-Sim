@@ -160,6 +160,41 @@ enum PublicMood: String, Codable, Hashable {
     }
 }
 
+enum VictimStance: String, Codable, Hashable {
+    case wantsMaximum, wantsAccountability, wantsLeniency, none
+}
+
+enum TreatmentNeed: String, Codable, Hashable {
+    case none, substance, mentalHealth, both
+
+    var substance: Bool { self == .substance || self == .both }
+    var mentalHealth: Bool { self == .mentalHealth || self == .both }
+}
+
+/// Facts outside the trial record that counsel know about and the judge can ask about.
+struct CaseBackground: Codable, Hashable {
+    var pleaOffer: String?
+    var pleaRejection: String?
+    var custodyDays: Int
+    var bondStatus: String
+    var restitution: Int
+    var restitutionBasis: String?
+    var victimStance: VictimStance
+    var victimStanceDetail: String
+    var treatmentNeed: TreatmentNeed
+    var treatmentDetail: String?
+    var treatmentBedAvailable: Bool
+    var employmentPlan: String?
+    var indigent: Bool
+    var supportPeople: String?
+    var willTestify: Bool
+    var discoveryIssue: String?
+    var stateObjectsToASR: Bool
+    var hiddenMitigator: String?
+    var hiddenAggravator: String?
+    var attorneyFeeEstimate: Int
+}
+
 /// What actually happened. The player never sees this directly; it may surface later in the news.
 struct HiddenTruth: Codable, Hashable {
     var actuallyGuilty: Bool
@@ -202,6 +237,8 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var mediaAttention: Int
     var truth: HiddenTruth
     var relatedDoctrines: [String]
+    /// Optional so cases saved by earlier builds still load.
+    var background: CaseBackground?
 
     var caption: String { "State of North Carolina v. \(defendant.name)" }
 

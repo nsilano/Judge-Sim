@@ -317,7 +317,192 @@ enum CaseGenerator {
             mood: mood,
             mediaAttention: media,
             truth: truth,
-            relatedDoctrines: doctrines
+            relatedDoctrines: doctrines,
+            background: makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
+                                       publicDefender: usePublicDefender, mitigating: mitigating,
+                                       isFelony: isFelonyCase, rng: &rng)
+        )
+    }
+
+    // MARK: - Background known to counsel
+
+    private static func dollars(in text: String?) -> Int? {
+        guard let text else { return nil }
+        let lower = text.lowercased()
+        let digits = lower.filter { $0.isNumber || $0 == "." }
+        guard let value = Double(digits) else { return nil }
+        if lower.contains("million") { return Int(value * 1_000_000) }
+        return Int(value)
+    }
+
+    private static func makeBackground(_ t: CaseTemplate, defendant: Defendant, charges: [Charge], values: [String: String],
+                                       mood: PublicMood, publicDefender: Bool, mitigating: [String], isFelony: Bool,
+                                       rng: inout SeededRNG) -> CaseBackground {
+        let fill = TextFiller(values: values)
+        let primary = charges[0]
+
+        // Plea negotiations
+        var pleaOffer: String?
+        var pleaRejection: String?
+        if rng.chance(0.65) {
+            if let lesser = primary.lesserLaw, let cls = lesser.ncClass {
+                pleaOffer = rng.pick([
+                    "Plead guilty to \(lesser.title) (\(cls.shortLabel)), remaining charges dismissed, sentencing in the court's discretion.",
+                    "Plead guilty to \(lesser.title) (\(cls.shortLabel)) with a sentence at the bottom of the presumptive range."
+                ])
+            } else if isFelony {
+                pleaOffer = rng.pick([
+                    "Plead guilty as charged with a mitigated-range sentence, remaining charges dismissed.",
+                    "Plead guilty as charged; the State would not oppose a suspended sentence."
+                ])
+            } else {
+                pleaOffer = "Plead guilty and receive a prayer for judgment continued on payment of costs."
+            }
+            pleaRejection = rng.pick([
+                "My client maintains their innocence, Judge. They won't plead to something they didn't do.",
+                "Even the reduced charge carried a felony record, and that would end my client's career.",
+                "We think the suppression issue is strong, and my client wanted it decided.",
+                "My client has three kids at home. An active sentence wasn't something they could accept.",
+                "My client was worried about immigration consequences of any conviction."
+            ])
+        }
+
+        // Custody
+        let inCustody = rng.chance(0.45)
+        let custodyDays = inCustody ? rng.int(21...420) : 0
+        let bond = rng.pick(["$2,500", "$10,000", "$25,000", "$50,000", "$100,000"])
+        let bondStatus = inCustody
+            ? "Held in the Hollis County jail on a \(bond) secured bond for \(custodyDays) days."
+            : rng.pick(["Released on a \(bond) secured bond. Has made every court date.",
+                        "Released on a written promise to appear, with electronic monitoring.",
+                        "Released on a \(bond) secured bond; missed one court date early on, then was re-released."])
+
+        // Restitution
+        var restitution = 0
+        var basis: String?
+        switch t.key {
+        case "storeRobbery":
+            restitution = dollars(in: values["AMT"]) ?? 400; basis = "cash taken from the register"
+        case "burglary":
+            restitution = rng.int(3...16) * 1_000; basis = "unrecovered property and window repair"
+        case "embezzlement", "elderScam":
+            restitution = dollars(in: values["AMT"]) ?? 50_000; basis = "funds taken"
+        case "ponzi":
+            restitution = dollars(in: values["AMT"]) ?? 5_000_000; basis = "investor losses"
+        case "insuranceArson":
+            restitution = 640_000; basis = "insurer's payout exposure and the firefighter's medical bills"
+        case "ransomware":
+            restitution = rng.int(8...25) * 100_000; basis = "the hospital's recovery costs"
+        case "barFight", "abusedSpouse", "poisoning", "drunkCrash", "overdose":
+            restitution = rng.int(7...16) * 1_000; basis = "funeral expenses"
+        case "protestAssault", "policeForce":
+            restitution = rng.int(12...70) * 1_000; basis = "medical bills"
+        case "imageLeak", "stalking":
+            restitution = rng.int(2...9) * 500; basis = "counseling costs and lost wages"
+        default:
+            break
+        }
+
+        // Victim stance
+        let stance: VictimStance
+        let stanceDetail: String
+        if t.hasVictim {
+            switch mood {
+            case .sympathetic:
+                stance = rng.chance(0.6) ? .wantsLeniency : .wantsAccountability
+            case .wantsConviction:
+                stance = rng.chance(0.6) ? .wantsMaximum : .wantsAccountability
+            default:
+                stance = rng.pick([.wantsMaximum, .wantsAccountability, .wantsLeniency])
+            }
+            switch stance {
+            case .wantsMaximum:
+                stanceDetail = fill("I've spoken with {VL}'s family several times. They want the maximum, and they've asked to be notified of every hearing.")
+            case .wantsAccountability:
+                stanceDetail = fill("{VL}'s family wants accountability, Judge. They aren't asking for a specific number. Mostly they want this taken seriously.")
+            case .wantsLeniency:
+                stanceDetail = fill("This is unusual, but {VL}'s family has told me they don't want {DL} to go to prison. They want help for {DL}, not punishment.")
+            case .none:
+                stanceDetail = "There's no identified victim in this case."
+            }
+        } else {
+            stance = .none
+            stanceDetail = "There's no individual victim in this case, Judge."
+        }
+
+        // Treatment
+        let need: TreatmentNeed
+        if t.category == .drugs || t.key == "drunkCrash" {
+            need = rng.chance(0.75) ? (rng.chance(0.2) ? .both : .substance) : .none
+        } else if defendant.background.lowercased().contains("depression") || defendant.background.lowercased().contains("ptsd") {
+            need = rng.chance(0.7) ? .mentalHealth : .both
+        } else {
+            let roll = Double.random(in: 0..<1, using: &rng)
+            need = roll < 0.22 ? .substance : (roll < 0.36 ? .mentalHealth : (roll < 0.42 ? .both : .none))
+        }
+        let treatmentDetail: String?
+        switch need {
+        case .none: treatmentDetail = nil
+        case .substance: treatmentDetail = rng.pick(["An opioid use disorder going back about six years.", "Alcohol, Judge. It's been the thread through everything.", "Methamphetamine use that started after a back injury at work."])
+        case .mentalHealth: treatmentDetail = rng.pick(["Diagnosed bipolar disorder, untreated since losing Medicaid coverage.", "Severe depression, with one hospitalization last year.", "PTSD, documented by the VA."])
+        case .both: treatmentDetail = "Co-occurring: a substance use disorder layered on untreated depression."
+        }
+
+        // Life circumstances
+        let plan: String? = rng.chance(0.6) ? fill(rng.pick([
+            "A job offer from a roofing company in {HOOD}, starting the Monday after sentencing.",
+            "Return to the night shift at the distribution center. The manager wrote a letter.",
+            "Enrollment in the welding program at Hollis Community College this spring.",
+            "Moving in with an aunt in {HOOD}, away from the people involved in this case."
+        ])) : nil
+        let indigent = publicDefender ? rng.chance(0.85) : rng.chance(0.2)
+        let support: String? = rng.chance(0.6) ? rng.pick([
+            "My client's mother, two sisters, and their pastor are in the gallery today.",
+            "A former employer drove in from Raleigh to be here.",
+            "My client's partner is here with their two children.",
+            "The client's grandmother, who raised them, is in the second row."
+        ]) : nil
+        let discovery: String? = rng.chance(0.25) ? rng.pick([
+            "The SBI lab report arrived late; we turned it over nine days before trial.",
+            "A supplemental police report surfaced last week and was disclosed immediately.",
+            "Body camera footage from a second officer was located and disclosed on Friday."
+        ]) : nil
+
+        let hiddenMitigatorPool = [
+            "The defendant voluntarily acknowledged wrongdoing at an early stage of the criminal process",
+            "The defendant supports the defendant's family",
+            "The defendant has been a person of good character or has had a good reputation in the community",
+            "The defendant has successfully completed a substance abuse program while in custody",
+            "The defendant was suffering from a mental condition that significantly reduced culpability"
+        ].filter { !mitigating.contains($0) }
+        let hiddenAggravatorPool = [
+            "The defendant committed the offense while on pretrial release on another charge",
+            "The defendant attempted to contact a State's witness from the jail",
+            "The defendant has been found in willful violation of probation within the past 10 years"
+        ]
+
+        let violent = t.category == .violent || t.category == .robbery
+        return CaseBackground(
+            pleaOffer: pleaOffer,
+            pleaRejection: pleaRejection,
+            custodyDays: custodyDays,
+            bondStatus: bondStatus,
+            restitution: restitution,
+            restitutionBasis: basis,
+            victimStance: stance,
+            victimStanceDetail: stanceDetail,
+            treatmentNeed: need,
+            treatmentDetail: treatmentDetail,
+            treatmentBedAvailable: rng.chance(0.5),
+            employmentPlan: plan,
+            indigent: indigent,
+            supportPeople: support,
+            willTestify: rng.chance(0.4),
+            discoveryIssue: discovery,
+            stateObjectsToASR: rng.chance(violent ? 0.7 : 0.3),
+            hiddenMitigator: rng.chance(0.7) && !hiddenMitigatorPool.isEmpty ? rng.pick(hiddenMitigatorPool) : nil,
+            hiddenAggravator: rng.chance(0.4) ? rng.pick(hiddenAggravatorPool) : nil,
+            attorneyFeeEstimate: isFelony ? rng.int(15...45) * 100 : rng.int(3...8) * 100
         )
     }
 

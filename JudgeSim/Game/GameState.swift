@@ -15,6 +15,19 @@ struct CaseRecord: Identifiable, Codable, Hashable {
     var appealStatus: String?
 }
 
+/// What's on today's calendar.
+enum DocketItem: Identifiable {
+    case trial(CourtCase)
+    case hearing(ViolationHearing)
+
+    var id: UUID {
+        switch self {
+        case .trial(let c): return c.id
+        case .hearing(let h): return h.id
+        }
+    }
+}
+
 private struct SaveData: Codable {
     var judgeName: String?
     var county: County?
@@ -25,6 +38,7 @@ private struct SaveData: Codable {
     var news: [NewsItem]
     var pending: [PendingEvent]
     var currentCase: CourtCase?
+    var currentHearing: ViolationHearing?
     var recentTemplates: [String]
     var seedBase: UInt64
 }
@@ -39,6 +53,7 @@ final class GameState: ObservableObject {
     @Published var people: [PersonRecord] = []
     @Published var news: [NewsItem] = []
     @Published var currentCase: CourtCase?
+    @Published var currentHearing: ViolationHearing?
 
     private var pending: [PendingEvent] = []
     private var docketSequence = 1_000
@@ -69,6 +84,60 @@ final class GameState: ObservableObject {
                              headline: "\(name) sworn in as Resident Superior Court Judge",
                              body: "In a ceremony at the \(county.courthouse), \(name) took the oath of office as a Resident Superior Court Judge for \(county.name). District Attorney \(county.districtAttorney), Chief Public Defender \(county.chiefPublicDefender), Sheriff \(county.sheriff), and Clerk of Superior Court \(county.clerk) attended.")]
         }
+        save()
+    }
+
+    /// The next matter on the calendar: a pending trial or hearing, or a newly scheduled one.
+    func nextDocketItem() -> DocketItem {
+        if let currentCase { return .trial(currentCase) }
+        if let currentHearing { return .hearing(currentHearing) }
+        if let hearing = scheduleViolationHearing() { return .hearing(hearing) }
+        return .trial(docketCase())
+    }
+
+    private func scheduleViolationHearing() -> ViolationHearing? {
+        guard let county else { return nil }
+        var rng = SeededRNG(seed: seedBase ^ UInt64(casesHeard &* 104_729 &+ 17))
+        let recentCutoff = Calendar.current.date(byAdding: .day, value: -60, to: currentDate) ?? currentDate
+        let candidates = people.filter { person in
+            person.status == .probation
+                && (person.probation?.imposedInThisCourt ?? false)
+                && (person.appearances.last?.date ?? .distantPast) < recentCutoff
+        }
+        let risks = candidates.map { $0.probation?.violationRisk ?? 0.15 }
+        let total = risks.reduce(0, +)
+        guard total > 0, rng.chance(min(0.35, total * 0.35)) else { return nil }
+        var target = Double.random(in: 0..<total, using: &rng)
+        var chosen = candidates[candidates.count - 1]
+        for (person, risk) in zip(candidates, risks) {
+            target -= risk
+            if target <= 0 { chosen = person; break }
+        }
+        guard let hearing = ViolationHearings.make(person: chosen, county: county, date: currentDate, seed: rng.next()) else { return nil }
+        currentHearing = hearing
+        save()
+        return hearing
+    }
+
+    func completeHearing(_ hearing: ViolationHearing, outcome: HearingOutcome) {
+        let appearance = PersonRecord.Appearance(docket: hearing.probation.docket + " (PV)", date: currentDate,
+                                                 charges: "Probation violation", outcome: outcome.appearance)
+        if let index = people.firstIndex(where: { $0.id == hearing.personID }) {
+            people[index].status = outcome.status
+            people[index].releaseDate = outcome.releaseDate
+            people[index].probation = outcome.probation
+            people[index].propensity = min(0.85, max(0.03, people[index].propensity + outcome.propensityChange))
+            people[index].appearances.append(appearance)
+        }
+        history.insert(CaseRecord(docket: hearing.probation.docket + " (PV)", caption: "Probation violation: \(hearing.personName)",
+                                  headline: "Probation violation hearing", category: .procedure, date: currentDate,
+                                  defendantID: hearing.personID, outcome: outcome.appearance, judgments: outcome.lines,
+                                  returningDefendant: true, appealStatus: nil), at: 0)
+        var item = outcome.news
+        item.date = currentDate
+        post(item)
+        currentHearing = nil
+        advanceCalendar()
         save()
     }
 
@@ -167,6 +236,7 @@ final class GameState: ObservableObject {
         news = []
         pending = []
         currentCase = nil
+        currentHearing = nil
         recentTemplates = []
         seedBase = UInt64.random(in: 1...UInt64.max / 2)
         save()
@@ -212,8 +282,13 @@ final class GameState: ObservableObject {
             switch people[index].status {
             case .incarcerated:
                 if let release = people[index].releaseDate, release <= currentDate {
-                    people[index].status = .free
                     people[index].releaseDate = nil
+                    if let probation = people[index].probation, probation.ends > currentDate {
+                        people[index].status = .probation
+                    } else {
+                        people[index].status = .free
+                        people[index].probation = nil
+                    }
                 }
             case .probation:
                 if let probation = people[index].probation, probation.ends <= currentDate {
@@ -240,7 +315,7 @@ final class GameState: ObservableObject {
     private func save() {
         let data = SaveData(judgeName: judgeName, county: county, currentDate: currentDate, docketSequence: docketSequence,
                             history: Array(history.prefix(300)), people: people, news: news, pending: pending,
-                            currentCase: currentCase, recentTemplates: recentTemplates, seedBase: seedBase)
+                            currentCase: currentCase, currentHearing: currentHearing, recentTemplates: recentTemplates, seedBase: seedBase)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -258,6 +333,7 @@ final class GameState: ObservableObject {
         news = data.news
         pending = data.pending
         currentCase = data.currentCase
+        currentHearing = data.currentHearing
         recentTemplates = data.recentTemplates
         seedBase = data.seedBase
     }

@@ -16,9 +16,17 @@ There is no score and no right answer. You make rulings, and the world responds:
    - Findings of aggravating and mitigating factors, which open the aggravated and mitigated ranges
    - Mitigated, presumptive, or aggravated range; a minimum term, with the statutory maximum computed automatically
    - Active, Intermediate, or Community disposition, as the chart cell allows, and the probation length
-   - Consolidated judgment or separate judgments run concurrently or consecutively, plus a fine
+   - Consolidated judgment or separate judgments run concurrently or consecutively
+   - Probation conditions: supervised or unsupervised, special probation (split sentence), electronic house arrest, Drug Treatment Court, community service, treatment, testing, curfew, no-contact, firearm surrender, employment and education
+   - For active sentences: credit for time served, Advanced Supervised Release (if the State doesn't object), and treatment, work-release, and vocational recommendations
+   - Prayer for judgment continued for misdemeanors; conditional discharge for eligible first-time drug possession
+   - Fines, court costs, restitution, appointed-attorney fees, and supervision and community service fees, with waivers
 6. **Probation violation hearing:** if the defendant was on probation, you decide whether to revoke, modify, or continue it.
 7. **Judgment:** the judgment and commitment, any notice of appeal, reactions in the hallway, and tomorrow's story in the *Port Hollis Ledger*.
+
+## Talking to counsel
+
+At every stage you can call a bench conference and question the ADA or defense counsel. They answer from what they know about the case: plea negotiations, custody status, discovery problems, the strength of each exhibit and witness, sentencing recommendations, restitution, the defendant's plan, ability to pay, treatment needs, and support. Asking the right question at sentencing can surface additional aggravating or mitigating factors. Each lawyer in the county has a consistent personality.
 
 ## The county
 
@@ -27,6 +35,7 @@ Each career generates one Hollis County, and it stays the same throughout:
 - **Fixed cast:** an elected District Attorney and their ADAs, the Chief Public Defender and assistants, private defense lawyers, the Clerk of Superior Court, the Sheriff, the Port Hollis police chief, detectives, officers, and Highway Patrol troopers. You can see all of them under **Chambers → Hollis County Courthouse**.
 - **Calendar:** time moves forward between cases, and docket numbers increase in sequence.
 - **People:** everyone who appears before you is kept on record. Prison sentences run out, probation ends, and people can be arrested again. Returning defendants bring their full record, including convictions from your courtroom. If they were on probation from your court, you hold a violation hearing.
+- **Probation:** conditions you set affect whether a probationer succeeds. Unaddressed addiction, unaffordable fees, and stacked conditions lead to violation reports, which come back to you as probation violation hearings: continue, modify, quick dip, 90-day CRV, revoke (only for absconding, a new crime, or after two CRVs), or terminate.
 - **Events:** appeals are decided by the Court of Appeals (or the Supreme Court in life-without-parole cases) months after judgment. Exonerations through the North Carolina Innocence Inquiry Commission, new evidence, and press coverage of ethics choices also surface over time.
 - **What really happened** is never shown to you directly. Sometimes it comes out later in the news.
 

@@ -39,6 +39,11 @@ final class CaseSession: ObservableObject {
     @Published var stage: Stage = .briefing
     @Published var rulings = Rulings()
     @Published private(set) var outcome: CaseOutcome?
+    @Published private(set) var transcript: [TranscriptEntry] = []
+    @Published private(set) var revealedAggravating: [String] = []
+    @Published private(set) var revealedMitigating: [String] = []
+    private var askedIDs = Set<String>()
+    private var sentencingPrepared = false
 
     init(courtCase: CourtCase, judgeName: String, county: County) {
         self.courtCase = courtCase
@@ -104,6 +109,44 @@ final class CaseSession: ObservableObject {
         rulings.sentences = [:]
     }
 
+    // MARK: Counsel
+
+    func counselName(_ side: Side) -> String { CounselDialogue.name(courtCase, side: side) }
+
+    func counselStyle(_ side: Side) -> CounselStyle { CounselDialogue.style(courtCase, side: side) }
+
+    func availableQuestions(_ side: Side) -> [CounselQuestion] {
+        CounselDialogue.questions(courtCase, stage: stage, rulings: rulings, units: units)
+            .filter { $0.side == side && !askedIDs.contains($0.id) }
+    }
+
+    func entries(for side: Side) -> [TranscriptEntry] {
+        transcript.filter { $0.side == side }
+    }
+
+    var unaskedCount: Int {
+        CounselDialogue.questions(courtCase, stage: stage, rulings: rulings, units: units)
+            .filter { !askedIDs.contains($0.id) }.count
+    }
+
+    func ask(_ question: CounselQuestion) {
+        guard !askedIDs.contains(question.id) else { return }
+        askedIDs.insert(question.id)
+        transcript.append(TranscriptEntry(side: question.side, speaker: counselName(question.side),
+                                          question: question.question, answer: question.answer, reveal: question.reveal))
+        switch question.reveal {
+        case .mitigating(let factor)?:
+            if !mitigatingFactors.contains(factor) { revealedMitigating.append(factor) }
+        case .aggravating(let factor)?:
+            if !aggravatingFactors.contains(factor) { revealedAggravating.append(factor) }
+        case nil:
+            break
+        }
+    }
+
+    var aggravatingFactors: [String] { courtCase.aggravating + revealedAggravating }
+    var mitigatingFactors: [String] { courtCase.mitigating + revealedMitigating }
+
     // MARK: State
 
     var motionsComplete: Bool {
@@ -153,8 +196,20 @@ final class CaseSession: ObservableObject {
         return ranges
     }
 
+    var pjcAvailable: Bool { Judgment.pjcAvailable(courtCase, rulings) }
+    var conditionalDischargeAvailable: Bool { Judgment.conditionalDischargeAvailable(courtCase, rulings) }
+    var anySuspended: Bool { Judgment.anySuspended(courtCase, rulings) }
+    var anyIntermediate: Bool { Judgment.anyIntermediate(courtCase, rulings) }
+    var anyActive: Bool { Judgment.anyActive(courtCase, rulings) }
+    var maxSpecialProbationDays: Int { Judgment.maxSpecialProbationDays(courtCase, rulings) }
+    var obligations: [(label: String, amount: Int)] { Judgment.obligations(courtCase, rulings) }
+    var asrEligible: Bool { units.contains { Judgment.asrEligible($0, rulings) } }
+    var askedAboutASR: Bool { askedIDs.contains("sen.state.asr") }
+
     var sentencingComplete: Bool {
         if needsHabitualDecision && rulings.habitualFound == nil { return false }
+        if rulings.special != .none { return true }
+        if rulings.conditions.specialProbationDays > maxSpecialProbationDays { return false }
         return units.allSatisfy { unit in
             let selected = self.choice(for: unit)
             guard Judgment.isComplete(selected) else { return false }
@@ -179,6 +234,7 @@ final class CaseSession: ObservableObject {
                 stage = .verdict
             case .verdict:
                 if anyConviction {
+                    prepareSentencing()
                     stage = .sentencing
                 } else if courtCase.defendant.probation != nil {
                     stage = .probation
@@ -198,7 +254,30 @@ final class CaseSession: ObservableObject {
         }
     }
 
+    private func prepareSentencing() {
+        guard !sentencingPrepared else { return }
+        sentencingPrepared = true
+        let bg = courtCase.background
+        rulings.money.restitution = bg?.restitution ?? 0
+        rulings.money.attorneyFees = Judgment.appointedCounsel(courtCase)
+    }
+
+    /// Drops conditions that the chosen dispositions don't permit.
+    private func normalizeConditions() {
+        if !anyIntermediate && rulings.special == .none {
+            rulings.conditions.specialProbationDays = 0
+            rulings.conditions.houseArrestDays = 0
+            rulings.conditions.drugTreatmentCourt = false
+        }
+        rulings.conditions.specialProbationDays = min(rulings.conditions.specialProbationDays, maxSpecialProbationDays)
+        if anyIntermediate || rulings.special == .conditionalDischarge { rulings.conditions.supervised = true }
+        if !anyActive { rulings.recommendations = ActiveRecommendations() }
+        if !pjcAvailable && rulings.special == .prayerForJudgment { rulings.special = .none }
+        if !conditionalDischargeAvailable && rulings.special == .conditionalDischarge { rulings.special = .none }
+    }
+
     private func finish() {
+        normalizeConditions()
         outcome = Judgment.evaluate(courtCase, rulings, judgeName: judgeName, county: county, date: courtCase.sessionDate)
         stage = .judgment
     }
