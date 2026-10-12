@@ -8,6 +8,7 @@ struct CourtroomView: View {
     @State private var showCounsel = false
     @State private var confirmRecess = false
     @State private var showContinuance = false
+    @State private var reviewSection: CaseReviewSheet.Section?
 
     init(courtCase: CourtCase, judgeName: String, county: County, resume: CaseSnapshot? = nil) {
         _session = StateObject(wrappedValue: CaseSession(courtCase: courtCase, judgeName: judgeName, county: county, resume: resume))
@@ -18,8 +19,29 @@ struct CourtroomView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: 16) {
-                        StageTracker(stages: session.visibleStages, current: session.stage)
-                            .id("top")
+                        StageTracker(stages: session.visibleStages, current: session.stage) { tapped in
+                            reviewSection = section(for: tapped)
+                        }
+                        .id("top")
+
+                        if session.stage.rawValue > CaseSession.Stage.briefing.rawValue && session.stage != .judgment {
+                            Button {
+                                reviewSection = .evidence
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "folder.fill").font(.title3).foregroundStyle(Theme.gold)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Review the case file").font(.subheadline.weight(.semibold))
+                                        Text("Charges, exhibits, testimony, your rulings, and counsel's answers")
+                                            .font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right").foregroundStyle(.secondary)
+                                }
+                                .card()
+                            }
+                            .buttonStyle(.plain)
+                        }
 
                         if session.stage != .judgment {
                             CounselPrompt(available: session.unaskedCount) { showCounsel = true }
@@ -85,6 +107,9 @@ struct CourtroomView: View {
                     }
                 }
             }
+            .sheet(item: $reviewSection) { section in
+                CaseReviewSheet(session: session, section: section)
+            }
             .sheet(isPresented: $showContinuance) {
                 ContinuanceSheet(today: session.courtCase.sessionDate, subject: session.courtCase.caption) { date, reason in
                     showContinuance = false
@@ -110,9 +135,22 @@ struct CourtroomView: View {
     }
 }
 
+extension CourtroomView {
+    /// Tapping a finished step opens that part of the case file.
+    func section(for stage: CaseSession.Stage) -> CaseReviewSheet.Section {
+        switch stage {
+        case .briefing: return .file
+        case .motions: return .motions
+        case .trial: return .testimony
+        default: return .evidence
+        }
+    }
+}
+
 struct StageTracker: View {
     let stages: [CaseSession.Stage]
     let current: CaseSession.Stage
+    var onReview: ((CaseSession.Stage) -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 4) {
@@ -131,7 +169,12 @@ struct StageTracker: View {
                         .minimumScaleFactor(0.7)
                 }
                 .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if stage.rawValue < current.rawValue { onReview?(stage) }
+                }
                 .accessibilityLabel(stage.title)
+                .accessibilityHint(stage.rawValue < current.rawValue ? "Review this part of the case" : "")
             }
         }
     }
