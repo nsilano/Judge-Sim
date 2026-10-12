@@ -173,14 +173,14 @@ enum CaseGenerator {
         let defenseSeeds = rng.pick(t.defenseEvidence, count: defenseCount)
 
         var evidence: [Evidence] = []
-        var searchable: [(UUID, EvidenceKind)] = []
+        var searchable: [(UUID, EvidenceKind, SearchPlace)] = []
         var statements: [UUID] = []
         for (index, item) in prosecutionSeeds.enumerated() {
             let exhibit = Evidence(exhibit: "State's Exhibit \(index + 1)", title: fill(item.title), detail: fill(item.detail),
                                    side: .prosecution, kind: item.kind, weight: item.weight)
             evidence.append(exhibit)
             switch item.acquisition {
-            case .search: searchable.append((exhibit.id, item.kind))
+            case .search: searchable.append((exhibit.id, item.kind, SearchPlace.infer(exhibit.title + " " + exhibit.detail, kind: item.kind)))
             case .statement: statements.append(exhibit.id)
             case .none: break
             }
@@ -206,7 +206,8 @@ enum CaseGenerator {
         for witness in witnesses where rng.chance(0.6) {
             let options = GenericPools.objectionSeeds.filter { option in
                 let fits = option.onCross ? option.raisedBy == witness.calledBy : option.raisedBy != witness.calledBy
-                return fits && (!option.needsVictim || t.hasVictim) && !usedQuestions.contains(option.question)
+                return fits && (!option.needsVictim || t.hasVictim) && (!option.layOnly || witness.lay == true)
+                    && !usedQuestions.contains(option.question)
             }
             guard !options.isEmpty else { continue }
             let option = rng.pick(options)
@@ -221,12 +222,17 @@ enum CaseGenerator {
         var motions: [Motion] = []
         if !searchable.isEmpty && rng.chance(0.6) {
             let target = rng.pick(searchable)
-            let fitting = GenericPools.suppressSearchSeeds.filter { $0.kinds.isEmpty || $0.kinds.contains(target.1) }
+            let fitting = GenericPools.suppressSearchSeeds.filter {
+                ($0.kinds.isEmpty || $0.kinds.contains(target.1)) && ($0.places.isEmpty || $0.places.contains(target.2))
+            }
             let wantGrant = rng.chance(0.45)
             let preferred = fitting.filter { $0.shouldGrant == wantGrant }
-            let option = rng.pick(preferred.isEmpty ? fitting : preferred)
-            let title = evidence.first { $0.id == target.0 }?.title ?? "the evidence"
-            motions.append(makeMotion(option, target: target.0, targetTitle: title, fill: fill))
+            let pool = preferred.isEmpty ? fitting : preferred
+            if !pool.isEmpty {
+                let option = rng.pick(pool)
+                let title = evidence.first { $0.id == target.0 }?.title ?? "the evidence"
+                motions.append(makeMotion(option, target: target.0, targetTitle: title, fill: fill))
+            }
         }
         if !statements.isEmpty && rng.chance(0.55) {
             let target = rng.pick(statements)
@@ -260,10 +266,22 @@ enum CaseGenerator {
         // Factors, twists, community mood
         let aggravatingCount = rng.int(1...2)
         let mitigatingCount = rng.int(1...2)
-        var aggravating = fill(rng.pick(t.aggravating, count: aggravatingCount))
-        var mitigating = fill(rng.pick(t.mitigating, count: mitigatingCount))
-        if defendant.priors.isEmpty {
-            mitigating.append("The defendant has no prior criminal record")
+        let hasPriors = !defendant.priors.isEmpty
+        let aboutRecord: (String) -> Bool = { text in
+            let l = text.lowercased()
+            return l.contains("record") || l.hasPrefix("prior") || l.contains("first offense") || l.contains("first-time")
+        }
+        let aggravatingPool = t.aggravating.filter { hasPriors || !aboutRecord($0) }
+        let mitigatingPool = t.mitigating.filter { !hasPriors || !aboutRecord($0) }
+        var aggravating = fill(rng.pick(aggravatingPool.isEmpty ? t.aggravating : aggravatingPool, count: aggravatingCount))
+        var mitigating = fill(rng.pick(mitigatingPool.isEmpty ? t.mitigating : mitigatingPool, count: mitigatingCount))
+        if !hasPriors {
+            aggravating.removeAll(where: aboutRecord)
+            if !mitigating.contains(where: aboutRecord) {
+                mitigating.append("The defendant has no prior criminal record")
+            }
+        } else {
+            mitigating.removeAll(where: aboutRecord)
         }
         if !defendant.occupation.lowercased().contains("unemployed") && rng.chance(0.5) {
             mitigating.append("The defendant has a positive employment history and is gainfully employed")
@@ -272,8 +290,13 @@ enum CaseGenerator {
         var media = rng.int(1...2)
         var doctrines = t.doctrines
         var twistText: String?
-        if rng.chance(0.5) {
-            let twist = rng.pick(GenericPools.twists)
+        var twistKey: String?
+        var chosenTwist: TwistSeed?
+        let twistPool = GenericPools.twists.filter { $0.ages.contains(defendant.age) }
+        if rng.chance(0.5), !twistPool.isEmpty {
+            let twist = rng.pick(twistPool)
+            twistKey = twist.key
+            chosenTwist = twist
             twistText = fill(twist.text)
             if let m = twist.mitigating { mitigating.append(fill(m)) }
             if let a = twist.aggravating { aggravating.append(fill(a)) }
@@ -288,7 +311,7 @@ enum CaseGenerator {
         // Ethics dilemma
         var ethics: EthicsEvent?
         if rng.chance(0.3) {
-            var event = rng.pick(GenericPools.ethicsEvents(hasVictim: t.hasVictim))
+            var event = rng.pick(GenericPools.ethicsEvents(hasVictim: t.hasVictim, retainedCounsel: !usePublicDefender))
             event.body = fill(event.body)
             event.options = event.options.map { option in
                 var o = option
@@ -317,6 +340,24 @@ enum CaseGenerator {
 
         let yy = String(format: "%02d", currentYear % 100)
         let docket = "\(yy) \(isFelonyCase ? "CRS" : "CR") \(String(format: "%06d", context.docketSequence))"
+
+        var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
+                                        publicDefender: usePublicDefender, mitigating: mitigating,
+                                        isFelony: isFelonyCase, habitual: habitual, rng: &rng)
+        if let twist = chosenTwist {
+            if twist.trialOnly && background.arrangementPresented == true {
+                twistText = nil
+                if let a = twist.aggravating { aggravating.removeAll { $0 == fill(a) } }
+            }
+            if twistKey == "jailed" {
+                background.custodyDays = 330
+                background.bondStatus = "Held in the Hollis County jail on a $5,000 secured bond for 330 days."
+            }
+            if twistKey == "rehab" && background.custodyDays > 0 {
+                background.custodyDays = 0
+                background.bondStatus = "Released on a secured bond. Has made every court date."
+            }
+        }
 
         return CourtCase(
             seed: seed,
@@ -353,9 +394,7 @@ enum CaseGenerator {
             mediaAttention: media,
             truth: truth,
             relatedDoctrines: doctrines,
-            background: makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
-                                       publicDefender: usePublicDefender, mitigating: mitigating,
-                                       isFelony: isFelonyCase, rng: &rng),
+            background: background,
             scenarioSignature: signature
         )
     }
@@ -373,7 +412,7 @@ enum CaseGenerator {
 
     private static func makeBackground(_ t: CaseTemplate, defendant: Defendant, charges: [Charge], values: [String: String],
                                        mood: PublicMood, publicDefender: Bool, mitigating: [String], isFelony: Bool,
-                                       rng: inout SeededRNG) -> CaseBackground {
+                                       habitual: Bool, rng: inout SeededRNG) -> CaseBackground {
         let fill = TextFiller(values: values)
         let primary = charges[0]
 
@@ -499,7 +538,7 @@ enum CaseGenerator {
             "The client's grandmother, who raised them, is in the second row."
         ]) : nil
         let discovery: String? = rng.chance(0.25) ? rng.pick([
-            "The SBI lab report arrived late; we turned it over nine days before trial.",
+            "The State Crime Laboratory report arrived late; we turned it over nine days before trial.",
             "A supplemental police report surfaced last week and was disclosed immediately.",
             "Body camera footage from a second officer was located and disclosed on Friday."
         ]) : nil
@@ -523,14 +562,29 @@ enum CaseGenerator {
         var arrangementPresented = false
         var arrangementLawID: String?
         var arrangementTerms: String?
+        var arrangementHabitual: Bool?
         if pleaOffer != nil && rng.chance(0.3) {
             arrangementPresented = true
             let pleaLaw = primary.lesserLaw ?? primary.law
             arrangementLawID = pleaLaw.id
-            let dismissed = charges.count > 1 ? " The State will dismiss the remaining counts." : ""
+            let pleaFelony = pleaLaw.ncClass?.isFelony ?? false
+            var dismissed = charges.count > 1 ? " The State will dismiss the remaining counts." : ""
+            if habitual {
+                if pleaFelony && rng.chance(0.5) {
+                    arrangementHabitual = true
+                    dismissed += " The defendant admits habitual felon status and will be sentenced as a habitual felon."
+                } else {
+                    arrangementHabitual = false
+                    dismissed += " The State will dismiss the habitual felon indictment."
+                }
+            }
+            let probationTerms = restitution > 0
+                ? "a suspended sentence with supervised probation and \(restitution.formatted(.currency(code: "USD").precision(.fractionLength(0)))) in restitution"
+                : "a suspended sentence with supervised probation"
+            let bottom = pleaFelony ? "a sentence at the bottom of the presumptive range" : "a sentence at the low end of the authorized range"
             arrangementTerms = rng.pick([
-                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The State recommends a sentence at the bottom of the presumptive range. The recommendation does not bind the court.",
-                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The parties jointly recommend a suspended sentence with supervised probation and restitution. The court is free to impose any lawful sentence.",
+                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The State recommends \(bottom). The recommendation does not bind the court.",
+                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The parties jointly recommend \(probationTerms). The court is free to impose any lawful sentence.",
                 "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) Sentencing is left to the discretion of the court."
             ])
             pleaRejection = nil
@@ -559,7 +613,8 @@ enum CaseGenerator {
             attorneyFeeEstimate: isFelony ? rng.int(15...45) * 100 : rng.int(3...8) * 100,
             arrangementPresented: arrangementPresented,
             arrangementLawID: arrangementLawID,
-            arrangementTerms: arrangementTerms
+            arrangementTerms: arrangementTerms,
+            arrangementHabitual: arrangementHabitual
         )
     }
 
@@ -596,13 +651,16 @@ enum CaseGenerator {
         }
         var cross = fill(seed.cross)
         var weight = seed.weight
+        let isVictim = seed.name == "{V}"
         if seed.lay && rng.chance(0.45) {
-            let pool = side == .prosecution ? GenericPools.prosecutionImpeachments : GenericPools.defenseImpeachments
+            let pool = (side == .prosecution ? GenericPools.prosecutionImpeachments : GenericPools.defenseImpeachments)
+                .filter { !isVictim || $0.victimSafe }
             let impeachment = rng.pick(pool)
             cross.append(fill(impeachment.text))
             weight = max(0, weight - impeachment.penalty)
         }
-        return Witness(name: name, role: fill(seed.role), calledBy: side, direct: fill(seed.direct), cross: cross, weight: weight)
+        return Witness(name: name, role: fill(seed.role), calledBy: side, direct: fill(seed.direct), cross: cross, weight: weight,
+                       lay: seed.lay)
     }
 
     private static func makeMotion(_ seed: MotionSeed, target: UUID?, targetTitle: String?, fill: TextFiller) -> Motion {

@@ -89,6 +89,8 @@ struct ObjectionSeed {
     let doctrineID: String
     let weight: Int
     var needsVictim: Bool = false
+    /// Only fits an ordinary eyewitness, not an officer or expert.
+    var layOnly: Bool = false
 }
 
 struct MotionSeed {
@@ -99,19 +101,44 @@ struct MotionSeed {
     let doctrines: [String]
     /// Evidence kinds this fact pattern fits (empty means any).
     var kinds: [EvidenceKind] = []
+    /// Where the search happened (empty means anywhere).
+    var places: [SearchPlace] = []
+}
+
+enum SearchPlace: Hashable {
+    case vehicle, home, phone, person
+
+    /// Infers where an item was found from its description.
+    static func infer(_ text: String, kind: EvidenceKind) -> SearchPlace {
+        let t = text.lowercased()
+        if kind == .digital || t.contains("phone") || t.contains("text") || t.contains("records") { return .phone }
+        for word in ["car", "truck", "trunk", "vehicle", "glovebox", "console", "passenger seat", "van", "suv"] where t.contains(word) {
+            return .vehicle
+        }
+        for word in ["home", "house", "apartment", "closet", "bedroom", "garage", "kitchen", "residence", "shed", "attic", "drawer", "basement"] where t.contains(word) {
+            return .home
+        }
+        return .person
+    }
 }
 
 struct TwistSeed {
+    var key: String = ""
     let text: String
     var mitigating: String? = nil
     var aggravating: String? = nil
     var mood: PublicMood? = nil
     var mediaBoost: Int = 0
     var doctrine: String? = nil
+    var ages: ClosedRange<Int> = 16...90
+    /// Makes no sense if the case resolves by plea before trial.
+    var trialOnly: Bool = false
 }
 
 struct Impeachment {
     let text: String
+    /// Safe to use on the complaining witness.
+    var victimSafe: Bool = true
     /// Amount subtracted from the witness's weight (negative bolsters).
     let penalty: Int
 }

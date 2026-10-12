@@ -314,7 +314,7 @@ extension CaseTemplates {
                 E(.forensic, 4, "Shotgun Wound Pattern", "Wound spread indicates a distance of 20 to 25 feet, not close range."),
                 E(.physical, 3, "Shotgun", "A 12-gauge recovered from {DL}'s porch, one shell spent."),
                 E(.document, 3, "Prior Threats", "A magistrate's record of {DL} telling {VL} in 2019: \"Step on my land again and you'll leave in a bag.\""),
-                E(.statement, 3, "911 Call", "{DL}: \"I shot the son of a bitch. Send somebody.\"", .statement)
+                E(.statement, 3, "911 Call", "{DL}: \"I shot the son of a bitch. Send somebody.\"")
             ],
             defenseEvidence: [
                 E(.physical, 3, "The Shovel", "A shovel found near {VL}, blade raised in the photograph."),
@@ -326,7 +326,7 @@ extension CaseTemplates {
                             direct: ["\"I was putting in a survey stake on my own land. I never raised that shovel.\""],
                             cross: ["\"Yes, I was angry. Yes, I walked toward the porch.\""],
                             weight: 2, lay: true),
-                WitnessSeed(name: nil, role: "SBI firearms examiner",
+                WitnessSeed(name: nil, role: "State Crime Laboratory firearms examiner",
                             direct: ["\"The spread pattern puts the shooter twenty feet or more away.\""],
                             cross: ["\"Twenty feet is about two seconds if someone is running.\""],
                             weight: 2, lay: false)
@@ -715,7 +715,7 @@ extension CaseTemplates {
             ],
             prosecutionEvidence: [
                 E(.video, 4, "Check-Cashing Video", "{DL} at the counter cashing a check payable to {DL}, signed \"{V}.\""),
-                E(.document, 3, "Handwriting Analysis", "An SBI document examiner says the signatures were probably written by {DL}."),
+                E(.document, 3, "Handwriting Analysis", "A State Crime Laboratory document examiner says the signatures were probably written by {DL}."),
                 E(.document, 3, "Endorsements", "Every check is endorsed by {DL} and deposited or cashed with {DL}'s ID.")
             ],
             defenseEvidence: [

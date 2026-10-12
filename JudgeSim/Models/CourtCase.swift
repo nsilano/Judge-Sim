@@ -67,6 +67,10 @@ struct Witness: Identifiable, Codable, Hashable {
     var direct: [String]
     var cross: [String]
     var weight: Int
+    /// Ordinary eyewitness rather than an officer or expert. Optional for older saves.
+    var lay: Bool? = nil
+    /// The defendant, testifying in their own defense.
+    var isDefendant: Bool? = nil
 }
 
 struct Objection: Identifiable, Codable, Hashable {
@@ -197,6 +201,8 @@ struct CaseBackground: Codable, Hashable {
     var arrangementPresented: Bool?
     var arrangementLawID: String?
     var arrangementTerms: String?
+    /// nil: no habitual indictment. true: status admitted. false: indictment dismissed.
+    var arrangementHabitual: Bool?
 }
 
 /// What actually happened. The player never sees this directly; it may surface later in the news.
@@ -247,6 +253,16 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var scenarioSignature: String?
 
     var caption: String { "State of North Carolina v. \(defendant.name)" }
+
+    /// The allocution, adjusted so a defendant who pleaded guilty doesn't protest innocence or cite an appeal.
+    func allocution(afterPlea: Bool) -> String {
+        guard afterPlea else { return allocution }
+        let lower = allocution.lowercased()
+        if lower.contains("didn't do it") || lower.contains("pending appeal") || lower.contains("innocent") {
+            return "\(defendant.lastName): \"I pleaded guilty because I'm guilty, Your Honor. I'm not going to stand here and make excuses. I'm sorry.\""
+        }
+        return allocution
+    }
 
     func evidence(_ id: UUID?) -> Evidence? {
         guard let id else { return nil }

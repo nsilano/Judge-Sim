@@ -572,7 +572,7 @@ extension CaseTemplates {
             prosecutionEvidence: [
                 E(.video, 4, "Street Camera", "{DL} walking up to {VL} and throwing one punch; {VL} falls straight back."),
                 E(.forensic, 3, "Autopsy", "Death from blunt force head injury consistent with striking the curb."),
-                E(.statement, 2, "911 Call", "{DL}: \"Somebody help, they're not moving, I didn't mean it.\"", .statement)
+                E(.statement, 2, "911 Call", "{DL}: \"Somebody help, they're not moving, I didn't mean it.\"")
             ],
             defenseEvidence: [
                 E(.video, 3, "Victim Advanced", "The same video, slowed down, shows {VL} stepping toward {DL} with a fist raised."),

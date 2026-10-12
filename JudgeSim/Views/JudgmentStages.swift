@@ -124,7 +124,7 @@ struct SentencingStage: View {
                     Text(impact).font(.system(.callout, design: .serif)).italic()
                 }
                 Text("The defendant addresses the court").font(.caption.weight(.bold)).foregroundStyle(Theme.defense)
-                Text(c.allocution).font(.system(.callout, design: .serif)).italic()
+                Text(c.allocution(afterPlea: session.rulings.pleaAccepted == true)).font(.system(.callout, design: .serif)).italic()
             }
 
             if session.needsHabitualDecision {
