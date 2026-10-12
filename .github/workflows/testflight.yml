@@ -22,8 +22,8 @@ jobs:
     env:
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-      ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_KEY }}
+      APPLE_TEAM_ID: ${{ secrets.TEAM_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -31,7 +31,7 @@ jobs:
         run: |
           missing=0
           for name in ASC_KEY_ID ASC_ISSUER_ID ASC_PRIVATE_KEY APPLE_TEAM_ID; do
-            if [ -z "${!name}" ]; then echo "::error::Missing repository secret: $name"; missing=1; else echo "Found $name"; fi
+            if [ -z "${!name}" ]; then echo "::error::Missing secret for $name"; missing=1; else echo "Found $name"; fi
           done
           exit $missing
 
