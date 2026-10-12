@@ -126,6 +126,11 @@ struct BriefingStage: View {
     @State private var showColloquy = false
     private var c: CourtCase { session.courtCase }
 
+    private var deNovoNote: [String] {
+        guard c.court == .misdemeanorAppeal, let sentence = c.background?.districtCourtSentence else { return [] }
+        return ["District court judgment: \(sentence). On a trial de novo you may impose any lawful sentence, including a harsher one."]
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
@@ -162,7 +167,7 @@ struct BriefingStage: View {
             }
 
             SectionTitle(text: "Procedural posture", icon: "doc.plaintext")
-            BulletList(items: c.proceduralNotes, symbol: "circle.fill")
+            BulletList(items: c.proceduralNotes + deNovoNote, symbol: "circle.fill")
                 .font(.callout)
                 .card()
 

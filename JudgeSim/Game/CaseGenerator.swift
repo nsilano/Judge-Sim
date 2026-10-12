@@ -250,7 +250,7 @@ enum CaseGenerator {
         var notes: [String] = []
         if isFelonyCase {
             if t.primaryLaw == "murder1" {
-                notes.append("The State has declared this a non-capital case. A jury may therefore be waived.")
+                notes.append("The State has declared this a non-capital case, so a jury may be waived. Bench trials for first-degree murder are rare in North Carolina; the defense requested one and you consented after hearing from the State.")
             }
             notes.append("The defendant waived the right to trial by jury in writing (N.C. Const. art. I, § 24). After hearing from the State, you consented on the record.")
         } else {

@@ -178,6 +178,12 @@ struct SentencingStage: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
+            if c.court == .misdemeanorAppeal, let prior = c.background?.districtCourtSentence {
+                Label("The district court imposed \(prior). Its judgment was vacated by the appeal; you sentence fresh.", systemImage: "arrow.up.forward.circle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             CollapsibleSection(title: "Victim & defendant", icon: "person.2.fill",
                                summary: "Victim impact statement and allocution", expanded: true) {
                 if let impact = c.victimImpact {

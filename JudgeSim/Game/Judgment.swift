@@ -265,7 +265,12 @@ struct JudgmentEntry: Identifiable, Hashable {
     let lines: [String]
 }
 
+enum SentencePosition: String, Codable {
+    case below, within, above
+}
+
 struct CaseOutcome {
+    var sentencePosition: SentencePosition?
     var dismissed: Bool
     var verdictLines: [VerdictLine]
     var judgments: [JudgmentEntry]
@@ -1151,8 +1156,9 @@ enum Judgment {
             let appeals = rng.chance(plea ? 0.1 : (harsh ? 0.7 : 0.3))
             if appeals {
                 appealNotice = "The defendant gave notice of appeal to the North Carolina Court of Appeals in open court."
-                pending.append(appealEvent(c, r, anyUnsupported: anyUnsupported, proper: proper,
-                                           judgeLast: judgeLast, due: later(150...330), plea: plea))
+                pending.append(contentsOf: appealEvents(c, r, anyUnsupported: anyUnsupported, proper: proper,
+                                                        judgeLast: judgeLast, due: later(150...330), plea: plea,
+                                                        retryChance: rng.chance(0.7)))
             }
         }
         // Things that may surface about what really happened
@@ -1213,10 +1219,25 @@ enum Judgment {
                                         news: NewsItem(date: date, kind: .appeal,
                                                        headline: "Court of Appeals reinstates charges against \(d.name)",
                                                        body: "In \(c.caption), the State appealed Judge \(judgeLast)'s dismissal. The Court of Appeals held the delay did not violate the defendant's right to a speedy trial, noting that most of it was attributable to the defense, and remanded the case for trial.",
-                                                       docket: c.docket)))
+                                                       docket: c.docket),
+                                        retrial: retrialCase(c, r, reinstated: true)))
         }
 
-        return CaseOutcome(dismissed: dismissed, verdictLines: verdictLines, judgments: judgments,
+        var position: SentencePosition?
+        if special == .none, let unit = sentencingUnits.first(where: { $0.isFelony }), let cell = unit.felonyCell {
+            let selected = choice(unit, r)
+            if selected.lifeWithoutParole {
+                position = unit.isMandatoryLife ? .within : .above
+            } else if selected.minimum < cell.presumptive.low {
+                position = .below
+            } else if selected.minimum > cell.presumptive.high {
+                position = .above
+            } else {
+                position = .within
+            }
+        }
+
+        return CaseOutcome(sentencePosition: position, dismissed: dismissed, verdictLines: verdictLines, judgments: judgments,
                            habitualNote: habitualNote, probationHearing: probationHearing, convicted: convicted,
                            custodyMonths: custodyMonths, personStatus: status, releaseDate: releaseDate,
                            newProbation: newProbation, newPriors: newPriors, propensity: propensity,
@@ -1225,6 +1246,55 @@ enum Judgment {
     }
 
     // MARK: Appeals
+
+    private static func appealEvents(_ c: CourtCase, _ r: Rulings, anyUnsupported: Bool, proper: Int,
+                                     judgeLast: String, due: Date, plea: Bool, retryChance: Bool) -> [PendingEvent] {
+        let event = appealEvent(c, r, anyUnsupported: anyUnsupported, proper: proper, judgeLast: judgeLast, due: due, plea: plea)
+        guard event.appealReversed, event.news.headline.contains("new trial") else { return [event] }
+        let followUp = Calendar.current.date(byAdding: .day, value: 75, to: due) ?? due
+        if retryChance {
+            var retry = PendingEvent(due: followUp,
+                                     news: NewsItem(date: followUp, kind: .appeal,
+                                                    headline: "District Attorney will retry \(c.defendant.name)",
+                                                    body: "Following the Court of Appeals decision in \(c.caption), the District Attorney's office announced it will try the case again. It returns to Judge \(judgeLast)'s courtroom.",
+                                                    docket: c.docket),
+                                     personID: c.defendant.personID)
+            retry.retrial = retrialCase(c, r)
+            return [event, retry]
+        }
+        return [event, PendingEvent(due: followUp,
+                                    news: NewsItem(date: followUp, kind: .appeal,
+                                                   headline: "No retrial for \(c.defendant.name)",
+                                                   body: "The District Attorney's office said it will not retry \(c.caption) after the Court of Appeals ordered a new trial, citing the evidence that remains admissible.",
+                                                   docket: c.docket),
+                                    personID: c.defendant.personID)]
+    }
+
+    /// The case as it would be tried again: erroneously admitted evidence comes out, rulings start fresh.
+    static func retrialCase(_ c: CourtCase, _ r: Rulings, reinstated: Bool = false) -> CourtCase {
+        var retrial = c
+        retrial.id = UUID()
+        let wronglyAdmitted = Set(c.motions.compactMap { m in
+            m.shouldGrant && !(r.motions[m.id] ?? false) ? m.targetEvidenceID : nil
+        })
+        retrial.evidence.removeAll { wronglyAdmitted.contains($0.id) }
+        retrial.motions.removeAll { $0.shouldGrant && !(r.motions[$0.id] ?? false) }
+        retrial.motions.removeAll { $0.kind == .dismissSpeedyTrial }
+        retrial.objections.removeAll { $0.shouldSustain && !(r.objections[$0.id] ?? false) }
+        retrial.ethics = nil
+        retrial.twist = nil
+        retrial.mediaAttention = min(3, c.mediaAttention + 1)
+        retrial.headline = (reinstated ? "Reinstated: " : "Retrial: ") + c.headline
+        retrial.proceduralNotes.insert(reinstated
+            ? "The Court of Appeals reversed your speedy-trial dismissal and reinstated the charges. The case is back for trial."
+            : "The Court of Appeals ordered a new trial. Evidence it held inadmissible has been excluded, and the earlier verdict carries no weight.", at: 0)
+        if var bg = retrial.background {
+            bg.arrangementPresented = false
+            bg.arrangementTerms = nil
+            retrial.background = bg
+        }
+        return retrial
+    }
 
     private static func appealEvent(_ c: CourtCase, _ r: Rulings, anyUnsupported: Bool, proper: Int,
                                     judgeLast: String, due: Date, plea: Bool) -> PendingEvent {
@@ -1249,13 +1319,14 @@ enum Judgment {
         var body: String
         let reversed = anyUnsupported
         if reversed {
-            headline = "Appeals court orders new trial for \(c.defendant.name)"
             if let first = errors.first {
+                headline = "Appeals court orders new trial for \(c.defendant.name)"
                 body = "\(court) held that \(first) Because the error was prejudicial, the court vacated the conviction and ordered a new trial."
+                body += " The District Attorney's office said it is reviewing whether to retry the case."
             } else {
-                body = "\(court) held that the State's evidence was insufficient to support the conviction and vacated it."
+                headline = "Appeals court vacates conviction of \(c.defendant.name)"
+                body = "\(court) held that the State's evidence was insufficient to support the conviction and vacated it. Because the evidence was insufficient, double jeopardy bars a retrial."
             }
-            body += " The District Attorney's office said it is reviewing whether to retry the case."
         } else if let first = errors.first {
             headline = "Conviction of \(c.defendant.name) upheld despite trial error"
             body = "\(court) concluded that \(first) But in light of the other evidence, the panel found no reasonable possibility of a different result, and held there was no prejudicial error."
