@@ -26,6 +26,21 @@ enum LawLibrary {
     static let offenses: [Law] = violent + robbery + property + drugs + whiteCollar + publicOrder + traffic + cyber + family
 
     static let violent: [Law] = [
+        Law(id: "dischargingOccupied", statute: "G.S. 14-34.1(b)", title: "Discharging a Weapon into Occupied Property", category: .violent, ncClass: .D,
+            summary: "Willfully discharging a firearm into an occupied dwelling or occupied vehicle in operation.",
+            elements: ["The defendant willfully discharged a firearm.", "Into a dwelling, or a vehicle in operation.", "The property was occupied at the time.", "The defendant knew or had reasonable grounds to believe it was occupied."],
+            defenses: ["Misidentification", "Lack of knowledge that the property was occupied"],
+            related: ["awdwikisi", "felonFirearm"],
+            notes: "Discharging into other occupied property is Class E; if serious bodily injury results, Class C."),
+        Law(id: "assaultLEO", statute: "G.S. 14-34.7(c)", title: "Assault on a Law Enforcement Officer Inflicting Physical Injury", category: .violent, ncClass: .I,
+            summary: "Assaulting a law enforcement officer, probation officer, or detention officer in the performance of duties, inflicting physical injury.",
+            elements: ["The victim was a law enforcement, probation, or detention officer.", "Performing official duties.", "The defendant assaulted the officer.", "Inflicting physical injury."],
+            defenses: ["Self-defense against excessive force", "No physical injury (reduces to a misdemeanor)"],
+            related: ["assaultGovOfficial", "resisting"]),
+        Law(id: "assaultGovOfficial", statute: "G.S. 14-33(c)(4)", title: "Assault on a Government Officer or Employee", category: .violent, ncClass: .misdA1,
+            summary: "Assaulting an officer or employee of the State or a local government while they are discharging, or attempting to discharge, official duties.",
+            elements: ["The victim was a government officer or employee.", "Discharging official duties.", "The defendant assaulted the victim."],
+            related: ["assaultLEO", "simpleAssault"]),
         Law(id: "murder1", statute: "G.S. 14-17(a)", title: "First-Degree Murder", category: .violent, ncClass: .A,
             summary: "A willful, deliberate, and premeditated killing; a killing by poison, lying in wait, imprisonment, starving, or torture; or a killing during certain felonies (felony murder).",
             elements: ["The defendant unlawfully killed the victim.",
@@ -104,6 +119,15 @@ enum LawLibrary {
     ]
 
     static let robbery: [Law] = [
+        Law(id: "witnessIntimidation", statute: "G.S. 14-226", title: "Intimidating a Witness", category: .robbery, ncClass: .G,
+            summary: "Attempting by threats, menaces, or force to intimidate or deter a person summoned or acting as a witness in a court proceeding.",
+            elements: ["The victim was a witness or prospective witness in a court proceeding.", "The defendant, by threats, menaces, or force, attempted to intimidate or deter the witness from testifying or to influence the testimony."],
+            related: ["obstruction", "communicatingThreats"]),
+        Law(id: "communicatingThreats", statute: "G.S. 14-277.1", title: "Communicating Threats", category: .robbery, ncClass: .misd1,
+            summary: "Willfully threatening to physically injure a person or damage property, communicated in a way that a reasonable person would believe it is likely to be carried out.",
+            elements: ["The defendant willfully threatened to injure a person or damage their property.", "The threat was communicated orally, in writing, or by other means.", "Under the circumstances, a reasonable person would believe the threat was likely to be carried out.", "The person threatened believed it would be carried out."],
+            defenses: ["Hyperbole or jest", "First Amendment: not a true threat (Counterman v. Colorado requires at least recklessness)"],
+            related: ["massViolenceThreat", "stalking"]),
         Law(id: "dangerousRobbery", statute: "G.S. 14-87", title: "Robbery with a Firearm or Other Dangerous Weapon", category: .robbery, ncClass: .D,
             summary: "Taking personal property from another's person or presence, by use or threatened use of a firearm or dangerous weapon, endangering or threatening the person's life. Often called \"armed robbery.\"",
             elements: ["The defendant took personal property from the person or presence of another.",
@@ -143,6 +167,19 @@ enum LawLibrary {
     ]
 
     static let property: [Law] = [
+        Law(id: "breakingVehicle", statute: "G.S. 14-56", title: "Breaking or Entering a Motor Vehicle", category: .property, ncClass: .I,
+            summary: "Breaking or entering a motor vehicle containing goods or other things of value, with intent to commit larceny or a felony inside.",
+            elements: ["The defendant broke or entered a motor vehicle.", "The vehicle contained goods, wares, or other things of value.", "The defendant intended to commit larceny or a felony."],
+            related: ["misdLarceny", "possStolen"]),
+        Law(id: "larcenyMerchant", statute: "G.S. 14-72.11", title: "Larceny from a Merchant", category: .property, ncClass: .H,
+            summary: "Larceny from a merchant using an exit door erected for emergency purposes, by removing or disabling an anti-theft device, by using a booster bag, or of infant formula over $100.",
+            elements: ["The defendant committed larceny against a merchant.", "By one of the statutory methods: an emergency exit, defeating an anti-theft device or tag, a lined 'booster' bag, or taking infant formula valued over $100."],
+            related: ["misdLarceny", "felonyLarceny"]),
+        Law(id: "injuryRealProperty", statute: "G.S. 14-127", title: "Injury to Real Property", category: .property, ncClass: .misd1,
+            summary: "Willfully and wantonly damaging, injuring, or destroying the real property of another, including monuments and fixtures.",
+            elements: ["The defendant damaged, injured, or destroyed real property.", "The property belonged to another.", "The defendant acted willfully and wantonly."],
+            defenses: ["First Amendment does not protect destruction of property"],
+            related: ["riot"]),
         Law(id: "burglary1", statute: "G.S. 14-51", title: "First-Degree Burglary", category: .property, ncClass: .D,
             summary: "Breaking and entering the occupied dwelling of another, at night, with intent to commit a felony inside.",
             elements: ["The defendant broke and entered a dwelling house or sleeping apartment.",
@@ -197,6 +234,15 @@ enum LawLibrary {
     ]
 
     static let drugs: [Law] = [
+        Law(id: "maintainingDwelling", statute: "G.S. 90-108(a)(7)", title: "Maintaining a Dwelling for Controlled Substances", category: .drugs, ncClass: .I,
+            summary: "Knowingly keeping or maintaining a dwelling, vehicle, or place resorted to by persons using controlled substances, or used for keeping or selling them.",
+            elements: ["The defendant kept or maintained a dwelling, vehicle, or building.", "It was used for keeping or selling controlled substances, or resorted to by people using them.", "Done intentionally (otherwise a misdemeanor)."],
+            defenses: ["Not the defendant's residence; no control", "Single occasion is not 'keeping or maintaining'"],
+            related: ["pwisd"]),
+        Law(id: "prescriptionFraud", statute: "G.S. 90-108(a)(10)", title: "Obtaining a Controlled Substance by Fraud or Forgery", category: .drugs, ncClass: .I,
+            summary: "Acquiring or obtaining possession of a controlled substance by misrepresentation, fraud, forgery, deception, or subterfuge.",
+            elements: ["The defendant acquired or obtained a controlled substance.", "By misrepresentation, fraud, forgery, deception, or subterfuge.", "Done intentionally."],
+            related: ["possSchedII", "uttering"]),
         Law(id: "possSchedII", statute: "G.S. 90-95(a)(3), (d)(2)", title: "Possession of a Schedule II Controlled Substance", category: .drugs, ncClass: .I,
             summary: "Knowingly possessing a Schedule II controlled substance. Possession of any amount of cocaine or methamphetamine is a Class I felony.",
             elements: ["The defendant possessed a controlled substance, actually or constructively.", "The defendant knew it was present and what it was."],
@@ -239,6 +285,16 @@ enum LawLibrary {
     ]
 
     static let whiteCollar: [Law] = [
+        Law(id: "uttering", statute: "G.S. 14-120", title: "Uttering a Forged Instrument", category: .whiteCollar, ncClass: .I,
+            summary: "Offering a forged or counterfeit check or other instrument as true, knowing it to be false, with intent to defraud.",
+            elements: ["The defendant offered a forged instrument as genuine.", "The defendant knew it was forged.", "With intent to defraud or injure."],
+            related: ["identityTheft", "falsePretenses"],
+            notes: "Forgery itself (making the instrument) is also Class I under G.S. 14-119."),
+        Law(id: "exploitationElder", statute: "G.S. 14-112.2", title: "Exploitation of an Older Adult", category: .whiteCollar, ncClass: .G,
+            summary: "A person in a position of trust or a business relationship with an older adult (65+) or disabled adult who knowingly, by deception or intimidation, obtains or uses their funds or property.",
+            elements: ["The victim was 65 or older, or a disabled adult.", "The defendant stood in a position of trust and confidence, or had a business relationship, with the victim.", "The defendant knowingly, by deception or intimidation, obtained or used the victim's funds or property.", "With intent to temporarily or permanently deprive the victim of them."],
+            related: ["falsePretenses", "embezzlement"],
+            notes: "Class F if $100,000 or more; Class G if $20,000 to $100,000; Class H if less than $20,000. The simulator uses the middle tier."),
         Law(id: "falsePretenses", statute: "G.S. 14-100", title: "Obtaining Property by False Pretenses", category: .whiteCollar, ncClass: .H,
             summary: "Obtaining property or money from another by a knowingly false representation, made with intent to deceive, which does in fact deceive.",
             elements: ["The defendant made a false representation of a past or existing fact (or a future fulfillment).",
@@ -291,6 +347,20 @@ enum LawLibrary {
     ]
 
     static let publicOrder: [Law] = [
+        Law(id: "massViolenceThreat", statute: "G.S. 14-277.6", title: "Communicating a Threat of Mass Violence on Educational Property", category: .publicOrder, ncClass: .H,
+            summary: "Communicating a threat to commit an act of mass violence on educational property or at a curricular or extracurricular activity.",
+            elements: ["The defendant communicated a threat.", "To commit an act of mass violence (four or more people).", "On educational property or at a school-sponsored activity."],
+            defenses: ["Not a true threat", "Mental state: Counterman v. Colorado (2023) requires at least recklessness about the threatening character"],
+            related: ["communicatingThreats"],
+            notes: "A defendant under 18 with no prior adjudication may receive a conditional discharge-type disposition under the statute."),
+        Law(id: "impersonatingLEO", statute: "G.S. 14-277", title: "Impersonating a Law Enforcement Officer", category: .publicOrder, ncClass: .misd1,
+            summary: "Falsely representing oneself as a sworn law enforcement officer, including by using a red or blue light on a vehicle.",
+            elements: ["The defendant falsely represented, by word or action, being a sworn law enforcement officer, or used blue lights or a uniform to do so."],
+            related: ["kidnapping2"]),
+        Law(id: "firearmStorage", statute: "G.S. 14-315.1", title: "Storage of Firearms to Protect Minors", category: .publicOrder, ncClass: .misd1,
+            summary: "Storing or leaving a loaded firearm where a minor is likely to gain access without permission, when a minor then possesses or exhibits it in a public place, unlawfully, or with injury.",
+            elements: ["The defendant resided with a minor or knew a minor was likely to be present.", "The defendant stored or left a firearm in a condition that could be discharged, where a minor was likely to gain access.", "A minor gained access and possessed it in a public place, used it unlawfully, or caused injury."],
+            related: ["invManslaughter"]),
         Law(id: "felonFirearm", statute: "G.S. 14-415.1", title: "Possession of a Firearm by a Felon", category: .publicOrder, ncClass: .G,
             summary: "Purchasing, owning, possessing, or having custody, care, or control of any firearm after a felony conviction.",
             elements: ["The defendant was previously convicted of a felony.", "The defendant thereafter possessed or controlled a firearm."],
@@ -329,6 +399,11 @@ enum LawLibrary {
     ]
 
     static let traffic: [Law] = [
+        Law(id: "fleeing", statute: "G.S. 20-141.5(b)", title: "Felony Speeding to Elude Arrest", category: .traffic, ncClass: .H,
+            summary: "Operating a motor vehicle to flee or elude a law enforcement officer performing lawful duties, with two or more aggravating factors (e.g. speeding 15+ over the limit, reckless driving, gross impairment, driving while license revoked, a child in the car).",
+            elements: ["The defendant operated a motor vehicle on a street, highway, or public vehicular area.", "While fleeing or attempting to elude a law enforcement officer in the lawful performance of duties.", "Two or more statutory aggravating factors were present."],
+            related: ["resisting", "felonyDBV"],
+            notes: "Without two aggravating factors, a Class 1 misdemeanor. If death results, Class E."),
         Law(id: "dwi", statute: "G.S. 20-138.1", title: "Driving While Impaired", category: .traffic, ncClass: nil,
             summary: "Driving a vehicle on a highway or public vehicular area while under the influence of an impairing substance, or with an alcohol concentration of 0.08 or more.",
             elements: ["The defendant drove a vehicle.", "On a highway, street, or public vehicular area.", "While under the influence of an impairing substance, OR with an alcohol concentration of 0.08 or more at any relevant time after driving."],
@@ -382,6 +457,16 @@ enum LawLibrary {
     ]
 
     static let family: [Law] = [
+        Law(id: "felonyChildAbuse", statute: "G.S. 14-318.4(a)", title: "Felony Child Abuse Inflicting Serious Physical Injury", category: .family, ncClass: .D,
+            summary: "A parent or other person providing care to a child under 16 who intentionally inflicts serious physical injury on the child, or intentionally commits an assault that results in serious physical injury.",
+            elements: ["The defendant was a parent or caretaker of a child under 16.", "The defendant intentionally inflicted serious physical injury, or intentionally assaulted the child resulting in serious physical injury."],
+            defenses: ["Accidental injury", "Another caretaker inflicted the injury", "Medical explanation (e.g. bone disease)"],
+            related: ["childAbuseMisd", "expertTestimony"]),
+        Law(id: "dvpoViolation", statute: "G.S. 50B-4.1(a)", title: "Violation of a Domestic Violence Protective Order", category: .family, ncClass: .misdA1,
+            summary: "Knowingly violating a valid Chapter 50B protective order.",
+            elements: ["A valid domestic violence protective order was in effect.", "The defendant knew of the order.", "The defendant knowingly violated it."],
+            related: ["stalking", "assaultFemale"],
+            notes: "A third violation, or a violation while possessing a deadly weapon, is a Class H felony."),
         Law(id: "transportChild", statute: "G.S. 14-320.1", title: "Transporting a Child Outside the State with Intent to Violate a Custody Order", category: .family, ncClass: .I,
             summary: "Taking a child outside North Carolina with the intent to violate a court order awarding custody to another.",
             elements: ["A North Carolina court had entered a custody order.", "The defendant transported the child, or caused the child to be transported, outside the state.", "With the intent to violate the custody order."],

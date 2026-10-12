@@ -40,6 +40,7 @@ private struct SaveData: Codable {
     var currentCase: CourtCase?
     var currentHearing: ViolationHearing?
     var recentTemplates: [String]
+    var usedSignatures: [String]?
     var seedBase: UInt64
 }
 
@@ -58,6 +59,7 @@ final class GameState: ObservableObject {
     private var pending: [PendingEvent] = []
     private var docketSequence = 1_000
     private var recentTemplates: [String] = []
+    private var usedSignatures: [String] = []
     private var seedBase: UInt64 = UInt64.random(in: 1...UInt64.max / 2)
     private let saveKey = "JudgeSim.nc.save.v1"
 
@@ -151,12 +153,13 @@ final class GameState: ObservableObject {
         let returning = pickReturningDefendant(rng: &rng)
         let context = CaseGenerator.Context(county: county, judgeName: judgeName, date: currentDate,
                                             docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
-                                            returning: returning)
+                                            returning: returning, usedSignatures: Set(usedSignatures))
         let seed = rng.next()
         let newCase = CaseGenerator.generate(seed: seed, context: context)
         currentCase = newCase
         docketSequence += rng.int(30...420)
         recentTemplates.append(newCase.templateKey)
+        if let signature = newCase.scenarioSignature { usedSignatures.append(signature) }
         if recentTemplates.count > 8 { recentTemplates.removeFirst(recentTemplates.count - 8) }
 
         if let returning {
@@ -239,6 +242,7 @@ final class GameState: ObservableObject {
         currentCase = nil
         currentHearing = nil
         recentTemplates = []
+        usedSignatures = []
         seedBase = UInt64.random(in: 1...UInt64.max / 2)
         save()
     }
@@ -327,7 +331,8 @@ final class GameState: ObservableObject {
     private func save() {
         let data = SaveData(judgeName: judgeName, county: county, currentDate: currentDate, docketSequence: docketSequence,
                             history: Array(history.prefix(300)), people: people, news: news, pending: pending,
-                            currentCase: currentCase, currentHearing: currentHearing, recentTemplates: recentTemplates, seedBase: seedBase)
+                            currentCase: currentCase, currentHearing: currentHearing, recentTemplates: recentTemplates,
+                            usedSignatures: usedSignatures, seedBase: seedBase)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -347,6 +352,7 @@ final class GameState: ObservableObject {
         currentCase = data.currentCase
         currentHearing = data.currentHearing
         recentTemplates = data.recentTemplates
+        usedSignatures = data.usedSignatures ?? []
         seedBase = data.seedBase
     }
 }

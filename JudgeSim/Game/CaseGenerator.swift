@@ -9,6 +9,8 @@ enum CaseGenerator {
         let date: Date
         let docketSequence: Int
         let recentTemplateKeys: [String]
+        /// Scenario signatures already heard in this career, so no exact scenario repeats.
+        var usedSignatures: Set<String> = []
         let returning: PersonRecord?
     }
 
@@ -22,20 +24,40 @@ enum CaseGenerator {
         var pool = CaseTemplates.all
         if let person = context.returning {
             let hasFelony = person.priors.contains { $0.ncClass.isFelony }
-            pool = pool.filter { $0.occupations.isEmpty && (!$0.requiresFelonyPrior || hasFelony) }
+            let age = person.age(on: context.date)
+            let fitting = pool.filter { template in
+                template.occupations.isEmpty
+                    && (!template.requiresFelonyPrior || hasFelony)
+                    && template.forcedPriorOffenses.isEmpty
+                    && age >= template.ageRange.lowerBound - 3 && age <= template.ageRange.upperBound + 8
+            }
+            if !fitting.isEmpty { pool = fitting }
         }
-        let fresh = pool.filter { !context.recentTemplateKeys.contains($0.key) }
-        let template = rng.pick(fresh.isEmpty ? pool : fresh)
+
+        // Work through every kind of case before any repeats: prefer the least-heard templates.
+        func uses(_ template: CaseTemplate) -> Int {
+            context.usedSignatures.filter { $0.hasPrefix(template.key + "|") }.count
+        }
+        let fewest = pool.map(uses).min() ?? 0
+        var choices = pool.filter { uses($0) == fewest }
+        let notRecent = choices.filter { !context.recentTemplateKeys.contains($0.key) }
+        if !notRecent.isEmpty { choices = notRecent }
+        let template = rng.pick(choices)
 
         let roll = Double.random(in: 0..<1, using: &rng)
         let band: Band = roll < 0.38 ? .strong : (roll < 0.75 ? .close : .weak)
 
-        var candidate = build(template, seed: seed, band: band, context: context, rng: &rng)
-        for _ in 0..<24 {
-            if matches(candidate, band: band) { return candidate }
-            candidate = build(template, seed: seed, band: band, context: context, rng: &rng)
+        // Never repeat an exact scenario (same template, set-up, headline, and details).
+        var fallback: CourtCase?
+        var unheard: CourtCase?
+        for _ in 0..<40 {
+            let candidate = build(template, seed: seed, band: band, context: context, rng: &rng)
+            let fresh = !context.usedSignatures.contains(candidate.scenarioSignature ?? "")
+            if fresh && matches(candidate, band: band) { return candidate }
+            if fresh && unheard == nil { unheard = candidate }
+            if fallback == nil { fallback = candidate }
         }
-        return candidate
+        return unheard ?? fallback!
     }
 
     private static func matches(_ courtCase: CourtCase, band: Band) -> Bool {
@@ -78,6 +100,14 @@ enum CaseGenerator {
             let age = rng.int(t.ageRange)
             let occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
             var priors = randomPriors(age: age, year: currentYear, county: county, rng: &rng)
+            for (offset, name) in t.forcedPriorOffenses.enumerated() {
+                guard let seed = GenericPools.priorSeeds.first(where: { $0.offense == name }) else { continue }
+                priors.append(PriorConviction(offense: seed.offense, ncClass: seed.ncClass,
+                                              year: currentYear - 1 - offset * 2 - rng.int(0...1),
+                                              county: rng.chance(0.6) ? county.name : rng.pick(GenericPools.otherCounties),
+                                              sentence: rng.pick(seed.sentences)))
+            }
+            priors.sort { $0.year < $1.year }
             if t.requiresFelonyPrior && !priors.contains(where: { $0.ncClass.isFelony }) {
                 priors.insert(PriorConviction(offense: "Possession of Stolen Goods", ncClass: .H, year: currentYear - 12,
                                               county: rng.pick(GenericPools.otherCounties),
@@ -280,6 +310,11 @@ enum CaseGenerator {
         let truth = HiddenTruth(actuallyGuilty: actuallyGuilty,
                                 revelation: fill(rng.pick(actuallyGuilty ? t.guiltyTruths : t.innocentTruths)))
 
+        let summaryIndex = rng.int(0...(t.summaries.count - 1))
+        let headlineIndex = rng.int(0...(t.headlines.count - 1))
+        let extrasSignature = t.extras.keys.sorted().compactMap { values[$0] }.joined(separator: ",")
+        let signature = "\(t.key)|s\(summaryIndex)|h\(headlineIndex)|\(extrasSignature)"
+
         let yy = String(format: "%02d", currentYear % 100)
         let docket = "\(yy) \(isFelonyCase ? "CRS" : "CR") \(String(format: "%06d", context.docketSequence))"
 
@@ -289,9 +324,9 @@ enum CaseGenerator {
             docket: docket,
             court: court,
             sessionDate: context.date,
-            headline: fill(rng.pick(t.headlines)),
+            headline: fill(t.headlines[headlineIndex]),
             category: t.category,
-            summary: fill(rng.pick(t.summaries)),
+            summary: fill(t.summaries[summaryIndex]),
             defendant: defendant,
             victimName: victimName,
             charges: charges,
@@ -320,7 +355,8 @@ enum CaseGenerator {
             relatedDoctrines: doctrines,
             background: makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                        publicDefender: usePublicDefender, mitigating: mitigating,
-                                       isFelony: isFelonyCase, rng: &rng)
+                                       isFelony: isFelonyCase, rng: &rng),
+            scenarioSignature: signature
         )
     }
 

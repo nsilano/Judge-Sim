@@ -56,6 +56,8 @@ struct CaseTemplate {
     let ageRange: ClosedRange<Int>
     var occupations: [String] = []
     var requiresFelonyPrior = false
+    /// Prior convictions every defendant in this scenario must have, by offense name from GenericPools.priorSeeds.
+    var forcedPriorOffenses: [String] = []
     let hasVictim: Bool
     let summaries: [String]
     let prosecutionEvidence: [EvidenceSeed]

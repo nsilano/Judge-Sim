@@ -11,7 +11,7 @@ enum CaseTemplates {
         storeRobbery, barFight, poisoning, burglary, embezzlement, trafficStopDrugs, overdose,
         drunkCrash, abusedSpouse, medicineTheft, ransomware, imageLeak, insuranceArson,
         protestAssault, elderScam, stalking, custodyFlight, policeForce, councilBribe, felonGun, ponzi
-    ]
+    ] + expandedA + expandedB
 
     // MARK: - Violent
 

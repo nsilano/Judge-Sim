@@ -243,6 +243,8 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var relatedDoctrines: [String]
     /// Optional so cases saved by earlier builds still load.
     var background: CaseBackground?
+    /// Identifies the exact scenario so it is never repeated in a career.
+    var scenarioSignature: String?
 
     var caption: String { "State of North Carolina v. \(defendant.name)" }
 
