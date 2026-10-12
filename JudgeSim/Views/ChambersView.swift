@@ -90,6 +90,7 @@ struct OnboardingView: View {
 struct ChambersView: View {
     @EnvironmentObject private var game: GameState
     @State private var activeItem: DocketItem?
+    @State private var showSettings = false
 
     var body: some View {
         NavigationStack {
@@ -126,6 +127,15 @@ struct ChambersView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Chambers")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { showSettings = true } label: {
+                        Image(systemName: "gearshape.fill")
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
+            .sheet(isPresented: $showSettings) { SettingsView() }
             .fullScreenCover(item: $activeItem) { item in
                 if let county = game.county, let judgeName = game.judgeName {
                     switch item {

@@ -228,41 +228,49 @@ enum CounselDialogue {
         var q: [CounselQuestion] = []
         let excluded = r.excludedEvidence(in: c)
 
-        for item in c.evidence where !excluded.contains(item.id) {
+        for (index, item) in c.evidence.enumerated() where !excluded.contains(item.id) {
+            let title = item.title.lowercased()
             if item.side == .prosecution {
                 q.append(CounselQuestion(id: "tri.state.ex.\(item.exhibit)", side: .prosecution,
-                                         question: "Tell me more about \(item.exhibit), the \(item.title.lowercased()).",
-                                         answer: s.opener + (item.weight >= 4
-                                            ? "it was collected and documented properly, the chain of custody is complete, and it speaks directly to the defendant's guilt."
-                                            : item.weight >= 2
-                                                ? "it's corroborative. On its own it wouldn't carry the case, but it fits with everything else."
-                                                : "it's a small piece. We offered it for completeness.")))
+                                         question: "Tell me more about \(item.exhibit), the \(title).",
+                                         answer: s.opener + stateOnExhibit(item, index: index, dl: dl)))
                 q.append(CounselQuestion(id: "tri.def.ex.\(item.exhibit)", side: .defense,
-                                         question: "What's the defense's answer to \(item.exhibit)?",
-                                         answer: d.opener + (item.weight >= 4
-                                            ? (d == .combative ? "it proves less than the State says. Weigh it for what it actually shows." : "it's a hard piece of evidence, and I won't pretend otherwise. We ask the court to weigh it in context.")
-                                            : "it's thin. It shows, at most, that \(dl) was in the wrong place. It doesn't show what the State needs it to.")))
+                                         question: "What's the defense's answer to \(item.exhibit), the \(title)?",
+                                         answer: d.opener + defenseOnExhibit(item, index: index, dl: dl, style: d)))
             } else {
                 q.append(CounselQuestion(id: "tri.state.def.\(item.exhibit)", side: .prosecution,
-                                         question: "What's the State's response to \(item.exhibit), the \(item.title.lowercased())?",
+                                         question: "What's the State's response to \(item.exhibit), the \(title)?",
                                          answer: s.opener + (item.weight >= 3
-                                            ? "it's a fair point, and the State has to account for it. But it doesn't explain away the rest of our evidence."
-                                            : "it's a distraction. It doesn't actually contradict anything the State proved.")))
+                                            ? "the \(title) is a fair point, and the State has to account for it. But it doesn't explain away the rest of our evidence."
+                                            : ["the \(title) doesn't contradict anything the State proved. It's beside the point.",
+                                               "look at what the \(title) actually says. It's consistent with the State's case, not against it.",
+                                               "nobody disputes the \(title). It just doesn't answer the question this court has to decide."][index % 3])))
             }
         }
-        for witness in c.witnesses {
+        for (index, witness) in c.witnesses.enumerated() {
             let callingSide = witness.calledBy
             let otherSide: Side = callingSide == .prosecution ? .defense : .prosecution
             let callingStyle = callingSide == .prosecution ? s : d
             let otherStyle = otherSide == .prosecution ? s : d
+            let role = witness.role.lowercased()
+            let keyLine = witness.direct.first.map { " The heart of it: \($0)" } ?? ""
+            let credit: String
+            if witness.weight >= 2 {
+                credit = ["\(witness.name) is a \(role) with nothing to gain here, and the account didn't move on cross.\(keyLine)",
+                          "\(witness.name) told the same story to police that the court heard today.\(keyLine)",
+                          "as a \(role), \(witness.name) was in a position to know, and the details line up with the exhibits."][index % 3]
+            } else {
+                credit = ["\(witness.name) had some trouble on cross, I'll concede. But the core of the testimony held.",
+                          "\(witness.name) isn't perfect, but the court can credit the parts that are corroborated.\(keyLine)"][index % 2]
+            }
             q.append(CounselQuestion(id: "tri.\(callingSide.rawValue).wit.\(witness.id)", side: callingSide,
                                      question: "Why should I credit \(witness.name)?",
-                                     answer: callingStyle.opener + (witness.weight >= 2
-                                        ? "\(witness.name) was consistent on direct and cross, and has no reason to shade the truth."
-                                        : "\(witness.name) had some trouble on cross, I'll concede. But the core of the testimony held.")))
+                                     answer: callingStyle.opener + credit))
+            let attack = witness.cross.last.map { "remember what came out on cross: \($0)" }
+                ?? "\(witness.name) testified past what a \(role) could actually know."
             q.append(CounselQuestion(id: "tri.\(otherSide.rawValue).wit.\(witness.id)", side: otherSide,
                                      question: "What's wrong with \(witness.name)'s testimony?",
-                                     answer: otherStyle.opener + (witness.cross.last.map { "remember what came out on cross: \($0)" } ?? "the testimony goes further than the witness's actual knowledge.")))
+                                     answer: otherStyle.opener + attack))
         }
         if !bg.willTestify {
             q.append(CounselQuestion(id: "tri.def.silent", side: .defense,
@@ -275,6 +283,48 @@ enum CounselDialogue {
                                     ? "there's no doubt on any element. The evidence is consistent across the board."
                                     : "if anywhere, it's the mental state. But the circumstances show what was in the defendant's mind.")))
         return q
+    }
+
+    private static func stateOnExhibit(_ item: Evidence, index: Int, dl: String) -> String {
+        let title = item.title.lowercased()
+        let foundation: String
+        switch item.kind {
+        case .forensic: foundation = "The analyst followed the lab's accredited procedures, and the chain of custody is documented from collection to report."
+        case .video: foundation = "The footage was pulled the same day, and the system's timestamp was checked against a known clock."
+        case .digital: foundation = "It came from the provider's records, and the State has the custodian's certification."
+        case .document: foundation = "It's a business record, kept in the ordinary course, and authenticated by the custodian."
+        case .statement: foundation = "It's the defendant's own words, recorded and preserved."
+        case .physical: foundation = "It was photographed in place, collected, logged, and sealed."
+        }
+        if item.weight >= 4 {
+            return "the \(title) goes straight to identity and intent. \(item.detail) \(foundation)"
+        } else if item.weight >= 2 {
+            return ["the \(title) is corroboration. \(item.detail) On its own it wouldn't carry the case, but it fits with everything else.",
+                    "the \(title) matters because of what it lines up with. \(foundation)",
+                    "\(item.detail) That's the piece the court should hold up against \(dl)'s version."][index % 3]
+        }
+        return "the \(title) is a small piece, offered for completeness. \(item.detail)"
+    }
+
+    private static func defenseOnExhibit(_ item: Evidence, index: Int, dl: String, style: CounselStyle) -> String {
+        let title = item.title.lowercased()
+        let attack: String
+        switch item.kind {
+        case .forensic: attack = "Forensics tell you a match, not a story. They don't tell you when, or how, or why."
+        case .video: attack = "Look at the actual frames. Nobody can see a face, and the State is filling in the gaps with assumption."
+        case .digital: attack = "Records show a phone or an account, not a person's hands, and not what was in anyone's mind."
+        case .document: attack = "A piece of paper proves what's written on it. It doesn't prove what the State says it means."
+        case .statement: attack = "Listen to what was actually said, and the circumstances it was said in. It's not the confession the State makes it out to be."
+        case .physical: attack = "The State has an object. It doesn't have anyone who saw \(dl) use it."
+        }
+        if item.weight >= 4 {
+            return style == .combative
+                ? "the \(title) proves less than the State says. \(attack)"
+                : "the \(title) is a hard piece of evidence, and I won't pretend otherwise. \(attack)"
+        }
+        return ["the \(title) is thin. \(attack)",
+                "even taking the \(title) at face value, it puts \(dl) near the facts, not inside the crime. \(attack)",
+                "the State is asking the \(title) to do more work than it can. \(attack)"][index % 3]
     }
 
     // MARK: Sentencing

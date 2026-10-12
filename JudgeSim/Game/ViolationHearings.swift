@@ -358,6 +358,19 @@ final class HearingSession: ObservableObject {
 
     var canRevoke: Bool { ViolationHearings.canRevoke(hearing) }
 
+    func allQuestions(_ side: Side) -> [CounselQuestion] {
+        ViolationHearings.questions(hearing).filter { $0.side == side }
+    }
+
+    func brief(for side: Side) -> String { CounselBrief.make(for: hearing, side: side) }
+
+    func heldBackFactor(for side: Side) -> CounselReveal? { nil }
+
+    func record(side: Side, question: String, answer: String, reveal: CounselReveal?) {
+        transcript.append(TranscriptEntry(side: side, speaker: counselName(side), question: question, answer: answer, reveal: nil))
+        if let preset = allQuestions(side).first(where: { $0.answer == answer }) { askedIDs.insert(preset.id) }
+    }
+
     func finish() {
         withAnimation(.easeInOut) {
             outcome = ViolationHearings.evaluate(hearing, rulings, judgeName: judgeName, county: county, date: hearing.date)
