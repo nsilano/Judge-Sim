@@ -186,7 +186,7 @@ struct PersonFileDocuments: View {
 
     private func probationDocument(_ term: ProbationTerm) -> some View {
         let record = file.probationRecord
-        let entries = record?.entries ?? []
+        let entries = record?.recordEntries ?? []
         let suspended = entries.filter { $0.kind == .sentence && $0.isSuspended }
         let money = entries.first { $0.kind == .money }
         let supervised = term.supervised ?? true
@@ -307,7 +307,7 @@ struct PersonFileDocuments: View {
                         .font(.system(size: 10, weight: .semibold, design: .serif))
                         .foregroundStyle(DocInk.faint)
                     DocField(label: "Disposition", value: record.outcome)
-                    ForEach(Array(record.entries.enumerated()), id: \.offset) { _, entry in
+                    ForEach(Array(record.recordEntries.enumerated()), id: \.offset) { _, entry in
                         if let title = entry.title {
                             Text(title)
                                 .font(DocInk.serif(.callout, weight: .semibold))

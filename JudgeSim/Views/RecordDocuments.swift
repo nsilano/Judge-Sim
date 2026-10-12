@@ -53,7 +53,7 @@ enum RecordForms {
         case "continuance": return FormInfo(number: nil, title: "Order Continuing Case", subtitle: nil)
         default: break
         }
-        let entries = record.entries
+        let entries = record.recordEntries
         let sentences = entries.filter { $0.kind == .sentence }
         if let lead = sentences.first(where: { $0.isActive && $0.isFelony }) ?? sentences.first(where: \.isActive)
             ?? sentences.first(where: \.isFelony) ?? sentences.first {
@@ -187,7 +187,7 @@ struct CaseRecordDocuments: View {
 
     @ViewBuilder
     private var trialDocuments: some View {
-        let entries = record.entries
+        let entries = record.recordEntries
         let sentences = entries.filter { $0.kind == .sentence }
         let commitment = entries.first { $0.kind == .commitment }
         let conditions = entries.first { $0.kind == .probationConditions }
@@ -275,7 +275,7 @@ struct CaseRecordDocuments: View {
             Group {
                 DocSection(title: "Findings")
                 if entry.isLife {
-                    DocCheck(checked: true, text: "Class A felony: life imprisonment without parole is mandatory.")
+                    DocCheck(checked: true, text: "Sentence of life imprisonment without parole.")
                 } else if entry.rangeLine == "Term set by the court" {
                     DocCheck(checked: true, text: "Term set by the court")
                 } else {

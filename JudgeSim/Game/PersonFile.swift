@@ -120,7 +120,7 @@ enum RecordText {
 }
 
 extension CaseRecord {
-    var entries: [RecordEntry] {
+    var recordEntries: [RecordEntry] {
         judgments.map { RecordEntry.parse($0, titled: resolvedKind == "trial") }
     }
 
@@ -134,7 +134,7 @@ extension CaseRecord {
     /// Whether this record's judgment put the defendant in custody.
     var imposedCustody: Bool {
         switch resolvedKind {
-        case "trial": return entries.contains { $0.kind == .sentence && $0.isActive }
+        case "trial": return recordEntries.contains { $0.kind == .sentence && $0.isActive }
         case "hearing": return judgments.contains { $0.contains("revoked") || $0.contains("confinement") || $0.contains("quick dip") }
         default: return false
         }
@@ -240,7 +240,7 @@ struct PersonFile {
                                          revocationLines: [], postReleaseMonths: nil,
                                          custody: prior.ncClass.isFelony ? "N.C. Department of Adult Correction" : "Custody of the Sheriff")
         }
-        let entries = record.entries
+        let entries = record.recordEntries
         let terms = entries.filter { $0.kind == .sentence && $0.isActive }
         let commitment = entries.filter { $0.kind == .commitment }.flatMap(\.lines)
         let notes = entries.filter { $0.kind == .note }.flatMap(\.lines)

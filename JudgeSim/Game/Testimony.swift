@@ -876,3 +876,107 @@ extension Testimony {
         }
     }
 }
+
+// MARK: - Character witnesses
+
+extension Testimony {
+
+    /// Someone who knows the defendant outside this case: a supervisor, teacher, pastor, coach, or neighbor.
+    static func characterWitness(name: String, ctx: Context, rng: inout SeededRNG) -> Witness {
+        let dl = ctx.dl
+        let profile = ctx.defendant.profile
+        let background = ctx.defendant.background.lowercased()
+        let job = profile?.jobs.first { $0.current && $0.title != "Unemployed" }
+        let pastJob = profile?.jobs.first { !$0.current }
+        let student = job.map { $0.title.lowercased().contains("student") } ?? false
+        let years = rng.int(3...16)
+
+        enum Tie { case supervisor, instructor, formerBoss, pastor, coach, neighbor }
+        var ties: [Tie] = [.neighbor]
+        if job != nil { ties.append(student ? .instructor : .supervisor) }
+        if pastJob != nil { ties.append(.formerBoss) }
+        if background.contains("church") || background.contains("pantry") { ties.append(.pastor) }
+        if background.contains("coach") || background.contains("soccer") { ties.append(.coach) }
+        let tie = rng.pick(ties)
+
+        let role: String
+        let howKnown: String
+        let seen: String
+        switch tie {
+        case .supervisor:
+            role = "\(dl)'s supervisor at \(job?.employer ?? "work")"
+            howKnown = "I've supervised \(dl) at \(job?.employer ?? "work") since \(job.map { String($0.years.prefix(4)) } ?? "a few years back")."
+            seen = rng.pick(["Shows up early, stays when we're short. I've trusted \(dl) with the keys and the cash drawer.",
+                             "When we had layoffs, \(dl) was one of the people I fought to keep.",
+                             "Reliable. If \(dl) says something's done, it's done."])
+        case .instructor:
+            role = "\(dl)'s instructor at \(job?.employer ?? "school")"
+            howKnown = "\(dl) has been in my classes for \(rng.int(2...4)) semesters."
+            seen = rng.pick(["Turns in the work, asks good questions, helps the students who are struggling.", "Quiet, but the kind of student other students go to for help."])
+        case .formerBoss:
+            role = "\(dl)'s former employer at \(pastJob?.employer ?? "a previous job")"
+            howKnown = "\(dl) worked for me as \(withArticle(pastJob?.title.lowercased() ?? "an employee")), \(pastJob?.years ?? "for a few years")."
+            seen = rng.pick(["I'd hire \(dl) back tomorrow.", "Never a write-up. Not one.", "When \(dl) left, it was for a better job, and I gave a good reference."])
+        case .pastor:
+            role = "\(dl)'s pastor"
+            howKnown = "\(dl) has been part of our congregation for \(years) years, and volunteers at the food pantry most weekends."
+            seen = rng.pick(["When the pantry ran short last winter, \(dl) organized a drive on their own.", "I've watched \(dl) with the families who come to us. Patient. Respectful."])
+        case .coach:
+            role = "Fellow youth soccer coach"
+            howKnown = "We've coached kids' soccer together in \(ctx.sheet.town) for \(years) seasons."
+            seen = rng.pick(["I've seen \(dl) with a team of nine-year-olds after a bad loss. Never lost that temper once.", "Parents ask for \(dl)'s team. That tells you something."])
+        case .neighbor:
+            role = "\(dl)'s longtime neighbor"
+            howKnown = "We've lived next door to each other for \(years) years."
+            seen = rng.pick(["Checks on my mother when I'm out of town. Shovels the walk without being asked.", "We look out for each other's houses. \(dl) has a key to mine.", "Quiet. Friendly. The kind of neighbor you hope for."])
+        }
+
+        let trait: String
+        switch ctx.setting {
+        case .paper: trait = "honesty"
+        case .drugs, .road: trait = "being law-abiding"
+        case .scene: trait = ([.violent, .robbery, .family, .publicOrder] as [LawCategory]).contains(ctx.facts.category) ? "peacefulness" : "honesty"
+        }
+
+        var ex: [TestimonyExchange] = []
+        func d(_ q: String, _ a: String) { ex.append(.init(phase: .direct, examiner: .defense, question: q, answer: a)) }
+        func c(_ q: String, _ a: String) { ex.append(.init(phase: .cross, examiner: .prosecution, question: q, answer: a)) }
+        d(rng.pick(["Please tell the court your name.", "Would you introduce yourself?"]), "\(name).")
+        d(rng.pick(["How do you know \(dl)?", "What's your connection to \(dl)?"]), howKnown)
+        d(rng.pick(["What have you seen of \(dl) in that time?", "Tell the court what \(dl) is like.", "How would you describe \(dl)?"]), seen)
+        d(rng.pick(["Do you know \(dl)'s reputation in the community for \(trait)?", "What is \(dl)'s reputation for \(trait)?"]),
+          rng.pick(["Good. People trust \(dl).", "I've never heard a bad word about \(dl) on that score.", "Excellent. Ask anybody who knows \(dl)."]))
+        d(rng.pick(["Do you have your own opinion about \(dl)'s \(trait)?", "And your personal opinion?"]),
+          rng.pick(["I do. I'd stake my own name on it.", "In my opinion, \(dl) is as \(trait == "peacefulness" ? "gentle" : "honest") a person as I know.", "My opinion is the same as everyone else's."]))
+        if rng.chance(0.6) {
+            d(rng.pick(["Has anything about \(dl) changed since the arrest?", "How has \(dl) been since this started?"]),
+              rng.pick(["Quieter. Worried. Still shows up.", "Not that I've seen.", "Stressed, like anyone would be. Still the same person."]))
+        }
+
+        var pool: [(String, String)] = [
+            ("You weren't there when this happened, were you?", "No."),
+            ("You don't know what \(dl) does when you're not around?", "Nobody knows that about anybody. I know who I've seen."),
+            ("Did you talk with \(dl)'s lawyer before testifying today?", "Once, to find out when to be here."),
+            ("You haven't seen the evidence in this case?", "No. I can only tell you about the person I know.")
+        ]
+        if let prior = ctx.defendant.priors.last {
+            pool.append(("Did you know \(dl) was convicted of \(prior.offense.lowercased()) in \(prior.year)?",
+                         rng.pick(["I knew there was something years ago. People change.", "No, I didn't know that.", "I heard about it. That isn't the person I know."])))
+        }
+        if tie == .supervisor || tie == .formerBoss {
+            pool.append(("If \(dl) were convicted, you'd lose a good worker. You have a stake in this.", "I'd lose a good worker. I'd still tell you the truth."))
+        }
+        switch ctx.setting {
+        case .paper: pool.append(("You've never seen \(dl)'s bank records, have you?", "No. I've seen how \(dl) handles responsibility."))
+        case .road: if ctx.facts.impaired { pool.append(("Have you ever seen \(dl) drink?", rng.pick(["At a cookout. A beer or two.", "Not much. I don't really socialize with \(dl) that way."]))) }
+        case .drugs: pool.append(("You don't know who \(dl) spends evenings with, do you?", "Not every evening, no."))
+        case .scene: if trait == "peacefulness" { pool.append(("You've never seen \(dl) angry?", "I've seen \(dl) frustrated. Never violent.")) }
+        }
+        for (q, a) in rng.pick(pool, count: rng.int(2...4)) { c(q, a) }
+        if rng.chance(0.5) {
+            ex.append(.init(phase: .redirect, examiner: .defense, question: "Does anything you heard on cross change your opinion?",
+                            answer: rng.pick(["No.", "No. I know \(dl).", "No. I came here because I believe it."])))
+        }
+        return witness(name: name, role: role, side: .defense, exchanges: ex)
+    }
+}
