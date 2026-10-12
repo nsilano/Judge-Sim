@@ -379,6 +379,7 @@ struct RecordsView: View {
                 Picker("Records", selection: $section) {
                     Text("Calendar").tag(3)
                     Text("Cases").tag(0)
+                    Text("Appeals").tag(4)
                     Text("People").tag(1)
                     Text("News").tag(2)
                 }
@@ -389,6 +390,7 @@ struct RecordsView: View {
                 case 0: casesSection
                 case 1: peopleSection
                 case 3: calendarSection
+                case 4: appealsSection
                 default: newsSection
                 }
 
@@ -400,6 +402,25 @@ struct RecordsView: View {
             .confirmationDialog("Leave the bench? This erases your county, cases, and records.",
                                 isPresented: $confirmReset, titleVisibility: .visible) {
                 Button("Leave the bench", role: .destructive) { game.resetCareer() }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var appealsSection: some View {
+        let pendingAppeals = game.appeals.filter(\.isPending)
+        let decided = game.appeals.filter { !$0.isPending }
+        Section("Pending") {
+            if pendingAppeals.isEmpty { Text("No appeals pending.").foregroundStyle(.secondary) }
+            ForEach(pendingAppeals) { appeal in
+                NavigationLink { AppealDetail(appeal: appeal, today: game.currentDate) } label: { AppealRow(appeal: appeal, today: game.currentDate) }
+            }
+        }
+        if !decided.isEmpty {
+            Section("Decided") {
+                ForEach(decided) { appeal in
+                    NavigationLink { AppealDetail(appeal: appeal, today: game.currentDate) } label: { AppealRow(appeal: appeal, today: game.currentDate) }
+                }
             }
         }
     }
@@ -496,7 +517,28 @@ struct RecordsView: View {
 
     @ViewBuilder
     private var peopleSection: some View {
-        Section("People who have appeared before you") {
+        let sentenced = game.people.filter { person in
+            person.status != .free && (person.priors.contains { $0.fromThisCourt } || (person.probation?.imposedInThisCourt ?? false))
+        }
+        if !sentenced.isEmpty {
+            Section("Serving a sentence you imposed") {
+                ForEach(sentenced.sorted { $0.name < $1.name }) { person in
+                    NavigationLink {
+                        PersonDetail(person: person, today: game.currentDate)
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(person.name).font(.subheadline.weight(.semibold))
+                                Text(statusLine(person)).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Pill(text: person.status.label, color: statusColor(person.status))
+                        }
+                    }
+                }
+            }
+        }
+        Section("Everyone who has appeared before you") {
             if game.people.isEmpty {
                 Text("No one yet.").foregroundStyle(.secondary)
             }
@@ -516,6 +558,18 @@ struct RecordsView: View {
                     }
                 }
             }
+        }
+    }
+
+    private func statusLine(_ person: PersonRecord) -> String {
+        switch person.status {
+        case .incarcerated:
+            guard let release = person.releaseDate else { return "In custody" }
+            return release == .distantFuture ? "Life without parole" : "Release projected \(SentenceFormat.shortDate(release))"
+        case .probation:
+            return person.probation.map { "Probation ends \(SentenceFormat.shortDate($0.ends))" } ?? "On probation"
+        case .free:
+            return ""
         }
     }
 
@@ -560,6 +614,7 @@ struct RecordsView: View {
 }
 
 struct CaseRecordDetail: View {
+    @EnvironmentObject private var game: GameState
     let record: CaseRecord
 
     var body: some View {
@@ -575,7 +630,13 @@ struct CaseRecordDetail: View {
                 Text(record.outcome)
                 ForEach(record.judgments, id: \.self) { Text($0).font(.callout) }
             }
-            if let appeal = record.appealStatus {
+            if let tracker = game.appeals.first(where: { $0.docket == record.docket }) {
+                Section("Appeal") {
+                    NavigationLink { AppealDetail(appeal: tracker, today: game.currentDate) } label: {
+                        AppealRow(appeal: tracker, today: game.currentDate)
+                    }
+                }
+            } else if let appeal = record.appealStatus {
                 Section("Appeal") { Text(appeal) }
             }
         }
@@ -585,6 +646,7 @@ struct CaseRecordDetail: View {
 }
 
 struct PersonDetail: View {
+    @EnvironmentObject private var game: GameState
     let person: PersonRecord
     let today: Date
 
@@ -593,15 +655,17 @@ struct PersonDetail: View {
             Section {
                 Text("Age \(person.age(on: today)) · \(person.occupation)")
                 Text(person.background).font(.callout).foregroundStyle(.secondary)
-                Label(person.status.label, systemImage: "person.fill")
-                if let release = person.releaseDate, person.status == .incarcerated {
-                    Text(release == .distantFuture ? "Serving life without parole" : "Earliest projected release: \(SentenceFormat.shortDate(release))")
-                        .font(.callout)
-                }
-                if let probation = person.probation {
-                    Text("Probation in \(probation.docket) until \(SentenceFormat.shortDate(probation.ends)). Suspended: \(probation.suspendedSentence).")
-                        .font(.callout)
-                }
+            }
+            Section("Status today") {
+                PersonStatusCard(person: person, today: today,
+                                 appeals: game.appeals.filter { $0.personID == person.id },
+                                 upcoming: game.scheduled.filter { item in
+                                     switch item.entry.matter {
+                                     case .trial(let c): return c.defendant.personID == person.id
+                                     case .hearing(let h): return h.personID == person.id
+                                     case .calendar: return false
+                                     }
+                                 })
             }
             Section("Appearances in your court") {
                 ForEach(Array(person.appearances.enumerated()), id: \.offset) { _, appearance in
