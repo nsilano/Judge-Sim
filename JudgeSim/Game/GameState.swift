@@ -153,7 +153,7 @@ final class GameState: ObservableObject {
         let returning = pickReturningDefendant(rng: &rng)
         let context = CaseGenerator.Context(county: county, judgeName: judgeName, date: currentDate,
                                             docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
-                                            returning: returning, usedSignatures: Set(usedSignatures))
+                                            usedSignatures: Set(usedSignatures), returning: returning)
         let seed = rng.next()
         let newCase = CaseGenerator.generate(seed: seed, context: context)
         currentCase = newCase
