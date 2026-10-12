@@ -31,17 +31,16 @@ struct HearingView: View {
             .toolbar {
                 if session.outcome == nil {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Recess") { dismiss() }
-                    }
-                }
-                ToolbarItemGroup(placement: .primaryAction) {
-                    if session.outcome == nil {
-                        Button { showCounsel = true } label: {
-                            Label("Ask counsel", systemImage: "bubble.left.and.bubble.right.fill")
+                        Button {
+                            dismiss()
+                        } label: {
+                            Label("Leave", systemImage: "chevron.left").labelStyle(.titleAndIcon)
                         }
                     }
+                }
+                ToolbarItem(placement: .primaryAction) {
                     Button { showLibrary = true } label: {
-                        Label("Law Library", systemImage: "books.vertical.fill")
+                        Label("Laws", systemImage: "books.vertical.fill").labelStyle(.titleAndIcon)
                     }
                 }
             }
@@ -102,16 +101,16 @@ struct HearingView: View {
         SectionTitle(text: "Order", icon: "hammer.fill")
         VStack(alignment: .leading, spacing: 8) {
             ForEach(HearingDecision.allCases, id: \.self) { decision in
-                let allowed = decision != .revoke || session.canRevoke
                 ChoiceRow(title: decision.label, subtitle: decision.detail,
-                          selected: session.rulings.decision == decision, enabled: allowed) {
+                          selected: session.rulings.decision == decision) {
                     session.rulings.decision = decision
                 }
             }
-            if !session.canRevoke {
-                Text("Revocation isn't available: there's no new criminal offense or absconding, and fewer than two prior CRVs.")
+            if !session.canRevoke && session.rulings.decision == .revoke {
+                Label("Heads up: there's no new offense, absconding, or two prior CRVs here. The statute doesn't authorize revocation, and it may be reversed on appeal.",
+                      systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.orange)
             }
             LawLink(lawID: "crv")
         }
@@ -138,7 +137,8 @@ struct HearingView: View {
         }
         .card()
 
-        PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.decision != nil) {
+        PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.decision != nil,
+                      hint: "Choose an order above.") {
             Haptics.gavel()
             session.finish()
         }
@@ -157,7 +157,7 @@ struct HearingView: View {
         .card()
         SectionTitle(text: "Tomorrow's paper", icon: "newspaper.fill")
         NewsCard(item: outcome.news)
-        PrimaryButton(title: "Adjourn", icon: "house.fill") {
+        PrimaryButton(title: "Return to Chambers", icon: "house.fill") {
             game.completeHearing(h, outcome: outcome)
             dismiss()
         }

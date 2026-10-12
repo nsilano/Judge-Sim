@@ -58,21 +58,20 @@ struct CourtroomView: View {
             .toolbar {
                 if session.stage != .judgment {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Recess") { confirmRecess = true }
-                    }
-                }
-                ToolbarItemGroup(placement: .primaryAction) {
-                    if session.stage != .judgment {
                         Button {
-                            showCounsel = true
+                            confirmRecess = true
                         } label: {
-                            Label("Ask counsel", systemImage: "bubble.left.and.bubble.right.fill")
+                            Label("Leave", systemImage: "chevron.left")
+                                .labelStyle(.titleAndIcon)
                         }
                     }
+                }
+                ToolbarItem(placement: .primaryAction) {
                     Button {
                         showLibrary = true
                     } label: {
-                        Label("Law Library", systemImage: "books.vertical.fill")
+                        Label("Laws", systemImage: "books.vertical.fill")
+                            .labelStyle(.titleAndIcon)
                     }
                 }
             }
@@ -82,11 +81,11 @@ struct CourtroomView: View {
             .sheet(isPresented: $showLibrary) {
                 LawLibraryView(highlightIDs: session.courtCase.relevantLawIDs, showsDoneButton: true)
             }
-            .confirmationDialog("Recess court?", isPresented: $confirmRecess, titleVisibility: .visible) {
-                Button("Recess (rulings so far are set aside)", role: .destructive) { dismiss() }
-                Button("Stay in session", role: .cancel) {}
+            .confirmationDialog("Leave the courtroom?", isPresented: $confirmRecess, titleVisibility: .visible) {
+                Button("Leave and start this case over later", role: .destructive) { dismiss() }
+                Button("Stay", role: .cancel) {}
             } message: {
-                Text("The case stays on the calendar. When court resumes, the hearing starts over.")
+                Text("The case stays on your calendar, but rulings you've made so far will not be saved.")
             }
         }
         .interactiveDismissDisabled()
@@ -102,14 +101,16 @@ struct StageTracker: View {
             ForEach(stages) { stage in
                 let reached = stage.rawValue <= current.rawValue
                 VStack(spacing: 4) {
-                    Image(systemName: stage.icon)
+                    Image(systemName: stage.rawValue < current.rawValue ? "checkmark" : stage.icon)
                         .font(.system(size: 13, weight: .semibold))
                         .frame(width: 30, height: 30)
                         .background(Circle().fill(reached ? Theme.gold : Color(.tertiarySystemFill)))
                         .foregroundStyle(reached ? Color.black : Color.secondary)
-                    Capsule()
-                        .fill(stage == current ? Theme.gold : Color.clear)
-                        .frame(width: 16, height: 3)
+                    Text(stage.shortTitle)
+                        .font(.system(size: 10, weight: stage == current ? .bold : .regular))
+                        .foregroundStyle(stage == current ? Color.primary : Color.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
                 .frame(maxWidth: .infinity)
                 .accessibilityLabel(stage.title)
@@ -187,7 +188,53 @@ struct BriefingStage: View {
             .font(.callout)
             .card()
 
-            PrimaryButton(title: c.motions.isEmpty ? "Call the Case for Trial" : "Hear Pretrial Motions") {
+            if session.pleaPresented, let terms = c.background?.arrangementTerms {
+                SectionTitle(text: "Plea arrangement", icon: "signature")
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("The State and the defense present a negotiated plea for your approval.")
+                        .font(.callout.weight(.semibold))
+                    Text(terms).font(.callout)
+                    Text("If you accept, the case goes straight to sentencing and you may impose whatever sentence you choose. If you reject it, the case goes to trial.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if session.rulings.pleaAccepted == false {
+                        Label("You rejected the plea. The case will be tried.", systemImage: "xmark.circle.fill")
+                            .font(.callout)
+                            .foregroundStyle(.orange)
+                    } else {
+                        HStack(spacing: 10) {
+                            Button {
+                                Haptics.gavel()
+                                session.acceptPlea()
+                            } label: {
+                                Label("Accept plea", systemImage: "checkmark.seal.fill")
+                                    .font(.subheadline.weight(.bold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(RoundedRectangle(cornerRadius: 12).fill(Theme.gold))
+                                    .foregroundStyle(Color.black)
+                            }
+                            .buttonStyle(.plain)
+                            Button {
+                                Haptics.tap()
+                                session.rejectPlea()
+                            } label: {
+                                Label("Reject, go to trial", systemImage: "xmark")
+                                    .font(.subheadline.weight(.bold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemFill)))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                .card(tint: Theme.gold)
+            }
+
+            PrimaryButton(title: c.motions.isEmpty ? "Start the Trial" : "Go to Pretrial Motions",
+                          enabled: !session.pleaPresented || session.rulings.pleaAccepted == false,
+                          hint: "Accept or reject the plea arrangement first.") {
                 session.advance()
             }
         }
@@ -323,9 +370,10 @@ struct MotionsStage: View {
                            selection: session.motionBinding(motion))
             }
 
-            PrimaryButton(title: session.dismissedBySpeedyTrial ? "Enter Order of Dismissal" : "Proceed to Trial",
+            PrimaryButton(title: session.dismissedBySpeedyTrial ? "Dismiss the Case" : "Start the Trial",
                           icon: session.dismissedBySpeedyTrial ? "xmark.seal.fill" : "chevron.right",
-                          enabled: session.motionsComplete) {
+                          enabled: session.motionsComplete,
+                          hint: "Grant or deny every motion to continue.") {
                 Haptics.gavel()
                 session.advance()
             }
@@ -355,14 +403,10 @@ struct MotionCard: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack { ForEach(motion.doctrineIDs, id: \.self) { LawLink(lawID: $0) } }
             }
-            RulingPicker(first: "Allow", second: "Deny", selection: $selection)
-            if selection == true {
-                Text(motion.kind == .dismissSpeedyTrial
-                     ? "All charges will be dismissed."
-                     : "This evidence will not be admitted at trial.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            RulingPicker(first: "Grant", second: "Deny",
+                         firstDetail: motion.kind == .dismissSpeedyTrial ? "Case is dismissed" : "Evidence is excluded",
+                         secondDetail: motion.kind == .dismissSpeedyTrial ? "Case goes forward" : "Evidence comes in",
+                         selection: $selection)
         }
         .card(tint: selection == nil ? nil : Theme.gold)
     }

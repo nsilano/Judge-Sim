@@ -20,6 +20,18 @@ final class CaseSession: ObservableObject {
             }
         }
 
+        var shortTitle: String {
+            switch self {
+            case .briefing: return "File"
+            case .motions: return "Motions"
+            case .trial: return "Trial"
+            case .verdict: return "Verdict"
+            case .sentencing: return "Sentence"
+            case .probation: return "Probation"
+            case .judgment: return "Done"
+            }
+        }
+
         var icon: String {
             switch self {
             case .briefing: return "folder.fill"
@@ -53,6 +65,7 @@ final class CaseSession: ObservableObject {
 
     var visibleStages: [Stage] {
         Stage.allCases.filter { stage in
+            if rulings.pleaAccepted == true && [Stage.motions, .trial, .verdict].contains(stage) { return false }
             switch stage {
             case .motions: return !courtCase.motions.isEmpty
             case .probation: return courtCase.defendant.probation != nil
@@ -206,15 +219,55 @@ final class CaseSession: ObservableObject {
     var asrEligible: Bool { units.contains { Judgment.asrEligible($0, rulings) } }
     var askedAboutASR: Bool { askedIDs.contains("sen.state.asr") }
 
+    /// The judge decides; the only requirement is that every judgment has a disposition.
     var sentencingComplete: Bool {
         if needsHabitualDecision && rulings.habitualFound == nil { return false }
         if rulings.special != .none { return true }
-        if rulings.conditions.specialProbationDays > maxSpecialProbationDays { return false }
-        return units.allSatisfy { unit in
-            let selected = self.choice(for: unit)
-            guard Judgment.isComplete(selected) else { return false }
-            return !unit.isFelony || unit.isMandatoryLife || allowedRanges(for: unit).contains(selected.range)
+        return units.allSatisfy { Judgment.isComplete(self.choice(for: $0)) }
+    }
+
+    var sentencingHint: String? {
+        if needsHabitualDecision && rulings.habitualFound == nil { return "Decide whether habitual felon status was proven." }
+        if !sentencingComplete { return "Choose a disposition (Active, Intermediate, or Community) for each judgment." }
+        return nil
+    }
+
+    var legalIssues: [String] { Judgment.legalIssues(courtCase, rulings) }
+
+    // MARK: Plea arrangement
+
+    var pleaPresented: Bool { courtCase.background?.arrangementPresented == true }
+
+    func acceptPlea() {
+        guard let lawID = courtCase.background?.arrangementLawID else { return }
+        rulings.pleaAccepted = true
+        for (index, charge) in courtCase.charges.enumerated() {
+            if index == 0 {
+                rulings.verdicts[charge.id] = charge.lesserLawID == lawID ? .lesser : .guilty
+            } else {
+                rulings.verdicts[charge.id] = .notGuilty
+                rulings.dismissedByPlea.insert(charge.id)
+            }
         }
+        prepareSentencing()
+        withAnimation(.easeInOut) { stage = .sentencing }
+    }
+
+    func rejectPlea() {
+        rulings.pleaAccepted = false
+    }
+
+    // MARK: Custom conditions
+
+    func addCustomCondition(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        rulings.customConditions.append(trimmed)
+    }
+
+    func removeCustomCondition(at index: Int) {
+        guard rulings.customConditions.indices.contains(index) else { return }
+        rulings.customConditions.remove(at: index)
     }
 
     // MARK: Flow
@@ -264,16 +317,9 @@ final class CaseSession: ObservableObject {
 
     /// Drops conditions that the chosen dispositions don't permit.
     private func normalizeConditions() {
-        if !anyIntermediate && rulings.special == .none {
-            rulings.conditions.specialProbationDays = 0
-            rulings.conditions.houseArrestDays = 0
-            rulings.conditions.drugTreatmentCourt = false
-        }
-        rulings.conditions.specialProbationDays = min(rulings.conditions.specialProbationDays, maxSpecialProbationDays)
-        if anyIntermediate || rulings.special == .conditionalDischarge { rulings.conditions.supervised = true }
+        // Probation conditions only exist if something is suspended; recommendations only if something is active.
+        if !anySuspended && rulings.special == .none { rulings.conditions = ProbationConditions() }
         if !anyActive { rulings.recommendations = ActiveRecommendations() }
-        if !pjcAvailable && rulings.special == .prayerForJudgment { rulings.special = .none }
-        if !conditionalDischargeAvailable && rulings.special == .conditionalDischarge { rulings.special = .none }
     }
 
     private func finish() {

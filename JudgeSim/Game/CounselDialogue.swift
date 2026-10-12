@@ -101,6 +101,16 @@ enum CounselDialogue {
         q.append(CounselQuestion(id: "pre.state.theory", side: .prosecution,
                                  question: "Walk me through the State's case.",
                                  answer: c.prosecutionOpening + (strongest.map { " The centerpiece is \($0.exhibit), the \($0.title.lowercased())." } ?? "")))
+        if bg.arrangementPresented == true, let terms = bg.arrangementTerms {
+            q.append(CounselQuestion(id: "pre.state.deal", side: .prosecution,
+                                     question: "Why is the State agreeing to this plea arrangement?",
+                                     answer: s.opener + (bg.victimStance == .wantsMaximum
+                                        ? "I'll be candid: the victim's family isn't happy with it. But a certain conviction is better than an uncertain trial. \(terms)"
+                                        : "it resolves the case with a conviction and spares the witnesses a trial. \(terms)")))
+            q.append(CounselQuestion(id: "pre.def.deal", side: .defense,
+                                     question: "Does your client understand the plea and enter it voluntarily?",
+                                     answer: d.opener + "yes. We've gone over every term, the rights being given up, and the maximum punishment. \(c.defendant.lastName) is entering it freely."))
+        }
         q.append(CounselQuestion(id: "pre.state.plea", side: .prosecution,
                                  question: "Was a plea offer extended?",
                                  answer: s.opener + (bg.pleaOffer.map { "yes. The offer was: \($0) It was rejected." }

@@ -193,6 +193,10 @@ struct CaseBackground: Codable, Hashable {
     var hiddenMitigator: String?
     var hiddenAggravator: String?
     var attorneyFeeEstimate: Int
+    // Plea arrangement presented to the court (optional for older saves).
+    var arrangementPresented: Bool?
+    var arrangementLawID: String?
+    var arrangementTerms: String?
 }
 
 /// What actually happened. The player never sees this directly; it may surface later in the news.

@@ -180,7 +180,7 @@ struct ChambersView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
-            PrimaryButton(title: next == nil && hearing == nil ? "Call the Next Case" : "Resume", icon: "hammer.fill") {
+            PrimaryButton(title: next == nil && hearing == nil ? "Call the Next Case" : "Continue the Case in Progress", icon: "hammer.fill") {
                 Haptics.gavel()
                 activeItem = game.nextDocketItem()
             }

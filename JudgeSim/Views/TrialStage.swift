@@ -29,13 +29,8 @@ struct TrialStage: View {
             }
             .card()
 
-            if !session.trialComplete {
-                Label(pendingText, systemImage: "hand.raised.fill")
-                    .font(.callout)
-                    .foregroundStyle(.orange)
-            }
-
-            PrimaryButton(title: "Retire to Deliberate", icon: "door.left.hand.closed", enabled: session.trialComplete) {
+            PrimaryButton(title: "Close the Evidence & Decide the Verdict", icon: "checkmark.seal", enabled: session.trialComplete,
+                          hint: pendingText) {
                 session.advance()
             }
         }
@@ -46,7 +41,7 @@ struct TrialStage: View {
         if session.ethicsPending { parts.append("respond to the ethics issue") }
         let pending = session.pendingObjections
         if pending > 0 { parts.append("rule on \(pending) objection\(pending == 1 ? "" : "s")") }
-        return "Before deliberating, you must " + parts.joined(separator: " and ") + "."
+        return "Scroll up to " + parts.joined(separator: " and ") + "."
     }
 
     @ViewBuilder
@@ -172,7 +167,9 @@ struct ObjectionView: View {
             .font(.callout.weight(.bold))
             .foregroundStyle(Theme.color(for: objection.raisedBy))
             LawLink(lawID: objection.doctrineID)
-            RulingPicker(first: "Sustained", second: "Overruled", selection: $selection)
+            RulingPicker(first: "Sustain", second: "Overrule",
+                         firstDetail: "Answer is struck", secondDetail: "Answer stays in",
+                         selection: $selection)
             if selection == true {
                 Text("The answer is stricken. You must disregard it.")
                     .font(.caption)

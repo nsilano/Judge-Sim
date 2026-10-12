@@ -180,6 +180,7 @@ struct PendingEvent: Codable, Hashable {
         case none
         case releasePerson
         case raisePropensity
+        case resentence
     }
 
     var due: Date
@@ -187,4 +188,6 @@ struct PendingEvent: Codable, Hashable {
     var personID: UUID?
     var effect: Effect = .none
     var appealReversed = false
+    /// For resentencing: the release date under the new, lawful sentence.
+    var newReleaseDate: Date?
 }

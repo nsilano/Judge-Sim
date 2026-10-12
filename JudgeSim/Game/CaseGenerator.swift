@@ -482,6 +482,24 @@ enum CaseGenerator {
         ]
 
         let violent = t.category == .violent || t.category == .robbery
+
+        // Sometimes the parties reach a deal and present it to the court before trial.
+        var arrangementPresented = false
+        var arrangementLawID: String?
+        var arrangementTerms: String?
+        if pleaOffer != nil && rng.chance(0.3) {
+            arrangementPresented = true
+            let pleaLaw = primary.lesserLaw ?? primary.law
+            arrangementLawID = pleaLaw.id
+            let dismissed = charges.count > 1 ? " The State will dismiss the remaining counts." : ""
+            arrangementTerms = rng.pick([
+                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The State recommends a sentence at the bottom of the presumptive range. The recommendation does not bind the court.",
+                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The parties jointly recommend a suspended sentence with supervised probation and restitution. The court is free to impose any lawful sentence.",
+                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) Sentencing is left to the discretion of the court."
+            ])
+            pleaRejection = nil
+        }
+
         return CaseBackground(
             pleaOffer: pleaOffer,
             pleaRejection: pleaRejection,
@@ -502,7 +520,10 @@ enum CaseGenerator {
             stateObjectsToASR: rng.chance(violent ? 0.7 : 0.3),
             hiddenMitigator: rng.chance(0.7) && !hiddenMitigatorPool.isEmpty ? rng.pick(hiddenMitigatorPool) : nil,
             hiddenAggravator: rng.chance(0.4) ? rng.pick(hiddenAggravatorPool) : nil,
-            attorneyFeeEstimate: isFelony ? rng.int(15...45) * 100 : rng.int(3...8) * 100
+            attorneyFeeEstimate: isFelony ? rng.int(15...45) * 100 : rng.int(3...8) * 100,
+            arrangementPresented: arrangementPresented,
+            arrangementLawID: arrangementLawID,
+            arrangementTerms: arrangementTerms
         )
     }
 

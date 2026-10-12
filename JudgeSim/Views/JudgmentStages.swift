@@ -44,7 +44,8 @@ struct VerdictStage: View {
                 VerdictCard(charge: charge, selection: session.verdictBinding(charge))
             }
 
-            PrimaryButton(title: "Announce Verdict", icon: "hammer.fill", enabled: session.verdictsComplete) {
+            PrimaryButton(title: "Announce Verdict", icon: "hammer.fill", enabled: session.verdictsComplete,
+                          hint: "Choose a verdict for every count.") {
                 confirm = true
             }
         }
@@ -108,84 +109,81 @@ struct SentencingStage: View {
     var body: some View {
         let record = session.priorRecord
         let units = session.units
+        let issues = session.legalIssues
         VStack(alignment: .leading, spacing: 16) {
-            Text("The court proceeds to sentencing under the Structured Sentencing Act. You can ask counsel for their recommendations, restitution figures, and anything else the court should know.")
+            Text(session.rulings.pleaAccepted == true
+                 ? "You accepted the plea. The sentence is entirely up to you."
+                 : "The sentence is entirely up to you. The punishment chart and counsel's recommendations are guidance, not limits.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
-            if let impact = c.victimImpact {
-                SectionTitle(text: "Victim impact", icon: "heart.text.square.fill")
-                Text(impact)
-                    .font(.system(.callout, design: .serif)).italic()
-                    .card(tint: Theme.prosecution)
+            CollapsibleSection(title: "Victim & defendant", icon: "person.2.fill",
+                               summary: "Victim impact statement and allocution", expanded: true) {
+                if let impact = c.victimImpact {
+                    Text("Victim impact").font(.caption.weight(.bold)).foregroundStyle(Theme.prosecution)
+                    Text(impact).font(.system(.callout, design: .serif)).italic()
+                }
+                Text("The defendant addresses the court").font(.caption.weight(.bold)).foregroundStyle(Theme.defense)
+                Text(c.allocution).font(.system(.callout, design: .serif)).italic()
             }
 
-            SectionTitle(text: "Allocution", icon: "person.wave.2.fill")
-            Text(c.allocution)
-                .font(.system(.callout, design: .serif)).italic()
-                .card(tint: Theme.defense)
-
             if session.needsHabitualDecision {
-                SectionTitle(text: "Habitual felon status", icon: "exclamationmark.triangle.fill")
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("The State offers certified judgments of these prior felony convictions:")
+                    Label("Habitual felon status", systemImage: "exclamationmark.triangle.fill").font(.headline)
+                    Text("The State offers certified judgments of these prior felony convictions. If you find the status proven, the defendant is sentenced four classes higher (up to Class C).")
                         .font(.callout)
                     ForEach(record.priorFelonies) { prior in
                         PriorRow(prior: prior)
                     }
-                    LawLink(lawID: "habitualFelon")
-                    RulingPicker(first: "Status proven", second: "Not proven",
+                    RulingPicker(first: "Proven", second: "Not proven",
+                                 firstDetail: "Sentence as a habitual felon", secondDetail: "Sentence normally",
                                  selection: Binding(get: { session.rulings.habitualFound },
                                                     set: { if let value = $0 { session.setHabitual(value) } }))
+                    LawLink(lawID: "habitualFelon")
                 }
                 .card(tint: .orange)
             }
 
-            SectionTitle(text: "Prior record", icon: "list.number")
-            PriorRecordCard(record: record)
+            CollapsibleSection(title: "Prior record", icon: "list.number",
+                               summary: "Felony level \(SentenceFormat.romanLevels[record.felonyLevel - 1]) (\(record.points) pts) · Misdemeanor level \(SentenceFormat.romanLevels[record.misdemeanorLevel - 1])",
+                               expanded: false) {
+                PriorRecordCard(record: record, carded: false)
+            }
 
-            SectionTitle(text: "Findings of factors", icon: "list.bullet.clipboard.fill")
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Aggravating factors offered by the State").font(.caption.weight(.bold)).foregroundStyle(Theme.prosecution)
+            CollapsibleSection(title: "Findings of factors", icon: "list.bullet.clipboard.fill",
+                               summary: "\(session.rulings.foundAggravating.count) aggravating, \(session.rulings.foundMitigating.count) mitigating found") {
+                Text("Turn on each factor you find. Under the statute, findings support the aggravated or mitigated range, but you can sentence however you choose.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("Aggravating (offered by the State)").font(.caption.weight(.bold)).foregroundStyle(Theme.prosecution)
                 ForEach(session.aggravatingFactors, id: \.self) { factor in
                     Toggle(factor, isOn: session.factorBinding(factor, aggravating: true)).font(.callout)
                 }
                 Divider()
-                Text("Mitigating factors offered by the defense").font(.caption.weight(.bold)).foregroundStyle(Theme.defense)
+                Text("Mitigating (offered by the defense)").font(.caption.weight(.bold)).foregroundStyle(Theme.defense)
                 ForEach(session.mitigatingFactors, id: \.self) { factor in
                     Toggle(factor, isOn: session.factorBinding(factor, aggravating: false)).font(.callout)
                 }
-                Text("Finding an aggravating factor permits the aggravated range; finding a mitigating factor permits the mitigated range. Counsel may offer more factors if asked.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
                 LawLink(lawID: "aggravatingFactors")
             }
-            .card()
 
-            if session.pjcAvailable || session.conditionalDischargeAvailable {
-                SectionTitle(text: "Form of judgment", icon: "doc.badge.gearshape.fill")
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(SpecialDisposition.allCases, id: \.self) { option in
-                        if option == .none
-                            || (option == .prayerForJudgment && session.pjcAvailable)
-                            || (option == .conditionalDischarge && session.conditionalDischargeAvailable) {
-                            ChoiceRow(title: option.label, subtitle: option.detail, selected: session.rulings.special == option) {
-                                session.rulings.special = option
-                            }
-                        }
-                    }
-                    HStack {
-                        LawLink(lawID: "pjc")
-                        if session.conditionalDischargeAvailable { LawLink(lawID: "conditionalDischarge") }
+            CollapsibleSection(title: "Form of judgment", icon: "doc.badge.gearshape.fill",
+                               summary: session.rulings.special.label) {
+                ForEach(SpecialDisposition.allCases, id: \.self) { option in
+                    ChoiceRow(title: option.label, subtitle: formNote(option), selected: session.rulings.special == option) {
+                        session.rulings.special = option
                     }
                 }
-                .card()
+                HStack {
+                    LawLink(lawID: "pjc")
+                    LawLink(lawID: "conditionalDischarge")
+                }
             }
 
             if session.rulings.special == .none && !(session.needsHabitualDecision && session.rulings.habitualFound == nil) {
                 if convictionCount > 1 {
-                    SectionTitle(text: "Multiple convictions", icon: "square.stack.3d.up.fill")
-                    VStack(alignment: .leading, spacing: 8) {
+                    CollapsibleSection(title: "Multiple convictions", icon: "square.stack.3d.up.fill",
+                                       summary: session.rulings.mode.label) {
                         ForEach(JudgmentMode.allCases, id: \.self) { mode in
                             ChoiceRow(title: mode.label, selected: session.rulings.mode == mode) {
                                 session.setMode(mode)
@@ -193,13 +191,12 @@ struct SentencingStage: View {
                         }
                         LawLink(lawID: "consolidation")
                     }
-                    .card()
                 }
 
-                SectionTitle(text: units.count == 1 ? "Judgment" : "Judgments", icon: "doc.text.fill")
                 ForEach(units) { unit in
                     UnitSentenceCard(unit: unit,
-                                     allowedRanges: session.allowedRanges(for: unit),
+                                     aggravatingFound: !session.rulings.foundAggravating.isEmpty,
+                                     mitigatingFound: !session.rulings.foundMitigating.isEmpty,
                                      choice: session.choiceBinding(for: unit))
                 }
 
@@ -212,9 +209,26 @@ struct SentencingStage: View {
                 ProbationConditionsCard(session: session)
             }
 
+            CustomConditionsCard(session: session)
+
             MoneyCard(session: session)
 
-            PrimaryButton(title: "Enter Judgment", icon: "hammer.fill", enabled: session.sentencingComplete) {
+            if !issues.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Departures from North Carolina law", systemImage: "exclamationmark.triangle.fill")
+                        .font(.headline)
+                        .foregroundStyle(.orange)
+                    Text("You can enter this judgment as is. Expect it to be appealed, and possibly vacated.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    BulletList(items: issues, symbol: "circle.fill", color: .orange)
+                        .font(.caption)
+                }
+                .card(tint: .orange)
+            }
+
+            PrimaryButton(title: "Enter Judgment", icon: "hammer.fill", enabled: session.sentencingComplete,
+                          hint: session.sentencingHint) {
                 Haptics.gavel()
                 session.advance()
             }
@@ -225,13 +239,24 @@ struct SentencingStage: View {
     private var convictionCount: Int {
         c.charges.filter { (session.rulings.verdicts[$0.id] ?? .notGuilty) != .notGuilty }.count
     }
+
+    private func formNote(_ option: SpecialDisposition) -> String {
+        switch option {
+        case .none: return option.detail
+        case .prayerForJudgment:
+            return option.detail + (session.pjcAvailable ? "" : " Unusual for a felony.")
+        case .conditionalDischarge:
+            return option.detail + (session.conditionalDischargeAvailable ? "" : " The statute limits this to first-time drug possession.")
+        }
+    }
 }
 
 struct PriorRecordCard: View {
     let record: PriorRecord
+    var carded = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let content = VStack(alignment: .leading, spacing: 8) {
             if record.lines.isEmpty {
                 Text("No prior convictions.").font(.callout).foregroundStyle(.secondary)
             }
@@ -257,7 +282,11 @@ struct PriorRecordCard: View {
             }
             LawLink(lawID: "priorRecord")
         }
-        .card()
+        if carded {
+            content.card()
+        } else {
+            content
+        }
     }
 }
 
@@ -278,90 +307,145 @@ struct ConditionToggle: View {
     }
 }
 
+/// Adjusts a number with a fine stepper and a coarse stepper.
+struct AmountStepper: View {
+    let title: String
+    var caption: String? = nil
+    @Binding var value: Int
+    let range: ClosedRange<Int>
+    let fine: Int
+    let coarse: Int
+    let fineLabel: String
+    let coarseLabel: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.subheadline.weight(.semibold))
+            if let caption {
+                Text(caption).font(.caption).foregroundStyle(.secondary)
+            }
+            HStack {
+                Stepper(fineLabel, value: $value, in: range, step: fine).font(.caption)
+            }
+            if coarse > fine {
+                Stepper(coarseLabel, value: $value, in: range, step: coarse).font(.caption)
+            }
+        }
+    }
+}
+
 struct ProbationConditionsCard: View {
     @ObservedObject var session: CaseSession
 
     var body: some View {
-        let intermediate = session.anyIntermediate || session.rulings.special == .conditionalDischarge
-        let maxSplit = session.maxSpecialProbationDays
-        SectionTitle(text: "Conditions of probation", icon: "checklist")
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Regular conditions (G.S. 15A-1343(b)) always apply: commit no new offense, remain in the jurisdiction, possess no firearm, and pay money owed.")
+        CollapsibleSection(title: "Conditions of probation", icon: "checklist",
+                           summary: "\(session.rulings.conditions.supervised ? "Supervised" : "Unsupervised"), \(session.rulings.conditions.specialCount) special conditions") {
+            Text("Regular conditions always apply: commit no new offense, remain in the jurisdiction, possess no firearm, and pay money owed. Every condition you add is another way to violate. Conditions that address the defendant's real problems make success more likely.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            if intermediate {
-                Label("Intermediate punishment requires supervised probation.", systemImage: "eye.fill")
-                    .font(.subheadline)
-            } else {
-                ConditionToggle(title: "Supervised probation",
-                                detail: "Off means unsupervised: no probation officer, fewer violations detected.",
-                                isOn: $session.rulings.conditions.supervised)
-            }
+            ConditionToggle(title: "Supervised probation",
+                            detail: "A probation officer, office visits, and warrantless searches. Off means unsupervised.",
+                            isOn: $session.rulings.conditions.supervised)
 
-            Group {
-                Text("Intermediate conditions").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-                if session.anyIntermediate {
-                    if maxSplit > 0 {
-                        Stepper(value: $session.rulings.conditions.specialProbationDays, in: 0...maxSplit, step: maxSplit > 60 ? 5 : 1) {
-                            VStack(alignment: .leading) {
-                                Text("Special probation: \(session.rulings.conditions.specialProbationDays) days in jail").font(.subheadline)
-                                Text("Split sentence, up to \(maxSplit) days (one-fourth of the maximum)").font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                    Stepper(value: $session.rulings.conditions.houseArrestDays, in: 0...180, step: 15) {
-                        VStack(alignment: .leading) {
-                            Text("House arrest with electronic monitoring: \(session.rulings.conditions.houseArrestDays) days").font(.subheadline)
-                            Text("The defendant may leave only for work, treatment, and court").font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    ConditionToggle(title: "Drug Treatment Court", detail: "Intensive court-supervised treatment with frequent review hearings",
-                                    isOn: $session.rulings.conditions.drugTreatmentCourt)
-                } else {
-                    Text("Special probation, house arrest, and Drug Treatment Court require an Intermediate disposition.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            Text("Jail and confinement").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+            AmountStepper(title: "Special probation: \(session.rulings.conditions.specialProbationDays) days in jail",
+                          caption: "A split sentence served before or during probation. The statute caps it at one-fourth of the maximum (\(session.maxSpecialProbationDays) days here).",
+                          value: $session.rulings.conditions.specialProbationDays, range: 0...3_650,
+                          fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
+            AmountStepper(title: "House arrest with electronic monitoring: \(session.rulings.conditions.houseArrestDays) days",
+                          value: $session.rulings.conditions.houseArrestDays, range: 0...3_650,
+                          fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
+            ConditionToggle(title: "Drug Treatment Court", detail: "Intensive court-supervised treatment with frequent review hearings",
+                            isOn: $session.rulings.conditions.drugTreatmentCourt)
+            ConditionToggle(title: "Curfew, 9 p.m. to 6 a.m.", isOn: $session.rulings.conditions.curfew)
 
             Divider()
-            Text("Community service & treatment").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-            Stepper(value: $session.rulings.conditions.communityServiceHours, in: 0...250, step: 10) {
-                VStack(alignment: .leading) {
-                    Text("Community service: \(session.rulings.conditions.communityServiceHours) hours").font(.subheadline)
-                    Text("Adds the $250 community service fee").font(.caption).foregroundStyle(.secondary)
-                }
-            }
+            Text("Treatment and service").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+            AmountStepper(title: "Community service: \(session.rulings.conditions.communityServiceHours) hours",
+                          caption: "Adds the $250 community service fee",
+                          value: $session.rulings.conditions.communityServiceHours, range: 0...5_000,
+                          fine: 10, coarse: 100, fineLabel: "± 10 hours", coarseLabel: "± 100 hours")
             ConditionToggle(title: "Substance abuse assessment and treatment (TASC)", isOn: $session.rulings.conditions.substanceTreatment)
             ConditionToggle(title: "Mental health evaluation and treatment", isOn: $session.rulings.conditions.mentalHealthTreatment)
             ConditionToggle(title: "Random drug and alcohol testing", isOn: $session.rulings.conditions.randomTesting)
             ConditionToggle(title: "Abstain from alcohol", isOn: $session.rulings.conditions.abstainAlcohol)
-            ConditionToggle(title: "Anger management / abuser treatment", isOn: $session.rulings.conditions.angerManagement)
+            ConditionToggle(title: "Anger management or abuser treatment", isOn: $session.rulings.conditions.angerManagement)
 
             Divider()
-            Text("Restrictions").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-            ConditionToggle(title: "Curfew, 9 p.m. to 6 a.m.", isOn: $session.rulings.conditions.curfew)
+            Text("Restrictions and obligations").font(.caption.weight(.bold)).foregroundStyle(.secondary)
             if session.courtCase.victimName != nil {
                 ConditionToggle(title: "No contact with the victim or their family", isOn: $session.rulings.conditions.noContactVictim)
             }
             ConditionToggle(title: "Stay away from the scene of the offense", isOn: $session.rulings.conditions.stayAway)
             ConditionToggle(title: "Surrender all firearms", isOn: $session.rulings.conditions.surrenderFirearms)
-
-            Divider()
-            Text("Rehabilitation").font(.caption.weight(.bold)).foregroundStyle(.secondary)
             ConditionToggle(title: "Maintain employment or full-time school", isOn: $session.rulings.conditions.maintainEmployment)
             ConditionToggle(title: "Obtain a high school equivalency diploma", isOn: $session.rulings.conditions.education)
 
-            Text("Every condition is another way to violate probation. Conditions that address the defendant's actual problems make success more likely.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
             HStack {
                 LawLink(lawID: "probationConditions")
                 LawLink(lawID: "specialProbation")
             }
         }
-        .card()
+    }
+}
+
+struct CustomConditionsCard: View {
+    @ObservedObject var session: CaseSession
+    @State private var draft = ""
+
+    private let ideas = [
+        "Write a letter of apology to the victim",
+        "Attend a victim impact panel",
+        "Complete a parenting class",
+        "No social media use during probation",
+        "Pay restitution at $100 per month",
+        "Volunteer at the county animal shelter"
+    ]
+
+    var body: some View {
+        CollapsibleSection(title: "Your own orders", icon: "pencil.and.list.clipboard",
+                           summary: session.rulings.customConditions.isEmpty ? "None added" : "\(session.rulings.customConditions.count) added",
+                           expanded: !session.rulings.customConditions.isEmpty) {
+            Text("Add anything you want the judgment to order. It becomes part of the judgment exactly as you write it.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            HStack {
+                TextField("Type an order or condition", text: $draft, axis: .vertical)
+                    .lineLimit(1...3)
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color(.tertiarySystemFill)))
+                Button {
+                    session.addCustomCondition(draft)
+                    draft = ""
+                } label: {
+                    Image(systemName: "plus.circle.fill").font(.title2)
+                }
+                .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    ForEach(ideas, id: \.self) { idea in
+                        Button(idea) { session.addCustomCondition(idea) }
+                            .font(.caption)
+                            .buttonStyle(.bordered)
+                    }
+                }
+            }
+            ForEach(Array(session.rulings.customConditions.enumerated()), id: \.offset) { index, condition in
+                HStack(alignment: .top) {
+                    Image(systemName: "text.badge.checkmark").foregroundStyle(Theme.gold)
+                    Text(condition).font(.callout)
+                    Spacer()
+                    Button {
+                        session.removeCustomCondition(at: index)
+                    } label: {
+                        Image(systemName: "trash").foregroundStyle(.red)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
     }
 }
 
@@ -371,32 +455,28 @@ struct ActiveOrdersCard: View {
     var body: some View {
         let custodyDays = session.courtCase.background?.custodyDays ?? 0
         let objects = session.courtCase.background?.stateObjectsToASR ?? true
-        SectionTitle(text: "Commitment", icon: "lock.fill")
-        VStack(alignment: .leading, spacing: 14) {
+        CollapsibleSection(title: "Commitment & recommendations", icon: "lock.fill",
+                           summary: custodyDays > 0 ? "\(custodyDays) days of credit for time served" : "No pretrial credit") {
             Label(custodyDays > 0
                   ? "Credit for \(custodyDays) days of pretrial confinement will be applied (G.S. 15-196.1)."
-                  : "No pretrial confinement credit: the defendant was released on bond.",
+                  : "No pretrial confinement credit: the defendant was out on bond.",
                   systemImage: "calendar.badge.clock")
                 .font(.subheadline)
 
-            if session.asrEligible {
-                ConditionToggle(title: "Advanced Supervised Release (ASR)",
-                                detail: session.askedAboutASR
-                                    ? (objects ? "The State has objected. ASR cannot be ordered over the State's objection." : "The State does not object. Release at the low end of the mitigated range after risk-reduction programming.")
-                                    : "Release at the low end of the mitigated range after risk-reduction programming. Requires that the State not object; ask the prosecutor.",
-                                isOn: $session.rulings.recommendations.advancedSupervisedRelease)
-                    .disabled(session.askedAboutASR && objects)
-            }
+            ConditionToggle(title: "Advanced Supervised Release (ASR)",
+                            detail: session.askedAboutASR
+                                ? (objects ? "The State objected on the record. Ordering ASR anyway may be reversed." : "The State does not object.")
+                                : "Early release at the low end of the mitigated range after risk-reduction programs. The statute requires that the State not object; ask the prosecutor.",
+                            isOn: $session.rulings.recommendations.advancedSupervisedRelease)
             ConditionToggle(title: "Recommend substance abuse treatment in custody", isOn: $session.rulings.recommendations.substanceTreatment)
             ConditionToggle(title: "Recommend mental health treatment in custody", isOn: $session.rulings.recommendations.mentalHealth)
             ConditionToggle(title: "Recommend work release", isOn: $session.rulings.recommendations.workRelease)
             ConditionToggle(title: "Recommend vocational and educational programs", isOn: $session.rulings.recommendations.vocational)
-            Text("Recommendations are not binding on the Department of Adult Correction.")
+            Text("Recommendations don't bind the Department of Adult Correction.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             LawLink(lawID: "asr")
         }
-        .card()
     }
 }
 
@@ -405,30 +485,23 @@ struct MoneyCard: View {
 
     var body: some View {
         let bg = session.courtCase.background
-        let restitutionCap = max(5_000, (bg?.restitution ?? 0) * 2)
-        let restitutionStep = restitutionCap > 1_000_000 ? 50_000 : (restitutionCap > 100_000 ? 5_000 : (restitutionCap > 10_000 ? 500 : 100))
         let items = session.obligations
         let total = items.reduce(0) { $0 + $1.amount }
-        SectionTitle(text: "Monetary obligations", icon: "dollarsign.circle.fill")
-        VStack(alignment: .leading, spacing: 14) {
-            Stepper(value: $session.rulings.money.fine, in: 0...maxFine, step: maxFine <= 1_000 ? 50 : 250) {
-                VStack(alignment: .leading) {
-                    Text("Fine: \(SentenceFormat.dollars(session.rulings.money.fine))").font(.subheadline)
-                    Text(fineNote).font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            Stepper(value: $session.rulings.money.restitution, in: 0...restitutionCap, step: restitutionStep) {
-                VStack(alignment: .leading) {
-                    Text("Restitution: \(SentenceFormat.dollars(session.rulings.money.restitution))").font(.subheadline)
-                    Text(bg.map { $0.restitution > 0 ? "State's figure: \(SentenceFormat.dollars($0.restitution)) (\($0.restitutionBasis ?? "losses"))" : "The State has not requested restitution" } ?? "")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            ConditionToggle(title: "Tax court costs", detail: "About \(SentenceFormat.dollars(FinancialOrders.courtCosts)). Turn off to remit costs.",
+        CollapsibleSection(title: "Fines, costs & restitution", icon: "dollarsign.circle.fill",
+                           summary: total > 0 ? "Total \(SentenceFormat.dollars(total))" : "Nothing owed") {
+            AmountStepper(title: "Fine: \(SentenceFormat.dollars(session.rulings.money.fine))",
+                          caption: fineNote,
+                          value: $session.rulings.money.fine, range: 0...10_000_000,
+                          fine: 100, coarse: 5_000, fineLabel: "± $100", coarseLabel: "± $5,000")
+            AmountStepper(title: "Restitution: \(SentenceFormat.dollars(session.rulings.money.restitution))",
+                          caption: bg.map { $0.restitution > 0 ? "State's figure: \(SentenceFormat.dollars($0.restitution)) for \($0.restitutionBasis ?? "losses")" : "The State hasn't requested restitution" },
+                          value: $session.rulings.money.restitution, range: 0...100_000_000,
+                          fine: 100, coarse: 10_000, fineLabel: "± $100", coarseLabel: "± $10,000")
+            ConditionToggle(title: "Tax court costs", detail: "About \(SentenceFormat.dollars(FinancialOrders.courtCosts)). Off remits costs.",
                             isOn: $session.rulings.money.courtCosts)
             if Judgment.appointedCounsel(session.courtCase) {
-                ConditionToggle(title: "Enter judgment for appointed attorney fees",
-                                detail: "Estimated \(SentenceFormat.dollars(bg?.attorneyFeeEstimate ?? 1_500)) for court-appointed counsel",
+                ConditionToggle(title: "Judgment for appointed attorney fees",
+                                detail: "About \(SentenceFormat.dollars(bg?.attorneyFeeEstimate ?? 1_500)) for court-appointed counsel",
                                 isOn: $session.rulings.money.attorneyFees)
             }
             if session.anySuspended && session.rulings.conditions.supervised {
@@ -448,25 +521,22 @@ struct MoneyCard: View {
                     Spacer()
                     Text(SentenceFormat.dollars(total)).font(.subheadline.monospacedDigit().weight(.semibold))
                 }
-                if bg?.indigent ?? false {
-                    Label("Defense counsel says the defendant is indigent. Ask about ability to pay.", systemImage: "exclamationmark.circle")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                }
+            }
+            if bg?.indigent ?? false {
+                Label("Defense counsel says the defendant is indigent.", systemImage: "exclamationmark.circle")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
             }
             LawLink(lawID: "monetaryObligations")
         }
-        .card()
-    }
-
-    private var maxFine: Int {
-        let units = session.units
-        if units.contains(where: { $0.isFelony }) { return 50_000 }
-        return units.map { $0.sentencingClass.maxFine ?? 10_000 }.max() ?? 1_000
     }
 
     private var fineNote: String {
-        maxFine <= 1_000 ? "Statutory maximum \(SentenceFormat.dollars(maxFine))" : "In the court's discretion"
+        let caps = session.units.compactMap { $0.sentencingClass.maxFine }
+        if let cap = caps.max(), !session.units.contains(where: { $0.isFelony }) {
+            return "Statutory maximum for this class: \(SentenceFormat.dollars(cap))"
+        }
+        return "Amount in the court's discretion"
     }
 }
 
@@ -504,88 +574,144 @@ struct ChoiceRow: View {
 
 struct UnitSentenceCard: View {
     let unit: SentencingUnit
-    let allowedRanges: [SentenceRangeKind]
+    let aggravatingFound: Bool
+    let mitigatingFound: Bool
     @Binding var choice: SentenceChoice
+
+    private enum Mode { case chart(SentenceRangeKind), custom, life }
+
+    private var mode: Mode {
+        if choice.lifeWithoutParole { return .life }
+        if choice.customTerm { return .custom }
+        return .chart(choice.range)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(unit.title).font(.headline)
             Text(unit.classLine).font(.caption).foregroundStyle(.secondary)
-
             if unit.isMandatoryLife {
-                Label("Class A felony: life imprisonment without parole is mandatory for a defendant who was 18 or older.",
-                      systemImage: "lock.fill")
-                    .font(.callout)
-            } else if let cell = unit.felonyCell {
-                felony(cell)
+                Label("The statute makes life without parole mandatory for a Class A felony. The choice below is still yours.",
+                      systemImage: "info.circle")
+                    .font(.caption)
+            }
+
+            Text("Term").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+            if let cell = unit.felonyCell {
+                ForEach(SentenceRangeKind.allCases, id: \.self) { kind in
+                    if let range = cell.range(kind) {
+                        ChoiceRow(title: "\(kind.label) range", subtitle: rangeSubtitle(kind, range), selected: isChart(kind)) {
+                            choice.lifeWithoutParole = false
+                            choice.customTerm = false
+                            choice.range = kind
+                            choice.minimum = min(max(choice.minimum, range.low), range.high)
+                        }
+                    }
+                }
             } else if let cell = unit.misdemeanorCell {
-                misdemeanor(cell)
+                ChoiceRow(title: "Authorized range", subtitle: "1–\(cell.maxDays) days for this class and level",
+                          selected: isChart(.presumptive)) {
+                    choice.lifeWithoutParole = false
+                    choice.customTerm = false
+                    choice.range = .presumptive
+                    choice.minimum = min(max(choice.minimum, 1), cell.maxDays)
+                }
+            }
+            ChoiceRow(title: "Set my own term", subtitle: "Any length, inside or outside the chart",
+                      selected: isCustom) {
+                choice.lifeWithoutParole = false
+                choice.customTerm = true
+            }
+            ChoiceRow(title: "Life imprisonment without parole", subtitle: lifeSubtitle, selected: choice.lifeWithoutParole) {
+                choice.lifeWithoutParole = true
+                choice.disposition = .active
+            }
+
+            if !choice.lifeWithoutParole {
+                termEditor
+                dispositionPicker
             }
         }
         .card(tint: Judgment.isComplete(choice) ? Theme.gold : nil)
     }
 
-    @ViewBuilder
-    private func felony(_ cell: FelonyCell) -> some View {
-        Text("Minimum sentence range").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-        ForEach(SentenceRangeKind.allCases, id: \.self) { kind in
-            let range = cell.range(kind)
-            ChoiceRow(title: kind.label,
-                      subtitle: range?.text ?? "Life imprisonment without parole",
-                      selected: choice.range == kind,
-                      enabled: allowedRanges.contains(kind)) {
-                choice.range = kind
-                if let range {
-                    choice.lifeWithoutParole = false
-                    choice.minimum = min(max(choice.minimum, range.low), range.high)
-                } else {
-                    choice.lifeWithoutParole = true
-                    choice.disposition = .active
-                }
-            }
-        }
+    private var isCustom: Bool {
+        if case .custom = mode { return true }
+        return false
+    }
 
-        if !choice.lifeWithoutParole, let range = cell.range(choice.range) {
-            Stepper(value: $choice.minimum, in: range.low...range.high) {
-                VStack(alignment: .leading) {
-                    Text("Minimum \(choice.minimum) months").font(.title3.weight(.bold))
-                    Text("Maximum \(StructuredSentencing.maximum(forMinimum: choice.minimum, cls: unit.sentencingClass)) months · \(SentenceFormat.months(choice.minimum)) to \(SentenceFormat.months(StructuredSentencing.maximum(forMinimum: choice.minimum, cls: unit.sentencingClass)))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+    private func isChart(_ kind: SentenceRangeKind) -> Bool {
+        if case .chart(let selected) = mode { return selected == kind }
+        return false
+    }
+
+    private func rangeSubtitle(_ kind: SentenceRangeKind, _ range: MonthRange) -> String {
+        var text = "\(range.text) minimum"
+        if kind == .aggravated && !aggravatingFound { text += " · no aggravating factor found yet" }
+        if kind == .mitigated && !mitigatingFound { text += " · no mitigating factor found yet" }
+        return text
+    }
+
+    private var lifeSubtitle: String {
+        if unit.isMandatoryLife { return "Required by statute for Class A" }
+        if unit.sentencingClass == .B1 && unit.level >= 5 { return "Authorized only in the aggravated range at this level" }
+        return "Not authorized for this offense"
+    }
+
+    @ViewBuilder
+    private var termEditor: some View {
+        if unit.isFelony {
+            let statutoryMax = StructuredSentencing.maximum(forMinimum: choice.minimum, cls: unit.sentencingClass)
+            if isCustom || unit.felonyCell == nil {
+                AmountStepper(title: "Minimum: \(SentenceFormat.months(choice.minimum)) (\(choice.minimum) months)",
+                              value: $choice.minimum, range: 0...1_200,
+                              fine: 1, coarse: 12, fineLabel: "± 1 month", coarseLabel: "± 1 year")
+                ConditionToggle(title: "Use the statutory maximum (\(statutoryMax) months)",
+                                isOn: Binding(get: { choice.customMaximum == nil },
+                                              set: { choice.customMaximum = $0 ? nil : statutoryMax }))
+                if let custom = choice.customMaximum {
+                    AmountStepper(title: "Maximum: \(SentenceFormat.months(custom)) (\(custom) months)",
+                                  value: Binding(get: { choice.customMaximum ?? statutoryMax },
+                                                 set: { choice.customMaximum = max($0, choice.minimum) }),
+                                  range: 0...1_200, fine: 1, coarse: 12, fineLabel: "± 1 month", coarseLabel: "± 1 year")
+                }
+            } else if let range = unit.felonyCell?.range(choice.range) {
+                Stepper(value: $choice.minimum, in: range.low...range.high) {
+                    VStack(alignment: .leading) {
+                        Text("Minimum \(choice.minimum) months").font(.title3.weight(.bold))
+                        Text("Maximum \(statutoryMax) months · \(SentenceFormat.months(choice.minimum)) to \(SentenceFormat.months(statutoryMax))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
-            dispositionPicker(cell.dispositions, felony: true)
+        } else {
+            let cap = isCustom ? 3_650 : (unit.misdemeanorCell?.maxDays ?? 150)
+            AmountStepper(title: "\(choice.minimum) days",
+                          value: $choice.minimum, range: 1...cap,
+                          fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
         }
     }
 
     @ViewBuilder
-    private func misdemeanor(_ cell: MisdemeanorCell) -> some View {
-        Stepper(value: $choice.minimum, in: 1...cell.maxDays) {
-            VStack(alignment: .leading) {
-                Text("\(choice.minimum) days").font(.title3.weight(.bold))
-                Text("Authorized: 1–\(cell.maxDays) days").font(.caption).foregroundStyle(.secondary)
-            }
-        }
-        dispositionPicker(cell.dispositions, felony: false)
-    }
-
-    @ViewBuilder
-    private func dispositionPicker(_ allowed: [Disposition], felony: Bool) -> some View {
-        Text("Disposition (allowed: \(allowed.map(\.rawValue).joined(separator: "/")))")
-            .font(.caption.weight(.bold))
-            .foregroundStyle(.secondary)
-        ForEach(allowed, id: \.self) { disposition in
-            ChoiceRow(title: disposition.label, subtitle: disposition.detail, selected: choice.disposition == disposition) {
+    private var dispositionPicker: some View {
+        let allowed = unit.felonyCell?.dispositions ?? unit.misdemeanorCell?.dispositions ?? [.active]
+        Text("Disposition").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+        ForEach(Disposition.allCases.reversed(), id: \.self) { disposition in
+            ChoiceRow(title: disposition.label,
+                      subtitle: disposition.detail + (allowed.contains(disposition) ? "" : " · Not authorized by the chart here"),
+                      selected: choice.disposition == disposition) {
                 choice.disposition = disposition
-                let months = StructuredSentencing.probationMonths(felony: felony, disposition: disposition)
-                choice.probationMonths = min(max(choice.probationMonths, months.lowerBound), months.upperBound)
+                let months = StructuredSentencing.probationMonths(felony: unit.isFelony, disposition: disposition)
+                if choice.probationMonths < 1 { choice.probationMonths = months.lowerBound }
             }
         }
         if let disposition = choice.disposition, disposition != .active {
-            let months = StructuredSentencing.probationMonths(felony: felony, disposition: disposition)
-            Stepper(value: $choice.probationMonths, in: months) {
-                Text("Probation: \(choice.probationMonths) months").font(.subheadline.weight(.semibold))
-            }
+            let typical = StructuredSentencing.probationMonths(felony: unit.isFelony, disposition: disposition)
+            AmountStepper(title: "Probation: \(choice.probationMonths) months",
+                          caption: "Typical: \(typical.lowerBound)–\(typical.upperBound) months. The statute caps probation at 5 years.",
+                          value: $choice.probationMonths, range: 1...240,
+                          fine: 1, coarse: 12, fineLabel: "± 1 month", coarseLabel: "± 1 year")
         }
     }
 }
@@ -627,7 +753,8 @@ struct ProbationStage: View {
                 }
             }
 
-            PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.probationDecision != nil) {
+            PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.probationDecision != nil,
+                          hint: "Choose how to handle the probation violation.") {
                 Haptics.gavel()
                 session.advance()
             }
@@ -709,7 +836,7 @@ struct JudgmentStage: View {
             SectionTitle(text: "Tomorrow's paper", icon: "newspaper.fill")
             NewsCard(item: outcome.news)
 
-            PrimaryButton(title: "Adjourn", icon: "house.fill", action: onFinish)
+            PrimaryButton(title: "Return to Chambers", icon: "house.fill", action: onFinish)
         }
     }
 }

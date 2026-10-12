@@ -22,7 +22,7 @@ enum HearingDecision: String, CaseIterable, Hashable {
         case .modify: return "Add or change conditions, and optionally extend the term."
         case .quickDip: return "A short jail stay as a sanction, then probation resumes (G.S. 15A-1343(a1)(3))."
         case .crv: return "Confinement in response to violation: 90 days in custody, then probation resumes (G.S. 15A-1344(d2))."
-        case .revoke: return "Available only for a new criminal offense, absconding, or after two prior CRVs (G.S. 15A-1344(a))."
+        case .revoke: return "The statute permits revocation for a new criminal offense, absconding, or after two prior CRVs (G.S. 15A-1344(a))."
         case .terminate: return "Ends supervision now. Unpaid money becomes a civil judgment."
         }
     }
@@ -46,6 +46,7 @@ struct HearingOutcome {
     var propensityChange: Double
     var news: NewsItem
     var appearance: String
+    var pending: [PendingEvent] = []
 }
 
 enum ViolationHearings {
@@ -208,6 +209,18 @@ enum ViolationHearings {
         if !h.willful && (decision == .crv || decision == .revoke) { propensityChange += 0.05 }
         term.violationRisk = min(0.7, max(0.03, risk))
 
+        var pending: [PendingEvent] = []
+        if decision == .revoke && !canRevoke(h) {
+            lines.append("Note: the record does not show a new offense, absconding, or two prior CRVs.")
+            let due = Calendar.current.date(byAdding: .day, value: 150, to: date) ?? date
+            pending.append(PendingEvent(due: due,
+                                        news: NewsItem(date: due, kind: .appeal,
+                                                       headline: "Court of Appeals reverses probation revocation of \(h.personName)",
+                                                       body: "The Court of Appeals held that Judge \(judgeLast) lacked statutory authority to revoke probation for technical violations alone under G.S. 15A-1344(a), and remanded. \(h.personName) was released from custody.",
+                                                       docket: term.docket),
+                                        personID: h.personID, effect: .resentence, appealReversed: true, newReleaseDate: due))
+        }
+
         let keepsProbation = decision != .revoke && decision != .terminate
         let headline: String
         switch decision {
@@ -223,7 +236,8 @@ enum ViolationHearings {
         return HearingOutcome(lines: lines, status: status, releaseDate: release,
                               probation: keepsProbation ? term : nil,
                               propensityChange: propensityChange, news: news,
-                              appearance: "Probation violation hearing: \(decision.label.lowercased())")
+                              appearance: "Probation violation hearing: \(decision.label.lowercased())",
+                              pending: pending)
     }
 }
 

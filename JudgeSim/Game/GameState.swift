@@ -136,6 +136,7 @@ final class GameState: ObservableObject {
         var item = outcome.news
         item.date = currentDate
         post(item)
+        pending.append(contentsOf: outcome.pending)
         currentHearing = nil
         advanceCalendar()
         save()
@@ -267,13 +268,24 @@ final class GameState: ObservableObject {
                     people[index].probation = nil
                 case .raisePropensity:
                     people[index].propensity = min(0.85, people[index].propensity + 0.15)
+                case .resentence:
+                    if people[index].status == .incarcerated, let newRelease = event.newReleaseDate {
+                        if newRelease <= currentDate {
+                            people[index].status = people[index].probation == nil ? .free : .probation
+                            people[index].releaseDate = nil
+                        } else {
+                            people[index].releaseDate = newRelease
+                        }
+                    }
                 case .none:
                     break
                 }
             }
             if event.news.kind == .appeal, let docket = event.news.docket,
                let index = history.firstIndex(where: { $0.docket == docket }) {
-                history[index].appealStatus = event.appealReversed ? "New trial ordered on appeal" : "Affirmed on appeal"
+                history[index].appealStatus = event.effect == .resentence || event.news.headline.contains("vacates sentence")
+                    ? "Sentence vacated; remanded for resentencing"
+                    : (event.appealReversed ? "New trial ordered on appeal" : "Affirmed on appeal")
             }
         }
 
