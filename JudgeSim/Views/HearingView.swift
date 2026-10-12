@@ -6,6 +6,7 @@ struct HearingView: View {
     @StateObject private var session: HearingSession
     @State private var showCounsel = false
     @State private var showLibrary = false
+    @State private var confirmLeave = false
 
     init(hearing: ViolationHearing, judgeName: String, county: County) {
         _session = StateObject(wrappedValue: HearingSession(hearing: hearing, judgeName: judgeName, county: county))
@@ -32,7 +33,7 @@ struct HearingView: View {
                 if session.outcome == nil {
                     ToolbarItem(placement: .cancellationAction) {
                         Button {
-                            dismiss()
+                            confirmLeave = true
                         } label: {
                             Label("Leave", systemImage: "chevron.left").labelStyle(.titleAndIcon)
                         }
@@ -50,6 +51,12 @@ struct HearingView: View {
             }
         }
         .interactiveDismissDisabled()
+        .confirmationDialog("Leave the hearing?", isPresented: $confirmLeave, titleVisibility: .visible) {
+            Button("Leave; resume later") { dismiss() }
+            Button("Stay", role: .cancel) {}
+        } message: {
+            Text("The hearing stays on your docket. Your rulings so far won't be kept.")
+        }
     }
 
     @ViewBuilder
@@ -79,6 +86,33 @@ struct HearingView: View {
         }
         .card(tint: .orange)
 
+        SectionTitle(text: "Admission or denial", icon: "person.fill.questionmark")
+        VStack(alignment: .leading, spacing: 10) {
+            let last = h.personName.components(separatedBy: " ").last ?? h.personName
+            if h.admits ?? true {
+                Text("Through counsel, \(last) admits the violations. The hearing proceeds to disposition; you still decide whether each was without lawful excuse.")
+                    .font(.callout)
+            } else {
+                Text("\(last) denies the violations. The State calls the probation officer.").font(.callout)
+                ForEach(h.officerTestimony ?? [], id: \.self) { line in
+                    Text(line).font(.system(.callout, design: .serif)).italic()
+                }
+                ForEach(h.officerCross ?? [], id: \.self) { line in
+                    Text(line).font(.callout).foregroundStyle(.secondary)
+                }
+                Text("The rules of evidence don't strictly apply at a violation hearing, but you must be reasonably satisfied the violation occurred (G.S. 15A-1345(e)).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Text("Finding").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+            ForEach(ViolationFinding.allCases, id: \.self) { finding in
+                ChoiceRow(title: finding.label, subtitle: finding.detail, selected: session.rulings.finding == finding) {
+                    session.rulings.finding = finding
+                }
+            }
+        }
+        .card(tint: .orange)
+
         SectionTitle(text: "The judgment being enforced", icon: "scalemass.fill")
         VStack(alignment: .leading, spacing: 8) {
             Text("Suspended sentence: \(h.probation.suspendedSentence)").font(.callout)
@@ -101,12 +135,20 @@ struct HearingView: View {
         SectionTitle(text: "Order", icon: "hammer.fill")
         VStack(alignment: .leading, spacing: 8) {
             ForEach(HearingDecision.allCases, id: \.self) { decision in
-                ChoiceRow(title: decision.label, subtitle: decision.detail,
+                ChoiceRow(title: decision.label,
+                          subtitle: decision == .crv ? "\(ViolationHearings.crvDays(h)) days here. " + decision.detail
+                            : (decision == .revoke ? "Activates \(ViolationHearings.revocationMonths(h.probation)) months after CRV credit. " + decision.detail : decision.detail),
                           selected: session.rulings.decision == decision) {
                     session.rulings.decision = decision
                 }
             }
-            if !session.canRevoke && session.rulings.decision == .revoke {
+            if session.rulings.finding != nil && session.rulings.finding != .established
+                && [HearingDecision.quickDip, .crv, .revoke].contains(session.rulings.decision) {
+                Label("You found no willful violation. A sanction now may be vacated on appeal.",
+                      systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            } else if !session.canRevoke && session.rulings.decision == .revoke {
                 Label("Heads up: there's no new offense, absconding, or two prior CRVs here. The statute doesn't authorize revocation, and it may be reversed on appeal.",
                       systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
@@ -137,8 +179,8 @@ struct HearingView: View {
         }
         .card()
 
-        PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.decision != nil,
-                      hint: "Choose an order above.") {
+        PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.decision != nil && session.rulings.finding != nil,
+                      hint: "Make a finding and choose an order above.") {
             Haptics.gavel()
             session.finish()
         }

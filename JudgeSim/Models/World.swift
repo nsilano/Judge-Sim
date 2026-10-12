@@ -147,6 +147,11 @@ struct ViolationHearing: Identifiable, Codable, Hashable {
     /// Hidden: whether the violations were truly willful.
     var willful: Bool
     var circumstances: String
+    /// Whether the probationer admits the violations (optional for older saves).
+    var admits: Bool?
+    /// The probation officer's testimony if the violations are denied.
+    var officerTestimony: [String]?
+    var officerCross: [String]?
 }
 
 struct NewsItem: Identifiable, Codable, Hashable {
