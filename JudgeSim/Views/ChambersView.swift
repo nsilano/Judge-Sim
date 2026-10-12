@@ -134,7 +134,7 @@ struct ChambersView: View {
                     }
 
                     SectionTitle(text: game.county?.newspaper ?? "Local news", icon: "newspaper.fill")
-                    ForEach(game.news.prefix(6)) { item in
+                    ForEach(game.news.prefix(3)) { item in
                         NewsCard(item: item)
                     }
                 }

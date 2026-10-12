@@ -24,27 +24,10 @@ struct CourtroomView: View {
                         }
                         .id("top")
 
-                        if session.stage.rawValue > CaseSession.Stage.briefing.rawValue && session.stage != .judgment {
-                            Button {
-                                reviewSection = .evidence
-                            } label: {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "folder.fill").font(.title3).foregroundStyle(Theme.gold)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("Review the case file").font(.subheadline.weight(.semibold))
-                                        Text("Charges, exhibits, testimony, your rulings, and counsel's answers")
-                                            .font(.caption).foregroundStyle(.secondary)
-                                    }
-                                    Spacer()
-                                    Image(systemName: "chevron.right").foregroundStyle(.secondary)
-                                }
-                                .card()
-                            }
-                            .buttonStyle(.plain)
-                        }
-
                         if session.stage != .judgment {
-                            CounselPrompt(available: session.unaskedCount) { showCounsel = true }
+                            CourtActionBar(counselCount: session.unaskedCount, next: session.nextStep,
+                                           onCounsel: { showCounsel = true },
+                                           onReview: { reviewSection = session.stage == .briefing ? .file : .evidence })
                         }
 
                         switch session.stage {
@@ -227,20 +210,27 @@ struct BriefingStage: View {
                     .card(tint: .orange)
             }
 
-            SectionTitle(text: "Procedural posture", icon: "doc.plaintext")
-            BulletList(items: c.proceduralNotes + deNovoNote, symbol: "circle.fill")
-                .font(.callout)
-                .card()
-
-            SectionTitle(text: "The defendant", icon: "person.fill")
-            DefendantCard(defendant: c.defendant, county: session.county)
-
-            SectionTitle(text: "Charges", icon: "list.bullet.rectangle.fill")
+            SectionTitle(text: c.charges.count == 1 ? "The charge" : "\(c.charges.count) charges", icon: "list.bullet.rectangle.fill")
             ForEach(c.charges) { charge in
                 ChargeCard(charge: charge)
             }
 
-            SectionTitle(text: "Counsel & investigation", icon: "person.2.fill")
+            CollapsibleSection(title: "The defendant", icon: "person.fill",
+                               summary: "\(c.defendant.name), \(c.defendant.age) · " + (c.defendant.priors.isEmpty ? "no prior record" : "\(c.defendant.priors.count) prior conviction\(c.defendant.priors.count == 1 ? "" : "s")") + (c.defendant.probation != nil ? " · on probation" : ""),
+                               expanded: false) {
+                DefendantCard(defendant: c.defendant, county: session.county)
+            }
+
+            CollapsibleSection(title: "Procedural posture", icon: "doc.plaintext",
+                               summary: c.habitualIndicted ? "Jury waived · habitual felon indictment" : (c.court == .misdemeanorAppeal ? "Appeal from district court" : "Jury waived"),
+                               expanded: false) {
+                BulletList(items: c.proceduralNotes + deNovoNote, symbol: "circle.fill")
+                    .font(.callout)
+            }
+
+            CollapsibleSection(title: "Counsel & investigation", icon: "person.2.fill",
+                               summary: "\(c.prosecutor) for the State · \(c.defenseAttorney.components(separatedBy: ",").first ?? c.defenseAttorney) for the defense",
+                               expanded: false) {
             VStack(alignment: .leading, spacing: 8) {
                 Label { Text("For the State: ").bold() + Text(c.prosecutor) } icon: {
                     Image(systemName: "building.columns").foregroundStyle(Theme.prosecution)
@@ -253,7 +243,7 @@ struct BriefingStage: View {
                 }
             }
             .font(.callout)
-            .card()
+            }
 
             if session.pleaPresented, let terms = c.background?.arrangementTerms {
                 SectionTitle(text: "Plea arrangement", icon: "signature")

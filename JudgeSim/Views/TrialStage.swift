@@ -12,12 +12,10 @@ struct TrialStage: View {
                 }
             }
 
-            SectionTitle(text: "Opening statements", icon: "text.quote")
-            VStack(alignment: .leading, spacing: 12) {
+            CollapsibleSection(title: "Opening statements", icon: "text.quote", summary: "Tap to read each side's opening", expanded: false) {
                 Statement(side: .prosecution, speaker: c.prosecutor, text: c.prosecutionOpening)
                 Statement(side: .defense, speaker: c.defenseAttorney, text: c.defenseOpening)
             }
-            .card()
 
             caseInChief(for: .prosecution, title: "The State's case", icon: "building.columns.fill")
 
@@ -40,12 +38,14 @@ struct TrialStage: View {
                 }
             }
 
-            SectionTitle(text: "Closing arguments", icon: "text.quote")
-            VStack(alignment: .leading, spacing: 12) {
-                Statement(side: .prosecution, speaker: c.prosecutor, text: c.prosecutionClosing)
-                Statement(side: .defense, speaker: c.defenseAttorney, text: c.defenseClosing)
+            if session.halftimeComplete && session.testimonyDecided {
+                SectionTitle(text: "Closing arguments", icon: "text.quote")
+                VStack(alignment: .leading, spacing: 12) {
+                    Statement(side: .prosecution, speaker: c.prosecutor, text: c.prosecutionClosing)
+                    Statement(side: .defense, speaker: c.defenseAttorney, text: c.defenseClosing)
+                }
+                .card()
             }
-            .card()
 
             PrimaryButton(title: "Close the Evidence & Decide the Verdict", icon: "checkmark.seal", enabled: session.trialComplete,
                           hint: pendingText) {
@@ -61,7 +61,7 @@ struct TrialStage: View {
         if pending > 0 { parts.append("rule on \(pending) objection\(pending == 1 ? "" : "s")") }
         if session.stateRested && !session.halftimeComplete { parts.append("rule on the motion to dismiss") }
         if session.halftimeComplete && !session.testimonyDecided { parts.append("advise the defendant on the right to testify") }
-        return "Scroll up to " + parts.joined(separator: " and ") + "."
+        return "Still to do above: " + parts.joined(separator: ", ") + "."
     }
 
     @ViewBuilder
@@ -70,8 +70,13 @@ struct TrialStage: View {
         let witnesses = c.witnesses.filter { $0.calledBy == side }
         if !exhibits.isEmpty || !witnesses.isEmpty {
             SectionTitle(text: title, icon: icon)
-            ForEach(exhibits) { item in
-                EvidenceCard(evidence: item, suppressed: session.isSuppressed(item))
+            if !exhibits.isEmpty {
+                CollapsibleSection(title: "\(exhibits.count) exhibit\(exhibits.count == 1 ? "" : "s")", icon: "tray.full.fill",
+                                   summary: exhibits.map(\.title).joined(separator: " · "), expanded: side == .prosecution) {
+                    ForEach(exhibits) { item in
+                        EvidenceCard(evidence: item, suppressed: session.isSuppressed(item))
+                    }
+                }
             }
             ForEach(witnesses) { witness in
                 WitnessCard(witness: witness, objections: c.objections(for: witness), session: session)

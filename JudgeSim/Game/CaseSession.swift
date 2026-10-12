@@ -321,6 +321,34 @@ final class CaseSession: ObservableObject {
 
     var legalIssues: [String] { Judgment.legalIssues(courtCase, rulings) }
 
+    /// One line telling the judge what this screen needs.
+    var nextStep: String? {
+        switch stage {
+        case .briefing:
+            if pleaPresented && rulings.pleaAccepted == nil && !rulings.pleaWithdrawn { return "Take the plea or reject it." }
+            return courtCase.motions.isEmpty ? "Read the file, then start the trial." : "Read the file, then hear the pretrial motions."
+        case .motions:
+            let left = courtCase.motions.filter { rulings.motions[$0.id] == nil }.count
+            return left == 0 ? "Go on to trial." : "Grant or deny \(left) motion\(left == 1 ? "" : "s")."
+        case .trial:
+            var parts: [String] = []
+            if ethicsPending { parts.append("respond to the matter outside the courtroom") }
+            if pendingObjections > 0 { parts.append("rule on \(pendingObjections) objection\(pendingObjections == 1 ? "" : "s")") }
+            if stateRested && !halftimeComplete { parts.append("rule on the motion to dismiss") }
+            if halftimeComplete && !testimonyDecided { parts.append("advise the defendant on testifying") }
+            return parts.isEmpty ? "Close the evidence and decide the verdict." : parts.joined(separator: ", ").capitalizedFirst + "."
+        case .verdict:
+            let decided = courtCase.charges.filter { rulings.verdicts[$0.id] != nil }.count
+            return decided == courtCase.charges.count ? "Announce the verdict." : "Decide each count (\(decided) of \(courtCase.charges.count) done)."
+        case .sentencing:
+            return sentencingHint ?? "Work through the steps, then enter judgment."
+        case .probation:
+            return rulings.probationDecision == nil ? "Decide what to do about the probation violation." : "Enter the order."
+        case .judgment:
+            return nil
+        }
+    }
+
     // MARK: Plea arrangement
 
     var pleaPresented: Bool { courtCase.background?.arrangementPresented == true }

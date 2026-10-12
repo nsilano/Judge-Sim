@@ -308,3 +308,75 @@ struct VersionBadge: View {
             .accessibilityLabel("Version \(Self.text)")
     }
 }
+
+/// A numbered step heading, so long screens read as a short sequence.
+struct StepHeader: View {
+    let number: Int
+    let title: String
+    var detail: String? = nil
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text("\(number)")
+                .font(.caption.weight(.heavy))
+                .frame(width: 22, height: 22)
+                .background(Circle().fill(Theme.gold))
+                .foregroundStyle(Color.black)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title).font(.title3.weight(.bold))
+                if let detail {
+                    Text(detail).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.top, 8)
+    }
+}
+
+/// Counsel, the case file, and what to do next, in one compact row at the top of the courtroom.
+struct CourtActionBar: View {
+    let counselCount: Int
+    let next: String?
+    let onCounsel: () -> Void
+    let onReview: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                button("Ask counsel", icon: "bubble.left.and.bubble.right.fill", badge: counselCount, action: onCounsel)
+                button("Case file", icon: "folder.fill", badge: 0, action: onReview)
+            }
+            if let next {
+                Label {
+                    Text("Next: ").bold() + Text(next)
+                } icon: {
+                    Image(systemName: "arrow.right.circle.fill").foregroundStyle(Theme.gold)
+                }
+                .font(.callout)
+            }
+        }
+    }
+
+    private func button(_ title: String, icon: String, badge: Int, action: @escaping () -> Void) -> some View {
+        Button {
+            Haptics.tap()
+            action()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: icon).foregroundStyle(Theme.gold)
+                Text(title).font(.subheadline.weight(.semibold))
+                if badge > 0 {
+                    Text("\(badge)")
+                        .font(.caption2.weight(.bold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(Theme.gold.opacity(0.25)))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color(.secondarySystemGroupedBackground)))
+        }
+        .buttonStyle(.plain)
+    }
+}
