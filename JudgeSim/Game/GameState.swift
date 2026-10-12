@@ -7,161 +7,240 @@ struct CaseRecord: Identifiable, Codable, Hashable {
     var caption: String
     var headline: String
     var category: LawCategory
-    var verdictSummary: String
-    var sentenceSummary: String?
-    var grade: String
-    var appealLabel: String
-    var convicted: Bool
-    var actuallyGuilty: Bool
-    var integrityDelta: Int
-    var approvalDelta: Int
     var date: Date
+    var defendantID: UUID
+    var outcome: String
+    var judgments: [String]
+    var returningDefendant: Bool
+    var appealStatus: String?
 }
 
-struct CareerEnd: Codable, Hashable {
-    var title: String
-    var reason: String
-}
-
-/// Persisted snapshot of a career.
 private struct SaveData: Codable {
     var judgeName: String?
-    var integrity: Int
-    var approval: Int
-    var casesHeard: Int
-    var reversals: Int
-    var wrongfulConvictions: Int
-    var guiltyAcquitted: Int
+    var county: County?
+    var currentDate: Date
+    var docketSequence: Int
     var history: [CaseRecord]
+    var people: [PersonRecord]
+    var news: [NewsItem]
+    var pending: [PendingEvent]
     var currentCase: CourtCase?
     var recentTemplates: [String]
     var seedBase: UInt64
-    var careerEnd: CareerEnd?
 }
 
+/// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
 @MainActor
 final class GameState: ObservableObject {
-    static let reviewInterval = 8
-
     @Published var judgeName: String?
-    @Published var integrity = 70
-    @Published var approval = 55
-    @Published var casesHeard = 0
-    @Published var reversals = 0
-    @Published var wrongfulConvictions = 0
-    @Published var guiltyAcquitted = 0
+    @Published var county: County?
+    @Published var currentDate = Date()
     @Published var history: [CaseRecord] = []
+    @Published var people: [PersonRecord] = []
+    @Published var news: [NewsItem] = []
     @Published var currentCase: CourtCase?
-    @Published var careerEnd: CareerEnd?
-    @Published var lastReviewMessage: String?
 
+    private var pending: [PendingEvent] = []
+    private var docketSequence = 1_000
     private var recentTemplates: [String] = []
     private var seedBase: UInt64 = UInt64.random(in: 1...UInt64.max / 2)
-    private let saveKey = "JudgeSim.save.v1"
+    private let saveKey = "JudgeSim.nc.save.v1"
 
     init() {
         load()
     }
 
+    var casesHeard: Int { history.count }
+
     var title: String {
-        if casesHeard >= 40 && integrity >= 85 { return "State Supreme Court Nominee" }
-        switch casesHeard {
-        case 0..<5: return "Municipal Court Judge"
-        case 5..<12: return "District Court Judge"
-        case 12..<20: return "Superior Court Judge"
-        case 20..<30: return "Senior Superior Court Judge"
-        default: return "Presiding Judge"
-        }
+        casesHeard >= 40 ? "Senior Resident Superior Court Judge" : "Resident Superior Court Judge"
     }
 
-    var casesUntilReview: Int {
-        GameState.reviewInterval - (casesHeard % GameState.reviewInterval)
-    }
-
-    var reversalRate: Double {
-        let convictions = history.filter(\.convicted).count
-        return convictions == 0 ? 0 : Double(reversals) / Double(convictions)
-    }
-
-    // MARK: Actions
+    // MARK: Career
 
     func startCareer(name: String) {
         judgeName = name
+        county = County.generate(seed: seedBase)
+        currentDate = Date()
+        var rng = SeededRNG(seed: seedBase)
+        docketSequence = rng.int(1_200...4_800)
+        if let county {
+            news = [NewsItem(date: currentDate, kind: .community,
+                             headline: "\(name) sworn in as Resident Superior Court Judge",
+                             body: "In a ceremony at the \(county.courthouse), \(name) took the oath of office as a Resident Superior Court Judge for \(county.name). District Attorney \(county.districtAttorney), Chief Public Defender \(county.chiefPublicDefender), Sheriff \(county.sheriff), and Clerk of Superior Court \(county.clerk) attended.")]
+        }
         save()
     }
 
-    /// Returns the case on the docket, generating a new one if needed.
+    /// The case on today's calendar, generating one if needed.
     func docketCase() -> CourtCase {
         if let currentCase { return currentCase }
-        let seed = seedBase &+ UInt64(casesHeard + 1) &* 0x9E37_79B9_7F4A_7C15
-        let newCase = CaseGenerator.generate(seed: seed, avoiding: recentTemplates)
+        guard let county, let judgeName else { fatalError("Career not started") }
+
+        var rng = SeededRNG(seed: seedBase &+ UInt64(casesHeard + 1) &* 0x9E37_79B9_7F4A_7C15)
+        let returning = pickReturningDefendant(rng: &rng)
+        let context = CaseGenerator.Context(county: county, judgeName: judgeName, date: currentDate,
+                                            docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
+                                            returning: returning)
+        let seed = rng.next()
+        let newCase = CaseGenerator.generate(seed: seed, context: context)
         currentCase = newCase
+        docketSequence += rng.int(30...420)
         recentTemplates.append(newCase.templateKey)
         if recentTemplates.count > 8 { recentTemplates.removeFirst(recentTemplates.count - 8) }
+
+        if let returning {
+            let lead = returning.status == .probation ? "while on probation" : "again"
+            post(NewsItem(date: currentDate, kind: .arrest,
+                          headline: "\(returning.name) charged \(lead)",
+                          body: "\(returning.name), \(returning.age(on: currentDate)), who has previously appeared in Hollis County Superior Court, has been charged with \(newCase.charges.first?.law.title.lowercased() ?? "a new offense"). The case is set for trial before Judge \(lastName(judgeName)).",
+                          docket: newCase.docket))
+        }
         save()
         return newCase
     }
 
-    func complete(_ courtCase: CourtCase, outcome: CaseOutcome) {
-        casesHeard += 1
-        integrity = clamp(integrity + outcome.integrityDelta)
-        approval = clamp(approval + outcome.approvalDelta)
-        if outcome.appeal.isBad { reversals += 1 }
-        if outcome.convicted && !outcome.truthGuilty { wrongfulConvictions += 1 }
-        if !outcome.convicted && outcome.truthGuilty { guiltyAcquitted += 1 }
-
-        let verdictSummary = outcome.dismissed
-            ? "Dismissed"
-            : outcome.verdictLines.map { "Count \($0.count): \($0.verdictLabel)" }.joined(separator: " · ")
-        history.insert(CaseRecord(docket: courtCase.docket, caption: courtCase.caption, headline: courtCase.headline,
-                                  category: courtCase.category, verdictSummary: verdictSummary,
-                                  sentenceSummary: outcome.sentenceSummary, grade: outcome.grade,
-                                  appealLabel: outcome.appeal.label, convicted: outcome.convicted,
-                                  actuallyGuilty: outcome.truthGuilty, integrityDelta: outcome.integrityDelta,
-                                  approvalDelta: outcome.approvalDelta, date: Date()), at: 0)
-        currentCase = nil
-        lastReviewMessage = nil
-
-        if integrity <= 15 {
-            careerEnd = CareerEnd(title: "Removed from the Bench",
-                                  reason: "The Judicial Conduct Commission found a pattern of legal error and ethical lapses. Your commission has been revoked.")
-        } else if casesHeard % GameState.reviewInterval == 0 {
-            if approval < 30 {
-                careerEnd = CareerEnd(title: "Voted Out",
-                                      reason: "Your retention election wasn't close. With public approval at \(approval)%, voters chose not to retain you.")
-            } else {
-                lastReviewMessage = "Retention election: voters retained you with \(min(92, 40 + approval / 2))% of the vote."
-            }
+    private func pickReturningDefendant(rng: inout SeededRNG) -> PersonRecord? {
+        let recentCutoff = Calendar.current.date(byAdding: .day, value: -45, to: currentDate) ?? currentDate
+        let eligible = people.filter { person in
+            person.status != .incarcerated
+                && (person.appearances.last?.date ?? .distantPast) < recentCutoff
+                && person.age(on: currentDate) < 75
         }
+        let total = eligible.reduce(0) { $0 + $1.propensity }
+        guard total > 0, rng.chance(min(0.35, total * 0.12)) else { return nil }
+        var target = Double.random(in: 0..<total, using: &rng)
+        for person in eligible {
+            target -= person.propensity
+            if target <= 0 { return person }
+        }
+        return eligible.last
+    }
+
+    func complete(_ courtCase: CourtCase, outcome: CaseOutcome) {
+        let d = courtCase.defendant
+        let judgmentText = outcome.judgments.map { ([$0.title] + $0.lines).joined(separator: " · ") }
+            + [outcome.habitualNote, outcome.probationHearing].compactMap { $0 }
+
+        history.insert(CaseRecord(docket: courtCase.docket, caption: courtCase.caption, headline: courtCase.headline,
+                                  category: courtCase.category, date: currentDate, defendantID: d.personID,
+                                  outcome: outcome.appearanceSummary, judgments: judgmentText,
+                                  returningDefendant: d.isReturning,
+                                  appealStatus: outcome.appealNotice == nil ? nil : "Appeal pending"), at: 0)
+
+        // Update the person's record
+        let appearance = PersonRecord.Appearance(docket: courtCase.docket, date: currentDate,
+                                                 charges: courtCase.charges.map { $0.law.title }.joined(separator: ", "),
+                                                 outcome: outcome.appearanceSummary)
+        if let index = people.firstIndex(where: { $0.id == d.personID }) {
+            people[index].priors.append(contentsOf: outcome.newPriors)
+            people[index].status = outcome.personStatus
+            people[index].releaseDate = outcome.releaseDate
+            people[index].probation = outcome.newProbation
+            people[index].propensity = (people[index].propensity + outcome.propensity) / 2 + 0.05
+            people[index].appearances.append(appearance)
+        } else {
+            let birthYear = Calendar.current.component(.year, from: currentDate) - d.age
+            people.append(PersonRecord(id: d.personID, name: d.name, birthYear: birthYear, occupation: d.occupation,
+                                       background: d.background, priors: d.priors + outcome.newPriors,
+                                       status: outcome.personStatus, releaseDate: outcome.releaseDate,
+                                       probation: outcome.newProbation, propensity: outcome.propensity,
+                                       appearances: [appearance]))
+        }
+
+        var verdictNews = outcome.news
+        verdictNews.date = currentDate
+        post(verdictNews)
+        pending.append(contentsOf: outcome.pending)
+        currentCase = nil
+
+        advanceCalendar()
         save()
     }
 
     func resetCareer() {
         judgeName = nil
-        integrity = 70
-        approval = 55
-        casesHeard = 0
-        reversals = 0
-        wrongfulConvictions = 0
-        guiltyAcquitted = 0
+        county = nil
+        currentDate = Date()
         history = []
+        people = []
+        news = []
+        pending = []
         currentCase = nil
-        careerEnd = nil
-        lastReviewMessage = nil
         recentTemplates = []
         seedBase = UInt64.random(in: 1...UInt64.max / 2)
         save()
     }
 
-    private func clamp(_ value: Int) -> Int { min(100, max(0, value)) }
+    func person(_ id: UUID) -> PersonRecord? {
+        people.first { $0.id == id }
+    }
+
+    // MARK: Time
+
+    private func advanceCalendar() {
+        var rng = SeededRNG(seed: seedBase ^ UInt64(casesHeard &* 7919))
+        currentDate = Calendar.current.date(byAdding: .day, value: rng.int(7...24), to: currentDate) ?? currentDate
+
+        // Scheduled events
+        let due = pending.filter { $0.due <= currentDate }.sorted { $0.due < $1.due }
+        pending.removeAll { $0.due <= currentDate }
+        for event in due {
+            var item = event.news
+            item.date = event.due
+            post(item)
+            if let personID = event.personID, let index = people.firstIndex(where: { $0.id == personID }) {
+                switch event.effect {
+                case .releasePerson:
+                    people[index].status = .free
+                    people[index].releaseDate = nil
+                    people[index].probation = nil
+                case .raisePropensity:
+                    people[index].propensity = min(0.85, people[index].propensity + 0.15)
+                case .none:
+                    break
+                }
+            }
+            if event.news.kind == .appeal, let docket = event.news.docket,
+               let index = history.firstIndex(where: { $0.docket == docket }) {
+                history[index].appealStatus = event.appealReversed ? "New trial ordered on appeal" : "Affirmed on appeal"
+            }
+        }
+
+        // Sentences expire
+        for index in people.indices {
+            switch people[index].status {
+            case .incarcerated:
+                if let release = people[index].releaseDate, release <= currentDate {
+                    people[index].status = .free
+                    people[index].releaseDate = nil
+                }
+            case .probation:
+                if let probation = people[index].probation, probation.ends <= currentDate {
+                    people[index].status = .free
+                    people[index].probation = nil
+                }
+            case .free:
+                break
+            }
+        }
+    }
+
+    private func post(_ item: NewsItem) {
+        news.insert(item, at: 0)
+        if news.count > 150 { news.removeLast(news.count - 150) }
+    }
+
+    private func lastName(_ name: String) -> String {
+        name.components(separatedBy: " ").last ?? name
+    }
 
     // MARK: Persistence
 
     private func save() {
-        let data = SaveData(judgeName: judgeName, integrity: integrity, approval: approval, casesHeard: casesHeard,
-                            reversals: reversals, wrongfulConvictions: wrongfulConvictions, guiltyAcquitted: guiltyAcquitted,
-                            history: Array(history.prefix(100)), currentCase: currentCase, recentTemplates: recentTemplates,
-                            seedBase: seedBase, careerEnd: careerEnd)
+        let data = SaveData(judgeName: judgeName, county: county, currentDate: currentDate, docketSequence: docketSequence,
+                            history: Array(history.prefix(300)), people: people, news: news, pending: pending,
+                            currentCase: currentCase, recentTemplates: recentTemplates, seedBase: seedBase)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -171,16 +250,15 @@ final class GameState: ObservableObject {
         guard let raw = UserDefaults.standard.data(forKey: saveKey),
               let data = try? JSONDecoder().decode(SaveData.self, from: raw) else { return }
         judgeName = data.judgeName
-        integrity = data.integrity
-        approval = data.approval
-        casesHeard = data.casesHeard
-        reversals = data.reversals
-        wrongfulConvictions = data.wrongfulConvictions
-        guiltyAcquitted = data.guiltyAcquitted
+        county = data.county
+        currentDate = data.currentDate
+        docketSequence = data.docketSequence
         history = data.history
+        people = data.people
+        news = data.news
+        pending = data.pending
         currentCase = data.currentCase
         recentTemplates = data.recentTemplates
         seedBase = data.seedBase
-        careerEnd = data.careerEnd
     }
 }

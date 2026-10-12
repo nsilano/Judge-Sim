@@ -1,10 +1,8 @@
 import Foundation
 
 enum Side: String, Codable, Hashable {
-    case prosecution = "Prosecution"
+    case prosecution = "State"
     case defense = "Defense"
-
-    var opposite: Side { self == .prosecution ? .defense : .prosecution }
 }
 
 enum EvidenceKind: String, Codable, Hashable {
@@ -21,26 +19,33 @@ enum EvidenceKind: String, Codable, Hashable {
         }
     }
 
+    var label: String { rawValue.capitalized }
+}
+
+enum CourtKind: String, Codable, Hashable {
+    case felony
+    case misdemeanorAppeal
+
     var label: String {
         switch self {
-        case .physical: return "Physical"
-        case .forensic: return "Forensic"
-        case .digital: return "Digital"
-        case .document: return "Document"
-        case .statement: return "Statement"
-        case .video: return "Video"
+        case .felony: return "Felony bench trial"
+        case .misdemeanorAppeal: return "Misdemeanor appeal (trial de novo)"
         }
     }
 }
 
 struct Defendant: Codable, Hashable {
+    var personID: UUID
     var name: String
     var age: Int
     var occupation: String
     var background: String
-    var priorRecord: [String]
+    var priors: [PriorConviction]
+    var probation: ProbationTerm?
+    var history: [PersonRecord.Appearance]
 
     var lastName: String { name.components(separatedBy: " ").last ?? name }
+    var isReturning: Bool { !history.isEmpty }
 }
 
 struct Evidence: Identifiable, Codable, Hashable {
@@ -50,7 +55,7 @@ struct Evidence: Identifiable, Codable, Hashable {
     var detail: String
     var side: Side
     var kind: EvidenceKind
-    /// How strongly this item proves guilt (prosecution) or creates doubt (defense). Hidden from the player.
+    /// How strongly this item points toward (State) or away from (defense) guilt. Never shown.
     var weight: Int
 }
 
@@ -61,7 +66,6 @@ struct Witness: Identifiable, Codable, Hashable {
     var calledBy: Side
     var direct: [String]
     var cross: [String]
-    /// Contribution toward (prosecution) or against (defense) guilt, after impeachment. Hidden.
     var weight: Int
 }
 
@@ -72,10 +76,10 @@ struct Objection: Identifiable, Codable, Hashable {
     var answer: String
     var raisedBy: Side
     var grounds: String
+    /// How an appellate court would view the ruling. Never shown during play.
     var shouldSustain: Bool
-    var explanation: String
+    var appellateNote: String
     var doctrineID: String
-    /// Effect on the case's strength if this testimony stays in. Positive helps the prosecution.
     var weightIfAdmitted: Int
 }
 
@@ -86,9 +90,9 @@ enum MotionKind: String, Codable, Hashable {
 
     var title: String {
         switch self {
-        case .suppressSearch: return "Motion to Suppress Physical Evidence"
+        case .suppressSearch: return "Motion to Suppress Evidence"
         case .suppressStatement: return "Motion to Suppress Statement"
-        case .dismissSpeedyTrial: return "Motion to Dismiss: Speedy Trial Violation"
+        case .dismissSpeedyTrial: return "Motion to Dismiss: Speedy Trial"
         }
     }
 }
@@ -100,8 +104,9 @@ struct Motion: Identifiable, Codable, Hashable {
     var defenseArgument: String
     var prosecutionResponse: String
     var targetEvidenceID: UUID?
+    /// How an appellate court would view the ruling. Never shown during play.
     var shouldGrant: Bool
-    var explanation: String
+    var appellateNote: String
     var doctrineIDs: [String]
 }
 
@@ -111,9 +116,7 @@ struct Charge: Identifiable, Codable, Hashable {
     var lawID: String
     var lesserLawID: String?
     var specification: String
-    /// Strength needed to prove this charge beyond a reasonable doubt.
     var threshold: Int
-    /// Strength needed for the lesser included offense.
     var lesserThreshold: Int
 
     var law: Law { LawLibrary.law(lawID) }
@@ -124,9 +127,8 @@ struct EthicsOption: Identifiable, Codable, Hashable {
     var id = UUID()
     var label: String
     var result: String
-    var integrity: Int
-    var approval: Int
-    var isProper: Bool
+    /// Optional story the local paper runs later.
+    var laterHeadline: String?
 }
 
 struct EthicsEvent: Codable, Hashable {
@@ -141,10 +143,10 @@ enum PublicMood: String, Codable, Hashable {
 
     var label: String {
         switch self {
-        case .wantsConviction: return "Public wants a conviction"
-        case .sympathetic: return "Public sympathizes with the defendant"
-        case .divided: return "Public opinion is divided"
-        case .indifferent: return "Little public interest"
+        case .wantsConviction: return "Community wants accountability"
+        case .sympathetic: return "Community sympathizes with the defendant"
+        case .divided: return "Community is divided"
+        case .indifferent: return "Little public attention"
         }
     }
 
@@ -158,6 +160,7 @@ enum PublicMood: String, Codable, Hashable {
     }
 }
 
+/// What actually happened. The player never sees this directly; it may surface later in the news.
 struct HiddenTruth: Codable, Hashable {
     var actuallyGuilty: Bool
     var revelation: String
@@ -168,15 +171,20 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var seed: UInt64
     var templateKey: String
     var docket: String
+    var court: CourtKind
+    var sessionDate: Date
     var headline: String
     var category: LawCategory
     var summary: String
     var defendant: Defendant
     var victimName: String?
     var charges: [Charge]
+    var habitualIndicted: Bool
+    var proceduralNotes: [String]
     var motions: [Motion]
     var prosecutor: String
     var defenseAttorney: String
+    var investigatingAgency: String
     var prosecutionOpening: String
     var defenseOpening: String
     var prosecutionClosing: String
@@ -191,12 +199,11 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var twist: String?
     var ethics: EthicsEvent?
     var mood: PublicMood
-    /// 1 = local paper, 2 = regional news, 3 = national story.
     var mediaAttention: Int
     var truth: HiddenTruth
     var relatedDoctrines: [String]
 
-    var caption: String { "State of Westbrook v. \(defendant.name)" }
+    var caption: String { "State of North Carolina v. \(defendant.name)" }
 
     func evidence(_ id: UUID?) -> Evidence? {
         guard let id else { return nil }
@@ -207,13 +214,14 @@ struct CourtCase: Identifiable, Codable, Hashable {
         objections.filter { $0.witnessID == witness.id }
     }
 
-    /// Every law the player might want to look up for this case.
     var relevantLawIDs: [String] {
         var ids: [String] = []
         for charge in charges {
             ids.append(charge.lawID)
             if let lesser = charge.lesserLawID { ids.append(lesser) }
         }
+        if habitualIndicted { ids.append("habitualFelon") }
+        if defendant.probation != nil { ids.append("probationViolation") }
         ids.append(contentsOf: motions.flatMap(\.doctrineIDs))
         ids.append(contentsOf: objections.map(\.doctrineID))
         ids.append(contentsOf: relatedDoctrines)

@@ -1,10 +1,10 @@
 import Foundation
 import SwiftUI
 
-/// Tracks the player's progress and rulings through a single case.
+/// Tracks the judge's rulings through a single case.
 final class CaseSession: ObservableObject {
     enum Stage: Int, CaseIterable, Identifiable {
-        case briefing, motions, trial, verdict, sentencing, outcome
+        case briefing, motions, trial, verdict, sentencing, probation, judgment
 
         var id: Int { rawValue }
 
@@ -15,7 +15,8 @@ final class CaseSession: ObservableObject {
             case .trial: return "Trial"
             case .verdict: return "Verdict"
             case .sentencing: return "Sentencing"
-            case .outcome: return "Judgment"
+            case .probation: return "Probation Violation"
+            case .judgment: return "Judgment"
             }
         }
 
@@ -26,22 +27,33 @@ final class CaseSession: ObservableObject {
             case .trial: return "person.3.fill"
             case .verdict: return "checkmark.seal.fill"
             case .sentencing: return "scalemass.fill"
-            case .outcome: return "building.columns.fill"
+            case .probation: return "person.badge.clock.fill"
+            case .judgment: return "building.columns.fill"
             }
         }
     }
 
     let courtCase: CourtCase
+    let judgeName: String
+    let county: County
     @Published var stage: Stage = .briefing
     @Published var rulings = Rulings()
     @Published private(set) var outcome: CaseOutcome?
 
-    init(courtCase: CourtCase) {
+    init(courtCase: CourtCase, judgeName: String, county: County) {
         self.courtCase = courtCase
+        self.judgeName = judgeName
+        self.county = county
     }
 
     var visibleStages: [Stage] {
-        Stage.allCases.filter { $0 != .motions || !courtCase.motions.isEmpty }
+        Stage.allCases.filter { stage in
+            switch stage {
+            case .motions: return !courtCase.motions.isEmpty
+            case .probation: return courtCase.defendant.probation != nil
+            default: return true
+            }
+        }
     }
 
     // MARK: Bindings
@@ -61,9 +73,35 @@ final class CaseSession: ObservableObject {
                 set: { self.rulings.verdicts[charge.id] = $0 })
     }
 
-    func sentenceBinding(_ charge: Charge, range: SentenceRange) -> Binding<Double> {
-        Binding(get: { Double(self.rulings.sentences[charge.id] ?? range.typicalMonths) },
-                set: { self.rulings.sentences[charge.id] = Int($0.rounded()) })
+    func factorBinding(_ factor: String, aggravating: Bool) -> Binding<Bool> {
+        Binding(get: {
+            aggravating ? self.rulings.foundAggravating.contains(factor) : self.rulings.foundMitigating.contains(factor)
+        }, set: { found in
+            if aggravating {
+                if found { self.rulings.foundAggravating.insert(factor) } else { self.rulings.foundAggravating.remove(factor) }
+            } else {
+                if found { self.rulings.foundMitigating.insert(factor) } else { self.rulings.foundMitigating.remove(factor) }
+            }
+        })
+    }
+
+    func choice(for unit: SentencingUnit) -> SentenceChoice {
+        rulings.sentences[unit.id] ?? Judgment.defaultChoice(for: unit)
+    }
+
+    func choiceBinding(for unit: SentencingUnit) -> Binding<SentenceChoice> {
+        Binding(get: { self.choice(for: unit) },
+                set: { self.rulings.sentences[unit.id] = $0 })
+    }
+
+    func setHabitual(_ found: Bool) {
+        rulings.habitualFound = found
+        rulings.sentences = [:]
+    }
+
+    func setMode(_ mode: JudgmentMode) {
+        rulings.mode = mode
+        rulings.sentences = [:]
     }
 
     // MARK: State
@@ -92,36 +130,36 @@ final class CaseSession: ObservableObject {
         courtCase.motions.contains { $0.kind == .dismissSpeedyTrial && (rulings.motions[$0.id] ?? false) }
     }
 
+    var anyConviction: Bool {
+        courtCase.charges.contains { (rulings.verdicts[$0.id] ?? .notGuilty) != .notGuilty }
+    }
+
+    var needsHabitualDecision: Bool {
+        courtCase.habitualIndicted && Judgment.anyFelonyConviction(courtCase, rulings)
+    }
+
+    var units: [SentencingUnit] { Judgment.units(courtCase, rulings) }
+
+    var priorRecord: PriorRecord { Judgment.priorRecord(courtCase, rulings) }
+
     func isSuppressed(_ evidence: Evidence) -> Bool {
         rulings.excludedEvidence(in: courtCase).contains(evidence.id)
     }
 
-    /// Each convicted count with the law it was convicted under.
-    var convictions: [(charge: Charge, law: Law)] {
-        courtCase.charges.compactMap { charge -> (charge: Charge, law: Law)? in
-            guard let verdict = rulings.verdicts[charge.id],
-                  let law = Scoring.convictedLaw(charge, verdict),
-                  law.sentence != nil else { return nil }
-            return (charge, law)
+    func allowedRanges(for unit: SentencingUnit) -> [SentenceRangeKind] {
+        var ranges: [SentenceRangeKind] = [.presumptive]
+        if !rulings.foundMitigating.isEmpty { ranges.insert(.mitigated, at: 0) }
+        if !rulings.foundAggravating.isEmpty { ranges.append(.aggravated) }
+        return ranges
+    }
+
+    var sentencingComplete: Bool {
+        if needsHabitualDecision && rulings.habitualFound == nil { return false }
+        return units.allSatisfy { unit in
+            let selected = self.choice(for: unit)
+            guard Judgment.isComplete(selected) else { return false }
+            return !unit.isFelony || unit.isMandatoryLife || allowedRanges(for: unit).contains(selected.range)
         }
-    }
-
-    var probationAvailable: Bool {
-        let ranges = convictions.compactMap { $0.law.sentence }
-        return !ranges.isEmpty && ranges.allSatisfy { $0.probationEligible && !$0.mandatoryMinimum && $0.minMonths == 0 }
-    }
-
-    var maxFine: Int {
-        convictions.compactMap { $0.law.sentence?.maxFine }.max() ?? 0
-    }
-
-    var totalSentence: Int {
-        if rulings.probation { return 0 }
-        let terms = convictions.map { item -> Int in
-            let range = item.law.sentence!
-            return rulings.sentences[item.charge.id] ?? range.typicalMonths
-        }
-        return Scoring.combine(terms, consecutive: rulings.consecutive)
     }
 
     // MARK: Flow
@@ -140,25 +178,28 @@ final class CaseSession: ObservableObject {
             case .trial:
                 stage = .verdict
             case .verdict:
-                if convictions.isEmpty {
-                    finish()
-                } else {
-                    for item in convictions where rulings.sentences[item.charge.id] == nil {
-                        rulings.sentences[item.charge.id] = item.law.sentence?.typicalMonths ?? 0
-                    }
+                if anyConviction {
                     stage = .sentencing
+                } else if courtCase.defendant.probation != nil {
+                    stage = .probation
+                } else {
+                    finish()
                 }
             case .sentencing:
+                for unit in units where rulings.sentences[unit.id] == nil {
+                    rulings.sentences[unit.id] = Judgment.defaultChoice(for: unit)
+                }
+                if courtCase.defendant.probation != nil { stage = .probation } else { finish() }
+            case .probation:
                 finish()
-            case .outcome:
+            case .judgment:
                 break
             }
         }
     }
 
     private func finish() {
-        if !probationAvailable { rulings.probation = false }
-        outcome = Scoring.evaluate(courtCase, rulings)
-        stage = .outcome
+        outcome = Judgment.evaluate(courtCase, rulings, judgeName: judgeName, county: county, date: courtCase.sessionDate)
+        stage = .judgment
     }
 }

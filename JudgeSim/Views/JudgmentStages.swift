@@ -10,8 +10,8 @@ struct VerdictStage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 10) {
-                Label("Your duty as fact-finder", systemImage: "scalemass.fill").font(.headline)
-                Text("Decide each count using only admissible evidence. Ignore anything you suppressed or struck. If the State hasn't proven every element beyond a reasonable doubt, you must acquit, even if you suspect guilt.")
+                Label("Deliberation", systemImage: "scalemass.fill").font(.headline)
+                Text("As fact-finder, consider only the evidence admitted at trial. Disregard anything suppressed or stricken. The State must prove each element beyond a reasonable doubt.")
                     .font(.callout)
                 HStack {
                     LawLink(lawID: "burdenOfProof")
@@ -22,12 +22,12 @@ struct VerdictStage: View {
             }
             .card(tint: Theme.gold)
 
-            SectionTitle(text: "Evidence you admitted", icon: "tray.full.fill")
+            SectionTitle(text: "The record", icon: "tray.full.fill")
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(c.evidence.filter { !session.isSuppressed($0) }) { item in
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Circle().fill(Theme.color(for: item.side)).frame(width: 8, height: 8)
-                        Text(item.title).font(.callout)
+                        Text("\(item.exhibit): \(item.title)").font(.callout)
                     }
                 }
                 ForEach(c.witnesses) { witness in
@@ -39,21 +39,21 @@ struct VerdictStage: View {
             }
             .card()
 
-            SectionTitle(text: "Your verdict", icon: "checkmark.seal.fill")
+            SectionTitle(text: "Verdict", icon: "checkmark.seal.fill")
             ForEach(c.charges) { charge in
                 VerdictCard(charge: charge, selection: session.verdictBinding(charge))
             }
 
-            PrimaryButton(title: "Deliver the Verdict", icon: "hammer.fill", enabled: session.verdictsComplete) {
+            PrimaryButton(title: "Announce Verdict", icon: "hammer.fill", enabled: session.verdictsComplete) {
                 confirm = true
             }
         }
-        .confirmationDialog("A verdict is final. Are you ready?", isPresented: $confirm, titleVisibility: .visible) {
-            Button("Deliver the verdict") {
+        .confirmationDialog("Announce the verdict in open court?", isPresented: $confirm, titleVisibility: .visible) {
+            Button("Announce") {
                 Haptics.gavel()
                 session.advance()
             }
-            Button("Keep deliberating", role: .cancel) {}
+            Button("Continue deliberating", role: .cancel) {}
         }
     }
 }
@@ -66,16 +66,16 @@ struct VerdictCard: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Count \(charge.count): \(charge.law.title)").font(.headline)
             Text(charge.specification).font(.callout).foregroundStyle(.secondary)
-            option(.guilty, "Guilty", "As charged", Theme.bad)
+            option(.guilty, "Guilty", charge.law.ncClass?.label ?? "As charged")
             if let lesser = charge.lesserLaw {
-                option(.lesser, "Guilty of \(lesser.title)", "Lesser included offense", .orange)
+                option(.lesser, "Guilty of \(lesser.title)", "Lesser-included offense · \(lesser.ncClass?.label ?? "")")
             }
-            option(.notGuilty, "Not Guilty", "The State did not prove its case", Theme.good)
+            option(.notGuilty, "Not Guilty", "")
         }
         .card(tint: selection == nil ? nil : Theme.gold)
     }
 
-    private func option(_ verdict: Verdict, _ title: String, _ subtitle: String, _ color: Color) -> some View {
+    private func option(_ verdict: Verdict, _ title: String, _ subtitle: String) -> some View {
         let isSelected = selection == verdict
         return Button {
             Haptics.tap()
@@ -83,15 +83,17 @@ struct VerdictCard: View {
         } label: {
             HStack {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                    .foregroundStyle(isSelected ? color : .secondary)
+                    .foregroundStyle(isSelected ? Theme.gold : .secondary)
                 VStack(alignment: .leading) {
                     Text(title).font(.subheadline.weight(.bold))
-                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                    if !subtitle.isEmpty {
+                        Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
             }
             .padding(10)
-            .background(RoundedRectangle(cornerRadius: 10).fill(isSelected ? color.opacity(0.12) : Color(.tertiarySystemFill)))
+            .background(RoundedRectangle(cornerRadius: 10).fill(isSelected ? Theme.gold.opacity(0.15) : Color(.tertiarySystemFill)))
         }
         .buttonStyle(.plain)
     }
@@ -104,90 +106,121 @@ struct SentencingStage: View {
     private var c: CourtCase { session.courtCase }
 
     var body: some View {
+        let record = session.priorRecord
+        let units = session.units
         VStack(alignment: .leading, spacing: 16) {
-            Text("You found \(c.defendant.name) guilty. Now you must decide the sentence. It should be sufficient, but not greater than necessary.")
+            Text("The court proceeds to sentencing under the Structured Sentencing Act.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
-            LawLink(lawID: "sentencingFactors")
 
             if let impact = c.victimImpact {
-                SectionTitle(text: "Victim impact statement", icon: "heart.text.square.fill")
+                SectionTitle(text: "Victim impact", icon: "heart.text.square.fill")
                 Text(impact)
                     .font(.system(.callout, design: .serif)).italic()
                     .card(tint: Theme.prosecution)
             }
 
-            SectionTitle(text: "The defendant addresses the court", icon: "person.wave.2.fill")
+            SectionTitle(text: "Allocution", icon: "person.wave.2.fill")
             Text(c.allocution)
                 .font(.system(.callout, design: .serif)).italic()
                 .card(tint: Theme.defense)
 
-            SectionTitle(text: "Factors", icon: "list.bullet.clipboard.fill")
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Aggravating").font(.caption.weight(.bold)).foregroundStyle(Theme.bad)
-                BulletList(items: c.aggravating, symbol: "plus.circle.fill", color: Theme.bad)
-                Text("Mitigating").font(.caption.weight(.bold)).foregroundStyle(Theme.good)
-                BulletList(items: c.mitigating, symbol: "minus.circle.fill", color: Theme.good)
-                Text("Prior record").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-                Text(c.defendant.priorRecord.isEmpty ? "None" : "\(c.defendant.priorRecord.count) prior conviction\(c.defendant.priorRecord.count == 1 ? "" : "s")")
-                    .font(.callout)
+            if session.needsHabitualDecision {
+                SectionTitle(text: "Habitual felon status", icon: "exclamationmark.triangle.fill")
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("The State offers certified judgments of these prior felony convictions:")
+                        .font(.callout)
+                    ForEach(record.priorFelonies) { prior in
+                        PriorRow(prior: prior)
+                    }
+                    LawLink(lawID: "habitualFelon")
+                    RulingPicker(first: "Status proven", second: "Not proven",
+                                 selection: Binding(get: { session.rulings.habitualFound },
+                                                    set: { if let value = $0 { session.setHabitual(value) } }))
+                }
+                .card(tint: .orange)
+            }
+
+            SectionTitle(text: "Prior record", icon: "list.number")
+            VStack(alignment: .leading, spacing: 8) {
+                if record.lines.isEmpty {
+                    Text("No prior convictions.").font(.callout).foregroundStyle(.secondary)
+                }
+                ForEach(Array(record.lines.enumerated()), id: \.offset) { _, line in
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(line.text).font(.caption)
+                        Spacer()
+                        Text("\(line.points)").font(.caption.monospacedDigit().weight(.bold))
+                    }
+                }
+                Divider()
+                HStack {
+                    Text("Felony prior record level").font(.subheadline.weight(.semibold))
+                    Spacer()
+                    Text("\(record.points) pts · Level \(SentenceFormat.romanLevels[record.felonyLevel - 1])")
+                        .font(.subheadline.monospacedDigit())
+                }
+                HStack {
+                    Text("Misdemeanor prior conviction level").font(.subheadline.weight(.semibold))
+                    Spacer()
+                    Text("Level \(SentenceFormat.romanLevels[record.misdemeanorLevel - 1])")
+                        .font(.subheadline.monospacedDigit())
+                }
+                LawLink(lawID: "priorRecord")
             }
             .card()
 
-            SectionTitle(text: "Sentence", icon: "scalemass.fill")
-            ForEach(session.convictions, id: \.charge.id) { item in
-                if let range = item.law.sentence {
-                    SentenceSlider(title: "Count \(item.charge.count): \(item.law.title)",
-                                   law: item.law,
-                                   range: range,
-                                   value: session.sentenceBinding(item.charge, range: range),
-                                   disabled: session.rulings.probation)
+            SectionTitle(text: "Findings of factors", icon: "list.bullet.clipboard.fill")
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Aggravating factors offered by the State").font(.caption.weight(.bold)).foregroundStyle(Theme.prosecution)
+                ForEach(c.aggravating, id: \.self) { factor in
+                    Toggle(factor, isOn: session.factorBinding(factor, aggravating: true)).font(.callout)
                 }
+                Divider()
+                Text("Mitigating factors offered by the defense").font(.caption.weight(.bold)).foregroundStyle(Theme.defense)
+                ForEach(c.mitigating, id: \.self) { factor in
+                    Toggle(factor, isOn: session.factorBinding(factor, aggravating: false)).font(.callout)
+                }
+                Text("Finding an aggravating factor permits the aggravated range; finding a mitigating factor permits the mitigated range. Whether to depart is your decision.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                LawLink(lawID: "aggravatingFactors")
+            }
+            .card()
+
+            if convictionCount > 1 {
+                SectionTitle(text: "Multiple convictions", icon: "square.stack.3d.up.fill")
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(JudgmentMode.allCases, id: \.self) { mode in
+                        ChoiceRow(title: mode.label, selected: session.rulings.mode == mode) {
+                            session.setMode(mode)
+                        }
+                    }
+                    LawLink(lawID: "consolidation")
+                }
+                .card()
             }
 
-            VStack(alignment: .leading, spacing: 14) {
-                if session.probationAvailable {
-                    Toggle(isOn: $session.rulings.probation) {
-                        VStack(alignment: .leading) {
-                            Text("Suspend prison: probation").font(.subheadline.weight(.semibold))
-                            Text("Supervised release with conditions").font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                } else {
-                    Label("Probation isn't available for this conviction.", systemImage: "lock.fill")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            if !(session.needsHabitualDecision && session.rulings.habitualFound == nil) {
+                SectionTitle(text: units.count == 1 ? "Judgment" : "Judgments", icon: "doc.text.fill")
+                ForEach(units) { unit in
+                    UnitSentenceCard(unit: unit,
+                                     allowedRanges: session.allowedRanges(for: unit),
+                                     choice: session.choiceBinding(for: unit))
                 }
-                if session.convictions.count > 1 {
-                    Toggle(isOn: $session.rulings.consecutive) {
-                        VStack(alignment: .leading) {
-                            Text("Run sentences consecutively").font(.subheadline.weight(.semibold))
-                            Text(session.rulings.consecutive ? "Terms are served back-to-back" : "Terms are served at the same time")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                if session.maxFine > 0 {
-                    Stepper(value: $session.rulings.fine, in: 0...session.maxFine, step: fineStep) {
+
+                VStack(alignment: .leading) {
+                    Stepper(value: $session.rulings.fine, in: 0...maxFine, step: fineStep) {
                         VStack(alignment: .leading) {
                             Text("Fine: \(SentenceFormat.dollars(session.rulings.fine))").font(.subheadline.weight(.semibold))
-                            Text("Up to \(SentenceFormat.dollars(session.maxFine))").font(.caption).foregroundStyle(.secondary)
+                            Text("Plus court costs").font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 }
+                .card()
             }
-            .card()
 
-            HStack {
-                Text("Total sentence").font(.headline)
-                Spacer()
-                Text(session.rulings.probation ? "Probation" : SentenceFormat.months(session.totalSentence))
-                    .font(.system(.title3, design: .rounded).weight(.bold))
-                    .foregroundStyle(Theme.gold)
-            }
-            .card(tint: Theme.gold)
-
-            PrimaryButton(title: "Impose Sentence", icon: "hammer.fill") {
+            PrimaryButton(title: "Enter Judgment", icon: "hammer.fill", enabled: session.sentencingComplete) {
                 Haptics.gavel()
                 session.advance()
             }
@@ -195,200 +228,283 @@ struct SentencingStage: View {
         .tint(Theme.gold)
     }
 
+    private var convictionCount: Int {
+        c.charges.filter { (session.rulings.verdicts[$0.id] ?? .notGuilty) != .notGuilty }.count
+    }
+
+    private var maxFine: Int {
+        let units = session.units
+        if units.contains(where: { $0.isFelony }) { return 50_000 }
+        let caps = units.map { $0.sentencingClass.maxFine ?? 10_000 }
+        return caps.max() ?? 1_000
+    }
+
     private var fineStep: Int {
-        let raw = session.maxFine / 20
-        return max(100, (raw / 100) * 100)
+        maxFine <= 1_000 ? 50 : (maxFine <= 10_000 ? 250 : 1_000)
     }
 }
 
-struct SentenceSlider: View {
+struct ChoiceRow: View {
     let title: String
-    let law: Law
-    let range: SentenceRange
-    @Binding var value: Double
-    let disabled: Bool
-
-    private var step: Double {
-        let span = range.maxMonths - range.minMonths
-        if span <= 24 { return 1 }
-        if span <= 120 { return 3 }
-        return 6
-    }
+    var subtitle: String? = nil
+    let selected: Bool
+    var enabled = true
+    let action: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text(title).font(.subheadline.weight(.semibold))
-                Spacer()
-                LawLink(lawID: law.id)
-            }
-            Text(disabled ? "Suspended" : SentenceFormat.months(Int(value)))
-                .font(.system(.title, design: .rounded).weight(.bold))
-                .foregroundStyle(disabled ? Color.secondary : Color.primary)
-            Slider(value: $value,
-                   in: Double(range.minMonths)...Double(range.maxMonths),
-                   step: step) {
-                Text("Months")
-            } minimumValueLabel: {
-                Text(SentenceFormat.months(range.minMonths)).font(.caption2)
-            } maximumValueLabel: {
-                Text(SentenceFormat.months(range.maxMonths)).font(.caption2)
-            }
-            .disabled(disabled)
-            HStack {
-                Text("Typical: \(SentenceFormat.months(range.typicalMonths))")
-                if range.mandatoryMinimum {
-                    Text("· Mandatory minimum").foregroundStyle(Theme.bad)
+        Button {
+            Haptics.tap()
+            withAnimation(.snappy) { action() }
+        } label: {
+            HStack(alignment: .top) {
+                Image(systemName: selected ? "largecircle.fill.circle" : "circle")
+                    .foregroundStyle(selected ? Theme.gold : .secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(.subheadline.weight(.semibold)).multilineTextAlignment(.leading)
+                    if let subtitle {
+                        Text(subtitle).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.leading)
+                    }
                 }
+                Spacer()
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 10).fill(selected ? Theme.gold.opacity(0.15) : Color(.tertiarySystemFill)))
+            .opacity(enabled ? 1 : 0.4)
         }
-        .card()
+        .buttonStyle(.plain)
+        .disabled(!enabled)
     }
 }
 
-// MARK: - Outcome
+struct UnitSentenceCard: View {
+    let unit: SentencingUnit
+    let allowedRanges: [SentenceRangeKind]
+    @Binding var choice: SentenceChoice
 
-struct OutcomeStage: View {
-    let courtCase: CourtCase
-    let outcome: CaseOutcome
-    let onFinish: () -> Void
-    @State private var revealed = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(unit.title).font(.headline)
+            Text(unit.classLine).font(.caption).foregroundStyle(.secondary)
+
+            if unit.isMandatoryLife {
+                Label("Class A felony: life imprisonment without parole is mandatory for a defendant who was 18 or older.",
+                      systemImage: "lock.fill")
+                    .font(.callout)
+            } else if let cell = unit.felonyCell {
+                felony(cell)
+            } else if let cell = unit.misdemeanorCell {
+                misdemeanor(cell)
+            }
+        }
+        .card(tint: Judgment.isComplete(choice) ? Theme.gold : nil)
+    }
+
+    @ViewBuilder
+    private func felony(_ cell: FelonyCell) -> some View {
+        Text("Minimum sentence range").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+        ForEach(SentenceRangeKind.allCases, id: \.self) { kind in
+            let range = cell.range(kind)
+            ChoiceRow(title: kind.label,
+                      subtitle: range?.text ?? "Life imprisonment without parole",
+                      selected: choice.range == kind,
+                      enabled: allowedRanges.contains(kind)) {
+                choice.range = kind
+                if let range {
+                    choice.lifeWithoutParole = false
+                    choice.minimum = min(max(choice.minimum, range.low), range.high)
+                } else {
+                    choice.lifeWithoutParole = true
+                    choice.disposition = .active
+                }
+            }
+        }
+
+        if !choice.lifeWithoutParole, let range = cell.range(choice.range) {
+            Stepper(value: $choice.minimum, in: range.low...range.high) {
+                VStack(alignment: .leading) {
+                    Text("Minimum \(choice.minimum) months").font(.title3.weight(.bold))
+                    Text("Maximum \(StructuredSentencing.maximum(forMinimum: choice.minimum, cls: unit.sentencingClass)) months · \(SentenceFormat.months(choice.minimum)) to \(SentenceFormat.months(StructuredSentencing.maximum(forMinimum: choice.minimum, cls: unit.sentencingClass)))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            dispositionPicker(cell.dispositions, felony: true)
+        }
+    }
+
+    @ViewBuilder
+    private func misdemeanor(_ cell: MisdemeanorCell) -> some View {
+        Stepper(value: $choice.minimum, in: 1...cell.maxDays) {
+            VStack(alignment: .leading) {
+                Text("\(choice.minimum) days").font(.title3.weight(.bold))
+                Text("Authorized: 1–\(cell.maxDays) days").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        dispositionPicker(cell.dispositions, felony: false)
+    }
+
+    @ViewBuilder
+    private func dispositionPicker(_ allowed: [Disposition], felony: Bool) -> some View {
+        Text("Disposition (allowed: \(allowed.map(\.rawValue).joined(separator: "/")))")
+            .font(.caption.weight(.bold))
+            .foregroundStyle(.secondary)
+        ForEach(allowed, id: \.self) { disposition in
+            ChoiceRow(title: disposition.label, subtitle: disposition.detail, selected: choice.disposition == disposition) {
+                choice.disposition = disposition
+                let months = StructuredSentencing.probationMonths(felony: felony, disposition: disposition)
+                choice.probationMonths = min(max(choice.probationMonths, months.lowerBound), months.upperBound)
+            }
+        }
+        if let disposition = choice.disposition, disposition != .active {
+            let months = StructuredSentencing.probationMonths(felony: felony, disposition: disposition)
+            Stepper(value: $choice.probationMonths, in: months) {
+                Text("Probation: \(choice.probationMonths) months").font(.subheadline.weight(.semibold))
+            }
+        }
+    }
+}
+
+// MARK: - Probation violation
+
+struct ProbationStage: View {
+    @ObservedObject var session: CaseSession
+    private var c: CourtCase { session.courtCase }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .center, spacing: 16) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(courtCase.caption).font(.caption).foregroundStyle(.secondary)
-                    Text(outcome.headline)
-                        .font(.system(.largeTitle, design: .serif).weight(.bold))
+            if let probation = c.defendant.probation {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Probation violation hearing").font(.headline)
+                    Text("\(probation.docket): \(probation.offense)").font(.subheadline.weight(.semibold))
+                    Text("Suspended sentence: \(probation.suspendedSentence). Probation set to end \(SentenceFormat.shortDate(probation.ends)).")
+                        .font(.callout)
+                    if probation.imposedInThisCourt {
+                        Text("You imposed this sentence.").font(.caption).foregroundStyle(.purple)
+                    }
+                    Divider()
+                    Text("Alleged violation: commission of a new criminal offense (\(c.docket)).").font(.callout)
+                    Text(session.anyConviction
+                         ? "You have just found the probationer guilty in the new case."
+                         : "You have just acquitted the probationer in the new case. A violation still may be found if you are reasonably satisfied, in your discretion, that the new offense occurred.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    LawLink(lawID: "probationViolation")
                 }
-                Spacer()
-                VStack(spacing: 0) {
-                    Text(outcome.grade)
-                        .font(.system(size: 40, weight: .black, design: .serif))
-                    Text("\(outcome.score)%").font(.caption.monospacedDigit())
+                .card(tint: .orange)
+
+                ForEach(ProbationDecision.allCases, id: \.self) { decision in
+                    ChoiceRow(title: decision.label,
+                              subtitle: decision == .revoke ? "Activates \(probation.suspendedSentence)" : nil,
+                              selected: session.rulings.probationDecision == decision) {
+                        session.rulings.probationDecision = decision
+                    }
                 }
-                .frame(width: 80, height: 80)
-                .background(Circle().fill(gradeColor.opacity(0.18)))
-                .foregroundStyle(gradeColor)
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                Label(outcome.appeal.label, systemImage: outcome.appeal.isBad ? "arrow.uturn.backward.circle.fill" : "checkmark.shield.fill")
-                    .font(.headline)
-                    .foregroundStyle(outcome.appeal.isBad ? Theme.bad : Theme.good)
-                Text(outcome.appeal.detail).font(.callout)
+            PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.probationDecision != nil) {
+                Haptics.gavel()
+                session.advance()
             }
-            .card(tint: outcome.appeal.isBad ? Theme.bad : Theme.good)
+        }
+    }
+}
+
+// MARK: - Judgment
+
+struct JudgmentStage: View {
+    let courtCase: CourtCase
+    let outcome: CaseOutcome
+    let onFinish: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(courtCase.caption).font(.caption).foregroundStyle(.secondary)
+                Text(outcome.dismissed ? "Order of Dismissal" : "Judgment Entered")
+                    .font(.system(.largeTitle, design: .serif).weight(.bold))
+                Text("\(courtCase.docket) · \(SentenceFormat.date(courtCase.sessionDate))")
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+            }
 
             if !outcome.verdictLines.isEmpty {
-                SectionTitle(text: "Verdict review", icon: "checkmark.seal.fill")
-                ForEach(outcome.verdictLines) { line in
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("Count \(line.count): \(line.chargeTitle)").font(.subheadline.weight(.semibold))
+                SectionTitle(text: "Verdict", icon: "checkmark.seal.fill")
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(outcome.verdictLines) { line in
+                        HStack(alignment: .firstTextBaseline) {
+                            Text("Count \(line.count): \(line.chargeTitle)").font(.callout)
                             Spacer()
-                            Pill(text: line.sound ? "Sound" : "Unsound",
-                                 color: line.sound ? Theme.good : Theme.bad,
-                                 icon: line.sound ? "checkmark" : "xmark")
+                            Text(line.verdictLabel).font(.callout.weight(.bold)).multilineTextAlignment(.trailing)
                         }
-                        Text("Your verdict: \(line.verdictLabel)").font(.callout)
-                        Text(line.explanation).font(.caption).foregroundStyle(.secondary)
-                    }
-                    .card()
-                }
-            }
-
-            if let sentence = outcome.sentenceSummary {
-                SectionTitle(text: "Sentence", icon: "scalemass.fill")
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(sentence).font(.headline)
-                    if let assessment = outcome.sentenceAssessment {
-                        Text(assessment).font(.callout).foregroundStyle(.secondary)
                     }
                 }
                 .card()
             }
 
-            if !outcome.reviews.isEmpty {
-                SectionTitle(text: "Your rulings, reviewed", icon: "doc.text.magnifyingglass")
-                ForEach(outcome.reviews) { review in
+            if let habitual = outcome.habitualNote {
+                Text(habitual).font(.callout).card()
+            }
+
+            if !outcome.judgments.isEmpty {
+                SectionTitle(text: "Judgment and commitment", icon: "doc.text.fill")
+                ForEach(outcome.judgments) { entry in
                     VStack(alignment: .leading, spacing: 6) {
-                        HStack(alignment: .top) {
-                            Image(systemName: review.correct ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                .foregroundStyle(review.correct ? Theme.good : Theme.bad)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(review.title).font(.subheadline.weight(.semibold))
-                                Text("You ruled: \(review.yourRuling)").font(.caption).foregroundStyle(.secondary)
-                            }
+                        Text(entry.title).font(.subheadline.weight(.semibold))
+                        ForEach(entry.lines, id: \.self) { line in
+                            Text(line).font(.callout)
                         }
-                        Text(review.explanation).font(.callout)
-                        if let doctrine = review.doctrineID { LawLink(lawID: doctrine) }
                     }
                     .card()
                 }
             }
 
-            SectionTitle(text: "Public reaction", icon: "newspaper.fill")
-            Text(outcome.publicReaction).card()
-
-            SectionTitle(text: "What really happened", icon: "eye.fill")
-            if revealed {
-                VStack(alignment: .leading, spacing: 10) {
-                    Pill(text: outcome.truthGuilty ? "The defendant was guilty" : "The defendant was innocent",
-                         color: outcome.truthGuilty ? Theme.bad : Theme.good,
-                         icon: outcome.truthGuilty ? "person.fill.xmark" : "person.fill.checkmark")
-                    Text(outcome.truthText).font(.system(.body, design: .serif))
-                    Divider()
-                    Text(outcome.epilogue).font(.callout.italic()).foregroundStyle(.secondary)
-                }
-                .card(tint: outcome.truthGuilty ? Theme.bad : Theme.good)
-                .transition(.opacity.combined(with: .scale(scale: 0.96)))
-            } else {
-                Button {
-                    Haptics.tap()
-                    withAnimation(.spring) { revealed = true }
-                } label: {
-                    Label("Reveal the truth", systemImage: "lock.open.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(RoundedRectangle(cornerRadius: 14).strokeBorder(Theme.gold, lineWidth: 2))
-                }
-                .buttonStyle(.plain)
-                Text("A judge never learns this for certain. You get to, after the gavel falls.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            if let probation = outcome.probationHearing {
+                SectionTitle(text: "Probation", icon: "person.badge.clock.fill")
+                Text(probation).font(.callout).card()
             }
 
-            SectionTitle(text: "Career impact", icon: "person.text.rectangle.fill")
-            HStack {
-                delta("Integrity", outcome.integrityDelta)
-                Spacer()
-                delta("Public approval", outcome.approvalDelta)
+            if let appeal = outcome.appealNotice {
+                Label(appeal, systemImage: "arrow.up.doc.fill").font(.callout).card()
+            }
+
+            if let ethics = outcome.ethicsResult {
+                SectionTitle(text: "Outside the courtroom", icon: "exclamationmark.shield.fill")
+                Text(ethics).font(.callout).card()
+            }
+
+            SectionTitle(text: "In the hallway", icon: "quote.bubble.fill")
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(outcome.reactions, id: \.self) { line in
+                    Text(line).font(.system(.callout, design: .serif))
+                }
             }
             .card()
 
-            PrimaryButton(title: "Return to Chambers", icon: "house.fill", action: onFinish)
+            SectionTitle(text: "Tomorrow's paper", icon: "newspaper.fill")
+            NewsCard(item: outcome.news)
+
+            PrimaryButton(title: "Adjourn", icon: "house.fill", action: onFinish)
         }
     }
+}
 
-    private var gradeColor: Color {
-        switch outcome.grade {
-        case "A", "B": return Theme.good
-        case "C": return .orange
-        default: return Theme.bad
-        }
-    }
+struct NewsCard: View {
+    let item: NewsItem
 
-    private func delta(_ label: String, _ value: Int) -> some View {
-        VStack(alignment: .leading) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
-            Text(value >= 0 ? "+\(value)" : "\(value)")
-                .font(.system(.title2, design: .rounded).weight(.bold))
-                .foregroundStyle(value >= 0 ? Theme.good : Theme.bad)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Label(SentenceFormat.shortDate(item.date), systemImage: item.kind.icon)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                if let docket = item.docket {
+                    Text(docket).font(.caption2.monospaced()).foregroundStyle(.secondary)
+                }
+            }
+            Text(item.headline).font(.system(.headline, design: .serif))
+            Text(item.body).font(.callout).foregroundStyle(.secondary)
         }
+        .card()
     }
 }

@@ -7,8 +7,8 @@ struct CourtroomView: View {
     @State private var showLibrary = false
     @State private var confirmRecess = false
 
-    init(courtCase: CourtCase) {
-        _session = StateObject(wrappedValue: CaseSession(courtCase: courtCase))
+    init(courtCase: CourtCase, judgeName: String, county: County) {
+        _session = StateObject(wrappedValue: CaseSession(courtCase: courtCase, judgeName: judgeName, county: county))
     }
 
     var body: some View {
@@ -30,9 +30,11 @@ struct CourtroomView: View {
                             VerdictStage(session: session)
                         case .sentencing:
                             SentencingStage(session: session)
-                        case .outcome:
+                        case .probation:
+                            ProbationStage(session: session)
+                        case .judgment:
                             if let outcome = session.outcome {
-                                OutcomeStage(courtCase: session.courtCase, outcome: outcome) {
+                                JudgmentStage(courtCase: session.courtCase, outcome: outcome) {
                                     game.complete(session.courtCase, outcome: outcome)
                                     dismiss()
                                 }
@@ -49,7 +51,7 @@ struct CourtroomView: View {
             .navigationTitle(session.stage.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if session.stage != .outcome {
+                if session.stage != .judgment {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Recess") { confirmRecess = true }
                     }
@@ -65,11 +67,11 @@ struct CourtroomView: View {
             .sheet(isPresented: $showLibrary) {
                 LawLibraryView(highlightIDs: session.courtCase.relevantLawIDs, showsDoneButton: true)
             }
-            .confirmationDialog("Call a recess?", isPresented: $confirmRecess, titleVisibility: .visible) {
-                Button("Recess (rulings will be lost)", role: .destructive) { dismiss() }
-                Button("Stay in court", role: .cancel) {}
+            .confirmationDialog("Recess court?", isPresented: $confirmRecess, titleVisibility: .visible) {
+                Button("Recess (rulings so far are set aside)", role: .destructive) { dismiss() }
+                Button("Stay in session", role: .cancel) {}
             } message: {
-                Text("The case stays on your docket, but you'll have to hear it again from the start.")
+                Text("The case stays on the calendar. When court resumes, the hearing starts over.")
             }
         }
         .interactiveDismissDisabled()
@@ -110,7 +112,11 @@ struct BriefingStage: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("\(c.docket) · Bench Trial")
+                Text("\(session.county.courtName.uppercased()) · CRIMINAL SESSION")
+                    .font(.caption2.weight(.bold))
+                    .tracking(1)
+                    .foregroundStyle(Theme.gold)
+                Text("\(c.docket) · \(SentenceFormat.date(c.sessionDate))")
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
                 Text(c.headline)
@@ -120,9 +126,11 @@ struct BriefingStage: View {
                     .foregroundStyle(.secondary)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
-                        Pill(text: c.category.rawValue, color: Theme.gold, icon: c.category.icon)
+                        Pill(text: c.court.label, color: Theme.gold, icon: "building.columns")
                         Pill(text: c.mood.label, icon: c.mood.icon)
-                        Pill(text: String(repeating: "★", count: c.mediaAttention) + " media", color: .orange)
+                        if c.defendant.isReturning {
+                            Pill(text: "Returning defendant", color: .purple, icon: "arrow.uturn.left")
+                        }
                     }
                 }
             }
@@ -136,29 +144,35 @@ struct BriefingStage: View {
                     .card(tint: .orange)
             }
 
-            SectionTitle(text: "The Defendant", icon: "person.fill")
-            DefendantCard(defendant: c.defendant)
+            SectionTitle(text: "Procedural posture", icon: "doc.plaintext")
+            BulletList(items: c.proceduralNotes, symbol: "circle.fill")
+                .font(.callout)
+                .card()
+
+            SectionTitle(text: "The defendant", icon: "person.fill")
+            DefendantCard(defendant: c.defendant, county: session.county)
 
             SectionTitle(text: "Charges", icon: "list.bullet.rectangle.fill")
             ForEach(c.charges) { charge in
                 ChargeCard(charge: charge)
             }
 
-            SectionTitle(text: "Counsel", icon: "person.2.fill")
+            SectionTitle(text: "Counsel & investigation", icon: "person.2.fill")
             VStack(alignment: .leading, spacing: 8) {
                 Label { Text("For the State: ").bold() + Text(c.prosecutor) } icon: {
                     Image(systemName: "building.columns").foregroundStyle(Theme.prosecution)
                 }
-                Label { Text("For the Defense: ").bold() + Text(c.defenseAttorney) } icon: {
+                Label { Text("For the defendant: ").bold() + Text(c.defenseAttorney) } icon: {
                     Image(systemName: "shield").foregroundStyle(Theme.defense)
                 }
-                Text("The defendant has waived a jury. You alone will decide the facts, the law, and the sentence.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Label { Text("Investigating agency: ").bold() + Text(c.investigatingAgency) } icon: {
+                    Image(systemName: "star.circle").foregroundStyle(.secondary)
+                }
             }
+            .font(.callout)
             .card()
 
-            PrimaryButton(title: c.motions.isEmpty ? "Begin Trial" : "Hear Pretrial Motions") {
+            PrimaryButton(title: c.motions.isEmpty ? "Call the Case for Trial" : "Hear Pretrial Motions") {
                 session.advance()
             }
         }
@@ -167,6 +181,7 @@ struct BriefingStage: View {
 
 struct DefendantCard: View {
     let defendant: Defendant
+    let county: County
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -181,20 +196,64 @@ struct DefendantCard: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            Text(defendant.background)
-                .font(.callout)
+            Text(defendant.background).font(.callout)
+
+            if defendant.isReturning {
+                Divider()
+                Text("Previously before this court").font(.caption.weight(.bold)).foregroundStyle(.purple)
+                ForEach(Array(defendant.history.enumerated()), id: \.offset) { _, appearance in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(appearance.docket) · \(SentenceFormat.shortDate(appearance.date))")
+                            .font(.caption.monospaced())
+                            .foregroundStyle(.secondary)
+                        Text("\(appearance.charges): \(appearance.outcome)").font(.callout)
+                    }
+                }
+            }
+
+            if let probation = defendant.probation {
+                Label("On probation: \(probation.docket), \(probation.offense). Suspended sentence: \(probation.suspendedSentence). Term ends \(SentenceFormat.shortDate(probation.ends)).",
+                      systemImage: "person.badge.clock.fill")
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+            }
+
             Divider()
             Text("Criminal record").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-            if defendant.priorRecord.isEmpty {
-                Label("No prior convictions", systemImage: "checkmark.circle.fill")
+            if defendant.priors.isEmpty {
+                Label("No prior convictions", systemImage: "checkmark.circle")
                     .font(.callout)
-                    .foregroundStyle(Theme.good)
+                    .foregroundStyle(.secondary)
             } else {
-                BulletList(items: defendant.priorRecord, symbol: "exclamationmark.circle.fill", color: .orange)
-                    .font(.callout)
+                ForEach(defendant.priors) { prior in
+                    PriorRow(prior: prior)
+                }
             }
         }
         .card()
+    }
+}
+
+struct PriorRow: View {
+    let prior: PriorConviction
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(String(prior.year))
+                .font(.caption.monospacedDigit().weight(.semibold))
+                .frame(width: 40, alignment: .leading)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(prior.offense).font(.callout.weight(.semibold))
+                    if prior.fromThisCourt {
+                        Pill(text: "Your court", color: .purple)
+                    }
+                }
+                Text("\(prior.ncClass.shortLabel) · \(prior.county) · \(prior.sentence)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 
@@ -209,26 +268,21 @@ struct ChargeCard: View {
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.secondary)
                 Spacer()
-                if let offenseClass = law.offenseClass {
-                    Pill(text: offenseClass.rawValue, color: offenseClass.isFelony ? Theme.bad : .orange)
+                if let cls = law.ncClass {
+                    Pill(text: cls.label, color: cls.isFelony ? Theme.bad : .orange)
                 }
             }
             Text(law.title).font(.headline)
+            Text(law.statute).font(.caption.monospaced()).foregroundStyle(.secondary)
             Text(charge.specification).font(.callout)
-            if let sentence = law.sentence {
-                Label("\(law.code) · \(sentence.summary)\(sentence.mandatoryMinimum ? " · mandatory minimum" : "")",
-                      systemImage: "scalemass")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
             HStack {
                 LawLink(lawID: law.id)
                 if let lesser = charge.lesserLawID {
                     LawLink(lawID: lesser)
                 }
             }
-            if let lesser = charge.lesserLaw {
-                Text("Lesser included offense available: \(lesser.title)")
+            if let lesser = charge.lesserLaw, let cls = lesser.ncClass {
+                Text("Lesser-included offense: \(lesser.title) (\(cls.shortLabel))")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -244,7 +298,7 @@ struct MotionsStage: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Before trial begins, the defense has filed motions. Rule on each one. Suppressed evidence won't be heard at trial, and the appeals court will review your rulings.")
+            Text("The defense has filed pretrial motions. You've heard testimony and argument at the suppression hearing. Rule on each.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
@@ -254,7 +308,7 @@ struct MotionsStage: View {
                            selection: session.motionBinding(motion))
             }
 
-            PrimaryButton(title: session.dismissedBySpeedyTrial ? "Dismiss the Case" : "Proceed to Trial",
+            PrimaryButton(title: session.dismissedBySpeedyTrial ? "Enter Order of Dismissal" : "Proceed to Trial",
                           icon: session.dismissedBySpeedyTrial ? "xmark.seal.fill" : "chevron.right",
                           enabled: session.motionsComplete) {
                 Haptics.gavel()
@@ -278,7 +332,7 @@ struct MotionCard: View {
                     .foregroundStyle(Theme.gold)
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text("Facts established at the hearing").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                Text("Evidence at the hearing").font(.caption.weight(.bold)).foregroundStyle(.secondary)
                 Text(motion.facts)
             }
             argument(side: .defense, text: motion.defenseArgument)
@@ -286,13 +340,13 @@ struct MotionCard: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack { ForEach(motion.doctrineIDs, id: \.self) { LawLink(lawID: $0) } }
             }
-            RulingPicker(first: "Grant", second: "Deny", selection: $selection)
+            RulingPicker(first: "Allow", second: "Deny", selection: $selection)
             if selection == true {
                 Text(motion.kind == .dismissSpeedyTrial
-                     ? "All charges will be dismissed with prejudice."
-                     : "This evidence will be excluded from trial.")
+                     ? "All charges will be dismissed."
+                     : "This evidence will not be admitted at trial.")
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(.secondary)
             }
         }
         .card(tint: selection == nil ? nil : Theme.gold)

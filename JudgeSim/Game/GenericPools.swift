@@ -243,23 +243,22 @@ enum GenericPools {
     static let twists: [TwistSeed] = [
         TwistSeed(text: "{DL} is the sole caregiver for three children under ten. Their other parent died last year.",
                   mitigating: "Sole caregiver for three young children", mood: .sympathetic),
-        TwistSeed(text: "{DL} is a decorated Army veteran diagnosed with severe PTSD after two combat tours.",
+        TwistSeed(text: "{DL} is a Fort Liberty Army veteran diagnosed with severe PTSD after two combat tours.",
                   mitigating: "Combat veteran with diagnosed PTSD", mood: .sympathetic),
-        TwistSeed(text: "{DL} turned 18 just three weeks before the offense.",
+        TwistSeed(text: "{DL} turned 18 just three weeks before the offense, too old for juvenile court by less than a month.",
                   mitigating: "Youth: barely 18 at the time of the offense"),
         TwistSeed(text: "{DL} is the child of a sitting state senator. Reporters are watching for any hint of favoritism.",
                   mood: .wantsConviction, mediaBoost: 2),
         TwistSeed(text: "While awaiting trial, {DL} was diagnosed with stage IV pancreatic cancer. Doctors estimate a year to live.",
                   mitigating: "Terminal illness", mood: .sympathetic),
-        TwistSeed(text: "Before trial, {DL} turned down a plea offer of 18 months in order to exercise the right to trial.",
-                  doctrine: "trialPenalty"),
-        TwistSeed(text: "{DL} has already spent 11 months in pretrial detention, unable to afford $5,000 bail.",
+        TwistSeed(text: "Before trial, {DL} turned down a plea offer to a lesser felony in order to exercise the right to trial."),
+        TwistSeed(text: "{DL} has already spent 11 months in the Hollis County jail, unable to post a $5,000 secured bond.",
                   mitigating: "Already served 11 months awaiting trial"),
         TwistSeed(text: "During testimony, {DL} smirked at witnesses and had to be admonished twice.",
                   aggravating: "Courtroom conduct shows no remorse", mood: .wantsConviction),
         TwistSeed(text: "About 200 protesters have gathered outside the courthouse every day of trial.",
                   mood: .divided, mediaBoost: 1),
-        TwistSeed(text: "The District Attorney is running for re-election on a \"tough on crime\" platform and has publicly demanded the maximum.",
+        TwistSeed(text: "District Attorney {ELECTEDDA} is up for re-election this fall and told the Ledger this case is \"exactly why the people elected me.\"",
                   mood: .wantsConviction, mediaBoost: 1),
         TwistSeed(text: "Three years ago, {DL} pulled a child from a burning car and received a city commendation.",
                   mitigating: "Documented act of heroism and community service", mood: .sympathetic),
@@ -279,81 +278,74 @@ enum GenericPools {
                         body: "The night before trial, ADA {PROS} emails your personal account: \"Off the record, Judge, {DL} is much worse than this file shows. Trust me.\"",
                         doctrineID: "exParte",
                         options: [
-                            EthicsOption(label: "Disclose the email to both sides on the record, and disregard it",
-                                         result: "You read the email into the record. Defense counsel thanks you; the ADA turns red. The Judicial Conduct Commission later cites your handling as a model.",
-                                         integrity: 6, approval: 0, isProper: true),
+                            EthicsOption(label: "Disclose the email to both sides on the record and say you will disregard it",
+                                         result: "You read it into the record. Defense counsel thanks you; {PROS} looks at the floor. District Attorney {ELECTEDDA} calls that afternoon to apologize for the assistant."),
                             EthicsOption(label: "Delete it and say nothing",
-                                         result: "You delete it. But ex parte contacts must be disclosed, and when it surfaces in discovery months later, it looks like you hid it.",
-                                         integrity: -5, approval: 0, isProper: false),
+                                         result: "You delete it and put it out of your mind.",
+                                         laterHeadline: "Defense learns of undisclosed email between prosecutor and Judge {JUDGE}"),
                             EthicsOption(label: "Reply: \"What do you mean?\"",
-                                         result: "You opened a secret channel with one side of a pending case. The defense finds out and moves for your recusal.",
-                                         integrity: -15, approval: -2, isProper: false)
+                                         result: "{PROS} replies within minutes with three paragraphs about {DL}'s juvenile record and a rumor from the jail.",
+                                         laterHeadline: "Judicial Standards Commission reviewing contact between Judge {JUDGE} and prosecutor")
                         ]),
             EthicsEvent(title: "An Old Connection",
                         body: "Reviewing the file, you realize {DL}'s parent was your college roommate. You haven't spoken in fifteen years.",
-                        doctrineID: "recusal",
+                        doctrineID: "disqualification",
                         options: [
                             EthicsOption(label: "Disclose it on the record and offer to recuse",
-                                         result: "Both sides confer and waive the conflict on the record. The trial proceeds cleanly.",
-                                         integrity: 5, approval: 1, isProper: true),
-                            EthicsOption(label: "Say nothing. It won't affect you.",
-                                         result: "It might not. But a reporter later digs up the connection, and \"Judge Hid Ties to Defendant's Family\" runs above the fold.",
-                                         integrity: -10, approval: -4, isProper: false)
+                                         result: "Both sides confer in the hallway and return to waive the issue on the record. The trial goes forward."),
+                            EthicsOption(label: "Say nothing",
+                                         result: "You decide fifteen years is long enough that it doesn't matter.",
+                                         laterHeadline: "Ledger review: Judge {JUDGE} did not disclose family ties to defendant {D}")
                         ]),
-            EthicsEvent(title: "Ambush in the Parking Garage",
-                        body: "A Channel 7 reporter corners you at your car: \"Judge! Is {DL} going to walk?\"",
-                        doctrineID: "extrajudicial",
+            EthicsEvent(title: "In the Parking Deck",
+                        body: "A reporter from WHCN-TV catches you at your car: \"Judge! Is {DL} going to walk?\"",
+                        doctrineID: "publicComment",
                         options: [
                             EthicsOption(label: "\"I can't comment on a pending case.\"",
-                                         result: "The clip is boring and nobody airs it. Exactly right.",
-                                         integrity: 3, approval: 0, isProper: true),
+                                         result: "The clip runs for four seconds on the evening news."),
                             EthicsOption(label: "\"Not in my courtroom.\"",
-                                         result: "It plays great at 6 p.m. It also signals you'd prejudged the case, and the defense files a motion citing the clip.",
-                                         integrity: -12, approval: 6, isProper: false),
-                            EthicsOption(label: "\"Frankly, the evidence is thin.\"",
-                                         result: "The prosecution moves for your recusal the next morning. You had no business saying that.",
-                                         integrity: -12, approval: -3, isProper: false)
+                                         result: "It leads the 6 o'clock broadcast. The next morning, defense counsel files a motion asking you to recuse, attaching the clip. You deny it, but it's in the record now.",
+                                         laterHeadline: "Defense cites Judge {JUDGE}'s TV remark in appeal"),
+                            EthicsOption(label: "\"The evidence will speak for itself.\"",
+                                         result: "Both sides spend the evening parsing what you meant.")
                         ]),
             EthicsEvent(title: "A Call from City Hall",
-                        body: "The mayor's chief of staff calls your chambers: \"The mayor would appreciate a strong message in this case. Your reappointment is next year, Judge.\"",
+                        body: "The Port Hollis mayor's chief of staff calls chambers: \"The mayor would appreciate a strong message in this case. Election years are long, Judge.\"",
                         doctrineID: "exParte",
                         options: [
-                            EthicsOption(label: "Report the call to the Judicial Conduct Commission",
-                                         result: "The Commission opens an inquiry into the mayor's office. Some allies go cold on you, but your independence is on the record.",
-                                         integrity: 8, approval: -3, isProper: true),
-                            EthicsOption(label: "Hang up and ignore it",
-                                         result: "You don't bend. But an attempt to influence a judge should be reported, and you let it slide.",
-                                         integrity: 1, approval: 0, isProper: false),
+                            EthicsOption(label: "Report the call to the Judicial Standards Commission and disclose it to the parties",
+                                         result: "You put the call on the record. Neither side knows what to make of it.",
+                                         laterHeadline: "Mayor's office acknowledges call to judge's chambers during pending trial"),
+                            EthicsOption(label: "End the call and do nothing further",
+                                         result: "You hang up. The case goes on as if it never happened."),
                             EthicsOption(label: "\"I'll keep that in mind.\"",
-                                         result: "That's the sound of judicial independence leaving the room.",
-                                         integrity: -20, approval: 3, isProper: false)
+                                         result: "\"That's all we ask,\" the chief of staff says, and hangs up.")
                         ]),
-            EthicsEvent(title: "A Generous Gift",
-                        body: "A gift basket arrives at chambers from the law firm representing {DL}: wine, chocolates, and two courtside playoff tickets. The card reads, \"With admiration.\"",
+            EthicsEvent(title: "A Gift Basket",
+                        body: "A gift basket arrives at chambers from the firm representing {DL}: wine, chocolates, and two tickets to a Hurricanes playoff game. The card reads, \"With admiration.\"",
                         doctrineID: "gifts",
                         options: [
                             EthicsOption(label: "Return everything and disclose it to the prosecution",
-                                         result: "You send it all back with a polite note and file a disclosure. Clean.",
-                                         integrity: 5, approval: 0, isProper: true),
+                                         result: "Your judicial assistant sends it all back with a polite note. ADA {PROS} raises an eyebrow and says nothing."),
                             EthicsOption(label: "Keep the chocolates, return the tickets",
-                                         result: "Half-measures. A gift from counsel in a pending case shouldn't be accepted at all.",
-                                         integrity: -3, approval: 0, isProper: false),
-                            EthicsOption(label: "Keep it all. It's just a basket.",
-                                         result: "Someone posts a photo of you at the playoff game. The caption writes itself.",
-                                         integrity: -15, approval: -5, isProper: false)
+                                         result: "The chocolates are excellent."),
+                            EthicsOption(label: "Keep it all",
+                                         result: "You enjoy the game from lower level seats.",
+                                         laterHeadline: "Photo shows Judge {JUDGE} at playoff game on defense firm's tickets")
                         ]),
             EthicsEvent(title: "Gone Viral",
                         body: hasVictim
-                            ? "{VL}'s family tags your personal account in a viral post: \"Judge, if you let {DL} walk, the blood is on YOUR hands.\" It has 40,000 shares."
-                            : "A viral post tags your personal account: \"Judge, if you let {DL} walk, you're part of the problem.\" It has 40,000 shares.",
-                        doctrineID: "extrajudicial",
+                            ? "{VL}'s family tags your personal account in a post: \"Judge, if you let {DL} walk, the blood is on YOUR hands.\" It has 40,000 shares."
+                            : "A post tags your personal account: \"Judge, if you let {DL} walk, you're part of the problem.\" It has 40,000 shares.",
+                        doctrineID: "publicComment",
                         options: [
-                            EthicsOption(label: "Don't respond. Decide the case on the record.",
-                                         result: "The storm passes, as storms do. Your ruling will be your answer.",
-                                         integrity: 3, approval: 0, isProper: true),
-                            EthicsOption(label: "Post a reply defending your record",
-                                         result: "Judges don't litigate pending cases on social media. The reply gets screenshotted into a motion to recuse.",
-                                         integrity: -10, approval: 2, isProper: false)
+                            EthicsOption(label: "Don't respond",
+                                         result: "The post keeps circulating for a few days, then fades."),
+                            EthicsOption(label: "Ask the Sheriff's Office to review it for threats",
+                                         result: "Sheriff {SHERIFF} assigns a deputy to the courtroom door for the rest of the trial."),
+                            EthicsOption(label: "Post a reply explaining the presumption of innocence",
+                                         result: "Your reply gets 9,000 comments.",
+                                         laterHeadline: "Judge {JUDGE}'s social media reply draws complaint")
                         ])
         ]
     }
@@ -380,25 +372,34 @@ enum GenericPools {
         "{DL} looks at the gallery: \"Mom, I'm sorry. Your Honor, whatever you decide, I'll take it.\""
     ]
 
-    // MARK: Epilogues
+    // MARK: Prior records
 
-    static let convictedGuilty = [
-        "The conviction stands for what it is: the right person, held to account.",
-        "Whatever the sentence, the truth and the verdict lined up this time. That doesn't always happen."
+    struct PriorSeed {
+        let offense: String
+        let ncClass: NCClass
+        let sentences: [String]
+    }
+
+    static let priorSeeds: [PriorSeed] = [
+        PriorSeed(offense: "Misdemeanor Larceny", ncClass: .misd1, sentences: ["45 days suspended, 12 months probation", "20 days active", "Prayer for judgment continued"]),
+        PriorSeed(offense: "Simple Assault", ncClass: .misd2, sentences: ["30 days suspended, 12 months unsupervised probation", "Time served"]),
+        PriorSeed(offense: "Assault on a Female", ncClass: .misdA1, sentences: ["60 days suspended, 18 months supervised probation", "75 days active"]),
+        PriorSeed(offense: "Driving While Impaired", ncClass: .misd1, sentences: ["Level 5, 60 days suspended", "Level 3, 6 months suspended"]),
+        PriorSeed(offense: "Resisting a Public Officer", ncClass: .misd2, sentences: ["Time served", "$100 fine and costs"]),
+        PriorSeed(offense: "Possession of Drug Paraphernalia", ncClass: .misd1, sentences: ["Conditional discharge", "$100 fine and costs"]),
+        PriorSeed(offense: "Assault with a Deadly Weapon", ncClass: .misdA1, sentences: ["75 days active", "60 days suspended, 24 months probation"]),
+        PriorSeed(offense: "Possession of Schedule II (cocaine)", ncClass: .I, sentences: ["4–14 months suspended, 18 months probation", "5–15 months active"]),
+        PriorSeed(offense: "Breaking or Entering", ncClass: .H, sentences: ["6–17 months suspended, 24 months probation", "8–19 months active"]),
+        PriorSeed(offense: "Possession of Stolen Goods", ncClass: .H, sentences: ["5–15 months suspended, 30 months probation", "6–17 months active"]),
+        PriorSeed(offense: "Felony Larceny", ncClass: .H, sentences: ["6–17 months suspended, 24 months probation", "9–20 months active"]),
+        PriorSeed(offense: "PWISD Cocaine", ncClass: .H, sentences: ["8–19 months active", "6–17 months suspended, 36 months probation"]),
+        PriorSeed(offense: "Common Law Robbery", ncClass: .G, sentences: ["13–25 months active", "10–21 months active"]),
+        PriorSeed(offense: "Second-Degree Burglary", ncClass: .G, sentences: ["12–24 months active", "10–21 months suspended, 36 months probation"]),
+        PriorSeed(offense: "Assault with a Deadly Weapon Inflicting Serious Injury", ncClass: .E, sentences: ["25–42 months active", "20–36 months active"])
     ]
 
-    static let convictedInnocent = [
-        "An innocent person was convicted in your courtroom. {DL} lost years that no apology can return.",
-        "The Westbrook Innocence Project took the case. {DL} was exonerated, after years behind bars, for something {DL} never did."
-    ]
-
-    static let acquittedGuilty = [
-        "{DL} walked out of your courtroom free, and was guilty. The law demands proof. Sometimes the guilty go home.",
-        "You never learn what {DL} did next. You think about it sometimes."
-    ]
-
-    static let acquittedInnocent = [
-        "You acquitted an innocent person. {DL} went home that night.",
-        "{DL} hugged their lawyer for a long time. They'd been telling the truth all along."
+    static let otherCounties = [
+        "Wake County", "Mecklenburg County", "Cumberland County", "Robeson County", "New Hanover County",
+        "Pitt County", "Guilford County", "Onslow County", "Johnston County", "Brunswick County"
     ]
 }

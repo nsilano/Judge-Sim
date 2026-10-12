@@ -18,7 +18,7 @@ enum CaseTemplates {
     static let storeRobbery = CaseTemplate(
         key: "storeRobbery", category: .violent,
         headlines: ["Gunpoint Robbery at {BIZ}", "The Masked Robber of {STREET}"],
-        primaryLaw: "armedRobbery", lesserLaw: "robbery", threshold: 8, lesserThreshold: 6,
+        primaryLaw: "dangerousRobbery", lesserLaw: "commonLawRobbery", threshold: 8, lesserThreshold: 6,
         specification: "Robbed {V} at {BIZ} while armed with {WEAPON}.",
         ageRange: 19...38, hasVictim: true,
         summaries: [
@@ -78,7 +78,7 @@ enum CaseTemplates {
     static let barFight = CaseTemplate(
         key: "barFight", category: .violent,
         headlines: ["Closing Time at {BAR}", "One Wound, Two Stories"],
-        primaryLaw: "murder2", lesserLaw: "manslaughter", threshold: 5, lesserThreshold: 3,
+        primaryLaw: "murder2", lesserLaw: "volManslaughter", threshold: 5, lesserThreshold: 3,
         specification: "Killed {V} with a knife outside {BAR}.",
         ageRange: 22...50, hasVictim: true,
         summaries: [
@@ -184,7 +184,7 @@ enum CaseTemplates {
     static let abusedSpouse = CaseTemplate(
         key: "abusedSpouse", category: .violent,
         headlines: ["Fourteen Years", "The Night Before Tomorrow"],
-        primaryLaw: "murder2", lesserLaw: "manslaughter", threshold: 6, lesserThreshold: 4,
+        primaryLaw: "murder2", lesserLaw: "volManslaughter", threshold: 6, lesserThreshold: 4,
         specification: "Shot and killed spouse {V} at their home on {STREET}.",
         ageRange: 30...55, hasVictim: true,
         summaries: [
@@ -234,9 +234,9 @@ enum CaseTemplates {
     static let protestAssault = CaseTemplate(
         key: "protestAssault", category: .violent,
         headlines: ["Chaos at City Hall", "The Thrown {OBJ}"],
-        primaryLaw: "aggAssault", lesserLaw: "assault", threshold: 5, lesserThreshold: 3,
+        primaryLaw: "awdwisi", lesserLaw: "aisi", threshold: 5, lesserThreshold: 3,
         specification: "Struck {V} with a thrown {OBJ}, causing serious bodily injury.",
-        secondary: [SecondaryCharge(lawID: "rioting", specification: "Participated in a violent public disturbance outside City Hall.", chance: 0.5, threshold: 4)],
+        secondary: [SecondaryCharge(lawID: "riot", specification: "Willfully engaged in a riot outside Port Hollis City Hall.", chance: 0.5, threshold: 4)],
         ageRange: 19...34, hasVictim: true,
         summaries: [
             "During a clash between protesters and counter-protesters outside City Hall, {V} was knocked unconscious by a thrown {OBJ} and suffered a fractured skull. {D} was identified from viral social media video.",
@@ -285,8 +285,8 @@ enum CaseTemplates {
     static let policeForce = CaseTemplate(
         key: "policeForce", category: .violent,
         headlines: ["Nine Swings", "The Taillight Stop"],
-        primaryLaw: "aggAssault", lesserLaw: "assault", threshold: 7, lesserThreshold: 5,
-        specification: "Struck {V} repeatedly with a baton, causing serious bodily injury.",
+        primaryLaw: "awdwisi", lesserLaw: "awdw", threshold: 7, lesserThreshold: 5,
+        specification: "Assaulted {V} with a deadly weapon (a police baton), inflicting serious injury.",
         ageRange: 29...50, occupations: ["police officer, 12 years on the force", "police sergeant, 19 years on the force"],
         hasVictim: true,
         summaries: [
@@ -334,8 +334,8 @@ enum CaseTemplates {
     static let custodyFlight = CaseTemplate(
         key: "custodyFlight", category: .family,
         headlines: ["Five Months on the Run", "A Parent's Choice"],
-        primaryLaw: "kidnapping", lesserLaw: "custodialInterference", threshold: 7, lesserThreshold: 5,
-        specification: "Took a six-year-old child across state lines in violation of a custody order.",
+        primaryLaw: "transportChild", lesserLaw: nil, threshold: 7, lesserThreshold: 5,
+        specification: "Transported a six-year-old child outside North Carolina with intent to violate a custody order.",
         ageRange: 27...44, hasVictim: true,
         summaries: [
             "{D} took their six-year-old across state lines in violation of a custody order and hid for five months. {DL} says the child's other parent, {V}, was abusing the child, and that no one would listen.",
@@ -364,7 +364,7 @@ enum CaseTemplates {
                         cross: ["\"No, the child never said {VL} hurt them.\""],
                         weight: 2, lay: true)
         ],
-        prosecutionTheory: ["The law has a process for custody disputes. {D} ignored a court order, ran, and made a child disappear."],
+        prosecutionTheory: ["North Carolina has a process for custody disputes. {D} ignored a court order, ran, and made a child disappear."],
         defenseTheory: ["{D} did what the system wouldn't: protected a child. The necessity defense exists for parents like {DL}."],
         aggravating: ["Concealed the child for five months under a false name", "Crossed state lines"],
         mitigating: ["Credible concerns of abuse", "Child returned safe and healthy", "No criminal record"],
@@ -380,8 +380,9 @@ enum CaseTemplates {
     static let burglary = CaseTemplate(
         key: "burglary", category: .property,
         headlines: ["Vacation Break-In on {STREET}", "The Broken Window"],
-        primaryLaw: "burglary", lesserLaw: "receivingStolen", threshold: 7, lesserThreshold: 5,
-        specification: "Unlawfully entered the {VL} home and stole {LOOT}.",
+        primaryLaw: "burglary2", lesserLaw: "feloniousBE", threshold: 7, lesserThreshold: 5,
+        specification: "Broke and entered the {VL} home at night with intent to commit larceny.",
+        secondary: [SecondaryCharge(lawID: "felonyLarceny", specification: "Larceny of {LOOT} pursuant to a breaking or entering.", chance: 0.8, threshold: 0)],
         ageRange: 18...45, hasVictim: true,
         summaries: [
             "While the {VL} family was on vacation, someone broke a back window of their home on {STREET} and took {LOOT}. A week later, {D} tried to sell some of the items.",
@@ -431,7 +432,7 @@ enum CaseTemplates {
     static let embezzlement = CaseTemplate(
         key: "embezzlement", category: .whiteCollar,
         headlines: ["The Treasurer of {CHARITY}", "Charity Begins at Home"],
-        primaryLaw: "embezzlement", lesserLaw: nil, threshold: 7, lesserThreshold: 7,
+        primaryLaw: "embezzlement100k", lesserLaw: nil, threshold: 7, lesserThreshold: 7,
         specification: "Diverted {AMT} in donations from {CHARITY} for personal use.",
         ageRange: 38...66, occupations: ["volunteer treasurer and accountant", "retired bank manager"],
         hasVictim: false,
@@ -475,15 +476,15 @@ enum CaseTemplates {
         guiltyTruths: ["{DL}'s gambling records later showed {AMT} lost at an offshore sportsbook during the same period."],
         innocentTruths: ["{ALT}, the board president, was later indicted for running the same scheme at two other nonprofits."],
         moods: [.wantsConviction],
-        doctrines: ["restitution", "burdenOfProof"],
-        extras: ["CHARITY": ["the Port Hollis Children's Food Bank", "Harbor Street Animal Rescue", "the Westbrook Veterans' Fund"],
-                 "AMT": ["$184,000", "$412,000", "$96,500"]]
+        doctrines: ["victimRights", "burdenOfProof"],
+        extras: ["CHARITY": ["the Port Hollis Children's Food Bank", "Harbor Street Animal Rescue", "the Hollis County Veterans' Fund"],
+                 "AMT": ["$184,000", "$412,000", "$136,500"]]
     )
 
     static let medicineTheft = CaseTemplate(
         key: "medicineTheft", category: .property,
         headlines: ["Stolen Medicine", "A Mother's Insulin"],
-        primaryLaw: "pettyTheft", lesserLaw: nil, threshold: 8, lesserThreshold: 8,
+        primaryLaw: "misdLarceny", lesserLaw: nil, threshold: 8, lesserThreshold: 8,
         specification: "Stole {MEDS} from {PHARM}.",
         secondary: [SecondaryCharge(lawID: "resisting", specification: "Pulled away from an officer during the arrest.", chance: 0.4, threshold: 9)],
         ageRange: 24...47, hasVictim: false,
@@ -522,7 +523,7 @@ enum CaseTemplates {
         guiltyTruths: ["The child's medicine was real, and so was the theft. {DL} had done it before, three times, at other stores."],
         innocentTruths: ["Months later, {PHARM} found a scanning glitch. {DL} had actually paid for one of the items in a separate transaction. But the rest was taken."],
         moods: [.sympathetic],
-        doctrines: ["necessity", "probation"],
+        doctrines: ["necessity", "dispositions"],
         extras: ["MEDS": ["two boxes of insulin pens", "an asthma inhaler and antibiotics", "an EpiPen two-pack"],
                  "PHARM": ["MediMart Pharmacy", "Hollis Drug & Sundry", "CareWell Pharmacy"],
                  "AMT": ["$642", "$318", "$575"]]
@@ -531,9 +532,9 @@ enum CaseTemplates {
     static let insuranceArson = CaseTemplate(
         key: "insuranceArson", category: .violent,
         headlines: ["Fire at {REST}", "Burned for the Payout?"],
-        primaryLaw: "arson", lesserLaw: nil, threshold: 5, lesserThreshold: 5,
+        primaryLaw: "burningBuildings", lesserLaw: nil, threshold: 5, lesserThreshold: 5,
         specification: "Set fire to {REST}, a restaurant owned by the defendant.",
-        secondary: [SecondaryCharge(lawID: "fraud", specification: "Filed a $640,000 insurance claim for the fire.", chance: 0.7, threshold: 6)],
+        secondary: [SecondaryCharge(lawID: "insuranceFraud", specification: "Submitted a $640,000 insurance claim for the fire, knowing it contained false information.", chance: 0.7, threshold: 6)],
         ageRange: 35...60, occupations: ["restaurant owner"], hasVictim: false,
         summaries: [
             "{REST}, a struggling restaurant owned by {D}, burned to the ground at 3 a.m. Six weeks earlier, {DL} had doubled the fire insurance. A firefighter was hospitalized.",
@@ -578,7 +579,7 @@ enum CaseTemplates {
     static let elderScam = CaseTemplate(
         key: "elderScam", category: .whiteCollar,
         headlines: ["The Grandparent Scam", "Money Mule"],
-        primaryLaw: "fraud", lesserLaw: nil, threshold: 8, lesserThreshold: 8,
+        primaryLaw: "falsePretenses", lesserLaw: nil, threshold: 8, lesserThreshold: 8,
         specification: "Obtained {AMT} from {V} by deception.",
         secondary: [SecondaryCharge(lawID: "identityTheft", specification: "Opened bank accounts using another person's identity.", chance: 0.4, threshold: 9)],
         ageRange: 20...35, hasVictim: true,
@@ -621,7 +622,7 @@ enum CaseTemplates {
         guiltyTruths: ["Investigators later found {DL} had recruited three other mules and taken a 10% cut each time."],
         innocentTruths: ["The overseas ring was dismantled the next year. Its records listed {DL} under \"unaware recruits.\""],
         moods: [.wantsConviction, .divided],
-        doctrines: ["mistakeOfFact", "restitution"],
+        doctrines: ["mistakeOfFact", "victimRights"],
         extras: ["AMT": ["$46,000", "$12,500", "$88,000"]]
     )
 
@@ -632,7 +633,7 @@ enum CaseTemplates {
         specification: "Accepted {AMT} from a developer in exchange for a zoning vote.",
         ageRange: 40...65, occupations: ["city councilmember"], hasVictim: false,
         summaries: [
-            "Councilmember {D} is accused of taking {AMT} from developer {ALT} in exchange for a key zoning vote. The FBI recorded their meetings using a cooperating witness facing his own charges.",
+            "Councilmember {D} is accused of taking {AMT} from developer {ALT} in exchange for a key zoning vote. The State Bureau of Investigation recorded their meetings using a cooperating witness facing his own charges.",
             "A sting operation caught City Councilmember {D} accepting an envelope at a steakhouse. Days later, {DL} flipped a vote on a waterfront tower."
         ],
         prosecutionEvidence: [
@@ -650,7 +651,7 @@ enum CaseTemplates {
                         direct: ["\"Everyone knew {DL}'s vote was for sale. I just had to bring the envelope.\""],
                         cross: ["\"Yes, prosecutors told me my cooperation would be 'considered.'\""],
                         weight: 2, lay: true),
-            WitnessSeed(name: nil, role: "FBI special agent",
+            WitnessSeed(name: nil, role: "SBI special agent",
                         direct: ["\"The recording speaks for itself.\""],
                         cross: ["\"The informant initiated all four meetings. {DL} declined the first two.\""],
                         weight: 1, lay: false)
@@ -675,8 +676,9 @@ enum CaseTemplates {
     static let ponzi = CaseTemplate(
         key: "ponzi", category: .whiteCollar,
         headlines: ["The Hollis Harbor Fund", "Returns Too Good to Be True"],
-        primaryLaw: "securitiesFraud", lesserLaw: "fraud", threshold: 9, lesserThreshold: 7,
+        primaryLaw: "falsePretenses100k", lesserLaw: nil, threshold: 9, lesserThreshold: 7,
         specification: "Defrauded investors of {AMT} through false account statements.",
+        secondary: [SecondaryCharge(lawID: "securitiesFraud", specification: "Made materially false statements in connection with the sale of securities.", chance: 0.6, threshold: 0)],
         ageRange: 38...64, occupations: ["financial advisor"], hasVictim: false,
         summaries: [
             "For six years, {D}'s Hollis Harbor Fund reported steady 11% returns. When a market dip triggered withdrawals, the fund collapsed. {AMT} from 140 investors, many retired teachers, was gone.",
@@ -717,7 +719,7 @@ enum CaseTemplates {
         guiltyTruths: ["An offshore account in {DL}'s name, holding $3 million, was discovered two years later."],
         innocentTruths: ["Investigators later found that {DL}'s operations manager, {ALT}, had generated the fake statements without {DL}'s knowledge."],
         moods: [.wantsConviction],
-        doctrines: ["restitution", "lesserIncluded"],
+        doctrines: ["victimRights", "lesserIncluded"],
         extras: ["AMT": ["$23 million", "$8.7 million", "$41 million"]]
     )
 
@@ -726,11 +728,11 @@ enum CaseTemplates {
     static let trafficStopDrugs = CaseTemplate(
         key: "trafficStopDrugs", category: .drugs,
         headlines: ["Route 9 Traffic Stop", "What Was in the Trunk"],
-        primaryLaw: "possWithIntent", lesserLaw: "drugPossession", threshold: 6, lesserThreshold: 4,
+        primaryLaw: "pwisd", lesserLaw: "possSchedII", threshold: 6, lesserThreshold: 4,
         specification: "Possessed {QTY} of {DRUG} with intent to distribute.",
         ageRange: 19...45, hasVictim: false,
         summaries: [
-            "During a traffic stop on Route 9 at {TIME}, Officer {OFF} found {QTY} of {DRUG} in {D}'s car, along with a digital scale and {CASH} in cash.",
+            "During a traffic stop on N.C. 87 at {TIME}, Officer {OFF} found {QTY} of {DRUG} in {D}'s car, along with a digital scale and {CASH} in cash.",
             "{D} was pulled over a mile from {HOOD}. A search turned up {QTY} of {DRUG}. The State says {DL} is a dealer; {DL} says {DL} is an addict."
         ],
         prosecutionEvidence: [
@@ -763,22 +765,22 @@ enum CaseTemplates {
         ],
         prosecutionTheory: ["The quantity, the packaging, the scale, the cash, the texts. Everything here says dealer."],
         defenseTheory: ["{D} is sick, not a kingpin. This is a possession case dressed up as a distribution case."],
-        aggravating: ["Fentanyl-related distribution endangers the community", "Prior drug convictions"],
+        aggravating: ["Distribution activity in a residential neighborhood", "Prior drug convictions"],
         mitigating: ["Long history of addiction", "Low-level role", "Enrolled in treatment since arrest"],
         guiltyTruths: ["{DL} was arrested a year later with three times the amount and a customer list."],
         innocentTruths: ["{DL}'s brother later admitted the scale and texts were his. The drugs in the glovebox were {DL}'s personal supply."],
         moods: [.indifferent, .divided],
         doctrines: ["searchSeizure", "warrantExceptions", "lesserIncluded"],
-        extras: ["QTY": ["38 grams", "62 grams", "24 grams"],
-                 "DRUG": ["cocaine", "methamphetamine", "fentanyl pills"],
+        extras: ["QTY": ["14 grams", "21 grams", "26 grams"],
+                 "DRUG": ["cocaine", "methamphetamine"],
                  "CASH": ["$2,340", "$880", "$4,100"]]
     )
 
     static let overdose = CaseTemplate(
         key: "overdose", category: .drugs,
         headlines: ["One Pill", "Best Friends"],
-        primaryLaw: "drugHomicide", lesserLaw: "drugPossession", threshold: 6, lesserThreshold: 4,
-        specification: "Delivered fentanyl-laced pills that caused the death of {V}.",
+        primaryLaw: "deathByDistribution", lesserLaw: "deliverSchedII", threshold: 6, lesserThreshold: 4,
+        specification: "Sold a controlled substance whose ingestion caused the death of {V}.",
         ageRange: 19...26, hasVictim: true,
         summaries: [
             "{V}, 22, died of a fentanyl overdose at a party in {HOOD}. {D}, {VL}'s best friend since grade school, is accused of buying the pills and handing one to {VL}.",
@@ -807,7 +809,7 @@ enum CaseTemplates {
                         cross: ["\"I don't know who bought the pills.\""],
                         weight: 2, lay: false)
         ],
-        prosecutionTheory: ["The law is clear: whoever delivers the poison is responsible for the death. {D} delivered it."],
+        prosecutionTheory: ["The General Assembly made it a crime to sell the drug that kills someone. {D} sold it."],
         defenseTheory: ["Two friends made a terrible choice together. One died. Charging the survivor with homicide doesn't bring {V} back."],
         aggravating: ["Fentanyl crisis in the community"],
         mitigating: ["Called 911 and performed CPR", "No profit motive", "Close friend of the victim", "Own addiction"],
@@ -824,9 +826,8 @@ enum CaseTemplates {
     static let drunkCrash = CaseTemplate(
         key: "drunkCrash", category: .traffic,
         headlines: ["Crash on {ROAD}", "Six Beers and a Missing Sign"],
-        primaryLaw: "vehHomicide", lesserLaw: "dui", threshold: 6, lesserThreshold: 4,
-        specification: "Caused the death of {V} while driving impaired.",
-        secondary: [SecondaryCharge(lawID: "hitAndRun", specification: "Left the scene before police arrived.", chance: 0.35, threshold: 5)],
+        primaryLaw: "felonyDBV", lesserLaw: "misdDBV", threshold: 6, lesserThreshold: 4,
+        specification: "Unintentionally caused the death of {V} while engaged in impaired driving.",
         ageRange: 21...60, hasVictim: true,
         summaries: [
             "At {TIME}, {D}'s pickup crossed the center line on {ROAD} and struck a sedan, killing {V}, a nurse heading home from a night shift.",
@@ -845,7 +846,7 @@ enum CaseTemplates {
             E(.document, 2, "Rising BAC Expert", "With a draw three hours later, {DL}'s BAC at the time of driving could have been below 0.08%.")
         ],
         prosecutionWitnesses: [
-            WitnessSeed(name: "{OFF}", role: "State trooper",
+            WitnessSeed(name: "{TROOPER}", role: "N.C. State Highway Patrol trooper",
                         direct: ["\"Strong odor of alcohol, slurred speech, couldn't walk a line.\""],
                         cross: ["\"{DL} had a head injury from the airbag, yes. That can cause slurring.\""],
                         weight: 2, lay: false),
@@ -870,7 +871,7 @@ enum CaseTemplates {
         innocentTruths: ["A city engineer later testified the curve had a design flaw that had caused four other crashes that year."],
         moods: [.wantsConviction],
         doctrines: ["searchSeizure", "warrantExceptions", "lesserIncluded"],
-        extras: ["ROAD": ["Route 9", "Old Quarry Road", "the Harbor Bridge", "County Road 14"]]
+        extras: ["ROAD": ["N.C. 87", "Old Quarry Road", "the Harbor Bridge", "U.S. 17"]]
     )
 
     // MARK: - Cyber
@@ -878,8 +879,9 @@ enum CaseTemplates {
     static let ransomware = CaseTemplate(
         key: "ransomware", category: .cyber,
         headlines: ["Hospital Held Hostage", "The Encrypted Emergency Room"],
-        primaryLaw: "computerExtortion", lesserLaw: "computerIntrusion", threshold: 9, lesserThreshold: 7,
-        specification: "Deployed ransomware against {HOSP} and demanded {RANSOM} in cryptocurrency.",
+        primaryLaw: "extortion", lesserLaw: nil, threshold: 9, lesserThreshold: 7,
+        specification: "Threatened to keep {HOSP}'s systems encrypted unless paid {RANSOM}, with intent to wrongfully obtain it.",
+        secondary: [SecondaryCharge(lawID: "accessingComputers", specification: "Accessed {HOSP}'s computer network to execute a scheme to obtain property.", chance: 0.7, threshold: 0)],
         ageRange: 19...29, occupations: ["self-taught programmer", "IT help desk technician", "computer science student"],
         hasVictim: false,
         summaries: [
@@ -922,16 +924,16 @@ enum CaseTemplates {
         innocentTruths: ["{DL}'s roommate, {ALT}, fled the country the week of trial. The FBI later found the real operation on {ALT}'s cloud server."],
         moods: [.wantsConviction],
         doctrines: ["expertTestimony", "searchSeizure", "lesserIncluded"],
-        extras: ["HOSP": ["St. Brigid's Medical Center", "Port Hollis General", "Westbrook Children's Hospital"],
+        extras: ["HOSP": ["St. Brigid's Medical Center", "Port Hollis General", "Hollis Regional Medical Center"],
                  "RANSOM": ["$2.5 million", "$800,000", "$4 million"]]
     )
 
     static let imageLeak = CaseTemplate(
         key: "imageLeak", category: .cyber,
         headlines: ["After the Breakup", "Leaked"],
-        primaryLaw: "intimateImages", lesserLaw: nil, threshold: 9, lesserThreshold: 9,
+        primaryLaw: "privateImages", lesserLaw: nil, threshold: 9, lesserThreshold: 9,
         specification: "Distributed intimate images of {V} without consent.",
-        secondary: [SecondaryCharge(lawID: "stalking", specification: "Sent repeated threatening messages to {V}.", chance: 0.35, threshold: 10)],
+        secondary: [SecondaryCharge(lawID: "cyberstalking", specification: "Repeatedly sent electronic messages to {V} to harass and terrify.", chance: 0.35, threshold: 10)],
         ageRange: 20...35, hasVictim: true,
         summaries: [
             "Weeks after their breakup, private photos of {V} appeared on a forum and were emailed to {VL}'s employer. {VL} says only {D} ever had them.",
@@ -1024,13 +1026,13 @@ enum CaseTemplates {
     static let felonGun = CaseTemplate(
         key: "felonGun", category: .publicOrder,
         headlines: ["Protection or Crime?", "The Gun in the Glovebox"],
-        primaryLaw: "unlawfulGun", lesserLaw: nil, threshold: 7, lesserThreshold: 7,
+        primaryLaw: "felonFirearm", lesserLaw: nil, threshold: 7, lesserThreshold: 7,
         specification: "Possessed a loaded firearm while prohibited due to a prior felony conviction.",
-        ageRange: 30...52, forcedPriors: ["Receiving Stolen Property (felony), 14 months prison, completed 12 years ago"],
+        ageRange: 30...52, requiresFelonyPrior: true,
         hasVictim: false,
         summaries: [
-            "{D}, convicted of a nonviolent felony twelve years ago, was found with a loaded pistol in the glovebox. {DL} says it was for protection after the house was shot at twice in a month. The charge carries a two-year mandatory minimum.",
-            "After two drive-by shootings at {DL}'s home in {HOOD}, police did nothing. Then they stopped {D} for a cracked windshield and found a gun. Under Westbrook law, that's two years minimum."
+            "{D}, convicted of a nonviolent felony twelve years ago, was found with a loaded pistol in the glovebox. {DL} says it was for protection after the house was shot at twice in a month. In North Carolina, that is a Class G felony no matter the reason.",
+            "After two drive-by shootings at {DL}'s home in {HOOD}, police did nothing. Then they stopped {D} for a cracked windshield and found a gun. Under G.S. 14-415.1, a felon cannot possess a firearm, period."
         ],
         prosecutionEvidence: [
             E(.physical, 5, "Loaded Pistol", "A 9mm handgun with seven rounds, in the glovebox.", .search),
@@ -1054,13 +1056,13 @@ enum CaseTemplates {
                         cross: ["\"No, I didn't know Dad kept a gun.\""],
                         weight: 1, lay: true)
         ],
-        prosecutionTheory: ["The legislature decided people with felony convictions may not carry guns. No exceptions for good reasons."],
-        defenseTheory: ["Necessity. {D}'s family was being shot at and police did nothing. The law can't demand that a parent wait to die."],
+        prosecutionTheory: ["The General Assembly decided people with felony convictions may not possess firearms. Fear, however real, isn't a license."],
+        defenseTheory: ["Justification. {D}'s family was being shot at and police did nothing. The law can't demand that a parent wait to die."],
         aggravating: ["Loaded firearm in a vehicle"],
         mitigating: ["Documented threats against the family", "Old nonviolent prior", "Steady employment for a decade"],
         guiltyTruths: ["The shootings were real. So was the gun. {DL} had been carrying it for years, long before the threats."],
         innocentTruths: ["Six months later, the people who shot at {DL}'s house were arrested. The gun had been bought the day after the first shooting."],
         moods: [.sympathetic, .divided],
-        doctrines: ["necessity", "mandatoryMinimums", "searchSeizure"]
+        doctrines: ["justification", "searchSeizure", "priorRecord"]
     )
 }

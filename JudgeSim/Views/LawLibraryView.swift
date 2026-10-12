@@ -11,8 +11,19 @@ struct LawLibraryView: View {
     var body: some View {
         NavigationStack {
             List {
+                if query.isEmpty {
+                    Section {
+                        NavigationLink {
+                            PunishmentChartView()
+                        } label: {
+                            Label("Felony & Misdemeanor Punishment Charts", systemImage: "tablecells.fill")
+                                .font(.body.weight(.semibold))
+                        }
+                    }
+                }
+
                 if query.isEmpty && !highlightIDs.isEmpty {
-                    Section("Relevant to This Case") {
+                    Section("Relevant to this case") {
                         ForEach(highlightIDs.compactMap(LawLibrary.lawIfPresent)) { law in
                             row(law)
                         }
@@ -38,7 +49,7 @@ struct LawLibraryView: View {
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Law Library")
-            .searchable(text: $query, prompt: "Search crimes, rules, defenses")
+            .searchable(text: $query, prompt: "Search statutes, rules, defenses")
             .overlay {
                 if filtered.isEmpty {
                     ContentUnavailableView.search(text: query)
@@ -60,7 +71,7 @@ struct LawLibraryView: View {
         return LawLibrary.all.filter {
             $0.title.lowercased().contains(q)
                 || $0.summary.lowercased().contains(q)
-                || $0.code.lowercased().contains(q)
+                || $0.statute.lowercased().contains(q)
                 || $0.category.rawValue.lowercased().contains(q)
         }
     }
@@ -72,10 +83,10 @@ struct LawLibraryView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(law.title).font(.body.weight(.semibold))
                 HStack(spacing: 6) {
-                    Text(law.code)
-                    if let sentence = law.sentence {
+                    Text(law.statute)
+                    if let cls = law.ncClass {
                         Text("·")
-                        Text(sentence.summary)
+                        Text(cls.label)
                     }
                 }
                 .font(.caption)
@@ -95,11 +106,16 @@ struct LawDetailView: View {
                 header
 
                 Text(law.summary)
-                    .font(.body)
                     .card()
 
-                if let sentence = law.sentence {
-                    SentenceRangeCard(sentence: sentence)
+                if let special = law.specialPunishment {
+                    Label(special, systemImage: "exclamationmark.octagon.fill")
+                        .font(.callout)
+                        .card(tint: Theme.bad)
+                }
+
+                if let cls = law.ncClass, law.specialPunishment == nil || cls != .A {
+                    ClassPunishmentTable(cls: cls)
                 }
 
                 if !law.elements.isEmpty {
@@ -118,20 +134,12 @@ struct LawDetailView: View {
                     .card()
                 }
 
-                if !law.aggravating.isEmpty {
-                    SectionTitle(text: "Aggravating factors", icon: "arrow.up.circle.fill")
-                    BulletList(items: law.aggravating, symbol: "plus.circle.fill", color: Theme.bad).card()
-                }
-                if !law.mitigating.isEmpty {
-                    SectionTitle(text: "Mitigating factors", icon: "arrow.down.circle.fill")
-                    BulletList(items: law.mitigating, symbol: "minus.circle.fill", color: Theme.good).card()
-                }
                 if !law.defenses.isEmpty {
                     SectionTitle(text: "Common defenses", icon: "shield.lefthalf.filled")
                     BulletList(items: law.defenses).card()
                 }
                 if let notes = law.notes {
-                    Label(notes, systemImage: "exclamationmark.triangle.fill")
+                    Label(notes, systemImage: "info.circle.fill")
                         .font(.callout)
                         .card(tint: .orange)
                 }
@@ -159,69 +167,112 @@ struct LawDetailView: View {
             Text(law.title)
                 .font(.system(.largeTitle, design: .serif).weight(.bold))
             HStack {
-                Pill(text: law.code, icon: "number")
-                if let offenseClass = law.offenseClass {
-                    Pill(text: offenseClass.rawValue, color: offenseClass.isFelony ? Theme.bad : .orange)
+                Pill(text: law.statute, icon: "book.closed")
+                if let cls = law.ncClass {
+                    Pill(text: cls.label, color: cls.isFelony ? Theme.bad : .orange)
                 }
             }
         }
     }
 }
 
-struct SentenceRangeCard: View {
-    let sentence: SentenceRange
+/// The punishment-chart row for one class, at every prior record level.
+struct ClassPunishmentTable: View {
+    let cls: NCClass
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Label("Sentencing range", systemImage: "scalemass.fill")
+        VStack(alignment: .leading, spacing: 10) {
+            Label(cls.isFelony ? "Typical sentence (presumptive minimum, months)" : "Authorized sentence (days)",
+                  systemImage: "scalemass.fill")
                 .font(.headline)
 
-            HStack {
-                stat("Minimum", SentenceFormat.months(sentence.minMonths))
-                Spacer()
-                stat("Typical", SentenceFormat.months(sentence.typicalMonths), highlight: true)
-                Spacer()
-                stat("Maximum", SentenceFormat.months(sentence.maxMonths))
-            }
-
-            GeometryReader { proxy in
-                let width = proxy.size.width
-                let span = Double(max(1, sentence.maxMonths - sentence.minMonths))
-                let typical = Double(sentence.typicalMonths - sentence.minMonths) / span
-                ZStack(alignment: .leading) {
-                    Capsule().fill(
-                        LinearGradient(colors: [Theme.good.opacity(0.6), .orange.opacity(0.7), Theme.bad.opacity(0.8)],
-                                       startPoint: .leading, endPoint: .trailing)
-                    )
-                    Circle()
-                        .fill(Color.white)
-                        .overlay(Circle().stroke(Color.black.opacity(0.6), lineWidth: 2))
-                        .frame(width: 16, height: 16)
-                        .offset(x: max(0, min(width - 16, width * typical - 8)))
+            if cls == .A {
+                Text("Life imprisonment without parole, or death in a capital case.").font(.callout)
+            } else if cls.isFelony, let cells = StructuredSentencing.felonyGrid[cls] {
+                ForEach(Array(cells.enumerated()), id: \.offset) { index, cell in
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Level \(SentenceFormat.romanLevels[index])")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(width: 70, alignment: .leading)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(cell.presumptive.text) · \(SentenceFormat.months(cell.presumptive.low))–\(SentenceFormat.months(cell.presumptive.high))")
+                                .font(.subheadline)
+                            Text("Mitigated \(cell.mitigated.low)–\(cell.mitigated.high) · Aggravated \(cell.aggravated.map { "\($0.low)–\($0.high)" } ?? "LWOP") · \(cell.dispositionCode)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
-            }
-            .frame(height: 16)
-
-            VStack(alignment: .leading, spacing: 6) {
-                Label("Maximum fine: \(SentenceFormat.dollars(sentence.maxFine))", systemImage: "dollarsign.circle")
-                Label(sentence.probationEligible && !sentence.mandatoryMinimum ? "Probation available" : "Probation NOT available",
-                      systemImage: sentence.probationEligible && !sentence.mandatoryMinimum ? "checkmark.circle" : "xmark.circle")
-                if sentence.mandatoryMinimum {
-                    Label("Mandatory minimum: \(SentenceFormat.months(sentence.minMonths))", systemImage: "lock.fill")
-                        .foregroundStyle(Theme.bad)
+                Text("Ranges are for the minimum term. The maximum is about 120% of the minimum plus \(cls.severity <= NCClass.E.severity ? 12 : 9) months of post-release supervision. A = Active, I = Intermediate, C = Community.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if let cells = StructuredSentencing.misdemeanorGrid[cls] {
+                ForEach(Array(cells.enumerated()), id: \.offset) { index, cell in
+                    HStack {
+                        Text("Level \(SentenceFormat.romanLevels[index])")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(width: 70, alignment: .leading)
+                        Text("1–\(cell.maxDays) days · \(cell.dispositionCode)").font(.subheadline)
+                    }
                 }
+                Text("Level I: no prior convictions. II: 1–4. III: 5 or more." + (cls.maxFine.map { " Maximum fine \(SentenceFormat.dollars($0))." } ?? " Fine in the court's discretion."))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .font(.subheadline)
+            LawLink(lawID: cls.isFelony ? "punishmentChart" : "misdemeanorSentencing")
         }
         .card(tint: Theme.gold)
     }
+}
 
-    private func stat(_ label: String, _ value: String, highlight: Bool = false) -> some View {
-        VStack(spacing: 2) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
-            Text(value)
-                .font(.system(.headline, design: .rounded))
-                .foregroundStyle(highlight ? Theme.gold : .primary)
+struct PunishmentChartView: View {
+    @State private var selected: NCClass = .D
+
+    private let felonyClasses: [NCClass] = [.B1, .B2, .C, .D, .E, .F, .G, .H, .I]
+    private let misdemeanorClasses: [NCClass] = [.misdA1, .misd1, .misd2, .misd3]
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("North Carolina Structured Sentencing, for offenses committed on or after October 1, 2013. Find the offense class and the defendant's prior record level.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+
+                SectionTitle(text: "Felonies", icon: "tablecells")
+                classPicker(felonyClasses)
+                SectionTitle(text: "Misdemeanors", icon: "tablecells")
+                classPicker(misdemeanorClasses)
+
+                ClassPunishmentTable(cls: selected)
+
+                HStack {
+                    LawLink(lawID: "priorRecord")
+                    LawLink(lawID: "habitualFelon")
+                }
+            }
+            .padding()
+        }
+        .background(Color(.systemGroupedBackground))
+        .navigationTitle("Punishment Charts")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func classPicker(_ classes: [NCClass]) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack {
+                ForEach(classes, id: \.self) { cls in
+                    Button {
+                        withAnimation(.snappy) { selected = cls }
+                    } label: {
+                        Text(cls.rawValue)
+                            .font(.headline)
+                            .frame(minWidth: 44, minHeight: 36)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(selected == cls ? Theme.gold : Color(.tertiarySystemFill)))
+                            .foregroundStyle(selected == cls ? Color.black : Color.primary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
         }
     }
 }

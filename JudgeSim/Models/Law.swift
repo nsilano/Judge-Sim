@@ -2,25 +2,27 @@ import Foundation
 
 /// Top-level groupings used by the Law Library.
 enum LawCategory: String, CaseIterable, Codable, Identifiable {
-    case violent = "Violent Crimes"
-    case property = "Property Crimes"
-    case drugs = "Drug Offenses"
-    case whiteCollar = "Fraud & White Collar"
-    case publicOrder = "Public Order & Weapons"
-    case traffic = "Vehicle & Traffic"
-    case cyber = "Cyber Crimes"
-    case family = "Family & Children"
-    case procedure = "Constitutional Procedure"
+    case violent = "Homicide & Assault"
+    case robbery = "Robbery, Kidnapping & Stalking"
+    case property = "Burglary, Larceny & Arson"
+    case drugs = "Controlled Substances"
+    case whiteCollar = "Fraud & Public Corruption"
+    case publicOrder = "Weapons & Public Order"
+    case traffic = "Motor Vehicle Offenses"
+    case cyber = "Computer & Privacy Crimes"
+    case family = "Children & Family"
+    case procedure = "Criminal Procedure"
     case evidence = "Rules of Evidence"
     case defenses = "Defenses"
-    case sentencing = "Sentencing Principles"
-    case ethics = "Judicial Ethics"
+    case sentencing = "Structured Sentencing"
+    case ethics = "Code of Judicial Conduct"
 
     var id: String { rawValue }
 
     var icon: String {
         switch self {
         case .violent: return "bolt.fill"
+        case .robbery: return "figure.walk.motion"
         case .property: return "house.fill"
         case .drugs: return "pills.fill"
         case .whiteCollar: return "banknote.fill"
@@ -36,7 +38,7 @@ enum LawCategory: String, CaseIterable, Codable, Identifiable {
         }
     }
 
-    /// Offense categories carry sentencing ranges; the rest are doctrines.
+    /// Offense categories carry a punishment class; the rest are doctrines.
     var isOffense: Bool {
         switch self {
         case .procedure, .evidence, .defenses, .sentencing, .ethics: return false
@@ -45,89 +47,85 @@ enum LawCategory: String, CaseIterable, Codable, Identifiable {
     }
 }
 
-enum OffenseClass: String, Codable {
-    case felonyA = "Class A Felony"
-    case felonyB = "Class B Felony"
-    case felonyC = "Class C Felony"
-    case felonyD = "Class D Felony"
-    case misdemeanorA = "Class A Misdemeanor"
-    case misdemeanorB = "Class B Misdemeanor"
+/// North Carolina offense classes (G.S. 14-1.1 and 14-3).
+enum NCClass: String, Codable, CaseIterable, Hashable {
+    case A, B1, B2, C, D, E, F, G, H, I
+    case misdA1 = "A1"
+    case misd1 = "1"
+    case misd2 = "2"
+    case misd3 = "3"
 
     var isFelony: Bool {
         switch self {
-        case .misdemeanorA, .misdemeanorB: return false
+        case .misdA1, .misd1, .misd2, .misd3: return false
         default: return true
         }
     }
-}
 
-/// Statutory sentencing range, in months. `life` stands in for a life sentence.
-struct SentenceRange: Codable, Hashable {
-    static let life = 1200
+    /// 0 is most serious.
+    var severity: Int { NCClass.allCases.firstIndex(of: self) ?? 0 }
 
-    var minMonths: Int
-    var maxMonths: Int
-    var typicalMonths: Int
-    var maxFine: Int
-    var probationEligible: Bool
-    var mandatoryMinimum: Bool
+    var label: String { isFelony ? "Class \(rawValue) Felony" : "Class \(rawValue) Misdemeanor" }
+    var shortLabel: String { isFelony ? "Class \(rawValue) felony" : "Class \(rawValue) misd." }
 
-    init(min: Int, max: Int, typical: Int, fine: Int, probation: Bool, mandatory: Bool = false) {
-        self.minMonths = min
-        self.maxMonths = max
-        self.typicalMonths = typical
-        self.maxFine = fine
-        self.probationEligible = probation
-        self.mandatoryMinimum = mandatory
+    /// Prior record points this class carries as a prior conviction (G.S. 15A-1340.14(b)).
+    var priorRecordPoints: Int {
+        switch self {
+        case .A: return 10
+        case .B1: return 9
+        case .B2, .C, .D: return 6
+        case .E, .F, .G: return 4
+        case .H, .I: return 2
+        case .misdA1, .misd1: return 1
+        case .misd2, .misd3: return 0
+        }
     }
 
-    var lifePossible: Bool { maxMonths >= SentenceRange.life }
-
-    var summary: String {
-        "\(SentenceFormat.months(minMonths)) – \(SentenceFormat.months(maxMonths))"
+    /// Maximum fine for misdemeanors with a statutory cap; nil means the court's discretion.
+    var maxFine: Int? {
+        switch self {
+        case .misd2: return 1_000
+        case .misd3: return 200
+        default: return nil
+        }
     }
 }
 
 /// A statute (offense) or a legal doctrine, as shown in the Law Library.
 struct Law: Identifiable, Hashable {
     let id: String
-    let code: String
+    let statute: String
     let title: String
     let category: LawCategory
-    let offenseClass: OffenseClass?
+    let ncClass: NCClass?
     let summary: String
-    /// For offenses: the elements the prosecution must prove. For doctrines: the key rules.
+    /// For offenses: the elements the State must prove. For doctrines: the key rules.
     let elements: [String]
-    let sentence: SentenceRange?
-    let aggravating: [String]
-    let mitigating: [String]
+    /// Punishment that falls outside the ordinary grid (e.g. life without parole, trafficking).
+    let specialPunishment: String?
     let defenses: [String]
     let related: [String]
     let notes: String?
 
     init(id: String,
-         code: String,
+         statute: String,
          title: String,
          category: LawCategory,
-         offenseClass: OffenseClass? = nil,
+         ncClass: NCClass? = nil,
          summary: String,
          elements: [String],
-         sentence: SentenceRange? = nil,
-         aggravating: [String] = [],
-         mitigating: [String] = [],
+         specialPunishment: String? = nil,
          defenses: [String] = [],
          related: [String] = [],
          notes: String? = nil) {
         self.id = id
-        self.code = code
+        self.statute = statute
         self.title = title
         self.category = category
-        self.offenseClass = offenseClass
+        self.ncClass = ncClass
         self.summary = summary
         self.elements = elements
-        self.sentence = sentence
-        self.aggravating = aggravating
-        self.mitigating = mitigating
+        self.specialPunishment = specialPunishment
         self.defenses = defenses
         self.related = related
         self.notes = notes
@@ -136,13 +134,16 @@ struct Law: Identifiable, Hashable {
 
 enum SentenceFormat {
     static func months(_ m: Int) -> String {
-        if m >= SentenceRange.life { return "Life" }
         if m <= 0 { return "0 mo" }
         let years = m / 12
         let rem = m % 12
-        if years == 0 { return "\(rem) mo" }
+        if years == 0 { return "\(m) mo" }
         if rem == 0 { return years == 1 ? "1 yr" : "\(years) yrs" }
         return "\(years) yr \(rem) mo"
+    }
+
+    static func range(_ low: Int, _ high: Int) -> String {
+        "\(low)–\(high) months"
     }
 
     static func dollars(_ amount: Int) -> String {
@@ -152,4 +153,14 @@ enum SentenceFormat {
         formatter.maximumFractionDigits = 0
         return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
     }
+
+    static func date(_ date: Date) -> String {
+        date.formatted(date: .long, time: .omitted)
+    }
+
+    static func shortDate(_ date: Date) -> String {
+        date.formatted(date: .abbreviated, time: .omitted)
+    }
+
+    static let romanLevels = ["I", "II", "III", "IV", "V", "VI"]
 }

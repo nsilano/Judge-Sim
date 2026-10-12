@@ -1,64 +1,68 @@
 # Judge Sim
 
-An iPhone game where you play a bench-trial judge in the fictional **State of Westbrook**. Every case is generated fresh, so no two are the same. You rule on motions and objections, decide guilt, pass sentence, and then learn what really happened.
+An iPhone simulator in which you serve as a Resident Superior Court Judge in **Hollis County, North Carolina** (a fictional county). Defendants have waived a jury, so you hear the motions, rule on objections, decide guilt, and impose sentence under North Carolina's Structured Sentencing Act.
 
-## How a case plays out
+There is no score and no right answer. You make rulings, and the world responds: appeals come back months later, the local paper covers your cases, and people you sentenced, put on probation, or acquitted may appear in your courtroom again.
 
-1. **Case File:** the charges, the defendant's background and record, counsel, and sometimes a twist (a sole caregiver, a terminal diagnosis, a DA running for re-election…).
-2. **Pretrial Motions:** suppress evidence from an illegal search? Throw out a confession taken after the suspect asked for a lawyer? Dismiss for a speedy-trial violation? Suppressed evidence disappears from the trial, even when it proves guilt.
-3. **Trial:** opening statements, exhibits, and witnesses with direct and cross-examination. Lawyers object (hearsay, leading, speculation, character evidence…), and you sustain or overrule. Some cases also put an ethics dilemma in front of you: an ex parte email, a gift from defense counsel, a call from the mayor's office.
-4. **Verdict:** guilty, guilty of a lesser included offense, or not guilty, on each count.
-5. **Sentencing:** set prison time inside the statutory range, with victim impact statements, the defendant's allocution, and aggravating and mitigating factors. You also decide on probation, fines, and whether multiple counts run concurrently or consecutively.
-6. **Judgment:** the Court of Appeals reviews your rulings and may reverse. Then you see the public reaction, your grade, and **the truth**: whether the defendant actually did it.
+## A case
 
-Your career tracks **Integrity** (legal soundness) and **Public Approval**. A retention election comes every 8 cases. If integrity collapses, the Judicial Conduct Commission removes you.
+1. **Case file:** docket number (`27 CRS 004512`), session date, procedural posture (jury waiver under N.C. Const. art. I, § 24; habitual felon indictment; probation status), the defendant's record with offense classes and counties, the charges with G.S. citations, counsel, and the investigating agency.
+2. **Pretrial motions:** suppress evidence under G.S. 15A-974, suppress statements (Miranda, voluntariness), or dismiss on speedy-trial grounds.
+3. **Trial:** exhibits and witnesses, with objections under the North Carolina Rules of Evidence. Sometimes there is also an ethics situation outside the courtroom.
+4. **Verdict:** guilty, guilty of a lesser-included offense, or not guilty, on each count.
+5. **Sentencing (Structured Sentencing):**
+   - Prior record points and level (I–VI felony, I–III misdemeanor), including the +1 point for offending on probation
+   - Habitual felon status (sentenced four classes higher, capped at Class C), with predicate convictions excluded from points
+   - Findings of aggravating and mitigating factors, which open the aggravated and mitigated ranges
+   - Mitigated, presumptive, or aggravated range; a minimum term, with the statutory maximum computed automatically
+   - Active, Intermediate, or Community disposition, as the chart cell allows, and the probation length
+   - Consolidated judgment or separate judgments run concurrently or consecutively, plus a fine
+6. **Probation violation hearing:** if the defendant was on probation, you decide whether to revoke, modify, or continue it.
+7. **Judgment:** the judgment and commitment, any notice of appeal, reactions in the hallway, and tomorrow's story in the *Port Hollis Ledger*.
 
-## Why every case is different
+## The county
 
-`CaseGenerator` combines one of 21 case blueprints (armed robbery, a bar-fight stabbing, antifreeze poisoning, a battered spouse, hospital ransomware, a police excessive-force case, insulin shoplifting, a Ponzi scheme, a felon carrying a gun for protection, and more) with:
+Each career generates one Hollis County, and it stays the same throughout:
 
-- randomly drawn defendants, victims, witnesses, and lawyers, with random backgrounds and prior records
-- a random subset of each side's evidence, and witnesses who may be impeached on cross
-- randomly attached motions, objections, twists, and ethics dilemmas
-- a target case strength (clear guilt, close call, or weak), so the answer isn't always "guilty"
-- a hidden truth that suppressed evidence still counts toward, so following the law sometimes frees the guilty
+- **Fixed cast:** an elected District Attorney and their ADAs, the Chief Public Defender and assistants, private defense lawyers, the Clerk of Superior Court, the Sheriff, the Port Hollis police chief, detectives, officers, and Highway Patrol troopers. You can see all of them under **Chambers → Hollis County Courthouse**.
+- **Calendar:** time moves forward between cases, and docket numbers increase in sequence.
+- **People:** everyone who appears before you is kept on record. Prison sentences run out, probation ends, and people can be arrested again. Returning defendants bring their full record, including convictions from your courtroom. If they were on probation from your court, you hold a violation hearing.
+- **Events:** appeals are decided by the Court of Appeals (or the Supreme Court in life-without-parole cases) months after judgment. Exonerations through the North Carolina Innocence Inquiry Commission, new evidence, and press coverage of ethics choices also surface over time.
+- **What really happened** is never shown to you directly. Sometimes it comes out later in the news.
 
 ## Law Library
 
-The Law Library is available from the tab bar and from inside the courtroom. It has 89 entries:
+The library has 60 North Carolina offenses and 51 doctrine entries. Each offense shows its G.S. citation, class, elements, and the presumptive, mitigated, and aggravated minimum ranges and dispositions at every prior record level, taken from the felony and misdemeanor punishment charts. Doctrine entries cover criminal procedure, the Rules of Evidence, defenses (including *State v. Norman* and *State v. Mercer*), Structured Sentencing, habitual felon status, probation violations, and the Code of Judicial Conduct. A full punishment chart viewer is included.
 
-- **Offenses** (46), each with the elements the State must prove, the class, the sentencing range (minimum, typical, maximum), the maximum fine, probation eligibility, mandatory minimums, aggravating and mitigating factors, and common defenses
-- **Doctrines** covering constitutional procedure (Fourth Amendment, Miranda, speedy trial, double jeopardy), rules of evidence (hearsay and its exceptions, leading questions, character evidence), defenses (self-defense, necessity, entrapment, insanity), sentencing principles, and judicial ethics
-
-> Westbrook is fictional. Its code is a simplified composite of typical U.S. criminal law, written for gameplay. It is not legal advice.
+> Laws are summarized from the North Carolina General Statutes and the Structured Sentencing punishment charts for offenses on or after October 1, 2013, and simplified for a simulator. Statutes change; this is not legal advice. Hollis County and everyone in it are fictional.
 
 ## Running it
 
-Requirements: a Mac with **Xcode 16 or later**. The game targets iOS 17 and later.
+Requirements: a Mac with **Xcode 16 or later**. The app targets iOS 17 and later.
 
 1. Open `JudgeSim.xcodeproj`.
-2. Choose an iPhone simulator, or your own iPhone, and press **Run**.
-   - To run on a physical device, open the JudgeSim target's **Signing & Capabilities** tab, select your Team, and change the bundle identifier (`com.example.JudgeSim`) to something unique.
+2. Pick an iPhone simulator, or your own iPhone, and press **Run**.
+   - To install on a physical device, set your Team under **Signing & Capabilities** and change the bundle identifier (`com.example.JudgeSim`) to something unique.
 
-If the project doesn't open in your Xcode version, install [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`) and run `xcodegen` in this folder to regenerate it from `project.yml`.
+If the project won't open in your Xcode version, install [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`) and run `xcodegen` in this folder.
 
 ## Code map
 
 ```
 JudgeSim/
-  JudgeSimApp.swift        App entry point
+  JudgeSimApp.swift            App entry point
   Models/
-    Law.swift              Law, categories, sentence ranges
-    LawLibrary.swift       The Westbrook Penal Code (all encyclopedia content)
-    CourtCase.swift        Case, evidence, witnesses, motions, objections
+    Law.swift                  Offense classes, law entries
+    LawLibrary.swift           NC statutes and doctrines (encyclopedia content)
+    StructuredSentencing.swift Felony/misdemeanor charts, prior record, habitual felon, maximums
+    CourtCase.swift            Case, evidence, witnesses, motions, objections
+    World.swift                County, cast, people, probation terms, news, scheduled events
   Game/
-    CaseTemplates.swift    The 21 case blueprints
-    GenericPools.swift     Shared motions, objections, twists, ethics dilemmas, epilogues
-    CaseGenerator.swift    Assembles a unique case from a seed
-    Scoring.swift          Verdict review, appeals, sentencing guidelines, public reaction
-    CaseSession.swift      State of a case in progress
-    GameState.swift        Career, save/load, retention elections
-  Views/                   SwiftUI screens
+    CaseTemplates.swift        21 case blueprints with NC charges
+    GenericPools.swift         Shared motions, objections, twists, ethics situations, prior records
+    CaseGenerator.swift        Builds a case from a template, the county cast, and returning defendants
+    Judgment.swift             Sentencing units, judgment text, appeals, news
+    CaseSession.swift          State of a case in progress
+    GameState.swift            Calendar, people, news, scheduled events, save/load
+  Views/                       SwiftUI screens
 ```
-
-To add a new kind of case, add a `CaseTemplate` to `CaseTemplates.swift` and append it to `CaseTemplates.all`.

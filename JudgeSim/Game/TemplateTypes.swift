@@ -55,7 +55,7 @@ struct CaseTemplate {
     var secondary: [SecondaryCharge] = []
     let ageRange: ClosedRange<Int>
     var occupations: [String] = []
-    var forcedPriors: [String] = []
+    var requiresFelonyPrior = false
     let hasVictim: Bool
     let summaries: [String]
     let prosecutionEvidence: [EvidenceSeed]
