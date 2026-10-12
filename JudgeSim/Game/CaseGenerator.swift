@@ -341,6 +341,21 @@ enum CaseGenerator {
         let yy = String(format: "%02d", currentYear % 100)
         let docket = "\(yy) \(isFelonyCase ? "CRS" : "CR") \(String(format: "%06d", context.docketSequence))"
 
+        // What the defendant would say on the stand
+        let strongestState = evidence.filter { $0.side == .prosecution }.max { $0.weight < $1.weight }
+        let testimonyHolds = !actuallyGuilty || rng.chance(0.2)
+        let testimony = Witness(
+            name: defendant.name, role: "Defendant, testifying in their own defense", calledBy: .defense,
+            direct: ["\(defendant.lastName) gives their account, consistent with the defense theory: " + fill(rng.pick(t.defenseTheory)),
+                     rng.pick(["\"I want the court to hear it from me.\"",
+                               "\"I've waited a long time to tell my side.\"",
+                               "\"I'm not going to pretend I'm perfect. But I didn't do what they say.\""])],
+            cross: testimonyHolds
+                ? ["On cross, \(defendant.lastName) stays calm and consistent, and concedes only small details."]
+                : ["On cross, \(defendant.lastName) has no explanation for \(strongestState.map { "\"\($0.title)\"" } ?? "the State's evidence") and contradicts an earlier statement."],
+            weight: testimonyHolds ? 2 : -2,
+            lay: true, isDefendant: true)
+
         var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                         publicDefender: usePublicDefender, mitigating: mitigating,
                                         isFelony: isFelonyCase, habitual: habitual, rng: &rng)
@@ -395,7 +410,8 @@ enum CaseGenerator {
             truth: truth,
             relatedDoctrines: doctrines,
             background: background,
-            scenarioSignature: signature
+            scenarioSignature: signature,
+            defendantTestimony: testimony
         )
     }
 

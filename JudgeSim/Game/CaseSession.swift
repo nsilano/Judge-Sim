@@ -178,8 +178,40 @@ final class CaseSession: ObservableObject {
         courtCase.ethics != nil && rulings.ethicsChoice == nil
     }
 
+    /// The State has rested once every objection during its witnesses is ruled on.
+    var stateRested: Bool {
+        courtCase.objections.filter { obj in courtCase.witnesses.first { $0.id == obj.witnessID }?.calledBy == .prosecution }
+            .allSatisfy { rulings.objections[$0.id] != nil }
+    }
+
+    var halftimeComplete: Bool {
+        courtCase.charges.allSatisfy { rulings.halftime[$0.id] != nil }
+    }
+
+    func halftimeBinding(_ charge: Charge) -> Binding<HalftimeRuling?> {
+        Binding(get: { self.rulings.halftime[charge.id] },
+                set: { self.rulings.halftime[charge.id] = $0 })
+    }
+
+    var testimonyDecided: Bool {
+        courtCase.defendantTestimony == nil || rulings.defendantTestifies != nil
+    }
+
+    func adviseRightToTestify() {
+        rulings.defendantTestifies = courtCase.background?.willTestify ?? false
+    }
+
     var trialComplete: Bool {
-        pendingObjections == 0 && !ethicsPending
+        pendingObjections == 0 && !ethicsPending && halftimeComplete && testimonyDecided
+    }
+
+    /// Verdict choices left open after the motion to dismiss.
+    func verdictOptions(_ charge: Charge) -> [Verdict] {
+        switch rulings.halftime[charge.id] {
+        case .dismiss?: return [.notGuilty]
+        case .lesserOnly?: return [.lesser, .notGuilty]
+        default: return charge.lesserLawID == nil ? [.guilty, .notGuilty] : [.guilty, .lesser, .notGuilty]
+        }
     }
 
     var verdictsComplete: Bool {
@@ -342,6 +374,9 @@ final class CaseSession: ObservableObject {
                     if courtCase.defendant.probation != nil { stage = .probation } else { finish() }
                 } else { stage = .trial }
             case .trial:
+                for charge in courtCase.charges where rulings.halftime[charge.id] == .dismiss {
+                    rulings.verdicts[charge.id] = .notGuilty
+                }
                 stage = .verdict
             case .verdict:
                 if anyConviction {

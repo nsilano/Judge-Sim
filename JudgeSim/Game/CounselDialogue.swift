@@ -113,8 +113,10 @@ enum CounselDialogue {
         }
         q.append(CounselQuestion(id: "pre.state.plea", side: .prosecution,
                                  question: "Was a plea offer extended?",
-                                 answer: s.opener + (bg.pleaOffer.map { "yes. The offer was: \($0) It was rejected." }
-                                                     ?? "no offer. District Attorney's office policy on cases like this is to try them.")))
+                                 answer: s.opener + (bg.arrangementPresented == true
+                                    ? "yes, and the defense accepted it. The arrangement is before the court now."
+                                    : (bg.pleaOffer.map { "yes. The offer was: \($0) It was rejected." }
+                                       ?? "no offer. District Attorney's office policy on cases like this is to try them."))))
         if let charge = c.charges.first, let lesser = charge.lesserLaw {
             let element = charge.law.elements.last ?? "the additional element"
             let confident = s == .aggressive
@@ -152,8 +154,13 @@ enum CounselDialogue {
                                  question: "What's the defense theory?",
                                  answer: c.defenseOpening))
         q.append(CounselQuestion(id: "pre.def.plea", side: .defense,
-                                 question: bg.pleaOffer == nil ? "Has there been any plea discussion?" : "Why did your client reject the State's offer?",
-                                 answer: bg.pleaRejection ?? (d.opener + "the State never made an offer we could take back to our client.")))
+                                 question: bg.arrangementPresented == true ? "Why is your client taking this plea?"
+                                    : (bg.pleaOffer == nil ? "Has there been any plea discussion?" : "Why did your client reject the State's offer?"),
+                                 answer: bg.arrangementPresented == true
+                                    ? d.opener + (c.truth.actuallyGuilty
+                                        ? "candidly, the evidence is strong, and this is the best outcome available. My client wants to take responsibility."
+                                        : "my client has doubts about going to trial on this evidence, and the deal removes the risk of a much longer sentence. We've discussed an Alford plea.")
+                                    : (bg.pleaRejection ?? (d.opener + "the State never made an offer we could take back to our client."))))
         q.append(CounselQuestion(id: "pre.def.custody", side: .defense,
                                  question: "Is your client in custody?",
                                  answer: bg.bondStatus))
@@ -272,9 +279,27 @@ enum CounselDialogue {
 
     // MARK: Sentencing
 
-    static func recommendation(_ c: CourtCase, side: Side, units: [SentencingUnit]) -> String {
+    static func recommendation(_ c: CourtCase, side: Side, units: [SentencingUnit], rulings r: Rulings? = nil) -> String {
         guard let unit = units.first else { return "We'll defer to the court." }
         let persona = style(c, side: side)
+        if r?.pleaAccepted == true, let kind = c.background?.arrangementKind {
+            switch kind {
+            case "bottom":
+                let low = unit.felonyCell.map { "\($0.presumptive.low) months, the bottom of the presumptive range" }
+                    ?? "a sentence at the low end of the range"
+                return side == .prosecution
+                    ? "Consistent with the arrangement, the State recommends \(low)."
+                    : "We ask the court to follow the arrangement: \(low). \(c.defendant.lastName) has accepted responsibility."
+            case "suspended":
+                return side == .prosecution
+                    ? "Under the arrangement, the State joins in recommending a suspended sentence on supervised probation."
+                    : "We join the State: a suspended sentence on supervised probation, as the arrangement provides."
+            default:
+                if side == .defense {
+                    return "Sentencing is open, Judge, but my client spared everyone a trial and accepted responsibility. " + (unit.felonyCell.map { "We ask for \($0.mitigated.low) months in the mitigated range" + ($0.dispositions.contains(.active) && $0.dispositions.count == 1 ? "." : ", suspended.") } ?? "We ask for a suspended sentence.")
+                }
+            }
+        }
         if unit.isMandatoryLife { return "The sentence is fixed by law, Judge: life without parole." }
         if let cell = unit.felonyCell {
             if side == .prosecution {
@@ -315,7 +340,7 @@ enum CounselDialogue {
 
         q.append(CounselQuestion(id: "sen.state.rec", side: .prosecution,
                                  question: "What sentence is the State requesting?",
-                                 answer: recommendation(c, side: .prosecution, units: units)))
+                                 answer: recommendation(c, side: .prosecution, units: units, rulings: r)))
         q.append(CounselQuestion(id: "sen.state.restitution", side: .prosecution,
                                  question: "Is the State seeking restitution?",
                                  answer: s.opener + (bg.restitution > 0
@@ -329,7 +354,16 @@ enum CounselDialogue {
         q.append(CounselQuestion(id: "sen.state.conditions", side: .prosecution,
                                  question: "If I suspend the sentence, what conditions would the State want?",
                                  answer: s.opener + stateConditions(c, bg)))
-        if units.contains(where: { [NCClass.D, .E, .F, .G, .H].contains($0.sentencingClass) }) {
+        let asrPossible = units.contains { unit in
+            switch unit.sentencingClass {
+            case .D: return unit.level <= 3
+            case .E: return unit.level <= 4
+            case .F: return unit.level <= 5
+            case .G, .H: return true
+            default: return false
+            }
+        }
+        if asrPossible {
             q.append(CounselQuestion(id: "sen.state.asr", side: .prosecution,
                                      question: "Would the State object to Advanced Supervised Release?",
                                      answer: s.opener + (bg.stateObjectsToASR
@@ -338,13 +372,13 @@ enum CounselDialogue {
         }
         q.append(CounselQuestion(id: "sen.state.more", side: .prosecution,
                                  question: "Is there anything else the court should consider?",
-                                 answer: s.opener + (bg.hiddenAggravator.map { "yes. The State offers this as an aggravating factor: \($0.lowercased()). We gave notice and have the records." }
+                                 answer: s.opener + (bg.hiddenAggravator.map { "yes. The State offers this as an aggravating factor: \($0.lowercased()). I'll be candid: it wasn't in our written notice, but we have the records." }
                                                      ?? "nothing further, Judge."),
                                  reveal: bg.hiddenAggravator.map { .aggravating($0) }))
 
         q.append(CounselQuestion(id: "sen.def.rec", side: .defense,
                                  question: "What is the defense asking for?",
-                                 answer: recommendation(c, side: .defense, units: units)))
+                                 answer: recommendation(c, side: .defense, units: units, rulings: r)))
         q.append(CounselQuestion(id: "sen.def.plan", side: .defense,
                                  question: "What's your client's plan if released?",
                                  answer: (bg.employmentPlan ?? "Honestly, it's a work in progress. \(dl) would need help finding work.")
@@ -373,6 +407,22 @@ enum CounselDialogue {
                                  answer: d.opener + (bg.hiddenMitigator.map { "yes. We offer this as a mitigating factor: \($0.lowercased()). I have documentation." }
                                                      ?? "I think the court has the full picture."),
                                  reveal: bg.hiddenMitigator.map { .mitigating($0) }))
+        if let reason = bg.disputedPriorReason {
+            q.append(CounselQuestion(id: "sen.def.priors", side: .defense,
+                                     question: "Does the defense contest the prior record?",
+                                     answer: d.opener + reason))
+            q.append(CounselQuestion(id: "sen.state.priors", side: .prosecution,
+                                     question: "How does the State prove the disputed prior?",
+                                     answer: s.opener + "through the DCI record, which the statute allows. The defense can rebut it, but they haven't offered anything but argument."))
+        }
+        if c.defendant.probation != nil {
+            let notice = bg.probationPointNotice ?? true
+            q.append(CounselQuestion(id: "sen.state.notice", side: .prosecution,
+                                     question: "Did the State give notice of the probation point?",
+                                     answer: s.opener + (notice
+                                        ? "yes, written notice was served more than 30 days before trial."
+                                        : "I have to concede we didn't serve the written notice. We'd ask the court to count the point anyway; the defendant obviously knew they were on probation.")))
+        }
         if bg.custodyDays > 0 {
             q.append(CounselQuestion(id: "sen.def.credit", side: .defense,
                                      question: "How much time has your client already served?",

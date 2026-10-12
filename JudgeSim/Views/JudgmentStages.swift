@@ -23,25 +23,13 @@ struct VerdictStage: View {
             .card(tint: Theme.gold)
 
             SectionTitle(text: "The record", icon: "tray.full.fill")
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(c.evidence.filter { !session.isSuppressed($0) }) { item in
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Circle().fill(Theme.color(for: item.side)).frame(width: 8, height: 8)
-                        Text("\(item.exhibit): \(item.title)").font(.callout)
-                    }
-                }
-                ForEach(c.witnesses) { witness in
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Image(systemName: "person.fill").font(.caption).foregroundStyle(Theme.color(for: witness.calledBy))
-                        Text("\(witness.name), \(witness.role.lowercased())").font(.callout)
-                    }
-                }
-            }
-            .card()
+            RecordReview(session: session)
 
             SectionTitle(text: "Verdict", icon: "checkmark.seal.fill")
             ForEach(c.charges) { charge in
-                VerdictCard(charge: charge, selection: session.verdictBinding(charge))
+                VerdictCard(charge: charge, allowed: session.verdictOptions(charge),
+                            note: halftimeNote(charge),
+                            selection: session.verdictBinding(charge))
             }
 
             PrimaryButton(title: "Announce Verdict", icon: "hammer.fill", enabled: session.verdictsComplete,
@@ -59,19 +47,92 @@ struct VerdictStage: View {
     }
 }
 
+extension VerdictStage {
+    func halftimeNote(_ charge: Charge) -> String? {
+        switch session.rulings.halftime[charge.id] {
+        case .dismiss?: return "You dismissed this count at the close of the State's evidence."
+        case .lesserOnly?: return "You allowed this count to proceed only on the lesser offense."
+        default: return nil
+        }
+    }
+}
+
+/// Everything the fact-finder may consider, with suppressed and stricken material marked.
+struct RecordReview: View {
+    @ObservedObject var session: CaseSession
+    private var c: CourtCase { session.courtCase }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Exhibits").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+            ForEach(c.evidence) { item in
+                let suppressed = session.isSuppressed(item)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Circle().fill(Theme.color(for: item.side)).frame(width: 8, height: 8)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(item.exhibit): \(item.title)").font(.callout).strikethrough(suppressed)
+                        if suppressed {
+                            Text("Suppressed. Disregard.").font(.caption2.weight(.bold)).foregroundStyle(.orange)
+                        }
+                    }
+                }
+                .opacity(suppressed ? 0.6 : 1)
+            }
+            Divider()
+            Text("Testimony").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+            ForEach(witnesses) { witness in
+                CollapsibleSection(title: witness.name, icon: witness.isDefendant == true ? "person.fill.questionmark" : "person.fill",
+                                   summary: witness.role, expanded: false) {
+                    ForEach(Array((witness.direct + witness.cross).enumerated()), id: \.offset) { _, line in
+                        Text(line).font(.system(.caption, design: .serif))
+                    }
+                    ForEach(c.objections(for: witness)) { objection in
+                        let sustained = session.rulings.objections[objection.id] == true
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(objection.answer).font(.system(.caption, design: .serif)).strikethrough(sustained)
+                            Text(sustained ? "Objection sustained (\(objection.grounds.lowercased())). Stricken." : "Admitted over objection (\(objection.grounds.lowercased())).")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(sustained ? .orange : .secondary)
+                        }
+                    }
+                }
+            }
+            if session.rulings.defendantTestifies == false {
+                Text("The defendant did not testify. No inference may be drawn from that choice.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .card()
+    }
+
+    private var witnesses: [Witness] {
+        var list = c.witnesses
+        if session.rulings.defendantTestifies == true, let testimony = c.defendantTestimony { list.append(testimony) }
+        return list
+    }
+}
+
 struct VerdictCard: View {
     let charge: Charge
+    var allowed: [Verdict] = [.guilty, .lesser, .notGuilty]
+    var note: String? = nil
     @Binding var selection: Verdict?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Count \(charge.count): \(charge.law.title)").font(.headline)
             Text(charge.specification).font(.callout).foregroundStyle(.secondary)
-            option(.guilty, "Guilty", charge.law.ncClass?.label ?? "As charged")
-            if let lesser = charge.lesserLaw {
+            if let note {
+                Label(note, systemImage: "info.circle").font(.caption).foregroundStyle(.orange)
+            }
+            if allowed.contains(.guilty) {
+                option(.guilty, "Guilty", charge.law.ncClass?.label ?? "As charged")
+            }
+            if let lesser = charge.lesserLaw, allowed.contains(.lesser) {
                 option(.lesser, "Guilty of \(lesser.title)", "Lesser-included offense · \(lesser.ncClass?.label ?? "")")
             }
-            option(.notGuilty, "Not Guilty", "")
+            option(.notGuilty, allowed == [.notGuilty] ? "Dismissed (acquittal)" : "Not Guilty", "")
         }
         .card(tint: selection == nil ? nil : Theme.gold)
     }
@@ -262,7 +323,7 @@ struct SentencingStage: View {
         case .none: return option.detail
         case .prayerForJudgment:
             let barred: [NCClass] = [.A, .B1, .B2, .C, .D, .E]
-            return option.detail + (units.contains { barred.contains($0.offenseClass) } ? " Not allowed for Class A–E felonies (G.S. 15A-1331.2)." : "")
+            return option.detail + (session.units.contains { barred.contains($0.offenseClass) } ? " Not allowed for Class A–E felonies (G.S. 15A-1331.2)." : "")
         case .conditionalDischarge:
             switch Judgment.dischargeBasis(c, session.rulings) {
             case .drugPossession: return option.detail + " Eligible under G.S. 90-96."

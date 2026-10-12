@@ -304,13 +304,19 @@ enum Judgment {
         return s
     }
 
-    static func properStrength(_ c: CourtCase) -> Int {
+    static func properStrength(_ c: CourtCase, _ r: Rulings? = nil) -> Int {
         let excluded = Set(c.motions.compactMap { $0.shouldGrant ? $0.targetEvidenceID : nil })
-        return strength(c, excluded: excluded) { !$0.shouldSustain }
+        return strength(c, excluded: excluded) { !$0.shouldSustain } - testimonyWeight(c, r)
     }
 
     static func ruledStrength(_ c: CourtCase, _ r: Rulings) -> Int {
-        strength(c, excluded: r.excludedEvidence(in: c)) { !(r.objections[$0.id] ?? false) }
+        strength(c, excluded: r.excludedEvidence(in: c)) { !(r.objections[$0.id] ?? false) } - testimonyWeight(c, r)
+    }
+
+    /// The defendant's own testimony helps or hurts the defense depending on how it holds up.
+    static func testimonyWeight(_ c: CourtCase, _ r: Rulings?) -> Int {
+        guard r?.defendantTestifies == true, let testimony = c.defendantTestimony else { return 0 }
+        return testimony.weight
     }
 
     /// Whether a conviction would survive appellate sufficiency review.
@@ -773,7 +779,7 @@ enum Judgment {
         var verdictLines: [VerdictLine] = []
         var convicted = false
         var anyUnsupported = false
-        let proper = properStrength(c)
+        let proper = properStrength(c, r)
         if !dismissed {
             for charge in c.charges {
                 let verdict = r.verdicts[charge.id] ?? .notGuilty
@@ -786,6 +792,8 @@ enum Judgment {
                 }
                 if r.dismissedByPlea.contains(charge.id) {
                     label = "Dismissed under plea arrangement"
+                } else if r.halftime[charge.id] == .dismiss {
+                    label = "Dismissed at the close of the State's evidence (G.S. 15A-1227)"
                 } else if plea && verdict != .notGuilty {
                     switch r.pleaKind {
                     case .guilty: label += " (plea)"

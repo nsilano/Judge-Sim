@@ -263,6 +263,8 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var background: CaseBackground?
     /// Identifies the exact scenario so it is never repeated in a career.
     var scenarioSignature: String?
+    /// What the defendant would say if they chose to testify.
+    var defendantTestimony: Witness?
 
     var caption: String { "State of North Carolina v. \(defendant.name)" }
 

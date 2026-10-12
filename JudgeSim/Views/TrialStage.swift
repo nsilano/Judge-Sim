@@ -20,7 +20,25 @@ struct TrialStage: View {
             .card()
 
             caseInChief(for: .prosecution, title: "The State's case", icon: "building.columns.fill")
-            caseInChief(for: .defense, title: "The defense case", icon: "shield.fill")
+
+            if session.stateRested {
+                HalftimeMotionCard(session: session)
+                if session.halftimeComplete {
+                    RightToTestifyCard(session: session)
+                }
+            } else {
+                Label("Rule on the objections in the State's case. When the State rests, the defense may move to dismiss.",
+                      systemImage: "hourglass")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if session.halftimeComplete && session.testimonyDecided {
+                caseInChief(for: .defense, title: "The defense case", icon: "shield.fill")
+                if session.rulings.defendantTestifies == true, let testimony = c.defendantTestimony {
+                    WitnessCard(witness: testimony, objections: [], session: session)
+                }
+            }
 
             SectionTitle(text: "Closing arguments", icon: "text.quote")
             VStack(alignment: .leading, spacing: 12) {
@@ -41,6 +59,8 @@ struct TrialStage: View {
         if session.ethicsPending { parts.append("respond to the ethics issue") }
         let pending = session.pendingObjections
         if pending > 0 { parts.append("rule on \(pending) objection\(pending == 1 ? "" : "s")") }
+        if session.stateRested && !session.halftimeComplete { parts.append("rule on the motion to dismiss") }
+        if session.halftimeComplete && !session.testimonyDecided { parts.append("advise the defendant on the right to testify") }
         return "Scroll up to " + parts.joined(separator: " and ") + "."
     }
 
@@ -217,5 +237,81 @@ struct EthicsCard: View {
             }
         }
         .card(tint: .purple)
+    }
+}
+
+
+// MARK: - Motion to dismiss at the close of the State's evidence
+
+struct HalftimeMotionCard: View {
+    @ObservedObject var session: CaseSession
+    private var c: CourtCase { session.courtCase }
+
+    var body: some View {
+        SectionTitle(text: "Motion to dismiss", icon: "hand.raised.fill")
+        VStack(alignment: .leading, spacing: 12) {
+            Text("The State rests. \(c.defenseAttorney.components(separatedBy: ",").first ?? "Defense counsel") moves to dismiss every count for insufficient evidence (G.S. 15A-1227).")
+                .font(.callout)
+            Text("The question is whether there is substantial evidence of each element and that the defendant committed the offense, taking the evidence in the light most favorable to the State. A dismissal is an acquittal and cannot be appealed by the State.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            ForEach(c.charges) { charge in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Count \(charge.count): \(charge.law.title)").font(.subheadline.weight(.semibold))
+                    HStack(spacing: 8) {
+                        ForEach(options(for: charge), id: \.self) { option in
+                            let selected = session.rulings.halftime[charge.id] == option
+                            Button {
+                                Haptics.tap()
+                                withAnimation(.snappy) { session.halftimeBinding(charge).wrappedValue = option }
+                            } label: {
+                                Text(option == .lesserOnly ? "Lesser only" : option.label)
+                                    .font(.caption.weight(.bold))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                                    .background(RoundedRectangle(cornerRadius: 10).fill(selected ? Theme.gold.opacity(0.3) : Color(.tertiarySystemFill)))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+            LawLink(lawID: "burdenOfProof")
+        }
+        .card(tint: session.halftimeComplete ? Theme.gold : nil)
+    }
+
+    private func options(for charge: Charge) -> [HalftimeRuling] {
+        charge.lesserLawID == nil ? [.deny, .dismiss] : [.deny, .lesserOnly, .dismiss]
+    }
+}
+
+// MARK: - Right to testify
+
+struct RightToTestifyCard: View {
+    @ObservedObject var session: CaseSession
+    private var c: CourtCase { session.courtCase }
+
+    var body: some View {
+        if c.defendantTestimony != nil {
+            SectionTitle(text: "The defendant's right to testify", icon: "person.fill.questionmark")
+            VStack(alignment: .leading, spacing: 10) {
+                if let testifies = session.rulings.defendantTestifies {
+                    Text("Court: \"\(c.defendant.lastName), you have the absolute right to testify, and the absolute right not to. If you don't, I will draw no inference from it. The decision is yours, not your lawyer's. Have you made it?\"")
+                        .font(.system(.callout, design: .serif))
+                    Text(testifies
+                         ? "\(c.defendant.lastName): \"Yes, Your Honor. I want to testify.\""
+                         : "\(c.defendant.lastName): \"Yes. I'm not going to testify.\"")
+                        .font(.system(.callout, design: .serif)).italic()
+                } else {
+                    Text("Before the defense presents its case, you may address the defendant personally about the right to testify or remain silent.")
+                        .font(.callout)
+                    PrimaryButton(title: "Advise the Defendant", icon: "text.bubble.fill", enabled: true, hint: nil) {
+                        withAnimation(.snappy) { session.adviseRightToTestify() }
+                    }
+                }
+            }
+            .card(tint: session.rulings.defendantTestifies == nil ? nil : Theme.gold)
+        }
     }
 }
