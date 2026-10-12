@@ -116,6 +116,9 @@ struct ChambersView: View {
                         VersionBadge()
                     }
                     header
+                    if !game.digest.isEmpty {
+                        digestCard
+                    }
                     docketCard
 
                     if let county = game.county {
@@ -261,6 +264,48 @@ struct ChambersView: View {
             }
         }
         .card(tint: Theme.gold)
+    }
+
+    /// Appeals decided, releases, and arrests since the last court day, with appeals first.
+    private var digestCard: some View {
+        let appeals = game.digest.filter { $0.kind == .appeal || $0.kind == .exoneration }
+        let others = game.digest.filter { $0.kind != .appeal && $0.kind != .exoneration }
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionTitle(text: "Since you last sat", icon: "envelope.open.fill")
+                Spacer()
+                Button("Dismiss") { withAnimation { game.clearDigest() } }
+                    .font(.caption.weight(.semibold))
+            }
+            if !appeals.isEmpty {
+                Text("Appellate decisions").font(.caption.weight(.bold)).foregroundStyle(.orange)
+                ForEach(appeals) { item in digestRow(item, highlight: true) }
+            }
+            if !others.isEmpty {
+                if !appeals.isEmpty { Divider() }
+                ForEach(others.prefix(6)) { item in digestRow(item, highlight: false) }
+                if others.count > 6 {
+                    Text("And \(others.count - 6) more in Records → News.").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .card(tint: appeals.isEmpty ? nil : .orange)
+    }
+
+    private func digestRow(_ item: NewsItem, highlight: Bool) -> some View {
+        DisclosureGroup {
+            Text(item.body).font(.callout).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
+            if let docket = item.docket {
+                Text(docket).font(.caption2.monospaced()).foregroundStyle(.secondary)
+            }
+        } label: {
+            Label {
+                Text(item.headline).font(.subheadline.weight(highlight ? .semibold : .regular)).multilineTextAlignment(.leading)
+            } icon: {
+                Image(systemName: item.kind.icon).foregroundStyle(highlight ? Color.orange : Theme.gold)
+            }
+        }
+        .tint(.primary)
     }
 
     private func statusIcon(_ entry: DocketEntry) -> String {

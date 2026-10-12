@@ -71,6 +71,7 @@ private struct SaveData: Codable {
     var scheduled: [ScheduledMatter]?
     var openingMinutes: Int?
     var sessionEnds: Date?
+    var digest: [NewsItem]?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -89,6 +90,8 @@ final class GameState: ObservableObject {
     @Published private(set) var scheduled: [ScheduledMatter] = []
     /// The hour court opens each day, in minutes after midnight.
     @Published private(set) var openingMinutes = 9 * 60 + 30
+    /// What happened since the judge last sat: appeals decided, releases, new arrests.
+    @Published private(set) var digest: [NewsItem] = []
     /// The last day of the current week-long criminal session.
     private var sessionEnds = Date()
     // Kept only to bring forward a matter left open in an older save.
@@ -224,9 +227,54 @@ final class GameState: ObservableObject {
             sessionDay = 0
             kind = .specialSetting
         }
+        let marker = news.first?.id
         advanceWorld(to: next)
         today = buildDay(next, kind: kind, sessionDay: sessionDay)
+        digest = Array(news.prefix { $0.id != marker })
         save()
+    }
+
+    func clearDigest() {
+        digest = []
+        save()
+    }
+
+    /// A probationer sentenced elsewhere whose supervision was transferred to this county.
+    private func makeOutsideHearing(date: Date, rng: inout SeededRNG) -> ViolationHearing? {
+        guard let county else { return nil }
+        var used = Set(people.map(\.name))
+        let name = NameBank.person(using: &rng, excluding: &used)
+        let age = rng.int(20...58)
+        let year = Calendar.current.component(.year, from: date)
+        let seed = rng.pick(GenericPools.priorSeeds)
+        var priors: [PriorConviction] = []
+        for _ in 0..<rng.int(0...3) {
+            let p = rng.pick(GenericPools.priorSeeds)
+            priors.append(PriorConviction(offense: p.offense, ncClass: p.ncClass, year: year - rng.int(2...12),
+                                          county: rng.pick(GenericPools.otherCounties), sentence: rng.pick(p.sentences)))
+        }
+        let otherCounty = rng.pick(GenericPools.otherCounties)
+        let felony = seed.ncClass.isFelony
+        let months = felony ? rng.int(6...20) : rng.int(1...4)
+        let docket = String(format: "%02d %@ %06d", (year - 1) % 100, felony ? "CRS" : "CR", rng.int(1_000...90_000))
+        let judge = "Judge " + (NameBank.person(using: &rng, excluding: &used).components(separatedBy: " ").last ?? "Ward")
+        priors.append(PriorConviction(offense: seed.offense, ncClass: seed.ncClass, year: year - 1, county: otherCounty,
+                                      sentence: felony ? "\(months) months suspended, 30 months probation" : "\(months * 30) days suspended, 18 months probation",
+                                      docket: docket))
+        let term = ProbationTerm(docket: docket, offense: seed.offense, isFelony: felony,
+                                 suspendedSentence: felony ? "\(months)–\(StructuredSentencing.maximum(forMinimum: months, cls: seed.ncClass)) months" : "\(months * 30) days",
+                                 activeMonths: months,
+                                 ends: Calendar.current.date(byAdding: .month, value: rng.int(6...20), to: date) ?? date,
+                                 imposedInThisCourt: false, supervised: true,
+                                 conditions: rng.chance(0.5) ? ["Obtain a substance abuse assessment and complete recommended treatment."] : [],
+                                 monthlyObligation: rng.int(1...4) * 40, violationRisk: 0.25, crvCount: rng.chance(0.2) ? 1 : 0,
+                                 treatmentNeed: rng.chance(0.5) ? .substance : TreatmentNeed.none,
+                                 origin: "Sentenced by \(judge) in \(otherCounty); supervision transferred to \(county.name) when the probationer moved here.")
+        let person = PersonRecord(id: UUID(), name: name, birthYear: year - age, occupation: rng.pick(NameBank.occupations).capitalizedFirst,
+                                  background: "Moved to \(rng.pick(county.towns)) last year.", priors: priors,
+                                  status: .probation, probation: term, propensity: rng.chance(0.5) ? 0.35 : 0.2)
+        people.append(person)
+        return ViolationHearings.make(person: person, county: county, date: date, seed: rng.next())
     }
 
     /// Builds the calendar for a court date.
@@ -271,6 +319,9 @@ final class GameState: ObservableObject {
                     entries.append(DocketEntry(matter: .hearing(hearing)))
                 }
             }
+            if rng.chance(0.7), let hearing = makeOutsideHearing(date: date, rng: &rng) {
+                entries.append(DocketEntry(matter: .hearing(hearing)))
+            }
         case .trial:
             let roll = Double.random(in: 0..<1, using: &rng)
             let wanted = roll < 0.4 ? 1 : (roll < 0.85 ? 2 : 3)
@@ -281,6 +332,8 @@ final class GameState: ObservableObject {
                 }
             }
             if rng.chance(0.35), let hearing = makeViolationHearing(date: date, excluding: &usedPeople, rng: &rng) {
+                entries.append(DocketEntry(matter: .hearing(hearing)))
+            } else if rng.chance(0.25), let hearing = makeOutsideHearing(date: date, rng: &rng) {
                 entries.append(DocketEntry(matter: .hearing(hearing)))
             }
         }
@@ -326,7 +379,7 @@ final class GameState: ObservableObject {
         let recentCutoff = Calendar.current.date(byAdding: .day, value: -45, to: date) ?? date
         let candidates = people.filter { person in
             person.status == .probation
-                && (person.probation?.imposedInThisCourt ?? false)
+                && person.probation != nil
                 && (person.appearances.last?.date ?? .distantPast) < recentCutoff
                 && !used.contains(person.id)
         }
@@ -469,6 +522,7 @@ final class GameState: ObservableObject {
         currentCalendar = nil
         today = nil
         scheduled = []
+        digest = []
         retrials = []
         stats = CareerStats()
         recentTemplates = []
@@ -617,7 +671,8 @@ final class GameState: ObservableObject {
                             currentCase: currentCase, currentHearing: currentHearing, recentTemplates: recentTemplates,
                             usedSignatures: usedSignatures, seedBase: seedBase,
                             currentCalendar: currentCalendar, retrials: retrials, stats: stats,
-                            today: today, scheduled: scheduled, openingMinutes: openingMinutes, sessionEnds: sessionEnds)
+                            today: today, scheduled: scheduled, openingMinutes: openingMinutes, sessionEnds: sessionEnds,
+                            digest: digest)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -643,6 +698,7 @@ final class GameState: ObservableObject {
         retrials = data.retrials ?? []
         stats = data.stats ?? CareerStats()
         scheduled = data.scheduled ?? []
+        digest = data.digest ?? []
         openingMinutes = data.openingMinutes ?? openingMinutes
         sessionEnds = data.sessionEnds ?? sessionFriday(for: currentDate)
         today = data.today

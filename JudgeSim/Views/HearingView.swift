@@ -129,6 +129,8 @@ struct HearingView: View {
                 .font(.callout)
             if h.probation.imposedInThisCourt {
                 Text("You imposed this sentence.").font(.caption).foregroundStyle(.purple)
+            } else {
+                Text(h.probation.origin ?? "Another judge imposed this sentence.").font(.caption).foregroundStyle(.secondary)
             }
             if let conditions = h.probation.conditions, !conditions.isEmpty {
                 Divider()

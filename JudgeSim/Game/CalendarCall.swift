@@ -3,7 +3,7 @@ import Foundation
 /// One short matter handled at an administrative calendar call.
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
-        case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission
+        case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination
 
         var label: String {
             switch self {
@@ -13,6 +13,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .bondModification: return "Bond motion"
             case .capacity: return "Capacity motion"
             case .pvAdmission: return "Probation violation admission"
+            case .earlyTermination: return "Motion to end probation early"
             }
         }
 
@@ -24,6 +25,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .bondModification: return "dollarsign.circle"
             case .capacity: return "brain.head.profile"
             case .pvAdmission: return "person.badge.clock.fill"
+            case .earlyTermination: return "checkmark.seal.fill"
             }
         }
     }
@@ -157,8 +159,26 @@ enum CalendarCalls {
         }
 
         // A probationer from this court admits a technical violation.
-        let probationers = people.filter { $0.status == .probation && ($0.probation?.imposedInThisCourt ?? false) }
-        if let person = probationers.isEmpty ? nil : rng.pick(probationers), let term = person.probation, rng.chance(0.6) {
+        let probationers = people.filter { $0.status == .probation && $0.probation != nil }
+        let steady = probationers.filter { ($0.probation?.violationRisk ?? 0.2) < 0.25 }
+        if let person = steady.isEmpty ? nil : rng.pick(steady), let term = person.probation, rng.chance(0.5) {
+            let whose = term.imposedInThisCourt ? "You placed \(person.lastName) on probation." : (term.origin ?? "Sentenced in another court.")
+            matters.append(CalendarMatter(
+                kind: .earlyTermination, personID: person.id, personName: person.name, personAge: person.age(on: date),
+                occupation: person.occupation, docket: term.docket,
+                summary: "\(person.name) asks the court to end probation in \(term.docket) (\(term.offense)) early. \(whose) The probation officer reports every visit kept, clean drug screens, and steady work.",
+                stateAsk: rng.pick(["The State takes no position.",
+                                    "The State opposes. Restitution still isn't paid in full.",
+                                    "The State doesn't object, provided all money owed is paid."]),
+                defenseAsk: rng.pick(["My client has done everything asked. A new job requires travel that supervision makes impossible.",
+                                      "Two-thirds of the term is served without a single violation. The goal of probation has been met.",
+                                      "My client wants to move closer to family in another county and start over."]),
+                options: ["Grant: probation ends successfully (G.S. 15A-1342(b))",
+                          "Grant once all money owed is paid",
+                          "Deny: probation continues as ordered"]))
+        }
+        if let person = probationers.isEmpty ? nil : rng.pick(probationers), let term = person.probation, rng.chance(0.6),
+           !matters.contains(where: { $0.personID == person.id }) {
             matters.append(CalendarMatter(
                 kind: .pvAdmission, personID: person.id, personName: person.name, personAge: person.age(on: date),
                 occupation: person.occupation, docket: term.docket + " (PV)",
@@ -233,6 +253,16 @@ enum CalendarCalls {
                                                            docket: m.docket)))
             case .failureToAppear where choice == 0:
                 lines.append("Order for arrest issued; bond forfeiture entered (G.S. 15A-544.3).")
+            case .earlyTermination:
+                guard choice != 2 else { continue }
+                updates.append((m.personID, { person in
+                    guard let term = person.probation else { return }
+                    person.probation = nil
+                    person.status = .free
+                    person.propensity = max(0.03, person.propensity * 0.85)
+                    person.appearances.append(PersonRecord.Appearance(docket: term.docket, date: date, charges: "Motion to terminate probation early",
+                                                                      outcome: "Granted: probation ended early"))
+                }))
             case .pvAdmission:
                 updates.append((m.personID, { person in
                     guard var term = person.probation else { return }
