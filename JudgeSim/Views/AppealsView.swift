@@ -230,7 +230,8 @@ struct PersonStatusCard: View {
                         Text("Pays about \(SentenceFormat.dollars(monthly)) a month toward money owed.").font(.caption).foregroundStyle(.secondary)
                     }
                     if let conditions = term.conditions, !conditions.isEmpty {
-                        BulletList(items: conditions).font(.caption)
+                        Text("\(conditions.count) special condition\(conditions.count == 1 ? "" : "s"); see the conditions of probation below.")
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                     Text(term.imposedInThisCourt ? "You imposed this sentence." : (term.origin ?? "Sentenced in another court."))
                         .font(.caption).foregroundStyle(term.imposedInThisCourt ? .purple : .secondary)

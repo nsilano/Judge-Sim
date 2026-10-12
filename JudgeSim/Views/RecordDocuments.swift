@@ -273,36 +273,36 @@ struct CaseRecordDocuments: View {
             }
 
             Group {
-            DocSection(title: "Findings")
-            if entry.isLife {
-                DocCheck(checked: true, text: "Class A felony: life imprisonment without parole is mandatory.")
-            } else if entry.rangeLine == "Term set by the court" {
-                DocCheck(checked: true, text: "Term set by the court")
-            } else {
-                ForEach(["Presumptive range", "Aggravated range", "Mitigated range"], id: \.self) { range in
-                    DocCheck(checked: entry.rangeLine == range,
-                             text: "The court imposes a sentence from the \(range.lowercased()).")
+                DocSection(title: "Findings")
+                if entry.isLife {
+                    DocCheck(checked: true, text: "Class A felony: life imprisonment without parole is mandatory.")
+                } else if entry.rangeLine == "Term set by the court" {
+                    DocCheck(checked: true, text: "Term set by the court")
+                } else {
+                    ForEach(["Presumptive range", "Aggravated range", "Mitigated range"], id: \.self) { range in
+                        DocCheck(checked: entry.rangeLine == range,
+                                 text: "The court imposes a sentence from the \(range.lowercased()).")
+                    }
                 }
-            }
-            if findingsAttached {
-                DocCheck(checked: true, text: "The court makes the findings of aggravating and mitigating factors set out on the attached AOC-CR-605.")
-            }
+                if findingsAttached {
+                    DocCheck(checked: true, text: "The court makes the findings of aggravating and mitigating factors set out on the attached AOC-CR-605.")
+                }
             }
 
             Group {
-            DocSection(title: entry.isActive ? "Judgment – Active punishment" : "Judgment – Sentence suspended")
-            if let mm = entry.minimumMaximum {
-                DocFieldPair(first: ("Minimum term", "\(mm.minimum) months"), second: ("Maximum term", "\(mm.maximum) months"))
-            }
-            if let line = entry.sentenceLine {
-                DocText(line)
-            }
-            ForEach(Array(entry.otherLines.enumerated()), id: \.offset) { _, line in
-                DocCheck(checked: true, text: line)
-            }
-            if let prs = entry.postReleaseMonths {
-                DocCheck(checked: true, text: "Upon release, \(prs) months of post-release supervision (G.S. 15A-1368.2).")
-            }
+                DocSection(title: entry.isActive ? "Judgment – Active punishment" : "Judgment – Sentence suspended")
+                if let mm = entry.minimumMaximum {
+                    DocFieldPair(first: ("Minimum term", "\(mm.minimum) months"), second: ("Maximum term", "\(mm.maximum) months"))
+                }
+                if let line = entry.sentenceLine {
+                    DocText(line)
+                }
+                ForEach(Array(entry.otherLines.enumerated()), id: \.offset) { _, line in
+                    DocCheck(checked: true, text: line)
+                }
+                if let prs = entry.postReleaseMonths {
+                    DocCheck(checked: true, text: "Upon release, \(prs) months of post-release supervision (G.S. 15A-1368.2).")
+                }
             }
 
             if let commitment {

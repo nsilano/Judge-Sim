@@ -676,3 +676,203 @@ extension Testimony {
         return "\(what) \(light)"
     }
 }
+
+// MARK: - State Crime Laboratory analysts
+
+extension Testimony {
+
+    enum Discipline: CaseIterable {
+        case drugChemistry, toxicology, dna, latentPrints, firearms, fireDebris, trace
+
+        var section: String {
+            switch self {
+            case .drugChemistry: return "Drug Chemistry"
+            case .toxicology: return "Toxicology"
+            case .dna: return "Forensic Biology and DNA"
+            case .latentPrints: return "Latent Evidence"
+            case .firearms: return "Firearms and Toolmarks"
+            case .fireDebris: return "Trace Evidence (fire debris)"
+            case .trace: return "Trace Evidence"
+            }
+        }
+
+        var title: String {
+            switch self {
+            case .drugChemistry: return "Forensic chemist"
+            case .toxicology: return "Forensic toxicologist"
+            case .dna: return "DNA analyst"
+            case .latentPrints: return "Latent print examiner"
+            case .firearms: return "Firearms examiner"
+            case .fireDebris, .trace: return "Trace evidence analyst"
+            }
+        }
+
+        static func of(_ item: Evidence, setting: CaseSetting) -> Discipline {
+            let t = (item.title + " " + item.detail).lowercased()
+            if ["blood alcohol", "blood-alcohol", "toxicology", "bac", "alcohol concentration", "blood draw", "blood test"].contains(where: { t.contains($0) }) { return .toxicology }
+            if ["dna", "swab", "profile"].contains(where: { t.contains($0) }) { return .dna }
+            if ["fingerprint", "latent", "print"].contains(where: { t.contains($0) }) { return .latentPrints }
+            if ["casing", "cartridge", "bullet", "ballistic", "firearm", "rifling"].contains(where: { t.contains($0) }) { return .firearms }
+            if ["accelerant", "gasoline", "fire debris", "ignitable"].contains(where: { t.contains($0) }) { return .fireDebris }
+            if setting == .drugs || ["cocaine", "fentanyl", "heroin", "methamphetamine", "oxycodone", "grams", "powder", "pills", "substance", "thc", "plant material"].contains(where: { t.contains($0) }) { return .drugChemistry }
+            if ["toxic", "poison", "overdose", "antifreeze", "ethylene"].contains(where: { t.contains($0) }) { return .toxicology }
+            return .trace
+        }
+    }
+
+    /// One analyst per laboratory section that handled this case's forensic exhibits (at most two).
+    static func analysts(ctx: Context, names: [String], rng: inout SeededRNG) -> [Witness] {
+        let forensic = ctx.state.filter { $0.kind == .forensic }
+        var groups: [(Discipline, [Evidence])] = []
+        for item in forensic {
+            let discipline = Discipline.of(item, setting: ctx.setting)
+            if let index = groups.firstIndex(where: { $0.0 == discipline }) { groups[index].1.append(item) } else { groups.append((discipline, [item])) }
+        }
+        var out: [Witness] = []
+        for (index, group) in groups.prefix(min(2, names.count)).enumerated() {
+            out.append(analyst(name: names[index], discipline: group.0, items: group.1, ctx: ctx, rng: &rng))
+        }
+        return out
+    }
+
+    private static func analyst(name: String, discipline: Discipline, items: [Evidence], ctx: Context, rng: inout SeededRNG) -> Witness {
+        let s = ctx.sheet
+        let dl = ctx.dl
+        var ex: [TestimonyExchange] = []
+        func d(_ q: String, _ a: String) { ex.append(.init(phase: .direct, examiner: .prosecution, question: q, answer: a)) }
+        func c(_ q: String, _ a: String) { ex.append(.init(phase: .cross, examiner: .defense, question: q, answer: a)) }
+        let years = rng.int(3...21)
+        let degree: String
+        switch discipline {
+        case .drugChemistry, .toxicology, .fireDebris, .trace: degree = rng.pick(["a bachelor's degree in chemistry", "a master's degree in forensic science", "a degree in biochemistry"])
+        case .dna: degree = rng.pick(["a master's degree in molecular biology", "a bachelor's degree in biology with graduate coursework in genetics"])
+        case .latentPrints: degree = rng.pick(["a bachelor's degree in forensic science and IAI certification as a latent print examiner", "a biology degree and a two-year in-house training program"])
+        case .firearms: degree = rng.pick(["a bachelor's degree in chemistry and the laboratory's two-year firearms training program", "a forensic science degree and AFTE training"])
+        }
+
+        d(rng.pick(["Where do you work, and what do you do?", "Please tell the court your name and your position.", "Where are you employed?"]),
+          "\(name). I'm a forensic scientist in the \(discipline.section) section of the North Carolina State Crime Laboratory" + rng.pick([". I've been there \(years) years.", ", for \(years) years now.", "; I've worked there \(years) years."]))
+        d(rng.pick(["What is your training?", "Tell the court about your education and experience.", "What qualifies you to do this work?"]),
+          "I have \(degree). " + rng.pick(["I pass a proficiency test every year, and I've analyzed more than \(rng.int(8...40) * 100) items.",
+                                           "Before I worked cases on my own I completed a supervised training program and competency tests.",
+                                           "I've testified about my work \(rng.int(10...150)) times, in state and federal court."]))
+        if rng.chance(0.6) {
+            d(rng.pick(["Is the laboratory accredited?", "Does the lab follow written procedures?"]),
+              rng.pick(["Yes. We're accredited under the ISO/IEC 17025 standard, and we're audited regularly.",
+                        "Yes. Every method we use is validated and written down, and the lab is accredited and audited by an outside body.",
+                        "Yes, accredited. Every report is technically reviewed by a second qualified analyst before it's released."]))
+        }
+        if rng.chance(0.5) {
+            d("Your Honor, the State tenders \(name) as an expert in \(discipline.section.lowercased()).",
+              rng.pick(["Without objection, the witness is accepted as an expert.", "The defense has no objection. The court accepts the witness."]))
+        }
+
+        for (index, item) in items.prefix(2).enumerated() {
+            let title = lower(item.title)
+            let sent = s.labSubmitted.map { CaseDates.day($0) } ?? "the date on the request"
+            d(index == 0 ? rng.pick(["How did the \(title) come to you?", "Tell the court how \(item.exhibit) reached the laboratory.", "What did you receive in this case?"])
+                         : rng.pick(["Did you also examine the \(title)?", "What about \(item.exhibit)?"]),
+              "\(s.agency) submitted it on \(sent), " + rng.pick(["in a sealed bag with the officer's initials across the seal.", "heat-sealed and labeled with the case number.", "with a request for analysis and a chain-of-custody form."])
+                + " " + rng.pick(["The seal was intact when I opened it, and I documented that.", "I checked the seal and the labels against the request before opening it.", "Nothing about the packaging suggested tampering."]))
+            d(rng.pick(["What did you do with it?", "How did you analyze it?", "Walk the court through your method."]), method(discipline, rng: &rng))
+            d(rng.pick(["What were your results?", "What did you conclude?", "What did the analysis show?"]),
+              ("\(item.detail) " + conclusionFrame(discipline, rng: &rng)).trimmingCharacters(in: .whitespaces))
+        }
+        if let back = s.labReturned {
+            d(rng.pick(["When did you issue your report?", "When was your report released?"]),
+              "On \(CaseDates.day(back)). " + rng.pick(["It was technically and administratively reviewed before it went out.", "A second analyst reviewed my data and agreed with my conclusions."]))
+        }
+
+        // Cross: the limits of this discipline
+        var pool = crossPool(discipline, ctx: ctx, rng: &rng)
+        pool.append(("Has your lab ever had to correct a result?", "Every lab has corrected errors. That's why there's a review process, and this result was reviewed."))
+        pool.append(("Were there items from this case the agency never sent you?", rng.chance(0.5) ? "Yes. Some items weren't submitted for testing." : "Not that I'm aware of."))
+        pool.append(("You don't know what happened to the \(lower(items[0].title)) before it got to your lab?", "I know what the chain-of-custody form says. Before that, I'd defer to the officers."))
+        for (q, a) in rng.pick(pool, count: rng.int(3...4)) { c(q, a) }
+        ex.append(.init(phase: .redirect, examiner: .prosecution,
+                        question: rng.pick(["Does anything you were asked on cross change your results?", "Was your result confirmed?"]),
+                        answer: rng.pick(["No. The limits counsel pointed out are real, and they're in my report. The result is the result.",
+                                          "Yes. It was reviewed, and the controls ran correctly. My conclusion stands.", "No. I'd testify to the same result today."])))
+        _ = dl
+        return witness(name: name, role: "\(discipline.title), State Crime Laboratory", side: .prosecution, exchanges: ex)
+    }
+
+    private static func method(_ discipline: Discipline, rng: inout SeededRNG) -> String {
+        switch discipline {
+        case .drugChemistry:
+            return rng.pick(["I weighed it, then ran a color test as a screen and confirmed with gas chromatography-mass spectrometry, which identifies the compound by its chemical fingerprint.",
+                             "Net weight first, without packaging. Then I took a representative sample and confirmed its identity by GC-MS against a reference standard run the same day.",
+                             "I documented the packaging, weighed the contents, and analyzed a sample with GC-MS. The instrument's controls ran clean before and after."])
+        case .toxicology:
+            return rng.pick(["Headspace gas chromatography, run in duplicate with calibrators and controls. The two results have to agree within a set tolerance.",
+                             "I analyzed the blood for alcohol by headspace GC, in duplicate, and screened for other drugs with an immunoassay followed by confirmation.",
+                             "Two separate aliquots, each run against a calibration curve, with controls above and below the legal limit."])
+        case .dna:
+            return rng.pick(["I extracted DNA, measured how much there was, copied specific regions, and compared the resulting profile to the known reference samples.",
+                             "Standard STR testing: extraction, quantitation, amplification, and capillary electrophoresis. Then a statistical comparison with probabilistic genotyping software.",
+                             "I swabbed the item, developed a profile, and compared it to the reference swabs submitted with the case."])
+        case .latentPrints:
+            return rng.pick(["I processed the item chemically, photographed the prints that developed, and compared them to the known prints using ACE-V: analysis, comparison, evaluation, and verification by a second examiner.",
+                             "I used powder and superglue fuming, captured the latent prints, and compared them side by side with the ten-print card.",
+                             "ACE-V. I analyzed the latent print for quality first, compared it with the known prints, evaluated the agreement, and a second examiner verified it blind."])
+        case .firearms:
+            return rng.pick(["I test-fired the firearm into a water tank, recovered the test bullets and casings, and compared their markings under a comparison microscope.",
+                             "I checked the firearm for function, fired test shots, and compared the toolmarks on the test casings with the casings from the scene.",
+                             "Comparison microscopy: the evidence casing on one side, a test-fired casing on the other, looking for agreement in individual markings."])
+        case .fireDebris:
+            return rng.pick(["I extracted the debris with a passive headspace method and ran the extract on GC-MS, comparing the pattern to known ignitable liquids.",
+                             "The cans were sealed at the scene. I extracted vapors onto a carbon strip and analyzed them by GC-MS."])
+        case .trace:
+            return rng.pick(["Microscopy first, then instrumental comparison of the questioned sample with the known sample.",
+                             "I compared the questioned material with the known samples using microscopy and infrared spectroscopy."])
+        }
+    }
+
+    private static func conclusionFrame(_ discipline: Discipline, rng: inout SeededRNG) -> String {
+        switch discipline {
+        case .drugChemistry: return rng.pick(["That's a confirmed identification, not a field test.", "The identification is by GC-MS, which is the confirmatory standard.", ""])
+        case .toxicology: return rng.pick(["That result reflects the blood at the time it was drawn.", "Both runs agreed within tolerance.", ""])
+        case .dna: return rng.pick(["DNA tells you whose DNA is there. It doesn't tell you when or how it got there.", "The statistic is in my report.", ""])
+        case .latentPrints: return rng.pick(["The conclusion was verified by a second examiner.", "A print can't be dated; I can only say whose it is.", ""])
+        case .firearms: return rng.pick(["That's my opinion based on the agreement of individual markings.", "A second examiner verified the comparison.", ""])
+        case .fireDebris, .trace: return rng.pick(["That's what the instrument data supports, and no more.", ""])
+        }
+    }
+
+    private static func crossPool(_ discipline: Discipline, ctx: Context, rng: inout SeededRNG) -> [(String, String)] {
+        let dl = ctx.dl
+        switch discipline {
+        case .drugChemistry:
+            return [("You tested one sample. The rest you weighed?", "One representative sample from the bulk, consistent with our sampling plan."),
+                    ("Your result tells the court what the substance is, not who possessed it?", "That's right. Possession isn't a chemistry question."),
+                    ("You didn't test purity?", "No. North Carolina law goes by weight, not purity, so purity isn't part of the analysis."),
+                    ("How long did the item sit before you tested it?", "It waited in the queue. It was sealed and stored in the vault the whole time.")]
+        case .toxicology:
+            var pool: [(String, String)] = [
+                ("Your number is the level when the blood was drawn, not when \(dl) was driving?", "Correct. I measured the sample I received."),
+                ("Alcohol can still be absorbing after someone stops drinking?", "It can. Whether it was still absorbing depends on facts I don't have."),
+                ("You didn't do a retrograde extrapolation?", "I wasn't asked to, and it would require assumptions about drinking and food I can't verify.")]
+            if ctx.facts.mentions(["hospital"]) { pool.append(("Hospital serum results run higher than whole blood, don't they?", "Serum values run higher, yes. My result is on whole blood.")) }
+            return pool
+        case .dna:
+            return [("DNA can be transferred by touch, without the person ever being there?", "Secondary transfer happens. I can't tell you how the DNA got there."),
+                    ("The sample was a mixture?", rng.pick(["There was a minor contributor I couldn't interpret.", "A two-person mixture. The major profile is the one I reported."])),
+                    ("You can't say when the DNA was left?", "No. DNA doesn't carry a date."),
+                    ("Was the unknown profile ever run through CODIS?", rng.pick(["It didn't meet the upload criteria.", "Not that I'm aware of."]))]
+        case .latentPrints:
+            return [("Fingerprint comparison is ultimately a judgment call by the examiner?", "It's a trained judgment, documented and verified. Yes, it's a judgment."),
+                    ("There's no agreed number of points required for an identification?", "Not in this country. The quality and quantity of detail are evaluated together."),
+                    ("A print can't tell the court when it was left?", "Correct.")]
+        case .firearms:
+            return [("There's no statistic behind 'identification' in your field, is there?", "We don't report a statistic. Our conclusions are based on validated comparison methods."),
+                    ("The 2016 PCAST report criticized the foundations of firearms comparison?", "It raised concerns. Studies since then have addressed some of them."),
+                    ("You can't say who fired the gun?", "No. Only that the casing was fired in that firearm.")]
+        case .fireDebris:
+            return [("Gasoline is found in plenty of garages and sheds without anyone committing arson?", "It's common. My result is about the debris, not intent."),
+                    ("You can't say how the liquid got there?", "No.")]
+        case .trace:
+            return [("Your comparison shows the materials are similar, not that they came from the same source?", "Consistent with a common source. Not unique."),
+                    ("Those materials are mass-produced?", "Many are, yes.")]
+        }
+    }
+}
