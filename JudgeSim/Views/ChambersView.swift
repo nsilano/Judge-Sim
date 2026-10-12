@@ -26,10 +26,14 @@ struct OnboardingView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
+                HStack {
+                    Spacer()
+                    VersionBadge()
+                }
                 Image(systemName: "building.columns.fill")
                     .font(.system(size: 72))
                     .foregroundStyle(Theme.gold)
-                    .padding(.top, 48)
+                    .padding(.top, 24)
                 Text("Judge Sim")
                     .font(.system(size: 44, weight: .bold, design: .serif))
                 Text("You have been elected Resident Superior Court Judge for Hollis County, North Carolina. Defendants in your courtroom have waived their right to a jury, so the facts, the law, and the sentence are yours to decide.")
@@ -91,6 +95,10 @@ struct ChambersView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Spacer()
+                        VersionBadge()
+                    }
                     header
                     docketCard
 

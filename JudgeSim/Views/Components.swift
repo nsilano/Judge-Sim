@@ -288,3 +288,23 @@ enum Haptics {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 }
+
+/// The app's marketing version and build number, read from the bundle.
+struct VersionBadge: View {
+    static var text: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        return "v\(version) (\(build))"
+    }
+
+    var body: some View {
+        Text(Self.text)
+            .font(.caption2.monospaced().weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(Color(.tertiarySystemFill)))
+            .accessibilityLabel("Version \(Self.text)")
+    }
+}
