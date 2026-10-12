@@ -212,6 +212,9 @@ struct CaseBackground: Codable, Hashable {
     var stateJoinsDischarge: Bool?
     /// What the district court imposed before the defendant appealed for a trial de novo.
     var districtCourtSentence: String?
+    /// "bottom" (bottom of the presumptive range), "suspended", or "open" sentencing.
+    var arrangementKind: String?
+    var stateConsentsNoContest: Bool?
 }
 
 /// What actually happened. The player never sees this directly; it may surface later in the news.

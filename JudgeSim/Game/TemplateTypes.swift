@@ -137,8 +137,8 @@ struct TwistSeed {
 
 struct Impeachment {
     let text: String
-    /// Safe to use on the complaining witness.
-    var victimSafe: Bool = true
     /// Amount subtracted from the witness's weight (negative bolsters).
     let penalty: Int
+    /// Safe to use on the complaining witness.
+    var victimSafe: Bool = true
 }

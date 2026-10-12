@@ -54,6 +54,10 @@ final class CaseSession: ObservableObject {
     @Published private(set) var transcript: [TranscriptEntry] = []
     @Published private(set) var revealedAggravating: [String] = []
     @Published private(set) var revealedMitigating: [String] = []
+    /// Set when the chosen sentence is harsher than the plea arrangement and the court must address G.S. 15A-1024.
+    @Published var pendingPleaDeparture: String?
+    /// What happened when the court told the defendant about the departure.
+    @Published private(set) var pleaWithdrawalNote: String?
     private var askedIDs = Set<String>()
     private var sentencingPrepared = false
 
@@ -191,7 +195,8 @@ final class CaseSession: ObservableObject {
     }
 
     var needsHabitualDecision: Bool {
-        courtCase.habitualIndicted && Judgment.anyFelonyConviction(courtCase, rulings)
+        if rulings.pleaAccepted == true && courtCase.background?.arrangementHabitual != nil { return false }
+        return courtCase.habitualIndicted && Judgment.anyFelonyConviction(courtCase, rulings)
     }
 
     var units: [SentencingUnit] { Judgment.units(courtCase, rulings) }
@@ -238,9 +243,31 @@ final class CaseSession: ObservableObject {
 
     var pleaPresented: Bool { courtCase.background?.arrangementPresented == true }
 
-    func acceptPlea() {
+    /// The statutory maximum the defendant faces on the plea, for the colloquy (G.S. 15A-1022(a)(6)).
+    var pleaMaximumText: String {
+        guard let lawID = courtCase.background?.arrangementLawID else { return "the maximum allowed by law" }
+        let law = LawLibrary.law(lawID)
+        guard var cls = law.ncClass else { return "the maximum allowed by law" }
+        if courtCase.background?.arrangementHabitual == true && cls.isFelony { cls = StructuredSentencing.habitualClass(for: cls) }
+        if cls == .A { return "life imprisonment without parole" }
+        if let cell = StructuredSentencing.felonyCell(cls, level: priorRecord.felonyLevel) {
+            let top = cell.aggravated?.high ?? cell.presumptive.high
+            let max = StructuredSentencing.maximum(forMinimum: top, cls: cls)
+            return "\(top) to \(max) months in prison" + (cls == .B1 && priorRecord.felonyLevel >= 5 ? ", or life without parole" : "")
+        }
+        if let cell = StructuredSentencing.misdemeanorCell(cls, level: priorRecord.misdemeanorLevel) {
+            return "\(cell.maxDays) days in jail" + (cls.maxFine.map { " and a fine of up to \(SentenceFormat.dollars($0))" } ?? "")
+        }
+        return "the maximum allowed by law"
+    }
+
+    func acceptPlea(kind: PleaKind = .guilty) {
         guard let lawID = courtCase.background?.arrangementLawID else { return }
         rulings.pleaAccepted = true
+        rulings.pleaKind = kind
+        if let admitted = courtCase.background?.arrangementHabitual {
+            rulings.habitualFound = admitted
+        }
         for (index, charge) in courtCase.charges.enumerated() {
             if index == 0 {
                 rulings.verdicts[charge.id] = charge.lesserLawID == lawID ? .lesser : .guilty
@@ -255,6 +282,35 @@ final class CaseSession: ObservableObject {
 
     func rejectPlea() {
         rulings.pleaAccepted = false
+    }
+
+    /// The court tells the defendant it will not follow the arrangement; the defendant decides whether to withdraw.
+    func informDefendantOfDeparture() {
+        pendingPleaDeparture = nil
+        var rng = SeededRNG(seed: courtCase.seed ^ 0x1024)
+        let withdraws = rng.chance(courtCase.truth.actuallyGuilty ? 0.45 : 0.75)
+        if withdraws {
+            pleaWithdrawalNote = "After conferring with counsel, \(courtCase.defendant.lastName) withdrew the plea. The case will be tried."
+            rulings.pleaAccepted = false
+            rulings.pleaWithdrawn = true
+            rulings.verdicts = [:]
+            rulings.dismissedByPlea = []
+            rulings.sentences = [:]
+            rulings.habitualFound = nil
+            rulings.pleaDepartureDisclosed = nil
+            withAnimation(.easeInOut) { stage = courtCase.motions.isEmpty ? .trial : .motions }
+        } else {
+            pleaWithdrawalNote = "\(courtCase.defendant.lastName) chose to stand on the plea and accept the court's sentence."
+            rulings.pleaDepartureDisclosed = true
+            advance()
+        }
+    }
+
+    /// Enters the harsher sentence without offering withdrawal.
+    func enterDepartureWithoutNotice() {
+        pendingPleaDeparture = nil
+        rulings.pleaDepartureDisclosed = false
+        advance()
     }
 
     // MARK: Custom conditions
@@ -299,6 +355,10 @@ final class CaseSession: ObservableObject {
             case .sentencing:
                 for unit in units where rulings.sentences[unit.id] == nil {
                     rulings.sentences[unit.id] = Judgment.defaultChoice(for: unit)
+                }
+                if rulings.pleaDepartureDisclosed == nil, let departure = Judgment.pleaDeparture(courtCase, rulings) {
+                    pendingPleaDeparture = departure
+                    return
                 }
                 if courtCase.defendant.probation != nil { stage = .probation } else { finish() }
             case .probation:

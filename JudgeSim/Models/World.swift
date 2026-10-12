@@ -172,6 +172,16 @@ struct NewsItem: Identifiable, Codable, Hashable {
     var headline: String
     var body: String
     var docket: String?
+    /// 1 inside pages, 2 metro front, 3 front page above the fold.
+    var prominence: Int? = nil
+
+    var placement: String? {
+        switch prominence ?? 0 {
+        case 3: return "Front page"
+        case 2: return "Metro front"
+        default: return nil
+        }
+    }
 }
 
 /// Something that will happen later in the world, such as an appellate opinion or an exoneration.

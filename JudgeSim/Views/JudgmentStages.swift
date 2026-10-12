@@ -241,6 +241,16 @@ struct SentencingStage: View {
             }
         }
         .tint(Theme.gold)
+        .confirmationDialog("This sentence departs from the plea arrangement",
+                            isPresented: Binding(get: { session.pendingPleaDeparture != nil },
+                                                 set: { if !$0 { session.pendingPleaDeparture = nil } }),
+                            titleVisibility: .visible) {
+            Button("Tell the defendant and offer withdrawal") { session.informDefendantOfDeparture() }
+            Button("Enter it without telling them", role: .destructive) { session.enterDepartureWithoutNotice() }
+            Button("Go back and reconsider", role: .cancel) { session.pendingPleaDeparture = nil }
+        } message: {
+            Text((session.pendingPleaDeparture ?? "") + " Under G.S. 15A-1024, the court must tell the defendant and allow the plea to be withdrawn.")
+        }
     }
 
     private var convictionCount: Int {
@@ -910,7 +920,13 @@ struct NewsCard: View {
                     Text(docket).font(.caption2.monospaced()).foregroundStyle(.secondary)
                 }
             }
-            Text(item.headline).font(.system(.headline, design: .serif))
+            if let placement = item.placement {
+                Text(placement.uppercased())
+                    .font(.caption2.weight(.heavy))
+                    .tracking(1)
+                    .foregroundStyle(Theme.gold)
+            }
+            Text(item.headline).font(.system((item.prominence ?? 0) >= 3 ? .title3 : .headline, design: .serif).weight(.bold))
             Text(item.body).font(.callout).foregroundStyle(.secondary)
         }
         .card()

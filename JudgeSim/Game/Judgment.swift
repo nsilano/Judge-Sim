@@ -210,6 +210,9 @@ struct Rulings {
     var halftime: [UUID: HalftimeRuling] = [:]
     /// Whether the defendant elected to testify.
     var defendantTestifies: Bool?
+    /// After a sentence harsher than the plea arrangement: true if the defendant was told and chose to stand on the plea,
+    /// false if the court entered it without offering withdrawal.
+    var pleaDepartureDisclosed: Bool?
 
     func excludedEvidence(in courtCase: CourtCase) -> Set<UUID> {
         Set(courtCase.motions.compactMap { motion in
@@ -504,6 +507,32 @@ enum Judgment {
         !convictedLaws(c, r).isEmpty
     }
 
+    /// How the chosen sentence is harsher than the plea arrangement, if it is.
+    static func pleaDeparture(_ c: CourtCase, _ r: Rulings) -> String? {
+        guard r.pleaAccepted == true, let kind = c.background?.arrangementKind, kind != "open" else { return nil }
+        if r.special != .none { return nil }
+        for unit in units(c, r) {
+            let selected = choice(unit, r)
+            if selected.lifeWithoutParole { return "The arrangement did not contemplate life imprisonment." }
+            switch kind {
+            case "bottom":
+                if let cell = unit.felonyCell, selected.minimum > cell.presumptive.low {
+                    return "The State recommended \(cell.presumptive.low) months, the bottom of the presumptive range. You chose \(selected.minimum)."
+                }
+                if let cell = unit.misdemeanorCell, selected.minimum > max(1, cell.maxDays / 3) {
+                    return "The State recommended a sentence at the low end of the range. You chose \(selected.minimum) days."
+                }
+            case "suspended":
+                if selected.disposition == .active {
+                    return "The parties recommended a suspended sentence. You chose an active sentence."
+                }
+            default:
+                break
+            }
+        }
+        return nil
+    }
+
     static func appointedCounsel(_ c: CourtCase) -> Bool {
         c.defenseAttorney.contains("Public Defender")
     }
@@ -642,6 +671,12 @@ enum Judgment {
                 issues.append("Restitution of \(SentenceFormat.dollars(r.money.restitution)) exceeds the \(SentenceFormat.dollars(documented)) supported by the evidence.")
             }
         }
+        if r.pleaDepartureDisclosed == false {
+            issues.append("The sentence is harsher than the plea arrangement, and the defendant was not told or offered the chance to withdraw the plea (G.S. 15A-1024).")
+        }
+        if r.pleaAccepted == true && r.pleaKind == .noContest && c.background?.stateConsentsNoContest != true {
+            issues.append("A no-contest plea was accepted without the State's consent (G.S. 15A-1011(a)(3)).")
+        }
         for condition in r.customConditions where conditionLooksUnlawful(condition) {
             issues.append("The order \"\(condition)\" is likely unconstitutional or not reasonably related to the offense.")
         }
@@ -752,7 +787,11 @@ enum Judgment {
                 if r.dismissedByPlea.contains(charge.id) {
                     label = "Dismissed under plea arrangement"
                 } else if plea && verdict != .notGuilty {
-                    label += " (plea)"
+                    switch r.pleaKind {
+                    case .guilty: label += " (plea)"
+                    case .alford: label += " (Alford plea)"
+                    case .noContest: label = verdict == .lesser ? "No contest to \(charge.lesserLaw?.title ?? "lesser offense")" : "No contest"
+                    }
                 }
                 if verdict != .notGuilty {
                     convicted = true
@@ -1145,8 +1184,10 @@ enum Judgment {
         }
 
         // The local paper
-        let reactions = makeReactions(c, county: county, convicted: convicted, dismissed: dismissed, active: custodyMonths > 0 || life)
+        let reactions = makeReactions(c, county: county, convicted: convicted, dismissed: dismissed, active: custodyMonths > 0 || life,
+                                      plea: plea ? r.pleaKind : nil, rng: &rng)
         var news = makeNews(c, county: county, judgeLast: judgeLast, date: date, convicted: convicted, dismissed: dismissed,
+                            plea: plea ? r.pleaKind : nil, pleaLaw: plea ? sentencingUnits.first?.law : nil,
                             sentence: newsSentence, active: custodyMonths > 0 || life, reactions: reactions)
         if !newsExtras.isEmpty { news.body += " " + newsExtras.joined(separator: " ") }
 
@@ -1243,30 +1284,74 @@ enum Judgment {
 
     // MARK: Press
 
-    private static func makeReactions(_ c: CourtCase, county: County, convicted: Bool, dismissed: Bool, active: Bool) -> [String] {
+    private static func makeReactions(_ c: CourtCase, county: County, convicted: Bool, dismissed: Bool, active: Bool,
+                                      plea: PleaKind?, rng: inout SeededRNG) -> [String] {
         let defenseName = c.defenseAttorney.components(separatedBy: ",").first ?? c.defenseAttorney
+        let da = "District Attorney \(county.districtAttorney)"
+        let dl = c.defendant.lastName
         var lines: [String] = []
         if dismissed {
-            lines.append("District Attorney \(county.districtAttorney): \"We're disappointed and reviewing our options for appeal.\"")
-            lines.append("\(defenseName): \"The Constitution doesn't let the State hold someone in limbo indefinitely.\"")
+            lines.append(rng.pick([
+                "\(da): \"We're disappointed and reviewing our options for appeal.\"",
+                "\(da): \"We disagree with the ruling. Our office will decide in the coming days whether to appeal.\""
+            ]))
+            lines.append(rng.pick([
+                "\(defenseName): \"The Constitution doesn't let the State hold someone in limbo indefinitely.\"",
+                "\(defenseName): \"\(dl) waited years for a trial that never came. The court did what the law requires.\""
+            ]))
+        } else if let plea {
+            lines.append(rng.pick([
+                "\(da): \"This plea holds \(dl) accountable and spares the witnesses from having to testify.\"",
+                "\(da): \"A certain conviction today was worth more than an uncertain verdict tomorrow.\"",
+                "\(da): \"We're satisfied with the resolution and grateful to the investigators.\""
+            ]))
+            lines.append(plea == .alford
+                ? "\(defenseName): \"My client still maintains their innocence. This plea was about certainty, not guilt.\""
+                : (active
+                    ? "\(defenseName): \"My client accepted responsibility. We had hoped the court would give more weight to that.\""
+                    : "\(defenseName): \"My client accepted responsibility and has a chance to prove it.\""))
         } else if convicted {
-            lines.append("District Attorney \(county.districtAttorney): \"We're grateful to the officers and witnesses who saw this case through.\"")
+            lines.append(rng.pick([
+                "\(da): \"We're grateful to the officers and witnesses who saw this case through.\"",
+                "\(da): \"The evidence was clear, and the court followed it.\"",
+                "\(da): \"No verdict undoes the harm. But this one says it mattered.\"",
+                "\(da): \"Our assistant district attorneys tried this case the right way. We respect the sentence.\""
+            ]))
             lines.append(active
-                ? "\(defenseName): \"We're disappointed, and we'll be reviewing all of our options.\""
-                : "\(defenseName): \"My client has a chance to put this behind them, and intends to take it.\"")
+                ? rng.pick(["\(defenseName): \"We're disappointed, and we'll be reviewing all of our options.\"",
+                            "\(defenseName): \"We believe there were errors at trial, and we intend to raise them on appeal.\"",
+                            "\(defenseName): \"This sentence is far more than this case called for.\""])
+                : rng.pick(["\(defenseName): \"My client has a chance to put this behind them, and intends to take it.\"",
+                            "\(defenseName): \"The court saw a person, not just a file. We're grateful.\""]))
         } else {
-            lines.append("District Attorney \(county.districtAttorney): \"We respect the court's decision, though we see the evidence differently.\"")
-            lines.append("\(defenseName): \"The court held the State to its burden. That's how it's supposed to work.\"")
+            lines.append(rng.pick([
+                "\(da): \"We respect the court's decision, though we see the evidence differently.\"",
+                "\(da): \"The court has spoken. Our office will continue to stand with victims.\"",
+                "\(da): \"We presented the evidence we had. We accept the verdict.\""
+            ]))
+            lines.append(rng.pick([
+                "\(defenseName): \"The court held the State to its burden. That's how it's supposed to work.\"",
+                "\(defenseName): \"\(dl) can finally go home.\"",
+                "\(defenseName): \"Suspicion isn't proof. Today the system worked.\""
+            ]))
         }
         if let victim = c.victimName {
             let family = victim.components(separatedBy: " ").last ?? victim
-            switch (c.mood, convicted) {
-            case (.wantsConviction, false), (.divided, false):
-                lines.append("A member of the \(family) family, outside the courtroom: \"So that's it? That's justice?\"")
-            case (_, true) where !active:
-                lines.append("A member of the \(family) family: \"Probation. I don't know what to say.\"")
-            case (_, true):
-                lines.append("A member of the \(family) family: \"Nothing brings back what we lost. But today someone was held responsible.\"")
+            let stance = c.background?.victimStance ?? .wantsAccountability
+            switch (convicted, active) {
+            case (false, _) where c.mood == .wantsConviction || c.mood == .divided || stance == .wantsMaximum:
+                lines.append(rng.pick(["A member of the \(family) family, outside the courtroom: \"So that's it? That's justice?\"",
+                                       "A relative of \(victim), leaving the courthouse: \"We'll be living with this. \(dl) gets to walk away.\""]))
+            case (true, false) where stance == .wantsLeniency:
+                lines.append("A member of the \(family) family: \"We asked for mercy, and the judge listened. That's what we wanted.\"")
+            case (true, false):
+                lines.append(rng.pick(["A member of the \(family) family: \"Probation. I don't know what to say.\"",
+                                       "A relative of \(victim): \"We'll be watching to make sure every condition is followed.\""]))
+            case (true, true) where stance == .wantsLeniency:
+                lines.append("A member of the \(family) family: \"We didn't want this. Prison won't fix anything.\"")
+            case (true, true):
+                lines.append(rng.pick(["A member of the \(family) family: \"Nothing brings back what we lost. But today someone was held responsible.\"",
+                                       "A relative of \(victim): \"It's not enough. It's never going to be enough. But it's something.\""]))
             default:
                 break
             }
@@ -1275,7 +1360,8 @@ enum Judgment {
     }
 
     private static func makeNews(_ c: CourtCase, county: County, judgeLast: String, date: Date, convicted: Bool,
-                                 dismissed: Bool, sentence: String, active: Bool, reactions: [String]) -> NewsItem {
+                                 dismissed: Bool, plea: PleaKind?, pleaLaw: Law?, sentence: String, active: Bool,
+                                 reactions: [String]) -> NewsItem {
         let d = c.defendant
         let title = c.charges.first?.law.title ?? "charges"
         let headline: String
@@ -1283,6 +1369,20 @@ enum Judgment {
         if dismissed {
             headline = "Charges against \(d.name) dismissed over trial delays"
             body = "Superior Court Judge \(judgeLast) dismissed the \(title.lowercased()) case against \(d.name), \(d.age), finding the delay in bringing it to trial violated the constitutional right to a speedy trial."
+        } else if let plea, convicted {
+            let offense = (pleaLaw?.title ?? title).lowercased()
+            switch plea {
+            case .guilty:
+                headline = "\(d.name) pleads guilty to \(offense)"
+                body = "\(d.name), \(d.age), pleaded guilty to \(offense) before Judge \(judgeLast) in Hollis County Superior Court"
+            case .alford:
+                headline = "\(d.name) enters Alford plea to \(offense)"
+                body = "\(d.name), \(d.age), entered an Alford plea to \(offense) before Judge \(judgeLast), maintaining innocence while conceding the State's evidence would likely convict"
+            case .noContest:
+                headline = "\(d.name) pleads no contest to \(offense)"
+                body = "\(d.name), \(d.age), pleaded no contest to \(offense) before Judge \(judgeLast) in Hollis County Superior Court"
+            }
+            body += sentence.isEmpty ? "." : ", and was sentenced to \(sentence)."
         } else if convicted {
             headline = "\(d.name) convicted in \(title.lowercased()) case"
             body = "Following a bench trial in Hollis County Superior Court, Judge \(judgeLast) found \(d.name), \(d.age), guilty"
@@ -1311,6 +1411,7 @@ enum Judgment {
         if let quote = reactions.first {
             body += " " + quote
         }
-        return NewsItem(date: date, kind: .verdict, headline: headline, body: body, docket: c.docket)
+        return NewsItem(date: date, kind: .verdict, headline: headline, body: body, docket: c.docket,
+                        prominence: c.mediaAttention)
     }
 }

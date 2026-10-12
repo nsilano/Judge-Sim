@@ -563,6 +563,7 @@ enum CaseGenerator {
         var arrangementLawID: String?
         var arrangementTerms: String?
         var arrangementHabitual: Bool?
+        var arrangementKind: String?
         if pleaOffer != nil && rng.chance(0.3) {
             arrangementPresented = true
             let pleaLaw = primary.lesserLaw ?? primary.law
@@ -582,11 +583,14 @@ enum CaseGenerator {
                 ? "a suspended sentence with supervised probation and \(restitution.formatted(.currency(code: "USD").precision(.fractionLength(0)))) in restitution"
                 : "a suspended sentence with supervised probation"
             let bottom = pleaFelony ? "a sentence at the bottom of the presumptive range" : "a sentence at the low end of the authorized range"
-            arrangementTerms = rng.pick([
-                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The State recommends \(bottom). The recommendation does not bind the court.",
-                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The parties jointly recommend \(probationTerms). The court is free to impose any lawful sentence.",
+            let kindIndex = rng.int(0...2)
+            arrangementKind = ["bottom", "suspended", "open"][kindIndex]
+            let withdrawNote = " If the court decides on a harsher sentence, the defendant may withdraw the plea (G.S. 15A-1024)."
+            arrangementTerms = [
+                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The State recommends \(bottom).\(withdrawNote)",
+                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The parties jointly recommend \(probationTerms).\(withdrawNote)",
                 "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) Sentencing is left to the discretion of the court."
-            ])
+            ][kindIndex]
             pleaRejection = nil
         }
 
@@ -640,7 +644,9 @@ enum CaseGenerator {
             disputedPriorID: disputedID,
             disputedPriorReason: disputedReason,
             stateJoinsDischarge: stance == .wantsMaximum ? false : rng.chance(t.hasVictim ? 0.4 : 0.65),
-            districtCourtSentence: districtSentence
+            districtCourtSentence: districtSentence,
+            arrangementKind: arrangementKind,
+            stateConsentsNoContest: !t.hasVictim && rng.chance(0.6)
         )
     }
 
