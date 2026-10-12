@@ -9,7 +9,7 @@ protocol CounselProvider: ObservableObject {
     func entries(for side: Side) -> [TranscriptEntry]
     func ask(_ question: CounselQuestion)
     func allQuestions(_ side: Side) -> [CounselQuestion]
-    func brief(for side: Side) -> String
+    func brief(for side: Side, compact: Bool) -> String
     func heldBackFactor(for side: Side) -> CounselReveal?
     func record(side: Side, question: String, answer: String, reveal: CounselReveal?)
 }
@@ -18,17 +18,29 @@ extension CounselProvider {
     /// Answers a question the judge typed: live through Claude if an API key is set, otherwise from the case file.
     @MainActor
     func askFreeform(_ question: String, side: Side) async -> String? {
-        let settings = AISettings.shared
-        guard settings.hasKey else {
-            let (answer, reveal) = OfflineCounsel.answer(question, from: allQuestions(side), style: counselStyle(side))
-            record(side: side, question: question, answer: answer, reveal: reveal)
+        let engine = AISettings.shared.activeEngine
+        guard engine != .offline else {
+            answerOffline(question, side: side)
             return nil
         }
         let history = entries(for: side).map { (question: $0.question, answer: $0.answer) }
         do {
-            let reply = try await ClaudeClient.counselReply(system: brief(for: side), history: history, question: question)
+            let reply: CounselReply
+            if engine == .onDevice {
+                reply = try await OnDeviceCounsel.reply(instructions: brief(for: side, compact: true), history: history, question: question)
+            } else {
+                reply = try await ClaudeClient.counselReply(system: brief(for: side, compact: false), history: history, question: question)
+            }
             let reveal = reply.raisesFactor ? heldBackFactor(for: side) : nil
             record(side: side, question: question, answer: reply.answer, reveal: reveal)
+            return nil
+        } catch OnDeviceCounsel.Failure.guardrail {
+            record(side: side, question: question,
+                   answer: counselStyle(side).opener + "I'd rather not get into that at the bench. Is there something else the court needs from me?",
+                   reveal: nil)
+            return nil
+        } catch OnDeviceCounsel.Failure.tooLong {
+            answerOffline(question, side: side)
             return nil
         } catch ClaudeError.refusal {
             record(side: side, question: question,
@@ -38,6 +50,11 @@ extension CounselProvider {
         } catch {
             return error.localizedDescription
         }
+    }
+
+    func answerOffline(_ question: String, side: Side) {
+        let (answer, reveal) = OfflineCounsel.answer(question, from: allQuestions(side), style: counselStyle(side))
+        record(side: side, question: question, answer: answer, reveal: reveal)
     }
 }
 
@@ -100,7 +117,7 @@ struct CounselSheet<Provider: CounselProvider>: View {
                 }
                 .disabled(!canSend)
             }
-            Text(settings.hasKey ? "Live answers from \(settings.model.label)." : "Offline: answers come from the case file. Add a Claude API key in Settings for live answers.")
+            Text(settings.activeLabel)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -190,7 +207,7 @@ struct CounselSheet<Provider: CounselProvider>: View {
                                 ForEach(questions) { question in
                                     Button {
                                         Haptics.tap()
-                                        if AISettings.shared.hasKey {
+                                        if AISettings.shared.activeEngine != .offline {
                                             send(question.question)
                                         } else {
                                             withAnimation(.snappy) { provider.ask(question) }

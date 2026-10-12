@@ -3,6 +3,29 @@ import Security
 
 // MARK: - Settings
 
+/// What answers questions the judge types to counsel.
+enum CounselEngine: String, CaseIterable, Identifiable {
+    case onDevice, claude, offline
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .onDevice: return "Apple Intelligence (on device)"
+        case .claude: return "Claude API"
+        case .offline: return "Case file only"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .onDevice: return "Free, private, and offline. Needs an iPhone with Apple Intelligence turned on."
+        case .claude: return "The sharpest lawyers. Uses your own API key and costs a little per question."
+        case .offline: return "Matches your question to answers from the case file. Works anywhere."
+        }
+    }
+}
+
 /// Which Claude model answers free-form questions to counsel.
 enum CounselModel: String, CaseIterable, Identifiable {
     case opus = "claude-opus-5-5"
@@ -37,6 +60,11 @@ final class AISettings: ObservableObject {
 
     private static let keychainAccount = "judgesim.anthropic.apikey"
     private static let modelKey = "JudgeSim.counselModel"
+    private static let engineKey = "JudgeSim.counselEngine"
+
+    @Published var engine: CounselEngine {
+        didSet { UserDefaults.standard.set(engine.rawValue, forKey: Self.engineKey) }
+    }
 
     @Published private(set) var hasKey: Bool
     @Published var model: CounselModel {
@@ -46,6 +74,24 @@ final class AISettings: ObservableObject {
     private init() {
         hasKey = Keychain.read(Self.keychainAccount) != nil
         model = CounselModel(rawValue: UserDefaults.standard.string(forKey: Self.modelKey) ?? "") ?? .opus
+        engine = CounselEngine(rawValue: UserDefaults.standard.string(forKey: Self.engineKey) ?? "") ?? .onDevice
+    }
+
+    /// The engine that will actually answer, after checking what this phone and these settings allow.
+    var activeEngine: CounselEngine {
+        switch engine {
+        case .onDevice: return OnDeviceCounsel.isAvailable ? .onDevice : (hasKey ? .claude : .offline)
+        case .claude: return hasKey ? .claude : (OnDeviceCounsel.isAvailable ? .onDevice : .offline)
+        case .offline: return .offline
+        }
+    }
+
+    var activeLabel: String {
+        switch activeEngine {
+        case .onDevice: return "Live answers from Apple Intelligence, on this iPhone."
+        case .claude: return "Live answers from \(model.label)."
+        case .offline: return "Answers come from the case file. Turn on live answers in Settings."
+        }
     }
 
     var apiKey: String? { Keychain.read(Self.keychainAccount) }

@@ -362,7 +362,7 @@ final class HearingSession: ObservableObject {
         ViolationHearings.questions(hearing).filter { $0.side == side }
     }
 
-    func brief(for side: Side) -> String { CounselBrief.make(for: hearing, side: side) }
+    func brief(for side: Side, compact: Bool) -> String { CounselBrief.make(for: hearing, side: side, compact: compact) }
 
     func heldBackFactor(for side: Side) -> CounselReveal? { nil }
 

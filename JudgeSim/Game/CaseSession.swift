@@ -166,8 +166,8 @@ final class CaseSession: ObservableObject {
         CounselDialogue.questions(courtCase, stage: stage, rulings: rulings, units: units).filter { $0.side == side }
     }
 
-    func brief(for side: Side) -> String {
-        CounselBrief.make(for: courtCase, side: side, stage: stage, rulings: rulings, units: units)
+    func brief(for side: Side, compact: Bool) -> String {
+        CounselBrief.make(for: courtCase, side: side, stage: stage, rulings: rulings, units: units, compact: compact)
     }
 
     func heldBackFactor(for side: Side) -> CounselReveal? {

@@ -15,6 +15,40 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
+                    ForEach(CounselEngine.allCases) { engine in
+                        Button {
+                            settings.engine = engine
+                        } label: {
+                            HStack(alignment: .top) {
+                                Image(systemName: settings.engine == engine ? "largecircle.fill.circle" : "circle")
+                                    .foregroundStyle(settings.engine == engine ? Theme.gold : .secondary)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(engine.label).foregroundStyle(.primary)
+                                    Text(engine.detail).font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    switch OnDeviceCounsel.status {
+                    case .available:
+                        Label("Apple Intelligence is ready on this iPhone.", systemImage: "checkmark.circle.fill")
+                            .font(.caption).foregroundStyle(.green)
+                    case .unavailable(let reason):
+                        Label(reason, systemImage: "exclamationmark.circle.fill")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
+                    if settings.activeEngine != settings.engine {
+                        Text("Right now: \(settings.activeEngine.label), because your choice isn't available.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                } header: {
+                    Text("Answers from counsel")
+                } footer: {
+                    Text("This decides who answers the questions you type in a bench conference. Suggested questions always work.")
+                }
+
+                Section {
                     if settings.hasKey {
                         Label("API key saved on this iPhone", systemImage: "checkmark.seal.fill")
                             .foregroundStyle(.green)
@@ -34,7 +68,7 @@ struct SettingsView: View {
                         .disabled(keyDraft.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
                 } header: {
-                    Text("Claude API key")
+                    Text("Claude API key (optional)")
                 } footer: {
                     Text("Create a key at console.anthropic.com (separate from a Claude Pro plan; billed per use). The key stays in this iPhone's Keychain and is only sent to Anthropic. Without a key, counsel answers from the case file.")
                 }

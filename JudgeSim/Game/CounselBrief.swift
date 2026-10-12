@@ -4,6 +4,18 @@ import Foundation
 /// It holds only what that lawyer would know. What really happened is never included.
 enum CounselBrief {
 
+    /// Shortens text for the on-device model's small context window.
+    static func clip(_ text: String, _ limit: Int) -> String {
+        text.count <= limit ? text : String(text.prefix(limit)) + "…"
+    }
+
+    private static func compactPersona(name: String, style: CounselStyle, office: String) -> String {
+        "You are \(name), \(office) in Hollis County, North Carolina. You are at the bench answering the judge's question. Your manner: \(style.label.lowercased()). "
+            + "Speak in first person to the judge (\"Judge\" or \"Your Honor\"), one to three sentences. Answer exactly what was asked, in fresh words. "
+            + "Advocate for your side but never misstate facts. Use only the case file; if it doesn't say, say you don't know. Never invent evidence. "
+            + "No stage directions. Never mention AI or a game."
+    }
+
     private static func persona(name: String, side: Side, style: CounselStyle, office: String) -> String {
         let manner: String
         switch style {
@@ -32,26 +44,30 @@ enum CounselBrief {
 
     // MARK: Trial cases
 
-    static func make(for c: CourtCase, side: Side, stage: CaseSession.Stage, rulings r: Rulings, units: [SentencingUnit]) -> String {
+    static func make(for c: CourtCase, side: Side, stage: CaseSession.Stage, rulings r: Rulings, units: [SentencingUnit],
+                     compact: Bool = false) -> String {
+        let n = compact ? 160 : 2_000
         let bg = c.background ?? CounselDialogue.fallbackBackground
         let name = CounselDialogue.name(c, side: side)
         let office = side == .prosecution
             ? "an Assistant District Attorney prosecuting this case for the State"
             : (c.defenseAttorney.contains("Public Defender") ? "an Assistant Public Defender representing the defendant" : "private defense counsel retained by the defendant")
-        var lines: [String] = [persona(name: name, side: side, style: CounselDialogue.style(c, side: side), office: office), "", "CASE FILE"]
+        let style = CounselDialogue.style(c, side: side)
+        var lines: [String] = [compact ? compactPersona(name: name, style: style, office: office)
+                                       : persona(name: name, side: side, style: style, office: office), "", "CASE FILE"]
 
         lines.append("\(c.caption), \(c.docket). \(c.court.label). Investigating agency: \(c.investigatingAgency).")
         lines.append("Opposing counsel: \(side == .prosecution ? c.defenseAttorney : c.prosecutor).")
-        lines.append("Summary: \(c.summary)")
+        lines.append("Summary: \(clip(c.summary, n * 2))")
         for charge in c.charges {
             var text = "Count \(charge.count): \(charge.law.title) (\(charge.law.statute), \(charge.law.ncClass?.label ?? "")). \(charge.specification)"
             if let lesser = charge.lesserLaw { text += " Lesser-included offense: \(lesser.title)." }
             lines.append(text)
         }
-        lines.append(contentsOf: c.proceduralNotes.map { "Procedural note: \($0)" })
+        if !compact { lines.append(contentsOf: c.proceduralNotes.map { "Procedural note: \($0)" }) }
 
         let d = c.defendant
-        lines.append("Defendant: \(d.name), age \(d.age), \(d.occupation). \(d.background)")
+        lines.append("Defendant: \(d.name), age \(d.age), \(d.occupation). \(clip(d.background, n))")
         lines.append(d.priors.isEmpty ? "Prior record: none." :
             "Prior record: " + d.priors.map { "\($0.year) \($0.offense) (\($0.ncClass.shortLabel), \($0.county)): \($0.sentence)" }.joined(separator: "; ") + ".")
         if let probation = d.probation {
@@ -62,18 +78,20 @@ enum CounselBrief {
         lines.append("Evidence:")
         let excluded = r.excludedEvidence(in: c)
         for e in c.evidence {
-            lines.append("- \(e.exhibit) (\(e.side.rawValue), \(e.kind.label)): \(e.title). \(e.detail)" + (excluded.contains(e.id) ? " [SUPPRESSED by the judge's ruling; it may not be considered.]" : ""))
+            lines.append("- \(e.exhibit) (\(e.side.rawValue), \(e.kind.label)): \(e.title). \(clip(e.detail, n))" + (excluded.contains(e.id) ? " [SUPPRESSED by the judge's ruling; it may not be considered.]" : ""))
         }
         lines.append("Witnesses:")
         for w in c.witnesses {
-            lines.append("- \(w.name), \(w.role), called by the \(w.calledBy.rawValue). Direct: \(w.direct.joined(separator: " ")) Cross: \(w.cross.joined(separator: " "))")
+            lines.append("- \(w.name), \(w.role), called by the \(w.calledBy.rawValue). Direct: \(clip(w.direct.joined(separator: " "), n)) Cross: \(clip(w.cross.joined(separator: " "), n))")
         }
         for m in c.motions {
             let ruling = r.motions[m.id].map { $0 ? "GRANTED" : "DENIED" } ?? "not yet ruled on"
-            lines.append("Motion: \(m.kind.title). Facts: \(m.facts) Defense: \(m.defenseArgument) State: \(m.prosecutionResponse) Ruling: \(ruling).")
+            lines.append(compact
+                ? "Motion: \(m.kind.title). Facts: \(clip(m.facts, n)) Ruling: \(ruling)."
+                : "Motion: \(m.kind.title). Facts: \(m.facts) Defense: \(m.defenseArgument) State: \(m.prosecutionResponse) Ruling: \(ruling).")
         }
-        lines.append("State's theory: \(c.prosecutionOpening)")
-        lines.append("Defense theory: \(c.defenseOpening)")
+        lines.append("State's theory: \(clip(c.prosecutionOpening, n))")
+        lines.append("Defense theory: \(clip(c.defenseOpening, n))")
         if let twist = c.twist { lines.append("Also known: \(twist)") }
 
         // What this side knows that the other may not
@@ -135,18 +153,22 @@ enum CounselBrief {
         let hidden = side == .prosecution ? bg.hiddenAggravator : bg.hiddenMitigator
         if stage == .sentencing, let hidden {
             lines.append("")
-            lines.append("ADDITIONAL FACTOR: You can document this \(side == .prosecution ? "aggravating" : "mitigating") factor: \"\(hidden)\". \(side == .prosecution ? "It was not included in the State's written notice." : "") Raise it only if the judge's question gives a natural opening (for example, asking about the defendant's background, conduct, anything else the court should know, or the factors). When you raise it, set raises_factor to true.")
+            lines.append(compact
+                ? "ADDITIONAL FACTOR: \"\(hidden)\". Mention it only if the judge's question invites it; when you do, set raisesFactor to true. Otherwise false."
+                : "ADDITIONAL FACTOR: You can document this \(side == .prosecution ? "aggravating" : "mitigating") factor: \"\(hidden)\". \(side == .prosecution ? "It was not included in the State's written notice." : "") Raise it only if the judge's question gives a natural opening (for example, asking about the defendant's background, conduct, anything else the court should know, or the factors). When you raise it, set raises_factor to true.")
         }
         return lines.joined(separator: "\n")
     }
 
     // MARK: Violation hearings
 
-    static func make(for h: ViolationHearing, side: Side) -> String {
+    static func make(for h: ViolationHearing, side: Side, compact: Bool = false) -> String {
         let rawName = side == .prosecution ? h.prosecutor : h.defenseAttorney
         let name = rawName.components(separatedBy: ",").first ?? rawName
         let office = side == .prosecution ? "an Assistant District Attorney" : "an Assistant Public Defender representing the probationer"
-        var lines = [persona(name: name, side: side, style: CounselStyle.forName(name, side: side), office: office), "", "HEARING FILE"]
+        let style = CounselStyle.forName(name, side: side)
+        var lines = [compact ? compactPersona(name: name, style: style, office: office)
+                             : persona(name: name, side: side, style: style, office: office), "", "HEARING FILE"]
         lines.append("Probation violation hearing for \(h.personName), age \(h.personAge), in \(h.probation.docket) (\(h.probation.offense)).")
         lines.append("Suspended sentence: \(h.probation.suspendedSentence). Probation ends \(SentenceFormat.shortDate(h.probation.ends)). Prior CRVs: \(h.probation.crvCount ?? 0).")
         if let conditions = h.probation.conditions, !conditions.isEmpty { lines.append("Special conditions: \(conditions.joined(separator: " "))") }
