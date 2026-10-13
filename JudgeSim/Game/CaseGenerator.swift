@@ -22,6 +22,13 @@ enum CaseGenerator {
     static func generate(seed: UInt64, context: Context) -> CourtCase {
         var rng = SeededRNG(seed: seed)
         var pool = CaseTemplates.all
+        // Written cases come up first, until each has been heard once.
+        let unheardStories = StoryCases.all.filter { story in !context.usedSignatures.contains { $0.hasPrefix(story.key + "|") } }
+        if context.returning == nil, !unheardStories.isEmpty, rng.chance(0.6) {
+            let story = rng.pick(unheardStories)
+            return build(story, seed: seed, band: .close, context: context, rng: &rng)
+        }
+        pool += StoryCases.all
         if let person = context.returning {
             let hasFelony = person.priors.contains { $0.ncClass.isFelony }
             let age = person.age(on: context.date)
@@ -65,7 +72,7 @@ enum CaseGenerator {
         for _ in 0..<60 {
             let candidate = build(template, seed: seed, band: band, context: context, rng: &rng)
             let fresh = !context.usedSignatures.contains(candidate.scenarioSignature ?? "")
-            if fresh && matches(candidate, band: band) { return candidate }
+            if fresh && (matches(candidate, band: band) || template.story != nil) { return candidate }
             if fresh && unheard == nil { unheard = candidate }
             if fallback == nil { fallback = candidate }
         }
@@ -186,12 +193,12 @@ enum CaseGenerator {
         }
         // Extra counts the facts support
         let addOns = CaseComplexity.pickAddOns(for: t, hasFelonyPrior: defendant.priors.contains { $0.ncClass.isFelony },
-                                               existing: Set(charges.map(\.lawID)), rng: &rng)
+                                               existing: Set(charges.map(\.lawID)), rng: &rng).filter { _ in t.story == nil }
 
         // Sometimes the State indicts a whole series of incidents: a big case with 7 to 9 counts.
         var seriesCount = 0
         let seriesCategories: Set<LawCategory> = [.property, .drugs, .whiteCollar, .cyber]
-        if seriesCategories.contains(t.category) && rng.chance(0.22) {
+        if t.story == nil && seriesCategories.contains(t.category) && rng.chance(0.22) {
             let target = rng.int(7...9)
             let extraIncidents = max(2, target - charges.count - addOns.count)
             seriesCount = extraIncidents + 1
@@ -216,8 +223,8 @@ enum CaseGenerator {
         let court: CourtKind = isFelonyCase ? .felony : .misdemeanorAppeal
 
         // Evidence
-        let prosecutionCount = min(t.prosecutionEvidence.count, band == .weak ? rng.int(2...3) : (band == .strong ? rng.int(4...5) : rng.int(3...4)))
-        let defenseCount = min(t.defenseEvidence.count, band == .weak ? rng.int(2...3) : (band == .strong ? rng.int(0...1) : 2))
+        let prosecutionCount = t.story != nil ? t.prosecutionEvidence.count : min(t.prosecutionEvidence.count, band == .weak ? rng.int(2...3) : (band == .strong ? rng.int(4...5) : rng.int(3...4)))
+        let defenseCount = t.story != nil ? t.defenseEvidence.count : min(t.defenseEvidence.count, band == .weak ? rng.int(2...3) : (band == .strong ? rng.int(0...1) : 2))
         var prosecutionSeeds = rng.pick(t.prosecutionEvidence, count: prosecutionCount) + addOns.map(\.evidence)
         var defenseSeeds = rng.pick(t.defenseEvidence, count: defenseCount)
         if seriesCount > 0 {
@@ -226,7 +233,7 @@ enum CaseGenerator {
             defenseSeeds.append(EvidenceSeed(.document, 2, "Gaps in the Pattern",
                                              "For several of the \(seriesCount) incidents, the State has no witness, no video, and no physical evidence tying {DL} to that date."))
         }
-        if band == .close {
+        if band == .close && t.story == nil {
             // A case on the line pulls both ways: something real for each side.
             for complication in CaseComplexity.pickComplications(for: t, rng: &rng) {
                 if complication.side == .prosecution { prosecutionSeeds.append(complication.evidence) } else { defenseSeeds.append(complication.evidence) }
@@ -253,11 +260,20 @@ enum CaseGenerator {
 
         // Witnesses
         var witnesses: [Witness] = []
-        let prosecutionWitnessCount = min(t.prosecutionWitnesses.count, rng.int(1...2))
+        if t.story != nil {
+            // A written case calls every witness, in order, exactly as written.
+            for item in t.prosecutionWitnesses {
+                witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, impeach: false))
+            }
+            for item in t.defenseWitnesses {
+                witnesses.append(makeWitness(item, side: .defense, fill: fill, rng: &rng, used: &used, impeach: false))
+            }
+        }
+        let prosecutionWitnessCount = t.story != nil ? 0 : min(t.prosecutionWitnesses.count, rng.int(1...2))
         for item in rng.pick(t.prosecutionWitnesses, count: prosecutionWitnessCount) {
             witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used))
         }
-        if !t.defenseWitnesses.isEmpty && (band != .strong || rng.chance(0.3)) {
+        if t.story == nil && !t.defenseWitnesses.isEmpty && (band != .strong || rng.chance(0.3)) {
             witnesses.append(makeWitness(rng.pick(t.defenseWitnesses), side: .defense, fill: fill, rng: &rng, used: &used))
         }
 
@@ -286,18 +302,18 @@ enum CaseGenerator {
         }
         let roles = witnesses.map { $0.role.lowercased() }
         var added: [Witness] = []
-        if !roles.contains(where: { $0.contains("detective") || $0.contains("investigator") || $0.contains("agent") || $0.contains("trooper") }) {
+        if t.story == nil && !roles.contains(where: { $0.contains("detective") || $0.contains("investigator") || $0.contains("agent") || $0.contains("trooper") }) {
             added.append(Testimony.leadInvestigator(name: detective.display, agency: detective.agency, ctx: testimonyContext,
                                                     madeTheStop: facts.origin == .stop && rng.chance(0.5), rng: &rng))
         }
-        if setting != .paper && !roles.contains(where: { $0.contains("officer") || $0.contains("deputy") }) && rng.chance(0.65) {
+        if t.story == nil && setting != .paper && !roles.contains(where: { $0.contains("officer") || $0.contains("deputy") }) && rng.chance(0.65) {
             added.append(Testimony.firstOfficer(name: officer.display, agency: officer.agency, ctx: testimonyContext, rng: &rng))
         }
-        if !roles.contains(where: { $0.contains("analyst") || $0.contains("examiner") || $0.contains("scientist") || $0.contains("chemist") }) {
+        if t.story == nil && !roles.contains(where: { $0.contains("analyst") || $0.contains("examiner") || $0.contains("scientist") || $0.contains("chemist") }) {
             let names = (0..<3).map { _ in NameBank.person(using: &rng, excluding: &used) }
             added += Testimony.analysts(ctx: testimonyContext, names: names, rng: &rng)
         }
-        if rng.chance(0.55) {
+        if t.story == nil && rng.chance(0.55) {
             added.append(Testimony.characterWitness(name: NameBank.person(using: &rng, excluding: &used), ctx: testimonyContext, rng: &rng))
         }
         // State witnesses first, then the defense's.
@@ -308,13 +324,26 @@ enum CaseGenerator {
 
         // Objections, built from each witness and the facts of this case
         var objections: [Objection] = []
-        for witness in witnesses where rng.chance(0.55) {
-            if let objection = ObjectionEngine.make(for: witness, ctx: testimonyContext, rng: &rng) { objections.append(objection) }
+        if let story = t.story {
+            for (index, seed) in story.objections where witnesses.indices.contains(index) {
+                objections.append(Objection(witnessID: witnesses[index].id, question: fill(seed.question), answer: fill(seed.answer),
+                                            raisedBy: seed.raisedBy, grounds: seed.grounds, shouldSustain: seed.shouldSustain,
+                                            appellateNote: fill(seed.explanation), doctrineID: seed.doctrineID, weightIfAdmitted: seed.weight))
+            }
+            investigation.timeline = story.timeline.map { offset, what in
+                InvestigationReport.Entry(when: CaseDates.dayYear(CaseDates.add(offset, to: incident)), what: fill(what))
+            }
+            investigation.howIdentified = fill(story.howIdentified)
+            investigation.notDone = story.notDone.map { fill($0) }
+        } else {
+            for witness in witnesses where rng.chance(0.55) {
+                if let objection = ObjectionEngine.make(for: witness, ctx: testimonyContext, rng: &rng) { objections.append(objection) }
+            }
         }
 
         // Motions
         var motions: [Motion] = []
-        if !searchable.isEmpty && rng.chance(0.6) {
+        if t.story == nil && !searchable.isEmpty && rng.chance(0.6) {
             let target = rng.pick(searchable)
             let fitting = GenericPools.suppressSearchSeeds.filter {
                 ($0.kinds.isEmpty || $0.kinds.contains(target.1)) && ($0.places.isEmpty || $0.places.contains(target.2))
@@ -328,13 +357,13 @@ enum CaseGenerator {
                 motions.append(makeMotion(option, target: target.0, targetTitle: title, fill: fill))
             }
         }
-        if !statements.isEmpty && rng.chance(0.55) {
+        if t.story == nil && !statements.isEmpty && rng.chance(0.55) {
             let target = rng.pick(statements)
             let option = rng.pick(GenericPools.suppressStatementSeeds)
             let title = evidence.first { $0.id == target }?.title ?? "the statement"
             motions.append(makeMotion(option, target: target, targetTitle: title, fill: fill))
         }
-        if rng.chance(0.07) {
+        if t.story == nil && rng.chance(0.07) {
             motions.append(makeMotion(rng.pick(GenericPools.speedyTrialSeeds), target: nil, targetTitle: nil, fill: fill))
         }
 
@@ -387,7 +416,7 @@ enum CaseGenerator {
         var twistKey: String?
         var chosenTwist: TwistSeed?
         let twistPool = GenericPools.twists.filter { $0.ages.contains(defendant.age) }
-        if rng.chance(0.5), !twistPool.isEmpty {
+        if t.story == nil, rng.chance(0.5), !twistPool.isEmpty {
             let twist = rng.pick(twistPool)
             twistKey = twist.key
             chosenTwist = twist
@@ -453,6 +482,12 @@ enum CaseGenerator {
         var fullTestimony = testimony
         fullTestimony.exchanges = Testimony.defendant(testimony, ctx: testimonyContext, holds: testimonyHolds,
                                                       sessionDate: context.date, rng: &rng)
+        if let story = t.story {
+            fullTestimony.exchanges = story.defendantExam.map { line in
+                TestimonyExchange(phase: line.phase, examiner: line.phase == .cross ? .prosecution : .defense,
+                                  question: fill(line.question(0)), answer: fill(line.answer(0)))
+            }
+        }
         if let objection = rng.chance(0.4) ? ObjectionEngine.make(for: fullTestimony, ctx: testimonyContext, rng: &rng) : nil {
             objections.append(objection)
         }
@@ -493,10 +528,10 @@ enum CaseGenerator {
             prosecutor: "ADA \(prosecutor)",
             defenseAttorney: usePublicDefender ? "\(defenseLawyer), Assistant Public Defender" : "\(defenseLawyer), retained counsel",
             investigatingAgency: detective.agency,
-            prosecutionOpening: fill(rng.pick(t.prosecutionTheory)),
-            defenseOpening: fill(rng.pick(t.defenseTheory)),
-            prosecutionClosing: fill(rng.pick(GenericPools.prosecutionClosings)),
-            defenseClosing: fill(rng.pick(GenericPools.defenseClosings)),
+            prosecutionOpening: fill(t.story?.prosecutionOpening ?? rng.pick(t.prosecutionTheory)),
+            defenseOpening: fill(t.story?.defenseOpening ?? rng.pick(t.defenseTheory)),
+            prosecutionClosing: fill(t.story?.prosecutionClosing ?? rng.pick(GenericPools.prosecutionClosings)),
+            defenseClosing: fill(t.story?.defenseClosing ?? rng.pick(GenericPools.defenseClosings)),
             evidence: evidence,
             witnesses: witnesses,
             objections: objections,
@@ -800,7 +835,7 @@ enum CaseGenerator {
     }
 
     private static func makeWitness(_ seed: WitnessSeed, side: Side, fill: TextFiller,
-                                    rng: inout SeededRNG, used: inout Set<String>) -> Witness {
+                                    rng: inout SeededRNG, used: inout Set<String>, impeach: Bool = true) -> Witness {
         let name: String
         if let token = seed.name {
             name = fill(token)
@@ -810,7 +845,7 @@ enum CaseGenerator {
         var cross = fill(seed.cross)
         var weight = seed.weight
         let isVictim = seed.name == "{V}"
-        if seed.lay && rng.chance(0.45) {
+        if impeach && seed.lay && rng.chance(0.45) {
             let pool = (side == .prosecution ? GenericPools.prosecutionImpeachments : GenericPools.defenseImpeachments)
                 .filter { !isVictim || $0.victimSafe }
             let impeachment = rng.pick(pool)
