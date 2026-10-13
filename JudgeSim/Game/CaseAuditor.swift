@@ -47,8 +47,10 @@ enum CaseAuditor {
         let names = [c.defendant.lastName, c.defendant.name, c.victimName].compactMap { $0 }
 
         // Core facts: placeholders and dates.
-        for (label, text) in [("summary", c.summary), ("headline", c.headline)] + c.charges.map { ("charge", $0.specification) }
-            + c.evidence.map { ("exhibit", $0.detail) } where hasPlaceholder(text) {
+        var coreLines: [(String, String)] = [("summary", c.summary), ("headline", c.headline)]
+        coreLines += c.charges.map { ("charge", $0.specification) }
+        coreLines += c.evidence.map { ("exhibit", $0.detail) }
+        for (label, text) in coreLines where hasPlaceholder(text) {
             report.fatal.append("Unfilled placeholder in \(label): \(text.prefix(60))")
         }
         if let s = c.investigation?.facts {
