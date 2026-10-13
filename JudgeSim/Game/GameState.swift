@@ -73,6 +73,7 @@ private struct SaveData: Codable {
     var sessionEnds: Date?
     var digest: [NewsItem]?
     var appeals: [AppealTracker]?
+    var recentLineKeys: [UInt64]?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -106,6 +107,8 @@ final class GameState: ObservableObject {
     private var pending: [PendingEvent] = []
     private var docketSequence = 1_000
     private var recentTemplates: [String] = []
+    /// Fingerprints of testimony and argument the judge has read recently, so new cases steer away from them.
+    private var recentLineKeys: [UInt64] = []
     private var usedSignatures: [String] = []
     private var seedBase: UInt64 = UInt64.random(in: 1...UInt64.max / 2)
     private let saveKey = "JudgeSim.nc.save.v1"
@@ -593,7 +596,21 @@ final class GameState: ObservableObject {
         let context = CaseGenerator.Context(county: county, judgeName: judgeName, date: date,
                                             docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
                                             usedSignatures: Set(usedSignatures), returning: returning)
-        let newCase = CaseGenerator.generate(seed: rng.next(), context: context)
+        // Draw a few candidates, cut lines that don't fit, and keep the one that holds together and reads newest.
+        let recent = Set(recentLineKeys)
+        var best: (score: Int, value: CourtCase)?
+        for _ in 0..<4 {
+            var candidate = CaseGenerator.generate(seed: rng.next(), context: context)
+            let report = CaseAuditor.audit(&candidate)
+            let keys = CaseAuditor.lineKeys(candidate)
+            let repeats = keys.filter { recent.contains($0) }.count
+            let score = report.fatal.count * 1_000 + report.removed.count * 3 + repeats
+            if best == nil || score < best!.score { best = (score, candidate) }
+            if report.fatal.isEmpty && report.removed.isEmpty && repeats == 0 { break }
+        }
+        guard let newCase = best?.value else { return nil }
+        recentLineKeys.append(contentsOf: CaseAuditor.lineKeys(newCase))
+        if recentLineKeys.count > 2_500 { recentLineKeys.removeFirst(recentLineKeys.count - 2_500) }
         used.insert(newCase.defendant.personID)
         docketSequence += rng.int(30...420)
         recentTemplates.append(newCase.templateKey)
@@ -700,6 +717,7 @@ final class GameState: ObservableObject {
         retrials = []
         stats = CareerStats()
         recentTemplates = []
+        recentLineKeys = []
         usedSignatures = []
         seedBase = UInt64.random(in: 1...UInt64.max / 2)
         save()
@@ -865,7 +883,7 @@ final class GameState: ObservableObject {
                             usedSignatures: usedSignatures, seedBase: seedBase,
                             currentCalendar: currentCalendar, retrials: retrials, stats: stats,
                             today: today, scheduled: scheduled, openingMinutes: openingMinutes, sessionEnds: sessionEnds,
-                            digest: digest, appeals: appeals)
+                            digest: digest, appeals: appeals, recentLineKeys: recentLineKeys)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -893,6 +911,7 @@ final class GameState: ObservableObject {
         scheduled = data.scheduled ?? []
         digest = data.digest ?? []
         appeals = data.appeals ?? []
+        recentLineKeys = data.recentLineKeys ?? []
         openingMinutes = data.openingMinutes ?? openingMinutes
         sessionEnds = data.sessionEnds ?? sessionFriday(for: currentDate)
         today = data.today
