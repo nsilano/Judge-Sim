@@ -8,7 +8,25 @@ enum NameBank {
         "Raymond", "Keisha", "Hiroshi", "Molly", "Desmond", "Carmen", "Austin", "Zara", "Nikolai", "Tamika",
         "Gavin", "Lucia", "Omar", "Erin", "Ellis", "Jordan", "Avery", "Riley", "Quinn", "Sam",
         "Dakota", "Noor", "Pedro", "Allison", "Terrence", "Bao", "Shawn", "Renee", "Arjun", "Colleen",
-        "Isaiah", "Valentina", "Dmitri", "Maya", "Curtis", "Esperanza", "Frank", "Delilah", "Kenji", "Shannon"
+        "Isaiah", "Valentina", "Dmitri", "Maya", "Curtis", "Esperanza", "Frank", "Delilah", "Kenji", "Shannon",
+        "Abigail", "Adrian", "Alonzo", "Amara", "Ambrose", "Anika", "Antoine", "Ariel", "Arlo", "Ashton",
+        "Beatrice", "Benito", "Bethany", "Bianca", "Blake", "Bridget", "Bryce", "Caleb", "Camille", "Carlos",
+        "Cassandra", "Cecil", "Celeste", "Chandler", "Charlene", "Chester", "Chiara", "Clayton", "Cleo", "Corinne",
+        "Dalia", "Damon", "Dana", "Daphne", "Darius", "Deandre", "Denise", "Devon", "Dolores", "Dominic",
+        "Donovan", "Dorothy", "Earl", "Ebony", "Eduardo", "Eleanor", "Elijah", "Eloise", "Emeka", "Emmett",
+        "Enrique", "Esther", "Ezra", "Felicia", "Fernando", "Fiona", "Floyd", "Gabriel", "Gemma", "Gilbert",
+        "Gloria", "Gordon", "Gwen", "Harold", "Harriet", "Hector", "Hollis", "Hugo", "Irene", "Ivan",
+        "Jacinta", "Jada", "Jalen", "Janelle", "Jasper", "Javier", "Jerome", "Jillian", "Joaquin", "Josephine",
+        "Julius", "Kai", "Kara", "Keith", "Kendra", "Kiara", "Kofi", "Lamar", "Lana", "Latoya",
+        "Lawrence", "Leon", "Leonora", "Lionel", "Lorena", "Lucas", "Lydia", "Mabel", "Mason", "Matteo",
+        "Maurice", "Mavis", "Miguel", "Mira", "Monique", "Nathaniel", "Nell", "Nolan", "Ophelia", "Orlando",
+        "Otis", "Paloma", "Patrice", "Paulette", "Percy", "Phoebe", "Porter", "Rafael", "Ramona", "Reggie",
+        "Rhiannon", "Roderick", "Rowan", "Ruby", "Rufus", "Sabrina", "Santiago", "Savannah", "Selena", "Silas",
+        "Simone", "Solomon", "Stella", "Sterling", "Tabitha", "Tariq", "Teresa", "Thaddeus", "Tobias", "Trina",
+        "Ulysses", "Vanessa", "Vernon", "Viola", "Wallace", "Wanda", "Xavier", "Yolanda", "Yusuf", "Zachary",
+        "Zelda", "Aditya", "Ayesha", "Chidi", "Dariela", "Emre", "Farah", "Gideon", "Hamza", "Ines",
+        "Jovan", "Kalani", "Leilani", "Magnus", "Nia", "Olamide", "Pilar", "Rashida", "Soren", "Thandiwe",
+        "Uriel", "Wren"
     ]
 
     static let lastNames = [
@@ -18,7 +36,25 @@ enum NameBank {
         "Duquesne", "Hargrove", "Novak", "Pemberton", "Salazar", "Vance", "Achterberg", "Bishop", "Crowley", "Dorsey",
         "Esposito", "Fairbanks", "Greer", "Huxley", "Ibarra", "Jansen", "Kincaid", "Lockwood", "Montoya", "Nakamura",
         "Ortega", "Prescott", "Quintero", "Rhodes", "Szabo", "Tran", "Underwood", "Varga", "Winslow", "Yilmaz",
-        "Zamora", "Ashby", "Baptiste", "Coleridge", "Dunmore", "Everly", "Farouk", "Goldberg", "Hayashi", "Ivanova"
+        "Zamora", "Ashby", "Baptiste", "Coleridge", "Dunmore", "Everly", "Farouk", "Goldberg", "Hayashi", "Ivanova",
+        "Acosta", "Adeyemi", "Aldridge", "Ambrose", "Arceneaux", "Atwater", "Bachman", "Baird", "Barksdale", "Beaumont",
+        "Bellamy", "Benavides", "Blackwell", "Boateng", "Bolton", "Bramlett", "Breedlove", "Brinkley", "Buchanan", "Burkhart",
+        "Cabrera", "Calderon", "Carmichael", "Castellanos", "Chambers", "Chavis", "Coker", "Colvin", "Cortez", "Crenshaw",
+        "Cruz", "Dalton", "Daugherty", "Deans", "Devereaux", "Dixon", "Dominguez", "Draper", "Dunbar", "Eldridge",
+        "Ellington", "Emerson", "Espinoza", "Faircloth", "Farrow", "Ferrell", "Figueroa", "Flanagan", "Fontaine", "Gaines",
+        "Galindo", "Garrison", "Gentry", "Godwin", "Granger", "Guerrero", "Hadley", "Hamilton", "Hardison", "Hatcher",
+        "Hawkins", "Herrera", "Hines", "Holcomb", "Honeycutt", "Horne", "Ingram", "Ivey", "Jacobs", "Jernigan",
+        "Juarez", "Kaminski", "Keller", "Kendrick", "Knox", "Lambert", "Langston", "Larkin", "Ledbetter", "Locklear",
+        "Lowery", "Lucero", "Lyles", "Macias", "Maddox", "Mangum", "Marsh", "Massey", "McAllister", "McCrory",
+        "McLeod", "Medina", "Merritt", "Monroe", "Moss", "Murchison", "Nash", "Navarro", "Norwood", "Oakley",
+        "Ochoa", "Oxendine", "Pace", "Padilla", "Parrish", "Peebles", "Pennington", "Petrov", "Pinckney", "Pope",
+        "Pruitt", "Quarles", "Ragland", "Rainey", "Ransom", "Redd", "Renfrow", "Rios", "Robeson", "Rollins",
+        "Sampson", "Sauls", "Sellers", "Shepherd", "Silva", "Simmons", "Singletary", "Slade", "Spivey", "Stallings",
+        "Strickland", "Suggs", "Swinson", "Talley", "Tate", "Teague", "Toledo", "Townsend", "Tyndall", "Upchurch",
+        "Valdez", "Vick", "Wadsworth", "Walston", "Warrick", "Weatherspoon", "Whitley", "Wilder", "Womack", "Woodard",
+        "Wyatt", "Yancey", "Yates", "Zimmerman", "Achebe", "Bergstrom", "Cavanaugh", "Dimitriou", "Eklund", "Ferreira",
+        "Grabowski", "Hashemi", "Iwasaki", "Jablonski", "Kaur", "Lindgren", "Mahmoud", "Nwosu", "Oyelaran", "Papadopoulos",
+        "Rasmussen", "Sorensen", "Takahashi", "Uchenna", "Volkov", "Wojcik", "Xiong", "Zielinski"
     ]
 
     static let streets = [

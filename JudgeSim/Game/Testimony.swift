@@ -212,8 +212,12 @@ enum Testimony {
             ask(.direct, rng.pick(["Did you document that at the time?", "Is that in your report?", "Were your findings written up?"]),
                 rng.pick(["Yes. It's in my report, written within a day or two.", "Yes, with the supporting \(paper ? "records" : "photographs") attached.", "Yes. My report was finished on \(CaseDates.day(CaseDates.add(rng.int(1...6), to: ctx.sheet.assigned)))."]))
         case .expert:
-            ask(.direct, rng.pick(["How confident are you in that opinion?", "Do you hold that opinion to a reasonable degree of certainty in your field?", "Was your work reviewed by anyone else?"]),
-                rng.pick(["Confident. I'd reach the same conclusion if I did it again tomorrow.", "Yes, to a reasonable degree of scientific certainty.", "Yes. A colleague reviewed the work before I signed it."]))
+            let (q, a) = rng.pick([
+                ("How confident are you in that opinion?", "Confident. I'd reach the same conclusion if I did it again tomorrow."),
+                ("Do you hold that opinion to a reasonable degree of certainty in your field?", "Yes, to a reasonable degree of scientific certainty."),
+                ("Was your work reviewed by anyone else?", "Yes. A second qualified examiner reviewed my notes and conclusions before the report went out."),
+                ("Did anything about this work fall outside your normal procedures?", "No. It was handled under our standard protocols, start to finish.")])
+            ask(.direct, q, a)
         case .lay:
             if eyewitness || isVictim {
                 ask(.direct, rng.pick(["How sure are you about what you've told the court?", "Is there any doubt in your mind about what you saw?", "How clearly could you see?"]),
@@ -235,7 +239,8 @@ enum Testimony {
         case .investigator:
             openers = [("You never personally saw \(dl) commit any crime, did you?", "No. I came in afterward, like investigators do."),
                        ("Your report doesn't cover everything, does it?", "A report covers what matters. It doesn't cover every minute."),
-                       ("You decided who did this fairly early, didn't you?", "I followed the evidence. It went where it went.")]
+                       ("You wrote your report after \(dl) was already charged?", "The final version, yes. My notes were made as I went."),
+                       ("You didn't record every interview you did?", rng.pick(["Not the short ones at the scene. The formal interviews were recorded.", "No. Some were brief conversations; I summarized those in my notes."]))]
         case .expert:
             openers = [("You're being paid for your time here?", "I'm paid for my time, not my opinion."),
                        ("Your opinion is only as good as the information you were given?", "That's true of any expert. I checked what I could."),
@@ -496,9 +501,19 @@ extension Testimony {
         for gap in ctx.gaps { c(gap.question, gap.answer) }
         var pool: [(String, String)] = []
         if identityAtIssue && facts.setting != .paper {
-            pool.append(("Did you ever seriously consider anyone other than \(dl)?",
-                         ctx.defense.contains { $0.title.lowercased().contains("tip") } ? "We looked at it. Not as closely as we might have." : "We followed the evidence. It led to \(dl)."))
-            pool.append(("Once you had a suspect, you stopped looking, didn't you?", rng.pick(["No. We kept working the case through the arrest.", "I'd disagree. We kept testing it."])))
+            let days = max(1, CaseDates.days(from: s.incident, to: s.arrest))
+            pool.append(rng.pick([
+                ("Between \(s.day) and the arrest, how many people did you actually interview?",
+                 "\(rng.int(3...9)), not counting brief conversations at the scene. I can go through each one if the court wants."),
+                ("The tip that named \(dl) came in anonymously, correct?",
+                 ctx.defense.contains { $0.title.lowercased().contains("tip") } ? "Yes. We couldn't identify the caller, which is why we looked for other corroboration." : "No. The first name we had came from a witness who gave a statement.")]))
+            pool.append(rng.pick([
+                ("You arrested \(dl) \(days) days after the incident. What new evidence came in on the last day?",
+                 "Nothing on the last day itself. It was the combination of what we'd gathered by then."),
+                ("Did you ever put a photo of anyone besides \(dl) in front of a witness?",
+                 rng.pick(["Yes, in a six-person array with fillers. That's our procedure.", "No. We didn't use a lineup in this case."])),
+                ("Was anyone else's phone, car, or home ever searched in this case?",
+                 rng.pick(["No. There was no basis to search anyone else.", "One other person's car, early on, with consent. Nothing came of it."]))]))
         }
         switch facts.setting {
         case .road:

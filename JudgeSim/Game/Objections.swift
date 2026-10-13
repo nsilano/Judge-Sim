@@ -189,13 +189,17 @@ enum ObjectionEngine {
         // Experts.
         if kind == .expert {
             let lab = ctx.state.first { $0.kind == .forensic }
+            if asker == w.calledBy && asker == .prosecution {
             out.append(Draft(question: rng.pick(["In your expert opinion, is \(dl) guilty?", "Based on your work, did \(dl) commit this crime?"]),
                              answer: "In my opinion, yes.", grounds: "Opinion on guilt", sustain: true,
                              explanation: "An expert may help the factfinder understand evidence, but may not offer an opinion that the defendant is guilty.",
                              doctrine: "expertTestimony", weight: 1))
-            if let lab {
-                out.append(Draft(question: "Can you tell the court what the report on \(lab.title.lowercased()) concluded?",
-                                 answer: rng.pick(["The analyst who ran it concluded it was a match.", "The report, which a colleague prepared, says the result was positive."]),
+            }
+            if let lab, asker == .prosecution {
+                let finding = lab.detail.trimmingCharacters(in: CharacterSet(charactersIn: ". "))
+                out.append(Draft(question: "Can you tell the court what the lab report on the \(lab.title.lowercased()) concluded?",
+                                 answer: rng.pick(["I didn't do that analysis myself; a colleague did. But the report says: \(finding).",
+                                                   "The analyst who ran it isn't here today. Reading from the report: \(finding)."]),
                                  grounds: "Confrontation Clause", sustain: rng.chance(0.6),
                                  explanation: "Reading another analyst's testimonial lab conclusions, without that analyst testifying, can violate the right to confrontation; an expert may give an independent opinion but not merely repeat the report.",
                                  doctrine: "hearsay", weight: lab.weight))

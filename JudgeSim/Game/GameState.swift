@@ -604,9 +604,11 @@ final class GameState: ObservableObject {
             let report = CaseAuditor.audit(&candidate)
             let keys = CaseAuditor.lineKeys(candidate)
             let repeats = keys.filter { recent.contains($0) }.count
-            let score = report.fatal.count * 1_000 + report.removed.count * 3 + repeats
+            // Take the first draw that holds together and is mostly fresh; scoring on anything else would
+            // favor the same few kinds of case over and over.
+            let score = report.fatal.count * 1_000 + repeats
             if best == nil || score < best!.score { best = (score, candidate) }
-            if report.fatal.isEmpty && report.removed.isEmpty && repeats == 0 { break }
+            if report.fatal.isEmpty && repeats * 4 <= max(4, keys.count) { break }
         }
         guard let newCase = best?.value else { return nil }
         recentLineKeys.append(contentsOf: CaseAuditor.lineKeys(newCase))

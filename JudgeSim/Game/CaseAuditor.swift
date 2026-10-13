@@ -76,6 +76,8 @@ enum CaseAuditor {
         }
         func cleanExchanges(_ w: inout Witness) {
             guard var exchanges = w.exchanges else { return }
+            // Redirect is left out: the judge asked for direct and cross only.
+            exchanges.removeAll { $0.phase == .redirect }
             exchanges.removeAll { e in
                 let key = normalized(e.answer, names: names)
                 if let reason = fits(e.question + " " + e.answer) {
