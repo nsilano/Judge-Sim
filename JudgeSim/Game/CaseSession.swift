@@ -9,6 +9,78 @@ struct CaseSnapshot: Codable, Hashable {
     var revealedMitigating: [String] = []
 }
 
+/// The defense motion to dismiss at the close of the State's evidence (G.S. 15A-1227), as argued in this case.
+struct HalftimeMotion {
+    /// Counts the defense challenges; the rest go forward without argument.
+    let challenged: Set<UUID>
+    /// The defense argument, count by count.
+    let arguments: [UUID: String]
+    let opening: String
+    let response: String
+    /// What happens at the close of all the evidence.
+    let renewal: String
+
+    static func make(for c: CourtCase) -> HalftimeMotion {
+        var rng = SeededRNG(seed: c.seed ^ 0x1227)
+        let defense = c.defenseAttorney.components(separatedBy: ",").first ?? c.defenseAttorney
+        let dl = c.defendant.lastName
+        var challenged = Set(c.charges.map(\.id))
+        if c.charges.count > 1 && rng.chance(0.45) {
+            let keep = rng.int(1...max(1, c.charges.count - 1))
+            challenged = Set(rng.pick(c.charges, count: keep).map(\.id))
+        }
+        let stateWitness = c.witnesses.filter { $0.calledBy == .prosecution }
+        let stateEvidence = c.evidence.filter { $0.side == .prosecution }.sorted { $0.weight > $1.weight }
+        var arguments: [UUID: String] = [:]
+        for charge in c.charges where challenged.contains(charge.id) {
+            let elements = charge.law.elements
+            let element = elements.isEmpty ? nil : rng.pick(elements)
+            let lower = (element ?? "").lowercased()
+            let point: String
+            if lower.contains("premeditat") || lower.contains("deliberat") {
+                point = "there is no evidence of premeditation and deliberation. Everything the State offered shows a sudden quarrel, not a plan"
+            } else if lower.contains("value") || lower.contains("$") {
+                point = "the State never proved the value element. There's no receipt, no appraisal, only an owner's estimate"
+            } else if lower.contains("possess") {
+                point = "there's no evidence of possession. Nothing was found on \(dl), nothing in \(dl)'s name, no prints. Proximity isn't constructive possession"
+            } else if lower.contains("intent") || lower.contains("knowing") || lower.contains("knew") {
+                point = "nothing in this record shows the required intent beyond speculation"
+            } else if lower.contains("serious injury") || lower.contains("deadly weapon") {
+                point = "the State's evidence doesn't reach the \(lower.contains("serious") ? "serious injury" : "deadly weapon") element; at most it shows a simple assault"
+            } else if lower.contains("without") && lower.contains("consent") {
+                point = "the State offered no substantial evidence on lack of consent"
+            } else if let element {
+                point = "there's no substantial evidence that \(element.prefix(1).lowercased() + element.dropFirst())"
+            } else {
+                point = "the evidence doesn't identify \(dl) as the person who committed this offense"
+            }
+            arguments[charge.id] = "Count \(charge.count), \(charge.law.title): \(point)."
+        }
+        let scope = challenged.count == c.charges.count
+            ? (c.charges.count == 1 ? "the charge" : "all \(c.charges.count) counts")
+            : "Count" + (challenged.count == 1 ? " " : "s ") + c.charges.filter { challenged.contains($0.id) }.map { String($0.count) }.joined(separator: ", ")
+        let opening = rng.pick([
+            "The State rests. \(defense) moves to dismiss \(scope) for insufficient evidence (G.S. 15A-1227).",
+            "\(defense) rises at the close of the State's evidence: \"Your Honor, the defense moves to dismiss \(scope).\"",
+            "With the State's case in, \(defense) moves to dismiss \(scope), arguing the evidence doesn't reach every element."
+        ])
+        let witness = stateWitness.isEmpty ? nil : rng.pick(stateWitness)
+        let exhibit = stateEvidence.first
+        let basis = [witness.map { "\($0.name)'s testimony" }, exhibit.map { "\"\($0.title)\"" }].compactMap { $0 }.joined(separator: " and ")
+        let response = c.prosecutor + ": " + rng.pick([
+            "\"Taken in the light most favorable to the State, \(basis.isEmpty ? "the evidence" : basis) is substantial evidence of every element. Contradictions are for the fact-finder, not a reason to dismiss.\"",
+            "\"The State is entitled to every reasonable inference. \(basis.isEmpty ? "The evidence" : basis.prefix(1).uppercased() + basis.dropFirst()) puts \(dl) right in the middle of it.\"",
+            "\"Circumstantial evidence is enough, Your Honor. \(basis.isEmpty ? "What the court has heard" : basis.prefix(1).uppercased() + basis.dropFirst()) is more than a scintilla on each element.\"",
+            "\"The defense is arguing weight, not sufficiency. That's an argument for closing.\""
+        ])
+        let renewal = rng.chance(0.8)
+            ? rng.pick(["At the close of all the evidence, \(defense) renews the motion to dismiss; the earlier rulings stand.",
+                        "\(defense): \"The defense renews its motion at the close of all the evidence, Your Honor, for the record.\" The earlier rulings stand."])
+            : "The defense rests without renewing the motion to dismiss. Under Appellate Rule 10(a)(3), the sufficiency argument may not be preserved."
+        return HalftimeMotion(challenged: challenged, arguments: arguments, opening: opening, response: response, renewal: renewal)
+    }
+}
+
 /// Tracks the judge's rulings through a single case.
 final class CaseSession: ObservableObject {
     enum Stage: Int, CaseIterable, Identifiable {
@@ -56,6 +128,7 @@ final class CaseSession: ObservableObject {
     let courtCase: CourtCase
     let judgeName: String
     let county: County
+    let halftimeMotion: HalftimeMotion
     @Published var stage: Stage = .briefing
     @Published var rulings = Rulings()
     @Published private(set) var outcome: CaseOutcome?
@@ -73,12 +146,17 @@ final class CaseSession: ObservableObject {
         self.courtCase = courtCase
         self.judgeName = judgeName
         self.county = county
+        self.halftimeMotion = HalftimeMotion.make(for: courtCase)
         if let resume {
             rulings = resume.rulings
             stage = Stage(rawValue: resume.stage) ?? .briefing
             sentencingPrepared = stage.rawValue >= Stage.sentencing.rawValue
             revealedAggravating = resume.revealedAggravating
             revealedMitigating = resume.revealedMitigating
+            // The probation may have ended while the case was continued; pick up at the step before it.
+            if stage == .probation && courtCase.defendant.probation == nil {
+                stage = anyConviction ? .sentencing : .verdict
+            }
         }
     }
 
@@ -221,7 +299,8 @@ final class CaseSession: ObservableObject {
     }
 
     var pendingObjections: Int {
-        courtCase.objections.filter { rulings.objections[$0.id] == nil }.count
+        let silentDefendant = rulings.defendantTestifies == true ? nil : courtCase.defendantTestimony?.id
+        return courtCase.objections.filter { rulings.objections[$0.id] == nil && $0.witnessID != silentDefendant }.count
     }
 
     var ethicsPending: Bool {
@@ -234,8 +313,9 @@ final class CaseSession: ObservableObject {
             .allSatisfy { rulings.objections[$0.id] != nil }
     }
 
+    /// Every count the defense challenged has a ruling; unchallenged counts go forward.
     var halftimeComplete: Bool {
-        courtCase.charges.allSatisfy { rulings.halftime[$0.id] != nil }
+        courtCase.charges.allSatisfy { !halftimeMotion.challenged.contains($0.id) || rulings.halftime[$0.id] != nil }
     }
 
     func halftimeBinding(_ charge: Charge) -> Binding<HalftimeRuling?> {
@@ -389,6 +469,7 @@ final class CaseSession: ObservableObject {
     var nextStep: String? {
         switch stage {
         case .briefing:
+            if continuanceMotionPending { return "Rule on the motion to continue." }
             if pleaPresented && rulings.pleaAccepted == nil && !rulings.pleaWithdrawn { return "Take the plea or reject it." }
             return courtCase.motions.isEmpty ? "Read the file, then start the trial." : "Read the file, then hear the pretrial motions."
         case .motions:
@@ -411,6 +492,18 @@ final class CaseSession: ObservableObject {
         case .judgment:
             return nil
         }
+    }
+
+    // MARK: A party's motion to continue
+
+    var continuanceMotion: ContinuanceMotion? { courtCase.continuanceMotion }
+
+    var continuanceMotionPending: Bool {
+        continuanceMotion != nil && rulings.continuanceMotionDenied == nil
+    }
+
+    func denyContinuanceMotion() {
+        rulings.continuanceMotionDenied = true
     }
 
     // MARK: Plea arrangement

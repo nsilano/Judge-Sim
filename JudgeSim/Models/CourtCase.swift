@@ -223,6 +223,23 @@ struct CaseBackground: Codable, Hashable {
     var stateConsentsNoContest: Bool?
 }
 
+/// A motion by the State or the defense to continue the trial, with a concrete reason drawn from the case.
+struct ContinuanceMotion: Codable, Hashable {
+    var movant: Side
+    /// Short label, e.g. "Lab report not back".
+    var title: String
+    /// What the moving party tells the court.
+    var argument: String
+    /// What the other side says.
+    var opposition: String
+    /// The follow-up that comes back as new evidence if the motion is granted.
+    var request: EvidenceRequest
+    /// What it means to go forward now.
+    var ifDenied: String
+    /// How long the movant says it needs.
+    var suggestedDays: Int
+}
+
 /// What actually happened. The player never sees this directly; it may surface later in the news.
 struct HiddenTruth: Codable, Hashable {
     var actuallyGuilty: Bool
@@ -273,6 +290,8 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var defendantTestimony: Witness?
     /// The investigating agency's file.
     var investigation: InvestigationReport?
+    /// A party's motion to continue, heard when the case is called (optional; most cases have none).
+    var continuanceMotion: ContinuanceMotion? = nil
 
     var caption: String { "State of North Carolina v. \(defendant.name)" }
 

@@ -8,6 +8,8 @@ struct CourtroomView: View {
     @State private var showCounsel = false
     @State private var confirmRecess = false
     @State private var showContinuance = false
+    /// Set when the court grants a party's motion to continue, so the sheet opens with that motion's reason and follow-up.
+    @State private var grantingMotion: ContinuanceMotion?
     @State private var reviewSection: CaseReviewSheet.Section?
 
     init(courtCase: CourtCase, judgeName: String, county: County, resume: CaseSnapshot? = nil) {
@@ -32,7 +34,10 @@ struct CourtroomView: View {
 
                         switch session.stage {
                         case .briefing:
-                            BriefingStage(session: session)
+                            BriefingStage(session: session) { motion in
+                                grantingMotion = motion
+                                showContinuance = true
+                            }
                         case .motions:
                             MotionsStage(session: session)
                         case .trial:
@@ -93,9 +98,12 @@ struct CourtroomView: View {
             .sheet(item: $reviewSection) { section in
                 CaseReviewSheet(session: session, section: section)
             }
-            .sheet(isPresented: $showContinuance) {
+            .sheet(isPresented: $showContinuance, onDismiss: { grantingMotion = nil }) {
                 ContinuanceSheet(today: session.courtCase.sessionDate, subject: session.courtCase.caption,
-                                 requestOptions: EvidenceRequest.options(for: session.courtCase)) { date, reason, requests in
+                                 requestOptions: EvidenceRequest.options(for: session.courtCase),
+                                 initialRequests: grantingMotion.map { [$0.request] } ?? [],
+                                 initialReason: grantingMotion.map { "On the \($0.movant == .prosecution ? "State's" : "defense's") motion: \($0.title.lowercased())." },
+                                 initialDays: grantingMotion?.suggestedDays) { date, reason, requests in
                     showContinuance = false
                     game.continueMatter(session.courtCase.id, to: date, reason: reason, snapshot: session.snapshot, requests: requests)
                     dismiss()
@@ -168,6 +176,8 @@ struct StageTracker: View {
 
 struct BriefingStage: View {
     @ObservedObject var session: CaseSession
+    /// Called when the judge grants a party's motion to continue.
+    var onGrantContinuance: (ContinuanceMotion) -> Void = { _ in }
     @State private var showColloquy = false
     private var c: CourtCase { session.courtCase }
 
@@ -204,6 +214,12 @@ struct BriefingStage: View {
 
             Text(c.summary)
                 .card()
+
+            if let motion = session.continuanceMotion {
+                ContinuanceMotionCard(motion: motion, denied: session.rulings.continuanceMotionDenied == true,
+                                      onGrant: { onGrantContinuance(motion) },
+                                      onDeny: { session.denyContinuanceMotion() })
+            }
 
             if let twist = c.twist {
                 Label(twist, systemImage: "exclamationmark.bubble.fill")
@@ -315,11 +331,66 @@ struct BriefingStage: View {
                 }
 
             PrimaryButton(title: c.motions.isEmpty ? "Start the Trial" : "Go to Pretrial Motions",
-                          enabled: !session.pleaPresented || session.rulings.pleaAccepted == false,
-                          hint: "Accept or reject the plea arrangement first.") {
+                          enabled: !session.continuanceMotionPending && (!session.pleaPresented || session.rulings.pleaAccepted == false),
+                          hint: session.continuanceMotionPending ? "Rule on the motion to continue first." : "Accept or reject the plea arrangement first.") {
                 session.advance()
             }
         }
+    }
+}
+
+/// A party asks for more time before the trial starts.
+struct ContinuanceMotionCard: View {
+    let motion: ContinuanceMotion
+    let denied: Bool
+    let onGrant: () -> Void
+    let onDeny: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Motion to continue: \(motion.title)", systemImage: "calendar.badge.clock")
+                .font(.headline)
+            Text(motion.movant == .prosecution ? "Moved by the State" : "Moved by the defense")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Theme.color(for: motion.movant))
+            Text(motion.argument).font(.system(.callout, design: .serif))
+            Text(motion.opposition).font(.system(.callout, design: .serif)).foregroundStyle(.secondary)
+            Text("A continuance is in the court's discretion; the movant must show good cause (G.S. 15A-952(g)). If granted, the follow-up comes back as evidence when the case returns: \(motion.request.label.lowercased()).")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if denied {
+                Label("Denied. " + motion.ifDenied, systemImage: "xmark.circle.fill")
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+            } else {
+                HStack(spacing: 10) {
+                    Button {
+                        Haptics.tap()
+                        onGrant()
+                    } label: {
+                        Label("Grant; pick a date", systemImage: "calendar")
+                            .font(.subheadline.weight(.bold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(RoundedRectangle(cornerRadius: 12).fill(Theme.gold))
+                            .foregroundStyle(Color.black)
+                    }
+                    .buttonStyle(.plain)
+                    Button {
+                        Haptics.tap()
+                        onDeny()
+                    } label: {
+                        Label("Deny; proceed", systemImage: "hammer.fill")
+                            .font(.subheadline.weight(.bold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemFill)))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .card(tint: denied ? nil : .orange)
     }
 }
 
@@ -633,8 +704,9 @@ struct ContinuanceSheet: View {
     let onContinue: (Date, String, [EvidenceRequest]) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var date: Date
-    @State private var reason = Self.reasons[0]
-    @State private var requests = Set<EvidenceRequest>()
+    @State private var reason: String
+    @State private var reasonOptions: [String]
+    @State private var requests: Set<EvidenceRequest>
 
     static let reasons = [
         "On the court's own motion.",
@@ -646,12 +718,19 @@ struct ContinuanceSheet: View {
         "Defense counsel has a conflict in another courtroom."
     ]
 
-    init(today: Date, subject: String, requestOptions: [EvidenceRequest] = [], onContinue: @escaping (Date, String, [EvidenceRequest]) -> Void) {
+    init(today: Date, subject: String, requestOptions: [EvidenceRequest] = [], initialRequests: [EvidenceRequest] = [],
+         initialReason: String? = nil, initialDays: Int? = nil,
+         onContinue: @escaping (Date, String, [EvidenceRequest]) -> Void) {
         self.today = today
         self.subject = subject
         self.requestOptions = requestOptions
         self.onContinue = onContinue
-        _date = State(initialValue: CourtCalendar.nextWeekday(after: Calendar.current.date(byAdding: .day, value: 6, to: today) ?? today))
+        let days = max(1, (initialDays ?? 7) - 1)
+        _date = State(initialValue: CourtCalendar.nextWeekday(after: Calendar.current.date(byAdding: .day, value: days, to: today) ?? today))
+        let options = (initialReason.map { [$0] } ?? []) + Self.reasons
+        _reasonOptions = State(initialValue: options)
+        _reason = State(initialValue: options[0])
+        _requests = State(initialValue: Set(initialRequests))
     }
 
     var body: some View {
@@ -692,7 +771,7 @@ struct ContinuanceSheet: View {
                 }
                 Section("Reason") {
                     Picker("Reason", selection: $reason) {
-                        ForEach(Self.reasons, id: \.self) { Text($0).tag($0) }
+                        ForEach(reasonOptions, id: \.self) { Text($0).tag($0) }
                     }
                     .pickerStyle(.inline)
                     .labelsHidden()
@@ -705,7 +784,10 @@ struct ContinuanceSheet: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Continue") { onContinue(date, requests.isEmpty ? reason : "For further investigation, on the court's own motion.", Array(requests)) }
+                    Button("Continue") {
+                        let ownMotion = reason == Self.reasons[0]
+                        onContinue(date, requests.isEmpty || !ownMotion ? reason : "For further investigation, on the court's own motion.", Array(requests))
+                    }
                 }
             }
         }

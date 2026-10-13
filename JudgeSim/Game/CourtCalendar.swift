@@ -142,3 +142,113 @@ enum CourtCalendar {
 
     static func isSameDay(_ a: Date, _ b: Date) -> Bool { calendar.isDate(a, inSameDayAs: b) }
 }
+
+/// Motions to continue that the parties bring when a case is called for trial.
+enum ContinuanceMotions {
+
+    /// A motion with a concrete, case-specific reason, or nil if the follow-up it would need doesn't fit this case.
+    static func make(for c: CourtCase, rng: inout SeededRNG) -> ContinuanceMotion? {
+        let options = EvidenceRequest.options(for: c)
+        guard !options.isEmpty else { return nil }
+        let request = rng.pick(options)
+        let dl = c.defendant.lastName
+        let ada = c.prosecutor
+        let defense = c.defenseAttorney.components(separatedBy: ",").first ?? c.defenseAttorney
+        let agency = c.investigatingAgency
+        let jailed = (c.background?.custodyDays ?? 0) > 0
+        let weeks = rng.int(3...6)
+        let stateEvidence = c.evidence.filter { $0.side == .prosecution }
+        let place = rng.pick(["the convenience store across the street", "the apartment complex's front office", "a neighbor's doorbell camera",
+                              "the gas station at the corner", "the city traffic camera at the intersection"])
+        let speedyObjection = jailed
+            ? "\(dl) has been sitting in the Hollis County jail waiting for this trial. Every week of delay is another week in custody."
+            : "\(dl) has been under this charge for a long time and has been ready for trial at every setting."
+
+        switch request {
+        case .labTesting:
+            let item = c.evidence.first { $0.kind == .forensic && $0.side == .prosecution } ?? stateEvidence.first
+            let what = item.map { "\"\($0.title)\"" } ?? "the items seized in this case"
+            return ContinuanceMotion(
+                movant: .prosecution, title: "State Crime Laboratory report not back",
+                argument: "\(ada): \"The State moves to continue, Your Honor. The State Crime Laboratory hasn't finished its analysis of \(what). The section chief tells us about \(weeks) weeks. Without the final report we can't call the analyst, and the Confrontation Clause won't let us put it in any other way.\"",
+                opposition: "\(defense): \"We object. \(speedyObjection) The State has had this evidence since the day of the arrest.\"",
+                request: request,
+                ifDenied: "The trial goes forward without the lab's final report; the State proceeds on the evidence it has.",
+                suggestedDays: weeks * 7)
+        case .video:
+            if rng.chance(0.5) {
+                return ContinuanceMotion(
+                    movant: .defense, title: "Subpoenaed surveillance footage not produced",
+                    argument: "\(defense): \"The defense moves to continue. We subpoenaed the surveillance video from \(place) \(rng.int(3...6)) weeks ago. It still hasn't been produced, and the custodian says the system overwrites after 60 days unless it was pulled. My client tells me that video shows what really happened.\"",
+                    opposition: "\(ada): \"The State opposes. The defense could have asked for this months ago. The State's witnesses are here and ready.\"",
+                    request: request,
+                    ifDenied: "The trial goes forward without the footage; the defense can argue its absence.",
+                    suggestedDays: weeks * 7)
+            }
+            return ContinuanceMotion(
+                movant: .prosecution, title: "Surveillance footage still being collected",
+                argument: "\(ada): \"The State moves to continue. Investigators with the \(agency) identified a camera at \(place) after the case was indicted. A preservation letter went out, but the footage hasn't been turned over yet. We ask for \(weeks) weeks to get it and provide it in discovery.\"",
+                opposition: "\(defense): \"Objection. This is the State's investigation, and the State had every opportunity to collect it. \(speedyObjection)\"",
+                request: request,
+                ifDenied: "The trial goes forward; any footage won't be part of the record.",
+                suggestedDays: weeks * 7)
+        case .witnessFollowUp:
+            let movant: Side = rng.chance(0.5) ? .prosecution : .defense
+            let witness = c.witnesses.filter { $0.calledBy == movant }.first
+            let why = rng.pick(["was served with a subpoena but was admitted to the hospital on Saturday",
+                                "is out of state on military orders until the end of the month",
+                                "had a death in the family and is in Georgia for the funeral",
+                                "was served but called this morning; her child is in the emergency room"])
+            let who = witness.map { "\($0.name), \($0.role.lowercased())," } ?? "a material witness"
+            let lawyer = movant == .prosecution ? ada : defense
+            return ContinuanceMotion(
+                movant: movant, title: "Witness under subpoena unavailable",
+                argument: "\(lawyer): \"We move to continue, Your Honor. \(who) \(why). The testimony is material, we've used due diligence to secure it, and we expect the witness to be available at the next setting.\"",
+                opposition: movant == .prosecution
+                    ? "\(defense): \"We object. \(speedyObjection) The State could have taken a deposition or arranged remote testimony.\""
+                    : "\(ada): \"The State opposes. Our witnesses took off work again to be here, and the victim wants this resolved.\"",
+                request: request,
+                ifDenied: "The trial goes forward without that witness's testimony.",
+                suggestedDays: weeks * 7)
+        case .phoneRecords:
+            if rng.chance(0.5) {
+                return ContinuanceMotion(
+                    movant: .prosecution, title: "Phone extraction pending",
+                    argument: "\(ada): \"The State moves to continue. The digital forensics unit has the search warrant for the phone recovered in this case, but the extraction isn't finished. The examiner estimates \(weeks) weeks.\"",
+                    opposition: "\(defense): \"Objection. The phone has been in the State's custody since the arrest. \(speedyObjection)\"",
+                    request: request,
+                    ifDenied: "The trial goes forward without the phone extraction.",
+                    suggestedDays: weeks * 7)
+            }
+            return ContinuanceMotion(
+                movant: .defense, title: "Cell-site records subpoenaed",
+                argument: "\(defense): \"The defense moves to continue. We subpoenaed the carrier for the cell-site location records for \(dl)'s phone that night. They haven't come back, and we expect them to place my client somewhere else.\"",
+                opposition: "\(ada): \"The State opposes. Carriers take time, and the defense waited until the last minute to ask.\"",
+                request: request,
+                ifDenied: "The trial goes forward without the location records.",
+                suggestedDays: weeks * 7)
+        case .financialRecords:
+            let movant: Side = rng.chance(0.6) ? .prosecution : .defense
+            return ContinuanceMotion(
+                movant: movant, title: movant == .prosecution ? "Bank records subpoena outstanding" : "Business records just disclosed",
+                argument: movant == .prosecution
+                    ? "\(ada): \"The State moves to continue. Subpoenaed bank records for the accounts in this case haven't been returned, and our forensic accountant can't finish the tracing without them.\""
+                    : "\(defense): \"The defense moves to continue. The State turned over \(stateEvidence.first.map { "\"\($0.title)\"" } ?? "several hundred pages of business records") in supplemental discovery last week. We need time to review it with an accountant.\"",
+                opposition: movant == .prosecution
+                    ? "\(defense): \"Objection. \(speedyObjection)\""
+                    : "\(ada): \"The State opposes. The records were available for inspection all along.\"",
+                request: request,
+                ifDenied: "The trial goes forward on the records already in evidence.",
+                suggestedDays: weeks * 7)
+        case .expertReview:
+            let item = stateEvidence.first { $0.kind == .forensic || $0.kind == .digital } ?? stateEvidence.first
+            return ContinuanceMotion(
+                movant: .defense, title: "Late discovery: defense needs an expert",
+                argument: "\(defense): \"The defense moves to continue. The State disclosed \(item.map { "\"\($0.title)\"" } ?? "a new forensic report") on Friday. We need to review it and consult an independent expert. A continuance is one of the remedies the statute provides for late discovery (G.S. 15A-910).\"",
+                opposition: "\(ada): \"The State opposes. The report confirms what the defense already knew, and the disclosure was made as soon as we had it.\"",
+                request: request,
+                ifDenied: "The trial goes forward; the defense cross-examines on the new report without its own expert.",
+                suggestedDays: weeks * 7)
+        }
+    }
+}

@@ -23,6 +23,33 @@ struct EvidenceSeed {
     }
 }
 
+/// One question and answer written for a specific witness. Tokens like {DL} are filled in.
+/// Each witness testifies in one of several versions: version k uses the k-th question and answer
+/// (wrapping around when a line has fewer), so the same kind of case plays out differently each time.
+struct ExamLine {
+    let phase: TestimonyExchange.Phase
+    let questions: [String]
+    let answers: [String]
+    /// Optional lines are asked in some trials and not others.
+    var optional = false
+
+    /// Asked by the side that called the witness. Extra answers are alternate versions.
+    static func direct(_ question: String, _ answers: String...) -> ExamLine { ExamLine(phase: .direct, questions: [question], answers: answers) }
+    static func direct(_ questions: [String], _ answers: String...) -> ExamLine { ExamLine(phase: .direct, questions: questions, answers: answers) }
+    /// Asked by the other side.
+    static func cross(_ question: String, _ answers: String...) -> ExamLine { ExamLine(phase: .cross, questions: [question], answers: answers) }
+    static func cross(_ questions: [String], _ answers: String...) -> ExamLine { ExamLine(phase: .cross, questions: questions, answers: answers) }
+    /// Asked by the side that called the witness, after cross.
+    static func redirect(_ question: String, _ answers: String...) -> ExamLine { ExamLine(phase: .redirect, questions: [question], answers: answers) }
+    static func redirect(_ questions: [String], _ answers: String...) -> ExamLine { ExamLine(phase: .redirect, questions: questions, answers: answers) }
+
+    /// The same line, asked only in some trials.
+    var sometimes: ExamLine { var copy = self; copy.optional = true; return copy }
+
+    func question(_ version: Int) -> String { questions.isEmpty ? "" : questions[version % questions.count] }
+    func answer(_ version: Int) -> String { answers.isEmpty ? "" : answers[version % answers.count] }
+}
+
 struct WitnessSeed {
     /// A token like "{V}" or "{DET}", or nil for a random new name.
     let name: String?
@@ -32,6 +59,8 @@ struct WitnessSeed {
     let weight: Int
     /// Lay witnesses can be impeached with generic credibility problems.
     let lay: Bool
+    /// Full testimony written for this witness. When present it replaces the generic examination.
+    var exam: [ExamLine] = []
 }
 
 struct SecondaryCharge {
@@ -91,6 +120,16 @@ struct ObjectionSeed {
     var needsVictim: Bool = false
     /// Only fits an ordinary eyewitness, not an officer or expert.
     var layOnly: Bool = false
+    /// Kinds of case this exchange fits (empty means any).
+    var settings: Set<CaseSetting> = []
+    /// Only fits a witness who saw or heard the events firsthand.
+    var eyewitnessOnly: Bool = false
+    /// Only fits an officer, investigator, or expert.
+    var officialOnly: Bool = false
+    /// Words, one of which must appear somewhere in the case (summary, charges, evidence, testimony). Empty means any case.
+    var needsFacts: [String] = []
+    /// Words, one of which must appear in the witness's role (empty means any role).
+    var roleWords: [String] = []
 }
 
 struct MotionSeed {
@@ -133,6 +172,8 @@ struct TwistSeed {
     var ages: ClosedRange<Int> = 16...90
     /// Makes no sense if the case resolves by plea before trial.
     var trialOnly: Bool = false
+    /// Kinds of case this fits (empty means any).
+    var settings: Set<CaseSetting> = []
 }
 
 struct Impeachment {
@@ -141,4 +182,102 @@ struct Impeachment {
     let penalty: Int
     /// Safe to use on the complaining witness.
     var victimSafe: Bool = true
+    /// Kinds of case this fits (empty means any).
+    var settings: Set<CaseSetting> = []
+    /// Only fits a witness who saw the events firsthand.
+    var eyewitness: Bool = false
+    /// How the point is drawn out on cross: alternate (question, answer) pairs.
+    var asked: [(String, String)] = []
+}
+
+// MARK: - Fitting shared text to a case
+
+/// What kind of facts a case turns on, so shared text (objections, testimony, gaps, follow-up evidence) fits it.
+enum CaseSetting: String, Codable, Hashable {
+    /// Something happened at a place, in front of people: assaults, robberies, break-ins.
+    case scene
+    /// Records and computers: fraud, embezzlement, hacking, perjury.
+    case paper
+    /// Drugs found, sold, or delivered.
+    case drugs
+    /// Driving: impaired driving, crashes, chases.
+    case road
+
+    static func of(category: LawCategory, key: String) -> CaseSetting {
+        switch key {
+        case "perjuryTrial", "prescriptionForgery": return .paper
+        default: break
+        }
+        switch category {
+        case .whiteCollar, .cyber: return .paper
+        case .drugs: return .drugs
+        case .traffic: return .road
+        default: return .scene
+        }
+    }
+}
+
+/// How the police first got involved.
+enum CaseOrigin: Hashable {
+    /// A 911 call about something that just happened.
+    case call
+    /// An officer stopped a vehicle.
+    case stop
+    /// A planned search warrant after an investigation.
+    case warrant
+    /// Someone reported it afterward.
+    case report
+    /// An audit, complaint, or records review.
+    case records
+
+    static func of(key: String, setting: CaseSetting) -> CaseOrigin {
+        if setting == .paper { return .records }
+        switch key {
+        case "trafficStopDrugs", "habitualDWI", "fleeingElude", "felonGun": return .stop
+        case "trapHouse", "hiddenGun": return .warrant
+        case "schoolThreat", "animalHoarding", "fakeCop", "stalking", "custodyFlight", "shakenInfant",
+             "protectiveOrderParty", "witnessIntimidation": return .report
+        default: return .call
+        }
+    }
+}
+
+/// Everything known about a case, for checking whether a shared line fits it.
+struct CaseFacts {
+    let key: String
+    let category: LawCategory
+    let setting: CaseSetting
+    let origin: CaseOrigin
+    let hasVictim: Bool
+    /// Summaries, charges, evidence, and testimony, lowercased.
+    let text: String
+
+    init(key: String, category: LawCategory, hasVictim: Bool, text: String) {
+        self.key = key
+        self.category = category
+        self.setting = CaseSetting.of(category: category, key: key)
+        self.origin = CaseOrigin.of(key: key, setting: setting)
+        self.hasVictim = hasVictim
+        self.text = text.lowercased()
+    }
+
+    init(_ c: CourtCase) {
+        var parts: [String] = [c.summary]
+        parts += c.charges.map { $0.specification }
+        parts += c.evidence.map { $0.title + ". " + $0.detail }
+        for w in c.witnesses { parts += w.direct + w.cross }
+        self.init(key: c.templateKey, category: c.category, hasVictim: c.victimName != nil, text: parts.joined(separator: " "))
+    }
+
+    /// True when any of the words appears in the case (or when no words are given).
+    func mentions(_ words: [String]) -> Bool {
+        words.isEmpty || words.contains { text.contains($0) }
+    }
+
+    /// Alcohol or another impairing substance is part of the case.
+    var impaired: Bool { mentions(["impair", "alcohol", "blew 0", "breath test", "intoxilyzer", "dwi", "drunk", "drinking", "blood-alcohol"]) }
+    /// Money moved, was taken, or was paid.
+    var money: Bool { mentions(["$", "money", "payroll", "invoice", "deposit", "transfer", "account", "wallet", "check"]) }
+    /// Who did it is in dispute: descriptions, lineups, footage.
+    var identity: Bool { mentions(["description", "lineup", "identif", "mask", "hoodie", "matching", "unknown", "footage"]) }
 }

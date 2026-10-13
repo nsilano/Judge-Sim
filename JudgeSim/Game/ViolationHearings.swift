@@ -232,9 +232,13 @@ enum ViolationHearings {
 
         switch decision {
         case .continueAsIs:
-            lines.insert("The court \(h.willful ? "declines to find a willful violation" : "finds no willful violation"). Probation continues on the same terms.", at: 0)
+            lines.insert((r.finding ?? .established) == .established
+                ? "The court finds a violation but, in its discretion, continues probation on the same terms."
+                : "The court finds no willful violation. Probation continues on the same terms.", at: 0)
         case .modify:
-            lines.insert("The court finds the probationer in willful violation and modifies the judgment.", at: 0)
+            lines.insert((r.finding ?? .established) == .established
+                ? "The court finds the probationer in willful violation and modifies the judgment."
+                : "For good cause shown, the court modifies the conditions of probation (G.S. 15A-1344(d)).", at: 0)
             if r.addTreatment { addedConditions.append("Obtain a substance abuse and mental health assessment and complete recommended treatment."); risk -= 0.08; propensityChange -= 0.05 }
             if r.addTesting { addedConditions.append("Submit to random drug testing."); risk += 0.03 }
             if r.addCurfew { addedConditions.append("Curfew from 9:00 p.m. to 6:00 a.m."); risk += 0.02; propensityChange -= 0.02 }
@@ -271,6 +275,9 @@ enum ViolationHearings {
         term.violationRisk = min(0.7, max(0.03, risk))
 
         var pending: [PendingEvent] = []
+        // Probationers appeal an unauthorized sanction often, but not always.
+        var appealRNG = SeededRNG(seed: h.seed ^ 0xA_9915)
+        let appeals = appealRNG.chance(0.6)
         let finding = r.finding ?? .established
         let sanction = [HearingDecision.quickDip, .crv, .revoke].contains(decision)
         if finding != .established {
@@ -280,6 +287,7 @@ enum ViolationHearings {
         }
         if sanction && finding != .established {
             lines.append("Note: a sanction was imposed without finding a violation.")
+            if appeals && decision != .quickDip {
             let due = Calendar.current.date(byAdding: .day, value: 140, to: date) ?? date
             pending.append(PendingEvent(due: due,
                                         news: NewsItem(date: due, kind: .appeal,
@@ -287,8 +295,10 @@ enum ViolationHearings {
                                                        body: "The Court of Appeals held that Judge \(judgeLast) could not impose a sanction after finding no willful violation of probation, and vacated the order.",
                                                        docket: term.docket + " (PV)"),
                                         personID: h.personID, effect: .resentence, appealReversed: true, newReleaseDate: due))
+            }
         } else if decision == .revoke && !canRevoke(h) {
             lines.append("Note: the record does not show a new offense, absconding, or two prior CRVs.")
+            if appeals {
             let due = Calendar.current.date(byAdding: .day, value: 150, to: date) ?? date
             pending.append(PendingEvent(due: due,
                                         news: NewsItem(date: due, kind: .appeal,
@@ -296,6 +306,7 @@ enum ViolationHearings {
                                                        body: "The Court of Appeals held that Judge \(judgeLast) lacked statutory authority to revoke probation for technical violations alone under G.S. 15A-1344(a), and remanded. \(h.personName) was released from custody.",
                                                        docket: term.docket + " (PV)"),
                                         personID: h.personID, effect: .resentence, appealReversed: true, newReleaseDate: due))
+            }
         }
 
         let keepsProbation = decision != .revoke && decision != .terminate

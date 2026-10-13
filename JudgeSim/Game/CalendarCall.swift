@@ -61,7 +61,8 @@ enum CalendarCalls {
     private static let pleaLaws = ["felonyLarceny", "possSchedII", "breakingVehicle", "larcenyMerchant", "feloniousBE",
                                    "uttering", "pwisd", "commonLawRobbery", "possStolen", "strangulation", "awdwisi", "burglary2"]
 
-    static func make(county: County, date: Date, docketSequence: Int, people: [PersonRecord], seed: UInt64) -> CalendarCall {
+    static func make(county: County, date: Date, docketSequence: Int, people: [PersonRecord], excluding: Set<UUID> = [],
+                     seed: UInt64) -> CalendarCall {
         var rng = SeededRNG(seed: seed)
         var used = Set(people.map(\.name))
         let year = Calendar.current.component(.year, from: date) % 100
@@ -90,13 +91,21 @@ enum CalendarCalls {
             let record = PriorRecord(priors: priors, onSupervision: false)
             let active: Int
             let rangeText: String
+            var notes: [String] = []
             if cls.isFelony, let cell = StructuredSentencing.felonyCell(cls, level: record.felonyLevel) {
                 active = cell.presumptive.low
                 rangeText = "\(cell.presumptive.low)–\(StructuredSentencing.maximum(forMinimum: cell.presumptive.low, cls: cls)) months"
+                if [.A, .B1, .B2, .C, .D, .E].contains(cls) { notes.append("PJC not allowed for this class.") }
+                if !cell.dispositions.contains(.community) && !cell.dispositions.contains(.intermediate) {
+                    notes.append("At prior record level \(SentenceFormat.romanLevels[record.felonyLevel - 1]) the chart calls for an active sentence; suspending it departs from Structured Sentencing.")
+                }
             } else {
                 let cell = StructuredSentencing.misdemeanorCell(cls, level: record.misdemeanorLevel)
                 active = max(1, (cell?.maxDays ?? 30) / 2)
                 rangeText = "\(active) days"
+                if let cell, !cell.dispositions.contains(.active) {
+                    notes.append("At this prior conviction level the chart allows only community punishment; an active term departs from it.")
+                }
             }
             let occupation = rng.pick(NameBank.occupations)
             matters.append(CalendarMatter(
@@ -110,7 +119,7 @@ enum CalendarCalls {
                           "Accept the plea; impose \(rangeText) active",
                           "Reject the plea; set the case for trial"],
                 lawID: law.id, priors: priors, activeTerm: active, isFelony: cls.isFelony,
-                lawNote: cls.isFelony && [.A, .B1, .B2, .C, .D, .E].contains(cls) ? "PJC not allowed for this class." : nil))
+                lawNote: notes.isEmpty ? nil : notes.joined(separator: " ")))
         }
 
         let others: [CalendarMatter.Kind] = rng.pick([.failureToAppear, .continuance, .bondModification, .capacity], count: 2)
@@ -159,7 +168,7 @@ enum CalendarCalls {
         }
 
         // A probationer from this court admits a technical violation.
-        let probationers = people.filter { $0.status == .probation && $0.probation != nil }
+        let probationers = people.filter { $0.status == .probation && $0.probation != nil && !excluding.contains($0.id) }
         let steady = probationers.filter { ($0.probation?.violationRisk ?? 0.2) < 0.25 }
         if let person = steady.isEmpty ? nil : rng.pick(steady), let term = person.probation, rng.chance(0.5) {
             let whose = term.imposedInThisCourt ? "You placed \(person.lastName) on probation." : (term.origin ?? "Sentenced in another court.")
@@ -261,7 +270,8 @@ enum CalendarCalls {
                     person.status = .free
                     person.propensity = max(0.03, person.propensity * 0.85)
                     person.appearances.append(PersonRecord.Appearance(docket: term.docket, date: date, charges: "Motion to terminate probation early",
-                                                                      outcome: "Granted: probation ended early"))
+                                                                      outcome: choice == 1 ? "Granted on payment of all money owed: probation ended early"
+                                                                                           : "Granted: probation ended early"))
                 }))
             case .pvAdmission:
                 updates.append((m.personID, { person in

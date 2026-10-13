@@ -106,6 +106,8 @@ struct ChambersView: View {
     @EnvironmentObject private var game: GameState
     @State private var activeItem: DocketItem?
     @State private var showSettings = false
+    @State private var showLeave = false
+    @State private var leaveWeeks = 2
 
     var body: some View {
         NavigationStack {
@@ -154,6 +156,7 @@ struct ChambersView: View {
                 }
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
+            .sheet(isPresented: $showLeave) { leaveSheet }
             .fullScreenCover(item: $activeItem) { item in
                 if let county = game.county, let judgeName = game.judgeName {
                     switch item {
@@ -170,6 +173,33 @@ struct ChambersView: View {
                 }
             }
         }
+    }
+
+    private var leaveSheet: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Stepper("\(leaveWeeks) week\(leaveWeeks == 1 ? "" : "s")", value: $leaveWeeks, in: 1...12)
+                    LabeledContent("Back on the bench", value: CourtCalendar.dayTitle(game.leaveReturnDate(weeks: leaveWeeks)))
+                } footer: {
+                    Text("Time keeps moving while you're away: sentences end, people are released, probation runs its course, and appeals are decided. Matters continued into your leave are reset to your first day back. You'll get a summary when you return.")
+                }
+            }
+            .navigationTitle("Time Off")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showLeave = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Take Leave") {
+                        showLeave = false
+                        withAnimation { game.takeLeave(weeks: leaveWeeks) }
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 
     private var header: some View {
@@ -202,7 +232,7 @@ struct ChambersView: View {
                         .foregroundStyle(Theme.gold)
                 }
                 Text(CourtCalendar.dayTitle(day.date)).font(.system(.title3, design: .serif).weight(.bold))
-                Text(day.kind.label + (day.sessionDay > 0 ? " · Day \(day.sessionDay) of 5" : ""))
+                Text(day.kind.label + (day.sessionDay > 0 ? " · Day \(day.sessionDay) of \(day.sessionDay + max(0, 6 - Calendar.current.component(.weekday, from: day.date)))" : ""))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if Calendar.current.component(.hour, from: day.clock) >= 17 && !day.isComplete {
@@ -253,9 +283,21 @@ struct ChambersView: View {
                         Haptics.gavel()
                         withAnimation { game.adjourn() }
                     }
-                    Text("Next court date: \(CourtCalendar.dayTitle(next))" + (next > Calendar.current.date(byAdding: .day, value: 4, to: day.date) ?? next ? ". Your criminal session is over; the next one starts then." : "."))
+                    let plan = game.nextCourtDayKind
+                    Text("Next court date: \(CourtCalendar.dayTitle(next))"
+                         + (plan.newSession ? ". Your criminal session is over; the next one starts then."
+                            : (plan.kind == .specialSetting ? ", a special setting for continued matters." : ".")))
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    Button {
+                        Haptics.tap()
+                        showLeave = true
+                    } label: {
+                        Label("Take Time Off…", systemImage: "beach.umbrella.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
                 } else {
                     Text("Take the matters in any order. When the calendar is clear, you can adjourn.")
                         .font(.caption)
@@ -447,13 +489,7 @@ struct RecordsView: View {
                     NavigationLink {
                         CaseRecordDetail(record: record)
                     } label: {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(record.caption).font(.subheadline.weight(.semibold))
-                            Text(record.outcome).font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                            if let appeal = record.appealStatus {
-                                Text(appeal).font(.caption2.weight(.semibold)).foregroundStyle(.orange)
-                            }
-                        }
+                        DocketIndexRow(record: record, showDate: false)
                     }
                 }
             }
@@ -473,12 +509,13 @@ struct RecordsView: View {
                 stat("\(game.people.filter { $0.status == .probation }.count)", "On probation")
             }
         }
-        Section("Career ledger") {
+        Section {
+            DisclosureGroup("Career ledger") {
             let trials = game.history.filter { $0.resolvedKind == "trial" }
             let s = game.stats
             ledgerRow("Convictions", trials.filter { $0.outcome.contains("Guilty") || $0.outcome.contains("No contest") }.count)
-            ledgerRow("Acquittals and dismissals", trials.filter { $0.outcome.contains("Not guilty") || $0.outcome.contains("Dismissed") }.count)
-            ledgerRow("Guilty pleas", trials.filter { $0.outcome.contains("plea") }.count)
+            ledgerRow("Acquittals and dismissals", trials.filter { $0.outcome.hasPrefix("Not guilty") || $0.outcome.hasPrefix("Dismissed") }.count)
+            ledgerRow("Guilty pleas", trials.filter { $0.outcome.contains("plea)") || $0.outcome.contains("No contest") }.count)
             ledgerRow("Returning defendants", trials.filter(\.returningDefendant).count)
             ledgerRow("Felony sentences below the presumptive range", s.belowPresumptive)
             ledgerRow("Felony sentences within the presumptive range", s.withinPresumptive)
@@ -489,8 +526,9 @@ struct RecordsView: View {
             ledgerRow("Probation revoked", s.probationRevoked)
             ledgerRow("Released from custody", s.releasedFromPrison)
             ledgerRow("Affirmed on appeal", trials.filter { $0.appealStatus == "Affirmed on appeal" }.count)
-            ledgerRow("Reversed or vacated on appeal", trials.filter { ($0.appealStatus ?? "").contains("New trial") || ($0.appealStatus ?? "").contains("vacated") }.count)
+            ledgerRow("Reversed or vacated on appeal", trials.filter { ($0.appealStatus ?? "").contains("New trial") || ($0.appealStatus ?? "").contains("vacated") || ($0.appealStatus ?? "").contains("reversed") }.count)
             ledgerRow("Exonerations", s.exonerations)
+            }
         }
         Section("Docket history") {
             if game.history.isEmpty {
@@ -500,16 +538,7 @@ struct RecordsView: View {
                 NavigationLink {
                     CaseRecordDetail(record: record)
                 } label: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(record.caption).font(.subheadline.weight(.semibold))
-                        Text("\(record.docket) · \(SentenceFormat.shortDate(record.date))")
-                            .font(.caption.monospaced())
-                            .foregroundStyle(.secondary)
-                        Text(record.outcome).font(.caption)
-                        if let appeal = record.appealStatus {
-                            Text(appeal).font(.caption2.weight(.semibold)).foregroundStyle(.orange)
-                        }
-                    }
+                    DocketIndexRow(record: record)
                 }
             }
         }
@@ -528,8 +557,15 @@ struct RecordsView: View {
                     } label: {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(person.name).font(.subheadline.weight(.semibold))
+                                Text(person.name).font(.system(.subheadline, design: .serif).weight(.semibold))
+                                if let line = sentenceLine(person) {
+                                    Text(line).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                                }
                                 Text(statusLine(person)).font(.caption).foregroundStyle(.secondary)
+                                if game.appeals.contains(where: { $0.personID == person.id && $0.isPending }) {
+                                    Label("Appeal pending", systemImage: "building.columns.fill")
+                                        .font(.caption2.weight(.semibold)).foregroundStyle(.orange)
+                                }
                             }
                             Spacer()
                             Pill(text: person.status.label, color: statusColor(person.status))
@@ -561,6 +597,15 @@ struct RecordsView: View {
         }
     }
 
+    /// "26 CRS 001234 · Offense" for the sentence the person is serving.
+    private func sentenceLine(_ person: PersonRecord) -> String? {
+        if person.status == .probation, let term = person.probation {
+            return "\(term.docket) · \(term.offense)"
+        }
+        guard let prior = person.priors.last(where: \.fromThisCourt) else { return nil }
+        return [prior.docket, prior.offense].compactMap { $0 }.joined(separator: " · ")
+    }
+
     private func statusLine(_ person: PersonRecord) -> String {
         switch person.status {
         case .incarcerated:
@@ -578,11 +623,23 @@ struct RecordsView: View {
         Section(game.county?.newspaper ?? "News") {
             ForEach(game.news) { item in
                 VStack(alignment: .leading, spacing: 4) {
-                    Label(SentenceFormat.shortDate(item.date), systemImage: item.kind.icon)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack {
+                        Label(SentenceFormat.shortDate(item.date), systemImage: item.kind.icon)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        if let placement = item.placement {
+                            Text(placement.uppercased())
+                                .font(.system(size: 9, weight: .bold))
+                                .tracking(0.6)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                     Text(item.headline).font(.system(.subheadline, design: .serif).weight(.semibold))
-                    Text(item.body).font(.caption)
+                    Text(item.body).font(.system(.caption, design: .serif))
+                    if let docket = item.docket {
+                        Text(docket).font(.caption2.monospaced()).foregroundStyle(.secondary)
+                    }
                 }
                 .padding(.vertical, 2)
             }
@@ -613,76 +670,4 @@ struct RecordsView: View {
     }
 }
 
-struct CaseRecordDetail: View {
-    @EnvironmentObject private var game: GameState
-    let record: CaseRecord
-
-    var body: some View {
-        List {
-            Section {
-                Text(record.headline).font(.system(.headline, design: .serif))
-                Text("\(record.docket) · \(SentenceFormat.date(record.date))").font(.caption.monospaced())
-                if record.returningDefendant {
-                    Label("Returning defendant", systemImage: "arrow.uturn.left").foregroundStyle(.purple)
-                }
-            }
-            Section("Outcome") {
-                Text(record.outcome)
-                ForEach(record.judgments, id: \.self) { Text($0).font(.callout) }
-            }
-            if let tracker = game.appeals.first(where: { $0.docket == record.docket }) {
-                Section("Appeal") {
-                    NavigationLink { AppealDetail(appeal: tracker, today: game.currentDate) } label: {
-                        AppealRow(appeal: tracker, today: game.currentDate)
-                    }
-                }
-            } else if let appeal = record.appealStatus {
-                Section("Appeal") { Text(appeal) }
-            }
-        }
-        .navigationTitle(record.caption)
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-struct PersonDetail: View {
-    @EnvironmentObject private var game: GameState
-    let person: PersonRecord
-    let today: Date
-
-    var body: some View {
-        List {
-            Section {
-                Text("Age \(person.age(on: today)) · \(person.occupation)")
-                Text(person.background).font(.callout).foregroundStyle(.secondary)
-            }
-            Section("Status today") {
-                PersonStatusCard(person: person, today: today,
-                                 appeals: game.appeals.filter { $0.personID == person.id },
-                                 upcoming: game.scheduled.filter { item in
-                                     switch item.entry.matter {
-                                     case .trial(let c): return c.defendant.personID == person.id
-                                     case .hearing(let h): return h.personID == person.id
-                                     case .calendar: return false
-                                     }
-                                 })
-            }
-            Section("Appearances in your court") {
-                ForEach(Array(person.appearances.enumerated()), id: \.offset) { _, appearance in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(appearance.docket) · \(SentenceFormat.shortDate(appearance.date))").font(.caption.monospaced())
-                        Text(appearance.charges).font(.subheadline.weight(.semibold))
-                        Text(appearance.outcome).font(.caption)
-                    }
-                }
-            }
-            Section("Criminal record") {
-                if person.priors.isEmpty {
-                    Text("No convictions").foregroundStyle(.secondary)
-                }
-                ForEach(person.priors) { PriorRow(prior: $0) }
-            }
-        }
-        .navigationTitle(person.name)
-    }
-}
+// CaseRecordDetail and PersonDetail live in RecordDocuments.swift and PersonRecordView.swift.

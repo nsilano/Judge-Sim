@@ -269,7 +269,9 @@ struct SentencingStage: View {
                     UnitSentenceCard(unit: unit,
                                      aggravatingFound: !session.rulings.foundAggravating.isEmpty,
                                      mitigatingFound: !session.rulings.foundMitigating.isEmpty,
-                                     choice: session.choiceBinding(for: unit))
+                                     choice: session.choiceBinding(for: unit),
+                                     sentenceDate: c.sessionDate,
+                                     creditDays: c.background?.custodyDays ?? 0)
                 }
 
                 if session.anyActive {
@@ -596,9 +598,10 @@ struct ActiveOrdersCard: View {
 
             if session.asrEligible {
                 ConditionToggle(title: "Advanced Supervised Release (ASR)",
-                                detail: session.askedAboutASR
+                                detail: (session.askedAboutASR
                                     ? (objects ? "The State objected on the record. Ordering ASR anyway departs from the statute." : "The State does not object.")
-                                    : "Early release after risk-reduction programs. The statute requires that the State not object; ask the prosecutor.",
+                                    : "Early release after risk-reduction programs. The statute requires that the State not object; ask the prosecutor.")
+                                    + " Your choice: if ordered, the defendant can be released before the minimum term.",
                                 isOn: $session.rulings.recommendations.advancedSupervisedRelease)
             }
             ConditionToggle(title: "Recommend substance abuse treatment in custody", isOn: $session.rulings.recommendations.substanceTreatment)
@@ -706,6 +709,8 @@ struct UnitSentenceCard: View {
     let aggravatingFound: Bool
     let mitigatingFound: Bool
     @Binding var choice: SentenceChoice
+    var sentenceDate: Date? = nil
+    var creditDays: Int = 0
 
     private enum Mode { case chart(SentenceRangeKind), custom, life }
 
@@ -769,6 +774,7 @@ struct UnitSentenceCard: View {
             if !choice.lifeWithoutParole {
                 termEditor
                 dispositionPicker
+                releasePreview
             }
         }
         .card(tint: Judgment.isComplete(choice) ? Theme.gold : nil)
@@ -777,6 +783,35 @@ struct UnitSentenceCard: View {
     private var isCustom: Bool {
         if case .custom = mode { return true }
         return false
+    }
+
+    private var supervisionMonths: Int {
+        [NCClass.B1, .B2, .C, .D, .E].contains(unit.sentencingClass) ? 12 : 9
+    }
+
+    /// When this judgment, served alone, would let the defendant out.
+    @ViewBuilder
+    private var releasePreview: some View {
+        if choice.disposition == .active, let start = sentenceDate {
+            let cal = Calendar.current
+            let creditBack: (Date) -> Date = { max(start, cal.date(byAdding: .day, value: -creditDays, to: $0) ?? $0) }
+            let earliest = creditBack(unit.isFelony
+                ? (cal.date(byAdding: .month, value: choice.minimum, to: start) ?? start)
+                : (cal.date(byAdding: .day, value: choice.minimum, to: start) ?? start))
+            let latest = creditBack(unit.isFelony
+                ? (cal.date(byAdding: .month, value: max(choice.minimum, Judgment.maximum(for: unit, choice: choice) - supervisionMonths), to: start) ?? start)
+                : (cal.date(byAdding: .day, value: choice.minimum, to: start) ?? start))
+            VStack(alignment: .leading, spacing: 3) {
+                Label("If served alone: earliest release \(SentenceFormat.shortDate(earliest))" + (unit.isFelony ? ", latest \(SentenceFormat.shortDate(latest))" : ""),
+                      systemImage: "calendar.badge.clock")
+                    .font(.caption.weight(.semibold))
+                Text(unit.isFelony
+                     ? "The defendant serves the full minimum before release; earned time can't shorten it. Release comes no later than the maximum less \(supervisionMonths) months of post-release supervision." + (creditDays > 0 ? " Includes \(creditDays) days of jail credit." : "")
+                     : "Jail time is served day for day" + (creditDays > 0 ? ", less \(creditDays) days of jail credit." : "."))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 
     private func isChart(_ kind: SentenceRangeKind) -> Bool {
@@ -802,7 +837,8 @@ struct UnitSentenceCard: View {
         if unit.isFelony {
             let statutoryMax = StructuredSentencing.maximum(forMinimum: choice.minimum, cls: unit.sentencingClass)
             if isCustom || unit.felonyCell == nil {
-                AmountStepper(title: "Minimum: \(SentenceFormat.months(choice.minimum)) (\(choice.minimum) months)",
+                AmountStepper(title: "Minimum term: \(SentenceFormat.months(choice.minimum)) (\(choice.minimum) months)",
+                              caption: "Time the defendant must serve before becoming eligible for release.",
                               value: $choice.minimum, range: 0...1_200,
                               fine: 1, coarse: 12, fineLabel: "± 1 month", coarseLabel: "± 1 year")
                 ConditionToggle(title: "Use the statutory maximum (\(statutoryMax) months)",
@@ -817,8 +853,11 @@ struct UnitSentenceCard: View {
             } else if let range = unit.felonyCell?.range(choice.range) {
                 Stepper(value: $choice.minimum, in: range.low...range.high) {
                     VStack(alignment: .leading) {
-                        Text("Minimum \(choice.minimum) months").font(.title3.weight(.bold))
-                        Text("Maximum \(statutoryMax) months · \(SentenceFormat.months(choice.minimum)) to \(SentenceFormat.months(statutoryMax))")
+                        Text("Minimum term: \(choice.minimum) months").font(.title3.weight(.bold))
+                        Text("Must be served in full before release eligibility (\(SentenceFormat.months(choice.minimum))).")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("Maximum term: \(statutoryMax) months (\(SentenceFormat.months(statutoryMax))), set by statute; includes \(supervisionMonths) months of post-release supervision.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -905,7 +944,8 @@ struct ProbationStage: View {
                 }
             }
 
-            PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.probationDecision != nil,
+            PrimaryButton(title: "Enter Order", icon: "hammer.fill",
+                          enabled: session.rulings.probationDecision != nil || c.defendant.probation == nil,
                           hint: "Choose how to handle the probation violation.") {
                 Haptics.gavel()
                 session.advance()
@@ -1093,6 +1133,11 @@ struct JudgmentSummaryCard: View {
                     let relation = index == 0 ? "" : (r.mode == .consecutive ? " (consecutive)" : " (concurrent)")
                     Text("• \(unit.title): \(Judgment.termText(for: unit, choice: choice))\(disposition)\(relation)")
                         .font(.callout)
+                }
+            }
+            if let projection = Judgment.custodyProjection(session.courtCase, r, units: session.units, from: session.courtCase.sessionDate) {
+                ForEach(projection.lines, id: \.self) { line in
+                    Text("• " + line).font(.callout)
                 }
             }
             let total = session.obligations.reduce(0) { $0 + $1.amount }
