@@ -132,8 +132,17 @@ enum CaseGenerator {
 
         let victimName = t.hasVictim ? NameBank.person(using: &rng, excluding: &used) : nil
         let alternate = NameBank.person(using: &rng, excluding: &used)
-        let detective = rng.pick(county.detectives)
-        let officer = rng.pick(county.officers)
+        let setting = CaseSetting.of(category: t.category, key: t.key)
+        // Highway crashes and impaired driving are worked by the Highway Patrol.
+        let trooperName = rng.pick(county.troopers)
+        let detective = setting == .road
+            ? CastMember(name: trooperName, title: rng.pick(["Trooper", "Master Trooper", "Sergeant"]), agency: "N.C. State Highway Patrol")
+            : rng.pick(county.detectives)
+        let officer = setting == .road && rng.chance(0.5)
+            ? CastMember(name: NameBank.person(using: &rng, excluding: &used), title: "Trooper", agency: "N.C. State Highway Patrol")
+            : rng.pick(county.officers)
+        // The day it happened, fixed once so every report, witness, and exhibit agrees.
+        let incident = Calendar.current.date(byAdding: .day, value: -rng.int(150...330), to: context.date) ?? context.date
         let prosecutor = rng.pick(county.assistantDAs)
         let usePublicDefender = rng.chance(0.6)
         let defenseLawyer = usePublicDefender ? rng.pick(county.assistantPDs) : rng.pick(county.privateCounsel)
@@ -145,7 +154,7 @@ enum CaseGenerator {
             "DO": defendant.occupation.lowercased(),
             "DET": detective.display,
             "OFF": officer.display,
-            "TROOPER": "Trooper \(rng.pick(county.troopers))",
+            "TROOPER": setting == .road ? detective.display : "Trooper \(trooperName)",
             "ALT": alternate,
             "PROS": prosecutor,
             "DEF": defenseLawyer,
@@ -154,7 +163,7 @@ enum CaseGenerator {
             "JUDGE": lastName(context.judgeName),
             "STREET": rng.pick(NameBank.streets),
             "TIME": rng.pick(NameBank.times),
-            "DATE": rng.pick(NameBank.dates),
+            "DATE": CaseDates.day(incident),
             "HOOD": rng.pick(county.towns),
             "CITY": county.seat,
             "V": victimName ?? "the complainant",
@@ -187,7 +196,7 @@ enum CaseGenerator {
             let extraIncidents = max(2, target - charges.count - addOns.count)
             seriesCount = extraIncidents + 1
             charges[0].specification += " (Incident 1 of \(seriesCount).)"
-            var day = Calendar.current.date(byAdding: .day, value: -rng.int(200...320), to: context.date) ?? context.date
+            var day = incident
             for index in 2...seriesCount {
                 day = Calendar.current.date(byAdding: .day, value: rng.int(9...40), to: day) ?? day
                 let when = day.formatted(.dateTime.month(.wide).day().year())
@@ -252,38 +261,44 @@ enum CaseGenerator {
             witnesses.append(makeWitness(rng.pick(t.defenseWitnesses), side: .defense, fill: fill, rng: &rng, used: &used))
         }
 
-        // Full testimony, the investigation file, and the witnesses most trials actually hear
-        for index in witnesses.indices where witnesses[index].exchanges == nil {
-            witnesses[index].exchanges = Testimony.examination(for: witnesses[index], isVictim: witnesses[index].name == victimName,
-                                                               defendantLast: defendant.lastName, rng: &rng)
-        }
+        // The investigation file and fact sheet come first: every generated witness reads from them.
         var profiledDefendant = defendant
         profiledDefendant.profile = DefendantProfiles.make(for: defendant, county: county)
-        var investigation = Investigations.make(t: t, values: values, detective: detective, officer: officer,
-                                                evidence: evidence, witnesses: witnesses, defendant: defendant,
-                                                charges: charges, year: currentYear, rng: &rng)
+        let factText = (t.summaries.map { fill($0) } + charges.map(\.specification) + evidence.map { $0.title + ". " + $0.detail }
+                        + witnesses.flatMap { $0.direct + $0.cross }).joined(separator: " ")
+        let facts = CaseFacts(key: t.key, category: t.category, hasVictim: t.hasVictim, text: factText)
+        var (investigation, gaps) = Investigations.make(t: t, facts: facts, values: values, incident: incident, sessionDate: context.date,
+                                                        detective: detective, officer: officer, evidence: evidence,
+                                                        defendant: profiledDefendant, charges: charges, victimName: victimName,
+                                                        year: currentYear, rng: &rng)
+        let sheet = investigation.facts ?? CaseFactSheet(setting: setting, incident: incident, time: values["TIME"],
+                                                         place: values["STREET"] ?? "", street: values["STREET"] ?? "",
+                                                         town: values["HOOD"] ?? county.seat, arrivalTime: nil, assigned: incident,
+                                                         arrest: incident, interview: nil, labSubmitted: nil, labReturned: nil,
+                                                         agency: detective.agency, lead: detective.display, firstOfficer: officer.display)
+        let testimonyContext = Testimony.Context(facts: facts, sheet: sheet, report: investigation, gaps: gaps, evidence: evidence,
+                                                 charges: charges, defendant: profiledDefendant, victim: victimName, values: values,
+                                                 defenseTheory: fill(rng.pick(t.defenseTheory)))
+        for index in witnesses.indices where witnesses[index].exchanges == nil {
+            witnesses[index].exchanges = Testimony.examination(for: witnesses[index], isVictim: witnesses[index].name == victimName,
+                                                               ctx: testimonyContext, impeachment: nil,
+                                                               timingSlip: witnesses[index].lay == true && rng.chance(0.3), rng: &rng)
+        }
         let roles = witnesses.map { $0.role.lowercased() }
-        let stateEvidence = evidence.filter { $0.side == .prosecution }
         var added: [Witness] = []
-        if !roles.contains(where: { $0.contains("detective") || $0.contains("investigator") || $0.contains("agent") }) {
-            added.append(Testimony.detective(name: detective.display, agency: detective.agency, report: investigation,
-                                             statementTaken: stateEvidence.contains { $0.kind == .statement },
-                                             stateEvidence: stateEvidence, defendantLast: defendant.lastName,
-                                             alternateSuspectInDefense: evidence.contains { $0.side == .defense && $0.title.lowercased().contains("tip") },
-                                             rng: &rng))
+        if !roles.contains(where: { $0.contains("detective") || $0.contains("investigator") || $0.contains("agent") || $0.contains("trooper") }) {
+            added.append(Testimony.leadInvestigator(name: detective.display, agency: detective.agency, ctx: testimonyContext,
+                                                    madeTheStop: facts.origin == .stop && rng.chance(0.5), rng: &rng))
         }
-        if t.category != .whiteCollar && t.category != .cyber && !roles.contains(where: { $0.contains("officer") || $0.contains("deputy") || $0.contains("trooper") }) && rng.chance(0.6) {
-            added.append(Testimony.firstOfficer(name: officer.display, agency: officer.agency, report: investigation,
-                                                defendantLast: defendant.lastName, rng: &rng))
+        if setting != .paper && !roles.contains(where: { $0.contains("officer") || $0.contains("deputy") }) && rng.chance(0.65) {
+            added.append(Testimony.firstOfficer(name: officer.display, agency: officer.agency, ctx: testimonyContext, rng: &rng))
         }
-        let forensic = stateEvidence.filter { $0.kind == .forensic }
-        if !forensic.isEmpty && !roles.contains(where: { $0.contains("analyst") || $0.contains("examiner") || $0.contains("scientist") || $0.contains("chemist") }) {
-            added.append(Testimony.analyst(name: NameBank.person(using: &rng, excluding: &used), forensic: forensic,
-                                           defendantLast: defendant.lastName, rng: &rng))
+        if !roles.contains(where: { $0.contains("analyst") || $0.contains("examiner") || $0.contains("scientist") || $0.contains("chemist") }) {
+            let names = (0..<3).map { _ in NameBank.person(using: &rng, excluding: &used) }
+            added += Testimony.analysts(ctx: testimonyContext, names: names, rng: &rng)
         }
         if rng.chance(0.55) {
-            added.append(Testimony.characterWitness(name: NameBank.person(using: &rng, excluding: &used), profile: profiledDefendant.profile,
-                                                    defendantLast: defendant.lastName, rng: &rng))
+            added.append(Testimony.characterWitness(name: NameBank.person(using: &rng, excluding: &used), ctx: testimonyContext, rng: &rng))
         }
         // State witnesses first, then the defense's.
         witnesses = added.filter { $0.calledBy == .prosecution } + witnesses.filter { $0.calledBy == .prosecution }
@@ -291,22 +306,10 @@ enum CaseGenerator {
         investigation.interviews = witnesses.filter { $0.isDefendant != true && !$0.role.contains("State Crime Laboratory") }
             .map { "\($0.name), \($0.role.lowercased())" } + [investigation.interviews.last ?? ""]
 
-        // Objections
+        // Objections, built from each witness and the facts of this case
         var objections: [Objection] = []
-        var usedQuestions = Set<String>()
-        for witness in witnesses where rng.chance(0.6) {
-            let options = GenericPools.objectionSeeds.filter { option in
-                let fits = option.onCross ? option.raisedBy == witness.calledBy : option.raisedBy != witness.calledBy
-                return fits && (!option.needsVictim || t.hasVictim) && (!option.layOnly || witness.lay == true)
-                    && !usedQuestions.contains(option.question)
-            }
-            guard !options.isEmpty else { continue }
-            let option = rng.pick(options)
-            usedQuestions.insert(option.question)
-            objections.append(Objection(witnessID: witness.id, question: fill(option.question), answer: fill(option.answer),
-                                        raisedBy: option.raisedBy, grounds: option.grounds, shouldSustain: option.shouldSustain,
-                                        appellateNote: fill(option.explanation), doctrineID: option.doctrineID,
-                                        weightIfAdmitted: option.weight))
+        for witness in witnesses where rng.chance(0.55) {
+            if let objection = ObjectionEngine.make(for: witness, ctx: testimonyContext, rng: &rng) { objections.append(objection) }
         }
 
         // Motions
@@ -448,8 +451,11 @@ enum CaseGenerator {
             weight: testimonyHolds ? 2 : -2,
             lay: true, isDefendant: true)
         var fullTestimony = testimony
-        fullTestimony.exchanges = Testimony.defendant(testimony, defendantLast: defendant.lastName, holds: testimonyHolds,
-                                                      strongestState: strongestState?.title)
+        fullTestimony.exchanges = Testimony.defendant(testimony, ctx: testimonyContext, holds: testimonyHolds,
+                                                      sessionDate: context.date, rng: &rng)
+        if let objection = rng.chance(0.4) ? ObjectionEngine.make(for: fullTestimony, ctx: testimonyContext, rng: &rng) : nil {
+            objections.append(objection)
+        }
 
         var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                         publicDefender: usePublicDefender, mitigating: mitigating,
@@ -742,7 +748,7 @@ enum CaseGenerator {
             employmentPlan: plan,
             indigent: indigent,
             supportPeople: support,
-            willTestify: rng.chance(0.4),
+            willTestify: rng.chance(defendant.priors.contains { $0.ncClass.isFelony } ? 0.45 : 0.7),
             discoveryIssue: discovery,
             stateObjectsToASR: rng.chance(violent ? 0.7 : 0.3),
             hiddenMitigator: rng.chance(0.7) && !hiddenMitigatorPool.isEmpty ? rng.pick(hiddenMitigatorPool) : nil,
