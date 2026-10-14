@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "Assaulted {V} with ethylene glycol, a deadly weapon, with intent to kill, inflicting serious injury.",
         ageRange: 30...55, occupations: ["dispatcher at a trucking company"], hasVictim: true,
         summaries: [
-            "Over three weeks at a trucking company in {HOOD}, {V}, the dispatch supervisor, grew sicker: nausea, confusion, then kidney failure. Doctors found ethylene glycol, the main ingredient in antifreeze. {VL} survives on dialysis. {VL} drank from the same personal coffee thermos every day, kept in the break room fridge. {D}, a dispatcher {VL} had written up twice and recommended for firing, was the only coworker seen on camera opening the fridge at odd hours. {DL} says {DL} kept {DL}'s own lunch there, and that half the office resented {VL}."
+            "Over three weeks at a trucking company in {HOOD}, {V}, the dispatch supervisor, grew sicker: nausea, confusion, then kidney failure. Doctors found ethylene glycol, the main ingredient in antifreeze. {VL} survives on dialysis. {VL} drank from the same personal coffee thermos every day, kept in the break room fridge. {D}, a dispatcher {VL} had written up twice and recommended for firing, was the only coworker seen on camera opening the fridge at odd hours. {DL} says {D.he} kept {D.his} own lunch there, and that half the office resented {VL}."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Break Room Camera", "{DL} opens the fridge alone at 6:12 a.m. on eight mornings over three weeks, before others arrive. {DL}'s shift starts at 7."),
@@ -25,7 +25,7 @@ extension StoryCases {
         defenseEvidence: [
             E(.document, 2, "Early Arrivals", "{DL} had come in early for two years to beat traffic, according to badge records."),
             E(.document, 2, "Shared Computer", "The dispatch computer with the search was shared by four dispatchers on rotating shifts; {DL} was on shift, but so were two others."),
-            E(.document, 2, "Other Grievances", "Three other employees had filed complaints against {VL}, and one had been fired a week before {VL} got sick.")
+            E(.document, 2, "Other Grievances", "Three other employees had filed complaints against {VL}, and one had been fired a week before {V.he} got sick.")
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: nil, role: "Nephrologist",
@@ -45,7 +45,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did the camera show?", "\"{DL} opening the fridge alone at 6:12 a.m. on eight mornings. {DL}'s back is to the camera; we can't see hands.\""),
                             .direct("What about the search?", "\"'Antifreeze taste coffee,' on the dispatch computer during {DL}'s shift, six weeks before.\""),
-                            .direct("What did {DL} say?", "\"That {DL} came early every day and kept lunch in the fridge. When I showed {DL} the search, {DL} said someone else must have done it.\""),
+                            .direct("What did {DL} say?", "\"That {DL} came early every day and kept lunch in the fridge. When I showed {DL} the search, {D.he} said someone else must have done it.\""),
                             .cross("Two other dispatchers were on that shift and used that computer?", "\"Yes.\""),
                             .cross("The employee fired a week before {VL} got sick still had building access for a week?", "\"Their badge worked until it was deactivated, yes.\""),
                             .cross("You never searched {DL}'s home or car for antifreeze?", "\"We did. We found a jug in the garage. Most garages have one.\"")
@@ -58,12 +58,12 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What were {DL}'s habits?", "\"First one in, every day, for as long as I've worked there. Makes the coffee for everybody, puts lunch in the fridge.\""),
-                            .direct("How did people feel about {VL}?", "\"Most of us couldn't stand {VL}. Yelling, write-ups for nothing. When {DL}'s termination paperwork went up, people were angry for {DL}.\""),
+                            .direct("How did people feel about {VL}?", "\"Most of us couldn't stand {VL}. Yelling, write-ups for nothing. When {DL}'s termination paperwork went up, people were angry for {D.him}.\""),
                             .cross("{DL} complained about {VL} constantly?", "\"Everybody did. {DL} more than most.\""),
                             .cross("Did you ever see anyone else near {VL}'s thermos?", "\"No.\"")
                         ])
         ],
-        prosecutionTheory: ["{D}, about to be fired by {V}, searched how to hide antifreeze in coffee and was alone at the fridge with the victim's thermos on eight mornings."],
+        prosecutionTheory: ["{D}, about to be fired by {V}, searched how to hide antifreeze in coffee and was alone at the fridge with {V.his} thermos on eight mornings."],
         defenseTheory: ["{DL} came in early for two years, shared a computer with others, and was one of many people who resented {VL}. The State has suspicion, not proof."],
         aggravating: ["The offense was committed over weeks with planning", "The victim suffered permanent injury"],
         mitigating: ["No prior criminal record"],
@@ -115,7 +115,7 @@ extension StoryCases {
         prosecutionEvidence: [
             E(.document, 3, "Evidence Logs", "{DL} signed the log for every one of the nine affected bags, including resealing entries no one else witnessed."),
             E(.document, 3, "Medical Debt Payments", "{DL} paid $47,000 in cash toward hospital bills over two years; {DL}'s salary is $58,000."),
-            E(.forensic, 2, "Seal Tape", "Replacement evidence tape on the bag had {DL}'s initials and a fingerprint matching {DL}.")
+            E(.forensic, 2, "Seal Tape", "Replacement evidence tape on the bag had {DL}'s initials and a fingerprint matching {D.him}.")
         ],
         defenseEvidence: [
             E(.document, 3, "Broken Lock Reports", "Maintenance tickets show the evidence room's secondary door lock was broken for seven months; {DL} reported it three times."),
@@ -128,14 +128,14 @@ extension StoryCases {
                         cross: ["\"The lock was broken.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("What did the audit find?", "\"Nine cases with cash replaced by paper, $64,000 total, all resealed with tape initialed by {DL}, and logged by {DL}.\""),
+                            .direct("What did the audit find?", "\"Nine cases with cash replaced by paper, $64,000 total, all resealed with tape initialed by {DL}, and logged by {D.him}.\""),
                             .direct("Why does resealing matter?", "\"Opening a sealed bag requires a witness and a log entry explaining why. Each of these resealings has {DL}'s initials and no witness.\""),
                             .cross("{DL} reported the broken lock three times?", "\"The tickets show that.\""),
                             .cross("Another deputy with keys retired during the audit?", "\"For medical reasons, I'm told.\""),
                             .cross("Initials on tape can be copied by anyone holding a roll?", "\"In theory.\"")
                         ]),
             WitnessSeed(name: nil, role: "Forensic accountant",
-                        direct: ["\"{DL} paid far more in cash than {DL} could explain.\""],
+                        direct: ["\"{DL} paid far more in cash than {D.he} could explain.\""],
                         cross: ["\"Fundraiser money was real.\""],
                         weight: 1, lay: false,
                         exam: [
@@ -201,12 +201,12 @@ extension StoryCases {
         specification: "Willfully on more than one occasion followed and surveilled {V} without legal purpose, causing substantial emotional distress.",
         ageRange: 25...45, occupations: ["sales manager"], hasVictim: true,
         summaries: [
-            "Two months after {V} moved out, their phone alerted that an unknown tracker was moving with {VL}. A mechanic found a small Bluetooth tracker taped inside the rear bumper of {VL}'s car. The tracker was registered to {D}'s account. Over the next weeks {DL} \"happened\" to appear at {VL}'s gym and at a restaurant {VL} visited with a new partner. {DL} says the tracker had been on the car since they bought it together, to find it in parking lots, and that {DL} forgot to remove it; and that the gym and restaurant were places they'd always gone together."
+            "Two months after {V} moved out, {V.his} phone alerted that an unknown tracker was moving with {V.him}. A mechanic found a small Bluetooth tracker taped inside the rear bumper of {VL}'s car. The tracker was registered to {D}'s account. Over the next weeks {DL} \"happened\" to appear at {VL}'s gym and at a restaurant {V.he} visited with a new partner. {DL} says the tracker had been on the car since they bought it together, to find it in parking lots, and that {D.he} forgot to remove it; and that the gym and restaurant were places they'd always gone together."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "The Tracker", "A Bluetooth tracker registered to {DL}'s account, wrapped in black electrical tape inside the rear bumper cavity.", .search),
             E(.digital, 3, "Location History", "{DL}'s account checked the tracker's location 212 times in the six weeks after {VL} moved out, often late at night.", .search),
-            E(.statement, 2, "Encounters", "{DL} appeared at {VL}'s gym three times and at a restaurant within forty minutes of {VL} arriving.")
+            E(.statement, 2, "Encounters", "{DL} appeared at {VL}'s gym three times and at a restaurant within forty minutes of {V.him} arriving.")
         ],
         defenseEvidence: [
             E(.document, 2, "Car Purchase", "The car was bought jointly; the tracker was registered the week of purchase, a year and a half earlier."),
@@ -222,7 +222,7 @@ extension StoryCases {
                             .direct("When did you notice {DL} appearing?", "\"Two weeks after I moved out. The gym on a Tuesday, then a Thursday, then a Saturday morning, which {DL} never did. Then a restaurant on my first date in two years.\""),
                             .direct("How did you find the tracker?", "\"My phone kept saying 'unknown tracker moving with you.' I thought it was a glitch. My mechanic found it wrapped in tape in the bumper.\""),
                             .direct("How did that feel?", "\"Like my skin was crawling. I changed my route to work, my gym, my phone. I still look at my rearview mirror constantly.\""),
-                            .cross("You and {DL} bought that car together, and {DL} put a tracker on it then?", "\"I didn't know it was there.\""),
+                            .cross("You and {DL} bought that car together, and {D.he} put a tracker on it then?", "\"I didn't know it was there.\""),
                             .cross("{DL} never approached you, never said a word at the gym or the restaurant?", "\"Just looked at me. That was enough.\""),
                             .cross("{DL} has gone to that gym for ten years?", "\"Not on Saturdays.\"")
                         ]),
@@ -243,12 +243,12 @@ extension StoryCases {
                         cross: ["\"Checking the tracker was unhealthy.\""],
                         weight: 1, lay: false,
                         exam: [
-                            .direct("What was {DL}'s state after the breakup?", "\"Acute grief, insomnia, rumination. {DL} told me they checked the tracker at night to know {VL} was safe, and was ashamed of it.\""),
+                            .direct("What was {DL}'s state after the breakup?", "\"Acute grief, insomnia, rumination. {DL} told me {D.he} checked the tracker at night to know {VL} was safe, and was ashamed of it.\""),
                             .cross("Checking an ex's location 212 times is unhealthy?", "\"Very.\""),
-                            .cross("{DL} never told you {DL} removed it?", "\"No.\"")
+                            .cross("{DL} never told you {D.he} removed it?", "\"No.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} kept a hidden tracker on {V}'s car, checked it 212 times, and kept appearing wherever {VL} went."],
+        prosecutionTheory: ["{D} kept a hidden tracker on {V}'s car, checked it 212 times, and kept appearing wherever {V.he} went."],
         defenseTheory: ["A tracker put on a jointly bought car long before the breakup, a gym and restaurant {DL} has used for years, and not one threat. Grief isn't stalking."],
         aggravating: ["The surveillance was covert and prolonged"],
         mitigating: ["No threats were made", "No prior criminal record"],
@@ -384,7 +384,7 @@ extension StoryCases {
         specification: "Delivered oxycodone by writing prescriptions without a legitimate medical purpose.",
         ageRange: 38...60, occupations: ["nurse practitioner"], hasVictim: false,
         summaries: [
-            "{D}, a nurse practitioner, ran a cash-only pain clinic in {HOOD}. Over two years {DL} wrote more oxycodone prescriptions than any provider in the county. An undercover officer posing as a patient with \"back pain\" got a 90-pill prescription after a seven-minute visit with no exam and no records. Two of {DL}'s patients died of overdoses. {DL} says {DL} treated a rural population of injured laborers abandoned by other providers, and that the undercover officer lied on the intake form."
+            "{D}, a nurse practitioner, ran a cash-only pain clinic in {HOOD}. Over two years {DL} wrote more oxycodone prescriptions than any provider in the county. An undercover officer posing as a patient with \"back pain\" got a 90-pill prescription after a seven-minute visit with no exam and no records. Two of {DL}'s patients died of overdoses. {DL} says {D.he} treated a rural population of injured laborers abandoned by other providers, and that the undercover officer lied on the intake form."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Undercover Visit", "A seven-minute visit: no physical exam, no prior records requested, a $300 cash payment, and a 90-tablet oxycodone 30 mg prescription."),
@@ -405,7 +405,7 @@ extension StoryCases {
                             .direct("What happened at your visit?", "\"I filled out a form saying I'd hurt my back. {DL} asked my pain level, I said eight. {DL} asked what worked before, I said oxycodone 30s. {DL} wrote ninety. Seven minutes. No exam.\""),
                             .direct("What did you pay?", "\"Three hundred cash. They don't take insurance.\""),
                             .cross("You wrote that you'd had back surgery and a fall from a ladder?", "\"Yes. Those were lies, as part of the investigation.\""),
-                            .cross("{DL} relied on what you told {DL}?", "\"{DL} didn't check any of it.\""),
+                            .cross("{DL} relied on what you told {D.him}?", "\"{DL} didn't check any of it.\""),
                             .cross("{DL} ordered a urine drug screen?", "\"Yes, at the end.\"")
                         ]),
             WitnessSeed(name: nil, role: "Pain medicine physician for the State",

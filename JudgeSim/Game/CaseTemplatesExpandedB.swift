@@ -95,7 +95,7 @@ extension CaseTemplates {
             ageRange: 25...60, hasVictim: true,
             summaries: [
                 "After a near-collision at a merge on Marlowe Boulevard, both drivers got out. {V} ended up with a fractured eye socket. {D} says {VL} came at them with fists and a tire iron was the only thing in reach.",
-                "Dashcam footage went viral: {D} swinging a tire iron at {V}'s windshield, then at {VL}, at a red light in {HOOD}."
+                "Dashcam footage went viral: {D} swinging a tire iron at {V}'s windshield, then at {V.him}, at a red light in {HOOD}."
             ],
             prosecutionEvidence: [
                 E(.video, 4, "Dashcam Video", "A third driver's dashcam shows {DL} retrieving a tire iron from the trunk before the confrontation."),
@@ -267,8 +267,8 @@ extension CaseTemplates {
             specification: "Willfully and corruptly testified falsely, under oath, in a prior Hollis County criminal trial.",
             ageRange: 22...55, hasVictim: false,
             summaries: [
-                "Last year, {D} testified at a cousin's robbery trial in this courthouse that the cousin was at {D}'s apartment all night. Phone records later put {D} in Raleigh that night.",
-                "{D} swore at a probation hearing that {D} had never met a key witness. Text messages between the two surfaced afterward."
+                "Last year, {D} testified at a cousin's robbery trial in this courthouse that the cousin was at {D.his} apartment all night. Phone records later put {D} in Raleigh that night.",
+                "{D} swore at a probation hearing that {D.he} had never met a key witness. Text messages between the two surfaced afterward."
             ],
             prosecutionEvidence: [
                 E(.document, 4, "Trial Transcript", "The certified transcript of {DL}'s sworn testimony."),
@@ -296,7 +296,7 @@ extension CaseTemplates {
             aggravating: ["The perjury caused a mistrial in a serious felony case"],
             mitigating: ["No prior record"],
             guiltyTruths: ["The cousin, convicted at retrial, admitted at sentencing that {DL} lied to cover for the cousin."],
-            innocentTruths: ["Hotel staff later confirmed the guest that night was {DL}'s sibling, using {DL}'s card."],
+            innocentTruths: ["Hotel staff later confirmed the guest that night was {DL}'s sibling, using {D.his} card."],
             moods: [.indifferent],
             doctrines: ["burdenOfProof"]
         ),
@@ -308,7 +308,7 @@ extension CaseTemplates {
             specification: "Obstructed justice by concealing a firearm sought as evidence in a homicide investigation.",
             ageRange: 40...65, hasVictim: false,
             summaries: [
-                "After a shooting in {HOOD}, detectives searched {D}'s house for a pistol belonging to {D}'s 19-year-old son. They found it wrapped in a towel in the attic insulation. {DL} had told them there was no gun.",
+                "After a shooting in {HOOD}, detectives searched {D}'s house for a pistol belonging to {D.his} 19-year-old son. They found it wrapped in a towel in the attic insulation. {DL} had told them there was no gun.",
                 "{D} drove to a pond the morning after a shooting and threw something in. Divers recovered the pistol used in the shooting."
             ],
             prosecutionEvidence: [
@@ -443,7 +443,7 @@ extension CaseTemplates {
                 E(.document, 2, "Gas Can Purchase", "A gas can purchased with {DL}'s debit card that evening.")
             ],
             defenseEvidence: [
-                E(.document, 3, "Lawn Mower", "{DL} says the gas was for a lawn mower {DL} used for side work."),
+                E(.document, 3, "Lawn Mower", "{DL} says the gas was for a lawn mower {D.he} used for side work."),
                 E(.document, 2, "Other Grudges", "The landlord had evicted three tenants that month.")
             ],
             prosecutionWitnesses: [
@@ -494,7 +494,7 @@ extension CaseTemplates {
             ],
             prosecutionWitnesses: [
                 WitnessSeed(name: nil, role: "Forensic IT examiner",
-                            direct: ["\"The changes came from {DL}'s machine, during {DL}'s working hours.\""],
+                            direct: ["\"The changes came from {DL}'s machine, during {D.his} working hours.\""],
                             cross: ["\"A compromised account could produce the same logs.\""],
                             weight: 2, lay: false)
             ],
@@ -504,7 +504,7 @@ extension CaseTemplates {
                             cross: ["\"I found no malware on the workstation.\""],
                             weight: 1, lay: false)
             ],
-            prosecutionTheory: ["{D} had the keys to the system and used them to pay themself."],
+            prosecutionTheory: ["{D} had the keys to the system and used them to pay {D.himself}."],
             defenseTheory: ["Shared passwords and a phishing attack. The logs show the account, not the person."],
             aggravating: ["The defendant took advantage of a position of trust"],
             mitigating: ["No prior record"],
@@ -520,12 +520,12 @@ extension CaseTemplates {
             key: "carjacking", category: .robbery,
             headlines: ["Drive or Else", "The Back Seat"],
             primaryLaw: "kidnapping2", lesserLaw: nil, threshold: 5, lesserThreshold: 5,
-            specification: "Unlawfully restrained and removed {V} for the purpose of facilitating a felony, releasing {VL} in a safe place.",
-            secondary: [SecondaryCharge(lawID: "commonLawRobbery", specification: "Took {V}'s vehicle by putting them in fear.", chance: 0.7, threshold: 0)],
+            specification: "Unlawfully restrained and removed {V} for the purpose of facilitating a felony, releasing {V.him} in a safe place.",
+            secondary: [SecondaryCharge(lawID: "commonLawRobbery", specification: "Took {V}'s vehicle by putting {V.him} in fear.", chance: 0.7, threshold: 0)],
             ageRange: 18...32, hasVictim: true,
             summaries: [
                 "{V} was getting into the car outside a laundromat when someone got in the back seat and said, \"Drive.\" Twenty minutes later, {VL} was ordered out on a dirt road. The car was found burned. {D}'s fingerprints were on the rear door.",
-                "At a gas pump in {HOOD}, {D} allegedly forced {V} into the passenger seat and drove off with them for nine miles before letting {VL} out at a church."
+                "At a gas pump in {HOOD}, {D} allegedly forced {V} into the passenger seat and drove off with {V.him} for nine miles before letting {V.him} out at a church."
             ],
             prosecutionEvidence: [
                 E(.forensic, 4, "Fingerprints", "{DL}'s prints on the rear passenger door handle."),
@@ -533,7 +533,7 @@ extension CaseTemplates {
                 E(.digital, 3, "Phone Location", "{DL}'s phone moved along the same route as the car.", .search)
             ],
             defenseEvidence: [
-                E(.document, 3, "Prior Ride", "{DL} says {DL} got a paid ride from {V} a week earlier, explaining the prints."),
+                E(.document, 3, "Prior Ride", "{DL} says {D.he} got a paid ride from {V} a week earlier, explaining the prints."),
                 E(.document, 2, "Lineup Concerns", "The lineup administrator knew who the suspect was.")
             ],
             prosecutionWitnesses: [
@@ -549,7 +549,7 @@ extension CaseTemplates {
                             weight: 1, lay: true)
             ],
             prosecutionTheory: ["{D} took a person, not just a car, and that's kidnapping."],
-            defenseTheory: ["{DL}'s prints are there because {DL} paid {VL} for rides before."],
+            defenseTheory: ["{DL}'s prints are there because {D.he} paid {VL} for rides before."],
             aggravating: ["The victim was held for an extended time"],
             mitigating: ["The victim was released unharmed in a safe place", "Youth"],
             victimImpacts: ["{V}: \"I sold the car they gave back to me. I take the bus now.\""],
@@ -595,8 +595,8 @@ extension CaseTemplates {
             aggravating: ["The victim died"],
             mitigating: ["The defendant called 911 and rendered aid", "No prior record", "Deep remorse"],
             victimImpacts: ["{VL}'s mother: \"I forgive you. I don't know how, but I do. I need to.\"", "{VL}'s brother: \"One punch. That's all it took to end my whole family.\""],
-            guiltyTruths: ["A friend of {DL}'s later testified in a civil suit that {DL} had said, before the fight, \"I'm going to knock that guy out.\""],
-            innocentTruths: ["A second video showed {VL} swinging first, and {DL}'s punch coming as {DL} ducked."],
+            guiltyTruths: ["A friend of {DL}'s later testified in a civil suit that {D.he} had said, before the fight, \"I'm going to knock that guy out.\""],
+            innocentTruths: ["A second video showed {VL} swinging first, and {DL}'s punch coming as {D.he} ducked."],
             moods: [.divided, .sympathetic],
             doctrines: ["selfDefense"]
         ),
@@ -701,7 +701,7 @@ extension CaseTemplates {
                 E(.document, 2, "Stock Photos", "The Colonel's profile photos belong to a real Army officer who has no connection to the case.")
             ],
             defenseEvidence: [
-                E(.document, 3, "Recruited Mule", "{DL} says an online employer paid {DL} to receive and forward funds."),
+                E(.document, 3, "Recruited Mule", "{DL} says an online employer paid {D.him} to receive and forward funds."),
                 E(.digital, 2, "Shared Wi-Fi", "The apartment's Wi-Fi was open to neighbors.")
             ],
             prosecutionWitnesses: [
@@ -717,7 +717,7 @@ extension CaseTemplates {
                             weight: 1, lay: false)
             ],
             prosecutionTheory: ["{D} wasn't a middleman. {D} was the Colonel."],
-            defenseTheory: ["{DL} was a pawn for people {DL} never met."],
+            defenseTheory: ["{DL} was a pawn for people {D.he} never met."],
             aggravating: ["The victim was very old", "Victim lost life savings"],
             mitigating: ["The defendant has cooperated with investigators"],
             victimImpacts: ["{V}: \"I lost my money and my pride. I believed someone loved me.\""],
@@ -741,7 +741,7 @@ extension CaseTemplates {
             prosecutionEvidence: [
                 E(.video, 4, "Gas Station Video", "{DL} leaning close to {VL} at the pump, then walking away. No audio."),
                 E(.digital, 3, "Instagram Post", "{DL} posted a screenshot of {VL}'s witness statement with the caption \"rats.\"", .search),
-                E(.document, 2, "Witness Recanted", "{VL} told the DA after the encounter that {VL} \"didn't remember\" the original assault.")
+                E(.document, 2, "Witness Recanted", "{VL} told the DA after the encounter that {V.him} \"didn't remember\" the original assault.")
             ],
             defenseEvidence: [
                 E(.document, 2, "No Audio", "No recording of what was actually said at the gas station."),

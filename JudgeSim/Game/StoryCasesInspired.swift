@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "Killed {KID1} and {KID2}, the defendant's children, with malice, premeditation, and deliberation.",
         ageRange: 28...38, occupations: ["elementary school teacher"], hasVictim: true,
         summaries: [
-            "On the night of {DATE}, {D}, a teacher on leave four months after the family's third child was born, was alone with the children in their home in {HOOD} while {DL}'s spouse worked an overnight shift at the hospital. Shortly after 2 a.m. a neighbor found {DL} in the backyard, soaked and shivering, saying \"they're safe now.\" Inside, the two older children, {KID1}, 6, and {KID2}, 4, had died of asphyxia in their beds. The baby was unharmed. In the months since the birth, {DL} had been seen by three providers and had stopped sleeping. The State says {DL} chose a night alone. The defense says {DL} was in a postpartum psychosis and believed {DL} was rescuing the children from something worse."
+            "On the night of {DATE}, {D}, a teacher on leave four months after the family's third child was born, was alone with the children in their home in {HOOD} while {D.his} spouse worked an overnight shift at the hospital. Shortly after 2 a.m. a neighbor found {DL} in the backyard, soaked and shivering, saying \"they're safe now.\" Inside, the two older children, {KID1}, 6, and {KID2}, 4, had died of asphyxia in their beds. The baby was unharmed. In the months since the birth, {DL} had been seen by three providers and had stopped sleeping. The State says {DL} chose a night alone. The defense says {DL} was in a postpartum psychosis and believed {D.he} was rescuing the children from something worse."
         ],
         prosecutionEvidence: [
             E(.statement, 3, "Calls to the Spouse", "At 9:40 p.m. {DL} called the spouse at work and asked whether the shift could run until 7 a.m. instead of 3 a.m. The spouse agreed to cover for a coworker."),
@@ -35,8 +35,8 @@ extension StoryCases {
                         exam: [
                             .direct("What did you find in the house?", "\"The two older children in their beds, covered to the chin, as if tucked in. The baby asleep in a bassinet in the main bedroom. The back door was open. Nothing was disturbed or broken.\""),
                             .direct("Why does the call to the spouse matter?", "\"At 9:40 {DL} asked the spouse to stay at work four more hours. That created a window with no other adult in the house until seven in the morning. To me, that's planning.\""),
-                            .direct("What did the note on the phone say?", "\"That {DL} had to do it while they were asleep 'so they won't be scared.' It was written about two hours before the neighbor found {DL}.\""),
-                            .direct("What did {DL} say to you the next day?", "\"That {DL} knew people would say it was wrong, but they didn't understand what {DL} saw. I took that to mean {DL} understood it was wrong.\""),
+                            .direct("What did the note on the phone say?", "\"That {DL} had to do it while they were asleep 'so they won't be scared.' It was written about two hours before the neighbor found {D.him}.\""),
+                            .direct("What did {DL} say to you the next day?", "\"That {DL} knew people would say it was wrong, but they didn't understand what {D.he} saw. I took that to mean {DL} understood it was wrong.\""),
                             .cross("The note says {DL} was saving them from 'what's coming.' What was coming?", "\"I don't know. {DL} never explained it in a way that made sense to me.\""),
                             .cross("{DL} told the neighbor 'they're safe now.' Not 'I'm sorry,' not 'help me.'", "\"That's what the neighbor reported.\""),
                             .cross("Someone planning to get away doesn't sit in a wet yard at 2 a.m. waiting to be found?", "\"I can't tell the court what {DL} was planning.\""),
@@ -50,7 +50,7 @@ extension StoryCases {
                             .direct("What did you conclude?", "\"That {DL} had a major depression with postpartum onset and severe anxiety, and possibly some psychotic features. But in my opinion {DL} understood the nature of the act and that society, and the law, would see it as wrong.\""),
                             .direct("What leads you there?", "\"Arranging the spouse's absence. Choosing a time when the children were asleep. The statement 'I knew people would say it was wrong.' Those show awareness of wrongfulness.\""),
                             .direct("Isn't insanity about whether the person believed it was right?", "\"In North Carolina it's whether the person, because of mental disease, didn't know the nature and quality of the act or didn't know it was wrong. Knowing others would condemn it is knowing it's wrong in the legal sense.\""),
-                            .cross("You'd agree {DL} believed {DL} was protecting the children?", "\"{DL} said so. A person can believe that and still know the law forbids it.\""),
+                            .cross("You'd agree {DL} believed {D.he} was protecting the children?", "\"{DL} said so. A person can believe that and still know the law forbids it.\""),
                             .cross("You interviewed {DL} once, for three hours, eight months later?", "\"Yes.\""),
                             .cross("Postpartum psychosis can include organized planning?", "\"It can.\"")
                         ])
@@ -115,10 +115,10 @@ extension StoryCases {
         key: "story.snowbank", category: .traffic,
         headlines: ["Deputy Found Dead in Snow After Party", "Hit-and-Run or Cover-Up?"],
         primaryLaw: "murder2", lesserLaw: "invManslaughter", threshold: 3, lesserThreshold: 1,
-        specification: "Killed {V} by striking them with a motor vehicle while impaired, with malice.",
+        specification: "Killed {V} by striking {V.him} with a motor vehicle while impaired, with malice.",
         ageRange: 33...46, occupations: ["physical therapist"], hasVictim: true,
         summaries: [
-            "During an ice storm on {DATE}, {D} drove their partner, {V}, a Hollis County sheriff's deputy, to a holiday party at a fellow deputy's house on {STREET}, after the two had argued at a bar. At 6:15 a.m., {DL} and two friends found {VL} unconscious in a ditch at the edge of the yard; {VL} died at the hospital of a head injury and hypothermia. {DL}'s SUV had a broken passenger mirror. The State says {DL}, drunk and furious, clipped {VL} while making a fast U-turn and drove away. The defense says {VL} went inside, something happened there, and the deputies at that party steered the investigation toward {DL}."
+            "During an ice storm on {DATE}, {D} drove {D.his} partner, {V}, a Hollis County sheriff's deputy, to a holiday party at a fellow deputy's house on {STREET}, after the two had argued at a bar. At 6:15 a.m., {DL} and two friends found {VL} unconscious in a ditch at the edge of the yard; {VL} died at the hospital of a head injury and hypothermia. {DL}'s SUV had a broken passenger mirror. The State says {DL}, drunk and furious, clipped {VL} while making a fast U-turn and drove away. The defense says {VL} went inside, something happened there, and the deputies at that party steered the investigation toward {DL}."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "Mirror Glass", "Mirror glass and a black plastic housing piece matching {DL}'s SUV, found in the ditch eleven days later during a second search of the yard."),
@@ -168,7 +168,7 @@ extension StoryCases {
                             .cross("You never examined the body yourself?", "\"No. I reviewed the autopsy photos and report.\"")
                         ])
         ],
-        prosecutionTheory: ["{D}, drunk and angry after a fight, whipped the SUV around in the dark and knocked {V} into a ditch, then left them to freeze."],
+        prosecutionTheory: ["{D}, drunk and angry after a fight, whipped the SUV around in the dark and knocked {V} into a ditch, then left {V.him} to freeze."],
         defenseTheory: ["The injuries don't fit a car, the mirror pieces showed up eleven days later, and the investigator was a friend of the homeowner who mocked {DL}. The answer is inside that house."],
         aggravating: ["{DL} left {VL} in freezing conditions"],
         mitigating: ["No prior criminal record", "{DL} searched for {VL} and attempted CPR"],
@@ -187,18 +187,18 @@ extension StoryCases {
             howIdentified: "{DL} dropped {VL} off, and {DL}'s SUV had a broken mirror.",
             notDone: ["The house was never searched, and partygoers' phones were never examined.", "The scratches were never swabbed for DNA."],
             defendantExam: [
-                .direct("What happened when you dropped {VL} off?", "\"We'd been arguing. I let {VL} out and waited to see if {VL} would come back out. {VL} didn't answer texts. I turned around and went home, angry.\""),
+                .direct("What happened when you dropped {VL} off?", "\"We'd been arguing. I let {VL} out and waited to see if {V.he} would come back out. {VL} didn't answer texts. I turned around and went home, angry.\""),
                 .direct("How did your mirror break?", "\"I clipped the garage door frame backing out that morning, in the ice, when I went looking for {VL}. I told the detective that the first day.\""),
                 .direct("What did you mean, 'Did I do this?'", "\"I meant, did I cause this by leaving? By fighting? I was out of my mind.\""),
                 .cross("You'd had at least five drinks.", "\"Yes. I shouldn't have driven. I didn't hit anyone.\""),
                 .cross("You made a sharp U-turn at the exact spot.", "\"Because that's where the road is. I turned around to go home.\""),
-                .cross("You left {VL} in an ice storm.", "\"I left {VL} at a party full of {VL}'s friends. I thought {VL} was inside.\"")
+                .cross("You left {VL} in an ice storm.", "\"I left {VL} at a party full of {V.his} friends. I thought {VL} was inside.\"")
             ],
             objections: [
                 (1, ObjectionSeed(question: "Prosecutor: \"Did {DL} seem guilty to you?\"",
-                                  answer: "\"{DL} seemed like someone who knew what {DL} had done.\"",
+                                  answer: "\"{DL} seemed like someone who knew what {D.he} had done.\"",
                                   raisedBy: .defense, onCross: false, grounds: "Speculation", shouldSustain: true,
-                                  explanation: "A witness can describe what {DL} said and did, not offer an opinion on what {DL} knew or whether {DL} was guilty.",
+                                  explanation: "A witness can describe what {DL} said and did, not offer an opinion on what {D.he} knew or whether {D.he} was guilty.",
                                   doctrineID: "speculation", weight: 1))
             ],
             prosecutionOpening: "A fight, drinks, a U-turn at 19 miles an hour, a broken mirror, and {D}'s own words: 'I did this.'",
@@ -218,10 +218,10 @@ extension StoryCases {
         specification: "Killed {V}, the defendant's spouse, with a rifle, with malice, premeditation, and deliberation.",
         ageRange: 47...60, occupations: ["owner of a car dealership"], forcedPriorOffenses: ["Driving While Impaired"], hasVictim: true,
         summaries: [
-            "{D} owns the biggest car dealership in Hollis County, founded by their grandparent. At 9:52 p.m. on {DATE}, {DL} called 911 to report finding {DL}'s spouse, {V}, shot in the horse barn on the family's farm outside {HOOD}. {DL} said they had been at the house watching a game and then drove to check on an elderly parent. That afternoon, the dealership's bank had frozen its accounts over $1.2 million in customer down payments that never reached lenders. A video {VL} took of a sick horse at 8:31 p.m. captured {DL}'s voice in the barn."
+            "{D} owns the biggest car dealership in Hollis County, founded by {D.his} grandparent. At 9:52 p.m. on {DATE}, {DL} called 911 to report finding {D.his} spouse, {V}, shot in the horse barn on the family's farm outside {HOOD}. {DL} said {D.he} had been at the house watching a game and then drove to check on an elderly parent. That afternoon, the dealership's bank had frozen its accounts over $1.2 million in customer down payments that never reached lenders. A video {VL} took of a sick horse at 8:31 p.m. captured {DL}'s voice in the barn."
         ],
         prosecutionEvidence: [
-            E(.video, 4, "Barn Video", "A 38-second video on {VL}'s phone, timestamped 8:31 p.m., of a lame horse. Two voices are heard; three family members identify the second as {DL}'s. {DL} told police they were never at the barn that night."),
+            E(.video, 4, "Barn Video", "A 38-second video on {VL}'s phone, timestamped 8:31 p.m., of a lame horse. Two voices are heard; three family members identify the second as {DL}'s. {DL} told police {D.he} was never at the barn that night."),
             E(.document, 3, "Bank Freeze", "The bank froze the dealership's accounts at 3:15 p.m. over $1.2 million in diverted down payments. {VL} was a co-signer on the business loans and had asked the bookkeeper that week for the account statements."),
             E(.digital, 2, "Phone and Vehicle Data", "{DL}'s phone shows no movement from 8:20 to 8:45 p.m., then 2,100 steps in 6 minutes. The truck's data shows {DL} driving 85 mph to the parent's house and back.", .search)
         ],
@@ -236,22 +236,22 @@ extension StoryCases {
                         cross: ["\"We never found the rifle.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("What did {DL} tell you that night?", "\"That {DL} was at the house from about eight watching a game, left around 9:00 to check on {DL}'s parent, came back, and found {VL}. {DL} said they never went to the barn.\""),
+                            .direct("What did {DL} tell you that night?", "\"That {DL} was at the house from about eight watching a game, left around 9:00 to check on {D.his} parent, came back, and found {VL}. {DL} said {D.he} never went to the barn.\""),
                             .direct("What did the video show?", "\"That at 8:31 {DL} was in the barn with {VL}. We got it off {VL}'s phone nine months later. {VL}'s phone has no activity after 8:37.\""),
                             .direct("Why the money?", "\"The bank froze the accounts that afternoon. {VL} had been asking for statements. The State's theory is that {VL} was about to find out, and that a tragedy would buy {DL} sympathy and time.\""),
-                            .direct("What about the steps and the drive?", "\"Twenty-five minutes of no movement while {DL} says {DL} was on the couch, then a burst of 2,100 steps, then a drive at 85 to establish an alibi at the parent's house.\""),
+                            .direct("What about the steps and the drive?", "\"Twenty-five minutes of no movement while {DL} says {D.he} was on the couch, then a burst of 2,100 steps, then a drive at 85 to establish an alibi at the parent's house.\""),
                             .cross("No blood, no residue, no rifle?", "\"Correct.\""),
                             .cross("A fired farmhand who threatened {VL} owned a rifle of the same caliber?", "\"We looked at the farmhand early on. Not in depth.\""),
                             .cross("Your agency didn't open the phone for nine months?", "\"It took that long to get it unlocked.\"")
                         ]),
             WitnessSeed(name: nil, role: "Dealership bookkeeper",
                         direct: ["\"{VL} was asking for the statements that week.\""],
-                        cross: ["\"{VL} never said {VL} was afraid of {DL}.\""],
+                        cross: ["\"{VL} never said {V.he} was afraid of {DL}.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("What did {VL} ask you?", "\"On Tuesday, {VL} asked for copies of the loan and deposit statements. {VL} said 'something doesn't add up.' I told {VL} {DL} handled those.\""),
+                            .direct("What did {VL} ask you?", "\"On Tuesday, {VL} asked for copies of the loan and deposit statements. {VL} said 'something doesn't add up.' I told {V.him} {DL} handled those.\""),
                             .direct("What happened Friday afternoon?", "\"The bank called at 3:15 and froze everything. I called {DL}. {DL} said, 'I'll take care of it, don't tell anybody.'\""),
-                            .cross("{VL} never said {VL} was afraid of {DL}?", "\"No. {VL} was worried about the business.\""),
+                            .cross("{VL} never said {V.he} was afraid of {DL}?", "\"No. {VL} was worried about the business.\""),
                             .cross("Stealing from a business isn't the same as killing someone.", "\"I know that.\"")
                         ])
         ],
@@ -266,7 +266,7 @@ extension StoryCases {
                             .cross("Thousands of rifles in this county share that caliber and rifling?", "\"Thousands.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} was caught stealing that afternoon and killed {V} before they could find out, then lied about being at the barn."],
+        prosecutionTheory: ["{D} was caught stealing that afternoon and killed {V} before {V.he} could find out, then lied about being at the barn."],
         defenseTheory: ["No blood, no residue, no rifle. A fired farmhand who threatened {VL} was never seriously checked. {DL} lied out of panic, not guilt."],
         aggravating: ["The offense was committed to avoid exposure of other crimes"],
         mitigating: ["No prior violent record"],
@@ -313,10 +313,10 @@ extension StoryCases {
         specification: "Killed {KID}, age three, the defendant's child, with malice, premeditation, and deliberation.",
         ageRange: 20...28, occupations: ["cell phone store sales associate"], forcedPriorOffenses: ["Misdemeanor Larceny"], hasVictim: true,
         summaries: [
-            "{KID}, three, was last seen at day care on {DATE}. For nineteen days {D} told family that {KID} was at the beach with a coworker's relative. When {DL}'s parent pressed and called the Sheriff's Office, {DL} admitted {KID} was missing but said {KID} had been taken from a park. Five weeks later, {KID}'s remains were found in a storage tote in a creek bed four miles from the apartment. The medical examiner could not determine a cause of death. The State says {DL} drugged and suffocated {KID}. The defense says {KID} died of an accidental overdose of allergy medicine and {DL}, terrified, hid it."
+            "{KID}, three, was last seen at day care on {DATE}. For nineteen days {D} told family that {KID} was at the beach with a coworker's relative. When {DL}'s parent pressed and called the Sheriff's Office, {D.he} admitted {KID} was missing but said {KID} had been taken from a park. Five weeks later, {KID}'s remains were found in a storage tote in a creek bed four miles from the apartment. The medical examiner could not determine a cause of death. The State says {DL} drugged and suffocated {KID}. The defense says {KID} died of an accidental overdose of allergy medicine and {DL}, terrified, hid it."
         ],
         prosecutionEvidence: [
-            E(.forensic, 3, "Cadaver Dog Alert", "A certified human remains detection dog alerted on {DL}'s storage closet and the trunk of {DL}'s car. A tote of the same brand and color was missing from a set in the closet."),
+            E(.forensic, 3, "Cadaver Dog Alert", "A certified human remains detection dog alerted on {DL}'s storage closet and the trunk of {D.his} car. A tote of the same brand and color was missing from a set in the closet."),
             E(.document, 3, "The Lies", "{DL} invented the beach trip, the coworker's relative, and a park abduction. Police found no coworker by that name and no park witnesses."),
             E(.digital, 2, "Searches", "Three weeks before {KID} went missing, {DL}'s phone searched \"how much benadryl to make a toddler sleep\" and \"how long does it take.\"", .search),
             E(.statement, 2, "Nineteen Days", "Social media posts show {DL} at a concert and two parties while {KID} was missing.")
@@ -407,7 +407,7 @@ extension StoryCases {
         specification: "Killed {V} with a rifle, with malice.",
         ageRange: 18...19, occupations: ["community college student"], hasVictim: true,
         summaries: [
-            "Two nights after Hurricane {STORM} knocked out power across {CITY}, {D}, 18, stood outside their uncle's hardware store on {STREET} with an AR-style rifle, saying {DL} was protecting it from looters. At about {TIME} on {DATE}, {V} walked up, argued with {DL}, and grabbed for the rifle. {DL} fired three times, killing {VL}. As {DL} backed away, {VL}'s friend came at {DL} with a tire iron, and {DL} fired again, wounding the friend. The State says {DL} brought a war rifle to a dark street and provoked the fight. The defense says {VL} tried to take the gun."
+            "Two nights after Hurricane {STORM} knocked out power across {CITY}, {D}, 18, stood outside {D.his} uncle's hardware store on {STREET} with an AR-style rifle, saying {D.he} was protecting it from looters. At about {TIME} on {DATE}, {V} walked up, argued with {DL}, and grabbed for the rifle. {DL} fired three times, killing {VL}. As {DL} backed away, {VL}'s friend came at {DL} with a tire iron, and {D.he} fired again, wounding the friend. The State says {DL} brought a war rifle to a dark street and provoked the fight. The defense says {VL} tried to take the gun."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Store Camera on Battery Backup", "Grainy, no sound: {VL} approaches, points at {DL}, steps closer; both hands reach toward the rifle; three flashes in under a second."),
@@ -473,7 +473,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why were you there?", "\"My uncle asked. The police weren't coming. Stores up the street had been broken into the night before.\""),
                 .direct("Why the post?", "\"It was stupid. I was trying to scare people off so nobody would come.\""),
-                .direct("What happened with {VL}?", "\"{VL} got in my face, then grabbed the barrel with both hands and said {VL} was going to take it and use it on me. I couldn't pull it away. I fired.\""),
+                .direct("What happened with {VL}?", "\"{VL} got in my face, then grabbed the barrel with both hands and said {V.he} was going to take it and use it on me. I couldn't pull it away. I fired.\""),
                 .cross("You invited people to 'come find out.'", "\"I regret that every day.\""),
                 .cross("You were out after curfew with a rifle.", "\"Guarding my family's store.\"")
             ],
@@ -484,7 +484,7 @@ extension StoryCases {
                                   explanation: "The victim's prior arrest, unknown to {DL} at the time, isn't admissible to show {VL} was the aggressor through bad character; specific acts of violence would need a stronger foundation.",
                                   doctrineID: "characterEvidence", weight: 0))
             ],
-            prosecutionOpening: "A rifle, a challenge posted online, and a dark street. {D} got the confrontation they invited.",
+            prosecutionOpening: "A rifle, a challenge posted online, and a dark street. {D} got the confrontation {D.he} invited.",
             defenseOpening: "{VL} grabbed the rifle and threatened to use it. That's when {DL} fired. On video.",
             prosecutionClosing: "Self-defense isn't available to someone who provokes the fight.",
             defenseClosing: "Words online aren't provocation. Grabbing a loaded rifle is deadly force."

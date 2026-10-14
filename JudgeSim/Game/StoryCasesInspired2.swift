@@ -14,31 +14,31 @@ extension StoryCases {
         specification: "Killed {V}, the defendant's spouse, with malice, premeditation, and deliberation.",
         ageRange: 28...36, occupations: ["pharmaceutical sales representative"], hasVictim: true,
         summaries: [
-            "On Thanksgiving morning, {DATE}, {V}, seven months pregnant, was reported missing from the couple's home in {HOOD} by {D}, who said they had gone kayaking alone on {LAKE}, forty miles away, and came home to find {VL} gone and the dog in the yard. Three months later {VL}'s remains surfaced in a cove of {LAKE} about a mile from the boat ramp {DL} said they used. Investigators learned {DL} had a secret relationship with a coworker, had bought the kayak six days before without telling anyone, and was stopped at the Charlotte airport with a newly issued passport and $9,000 in cash the week the remains were found."
+            "On Thanksgiving morning, {DATE}, {V}, seven months pregnant, was reported missing from the couple's home in {HOOD} by {D}, who said {D.he} had gone kayaking alone on {LAKE}, forty miles away, and came home to find {VL} gone and the dog in the yard. Three months later {VL}'s remains surfaced in a cove of {LAKE} about a mile from the boat ramp {DL} said {D.he} used. Investigators learned {DL} had a secret relationship with a coworker, had bought the kayak six days before without telling anyone, and was stopped at the Charlotte airport with a newly issued passport and $9,000 in cash the week the remains were found."
         ],
         prosecutionEvidence: [
-            E(.document, 3, "Location of the Remains", "The remains surfaced in a cove about a mile from the boat ramp {DL} named as {DL}'s only alibi. Weights matching cinder-block fragments were found nearby."),
+            E(.document, 3, "Location of the Remains", "The remains surfaced in a cove about a mile from the boat ramp {DL} named as {D.his} only alibi. Weights matching cinder-block fragments were found nearby."),
             E(.statement, 3, "The Secret Relationship", "The coworker recorded calls at police request in which {DL} claimed to be on a business trip to Denver while actually attending a candlelight vigil for {VL}."),
             E(.physical, 2, "At the Airport", "Stopped at Charlotte airport with a passport issued nine days earlier, $9,000 in cash, two phones, and a one-way ticket to Lisbon."),
             E(.physical, 2, "The Kayak Purchase", "Receipt for a two-person sit-on kayak and anchor kit bought six days before the disappearance, paid in cash.")
         ],
         defenseEvidence: [
             E(.document, 3, "No Crime Scene", "No blood, no struggle, no cause of death. Investigators found no trace evidence of {VL} in the kayak."),
-            E(.document, 2, "Neighbor Sightings", "Two neighbors reported seeing a pregnant person walking a brown dog on the street at about 10:15 a.m., after {DL}'s receipt shows {DL} at a bait shop near the lake at 9:40 a.m."),
+            E(.document, 2, "Neighbor Sightings", "Two neighbors reported seeing a pregnant person walking a brown dog on the street at about 10:15 a.m., after {DL}'s receipt shows {D.him} at a bait shop near the lake at 9:40 a.m."),
             E(.document, 2, "Break-In Nearby", "A house two doors down was burglarized that morning; the burglars were never identified.")
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: nil, role: "{DL}'s coworker",
-                        direct: ["\"{DL} told me they were single and had 'lost' a spouse.\""],
+                        direct: ["\"{DL} told me {D.he} was single and had 'lost' a spouse.\""],
                         cross: ["\"{DL} never said anything violent.\""],
                         weight: 2, lay: true,
                         exam: [
-                            .direct("How did you come to know {DL}?", "\"We worked the same sales territory. In September {DL} asked me out. {DL} said they were single.\""),
+                            .direct("How did you come to know {DL}?", "\"We worked the same sales territory. In September {DL} asked me out. {DL} said {D.he} was single.\""),
                             .direct("What did {DL} tell you in early November?", "\"That {DL} had 'lost' a spouse and this would be the first holiday season without them. I thought {DL} meant a death, years ago. Three weeks later {VL} disappeared.\""),
                             .direct("Why did you record your calls?", "\"When I saw {VL}'s face on the news, I called the detective. They asked me to keep talking to {DL} and record it.\""),
-                            .direct("What did {DL} say on those calls?", "\"That {DL} was in Denver for work, that {DL} missed me, that we'd go to Portugal in the spring. I could hear the vigil in the background.\""),
+                            .direct("What did {DL} say on those calls?", "\"That {DL} was in Denver for work, that {D.he} missed me, that we'd go to Portugal in the spring. I could hear the vigil in the background.\""),
                             .cross("{DL} never said anything about hurting {VL}?", "\"No. Never.\""),
-                            .cross("{DL} never said {DL} wanted a new life without the baby?", "\"Not in those words.\"")
+                            .cross("{DL} never said {D.he} wanted a new life without the baby?", "\"Not in those words.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Lead detective",
                         direct: ["\"The remains surfaced a mile from {DL}'s alibi.\""],
@@ -114,7 +114,7 @@ extension StoryCases {
         specification: "In the offer and sale of securities, made untrue statements of material fact to {V} and other North Carolina investors.",
         ageRange: 29...42, occupations: ["startup founder and CEO"], hasVictim: true,
         summaries: [
-            "{D} founded {STARTUP}, a {CITY} company promising a ring that could detect heart attacks hours before they happened. North Carolina investors, including {V}, a retired dentist, put in $11 million. Former engineers say the ring never detected anything reliably, that demo results were pre-recorded, and that a letter of endorsement from a major hospital was written by {DL}. {DL} says the technology was close, that the chief engineer told {DL} it worked, and that startups always sell the future."
+            "{D} founded {STARTUP}, a {CITY} company promising a ring that could detect heart attacks hours before they happened. North Carolina investors, including {V}, a retired dentist, put in $11 million. Former engineers say the ring never detected anything reliably, that demo results were pre-recorded, and that a letter of endorsement from a major hospital was written by {DL}. {DL} says the technology was close, that the chief engineer told {D.him} it worked, and that startups always sell the future."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Investor Deck", "Slides claiming 94 percent accuracy in a clinical study and a partnership with Atlantic Heart Institute. No such study existed; the hospital says it never partnered."),
@@ -164,7 +164,7 @@ extension StoryCases {
                             .cross("Or that demos were recordings?", "\"No.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} sold investors a study that didn't exist, a hospital endorsement {DL} wrote, and recorded demos called live. That's fraud, not optimism."],
+        prosecutionTheory: ["{D} sold investors a study that didn't exist, a hospital endorsement {D.he} wrote, and recorded demos called live. That's fraud, not optimism."],
         defenseTheory: ["{DL} believed the chief engineer, poured personal money into the company, and never cashed out. Failure isn't fraud."],
         aggravating: ["The offense caused large monetary losses", "The offense involved forged documents"],
         mitigating: ["{DL} did not profit personally", "No prior criminal record"],
@@ -209,10 +209,10 @@ extension StoryCases {
         key: "story.textMessages", category: .violent,
         headlines: ["Teen Charged After Messages Urged Partner's Suicide", "Can Words Be Manslaughter?"],
         primaryLaw: "invManslaughter", lesserLaw: nil, threshold: 3, lesserThreshold: 1,
-        specification: "By culpable negligence, through repeated messages encouraging {VL}'s suicide, unintentionally caused the death of {V}.",
+        specification: "By culpable negligence, through repeated messages encouraging {VL}'s suicide, unintentionally caused the death of {V.him}.",
         ageRange: 18...19, occupations: ["college freshman"], hasVictim: true,
         summaries: [
-            "{V}, 18, died by suicide in {HOOD} on {DATE}. Over the previous six weeks, {D}, {VL}'s partner of two years, sent hundreds of messages urging {VL} to stop delaying and follow through, and was on a video call during the final hour without calling for help. Earlier in the relationship, {DL} had repeatedly urged {VL} to get treatment. The State says {DL}'s pressure was the cause, and that the failure to call for help was culpable negligence. The defense says they had struggled for years, that words alone aren't a cause of death, and that {DL} was a teenager in crisis too."
+            "{V}, 18, died by suicide in {HOOD} on {DATE}. Over the previous six weeks, {D}, {VL}'s partner of two years, sent hundreds of messages urging {V.him} to stop delaying and follow through, and was on a video call during the final hour without calling for help. Earlier in the relationship, {DL} had repeatedly urged {VL} to get treatment. The State says {DL}'s pressure was the cause, and that the failure to call for help was culpable negligence. The defense says {VL} had struggled for years, that words alone aren't a cause of death, and that {DL} was a teenager in crisis too."
         ],
         prosecutionEvidence: [
             E(.digital, 4, "Messages in the Final Weeks", "Hundreds of messages from {DL} pressing {VL} to stop postponing, including on the final day: \"You said tonight. Don't back out again.\"", .search),
@@ -221,7 +221,7 @@ extension StoryCases {
         ],
         defenseEvidence: [
             E(.document, 3, "Mental Health History", "{VL} had been hospitalized twice for depression before the relationship began, and had a prior attempt at 15."),
-            E(.digital, 2, "Earlier Messages", "For more than a year, {DL} had urged {VL} to see a counselor, sent hotline numbers, and offered to drive {VL} to appointments.", .search),
+            E(.digital, 2, "Earlier Messages", "For more than a year, {DL} had urged {VL} to see a counselor, sent hotline numbers, and offered to drive {V.him} to appointments.", .search),
             E(.document, 2, "Defendant's Own Treatment", "{DL} was being treated for depression and had started a new medication five weeks before {VL}'s death.")
         ],
         prosecutionWitnesses: [
@@ -250,7 +250,7 @@ extension StoryCases {
         defenseWitnesses: [
             WitnessSeed(name: nil, role: "Adolescent psychiatrist for the defense",
                         direct: ["\"{DL}'s judgment was impaired by depression and a medication change.\""],
-                        cross: ["\"{DL} understood the words {DL} wrote.\""],
+                        cross: ["\"{DL} understood the words {D.he} wrote.\""],
                         weight: 2, lay: false,
                         exam: [
                             .direct("What was {DL}'s condition?", "\"A depressed teenager who had just started an antidepressant that carries a warning for agitation and distorted thinking in young people, in a relationship consumed by the other person's suicidality.\""),
@@ -277,7 +277,7 @@ extension StoryCases {
             howIdentified: "Messages on {VL}'s phone.",
             notDone: ["{VL}'s treating therapists were never interviewed."],
             defendantExam: [
-                .direct("For a year you begged {VL} to get help. What changed?", "\"I was falling apart too. New medicine, no sleep. I started believing {VL} would never stop hurting and that I was being selfish to keep {VL} here for me.\""),
+                .direct("For a year you begged {VL} to get help. What changed?", "\"I was falling apart too. New medicine, no sleep. I started believing {VL} would never stop hurting and that I was being selfish to keep {V.him} here for me.\""),
                 .direct("Why didn't you call anyone that night?", "\"I froze. I told myself it was what {VL} wanted. I've replayed that hour a thousand times.\""),
                 .cross("'Don't back out again.' Your words, on the last day.", "\"Yes.\""),
                 .cross("You could have called 911 at any point in 52 minutes.", "\"I could have. I didn't.\"")
@@ -302,13 +302,13 @@ extension StoryCases {
         key: "story.restraintDeath", category: .violent,
         headlines: ["Jail Officer Charged in Inmate's Death", "Six Minutes on the Floor of Cell Block C"],
         primaryLaw: "murder2", lesserLaw: "invManslaughter", threshold: 6, lesserThreshold: 4,
-        specification: "Killed {V}, a detainee, by kneeling on their back and neck during a cell extraction, with malice.",
+        specification: "Killed {V}, a detainee, by kneeling on {V.his} back and neck during a cell extraction, with malice.",
         ageRange: 30...48, occupations: ["detention officer sergeant"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V}, 34, held in the Hollis County Detention Center on a probation violation, refused to leave a cell for a medical check during a mental health crisis. {D}, the sergeant leading a five-officer extraction team, pinned {VL} face-down and knelt across {VL}'s upper back and neck for about six minutes after {VL} was handcuffed. On jail video, {VL} says \"I can't breathe\" eleven times. {VL} stopped responding and died at the hospital. The defense says {VL} was violently resisting, had cocaine in {VL}'s system, and died of an enlarged heart under stress."
+            "On {DATE}, {V}, 34, held in the Hollis County Detention Center on a probation violation, refused to leave a cell for a medical check during a mental health crisis. {D}, the sergeant leading a five-officer extraction team, pinned {VL} face-down and knelt across {V.his} upper back and neck for about six minutes after {V.he} was handcuffed. On jail video, {VL} says \"I can't breathe\" eleven times. {VL} stopped responding and died at the hospital. The defense says {VL} was violently resisting, had cocaine in {V.his} system, and died of an enlarged heart under stress."
         ],
         prosecutionEvidence: [
-            E(.video, 4, "Jail Camera Video", "Six minutes and ten seconds of {DL} kneeling on {VL}'s back and neck after handcuffing, including about two minutes after {VL} stopped moving."),
+            E(.video, 4, "Jail Camera Video", "Six minutes and ten seconds of {DL} kneeling on {VL}'s back and neck after handcuffing, including about two minutes after {V.he} stopped moving."),
             E(.forensic, 3, "Autopsy", "Cause of death: cardiopulmonary arrest during restraint with compression of the neck and back. Manner: homicide."),
             E(.document, 2, "Detention Policy", "Training requires moving a restrained person to a recovery position as soon as they're handcuffed and checking breathing.")
         ],
@@ -319,7 +319,7 @@ extension StoryCases {
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: nil, role: "Pulmonologist",
-                        direct: ["\"{VL} died because {VL} couldn't breathe under that weight.\""],
+                        direct: ["\"{VL} died because {V.he} couldn't breathe under that weight.\""],
                         cross: ["\"Cocaine and a big heart made {VL} more vulnerable.\""],
                         weight: 3, lay: false,
                         exam: [
@@ -383,7 +383,7 @@ extension StoryCases {
             ],
             prosecutionOpening: "Six minutes. 'I can't breathe,' eleven times. Two minutes after {V} stopped moving. Watch the video.",
             defenseOpening: "A violent detainee, a chaotic extraction, cocaine, and an enlarged heart. The State wants you to see six minutes and stop thinking.",
-            prosecutionClosing: "{DL} ignored training {DL} taught. That's malice in the law's sense.",
+            prosecutionClosing: "{DL} ignored training {D.he} taught. That's malice in the law's sense.",
             defenseClosing: "The medical evidence is divided. That's reasonable doubt about causation and intent."
         )
     )
@@ -397,7 +397,7 @@ extension StoryCases {
         specification: "Willfully made a false report to the {CITY} Police Department that {DL} had been assaulted.",
         ageRange: 32...45, occupations: ["city council candidate and small business owner"], hasVictim: false,
         summaries: [
-            "Eleven days before a close {CITY} council election, {D} told police two masked people jumped them outside {DL}'s campaign office at about {TIME} on {DATE}, spray-painting a slur on the window and punching {DL}. The story went national. Police spent three weeks on it. Then two campaign volunteers said {DL} had paid them $1,800 to stage it, walked them through it the day before, and told them where the cameras were. {DL} says the attack was real and the volunteers turned on {DL} to avoid charges."
+            "Eleven days before a close {CITY} council election, {D} told police two masked people jumped {D.him} outside {D.his} campaign office at about {TIME} on {DATE}, spray-painting a slur on the window and punching {D.him}. The story went national. Police spent three weeks on it. Then two campaign volunteers said {DL} had paid them $1,800 to stage it, walked them through it the day before, and told them where the cameras were. {DL} says the attack was real and the volunteers turned on {D.him} to avoid charges."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Payment", "A $1,800 payment from {DL}'s personal account to one volunteer, memo \"door-knocking stipend,\" sent the day before. Other volunteers were paid $100 a week."),

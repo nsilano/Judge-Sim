@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "Robbed {V}, a pharmacist at {PHARM}, of oxycodone while armed with what appeared to be a handgun.",
         ageRange: 26...41, occupations: ["roofer"], forcedPriorOffenses: ["Possession of Schedule II (cocaine)"], hasVictim: true,
         summaries: [
-            "At about {TIME} on {DATE}, a person in a hooded sweatshirt and surgical mask walked up to the pharmacy counter at {PHARM} in {HOOD}, lifted a black pistol from a jacket pocket, and told {V}, the pharmacist on duty, to empty the oxycodone drawer. {V} handed over 340 tablets. Police arrested {D}, a roofer with a pain-pill addiction, a week later after a tip; in their truck they found a black CO2-powered BB pistol. {DL} admits the robbery and is pleading for the lesser charge: {DL} says it was a BB gun, not a firearm, and nobody's life was ever in danger."
+            "At about {TIME} on {DATE}, a person in a hooded sweatshirt and surgical mask walked up to the pharmacy counter at {PHARM} in {HOOD}, lifted a black pistol from a jacket pocket, and told {V}, the pharmacist on duty, to empty the oxycodone drawer. {V} handed over 340 tablets. Police arrested {D}, a roofer with a pain-pill addiction, a week later after a tip; in {DL}'s truck they found a black CO2-powered BB pistol. {DL} admits the robbery and is pleading for the lesser charge: {DL} says it was a BB gun, not a firearm, and nobody's life was ever in danger."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Pharmacy Video", "Clear footage of the robber lifting a black pistol and pointing it at {V} from four feet away for about eight seconds."),
@@ -72,7 +72,7 @@ extension StoryCases {
         victimImpacts: ["{V}: \"I believed I was going to be shot. That's what I'll remember, not what kind of gun it turned out to be.\""],
         allocutions: ["\"I'm ashamed. I scared a person who was just doing their job. I've been clean fourteen months and I'll stay clean.\""],
         guiltyTruths: ["A friend later told police {DL} had said the BB gun was 'good enough to make them think it's real.'"],
-        innocentTruths: ["{DL} had told {DL}'s sponsor before the arrest that {DL} had removed the orange tip years earlier for a costume and forgotten it."],
+        innocentTruths: ["{DL} had told {D.his} sponsor before the arrest that {D.he} had removed the orange tip years earlier for a costume and forgotten it."],
         moods: [.divided], doctrines: ["lesserIncluded"],
         extras: ["TIME": ["7:52 p.m."], "PHARM": ["Hollis Family Pharmacy", "Medicap Drugs", "Riverside Apothecary"]],
         story: StoryExtras(
@@ -112,7 +112,7 @@ extension StoryCases {
         specification: "Intentionally inflicted serious physical injury on {INFANT}, a seven-month-old, by violent shaking.",
         ageRange: 19...32, occupations: ["in-home child care provider"], hasVictim: true,
         summaries: [
-            "{D} ran a small licensed day care from their home in {HOOD}. On {DATE}, {DL} called 911 at about {TIME} to say seven-month-old {INFANT} had gone limp after falling from a changing table. At the hospital, doctors found bleeding beneath the skull, bleeding in both retinas, and brain swelling, and diagnosed abusive head trauma. {INFANT} survived with lasting developmental delays. {DL} says the baby rolled off the table while {DL} reached for a diaper, and that the parents had noticed {INFANT} was fussy and vomiting the night before."
+            "{D} ran a small licensed day care from {D.his} home in {HOOD}. On {DATE}, {DL} called 911 at about {TIME} to say seven-month-old {INFANT} had gone limp after falling from a changing table. At the hospital, doctors found bleeding beneath the skull, bleeding in both retinas, and brain swelling, and diagnosed abusive head trauma. {INFANT} survived with lasting developmental delays. {DL} says the baby rolled off the table while {D.he} reached for a diaper, and that the parents had noticed {INFANT} was fussy and vomiting the night before."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Child Abuse Pediatrician's Report", "Subdural hemorrhage, extensive multilayered retinal hemorrhages in both eyes, and brain swelling, which the hospital's child abuse team found \"diagnostic of abusive head trauma\" and inconsistent with a three-foot fall."),
@@ -215,11 +215,11 @@ extension StoryCases {
         prosecutionEvidence: [
             E(.document, 3, "Vault Access Log", "Badge records show {DL} entered the vault four times that afternoon; the assistant manager entered once, at 9:15 a.m., before the shipment arrived."),
             E(.document, 3, "Cash Loan Payoff", "Twenty-two days later, {DL} paid off a $14,200 car loan at a credit union with cash in $100 bills."),
-            E(.statement, 2, "Interview", "{DL} first said {DL} \"didn't remember\" how many times {DL} entered the vault, then said twice.", .statement)
+            E(.statement, 2, "Interview", "{DL} first said {D.him} \"didn't remember\" how many times {DL} entered the vault, then said twice.", .statement)
         ],
         defenseEvidence: [
             E(.document, 3, "Override Codes", "The vault door can be opened with a manager override code that doesn't create a badge record. The assistant manager knew the code."),
-            E(.document, 2, "Settlement Papers", "A wrongful death settlement paid to {DL}'s grandparent eight months earlier, and a $15,000 check from the grandparent to {DL} a month before the payoff."),
+            E(.document, 2, "Settlement Papers", "A wrongful death settlement paid to {DL}'s grandparent eight months earlier, and a $15,000 check from the grandparent to {D.him} a month before the payoff."),
             E(.document, 2, "Manager's Debts", "The assistant manager had $40,000 in past-due online gambling debts and resigned two weeks after the theft.")
         ],
         prosecutionWitnesses: [
@@ -306,11 +306,11 @@ extension StoryCases {
         specification: "Knowing or having reason to know that the vehicle was involved in a crash causing death, failed to stop and remain at the scene.",
         ageRange: 40...62, occupations: ["dental hygienist"], hasVictim: true,
         summaries: [
-            "At about {TIME} on {DATE}, {V}, 29, was riding home on Rock Quarry Road outside {HOOD} when a car struck the bike from behind. {VL} died in the ditch. The driver didn't stop. Two days later, a body shop called police about a silver sedan with a shattered windshield brought in by {D}. {DL} admits driving that road that night and says {DL} heard a bang, saw nothing in the mirror in the dark and rain, assumed it was a deer, and drove home. The question is whether {DL} knew, or had reason to know, a person was hit."
+            "At about {TIME} on {DATE}, {V}, 29, was riding home on Rock Quarry Road outside {HOOD} when a car struck the bike from behind. {VL} died in the ditch. The driver didn't stop. Two days later, a body shop called police about a silver sedan with a shattered windshield brought in by {D}. {DL} admits driving that road that night and says {D.he} heard a bang, saw nothing in the mirror in the dark and rain, assumed it was a deer, and drove home. The question is whether {DL} knew, or had reason to know, a person was hit."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "Windshield Damage", "A spiderweb fracture on the passenger side of the windshield, about twelve inches across, with fabric fibers matching {VL}'s jacket embedded in the glass."),
-            E(.statement, 2, "Body Shop", "{DL} brought the car to a body shop forty miles away, not the one {DL} normally used, and asked how fast it could be fixed."),
+            E(.statement, 2, "Body Shop", "{DL} brought the car to a body shop forty miles away, not the one {D.he} normally used, and asked how fast it could be fixed."),
             E(.forensic, 2, "Bike Reflectors and Light", "{VL}'s bike had a rear blinking light and reflectors; the light was found switched on in the ditch.")
         ],
         defenseEvidence: [
@@ -339,7 +339,7 @@ extension StoryCases {
                             .direct("What happened when {DL} came in?", "\"Silver sedan, windshield smashed on the passenger side, a dent in the hood. {DL} asked how fast I could do it and if I needed to file with insurance.\""),
                             .direct("Why did you call the police?", "\"I'd seen the news about the cyclist. There were threads of dark fabric in the glass. Deer don't wear jackets.\""),
                             .cross("{DL} told you it was a deer?", "\"Yes. Right away.\""),
-                            .cross("{DL} gave you {DL}'s real name and phone number?", "\"Yes.\"")
+                            .cross("{DL} gave you {D.his} real name and phone number?", "\"Yes.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -357,7 +357,7 @@ extension StoryCases {
         prosecutionTheory: ["A body hit {D}'s windshield. {DL} drove home, went to bed, and took the car to a body shop forty miles away."],
         defenseTheory: ["A bang in the rain on the county's worst deer road. {DL} truly believed it was a deer. The law punishes knowing flight, not a terrible mistake."],
         aggravating: ["{DL} sought to conceal the damage"],
-        mitigating: ["No prior criminal or driving record", "{DL} gave the body shop {DL}'s real name"],
+        mitigating: ["No prior criminal or driving record", "{DL} gave the body shop {D.his} real name"],
         victimImpacts: ["{VL}'s partner: \"{VL} lay in that ditch alive, maybe for a while. Somebody could have called.\""],
         allocutions: ["\"If I'd known it was a person, I'd have stopped. I didn't know. I'll never forgive myself for not looking.\""],
         guiltyTruths: ["A dashcam in a passing truck later showed {DL}'s brake lights coming on and the car slowing for several seconds before driving away."],
@@ -454,7 +454,7 @@ extension StoryCases {
         mitigating: ["No prior criminal record", "Steady five-year employment"],
         allocutions: ["\"I gave someone I thought was a friend a ride. I didn't know what was in that bag.\""],
         guiltyTruths: ["Messages recovered later showed {DL} arranging a 'pickup' in Charlotte for the same day."],
-        innocentTruths: ["{ALT} was arrested a year later in another state and admitted the pills were {ALT}'s."],
+        innocentTruths: ["{ALT} was arrested a year later in another state and admitted the pills were {ALT.hers}."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "searchSeizure"],
         extras: ["TIME": ["2:14 p.m."]],
         story: StoryExtras(
@@ -462,7 +462,7 @@ extension StoryCases {
                        (0, "2:14 p.m.: traffic stop on I-40; K-9 alert; 1,100 pills found. Both occupants arrested."),
                        (9, "{ALT} released on bond; later fails to appear."),
                        (52, "Laboratory confirms 121 grams of fentanyl; latent prints match {ALT}.")],
-            howIdentified: "{DL} was driving the rental SUV, rented in {DL}'s name.",
+            howIdentified: "{DL} was driving the rental SUV, rented in {D.his} name.",
             notDone: ["{DL}'s and {ALT}'s phones were never searched."],
             defendantExam: [
                 .direct("Why were you driving to Charlotte?", "\"My cousin's kid's birthday on Saturday. {ALT} heard I was going and asked for a ride. We'd known each other since high school.\""),
@@ -479,7 +479,7 @@ extension StoryCases {
                                   doctrineID: "hearsay", weight: 2))
             ],
             prosecutionOpening: "A rental in {D}'s name, a one-way trip, a story that didn't match, and enough fentanyl to kill a thousand people.",
-            defenseOpening: "{ALT}'s bag, {ALT}'s fingerprints, {ALT}'s record, and {ALT} gone. {DL} gave a ride.",
+            defenseOpening: "{ALT}'s bag, {ALT.his} fingerprints, {ALT.his} record, and {ALT.his} disappearance. {DL} gave a ride.",
             prosecutionClosing: "Knowing possession can be shared. {DL} controlled that car.",
             defenseClosing: "Proximity isn't knowledge."
         )

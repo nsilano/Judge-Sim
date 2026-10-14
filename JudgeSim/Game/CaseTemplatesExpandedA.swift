@@ -49,9 +49,9 @@ extension CaseTemplates {
             defenseTheory: ["Two people had a drunken fight, and the only person who saw it says it didn't happen the way the State claims."],
             aggravating: ["Committed in the presence of a child", "History of domestic violence calls to the residence"],
             mitigating: ["The victim requests leniency", "The defendant has enrolled in an abuser treatment program"],
-            victimImpacts: ["{V}, reading from a note: \"I just want us to move on. Please don't take {DL} away from the kids.\"", "{V}'s sister: \"{VL} is going to defend {DL} until the day that's no longer possible. Please hear what {VL} said that night, not what {VL} is saying now.\""],
+            victimImpacts: ["{V}, reading from a note: \"I just want us to move on. Please don't take {DL} away from the kids.\"", "{V}'s sister: \"{VL} is going to defend {DL} until the day that's no longer possible. Please hear what {VL} said that night, not what {V.he} is saying now.\""],
             guiltyTruths: ["Eight months later, deputies were called to the same duplex again. This time {V} was hospitalized."],
-            innocentTruths: ["{V} later told a victim advocate that the marks came from a fall during a fight that {VL} started, and that {DL} had only pushed {VL} away."],
+            innocentTruths: ["{V} later told a victim advocate that the marks came from a fall during a fight that {V.he} started, and that {DL} had only pushed {VL} away."],
             moods: [.divided, .wantsConviction],
             doctrines: ["hearsayExceptions", "selfDefense", "lesserIncluded"]
         ),
@@ -165,7 +165,7 @@ extension CaseTemplates {
             specification: "Took a purse from the person of {V}, 78, by violence.",
             ageRange: 18...35, hasVictim: true,
             summaries: [
-                "{V}, 78, was loading groceries outside {STORE} when someone grabbed {VL}'s purse. {VL} held on and was dragged several feet, breaking a wrist. {D} was arrested after using {VL}'s debit card at a gas station.",
+                "{V}, 78, was loading groceries outside {STORE} when someone grabbed {V.his} purse. {VL} held on and was dragged several feet, breaking a wrist. {D} was arrested after using {VL}'s debit card at a gas station.",
                 "Outside {STORE}, a person on a bicycle yanked {V}'s purse away and pedaled off. {V}, 78, fell and fractured a hip. The stolen credit card was used an hour later by {D}."
             ],
             prosecutionEvidence: [
@@ -337,7 +337,7 @@ extension CaseTemplates {
                             cross: ["\"I was inside at the window. I saw it through the curtain.\""],
                             weight: 2, lay: true)
             ],
-            prosecutionTheory: ["Twenty years of threats, then {D} finally did what they had promised."],
+            prosecutionTheory: ["Twenty years of threats, then {D} finally did what {D.he} had promised."],
             defenseTheory: ["A 71-year-old with a cane saw a neighbor charging with a raised shovel. North Carolina doesn't require you to wait to be hit."],
             aggravating: ["Prior threats against the victim"],
             mitigating: ["The defendant's age and physical infirmity", "The victim was the aggressor in prior incidents", "No prior criminal record"],
@@ -600,8 +600,8 @@ extension CaseTemplates {
                             cross: ["\"No, {DL} never actually signed anything to end it.\""],
                             weight: 2, lay: true)
             ],
-            prosecutionTheory: ["{D}'s name, {D}'s house, {D}'s responsibility."],
-            defenseTheory: ["A name on a lease doesn't mean {DL} knew what other people were doing in a house {DL} had left."],
+            prosecutionTheory: ["{D}'s name, {D.his} house, {D.his} responsibility."],
+            defenseTheory: ["A name on a lease doesn't mean {DL} knew what other people were doing in a house {D.he} had left."],
             aggravating: ["The dwelling was near a school or park"],
             mitigating: ["The defendant has a positive employment history"],
             guiltyTruths: ["A ledger later recovered from {DL}'s car listed customers and amounts owed."],
@@ -614,7 +614,7 @@ extension CaseTemplates {
             key: "caregiverExploitation", category: .whiteCollar,
             headlines: ["The Home Health Aide", "Power of Attorney"],
             primaryLaw: "exploitationElder", lesserLaw: nil, threshold: 7, lesserThreshold: 7,
-            specification: "As caregiver to {V}, 88, knowingly used their funds by deception, totaling {AMT}.",
+            specification: "As caregiver to {V}, 88, knowingly used {V.his} funds by deception, totaling {AMT}.",
             ageRange: 30...60, occupations: ["home health aide", "caregiver"], hasVictim: true,
             summaries: [
                 "{D} cared for {V}, 88, five days a week for three years. When {VL}'s son reviewed the accounts after a fall, {AMT} had gone to {DL} through checks, a car purchase, and a power of attorney {VL} doesn't remember signing.",
@@ -714,9 +714,9 @@ extension CaseTemplates {
                 "A teller at Hollis Federal Credit Union noticed {V}'s signature didn't match. {D} was standing at the window."
             ],
             prosecutionEvidence: [
-                E(.video, 4, "Check-Cashing Video", "{DL} at the counter cashing a check payable to {DL}, signed \"{V}.\""),
+                E(.video, 4, "Check-Cashing Video", "{DL} at the counter cashing a check payable to {D.him}, signed \"{V}.\""),
                 E(.document, 3, "Handwriting Analysis", "A State Crime Laboratory document examiner says the signatures were probably written by {DL}."),
-                E(.document, 3, "Endorsements", "Every check is endorsed by {DL} and deposited or cashed with {DL}'s ID.")
+                E(.document, 3, "Endorsements", "Every check is endorsed by {DL} and deposited or cashed with {D.his} ID.")
             ],
             defenseEvidence: [
                 E(.document, 3, "Payment for Work", "{DL} says a man who called himself \"{VL}'s nephew\" paid {DL} with checks for yard work."),
@@ -734,7 +734,7 @@ extension CaseTemplates {
                             cross: ["\"I never saw who paid {DL}.\""],
                             weight: 1, lay: true)
             ],
-            prosecutionTheory: ["{D} cashed the checks with their own face and license. There's no mystery here."],
+            prosecutionTheory: ["{D} cashed the checks with {D.his} own face and license. There's no mystery here."],
             defenseTheory: ["Who uses their own ID to commit forgery? {DL} was paid with bad checks and got used."],
             aggravating: ["The victim was very old"],
             mitigating: ["Restitution has been paid in full"],
@@ -804,7 +804,7 @@ extension CaseTemplates {
                 E(.document, 2, "Fire Exit Alarm Log", "The emergency exit alarm triggered at the time {DL} left.")
             ],
             defenseEvidence: [
-                E(.document, 2, "Coerced by Partner", "Texts show {DL}'s partner demanding {DL} \"go get the list.\""),
+                E(.document, 2, "Coerced by Partner", "Texts show {DL}'s partner demanding {D.him} \"go get the list.\""),
                 E(.document, 2, "Addiction", "{DL} has an opioid use disorder; the goods were resold for drugs.")
             ],
             prosecutionWitnesses: [

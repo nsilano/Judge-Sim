@@ -111,11 +111,11 @@ enum CaseTemplates {
         ],
         defenseWitnesses: [
             WitnessSeed(name: nil, role: "Friend of the defendant",
-                        direct: ["\"{VL} grabbed {DL} by the throat and slammed {DL} into the brick wall. Twice. {DL}'s face was purple.\""],
+                        direct: ["\"{VL} grabbed {DL} by the throat and slammed {D.him} into the brick wall. Twice. {DL}'s face was purple.\""],
                         cross: ["\"Yes, {DL} and I are close friends.\""],
                         weight: 2, lay: true)
         ],
-        prosecutionTheory: ["{D} was angry, armed, and itching for a fight, and when it came, {DL} ended a life over a spilled drink."],
+        prosecutionTheory: ["{D} was angry, armed, and itching for a fight, and when it came, {D.he} ended a life over a spilled drink."],
         defenseTheory: ["{V} had a history of violence and had {DL} by the throat. {DL} did what any of us would do to survive."],
         aggravating: ["Brought a knife into a fistfight", "Fled the scene and washed clothing"],
         mitigating: ["The victim was the initial aggressor in the physical fight", "{DL} suffered significant injuries", "No prior violent record"],
@@ -219,7 +219,7 @@ enum CaseTemplates {
                         cross: ["\"No, I never saw a punch thrown myself.\""],
                         weight: 2, lay: true)
         ],
-        prosecutionTheory: ["Whatever {V} did in the past, {D} bought a gun, waited for {VL} to fall asleep, and executed {VL}. That's not self-defense. That's murder."],
+        prosecutionTheory: ["Whatever {V} did in the past, {D} bought a gun, waited for {VL} to fall asleep, and executed {V.him}. That's not self-defense. That's murder."],
         defenseTheory: ["{D} lived in a war zone for fourteen years. When {VL} said 'tomorrow,' {DL} believed it, because {VL} had always kept those promises."],
         aggravating: ["Victim was asleep and defenseless", "Firearm purchased in advance"],
         mitigating: ["Fourteen years of documented abuse by the victim", "Immediately called 911 and confessed", "No criminal record"],
@@ -291,7 +291,7 @@ enum CaseTemplates {
         hasVictim: true,
         summaries: [
             "Officer {D} pulled over {V} for a broken taillight. Within four minutes, {VL} was on the ground with a broken arm and an orbital fracture, struck nine times by {DL}'s baton. {DL} says {VL} reached for a weapon.",
-            "Bodycam footage of {D} beating {V} during a traffic stop sparked protests across {CITY}. {DL}'s union says the footage doesn't show what {DL} saw."
+            "Bodycam footage of {D} beating {V} during a traffic stop sparked protests across {CITY}. {DL}'s union says the footage doesn't show what {D.he} saw."
         ],
         prosecutionEvidence: [
             E(.video, 5, "Bodycam Footage", "Nine baton strikes over 14 seconds. The last four come after {VL} is face-down."),
@@ -418,11 +418,11 @@ enum CaseTemplates {
                         weight: 2, lay: true)
         ],
         prosecutionTheory: ["{D} knew the house, knew the family was away, and came back for what was inside."],
-        defenseTheory: ["{DL}'s blood was on that window because {DL} cleaned it up weeks before. Finding stolen goods doesn't make you the thief."],
+        defenseTheory: ["{DL}'s blood was on that window because {D.he} cleaned it up weeks before. Finding stolen goods doesn't make you the thief."],
         aggravating: ["Targeted a home {DL} knew from work", "Irreplaceable heirlooms taken"],
         mitigating: ["Some items returned", "Supporting a younger sibling"],
         victimImpacts: ["{V}: \"I don't sleep in my own house anymore. I bought a gun. I've never owned a gun.\""],
-        guiltyTruths: ["{DL}'s former crewmate later admitted to driving the getaway car with {DL}."],
+        guiltyTruths: ["{DL}'s former crewmate later admitted to driving the getaway car with {D.him}."],
         innocentTruths: ["{ALT}, a neighbor's nephew, was caught a year later with more items from the same house in a storage unit."],
         moods: [.wantsConviction, .indifferent],
         doctrines: ["lesserIncluded", "chainOfCustody"],
@@ -489,7 +489,7 @@ enum CaseTemplates {
         secondary: [SecondaryCharge(lawID: "resisting", specification: "Pulled away from an officer during the arrest.", chance: 0.4, threshold: 9)],
         ageRange: 24...47, hasVictim: false,
         summaries: [
-            "{D}, a {DO}, was stopped leaving {PHARM} with {MEDS} hidden in a coat. {DL} says it was for a child whose insurance had lapsed, and that {DL} couldn't afford it.",
+            "{D}, a {DO}, was stopped leaving {PHARM} with {MEDS} hidden in a coat. {DL} says it was for a child whose insurance had lapsed, and that {D.he} couldn't afford it.",
             "Security at {PHARM} caught {D} concealing {MEDS}. The story went viral after {DL}'s sibling posted the child's medical bills online."
         ],
         prosecutionEvidence: [
@@ -515,7 +515,7 @@ enum CaseTemplates {
                         cross: ["\"There are charity programs. I didn't think to mention them.\""],
                         weight: 1, lay: true)
         ],
-        prosecutionTheory: ["Sympathy is not a defense. {D} knowingly took property that wasn't theirs. The law is the same for everyone."],
+        prosecutionTheory: ["Sympathy is not a defense. {D} knowingly took property that wasn't {D.hers}. The law is the same for everyone."],
         defenseTheory: ["Necessity: a child's life against a corporation's merchandise. Any parent would have done the same."],
         aggravating: ["Prior theft conviction"],
         mitigating: ["Took life-sustaining medicine for a child", "Attempted to arrange payment first", "Items recovered undamaged"],
@@ -545,7 +545,7 @@ enum CaseTemplates {
             E(.forensic, 3, "Pour Patterns", "The fire marshal identified \"pour patterns\" and \"crazed glass\" indicating an accelerant."),
             E(.forensic, 4, "Gasoline Residue", "Lab tests found gasoline residue near the back door."),
             E(.document, 3, "Debts", "$200,000 in unpaid loans and a pending eviction."),
-            E(.digital, 3, "Phone Location", "{DL}'s phone was near the restaurant at 2:40 a.m., though {DL} told police they were home.", .search)
+            E(.digital, 3, "Phone Location", "{DL}'s phone was near the restaurant at 2:40 a.m., though {D.he} told police they were home.", .search)
         ],
         defenseEvidence: [
             E(.document, 4, "Independent Fire Expert", "\"Pour patterns\" and \"crazed glass\" also appear in ordinary fires after flashover. The scientific community has rejected them as arson indicators."),
@@ -711,7 +711,7 @@ enum CaseTemplates {
                         cross: ["\"I never saw the account statements.\""],
                         weight: 1, lay: false)
         ],
-        prosecutionTheory: ["{D} lied to people who trusted them with everything, and kept lying until the money ran out."],
+        prosecutionTheory: ["{D} lied to people who trusted {D.him} with everything, and kept lying until the money ran out."],
         defenseTheory: ["A real fund that failed. Bad judgment and bad advice, but not a criminal scheme."],
         aggravating: ["140 victims", "Retirees' life savings", "Years-long scheme"],
         mitigating: ["Surrendered personal assets", "No prior record"],
@@ -733,7 +733,7 @@ enum CaseTemplates {
         ageRange: 19...45, hasVictim: false,
         summaries: [
             "During a traffic stop on N.C. 87 at {TIME}, {OFF} found {QTY} of {DRUG} in {D}'s car, along with a digital scale and {CASH} in cash.",
-            "{D} was pulled over a mile from {HOOD}. A search turned up {QTY} of {DRUG}. The State says {DL} is a dealer; {DL} says {DL} is an addict."
+            "{D} was pulled over a mile from {HOOD}. A search turned up {QTY} of {DRUG}. The State says {DL} is a dealer; {DL} says {D.he} is an addict."
         ],
         prosecutionEvidence: [
             E(.physical, 5, "The Drugs", "{QTY} of {DRUG} in 14 individually knotted baggies.", .search),
@@ -783,7 +783,7 @@ enum CaseTemplates {
         specification: "Sold a controlled substance whose ingestion caused the death of {V}.",
         ageRange: 19...26, hasVictim: true,
         summaries: [
-            "{V}, 22, died of a fentanyl overdose at a party in {HOOD}. {D}, {VL}'s best friend since grade school, is accused of buying the pills and handing one to {VL}.",
+            "{V}, 22, died of a fentanyl overdose at a party in {HOOD}. {D}, {VL}'s best friend since grade school, is accused of buying the pills and handing one to {V.him}.",
             "Two friends took what they thought were Percocets. One woke up. {D} called 911 and did CPR until paramedics arrived, but {V} was already gone."
         ],
         prosecutionEvidence: [
@@ -936,7 +936,7 @@ enum CaseTemplates {
         secondary: [SecondaryCharge(lawID: "cyberstalking", specification: "Repeatedly sent electronic messages to {V} to harass and terrify.", chance: 0.35, threshold: 10)],
         ageRange: 20...35, hasVictim: true,
         summaries: [
-            "Weeks after their breakup, private photos of {V} appeared on a forum and were emailed to their employer. {VL} says only {D} ever had them.",
+            "Weeks after their breakup, private photos of {V} appeared on a forum and were emailed to {V.his} employer. {VL} says only {D} ever had them.",
             "{V} lost a teaching job after intimate photos were sent to the school board. {VL} accuses ex-partner {D}, who denies everything."
         ],
         prosecutionEvidence: [
