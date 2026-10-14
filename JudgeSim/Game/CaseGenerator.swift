@@ -24,7 +24,7 @@ enum CaseGenerator {
         var pool = CaseTemplates.all
         // Written cases come up first, until each has been heard once.
         let unheardStories = StoryCases.all.filter { story in !context.usedSignatures.contains { $0.hasPrefix(story.key + "|") } }
-        if context.returning == nil, !unheardStories.isEmpty, rng.chance(0.6) {
+        if context.returning == nil, !unheardStories.isEmpty {
             let story = rng.pick(unheardStories)
             return build(story, seed: seed, band: .close, context: context, rng: &rng)
         }

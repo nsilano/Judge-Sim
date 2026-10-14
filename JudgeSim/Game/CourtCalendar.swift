@@ -148,6 +148,8 @@ enum ContinuanceMotions {
 
     /// A motion with a concrete, case-specific reason, or nil if the follow-up it would need doesn't fit this case.
     static func make(for c: CourtCase, rng: inout SeededRNG) -> ContinuanceMotion? {
+        // Written cases carry only what was written for them.
+        guard !c.templateKey.hasPrefix("story.") else { return nil }
         let options = EvidenceRequest.options(for: c)
         guard !options.isEmpty else { return nil }
         let request = rng.pick(options)
