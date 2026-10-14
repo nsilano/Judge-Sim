@@ -230,6 +230,8 @@ struct Rulings: Codable, Hashable {
     var dischargeMonths: Int?
     /// How long a modified probation is extended after a violation (nil: 12 months).
     var extensionMonths: Int?
+    /// The lesser-included offense the court chose for each count, when it differs from the one the case came with.
+    var lesserChoices: [UUID: String]?
 
     /// Whether separate judgments run one after another.
     var runsConsecutively: Bool { mode == .consecutive || (mode == .grouped && groupsConsecutive) }

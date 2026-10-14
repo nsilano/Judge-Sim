@@ -29,6 +29,8 @@ struct VerdictStage: View {
             ForEach(c.charges) { charge in
                 VerdictCard(charge: charge, allowed: session.verdictOptions(charge),
                             note: halftimeNote(charge),
+                            lesserOptions: session.lesserOptions(charge),
+                            onChooseLesser: { session.chooseLesser(charge, lawID: $0) },
                             selection: session.verdictBinding(charge))
             }
 
@@ -115,6 +117,8 @@ struct VerdictCard: View {
     let charge: Charge
     var allowed: [Verdict] = [.guilty, .lesser, .notGuilty]
     var note: String? = nil
+    var lesserOptions: [Law] = []
+    var onChooseLesser: (String) -> Void = { _ in }
     @Binding var selection: Verdict?
 
     var body: some View {
@@ -127,8 +131,36 @@ struct VerdictCard: View {
             if allowed.contains(.guilty) {
                 option(.guilty, "Guilty", charge.law.ncClass?.label ?? "As charged")
             }
-            if let lesser = charge.lesserLaw, allowed.contains(.lesser) {
-                option(.lesser, "Guilty of \(lesser.title)", "Lesser-included offense · \(lesser.ncClass?.label ?? "")")
+            if allowed.contains(.lesser), let lesser = charge.lesserLaw ?? lesserOptions.first {
+                option(.lesser, "Guilty of a lesser-included offense", "\(lesser.title) · \(lesser.ncClass?.label ?? "")")
+                if selection == .lesser && lesserOptions.count > 1 {
+                    Menu {
+                        ForEach(lesserOptions) { law in
+                            Button {
+                                Haptics.tap()
+                                onChooseLesser(law.id)
+                            } label: {
+                                if law.id == lesser.id {
+                                    Label("\(law.title) (\(law.ncClass?.label ?? ""))", systemImage: "checkmark")
+                                } else {
+                                    Text("\(law.title) (\(law.ncClass?.label ?? ""))")
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Lesser offense").font(.caption).foregroundStyle(Theme.secondaryText)
+                                Text(lesser.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.text)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.up.chevron.down").foregroundStyle(Theme.gold)
+                        }
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.gold, lineWidth: 1))
+                    }
+                    LawLink(lawID: lesser.id)
+                }
             }
             option(.notGuilty, allowed == [.notGuilty] ? "Dismissed (acquittal)" : "Not Guilty", "")
             if allowed.contains(.insanity) {
