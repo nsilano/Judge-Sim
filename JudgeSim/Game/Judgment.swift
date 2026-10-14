@@ -2,13 +2,18 @@ import Foundation
 
 enum Verdict: String, Codable, Hashable {
     case guilty, lesser, notGuilty
+    /// Not guilty by reason of insanity (G.S. 15A-1237); the defendant is committed for evaluation and treatment.
+    case insanity
+
+    var isConviction: Bool { self == .guilty || self == .lesser }
 }
 
 enum JudgmentMode: String, CaseIterable, Codable, Hashable {
-    case consolidated, concurrent, consecutive
+    case consolidated, concurrent, consecutive, grouped
 
     var label: String {
         switch self {
+        case .grouped: return "Group counts into separate judgments"
         case .consolidated: return "Consolidate for judgment"
         case .concurrent: return "Separate judgments, concurrent"
         case .consecutive: return "Separate judgments, consecutive"
@@ -215,6 +220,15 @@ struct Rulings: Codable, Hashable {
     var pleaDepartureDisclosed: Bool?
     /// The court denied a party's motion to continue and went forward (nil: none made or not yet ruled on).
     var continuanceMotionDenied: Bool?
+    /// With grouped judgments: which judgment each convicted count belongs to (1, 2, 3...).
+    var groups: [UUID: Int] = [:]
+    /// With grouped judgments: whether the judgments run one after another.
+    var groupsConsecutive = false
+    /// Counts on which the court arrested judgment at sentencing, after a bench conference.
+    var arrestedCounts: Set<UUID> = []
+
+    /// Whether separate judgments run one after another.
+    var runsConsecutively: Bool { mode == .consecutive || (mode == .grouped && groupsConsecutive) }
 
     func excludedEvidence(in courtCase: CourtCase) -> Set<UUID> {
         Set(courtCase.motions.compactMap { motion in
@@ -333,7 +347,7 @@ enum Judgment {
         switch verdict {
         case .guilty: return s >= charge.threshold - 1
         case .lesser: return s >= charge.lesserThreshold - 1
-        case .notGuilty: return true
+        case .notGuilty, .insanity: return true
         }
     }
 
@@ -343,7 +357,7 @@ enum Judgment {
         switch verdict {
         case .guilty: return charge.law
         case .lesser: return charge.lesserLaw
-        case .notGuilty: return nil
+        case .notGuilty, .insanity: return nil
         }
     }
 
@@ -381,7 +395,7 @@ enum Judgment {
     static func units(_ c: CourtCase, _ r: Rulings) -> [SentencingUnit] {
         let record = priorRecord(c, r)
         var items: [(charge: Charge, law: Law, offense: NCClass, sentencing: NCClass)] = []
-        for charge in c.charges {
+        for charge in c.charges where !r.arrestedCounts.contains(charge.id) {
             guard let verdict = r.verdicts[charge.id],
                   let law = convictedLaw(charge, verdict),
                   let cls = law.ncClass else { continue }
@@ -397,6 +411,20 @@ enum Judgment {
         }
 
         guard let principal = items.first else { return [] }
+        if r.mode == .grouped && items.count > 1 {
+            // Each judgment is sentenced on its most serious count; the order of judgments follows seriousness.
+            var order: [Int] = []
+            var members: [Int: [(charge: Charge, law: Law, offense: NCClass, sentencing: NCClass)]] = [:]
+            for item in items {
+                let group = r.groups[item.charge.id] ?? 1
+                if members[group] == nil { order.append(group) }
+                members[group, default: []].append(item)
+            }
+            return order.compactMap { group in
+                guard let list = members[group], let lead = list.first else { return nil }
+                return unit(lead, counts: list.map { $0.charge.count }.sorted())
+            }
+        }
         if r.mode == .consolidated || items.count == 1 {
             return [unit(principal, counts: items.map { $0.charge.count }.sorted())]
         }
@@ -588,6 +616,9 @@ enum Judgment {
         let convictedUnits = units(c, r)
         guard !convictedUnits.isEmpty else { return [] }
         let provenPriors = c.defendant.priors.filter { !r.priorsNotProven.contains($0.id) }
+        for charge in c.charges where r.arrestedCounts.contains(charge.id) && !BenchConference.stateConsents(c, r, charge: charge) {
+            add("Judgment arrested on Count \(charge.count) over the State's objection, without a merger or other legal basis.", against: false, term: true)
+        }
 
         if r.habitualFound == true && convictedUnits.contains(where: { $0.offenseClass.isFelony }) {
             let proven = provenPriors.filter { $0.ncClass.isFelony }.count
@@ -694,7 +725,7 @@ enum Judgment {
             }
             // Consecutive misdemeanors may not exceed twice the maximum for the most serious offense (G.S. 15A-1340.22(a)).
             let misdemeanors = convictedUnits.filter { !$0.isFelony }
-            if r.mode == .consecutive && misdemeanors.count > 1 && !convictedUnits.contains(where: { $0.isFelony }) {
+            if r.runsConsecutively && misdemeanors.count > 1 && !convictedUnits.contains(where: { $0.isFelony }) {
                 let total = misdemeanors.map { choice($0, r).minimum }.reduce(0, +)
                 let cap = 2 * (misdemeanors.compactMap { $0.misdemeanorCell?.maxDays }.max() ?? 0)
                 if cap > 0 && total > cap {
@@ -873,7 +904,7 @@ enum Judgment {
         var latest: Date
         let minText: String
         let maxText: String
-        if r.mode == .consecutive && terms.count > 1 {
+        if r.runsConsecutively && terms.count > 1 {
             let minM = terms.map { $0.minM }.reduce(0, +), minD = terms.map { $0.minD }.reduce(0, +)
             let lateM = terms.map { $0.lateM }.reduce(0, +), lateD = terms.map { $0.lateD }.reduce(0, +)
             earliest = add(minM, minD, to: date)
@@ -946,19 +977,23 @@ enum Judgment {
                 case .guilty: label = "Guilty"
                 case .lesser: label = "Guilty of \(charge.lesserLaw?.title ?? "lesser offense")"
                 case .notGuilty: label = "Not Guilty"
+                case .insanity: label = "Not Guilty by Reason of Insanity"
+                }
+                if r.arrestedCounts.contains(charge.id) && verdict.isConviction {
+                    label += "; judgment arrested"
                 }
                 if r.dismissedByPlea.contains(charge.id) {
                     label = "Dismissed under plea arrangement"
                 } else if r.halftime[charge.id] == .dismiss {
                     label = "Dismissed at the close of the State's evidence (G.S. 15A-1227)"
-                } else if plea && verdict != .notGuilty {
+                } else if plea && verdict.isConviction {
                     switch r.pleaKind {
                     case .guilty: label += " (plea)"
                     case .alford: label += " (Alford plea)"
                     case .noContest: label = verdict == .lesser ? "No contest to \(charge.lesserLaw?.title ?? "lesser offense")" : "No contest"
                     }
                 }
-                if verdict != .notGuilty {
+                if verdict.isConviction {
                     convicted = true
                     if !plea && !isSupported(verdict, charge: charge, strength: proper) { anyUnsupported = true }
                 }
@@ -992,7 +1027,7 @@ enum Judgment {
                 if index > 0 {
                     let first = sentencingUnits[0].counts.first ?? 1
                     let previous = sentencingUnits[index - 1].counts.first ?? 1
-                    lines.append(r.mode == .consecutive
+                    lines.append(r.runsConsecutively
                         ? "This sentence shall begin at the expiration of the sentence imposed in Count \(previous)."
                         : "This sentence shall run concurrently with the sentence imposed in Count \(first).")
                 }
@@ -1096,7 +1131,7 @@ enum Judgment {
         }
 
         let combine: ([Int]) -> Int = { terms in
-            r.mode == .consecutive ? terms.reduce(0, +) : (terms.max() ?? 0)
+            r.runsConsecutively ? terms.reduce(0, +) : (terms.max() ?? 0)
         }
         let projection = special == .none ? custodyProjection(c, r, units: sentencingUnits, from: date) : nil
         var releaseOn = projection?.earliest ?? date
@@ -1248,7 +1283,17 @@ enum Judgment {
 
         let status: PersonRecord.Status
         var releaseDate: Date?
-        if life {
+        let insanityAcquittal = !dismissed && !convicted && c.charges.contains { r.verdicts[$0.id] == .insanity }
+        if insanityAcquittal {
+            // Committed under G.S. 15A-1321; release comes only after a hearing, usually years later.
+            status = .incarcerated
+            releaseDate = later(900...2_400)
+            releaseBasis = "Committed to Central Regional Hospital under G.S. 15A-1321 after a verdict of not guilty by reason of insanity. Release only by court order, after a hearing showing \(d.lastName) is no longer mentally ill or dangerous."
+            judgments.append(JudgmentEntry(title: "Order of Commitment",
+                                           lines: ["The defendant, found not guilty by reason of insanity, is committed to a state facility for the mentally ill (G.S. 15A-1321).",
+                                                   "A hearing will be held within 50 days. The defendant bears the burden of proving by a preponderance of the evidence that the defendant is no longer mentally ill or no longer dangerous to others.",
+                                                   "The clerk will notify the District Attorney and the victims' families of any release hearing."]))
+        } else if life {
             status = .incarcerated
             releaseDate = .distantFuture
         } else if releaseOn > date {
@@ -1274,7 +1319,7 @@ enum Judgment {
             let maxima = activeUnits.map { $0.isFelony ? maximum(for: $0, choice: choice($0, r)) : choice($0, r).minimum }
             if activeUnits.count == 1, let low = minima.first, let high = maxima.first {
                 newsSentence = activeFelony ? "\(low) to \(high) \(unitLabel)" : "\(low) \(unitLabel)"
-            } else if r.mode == .consecutive {
+            } else if r.runsConsecutively {
                 let low = minima.reduce(0, +), high = maxima.reduce(0, +)
                 newsSentence = activeFelony
                     ? "consecutive sentences totaling \(low) to \(high) months in prison"
@@ -1418,7 +1463,7 @@ enum Judgment {
                         severity = -1
                     } else if selected.minimum < cell.presumptive.low || (selected.disposition != .active && cell.dispositions == [.intermediate, .active] && unit.level >= 2) {
                         severity = -1
-                    } else if selected.minimum > cell.presumptive.high || (r.mode == .consecutive && activeTerms.count > 1) {
+                    } else if selected.minimum > cell.presumptive.high || (r.runsConsecutively && activeTerms.count > 1) {
                         severity = 1
                     }
                 } else if let cell = unit.misdemeanorCell {
@@ -1439,6 +1484,10 @@ enum Judgment {
             appearance = "Dismissed (speedy trial)"
         } else if convicted {
             appearance = verdictLines.map { "Ct. \($0.count) \($0.verdictLabel)" }.joined(separator: "; ") + (newsSentence.isEmpty ? "" : ". \(newsSentence.capitalizedFirst)")
+        } else if insanityAcquittal {
+            appearance = "Not guilty by reason of insanity; committed to Central Regional Hospital (G.S. 15A-1321)"
+            news.headline = "\(d.name) found not guilty by reason of insanity"
+            news.body = "Judge \(judgeLast) found \(d.name) not guilty by reason of insanity in \(c.caption) and ordered \(d.lastName) committed to Central Regional Hospital in Butner. Under state law, \(d.lastName) can be released only after a court hearing. " + reactions.prefix(2).joined(separator: " ")
         } else {
             appearance = "Not guilty on all counts"
         }

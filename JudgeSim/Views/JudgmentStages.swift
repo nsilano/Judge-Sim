@@ -131,6 +131,9 @@ struct VerdictCard: View {
                 option(.lesser, "Guilty of \(lesser.title)", "Lesser-included offense · \(lesser.ncClass?.label ?? "")")
             }
             option(.notGuilty, allowed == [.notGuilty] ? "Dismissed (acquittal)" : "Not Guilty", "")
+            if allowed.contains(.insanity) {
+                option(.insanity, "Not Guilty by Reason of Insanity", "G.S. 15A-1237 · the defendant is committed for treatment")
+            }
         }
         .card(tint: selection == nil ? nil : Theme.gold)
     }
@@ -261,7 +264,52 @@ struct SentencingStage: View {
                                 session.setMode(mode)
                             }
                         }
+                        if session.rulings.mode == .grouped {
+                            Text("Put counts in the same judgment to consolidate them; each judgment is sentenced on its most serious count.")
+                                .font(.caption).foregroundStyle(.secondary)
+                            ForEach(convictedCharges) { charge in
+                                HStack {
+                                    Text("Count \(charge.count): \(charge.law.title)").font(.callout).lineLimit(2)
+                                    Spacer()
+                                    Picker("Judgment", selection: session.groupBinding(charge)) {
+                                        ForEach(1...max(1, convictionCount), id: \.self) { number in
+                                            Text("Judgment \(number)").tag(number)
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                }
+                            }
+                            Toggle("Run the judgments consecutively",
+                                   isOn: Binding(get: { session.rulings.groupsConsecutive },
+                                                 set: { session.setGroupsConsecutive($0) }))
+                                .font(.callout)
+                        }
                         LawLink(lawID: "consolidation")
+                    }
+
+                    CollapsibleSection(title: "Bench conference", icon: "person.2.wave.2.fill",
+                                       summary: session.rulings.arrestedCounts.isEmpty ? "Hear both sides before judgment"
+                                           : "Judgment arrested on \(session.rulings.arrestedCounts.count) count\(session.rulings.arrestedCounts.count == 1 ? "" : "s")",
+                                       expanded: false) {
+                        ForEach(BenchConference.transcript(c, session.rulings)) { line in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(line.speaker).font(.caption.weight(.bold))
+                                    .foregroundStyle(line.side == .prosecution ? Theme.prosecution : (line.side == .defense ? Theme.defense : .secondary))
+                                Text(line.text).font(.callout)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        Divider()
+                        Text("Arrest judgment on a count").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                        ForEach(convictedCharges) { charge in
+                            let arrested = session.rulings.arrestedCounts.contains(charge.id)
+                            let consents = BenchConference.stateConsents(c, session.rulings, charge: charge)
+                            ChoiceRow(title: (arrested ? "Judgment arrested: " : "Arrest judgment on ") + "Count \(charge.count)",
+                                      subtitle: consents ? "The State consents." : "The State objects; arresting judgment here would be appealable.",
+                                      selected: arrested) {
+                                session.toggleArrest(charge)
+                            }
+                        }
                     }
                 }
 
@@ -327,8 +375,13 @@ struct SentencingStage: View {
     }
 
     private var convictionCount: Int {
-        c.charges.filter { (session.rulings.verdicts[$0.id] ?? .notGuilty) != .notGuilty }.count
+        c.charges.filter { session.rulings.verdicts[$0.id]?.isConviction == true }.count
     }
+
+    private var convictedCharges: [Charge] {
+        c.charges.filter { session.rulings.verdicts[$0.id]?.isConviction == true }
+    }
+
 
     private func formNote(_ option: SpecialDisposition) -> String {
         switch option {
@@ -1130,7 +1183,7 @@ struct JudgmentSummaryCard: View {
                 ForEach(Array(session.units.enumerated()), id: \.offset) { index, unit in
                     let choice = session.choice(for: unit)
                     let disposition = choice.lifeWithoutParole ? "" : (choice.disposition == .active ? ", active" : ", suspended, \(choice.probationMonths) months probation")
-                    let relation = index == 0 ? "" : (r.mode == .consecutive ? " (consecutive)" : " (concurrent)")
+                    let relation = index == 0 ? "" : (r.runsConsecutively ? " (consecutive)" : " (concurrent)")
                     Text("• \(unit.title): \(Judgment.termText(for: unit, choice: choice))\(disposition)\(relation)")
                         .font(.callout)
                 }
