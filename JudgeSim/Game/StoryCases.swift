@@ -5,7 +5,8 @@ private typealias E = EvidenceSeed
 /// Fully written cases. Every line is authored for its case, so the story holds together from the first
 /// exhibit to the last answer. Only names, places, and dates change from one telling to the next.
 enum StoryCases {
-    static let all: [CaseTemplate] = [oldMillRoad, churchBooks, duplexBurglary, kitchenStrangulation, sharedApartment]
+    static let all: [CaseTemplate] = [oldMillRoad, churchBooks, duplexBurglary, kitchenStrangulation, sharedApartment,
+                                       caregiverAccount, parkingLotShooting, contractorDeposits]
 
     // MARK: - 1. A fatal crash after a closing shift
 
@@ -590,6 +591,325 @@ enum StoryCases {
             defenseOpening: "Three people shared that hallway closet. One had a record for selling cocaine and moved out two days later. The prints on the box aren't {DL}'s, and nobody ever checked whether they were that roommate's.",
             prosecutionClosing: "Possession can be shared. {DL} controlled that apartment, and the texts show {DL} was dealing. The State has proven intent to sell.",
             defenseClosing: "Constructive possession in a shared space needs more than a lease. The State had the means to find out whose prints were on that box and chose not to. That's reasonable doubt."
+        )
+    )
+
+    // MARK: - 6. The caregiver and the checkbook
+
+    static let caregiverAccount = CaseTemplate(
+        key: "story.caregiverAccount", category: .whiteCollar,
+        headlines: ["Caregiver Accused of Draining Client's Savings", "Gifts or Theft? $68,000 From a 91-Year-Old"],
+        primaryLaw: "exploitationElder", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
+        specification: "Knowingly exploited {V}, an older adult, by using {VL}'s funds for {DL}'s own benefit through deception and undue influence.",
+        ageRange: 29...52, occupations: ["home health aide"], hasVictim: true,
+        summaries: [
+            "For two years {D}, a home health aide, cared for {V}, 91, a retired textile mill supervisor who lives alone in {HOOD}. Over fourteen months, $68,000 left {VL}'s savings: checks to {DL} written in {DL}'s handwriting and signed by {VL}, a used car titled to {DL}, and cash withdrawals made with {VL}'s debit card. {VL}'s niece, who lives in Ohio, found the statements after {VL} fell and was hospitalized. {DL} says {VL} insisted on every gift and called {DL} \"the only family who shows up.\" {VL}, who has mild dementia but sometimes recalls things clearly, has told different people different things."
+        ],
+        prosecutionEvidence: [
+            E(.document, 3, "Bank Statements", "Thirty-one checks payable to {DL} totaling $41,500, a $19,800 check to Hollis Auto Sales for a car titled in {DL}'s name, and $6,700 in ATM withdrawals with {VL}'s card at times {DL} was on shift.", .search),
+            E(.document, 2, "Neurologist's Records", "Diagnosis of mild-to-moderate Alzheimer's-type dementia eighteen months before the first large check; notes say {VL} \"needs assistance with finances.\""),
+            E(.document, 2, "Agency Policy", "{DL}'s employer, {AGENCY}, prohibits aides from accepting any gift over $25 from a client. {DL} signed the policy every year."),
+            E(.statement, 2, "Statement to Adult Protective Services", "{V}: \"I don't know anything about a car. I don't drive anymore. Did I buy a car?\"")
+        ],
+        defenseEvidence: [
+            E(.document, 3, "Handwritten Note", "A note in {VL}'s hand, dated during the period: \"I want {DL} to have the car and what {DL} needs. Nobody else comes. — {V}\" A handwriting examiner for the defense says it is {VL}'s writing."),
+            E(.statement, 2, "Video Recorded by {DL}", "A 40-second phone video: {VL}, at the kitchen table, says \"I'm giving you this because I want to, and I'll tell anybody.\""),
+            E(.document, 1, "Niece's Visit Log", "Visitor sign-in at {VL}'s doctor's office and the niece's own texts show two visits in three years.")
+        ],
+        prosecutionWitnesses: [
+            WitnessSeed(name: nil, role: "{VL}'s niece",
+                        direct: ["\"My aunt would never buy a stranger a car.\""],
+                        cross: ["\"I visited twice in three years.\""],
+                        weight: 1, lay: true,
+                        exam: [
+                            .direct("What is your relationship to {V}?", "\"{VL} is my late mother's sister. I'm the only family left. I live outside Columbus and I hold the power of attorney, though I'd never had to use it before the fall.\""),
+                            .direct("How did you find out about the money?", "\"When {VL} was in the hospital I went through the mail to pay bills. The savings account had nine thousand dollars in it. When my uncle died there was close to eighty.\""),
+                            .direct("What kind of person is your aunt with money?", "\"Careful. Mill supervisor for thirty-four years. Clipped coupons, saved string. {VL} bought one car in a lifetime and drove it twenty years. A gift of twenty thousand dollars to anyone is unimaginable.\""),
+                            .direct("Did you talk to your aunt about it?", "\"I asked if {VL} had bought {DL} a car. {VL} looked confused and asked me who {DL} was. A minute later {VL} said {DL} was a sweetheart who did {VL}'s hair. {VL} goes in and out.\""),
+                            .cross("You visited your aunt twice in three years?", "\"Twice in person. I called every Sunday.\""),
+                            .cross("{VL} told you on the phone {VL} was lonely?", "\"Often. That's why I paid for an aide.\""),
+                            .cross("You're the sole heir under {VL}'s will?", "\"I am. I'm not here about the inheritance. I'm here because somebody took advantage of {VL}.\""),
+                            .cross("Your aunt calls {DL} by name and asks about {DL} in the hospital?", "\"Sometimes. She also asks about my mother, who's been dead nine years.\"")
+                        ]),
+            WitnessSeed(name: nil, role: "Adult Protective Services investigator",
+                        direct: ["\"The pattern fits financial exploitation.\""],
+                        cross: ["\"I never saw the handwritten note before the case was filed.\""],
+                        weight: 2, lay: false,
+                        exam: [
+                            .direct("What is your role?", "\"I'm a social worker with the Department of Social Services, Adult Protective Services. I've investigated financial exploitation reports for eight years.\""),
+                            .direct("What did you find?", "\"Checks written in {DL}'s handwriting with only {VL}'s signature, a vehicle in {DL}'s name paid for by {VL}, and cash withdrawals during {DL}'s shifts. {VL} could not tell me the account balance, the year, or the purpose of any of the checks.\""),
+                            .direct("Why does it matter who wrote the checks?", "\"When a caregiver fills out the check and the older adult only signs, it tells me the caregiver is driving the transaction. Combined with cognitive decline and isolation, that's the textbook pattern.\""),
+                            .direct("Did {VL} understand what was happening, in your judgment?", "\"Not consistently. On my second visit {VL} said the car was for a church raffle. On my third {VL} didn't remember the car at all.\""),
+                            .cross("You never saw the handwritten note or the video before charges were filed?", "\"No. They came from the defense.\""),
+                            .cross("People with mild dementia can still make real decisions about who they love?", "\"They can. Capacity isn't all or nothing. The question is whether these decisions were {VL}'s own.\""),
+                            .cross("You'd agree loneliness can be real, and kindness can be real, even inside a pattern like this?", "\"I'd agree. I see it every week. That's what makes these cases hard.\"")
+                        ])
+        ],
+        defenseWitnesses: [
+            WitnessSeed(name: nil, role: "{VL}'s neighbor and fellow church member",
+                        direct: ["\"{VL} told me {DL} was the daughter {VL} never had.\""],
+                        cross: ["\"I don't know what was said about money.\""],
+                        weight: 2, lay: true,
+                        exam: [
+                            .direct("How long have you known {V}?", "\"Forty years. We sat two pews apart at Bethel. I live three houses down.\""),
+                            .direct("What did you see of {DL}?", "\"Every day, rain or shine. {DL} took {VL} to the doctor, to church, to the beauty shop on Thursdays. Brought {VL} to my porch for tea. Nobody else did that, including the niece.\""),
+                            .direct("Did {VL} ever talk to you about {DL}?", "\"Many times. {VL} said, 'That child is the daughter I never had.' Last spring {VL} said, 'I bought {DL} a car so {DL} could get here when the old one broke down, and I'd do it again.' {VL} was clear as a bell that day.\""),
+                            .cross("Was {VL} clear as a bell every day?", "\"No. Some days {VL} called me by my late husband's name.\""),
+                            .cross("You never saw a check written?", "\"No. I don't know anything about the checks.\""),
+                            .cross("Did {VL} ever mention giving away forty thousand dollars beyond the car?", "\"No. Just the car.\"")
+                        ])
+        ],
+        prosecutionTheory: ["{D} was paid to care for a 91-year-old with dementia and instead filled out checks payable to {DL}, bought {DL} a car with {VL}'s savings, and drained the account."],
+        defenseTheory: ["{V} was lonely, and {DL} was the only person who showed up. {VL} chose to be generous, wrote it down, and said it on video. Generosity isn't a crime."],
+        aggravating: ["{V} was especially vulnerable due to age and dementia", "{DL} took advantage of a position of trust"],
+        mitigating: ["{DL} provided genuine daily care for two years", "No prior criminal record"],
+        victimImpacts: ["{V}, through the niece: \"{VL} keeps asking when {DL} is coming back. I don't know how to explain any of this to {VL}.\""],
+        allocutions: ["\"I loved {VL}. I still do. I should have said no to the money. I didn't know how to say no to someone who'd given me so much more than money.\""],
+        guiltyTruths: ["After the trial, {DL}'s cousin told investigators {DL} had bragged about having \"an old lady checkbook.\""],
+        innocentTruths: ["{VL}'s pastor later produced a sealed letter {VL} had left with the church a year earlier, leaving the house to {DL}."],
+        moods: [.divided], doctrines: ["burdenOfProof"],
+        extras: ["AGENCY": ["Carolina Comfort Home Care", "Hollis Senior Companions", "Piedmont Home Health"]],
+        story: StoryExtras(
+            timeline: [(0, "{V} falls at home and is admitted to Hollis Regional Medical Center."),
+                       (5, "Niece reviews bank statements and reports suspected exploitation to Adult Protective Services."),
+                       (12, "APS investigator interviews {V} at a rehabilitation center."),
+                       (30, "Bank records and vehicle title obtained by the Sheriff's Office."),
+                       (52, "{DL} interviewed; produces the handwritten note and video."),
+                       (66, "{DL} charged with exploitation of an older adult.")],
+            howIdentified: "{DL} wrote the checks, received the money, and holds title to the car bought with {VL}'s funds.",
+            notDone: ["The State never had the handwritten note independently examined.", "No capacity evaluation of {V} was performed during the fourteen months."],
+            defendantExam: [
+                .direct("How did you come to care for {V}?", "\"The agency sent me two years ago. Four hours a day at first, then eight. After a while I came on weekends without pay because {VL} was alone.\""),
+                .direct("Why did you write out the checks?", "\"{VL}'s hands shake. {VL} would tell me the amount and I'd fill it in and {VL} would sign. I did the same for the power bill and the pharmacy. That's how it worked.\""),
+                .direct("Why record the video?", "\"Because I was scared of exactly this. My mother told me, if somebody gives you something big, get it in writing. So I asked {VL} to write it down and say it on camera.\""),
+                .direct("What about the ATM withdrawals?", "\"Groceries, prescriptions, the beauty shop, church envelopes. Some of it was cash for me when {VL} insisted. I didn't keep receipts. I should have.\""),
+                .cross("Your employer's policy forbids gifts over $25. You signed it four times.", "\"I know. I broke it. I'm not proud of that.\""),
+                .cross("You asked {VL} to make that video. You chose the words.", "\"I asked {VL} to say it in {VL}'s own words. Those are {VL}'s words.\""),
+                .cross("Forty-one thousand dollars in checks, beyond the car. What was that for?", "\"Rent when I was behind, my son's braces, a lot of things. {VL} kept saying, 'What else do you need?' I should have said nothing.\"")
+            ],
+            objections: [
+                (1, ObjectionSeed(question: "Prosecutor: \"In your experience, do caregivers who exploit clients usually make videos like this one?\"",
+                                  answer: "\"It's become more common. They do it to protect themselves.\"",
+                                  raisedBy: .defense, onCross: false, grounds: "Improper profile evidence", shouldSustain: true,
+                                  explanation: "Testimony that the defendant's conduct matches a 'profile' of guilty people invites the factfinder to convict by category rather than evidence.",
+                                  doctrineID: "relevance", weight: 1))
+            ],
+            prosecutionOpening: "A 91-year-old with dementia, a caregiver who filled out the checks, a car in the caregiver's name, and an account that went from eighty thousand to nine. The State will prove exploitation.",
+            defenseOpening: "You'll hear {VL} in {VL}'s own voice, and see it in {VL}'s own handwriting: this was a gift to the one person who showed up. The question is whose choice it was. It was {VL}'s.",
+            prosecutionClosing: "A note and a video, both arranged by the person taking the money, don't make it a free choice. Undue influence is exactly this.",
+            defenseClosing: "The State's own investigator says capacity isn't all or nothing and that kindness was real. On this record there's reasonable doubt that {DL} deceived or overpowered anyone."
+        )
+    )
+
+    // MARK: - 7. Shots in a parking lot
+
+    static let parkingLotShooting = CaseTemplate(
+        key: "story.parkingLotShooting", category: .violent,
+        headlines: ["Driver Shot in {LOT} Parking Lot", "Road Rage or Self-Defense?"],
+        primaryLaw: "awdwikisi", lesserLaw: "awdwisi", threshold: 4, lesserThreshold: 2,
+        specification: "Assaulted {V} with a handgun, with intent to kill, inflicting serious injury.",
+        ageRange: 23...48, hasVictim: true,
+        summaries: [
+            "At about {TIME} on {DATE}, after a near-collision on {STREET}, {V} followed {D}'s pickup into the parking lot of {LOT} in {HOOD}. {V} got out and walked to {DL}'s driver's door. {DL}, who has a concealed carry permit, fired twice through the open window, hitting {V} in the shoulder and abdomen. {V} survived after surgery. {DL} says {V} reached into the truck and grabbed {DL}'s collar; {V} says {V} only knocked on the door frame and yelled. A store camera caught most of it from sixty yards away."
+        ],
+        prosecutionEvidence: [
+            E(.video, 3, "Store Surveillance Video", "From sixty yards: {V} walks quickly to the truck and stands at the driver's window for about six seconds, arms moving. Two muzzle flashes. {V}'s left arm is near or inside the window frame; the angle and a light pole block the view of {VL}'s hands for most of it."),
+            E(.forensic, 2, "Surgical and Wound Records", "Two entry wounds, left shoulder and left upper abdomen, no exit; trajectory slightly downward. Emergency surgery to repair the spleen and colon."),
+            E(.physical, 2, "No Weapon on {V}", "Officers found no weapon on {V} or in {VL}'s car. A phone was in {VL}'s right hand when officers arrived."),
+            E(.statement, 2, "911 Call by {DL}", "\"I just shot somebody, they came at my truck, they were grabbing me, send an ambulance.\" Call placed 40 seconds after the shots.")
+        ],
+        defenseEvidence: [
+            E(.physical, 3, "Torn Shirt Collar", "{DL}'s shirt collar is torn at the left seam, photographed by officers at the scene. {V}'s DNA is on the collar, according to the State Crime Laboratory."),
+            E(.document, 2, "Victim's Prior Record", "{V} has a 2019 conviction for assault on a female and a 2022 charge for road-rage assault, dismissed when the complainant didn't appear."),
+            E(.document, 1, "Concealed Carry Permit", "{DL} has held a concealed handgun permit for six years with no incidents.")
+        ],
+        prosecutionWitnesses: [
+            WitnessSeed(name: "{V}", role: "Shooting victim",
+                        direct: ["\"I knocked on the door frame and told {DL} to learn to drive. Then {DL} shot me.\""],
+                        cross: ["\"I might have touched the shirt. I don't remember grabbing it.\""],
+                        weight: 1, lay: true,
+                        exam: [
+                            .direct("What happened on {STREET}?", "\"{DL}'s truck cut into my lane coming out of the gas station. I had to stand on the brakes. My kid's car seat was in the back, empty thank God. I laid on the horn.\""),
+                            .direct("Why did you follow the truck?", "\"I was angry. I wanted to tell {DL} they almost killed somebody. It was stupid. I know that.\""),
+                            .direct("What happened at the truck?", "\"I walked up and banged on the door frame and said 'You almost hit me, learn to drive.' I was loud. I was cussing. I wasn't trying to hurt anybody. I didn't have anything in my hands but my phone.\""),
+                            .direct("Then what?", "\"I saw the gun come up and I turned. I felt the first one in my shoulder and the second one knocked the air out of me. I don't remember much after that until the ambulance.\""),
+                            .direct("What has your recovery been like?", "\"Two surgeries. I lost my spleen and part of my colon. I couldn't go back to work at the plant for five months.\""),
+                            .cross("You followed a stranger a half mile into a parking lot because you were angry?", "\"Yes.\""),
+                            .cross("You reached your arm inside the window, didn't you?", "\"My hand might have gone in when I was banging. I don't remember grabbing anybody.\""),
+                            .cross("Your DNA is on my client's torn collar. How did it get there?", "\"I don't know. Maybe I touched it. I'm telling you I didn't try to drag anybody out of a truck.\""),
+                            .cross("This isn't the first time you've confronted a driver, is it?", "\"That other thing was dismissed.\"")
+                        ]),
+            WitnessSeed(name: "{DET}", role: "Lead detective, violent crimes unit",
+                        direct: ["\"{VL} was unarmed and the truck could have driven away.\""],
+                        cross: ["\"The collar was torn and had {VL}'s DNA on it.\""],
+                        weight: 2, lay: false,
+                        exam: [
+                            .direct("What did you find at the scene?", "\"{DL}'s pickup was parked nose-in with its engine running. The driver's window was down. There was open pavement to the left and behind the truck. {VL}'s sedan was parked crooked behind and to the right, partly boxing the truck in on that side but not the other.\""),
+                            .direct("Could {DL} have driven away?", "\"In my opinion, yes. Reversing left was open. It would have taken a three-point turn, maybe five seconds.\""),
+                            .direct("What did the video show?", "\"About six seconds of {VL} at the window, arms moving. Then two flashes. The light pole blocks {VL}'s hands for much of it. You can't tell from the video whether {VL} grabbed anything.\""),
+                            .direct("Was {VL} armed?", "\"No. A phone in the right hand. Nothing in the car.\""),
+                            .cross("{DL} called 911 within forty seconds and stayed?", "\"Yes. {DL} was standing by the truck with the gun on the hood when patrol got there.\""),
+                            .cross("You photographed a fresh tear in {DL}'s collar?", "\"I did. The lab later found {VL}'s DNA on it.\""),
+                            .cross("Reversing would have meant taking your eyes off someone who already had an arm in your window?", "\"It would have meant turning to look behind, yes.\""),
+                            .cross("North Carolina doesn't require a person in their own vehicle to retreat, does it?", "\"I'm not the lawyer. I know the castle doctrine covers occupied vehicles in some circumstances.\"")
+                        ])
+        ],
+        defenseWitnesses: [
+            WitnessSeed(name: nil, role: "Shopper in the parking lot",
+                        direct: ["\"{VL} had {DL} by the shirt, pulling.\""],
+                        cross: ["\"I was about forty feet away, loading groceries.\""],
+                        weight: 2, lay: true,
+                        exam: [
+                            .direct("Where were you?", "\"Loading groceries into my trunk, two rows over. Maybe forty feet. I heard the screech of tires and the horn first, so I was already looking.\""),
+                            .direct("What did you see?", "\"The other driver got out fast and stomped up to the truck yelling, reached in the window with the left arm. I saw the driver's head jerk toward the window, like it was being pulled.\""),
+                            .direct("How sure are you of that?", "\"Sure about the arm going in and the head jerking. That's why I started toward them, I thought that driver was about to be pulled out. Then the shots.\""),
+                            .cross("You told the first officer you 'didn't really see what happened at the window.'", "\"I said I didn't see the gun. I was shaking. I told the detective about the arm the next day.\""),
+                            .cross("A light pole stands between the store camera and that window. Was it between you and the window too?", "\"No. I was off to the side, the other way.\""),
+                            .cross("You've never met either of them?", "\"Never. I'd never seen either one before that night.\"")
+                        ])
+        ],
+        prosecutionTheory: ["{V} was angry and loud, but unarmed. {D} had a running engine and an open lane, and chose to fire twice instead."],
+        defenseTheory: ["{V} chased {DL} into a parking lot, reached into {DL}'s truck, and grabbed {DL} by the collar. {DL} had every right to defend against someone trying to drag {DL} out of {DL}'s own vehicle."],
+        aggravating: ["{DL} fired twice at close range"],
+        mitigating: ["{DL} called 911 immediately and remained at the scene", "{V} was the initial aggressor in following and confronting {DL}", "No prior criminal record"],
+        victimImpacts: ["{V}: \"I was wrong to follow that truck. I've said that from day one. I didn't deserve to bleed out in a parking lot for it.\""],
+        allocutions: ["\"I've replayed those six seconds every night. I was sure {VL} was going to pull me out of that truck. I'm sorry {VL} was hurt. I don't know what else I could have done.\""],
+        guiltyTruths: ["{DL}'s dashcam, which {DL} had told police wasn't recording, turned up a year later: {V}'s hands were on the door frame, not the collar, when {DL} fired."],
+        innocentTruths: ["A second shopper's phone video, posted online after the trial, showed {V} pulling {DL} halfway out of the window by the shirt."],
+        moods: [.divided], doctrines: ["selfDefense", "imperfectSelfDefense", "burdenOfProof"],
+        extras: ["TIME": ["8:47 p.m."], "LOT": ["Food Lion", "Harris Teeter", "the Dollar General on Route 17"]],
+        story: StoryExtras(
+            timeline: [(0, "8:47 p.m.: two shots reported in the parking lot of {LOT}. {DL} calls 911 at 8:48 p.m. and remains at the scene."),
+                       (0, "{V} taken to Hollis Regional Medical Center for emergency surgery. {DL}'s shirt and handgun collected."),
+                       (1, "Shopper gives a recorded statement describing {V}'s arm inside the truck window."),
+                       (2, "Store surveillance video obtained."),
+                       (9, "{DL} charged with assault with a deadly weapon with intent to kill inflicting serious injury."),
+                       (58, "State Crime Laboratory reports {V}'s DNA on {DL}'s collar.")],
+            howIdentified: "{DL} called 911, identified as the shooter, and remained at the scene.",
+            notDone: ["{DL}'s pickup was not checked for a working dashcam.", "Other shoppers in the lot were not canvassed beyond the one who came forward."],
+            defendantExam: [
+                .direct("What happened on {STREET}?", "\"I pulled out of the gas station and didn't see the other car. It was coming fast. I raised my hand to say sorry. The other car laid on the horn and followed me for half a mile, right on my bumper.\""),
+                .direct("Why pull into the parking lot?", "\"I thought they'd keep going if I got off the road. And there'd be people around. I was trying to make it stop.\""),
+                .direct("What happened at your window?", "\"{VL} was screaming, then an arm came through the window, grabbed my collar, and yanked. My head hit the door frame. I thought I was being pulled out, and I didn't know what {VL} had in the other hand.\""),
+                .direct("Why not drive away?", "\"{VL}'s car was behind me on the right. To back out I'd have had to turn around and look, with {VL}'s hand on my shirt. I didn't think I had five seconds.\""),
+                .cross("You had your gun out before {VL} ever reached in, didn't you?", "\"It was in the console. I got it out when they grabbed me.\""),
+                .cross("You told 911 'they came at my truck.' Not 'they grabbed me.'", "\"I said they were grabbing me. Listen to the whole call.\""),
+                .cross("Two shots. After the first, {VL} was turning away.", "\"It happened in about one second. I didn't decide to fire twice. I just fired.\"")
+            ],
+            objections: [
+                (0, ObjectionSeed(question: "Defense attorney: \"Tell the court about the 2022 road-rage charge.\"",
+                                  answer: "\"Some driver said I punched their window. It got dismissed.\"",
+                                  raisedBy: .prosecution, onCross: true, grounds: "Improper character evidence", shouldSustain: false,
+                                  explanation: "When self-defense is raised, the victim's prior violent acts known to the defendant, or offered to show who was the aggressor, can be admissible (Rule 404(a)(2) and 405). The dismissal goes to weight.",
+                                  doctrineID: "characterEvidence", weight: 1))
+            ],
+            prosecutionOpening: "An unarmed driver, angry and foolish, at a truck window for six seconds. {D} had an open lane and a running engine, and fired twice instead. That isn't self-defense.",
+            defenseOpening: "A stranger chased {DL} half a mile, boxed {DL} in, and reached into {DL}'s truck. {VL}'s DNA is on {DL}'s torn collar. {DL} fired, called 911, and waited for police.",
+            prosecutionClosing: "Even if {VL} touched the collar, deadly force has to be reasonable. Two rounds into an unarmed person, with a way out, isn't.",
+            defenseClosing: "The State must disprove self-defense beyond a reasonable doubt. A torn collar with {VL}'s DNA and an eyewitness who saw the arm go in. The State hasn't done it."
+        )
+    )
+
+    // MARK: - 8. Deposits for kitchens that never came
+
+    static let contractorDeposits = CaseTemplate(
+        key: "story.contractorDeposits", category: .whiteCollar,
+        headlines: ["Six Families, Six Deposits, No Kitchens", "Contractor Charged After Remodels Never Start"],
+        primaryLaw: "falsePretenses", lesserLaw: nil, threshold: 6, lesserThreshold: 4,
+        specification: "Obtained a $14,500 deposit from {V} by falsely representing that materials had been ordered for {VL}'s kitchen remodel.",
+        ageRange: 35...58, occupations: ["remodeling contractor"], hasVictim: true,
+        summaries: [
+            "Over five months, {D}, owner of {BIZ} in {HOOD}, took deposits from six homeowners for kitchen and bathroom remodels, $61,000 in all. None of the work was finished; three jobs never started. {V} paid $14,500 after {DL} told {VL} the cabinets were \"already on order and arriving in three weeks.\" No cabinets were ever ordered. {DL} says the business collapsed when a supplier went under and {DL} was robbing Peter to pay Paul to keep it alive, not stealing. The State charged only {VL}'s deposit, because of what {DL} said to get it."
+        ],
+        prosecutionEvidence: [
+            E(.statement, 3, "Text Message to {V}", "From {DL}, the day before the deposit: \"Cabinets are already on order, arriving in 3 wks. Need the deposit to lock in install date.\""),
+            E(.document, 3, "Supplier Records", "Carolina Cabinet Supply's records show no order for {VL}'s address, and that {BIZ}'s credit account had been closed for nonpayment two months earlier.", .search),
+            E(.document, 2, "Business Bank Records", "{VL}'s $14,500 was deposited and, within six days, $9,200 went to another homeowner's countertop installer, $3,100 to {DL}'s truck payment and payroll, and the rest to overdue fees.", .search),
+            E(.document, 1, "Pattern of Complaints", "Five other homeowners filed complaints with the Attorney General's consumer protection division describing similar deposits and delays.")
+        ],
+        defenseEvidence: [
+            E(.document, 2, "Completed Jobs", "{BIZ} finished 41 remodels in the four years before the collapse, with no complaints on file before this year."),
+            E(.document, 2, "Supplier Bankruptcy", "{DL}'s main cabinet supplier, Tidewater Millwork, filed Chapter 7 bankruptcy, taking $22,000 in {BIZ}'s prepaid orders with it."),
+            E(.document, 2, "Partial Refund", "{DL} refunded $4,000 to {V} before charges were filed and signed a repayment agreement for the rest.")
+        ],
+        prosecutionWitnesses: [
+            WitnessSeed(name: "{V}", role: "Homeowner",
+                        direct: ["\"{DL} told me the cabinets were already ordered. That's why I paid.\""],
+                        cross: ["\"{DL} did give me back four thousand dollars.\""],
+                        weight: 2, lay: true,
+                        exam: [
+                            .direct("How did you choose {BIZ}?", "\"My sister-in-law had a kitchen done by them two years ago and it was beautiful. {DL} came out, measured, was friendly and knew the work. The bid was fair.\""),
+                            .direct("What made you pay the deposit when you did?", "\"I'd been holding off because I wanted a start date in writing. Then {DL} texted that the cabinets were already on order and arriving in three weeks, and the deposit was needed to lock in the install. If they were already ordered, I figured I'd better pay.\""),
+                            .direct("What happened after you paid?", "\"Three weeks went by. Then five. {DL} said the truck was delayed, then the color was backordered. After two months {DL} stopped answering. I called the cabinet company myself. They'd never heard of my order.\""),
+                            .direct("Did you get anything for your money?", "\"Demolition. They tore out my old kitchen in a day. We cooked on a hot plate in the dining room for seven months.\""),
+                            .cross("{DL} refunded you four thousand dollars before anyone filed charges?", "\"Yes, in two payments. I'm still out ten and a half.\""),
+                            .cross("And {DL}'s crew did the demolition, which you'd have paid for anyway?", "\"About two days of work. Not fourteen thousand dollars of it.\""),
+                            .cross("When you met {DL} at the house, did {DL} seem like someone planning to cheat you?", "\"No. That's what hurts. I believed {DL}.\"")
+                        ]),
+            WitnessSeed(name: nil, role: "Investigator, Attorney General's Consumer Protection Division",
+                        direct: ["\"The deposits paid for older jobs and overhead.\""],
+                        cross: ["\"The business had a real track record before this year.\""],
+                        weight: 2, lay: false,
+                        exam: [
+                            .direct("What did your investigation find?", "\"Six homeowners paid {BIZ} a total of sixty-one thousand dollars in deposits over five months. Not one deposit was used to buy materials for the job it was paid for. Each new deposit paid for the last customer's overdue job, payroll, and bills.\""),
+                            .direct("When was {DL} on notice the business was failing?", "\"The cabinet supplier closed the credit account in March, for nonpayment. The text to {VL} saying the cabinets were 'already on order' was sent in May.\""),
+                            .direct("So at the time of that text, could {DL} have ordered cabinets on credit?", "\"No. The account was closed. To order, {DL} would have had to pay cash up front, and the business account was overdrawn that week.\""),
+                            .cross("{BIZ} completed forty-one jobs in four years without a single complaint?", "\"That's correct. This was a business that worked, until it didn't.\""),
+                            .cross("Tidewater Millwork's bankruptcy cost {DL} twenty-two thousand dollars in prepaid orders?", "\"It did. That's when the trouble started.\""),
+                            .cross("Using new deposits to finish old jobs is bad business. Is it always a crime?", "\"Not always. What makes it fraud is a false statement to get the money. Here, the cabinets.\"")
+                        ])
+        ],
+        defenseWitnesses: [
+            WitnessSeed(name: nil, role: "{DL}'s former office manager",
+                        direct: ["\"{DL} was trying to finish everyone's job.\""],
+                        cross: ["\"I don't know if the cabinets were ordered.\""],
+                        weight: 1, lay: true,
+                        exam: [
+                            .direct("What did you do at {BIZ}?", "\"Scheduling, billing, ordering. I was there six years until it closed.\""),
+                            .direct("What happened after the supplier went bankrupt?", "\"Everything fell apart. We'd prepaid for six kitchens with Tidewater. That money was just gone. {DL} took out a second mortgage to keep the crew paid. {DL} wasn't sleeping.\""),
+                            .direct("Was {DL} trying to take people's money and run?", "\"No. {DL} was trying to finish everyone's job, one at a time, with whatever came in. It was a terrible way to do it. But {DL} didn't go anywhere. {DL} still lives in the same house.\""),
+                            .cross("You handled the ordering. Did you order cabinets for {VL}'s kitchen?", "\"No. By May I wasn't placing any orders; we didn't have credit anywhere.\""),
+                            .cross("So when {DL} texted that the cabinets were on order, that wasn't true?", "\"Not from my end. {DL} might have been talking to another supplier. I don't know.\"")
+                        ])
+        ],
+        prosecutionTheory: ["{D} knew {BIZ} had no credit to order cabinets and texted {V} that they were already ordered anyway, to get $14,500. That's obtaining property by false pretenses."],
+        defenseTheory: ["A real business with a real track record, wrecked by a supplier's bankruptcy. {DL} juggled deposits trying to save it and failed. That's a breach of contract, not a crime."],
+        aggravating: ["The offense was part of a pattern affecting six households"],
+        mitigating: ["{DL} made partial restitution before charges were filed", "{DL} had operated a legitimate business for years", "No prior criminal record"],
+        victimImpacts: ["{V}: \"It wasn't just the money. It was seven months of hot plates and paper plates, and feeling stupid for trusting somebody.\""],
+        allocutions: ["\"I lied about those cabinets because I believed I'd have the money to order them in a week. I didn't. Every one of those families deserves to be paid back, and I'll do it if I'm allowed to work.\""],
+        guiltyTruths: ["A seventh homeowner came forward after trial with a nearly identical text, sent the same week."],
+        innocentTruths: ["Phone records produced later showed {DL} had called a second supplier the morning of the text and been promised cabinets on credit, a promise that fell through."],
+        moods: [.wantsConviction, .divided], doctrines: ["burdenOfProof"],
+        extras: ["BIZ": ["Heritage Kitchen & Bath", "Pinecrest Remodeling", "Blue Ridge Home Renovations"]],
+        story: StoryExtras(
+            timeline: [(-60, "Carolina Cabinet Supply closes {BIZ}'s credit account for nonpayment."),
+                       (-1, "{DL} texts {V}: cabinets 'already on order, arriving in 3 wks.'"),
+                       (0, "{V} pays a $14,500 deposit."),
+                       (90, "{V} learns no cabinets were ordered and files a complaint with the Attorney General."),
+                       (130, "Consumer Protection Division completes review of {BIZ}'s bank records."),
+                       (150, "{DL} charged with obtaining property by false pretenses.")],
+            howIdentified: "{DL} owned {BIZ} and personally sent the text to {V}.",
+            notDone: ["{DL}'s phone records for the day of the text were never obtained.", "Only one of the six deposits was charged."],
+            defendantExam: [
+                .direct("Why did you text {V} that the cabinets were on order?", "\"Because that morning a supplier in Greensboro told me they'd open an account for me. I thought I'd place the order that afternoon. It fell through two days later. I should have told {VL}, and I didn't.\""),
+                .direct("Where did {VL}'s money go?", "\"To finish the Hendersons' countertops, which were three months overdue, and to make payroll. I was trying to keep the crew so I could finish everybody.\""),
+                .direct("Did you intend to cheat {V}?", "\"No. I intended to do that kitchen. I've done forty-one of them. I took out a second mortgage trying to save the business.\""),
+                .cross("Your Carolina Cabinet account had been closed for two months. You knew that.", "\"I knew that account was closed. I thought I had another one coming.\""),
+                .cross("You never mentioned a Greensboro supplier to investigators. Not once.", "\"Nobody asked me. My lawyer told me not to talk.\""),
+                .cross("Six families paid you deposits after your credit was gone.", "\"Yes. I believed I could get out of the hole. I was wrong.\"")
+            ],
+            objections: [
+                (0, ObjectionSeed(question: "Prosecutor: \"How many other families did this happen to?\"",
+                                  answer: "\"Five others. I found them on a Facebook group.\"",
+                                  raisedBy: .defense, onCross: false, grounds: "Other bad acts (Rule 404(b))", shouldSustain: false,
+                                  explanation: "The other deposits are admissible to show intent and a common plan under Rule 404(b), the central issue in a false pretenses case. They can't be used just to show bad character.",
+                                  doctrineID: "priorActs", weight: 2))
+            ],
+            prosecutionOpening: "One text: 'Cabinets are already on order.' It wasn't true, {D} knew the account was closed, and {V} paid $14,500 because of it.",
+            defenseOpening: "Forty-one finished kitchens. A supplier bankruptcy. A second mortgage. {DL} made promises {DL} couldn't keep, but believed {DL} could. Broken promises are for civil court.",
+            prosecutionClosing: "Intent is judged at the moment of the lie. {DL} knew there was no account, said the cabinets were ordered, and took the money for something else.",
+            defenseClosing: "If {DL} believed another supplier would come through, that text wasn't a knowing lie. The State never pulled the phone records that would have settled it."
         )
     )
 }
