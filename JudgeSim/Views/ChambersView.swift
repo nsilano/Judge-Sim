@@ -57,7 +57,7 @@ struct OnboardingView: View {
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled()
                         .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Theme.surface))
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -69,7 +69,7 @@ struct OnboardingView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(14)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color(.secondarySystemGroupedBackground)))
+                .background(RoundedRectangle(cornerRadius: 12).fill(Theme.surface))
 
                 PrimaryButton(title: "Take the Oath of Office", icon: "hand.raised.fill",
                               enabled: !name.trimmingCharacters(in: .whitespaces).isEmpty) {
@@ -86,7 +86,7 @@ struct OnboardingView: View {
             }
             .padding(24)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Theme.background)
     }
 
     private func feature(_ icon: String, _ title: String, _ text: String) -> some View {
@@ -145,7 +145,7 @@ struct ChambersView: View {
                 }
                 .padding()
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.background)
             .navigationTitle("Chambers")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -185,6 +185,7 @@ struct ChambersView: View {
                     Text("Time keeps moving while you're away: sentences end, people are released, probation runs its course, and appeals are decided. Matters continued into your leave are reset to your first day back. You'll get a summary when you return.")
                 }
             }
+            .benchBackground()
             .navigationTitle("Time Off")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -271,7 +272,7 @@ struct ChambersView: View {
                             }
                         }
                         .padding(10)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemFill)).opacity(entry.isOpen ? 1 : 0.5))
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised).opacity(entry.isOpen ? 1 : 0.5))
                     }
                     .buttonStyle(.plain)
                     .disabled(!entry.isOpen)
@@ -399,6 +400,7 @@ struct CourthouseView: View {
                 Text(county.towns.joined(separator: " · "))
             }
         }
+        .benchBackground()
         .navigationTitle(county.name)
     }
 
@@ -440,6 +442,7 @@ struct RecordsView: View {
                     Button("Leave the Bench and Start Over", role: .destructive) { confirmReset = true }
                 }
             }
+            .benchBackground()
             .navigationTitle("Records")
             .confirmationDialog("Leave the bench? This erases your county, cases, and records.",
                                 isPresented: $confirmReset, titleVisibility: .visible) {

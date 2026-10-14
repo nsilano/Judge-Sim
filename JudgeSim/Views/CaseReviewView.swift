@@ -26,7 +26,7 @@ struct CaseReviewSheet: View {
                                     .font(.subheadline.weight(.semibold))
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 8)
-                                    .background(Capsule().fill(section == item ? Theme.gold : Color(.tertiarySystemFill)))
+                                    .background(Capsule().fill(section == item ? Theme.gold : Theme.raised))
                                     .foregroundStyle(section == item ? Color.black : Color.primary)
                             }
                             .buttonStyle(.plain)
@@ -55,7 +55,7 @@ struct CaseReviewSheet: View {
                     .padding()
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.background)
             .navigationTitle("Case File")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -158,7 +158,7 @@ struct CaseReviewSheet: View {
                             .foregroundStyle(ruling == true ? Color.orange : Color.secondary)
                     }
                     .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(.tertiarySystemFill)))
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Theme.raised))
                 }
             }
             .card()

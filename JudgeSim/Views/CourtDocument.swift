@@ -27,7 +27,7 @@ enum DocInk {
     static let pen = dynamic(light: UIColor(red: 0.10, green: 0.20, blue: 0.52, alpha: 1),
                              dark: UIColor(red: 0.58, green: 0.70, blue: 0.98, alpha: 1))
     /// The desk the papers sit on.
-    static let desk = Color(.systemGroupedBackground)
+    static let desk = Theme.background
 
     static func serif(_ style: Font.TextStyle, weight: Font.Weight = .regular) -> Font {
         .system(style, design: .serif).weight(weight)

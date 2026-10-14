@@ -2,18 +2,76 @@ import SwiftUI
 import UIKit
 
 enum Theme {
-    static let gold = Color("AccentColor")
-    static let mahogany = Color(red: 0.42, green: 0.18, blue: 0.11)
-    static let prosecution = Color(red: 0.70, green: 0.20, blue: 0.20)
-    static let defense = Color(red: 0.18, green: 0.38, blue: 0.68)
-    static let good = Color.green
-    static let bad = Color.red
+    static func hex(_ v: UInt32) -> Color {
+        Color(red: Double((v >> 16) & 0xFF) / 255, green: Double((v >> 8) & 0xFF) / 255, blue: Double(v & 0xFF) / 255)
+    }
+
+    // Mahogany Bench palette.
+    static let background = hex(0x1C130D)
+    static let surface = hex(0x2A1B11)
+    static let raised = hex(0x3A271A)
+    static let border = hex(0x4A3322)
+    static let text = hex(0xEFE6D6)
+    static let secondaryText = hex(0xA8957C)
+    static let quoteText = hex(0xCDBDA4)
+    static let gold = hex(0xC9A46A)
+    static let lightGold = hex(0xE8C98E)
+    static let objectionFill = hex(0x3B1F17)
+    static let objectionBorder = hex(0xA3543F)
+    static let objectionLabel = hex(0xF0A48F)
+
+    static let mahogany = hex(0x6B2E1C)
+    static let prosecution = hex(0xE07A62)
+    static let defense = hex(0x8FB3E0)
+    static let good = hex(0x8CC084)
+    static let bad = hex(0xE0705A)
 
     static func color(for side: Side) -> Color {
         side == .prosecution ? prosecution : defense
     }
 
     static let serif = Font.system(.title2, design: .serif).weight(.bold)
+
+    /// UIKit chrome (navigation bars, tab bars, lists) in the walnut palette.
+    static func applyAppearance() {
+        let ui = { (v: UInt32) in UIColor(red: CGFloat((v >> 16) & 0xFF) / 255, green: CGFloat((v >> 8) & 0xFF) / 255, blue: CGFloat(v & 0xFF) / 255, alpha: 1) }
+        let surface = ui(0x2A1B11), text = ui(0xEFE6D6), gold = ui(0xC9A46A)
+        func serif(_ size: CGFloat, _ weight: UIFont.Weight) -> UIFont {
+            let base = UIFont.systemFont(ofSize: size, weight: weight)
+            return base.fontDescriptor.withDesign(.serif).map { UIFont(descriptor: $0, size: size) } ?? base
+        }
+        let nav = UINavigationBarAppearance()
+        nav.configureWithOpaqueBackground()
+        nav.backgroundColor = surface
+        nav.shadowColor = ui(0x4A3322)
+        nav.titleTextAttributes = [.foregroundColor: text, .font: serif(18, .semibold)]
+        nav.largeTitleTextAttributes = [.foregroundColor: text, .font: serif(32, .semibold)]
+        UINavigationBar.appearance().standardAppearance = nav
+        UINavigationBar.appearance().scrollEdgeAppearance = nav
+        UINavigationBar.appearance().compactAppearance = nav
+        UINavigationBar.appearance().tintColor = gold
+
+        let tab = UITabBarAppearance()
+        tab.configureWithOpaqueBackground()
+        tab.backgroundColor = surface
+        tab.shadowColor = ui(0x4A3322)
+        UITabBar.appearance().standardAppearance = tab
+        UITabBar.appearance().scrollEdgeAppearance = tab
+        UITabBar.appearance().tintColor = gold
+        UITabBar.appearance().unselectedItemTintColor = ui(0xA8957C)
+
+        UITableView.appearance().backgroundColor = ui(0x1C130D)
+        UISegmentedControl.appearance().selectedSegmentTintColor = gold
+        UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: ui(0x1C130D)], for: .selected)
+        UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: text], for: .normal)
+    }
+}
+
+extension View {
+    /// Walnut backdrop for List/Form screens.
+    func benchBackground() -> some View {
+        scrollContentBackground(.hidden).background(Theme.background)
+    }
 }
 
 struct CardModifier: ViewModifier {
@@ -25,11 +83,11 @@ struct CardModifier: ViewModifier {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color(.secondarySystemGroupedBackground))
+                    .fill(Theme.surface)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder((tint ?? .clear).opacity(0.55), lineWidth: tint == nil ? 0 : 1.5)
+                    .strokeBorder(tint.map { $0.opacity(0.6) } ?? Theme.border, lineWidth: tint == nil ? 1 : 1.5)
             )
     }
 }
@@ -94,7 +152,7 @@ struct Meter: View {
             }
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color(.tertiarySystemFill))
+                    Capsule().fill(Theme.raised)
                     Capsule().fill(color)
                         .frame(width: proxy.size.width * CGFloat(max(0, min(100, value))) / 100)
                 }
@@ -149,7 +207,6 @@ struct LawLink: View {
     }
 }
 
-/// Two-option ruling control, e.g. Sustained / Overruled.
 /// Two-option ruling control, e.g. Sustain / Overrule, with an optional explanation of each.
 struct RulingPicker: View {
     let first: String
@@ -174,7 +231,7 @@ struct RulingPicker: View {
             VStack(spacing: 3) {
                 HStack(spacing: 5) {
                     if isSelected { Image(systemName: "checkmark.circle.fill") }
-                    Text(title).font(.subheadline.weight(.bold))
+                    Text(title).font(.system(.body, design: .serif).weight(.bold))
                 }
                 if let detail {
                     Text(detail)
@@ -188,9 +245,13 @@ struct RulingPicker: View {
             .padding(.horizontal, 6)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(isSelected ? Theme.gold : Color(.tertiarySystemFill))
+                    .fill(isSelected ? Theme.gold : Color.clear)
             )
-            .foregroundStyle(isSelected ? Color.black : Color.primary)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Theme.gold, lineWidth: 1)
+            )
+            .foregroundStyle(isSelected ? Theme.background : Theme.lightGold)
         }
         .buttonStyle(.plain)
     }
@@ -208,16 +269,20 @@ struct PrimaryButton: View {
         VStack(spacing: 8) {
             Button(action: action) {
                 HStack {
-                    Text(title).font(.headline)
+                    Text(title).font(.system(.headline, design: .serif))
                     Image(systemName: icon)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(enabled ? Theme.mahogany : Color(.systemGray4))
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(enabled ? Theme.gold : Theme.raised)
                 )
-                .foregroundStyle(enabled ? Color.white : Color.secondary)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(enabled ? Theme.gold : Theme.border, lineWidth: 1)
+                )
+                .foregroundStyle(enabled ? Theme.background : Theme.secondaryText)
             }
             .buttonStyle(.plain)
             .disabled(!enabled)
@@ -304,7 +369,7 @@ struct VersionBadge: View {
             .foregroundStyle(.secondary)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(Capsule().fill(Color(.tertiarySystemFill)))
+            .background(Capsule().fill(Theme.raised))
             .accessibilityLabel("Version \(Self.text)")
     }
 }
@@ -352,7 +417,9 @@ struct CourtActionBar: View {
                 } icon: {
                     Image(systemName: "arrow.right.circle.fill").foregroundStyle(Theme.gold)
                 }
-                .font(.callout)
+                .font(.footnote)
+                .foregroundStyle(Theme.quoteText)
+                .lineLimit(2)
             }
         }
     }
@@ -375,7 +442,9 @@ struct CourtActionBar: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color(.secondarySystemGroupedBackground)))
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.background))
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.border, lineWidth: 1))
+            .foregroundStyle(Theme.text)
         }
         .buttonStyle(.plain)
     }
