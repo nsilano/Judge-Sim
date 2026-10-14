@@ -43,6 +43,11 @@ enum CaseAuditor {
     /// Checks the case and removes lines that don't fit it.
     static func audit(_ c: inout CourtCase) -> Report {
         var report = Report()
+        // Written cases are checked when they're written; only redirect is left out.
+        if c.templateKey.hasPrefix("story.") {
+            for index in c.witnesses.indices { c.witnesses[index].exchanges?.removeAll { $0.phase == .redirect } }
+            return report
+        }
         let core = coreText(c)
         let names = [c.defendant.lastName, c.defendant.name, c.victimName].compactMap { $0 }
 

@@ -104,6 +104,24 @@ struct CaseTemplate {
     let moods: [PublicMood]
     let doctrines: [String]
     var extras: [String: [String]] = [:]
+    /// A fully written case: every witness, objection, and argument is authored, and nothing generic is mixed in.
+    var story: StoryExtras? = nil
+}
+
+/// The parts of a written case that templates don't otherwise carry.
+struct StoryExtras {
+    /// What the lead investigator's file shows, as (days after the incident, what happened).
+    var timeline: [(Int, String)]
+    var howIdentified: String
+    var notDone: [String] = []
+    /// The defendant's own testimony, if they take the stand.
+    var defendantExam: [ExamLine]
+    /// Objections, tied to a witness by position: State witnesses first, then the defense's.
+    var objections: [(witness: Int, seed: ObjectionSeed)] = []
+    var prosecutionOpening: String
+    var defenseOpening: String
+    var prosecutionClosing: String
+    var defenseClosing: String
 }
 
 struct ObjectionSeed {
