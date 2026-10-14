@@ -85,7 +85,12 @@ struct CourtroomView: View {
                         .padding(.horizontal, 16)
                         .padding(.top, 10)
                         .padding(.bottom, 6)
-                        .background(Theme.surface.overlay(alignment: .top) { Rectangle().fill(Theme.border).frame(height: 1) })
+                        .frame(maxWidth: .infinity)
+                        .background {
+                            Theme.surface
+                                .overlay(alignment: .top) { Rectangle().fill(Theme.border).frame(height: 1) }
+                                .ignoresSafeArea(edges: .bottom)
+                        }
                 }
             }
             .navigationTitle(session.stage.title)
