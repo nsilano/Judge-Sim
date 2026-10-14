@@ -39,6 +39,11 @@ struct TextFiller {
 
     func callAsFunction(_ text: String) -> String {
         var result = text
+        var values = values
+        // he/she, him/her, his/her for each named person, from the first name.
+        for key in ["D", "V", "ALT"] where values["\(key).he"] == nil {
+            if let name = values[key] { values.merge(NameBank.gender(of: name).tokens(for: key)) { a, _ in a } }
+        }
         // Two passes so extras can themselves contain tokens like {DL}.
         for _ in 0..<2 {
             for (key, value) in values {

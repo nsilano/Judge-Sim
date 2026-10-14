@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "Threatened to disclose {V}'s private affair unless paid $60,000.",
         ageRange: 27...45, occupations: ["former executive assistant"], hasVictim: true,
         summaries: [
-            "{D} worked for two years as executive assistant to {V}, a regional bank vice president in {CITY}, until being laid off in a restructuring. A month later, {VL} received an anonymous message with photos of {VL} and a coworker at a hotel and the line: \"$60,000 or your spouse, your board, and the newspaper get these. You have a week.\" The payment instructions led to a crypto wallet. The State says {DL} sent it out of anger over the layoff. {DL} says {DL} knew about the affair but never sent any message, and that the coworker, also laid off, had more reason to."
+            "{D} worked for two years as executive assistant to {V}, a regional bank vice president in {CITY}, until being laid off in a restructuring. A month later, {VL} received an anonymous message with photos of {V.him} and a coworker at a hotel and the line: \"$60,000 or your spouse, your board, and the newspaper get these. You have a week.\" The payment instructions led to a crypto wallet. The State says {DL} sent it out of anger over the layoff. {DL} says {D.he} knew about the affair but never sent any message, and that the coworker, also laid off, had more reason to."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Crypto Wallet", "The wallet named in the demand had been funded once, months earlier, from an exchange account registered to {DL}.", .search),
@@ -61,7 +61,7 @@ extension StoryCases {
                             .cross("{DL} set up the wallet?", "\"Yes, at the beginning.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} knew the secret, threatened revenge at the exit interview, and demanded payment into {DL}'s own wallet."],
+        prosecutionTheory: ["{D} knew the secret, threatened revenge at the exit interview, and demanded payment into {D.his} own wallet."],
         defenseTheory: ["The coworker in the photos had the same knowledge, the same grudge, a lost bonus, and the wallet's recovery phrase. The State picked the assistant."],
         aggravating: ["The offense was motivated by revenge"],
         mitigating: ["No prior criminal record"],
@@ -91,7 +91,7 @@ extension StoryCases {
                                   explanation: "The victim's private dishonesty in the affair has no bearing on who sent the demand; the court may protect witnesses from harassment (Rule 611).",
                                   doctrineID: "relevance", weight: 0))
             ],
-            prosecutionOpening: "A secret {D} knew, a threat at the exit interview, and their own wallet.",
+            prosecutionOpening: "A secret {D} knew, a threat at the exit interview, and {D.his} own wallet.",
             defenseOpening: "The coworker had the secret, a bigger grudge, and the wallet's keys.",
             prosecutionClosing: "Revenge and access both point to {DL}.",
             defenseClosing: "Both point to the coworker too. That's reasonable doubt."
@@ -107,7 +107,7 @@ extension StoryCases {
         specification: "Killed {V} with a shotgun, with malice.",
         ageRange: 50...72, occupations: ["retired machinist"], hasVictim: true,
         summaries: [
-            "For two years {D} and their neighbor {V} fought over a property line in {HOOD}: surveys, a lawsuit, a torn-down fence, a magistrate's order. At about {TIME} on {DATE}, {VL} came into {DL}'s backyard with a sledgehammer to knock down a new fence post. {DL} came out the back door with a shotgun and told {VL} to leave. {VL} walked toward the porch. {DL} fired once from the porch steps; {VL} died in the yard twelve feet away. {DL} says {VL} came at {DL} with the sledgehammer raised. The State says {VL} was turning away and the hammer was down."
+            "For two years {D} and {D.his} neighbor {V} fought over a property line in {HOOD}: surveys, a lawsuit, a torn-down fence, a magistrate's order. At about {TIME} on {DATE}, {VL} came into {DL}'s backyard with a sledgehammer to knock down a new fence post. {DL} came out the back door with a shotgun and told {VL} to leave. {VL} walked toward the porch. {DL} fired once from the porch steps; {VL} died in the yard twelve feet away. {DL} says {VL} came at {DL} with the sledgehammer raised. The State says {VL} was turning away and the hammer was down."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Autopsy", "A shotgun wound entering the left side and upper back, at an angle suggesting {VL} was turned partly away from the porch."),
@@ -115,7 +115,7 @@ extension StoryCases {
             E(.statement, 2, "Prior Threat", "A neighbor heard {DL} say a week earlier: \"Next time {VL} comes over that line, it's the last time.\"")
         ],
         defenseEvidence: [
-            E(.statement, 3, "911 Call", "{DL}, 40 seconds after the shot: \"{VL} came at me with a sledgehammer on my own porch, I shot {VL}, send an ambulance.\""),
+            E(.statement, 3, "911 Call", "{DL}, 40 seconds after the shot: \"{VL} came at me with a sledgehammer on my own porch, I shot {V.him}, send an ambulance.\""),
             E(.document, 2, "Restraining Order Request", "Two months earlier, {DL} asked a magistrate for a no-contact order, describing {VL} swinging a shovel at {DL}'s dog."),
             E(.document, 2, "Castle Doctrine", "The shooting occurred within {DL}'s own fenced backyard curtilage.")
         ],
@@ -153,7 +153,7 @@ extension StoryCases {
                             .cross("It's also consistent with someone turning away?", "\"It's consistent with both.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} promised it would be 'the last time,' came out armed, and shot {V} as they turned away."],
+        prosecutionTheory: ["{D} promised it would be 'the last time,' came out armed, and shot {V} as {V.he} turned away."],
         defenseTheory: ["{VL} came into {DL}'s own yard with a sledgehammer after months of threats. North Carolina law presumes fear of death when someone unlawfully enters your home's curtilage with force."],
         aggravating: ["{DL} had announced an intent to harm {VL}"],
         mitigating: ["{VL} unlawfully entered {DL}'s yard with a weapon", "No prior criminal record", "{DL} immediately called 911"],
@@ -200,7 +200,7 @@ extension StoryCases {
         specification: "As a public officer, accepted cash from a contractor in exchange for passing building inspections.",
         ageRange: 40...60, occupations: ["county building inspector"], hasVictim: false,
         summaries: [
-            "{D}, a Hollis County building inspector for nineteen years, was recorded by an FBI-assisted sting taking an envelope with $1,500 from {CONTRACTOR}, a developer cooperating with investigators, at a job site on {STREET}. Over the prior year, {DL} had passed 38 inspections for that developer, including two homes later found with missing fire blocking. {DL} says the envelope was repayment of a personal loan to the developer, and that the developer set {DL} up to escape {CONTRACTOR}'s own fraud charges."
+            "{D}, a Hollis County building inspector for nineteen years, was recorded by an FBI-assisted sting taking an envelope with $1,500 from {CONTRACTOR}, a developer cooperating with investigators, at a job site on {STREET}. Over the prior year, {DL} had passed 38 inspections for that developer, including two homes later found with missing fire blocking. {DL} says the envelope was repayment of a personal loan to the developer, and that the developer set {D.him} up to escape {CONTRACTOR}'s own fraud charges."
         ],
         prosecutionEvidence: [
             E(.video, 4, "Recorded Handoff", "Hidden camera: {CONTRACTOR} hands {DL} an envelope and says \"for keeping things moving.\" {DL} says \"appreciate it\" and pockets it."),
@@ -248,8 +248,8 @@ extension StoryCases {
                             .cross("Would you say 'appreciate it' if handed an envelope 'for keeping things moving'?", "\"I'd ask what it was for.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} took $1,500 'for keeping things moving,' on camera, from a developer whose jobs {DL} kept passing."],
-        defenseTheory: ["{CONTRACTOR} owed {DL} $6,000 and is trading {DL} for leniency on {CONTRACTOR}'s own fraud. 'Keeping things moving' was the developer's script, not {DL}'s words."],
+        prosecutionTheory: ["{D} took $1,500 'for keeping things moving,' on camera, from a developer whose jobs {D.he} kept passing."],
+        defenseTheory: ["{CONTRACTOR} owed {DL} $6,000 and is trading {D.him} for leniency on {CONTRACTOR}'s own fraud. 'Keeping things moving' was the developer's script, not {DL}'s words."],
         aggravating: ["{DL} abused public office", "The offense endangered public safety"],
         mitigating: ["Nineteen years of public service", "No prior criminal record"],
         allocutions: ["\"That money was mine. I lent it when {CONTRACTOR} was going under. I never sold an inspection.\""],
@@ -295,7 +295,7 @@ extension StoryCases {
         specification: "Drove a vehicle while impaired, having three prior DWI convictions within ten years.",
         ageRange: 35...58, occupations: ["welder"], forcedPriorOffenses: ["Driving While Impaired", "Driving While Impaired", "Driving While Impaired"], hasVictim: false,
         summaries: [
-            "At about {TIME} on {DATE}, an officer found {D} asleep in the driver's seat of their running pickup in the parking lot of a bar on {STREET} in {HOOD}, headlights on, heater running, transmission in park. {DL} blew 0.14. {DL} has three DWI convictions in the last nine years, making this a felony if {DL} was \"driving.\" {DL} says {DL} knew {DL} was too drunk to drive, went to the truck to sleep it off in the heat, and never intended to move."
+            "At about {TIME} on {DATE}, an officer found {D} asleep in the driver's seat of {D.his} running pickup in the parking lot of a bar on {STREET} in {HOOD}, headlights on, heater running, transmission in park. {DL} blew 0.14. {DL} has three DWI convictions in the last nine years, making this a felony if {D.he} was \"driving.\" {DL} says {D.he} knew {D.he} was too drunk to drive, went to the truck to sleep it off in the heat, and never intended to move."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Breath Test", "Intoxilyzer result of 0.14 at 2:51 a.m., about forty minutes after {DL} was found."),
@@ -318,7 +318,7 @@ extension StoryCases {
                             .direct("Why is that 'driving'?", "\"Under North Carolina law, being in the driver's seat with the engine running is being in actual physical control. That's driving.\""),
                             .cross("The truck was in park and never moved?", "\"Correct.\""),
                             .cross("It was nineteen degrees?", "\"It was cold.\""),
-                            .cross("{DL} told you right away they were there to sleep, not drive?", "\"{DL} said that.\"")
+                            .cross("{DL} told you right away {D.he} was there to sleep, not drive?", "\"{DL} said that.\"")
                         ]),
             WitnessSeed(name: nil, role: "Bartender",
                         direct: ["\"I cut {DL} off at midnight.\""],
@@ -337,7 +337,7 @@ extension StoryCases {
                         cross: ["\"{DL} relapsed that night.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("What did {DL} tell you after?", "\"That {DL} relapsed, knew {DL} couldn't drive, couldn't get a ride, and chose the truck heater over freezing. For {DL}, not driving was a victory.\""),
+                            .direct("What did {DL} tell you after?", "\"That {DL} relapsed, knew {D.he} couldn't drive, couldn't get a ride, and chose the truck heater over freezing. For {DL}, not driving was a victory.\""),
                             .cross("{DL} relapsed and drank at a bar?", "\"Yes. That's a relapse. Driving would have been a crime.\"")
                         ])
         ],
@@ -387,7 +387,7 @@ extension StoryCases {
         specification: "Obtained $140,000 from {V} by false pretenses as part of an online romance scheme.",
         ageRange: 24...38, occupations: ["unemployed former call center worker"], hasVictim: true,
         summaries: [
-            "{V}, 68, recently widowed, of {HOOD}, met \"Daniel,\" who said he was an oil engineer working offshore, on a dating site. Over eight months {VL} sent $140,000 for customs fees, a frozen account, and a plane ticket that never came. The wire transfers went to bank accounts opened by {D}, who withdrew most of the money in cash and sent it overseas through money transfer apps. {DL} says {DL} answered an online job ad for a \"payment processing assistant,\" was paid 8 percent, and didn't know the money was stolen."
+            "{V}, 68, recently widowed, of {HOOD}, met \"Daniel,\" who said he was an oil engineer working offshore, on a dating site. Over eight months {VL} sent $140,000 for customs fees, a frozen account, and a plane ticket that never came. The wire transfers went to bank accounts opened by {D}, who withdrew most of the money in cash and sent it overseas through money transfer apps. {DL} says {D.he} answered an online job ad for a \"payment processing assistant,\" was paid 8 percent, and didn't know the money was stolen."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Bank Accounts", "Three accounts opened by {DL} within two months, receiving $140,000 from {VL} and $210,000 from other victims; {DL} withdrew cash within hours of each deposit.", .search),
@@ -397,7 +397,7 @@ extension StoryCases {
         defenseEvidence: [
             E(.document, 2, "Job Ad and Contract", "A professional-looking job posting and a signed 'independent contractor agreement' from 'Meridian Global Payments.'"),
             E(.document, 2, "No Contact with Victims", "{DL} never communicated with {VL} or any other victim."),
-            E(.document, 1, "Financial Situation", "{DL} had been laid off and was facing eviction when {DL} answered the ad.")
+            E(.document, 1, "Financial Situation", "{DL} had been laid off and was facing eviction when {D.he} answered the ad.")
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: "{V}", role: "Scam victim",
@@ -441,7 +441,7 @@ extension StoryCases {
         victimImpacts: ["{V}: \"I'm not angry at the person in that chair the way I'm angry at 'Daniel.' But somebody has to answer for my spouse's life savings.\""],
         allocutions: ["\"I needed a job. By the time I understood, I was afraid to stop. I'm sorry, {VL}.\""],
         guiltyTruths: ["Messages later recovered show {DL} recruiting two friends as mules for a bonus."],
-        innocentTruths: ["A federal task force later found the ring had threatened {DL}'s family when {DL} tried to quit."],
+        innocentTruths: ["A federal task force later found the ring had threatened {DL}'s family when {D.he} tried to quit."],
         moods: [.divided], doctrines: ["burdenOfProof"],
         story: StoryExtras(
             timeline: [(-240, "{VL} meets 'Daniel' online."),

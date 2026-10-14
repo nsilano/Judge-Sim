@@ -16,7 +16,7 @@ enum GenericPools {
     ]
 
     static let defenseImpeachments: [Impeachment] = [
-        Impeachment(text: "Admits being {DL}'s cousin and living with {DL} for two years.", penalty: 1),
+        Impeachment(text: "Admits being {DL}'s cousin and living with {D.him} for two years.", penalty: 1),
         Impeachment(text: "Admits never mentioning any of this to police, despite being interviewed twice.", penalty: 2),
         Impeachment(text: "Has a prior conviction for perjury.", penalty: 2),
         Impeachment(text: "Admits {DL} has been paying their rent since the arrest.", penalty: 2),
@@ -165,7 +165,7 @@ enum GenericPools {
                    explanation: "A warrant must particularly describe the place to be searched. 2D was simply not covered.",
                    doctrines: ["searchSeizure"], kinds: [.physical, .forensic, .document, .digital], places: [.home, .phone]),
         MotionSeed(kind: .suppressSearch,
-                   facts: "After arresting {DL}, officers scrolled through {DL}'s unlocked phone at the scene without a warrant, and that is how this evidence was found.",
+                   facts: "After arresting {DL}, officers scrolled through {D.his} unlocked phone at the scene without a warrant, and that is how this evidence was found.",
                    shouldGrant: true,
                    explanation: "Under Riley v. California, police must get a warrant before searching a phone's data, even after a lawful arrest.",
                    doctrines: ["searchSeizure", "warrantExceptions"], kinds: [.digital], places: [.phone]),
@@ -175,7 +175,7 @@ enum GenericPools {
                    explanation: "Carpenter v. United States requires a warrant for historical cell-site location information.",
                    doctrines: ["searchSeizure"], kinds: [.digital], places: [.phone]),
         MotionSeed(kind: .suppressSearch,
-                   facts: "{DL} initially refused consent. Officers then said they would \"tear the place apart and call CPS\" unless {DL} signed the consent form, which {DL} then did.",
+                   facts: "{DL} initially refused consent. Officers then said they would \"tear the place apart and call CPS\" unless {DL} signed the consent form, which {D.he} then did.",
                    shouldGrant: true,
                    explanation: "Consent must be voluntary. Consent extracted with threats about one's family is coerced and invalid.",
                    doctrines: ["warrantExceptions"], kinds: [.physical, .forensic, .document, .digital], places: [.home, .vehicle]),
@@ -239,7 +239,7 @@ enum GenericPools {
                    explanation: "Miranda covers interrogation. A spontaneous, volunteered statement is admissible.",
                    doctrines: ["miranda"]),
         MotionSeed(kind: .suppressStatement,
-                   facts: "Detectives spoke with {DL} at {DL}'s own kitchen table, said three times that {DL} was free to end the conversation, and left without arresting anyone.",
+                   facts: "Detectives spoke with {DL} at {D.his} own kitchen table, said three times that {D.he} was free to end the conversation, and left without arresting anyone.",
                    shouldGrant: false,
                    explanation: "Miranda requires custody. A voluntary conversation at home, with no restraint, is not custodial.",
                    doctrines: ["miranda"]),

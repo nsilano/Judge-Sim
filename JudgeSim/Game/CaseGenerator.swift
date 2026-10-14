@@ -116,7 +116,7 @@ enum CaseGenerator {
                                   probation: person.status == .probation ? person.probation : nil,
                                   history: person.appearances)
         } else {
-            let name = NameBank.person(using: &rng, excluding: &used)
+            let name = NameBank.person(using: &rng, excluding: &used, gender: t.story?.genders["D"])
             let age = rng.int(t.ageRange)
             let occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
             // Written cases describe the defendant's record themselves; most say there is none.
@@ -139,8 +139,8 @@ enum CaseGenerator {
                                   background: background, priors: priors, probation: nil, history: [])
         }
 
-        let victimName = t.hasVictim ? NameBank.person(using: &rng, excluding: &used) : nil
-        let alternate = NameBank.person(using: &rng, excluding: &used)
+        let victimName = t.hasVictim ? NameBank.person(using: &rng, excluding: &used, gender: t.story?.genders["V"]) : nil
+        let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.story?.genders["ALT"])
         let setting = CaseSetting.of(category: t.category, key: t.key)
         // Highway crashes and impaired driving are worked by the Highway Patrol.
         let trooperName = rng.pick(county.troopers)
@@ -182,6 +182,9 @@ enum CaseGenerator {
         for key in t.extras.keys.sorted() {
             if let options = t.extras[key] { values[key] = rng.pick(options) }
         }
+        values.merge(NameBank.gender(of: defendant.name).tokens(for: "D")) { a, _ in a }
+        values.merge(NameBank.gender(of: victimName ?? "").tokens(for: "V")) { a, _ in a }
+        values.merge(NameBank.gender(of: alternate).tokens(for: "ALT")) { a, _ in a }
         let fill = TextFiller(values: values)
 
         // Charges

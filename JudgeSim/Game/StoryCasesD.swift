@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "Unintentionally killed {V} by an unlawful assault, a single punch.",
         ageRange: 23...38, occupations: ["gym trainer and former bouncer"], hasVictim: true,
         summaries: [
-            "At closing time on {DATE}, outside {CLUB} in {CITY}, {V}, 31, and {D} exchanged words after {VL} bumped {DL}'s friend in the line for rides. Video shows {VL} stepping toward {DL} and pointing in {DL}'s face. {DL} threw a single punch. {VL} fell backward, struck the curb, and died two days later of a skull fracture and brain bleed. {DL} stayed, called 911, and held {VL}'s head still until paramedics came. The State says an unprovoked punch that kills is manslaughter. {DL} says {VL} was about to swing first."
+            "At closing time on {DATE}, outside {CLUB} in {CITY}, {V}, 31, and {D} exchanged words after {VL} bumped {DL}'s friend in the line for rides. Video shows {VL} stepping toward {DL} and pointing in {D.his} face. {DL} threw a single punch. {VL} fell backward, struck the curb, and died two days later of a skull fracture and brain bleed. {DL} stayed, called 911, and held {VL}'s head still until paramedics came. The State says an unprovoked punch that kills is manslaughter. {DL} says {VL} was about to swing first."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Street Camera Video", "Sixteen seconds: {VL} steps toward {DL}, points, and says something; {DL} punches once; {VL} falls straight back and hits the curb. {VL}'s hands never rise above the waist."),
@@ -63,7 +63,7 @@ extension StoryCases {
                         ])
         ],
         prosecutionTheory: ["{VL} was loud and drunk, but never raised a hand. {D}, a trained fighter, threw a punch that killed. That is manslaughter."],
-        defenseTheory: ["{VL}, ejected earlier for shoving, stepped into {DL} and threatened to knock {DL} out. {DL} threw one punch in self-defense and then tried to save {VL}'s life."],
+        defenseTheory: ["{VL}, ejected earlier for shoving, stepped into {DL} and threatened to knock {D.him} out. {DL} threw one punch in self-defense and then tried to save {VL}'s life."],
         aggravating: ["{DL} has professional fighting training"],
         mitigating: ["{DL} immediately called 911 and rendered aid", "{VL} was the initial verbal aggressor", "No prior criminal record"],
         victimImpacts: ["{VL}'s parent: \"One punch. That's all it took. I want people to know what one punch can do.\""],
@@ -95,7 +95,7 @@ extension StoryCases {
             prosecutionOpening: "{VL} never raised a hand. {D} threw a trained punch, and {VL} never woke up.",
             defenseOpening: "A drunk stranger stepped in close and threatened {DL}. {DL} threw one punch and then knelt in the street trying to save that stranger's life.",
             prosecutionClosing: "Words don't justify a punch from a trained fighter.",
-            defenseClosing: "{DL} reasonably believed {DL} was about to be hit. The law doesn't require waiting for the first blow."
+            defenseClosing: "{DL} reasonably believed {D.he} was about to be hit. The law doesn't require waiting for the first blow."
         )
     )
 
@@ -108,7 +108,7 @@ extension StoryCases {
         specification: "Knowingly disclosed private intimate images of {V} without consent, with intent to cause harm.",
         ageRange: 23...35, occupations: ["IT help desk technician"], hasVictim: true,
         summaries: [
-            "Three weeks after {V} ended a two-year relationship with {D}, private photos {VL} had shared only with {DL} appeared on a fake social media account tagged with {VL}'s employer and coworkers. The account was created from an IP address at {DL}'s apartment complex. {DL}, an IT help desk technician, says {DL}'s old phone with the photos was stolen from {DL}'s car two weeks earlier, that the complex's Wi-Fi is shared by 200 units, and that {DL} would never do this."
+            "Three weeks after {V} ended a two-year relationship with {D}, private photos {VL} had shared only with {DL} appeared on a fake social media account tagged with {VL}'s employer and coworkers. The account was created from an IP address at {DL}'s apartment complex. {DL}, an IT help desk technician, says {D.his} old phone with the photos was stolen from {D.his} car two weeks earlier, that the complex's Wi-Fi is shared by 200 units, and that {D.he} would never do this."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Account Creation Records", "The fake account was created at 11:41 p.m. from an IP address belonging to the apartment complex's shared Wi-Fi. {DL}'s phone was connected to that network at the time.", .search),
@@ -116,7 +116,7 @@ extension StoryCases {
             E(.digital, 2, "Messages After the Breakup", "{DL} to {VL}: \"You'll regret embarrassing me like this. Everyone will see who you really are.\"", .search)
         ],
         defenseEvidence: [
-            E(.document, 3, "Police Report of Stolen Phone", "{DL} reported an old phone stolen from {DL}'s unlocked car twelve days before the posting. That phone held the images."),
+            E(.document, 3, "Police Report of Stolen Phone", "{DL} reported an old phone stolen from {D.his} unlocked car twelve days before the posting. That phone held the images."),
             E(.document, 2, "Shared Network", "The complex Wi-Fi serves 214 units; any resident or visitor in range could have used it."),
             E(.document, 1, "Phone Activity", "{DL}'s current phone shows a streaming app running from 11:15 p.m. to 12:30 a.m.")
         ],
@@ -134,7 +134,7 @@ extension StoryCases {
                             .cross("The account was tagged with your employer. {DL} knew where you worked, but so did a lot of people?", "\"Sure.\"")
                         ]),
             WitnessSeed(name: nil, role: "Digital forensics examiner",
-                        direct: ["\"The account came from {DL}'s building network while {DL}'s phone was on it.\""],
+                        direct: ["\"The account came from {DL}'s building network while {D.his} phone was on it.\""],
                         cross: ["\"I can't say which device created the account.\""],
                         weight: 1, lay: false,
                         exam: [
@@ -155,8 +155,8 @@ extension StoryCases {
                             .cross("You don't know who broke into the cars?", "\"No.\"")
                         ])
         ],
-        prosecutionTheory: ["Only {DL} had the images, {DL} threatened that 'everyone will see,' and they were posted from {DL}'s building."],
-        defenseTheory: ["The images were on a phone stolen from {DL}'s car before the posting, uploaded by an Android device {DL} doesn't own, over Wi-Fi shared by two hundred units."],
+        prosecutionTheory: ["Only {DL} had the images, {D.he} threatened that 'everyone will see,' and they were posted from {D.his} building."],
+        defenseTheory: ["The images were on a phone stolen from {DL}'s car before the posting, uploaded by an Android device {D.he} doesn't own, over Wi-Fi shared by two hundred units."],
         aggravating: ["The images were sent to the victim's employer and coworkers"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{V}: \"I changed jobs. I changed my number. I still wonder who in the grocery store has seen them.\""],
@@ -166,11 +166,11 @@ extension StoryCases {
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
         story: StoryExtras(
             timeline: [(-33, "{VL} ends the relationship."),
-                       (-12, "{DL} reports an old phone stolen from {DL}'s car."),
+                       (-12, "{DL} reports an old phone stolen from {D.his} car."),
                        (0, "11:41 p.m.: fake account created and images posted."),
                        (1, "{VL} reports to police."),
                        (45, "Platform records obtained by court order.")],
-            howIdentified: "The images had been shared only with {DL}, and the account came from {DL}'s apartment network.",
+            howIdentified: "The images had been shared only with {DL}, and the account came from {D.his} apartment network.",
             notDone: ["The other apartment car break-ins were never linked or investigated.", "No search for the stolen phone."],
             defendantExam: [
                 .direct("Did you post those images?", "\"No. I had them on my old phone, which I kept in my glovebox for music. Somebody broke into my car and took it.\""),
@@ -248,7 +248,7 @@ extension StoryCases {
                             .cross("You'd say anything to keep your cousin out of prison?", "\"I'm telling you what I know.\"")
                         ])
         ],
-        prosecutionTheory: ["{D}, a convicted felon, leaned down and pushed a loaded pistol under their own seat when the officer approached."],
+        prosecutionTheory: ["{D}, a convicted felon, leaned down and pushed a loaded pistol under {D.his} own seat when the officer approached."],
         defenseTheory: ["{DL} had been in the car ten minutes. The backseat passenger had been in it all afternoon and could reach under that seat. No forensic evidence ties anyone to the gun."],
         aggravating: ["The firearm was loaded"],
         mitigating: ["{DL} has been employed and arrest-free for nine years"],
@@ -292,7 +292,7 @@ extension StoryCases {
         specification: "Presented a false statement in support of an insurance claim for the theft of {DL}'s vehicle.",
         ageRange: 26...45, occupations: ["real estate agent"], hasVictim: false,
         summaries: [
-            "On {DATE}, {D} reported their pickup stolen from a restaurant parking lot in {HOOD} and filed a $41,000 insurance claim. Three days later the truck was found burned in a field six miles away. {DL} was three payments behind and owed more than the truck was worth. The fire was set with gasoline. Phone data puts {DL}'s phone a quarter mile from the field the night of the fire. {DL} says {DL} drives that road to a client's house and that real thieves burn cars to destroy evidence."
+            "On {DATE}, {D} reported {D.his} pickup stolen from a restaurant parking lot in {HOOD} and filed a $41,000 insurance claim. Three days later the truck was found burned in a field six miles away. {DL} was three payments behind and owed more than the truck was worth. The fire was set with gasoline. Phone data puts {DL}'s phone a quarter mile from the field the night of the fire. {DL} says {D.he} drives that road to a client's house and that real thieves burn cars to destroy evidence."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Loan Records", "{DL} was three payments behind and owed $46,800 on a truck valued at $38,000. The lender had sent a repossession notice."),
@@ -311,7 +311,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("Why did this claim get flagged?", "\"An owner behind on payments with negative equity, a truck that burned within days of being reported stolen, and no forced entry to the ignition. Those are the top three signs of owner give-up fraud.\""),
-                            .direct("What did the phone records show?", "\"{DL}'s phone near the field at 1:12 a.m. the night of the fire. {DL} told me they were home asleep.\""),
+                            .direct("What did the phone records show?", "\"{DL}'s phone near the field at 1:12 a.m. the night of the fire. {DL} told me {D.he} was home asleep.\""),
                             .cross("A spare key under the bumper would explain an undamaged ignition?", "\"If the thief found it, yes.\""),
                             .cross("Two other trucks were stolen and burned in the county that month?", "\"I've read that.\""),
                             .cross("You're paid by the insurance company that would owe $41,000?", "\"I'm employed by them, yes.\"")
@@ -383,7 +383,7 @@ extension StoryCases {
         specification: "Threatened to commit an act of mass violence on educational property.",
         ageRange: 18...19, occupations: ["high school senior"], hasVictim: false,
         summaries: [
-            "On {DATE}, {D}, an 18-year-old senior at {SCHOOL}, posted a short video to a private story seen by about 140 classmates: a photo of the school with the caption \"don't come friday 💀\" and a song with gunshot sound effects. Within an hour, parents flooded the school with calls; Friday attendance dropped by half. Deputies found no weapons in {DL}'s home, though {DL}'s parent owns two hunting rifles kept in a locked safe. {DL} says it was a joke about a canceled pep rally and a big test, and that everyone who knows {DL} knew that."
+            "On {DATE}, {D}, an 18-year-old senior at {SCHOOL}, posted a short video to a private story seen by about 140 classmates: a photo of the school with the caption \"don't come friday 💀\" and a song with gunshot sound effects. Within an hour, parents flooded the school with calls; Friday attendance dropped by half. Deputies found no weapons in {DL}'s home, though {D.his} parent owns two hunting rifles kept in a locked safe. {DL} says it was a joke about a canceled pep rally and a big test, and that everyone who knows {D.he} knew that."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "The Post", "The school photo, \"don't come friday 💀,\" and a rap song with gunshot sound effects, viewed by 143 accounts.", .search),
@@ -435,7 +435,7 @@ extension StoryCases {
         aggravating: ["The threat caused widespread fear and disruption"],
         mitigating: ["{DL} was 18 with no prior record", "{DL} cooperated fully and apologized immediately", "No weapons or plan found"],
         allocutions: ["\"I didn't think. I'd never hurt anyone. I'm so sorry for scaring people.\""],
-        guiltyTruths: ["A deleted note on {DL}'s phone, recovered later, listed names of students who had bullied {DL}."],
+        guiltyTruths: ["A deleted note on {DL}'s phone, recovered later, listed names of students who had bullied {D.him}."],
         innocentTruths: ["The calculus teacher later confirmed the 'don't come Friday' joke had started in class, from the teacher."],
         moods: [.divided], doctrines: ["burdenOfProof"],
         extras: ["SCHOOL": ["Hollis Central High School", "Eastview High School", "Port Hollis High School"]],
@@ -444,7 +444,7 @@ extension StoryCases {
                        (0, "3:40 p.m.: pep rally canceled. 8:02 p.m.: post. 9:15 p.m.: deputies at {DL}'s home; consent search; no weapons."),
                        (1, "Friday attendance drops by half."),
                        (3, "{DL} charged.")],
-            howIdentified: "{DL} posted from {DL}'s own account and admitted it immediately.",
+            howIdentified: "{DL} posted from {D.his} own account and admitted it immediately.",
             notDone: [],
             defendantExam: [
                 .direct("Why did you post it?", "\"We'd been joking all week that the calc final would kill us. Then they canceled the pep rally, and I thought, perfect, nothing on Friday but the test. The song is what we play on the soccer bus.\""),
@@ -462,7 +462,7 @@ extension StoryCases {
             prosecutionOpening: "A school, a skull, gunshots, and 'don't come Friday.' Seven hundred students stayed home.",
             defenseOpening: "A joke about a calculus test that went horribly wrong. No weapon, no plan, no intent to threaten.",
             prosecutionClosing: "In today's world, a reasonable person reads that as a threat.",
-            defenseClosing: "Intent matters. {DL} meant a joke, and every person who knew {DL} took it as one."
+            defenseClosing: "Intent matters. {DL} meant a joke, and every person who knew {D.he} took it as one."
         )
     )
 }

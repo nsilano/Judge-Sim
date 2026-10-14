@@ -89,7 +89,7 @@ enum CaseComplexity {
               specification: "Repeatedly sent electronic messages to {V} for the purpose of abusing, annoying, threatening, or harassing.",
               categories: [.cyber, .family, .robbery],
               thresholdDelta: -2,
-              evidence: EvidenceSeed(.digital, 1, "Message Log", "Forty-one messages to {V} over nine days, most of them after {V} blocked {DL}'s first account."),
+              evidence: EvidenceSeed(.digital, 1, "Message Log", "Forty-one messages to {V} over nine days, most of them after {V.he} blocked {DL}'s first account."),
               needsVictim: true)
     ]
 

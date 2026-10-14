@@ -1,5 +1,20 @@
 import Foundation
 
+enum Gender { case male, female
+
+    var he: String { self == .female ? "she" : "he" }
+    var him: String { self == .female ? "her" : "him" }
+    var his: String { self == .female ? "her" : "his" }
+    var hers: String { self == .female ? "hers" : "his" }
+    var himself: String { self == .female ? "herself" : "himself" }
+
+    /// Pronoun tokens for a person whose name token is `key`: {D.he}, {D.He}, {D.him}, {D.his}, {D.His}, {D.hers}, {D.himself}.
+    func tokens(for key: String) -> [String: String] {
+        ["\(key).he": he, "\(key).He": he.capitalizedFirst, "\(key).him": him, "\(key).his": his,
+         "\(key).His": his.capitalizedFirst, "\(key).hers": hers, "\(key).himself": himself]
+    }
+}
+
 enum NameBank {
     static let firstNames = [
         "Marcus", "Elena", "Jamal", "Priya", "Tyler", "Rosa", "Darnell", "Mei", "Connor", "Aaliyah",
@@ -106,6 +121,22 @@ enum NameBank {
         "Resisting Arrest, 10 days jail",
         "Grand Theft (felony), 2 years probation"
     ]
+
+    static let femaleFirstNames: Set<String> = ["Elena", "Priya", "Rosa", "Mei", "Aaliyah", "Hannah", "Sofia", "Yasmin", "Grace", "Nadia", "Fatima", "Imani", "Leah", "Brooke", "Ingrid", "Keisha", "Molly", "Carmen", "Zara", "Tamika", "Lucia", "Erin", "Avery", "Riley", "Quinn", "Dakota", "Noor", "Allison", "Renee", "Colleen", "Valentina", "Maya", "Esperanza", "Delilah", "Shannon", "Abigail", "Amara", "Anika", "Ariel", "Beatrice", "Bethany", "Bianca", "Bridget", "Camille", "Cassandra", "Celeste", "Charlene", "Chiara", "Cleo", "Corinne", "Dalia", "Dana", "Daphne", "Denise", "Dolores", "Dorothy", "Ebony", "Eleanor", "Eloise", "Esther", "Felicia", "Fiona", "Gemma", "Gloria", "Gwen", "Harriet", "Irene", "Jacinta", "Jada", "Janelle", "Jillian", "Josephine", "Kara", "Kendra", "Kiara", "Lana", "Latoya", "Leonora", "Lorena", "Lydia", "Mabel", "Mavis", "Mira", "Monique", "Nell", "Ophelia", "Paloma", "Patrice", "Paulette", "Phoebe", "Ramona", "Rhiannon", "Ruby", "Sabrina", "Savannah", "Selena", "Simone", "Stella", "Tabitha", "Teresa", "Trina", "Vanessa", "Viola", "Wanda", "Yolanda", "Zelda", "Ayesha", "Dariela", "Farah", "Ines", "Kalani", "Leilani", "Nia", "Pilar", "Rashida", "Thandiwe", "Wren"]
+
+    static func gender(of fullName: String) -> Gender {
+        femaleFirstNames.contains(fullName.components(separatedBy: " ").first ?? "") ? .female : .male
+    }
+
+    static func person(using rng: inout SeededRNG, excluding used: inout Set<String>, gender: Gender?) -> String {
+        guard let gender else { return person(using: &rng, excluding: &used) }
+        for _ in 0..<60 {
+            var trial = used
+            let name = person(using: &rng, excluding: &trial)
+            if self.gender(of: name) == gender { used = trial; return name }
+        }
+        return person(using: &rng, excluding: &used)
+    }
 
     /// Surnames that also name places in the county, so no one shares a name with a street, town, or county.
     static let placeWords: Set<String> = {

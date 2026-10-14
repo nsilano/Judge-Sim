@@ -124,6 +124,8 @@ struct StoryExtras {
     var defenseClosing: String
     /// When the story has to happen at a particular time of year.
     var when: StoryDate? = nil
+    /// People whose sex the story fixes (its text calls them an aunt, an uncle, a daughter...), keyed "D", "V", or "ALT".
+    var genders: [String: Gender] = [:]
 }
 
 enum StoryDate {

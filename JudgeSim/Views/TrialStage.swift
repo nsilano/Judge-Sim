@@ -376,6 +376,13 @@ struct ExaminationTranscript: View {
         }
     }
 
+    /// Testimony in curly quotes, whether or not the text already carries straight ones.
+    static func quoted(_ text: String) -> String {
+        var t = text.trimmingCharacters(in: .whitespaces)
+        if t.hasPrefix("\""), t.hasSuffix("\""), t.count >= 2 { t = String(t.dropFirst().dropLast()) }
+        return "\u{201C}" + t + "\u{201D}"
+    }
+
     private struct PhaseBlock: View {
         let phase: TestimonyExchange.Phase
         let lines: [TestimonyExchange]
@@ -400,7 +407,7 @@ struct ExaminationTranscript: View {
                                     .font(.subheadline)
                                     .foregroundStyle(Theme.quoteText)
                             }
-                            Text(line.question.isEmpty ? line.answer : "\u{201C}\(line.answer)\u{201D}")
+                            Text(line.question.isEmpty ? line.answer : ExaminationTranscript.quoted(line.answer))
                                 .font(.system(.body, design: .serif))
                                 .foregroundStyle(Theme.text)
                                 .italic(line.question.isEmpty)

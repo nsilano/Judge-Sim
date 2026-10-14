@@ -11,10 +11,10 @@ extension StoryCases {
         key: "story.longDrive", category: .robbery,
         headlines: ["Ex-Partner Charged With Kidnapping After Five-Hour Drive", "Held Against Will, or a Long Talk?"],
         primaryLaw: "kidnapping2", lesserLaw: nil, threshold: 5, lesserThreshold: 3,
-        specification: "Unlawfully restrained and removed {V} for the purpose of terrorizing them.",
+        specification: "Unlawfully restrained and removed {V} for the purpose of terrorizing {V.him}.",
         ageRange: 26...42, occupations: ["HVAC technician"], hasVictim: true,
         summaries: [
-            "On {DATE}, {D} showed up at {V}'s workplace parking lot in {HOOD} at shift change, six weeks after {VL} ended their relationship. {VL} got into {DL}'s car. Five hours later {VL} jumped out at a gas station in Virginia and called 911, saying {DL} had locked the doors, taken {VL}'s phone, and threatened to drive them both off a bridge. {DL} says {VL} got in willingly to talk, that they argued for hours, and that {VL} could have left at any of three stops."
+            "On {DATE}, {D} showed up at {V}'s workplace parking lot in {HOOD} at shift change, six weeks after {V.he} ended their relationship. {VL} got into {DL}'s car. Five hours later {VL} jumped out at a gas station in Virginia and called 911, saying {DL} had locked the doors, taken {VL}'s phone, and threatened to drive them both off a bridge. {DL} says {VL} got in willingly to talk, that they argued for hours, and that {V.he} could have left at any of three stops."
         ],
         prosecutionEvidence: [
             E(.statement, 3, "911 Call from Virginia", "{V}, sobbing: \"I got away, I've been in the car five hours, {DL} took my phone, said we'd both go off the bridge.\""),
@@ -64,7 +64,7 @@ extension StoryCases {
                             .cross("{DL} had talked about not wanting to live?", "\"Once. I told {DL} to see somebody.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} drove {V} across state lines for five hours with the doors locked and the victim's phone in the driver's door, threatening a bridge. That's kidnapping for the purpose of terrorizing."],
+        prosecutionTheory: ["{D} drove {V} across state lines for five hours with the doors locked and {V.his} phone in {DL}'s door, threatening a bridge. That's kidnapping for the purpose of terrorizing."],
         defenseTheory: ["{VL} chose to get in, walked into a rest stop alone and walked back out. This was a painful, desperate breakup conversation, not a kidnapping."],
         aggravating: ["{DL} threatened to kill {VL}"],
         mitigating: ["No prior criminal record", "{DL} was in emotional crisis"],
@@ -78,7 +78,7 @@ extension StoryCases {
                        (0, "3:10 p.m.: {VL} gets into {DL}'s car. 5:20 p.m.: rest stop. 8:15 p.m.: {VL} flees at a Virginia gas station."),
                        (1, "{DL} extradited to North Carolina."),
                        (20, "{DL} charged with second-degree kidnapping.")],
-            howIdentified: "{VL} identified {DL}, and {DL} was arrested at the scene.",
+            howIdentified: "{VL} identified {DL}, and {D.he} was arrested at the scene.",
             notDone: ["The rest-stop attendant was never interviewed."],
             defendantExam: [
                 .direct("Why did you drive so far?", "\"We started driving and talking and I didn't want it to end. I kept thinking if we got to the mountains, {VL} would remember.\""),
@@ -94,7 +94,7 @@ extension StoryCases {
                                   explanation: "The trooper can describe {VL}'s condition, not offer a conclusion on whether a crime occurred.",
                                   doctrineID: "speculation", weight: 1))
             ],
-            prosecutionOpening: "Locked doors, a phone taken, five hours, and a bridge. {D} held {V} to terrorize them.",
+            prosecutionOpening: "Locked doors, a phone taken, five hours, and a bridge. {D} held {V} to terrorize {V.him}.",
             defenseOpening: "{VL} invited {DL} to talk, got in willingly, and walked back to the car from a rest stop. That's not kidnapping.",
             prosecutionClosing: "Consent to talk in a parking lot isn't consent to a five-hour drive with a threat.",
             defenseClosing: "The State has to prove restraint beyond a reasonable doubt. The rest stop shows otherwise."
@@ -110,7 +110,7 @@ extension StoryCases {
         specification: "Knowingly used identifying information of {V} to open credit accounts and obtain goods.",
         ageRange: 24...40, occupations: ["online reseller"], hasVictim: true,
         summaries: [
-            "{V}, 79, lives in a duplex on {STREET} in {HOOD}, sharing a cluster mailbox with {D}, who lives next door and resells electronics online. Over four months, five credit cards were opened in {VL}'s name and used to buy $23,000 in laptops, gaming consoles, and phones, delivered to the cluster box or to a locker at a nearby store. {DL} sold more than thirty of those same models online during those months. {DL} says {DL} buys inventory in bulk from liquidation sales, and that a mail carrier substitute that season was later fired for mail theft."
+            "{V}, 79, lives in a duplex on {STREET} in {HOOD}, sharing a cluster mailbox with {D}, who lives next door and resells electronics online. Over four months, five credit cards were opened in {VL}'s name and used to buy $23,000 in laptops, gaming consoles, and phones, delivered to the cluster box or to a locker at a nearby store. {DL} sold more than thirty of those same models online during those months. {DL} says {D.he} buys inventory in bulk from liquidation sales, and that a mail carrier substitute that season was later fired for mail theft."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Credit Applications", "Five cards opened online in {VL}'s name, all listing a phone number registered to a prepaid account bought at the store where {DL} shops."),
@@ -201,7 +201,7 @@ extension StoryCases {
         specification: "Assaulted {OFF} with a firearm, with intent to kill, inflicting serious injury.",
         ageRange: 30...55, occupations: ["long-haul truck driver"], hasVictim: true,
         summaries: [
-            "At about {TIME} on {DATE}, a narcotics team executed a no-knock search warrant at a house on {STREET} in {HOOD}. The target, a suspected dealer, had moved out two months earlier; {D}, a truck driver home between runs, had moved in. Officers rammed the door. {DL}, woken in the dark, grabbed a pistol from the nightstand and fired as the first officer came down the hall, hitting {OFF} in the thigh. {DL} says {DL} thought it was a home invasion. Officers say they announced \"Police, search warrant\" as they breached."
+            "At about {TIME} on {DATE}, a narcotics team executed a no-knock search warrant at a house on {STREET} in {HOOD}. The target, a suspected dealer, had moved out two months earlier; {D}, a truck driver home between runs, had moved in. Officers rammed the door. {DL}, woken in the dark, grabbed a pistol from the nightstand and fired as the first officer came down the hall, hitting {OFF} in the thigh. {DL} says {D.he} thought it was a home invasion. Officers say they announced \"Police, search warrant\" as they breached."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Body Camera", "Lead officer's camera: the door is rammed, and within about two seconds the team shouts \"Police! Search warrant!\" as they enter. Four seconds later, two shots from down the hall."),
@@ -249,9 +249,9 @@ extension StoryCases {
                         ])
         ],
         prosecutionTheory: ["Officers shouted 'police' as they entered, wearing marked vests. {D} fired at an officer in the hallway and nearly killed {OFF}."],
-        defenseTheory: ["Police rammed the wrong house at 5 a.m. on a stale warrant. {DL}, asleep, believed {DL} was being robbed, fired in self-defense, and called 911 for help."],
+        defenseTheory: ["Police rammed the wrong house at 5 a.m. on a stale warrant. {DL}, asleep, believed {D.he} was being robbed, fired in self-defense, and called 911 for help."],
         aggravating: ["The victim was a law enforcement officer performing official duties"],
-        mitigating: ["{DL} had no criminal record", "{DL} called 911 believing {DL} was the victim"],
+        mitigating: ["{DL} had no criminal record", "{DL} called 911 believing {D.he} was the victim"],
         victimImpacts: ["{OFF}: \"I don't hate {DL}. I hate that my career might be over because of bad information.\""],
         allocutions: ["\"I would never shoot a police officer knowingly. I thought I was going to die in my own bed.\""],
         guiltyTruths: ["A neighbor's doorbell camera later showed officers knocking and announcing for ten seconds before ramming."],
@@ -281,7 +281,7 @@ extension StoryCases {
                                   doctrineID: "relevance", weight: 1))
             ],
             prosecutionOpening: "Officers announced, wore marked vests, and {D} fired anyway, nearly killing {OFF}.",
-            defenseOpening: "The wrong house, a stale warrant, and {DL}, woken by the door coming down. {DL} called 911 because {DL} thought {DL} was the victim.",
+            defenseOpening: "The wrong house, a stale warrant, and {DL}, woken by the door coming down. {DL} called 911 because {D.he} thought {D.he} was the victim.",
             prosecutionClosing: "A reasonable person hears 'police.'",
             defenseClosing: "A reasonable person asleep doesn't, and the State's own error put everyone in that hallway."
         )
@@ -293,10 +293,10 @@ extension StoryCases {
         key: "story.lastPill", category: .drugs,
         headlines: ["Friend Charged in Fentanyl Death", "Death by Distribution Case Tests Causation"],
         primaryLaw: "deathByDistribution", lesserLaw: "deliverSchedII", threshold: 5, lesserThreshold: 3,
-        specification: "Delivered a pill containing fentanyl to {V}, whose ingestion of it caused their death.",
+        specification: "Delivered a pill containing fentanyl to {V}, whose ingestion of it caused {V.his} death.",
         ageRange: 21...30, occupations: ["restaurant server"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V}, 24, was found dead in their apartment in {HOOD}. Beside {VL} were an empty pill bag and a rolled-up dollar bill. Texts show {D}, a longtime friend and fellow server, sold {VL} two pills the night before for $40, which {DL} described as \"perc 30s.\" The pills were counterfeit and contained fentanyl. {VL}'s toxicology also showed alcohol and a sedative prescribed to {VL}. {DL} says {DL} was passing along pills from {DL}'s own supply, didn't know they had fentanyl, and that {VL}'s mix of drugs, not {DL}'s pill, caused the death."
+            "On {DATE}, {V}, 24, was found dead in {V.his} apartment in {HOOD}. Beside {VL} were an empty pill bag and a rolled-up dollar bill. Texts show {D}, a longtime friend and fellow server, sold {VL} two pills the night before for $40, which {DL} described as \"perc 30s.\" The pills were counterfeit and contained fentanyl. {VL}'s toxicology also showed alcohol and a sedative prescribed to {V.him}. {DL} says {D.he} was passing along pills from {D.his} own supply, didn't know they had fentanyl, and that {VL}'s mix of drugs, not {DL}'s pill, caused the death."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Text Messages", "{VL}: \"u got 2 of the perc 30s still?\" {DL}: \"ya 40 for both, come by after close.\" The night before {VL} died.", .search),
@@ -304,7 +304,7 @@ extension StoryCases {
             E(.physical, 2, "Pills from {DL}", "Three more identical blue pills in {DL}'s apron at work, all containing fentanyl.", .search)
         ],
         defenseEvidence: [
-            E(.document, 2, "Defendant's Own Use", "{DL} has a documented opioid use disorder and bought the pills for {DL}'s own use from an online source."),
+            E(.document, 2, "Defendant's Own Use", "{DL} has a documented opioid use disorder and bought the pills for {D.his} own use from an online source."),
             E(.forensic, 2, "Mixed Drug Death", "The medical examiner listed the cause as \"combined toxicity of fentanyl, alcohol, and alprazolam.\""),
             E(.document, 1, "No Profit Pattern", "No evidence {DL} sold to anyone else; the $40 matched what {DL} paid.")
         ],
@@ -342,7 +342,7 @@ extension StoryCases {
                         ])
         ],
         prosecutionTheory: ["{D} sold {V} fentanyl pills. Without the fentanyl, {VL} would be alive. That is death by distribution."],
-        defenseTheory: ["{DL} was an addict sharing pills at cost with a friend, believing they were oxycodone. And {VL}'s own sedative and alcohol were part of what killed {VL}."],
+        defenseTheory: ["{DL} was an addict sharing pills at cost with a friend, believing they were oxycodone. And {VL}'s own sedative and alcohol were part of what killed {V.him}."],
         aggravating: ["The pills contained fentanyl"],
         mitigating: ["{DL} has an opioid use disorder and was not selling for profit", "No prior criminal record"],
         victimImpacts: ["{VL}'s parent: \"Two kids who worked together, laughed together. One is gone and one is going to prison. Find whoever is making these pills.\""],
@@ -365,7 +365,7 @@ extension StoryCases {
                 .cross("You knew pills from online sources are often fake.", "\"I'd heard. I didn't think it would be mine.\"")
             ],
             objections: [
-                (0, ObjectionSeed(question: "Defense attorney: \"So {VL}'s own choices killed {VL}, didn't they?\"",
+                (0, ObjectionSeed(question: "Defense attorney: \"So {VL}'s own choices killed {V.him}, didn't they?\"",
                                   answer: "\"Every drug contributed.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Argumentative", shouldSustain: true,
                                   explanation: "The question argues a conclusion to the witness instead of asking for facts.",
@@ -387,16 +387,16 @@ extension StoryCases {
         specification: "Willfully and falsely testified under oath, in a material matter, that {ALT} was with {DL} on the night of a robbery.",
         ageRange: 22...40, occupations: ["hair stylist"], hasVictim: false,
         summaries: [
-            "Last year {ALT} was tried for an armed robbery in {CITY}. {D}, {ALT}'s partner, testified under oath that the two were at home watching a movie all night. The jury hung. Before the retrial, a detective found security video from a casino two hours away showing {DL} at a slot machine at 10:40 p.m. that night, alone. {DL} is now charged with perjury. {DL} says {DL} confused the night with another, testified honestly, and was coached by no one."
+            "Last year {ALT} was tried for an armed robbery in {CITY}. {D}, {ALT}'s partner, testified under oath that the two were at home watching a movie all night. The jury hung. Before the retrial, a detective found security video from a casino two hours away showing {DL} at a slot machine at 10:40 p.m. that night, alone. {DL} is now charged with perjury. {DL} says {D.he} confused the night with another, testified honestly, and was coached by no one."
         ],
         prosecutionEvidence: [
             E(.video, 4, "Casino Video", "{DL} at a slot machine from 10:12 p.m. to 11:50 p.m. on the night of the robbery, two hours from {CITY}, swiping a players' card in {DL}'s name."),
             E(.document, 3, "Trial Transcript", "{DL}: \"I'm certain. We were home all night. We watched a movie and I fell asleep on the couch around midnight.\""),
-            E(.digital, 2, "Jail Calls", "Weeks before {ALT}'s trial, {ALT} told {DL} on a recorded jail call: \"Remember, it was movie night.\"", .search)
+            E(.digital, 2, "Jail Calls", "Weeks before {ALT}'s trial, {ALT.he} told {DL} on a recorded jail call: \"Remember, it was movie night.\"", .search)
         ],
         defenseEvidence: [
             E(.document, 2, "Similar Nights", "Bank records show {DL} and {ALT} rented movies on three other weekend nights that month."),
-            E(.document, 2, "Gambling Disorder", "{DL} is in treatment for a gambling disorder and says {DL} hid casino trips from everyone."),
+            E(.document, 2, "Gambling Disorder", "{DL} is in treatment for a gambling disorder and says {D.he} hid casino trips from everyone."),
             E(.document, 1, "Original Detective's Notes", "The first detective never asked {DL} about that specific date before trial.")
         ],
         prosecutionWitnesses: [
@@ -406,7 +406,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("How did you find the casino video?", "\"Before the retrial I ran {DL}'s name through the casinos' players' card systems. A card in {DL}'s name was used that night. The casino pulled video.\""),
-                            .direct("What did the jail calls show?", "\"{ALT} telling {DL}, three weeks before trial, 'Remember, it was movie night.' {DL} said 'I know, I know.'\""),
+                            .direct("What did the jail calls show?", "\"{ALT} telling {DL}, three weeks before trial, 'Remember, it was movie night.' {D.he} said 'I know, I know.'\""),
                             .cross("They had movie nights three other weekends that month?", "\"The rental records show that.\""),
                             .cross("'Remember it was movie night' could be a reminder of an honest belief?", "\"It could be. In my experience, it wasn't.\"")
                         ]),
@@ -430,7 +430,7 @@ extension StoryCases {
                         ])
         ],
         prosecutionTheory: ["{D} swore {ALT} was home with {DL} all night. {DL} was two hours away at a casino, and {ALT} had told {DL} what to say."],
-        defenseTheory: ["{DL} hid gambling from everyone, even in {DL}'s own memory. Several movie nights blurred together. A false memory isn't perjury; perjury requires knowing falsehood."],
+        defenseTheory: ["{DL} hid gambling from everyone, even in {D.his} own memory. Several movie nights blurred together. A false memory isn't perjury; perjury requires knowing falsehood."],
         aggravating: ["The false testimony was given to secure an acquittal in a violent felony trial"],
         mitigating: ["No prior criminal record", "{DL} is in treatment for a gambling disorder"],
         allocutions: ["\"I believed what I said. I've learned how much my addiction made me lie, even to myself.\""],
