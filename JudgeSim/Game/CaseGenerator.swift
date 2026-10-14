@@ -28,7 +28,8 @@ enum CaseGenerator {
             let story = rng.pick(unheardStories)
             return build(story, seed: seed, band: .close, context: context, rng: &rng)
         }
-        pool += StoryCases.all
+        // A written case is heard once per career, and only with a new defendant, whose history it describes.
+        if context.returning == nil { pool += unheardStories }
         if let person = context.returning {
             let hasFelony = person.priors.contains { $0.ncClass.isFelony }
             let age = person.age(on: context.date)
@@ -118,7 +119,8 @@ enum CaseGenerator {
             let name = NameBank.person(using: &rng, excluding: &used)
             let age = rng.int(t.ageRange)
             let occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
-            var priors = randomPriors(age: age, year: currentYear, county: county, rng: &rng)
+            // Written cases describe the defendant's record themselves; most say there is none.
+            var priors = t.story != nil ? [] : randomPriors(age: age, year: currentYear, county: county, rng: &rng)
             for (offset, name) in t.forcedPriorOffenses.enumerated() {
                 guard let seed = GenericPools.priorSeeds.first(where: { $0.offense == name }) else { continue }
                 priors.append(PriorConviction(offense: seed.offense, ncClass: seed.ncClass,
@@ -717,7 +719,8 @@ enum CaseGenerator {
         var arrangementTerms: String?
         var arrangementHabitual: Bool?
         var arrangementKind: String?
-        if pleaOffer != nil && rng.chance(0.3) {
+        // A written case is meant to be tried, so it never arrives as a negotiated plea.
+        if t.story == nil && pleaOffer != nil && rng.chance(0.3) {
             arrangementPresented = true
             let pleaLaw = primary.lesserLaw ?? primary.law
             arrangementLawID = pleaLaw.id
