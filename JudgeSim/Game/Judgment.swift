@@ -28,7 +28,7 @@ enum ProbationDecision: String, CaseIterable, Codable, Hashable {
         switch self {
         case .revoke: return "Revoke probation and activate the suspended sentence"
         case .crv: return "Find a violation and order confinement in response to violation (CRV)"
-        case .modify: return "Find a violation, modify conditions, and extend probation 12 months"
+        case .modify: return "Find a violation, modify conditions, and extend probation"
         case .continueAsIs: return "Continue probation on the same terms"
         }
     }
@@ -226,6 +226,10 @@ struct Rulings: Codable, Hashable {
     var groupsConsecutive = false
     /// Counts on which the court arrested judgment at sentencing, after a bench conference.
     var arrestedCounts: Set<UUID> = []
+    /// Length of probation under a conditional discharge (nil: 12 months).
+    var dischargeMonths: Int?
+    /// How long a modified probation is extended after a violation (nil: 12 months).
+    var extensionMonths: Int?
 
     /// Whether separate judgments run one after another.
     var runsConsecutively: Bool { mode == .consecutive || (mode == .grouped && groupsConsecutive) }
@@ -1087,11 +1091,11 @@ enum Judgment {
                                               : [])))
             newsSentence = "a prayer for judgment continued, with no sentence imposed"
         } else {
-            probationMonths = 12
+            probationMonths = r.dischargeMonths ?? 12
             let basis = dischargeBasis(c, r) == .drugPossession ? "G.S. 90-96" : "G.S. 15A-1341(a4)"
             judgments.append(JudgmentEntry(title: "Conditional discharge (\(basis))",
                                            lines: ["Further proceedings are deferred without entry of judgment.",
-                                                   "The defendant is placed on 12 months of supervised probation. On successful completion, the charge will be dismissed."]
+                                                   "The defendant is placed on \(probationMonths) months of supervised probation. On successful completion, the charge will be dismissed."]
                                            + r.conditions.descriptions(victimName: c.victimName).dropFirst() + r.customConditions))
             newsSentence = "a conditional discharge: if \(d.lastName) completes 12 months of probation, the charge will be dismissed"
         }
@@ -1219,10 +1223,13 @@ enum Judgment {
                 let days = existing.isFelony ? "90-day" : "\(crv * 30)-day"
                 probationHearing = "Violation found in \(existing.docket). The defendant is ordered to serve a \(days) period of confinement in response to violation (G.S. 15A-1344(d2)), after which probation resumes."
             case .modify:
+                let extraMonths = r.extensionMonths ?? 12
                 var extended = existing
-                extended.ends = Calendar.current.date(byAdding: .month, value: 12, to: existing.ends) ?? existing.ends
+                extended.ends = Calendar.current.date(byAdding: .month, value: extraMonths, to: existing.ends) ?? existing.ends
                 continuedProbation = extended
-                probationHearing = "Violation found in \(existing.docket). Probation modified and extended 12 months."
+                probationHearing = extraMonths == 0
+                    ? "Violation found in \(existing.docket). Probation conditions modified; the term is not extended."
+                    : "Violation found in \(existing.docket). Probation modified and extended \(extraMonths) month\(extraMonths == 1 ? "" : "s")."
             case .continueAsIs:
                 continuedProbation = existing
                 probationHearing = r.probationDecision == nil ? nil : "Probation in \(existing.docket) continued on the same terms."
