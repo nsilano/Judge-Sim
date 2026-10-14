@@ -11,7 +11,7 @@ extension StoryCases {
         key: "story.longDrive", category: .robbery,
         headlines: ["Ex-Partner Charged With Kidnapping After Five-Hour Drive", "Held Against Will, or a Long Talk?"],
         primaryLaw: "kidnapping2", lesserLaw: nil, threshold: 5, lesserThreshold: 3,
-        specification: "Unlawfully restrained and removed {V} for the purpose of terrorizing {VL}.",
+        specification: "Unlawfully restrained and removed {V} for the purpose of terrorizing them.",
         ageRange: 26...42, occupations: ["HVAC technician"], hasVictim: true,
         summaries: [
             "On {DATE}, {D} showed up at {V}'s workplace parking lot in {HOOD} at shift change, six weeks after {VL} ended their relationship. {VL} got into {DL}'s car. Five hours later {VL} jumped out at a gas station in Virginia and called 911, saying {DL} had locked the doors, taken {VL}'s phone, and threatened to drive them both off a bridge. {DL} says {VL} got in willingly to talk, that they argued for hours, and that {VL} could have left at any of three stops."
@@ -64,7 +64,7 @@ extension StoryCases {
                             .cross("{DL} had talked about not wanting to live?", "\"Once. I told {DL} to see somebody.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} drove {V} across state lines for five hours with the doors locked and {VL}'s phone in {DL}'s door, threatening a bridge. That's kidnapping for the purpose of terrorizing."],
+        prosecutionTheory: ["{D} drove {V} across state lines for five hours with the doors locked and the victim's phone in the driver's door, threatening a bridge. That's kidnapping for the purpose of terrorizing."],
         defenseTheory: ["{VL} chose to get in, walked into a rest stop alone and walked back out. This was a painful, desperate breakup conversation, not a kidnapping."],
         aggravating: ["{DL} threatened to kill {VL}"],
         mitigating: ["No prior criminal record", "{DL} was in emotional crisis"],
@@ -94,7 +94,7 @@ extension StoryCases {
                                   explanation: "The trooper can describe {VL}'s condition, not offer a conclusion on whether a crime occurred.",
                                   doctrineID: "speculation", weight: 1))
             ],
-            prosecutionOpening: "Locked doors, a phone taken, five hours, and a bridge. {D} held {V} to terrorize {VL}.",
+            prosecutionOpening: "Locked doors, a phone taken, five hours, and a bridge. {D} held {V} to terrorize them.",
             defenseOpening: "{VL} invited {DL} to talk, got in willingly, and walked back to the car from a rest stop. That's not kidnapping.",
             prosecutionClosing: "Consent to talk in a parking lot isn't consent to a five-hour drive with a threat.",
             defenseClosing: "The State has to prove restraint beyond a reasonable doubt. The rest stop shows otherwise."
@@ -293,10 +293,10 @@ extension StoryCases {
         key: "story.lastPill", category: .drugs,
         headlines: ["Friend Charged in Fentanyl Death", "Death by Distribution Case Tests Causation"],
         primaryLaw: "deathByDistribution", lesserLaw: "deliverSchedII", threshold: 5, lesserThreshold: 3,
-        specification: "Delivered a pill containing fentanyl to {V}, whose ingestion of it caused {VL}'s death.",
+        specification: "Delivered a pill containing fentanyl to {V}, whose ingestion of it caused their death.",
         ageRange: 21...30, occupations: ["restaurant server"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V}, 24, was found dead in {VL}'s apartment in {HOOD}. Beside {VL} were an empty pill bag and a rolled-up dollar bill. Texts show {D}, a longtime friend and fellow server, sold {VL} two pills the night before for $40, which {DL} described as \"perc 30s.\" The pills were counterfeit and contained fentanyl. {VL}'s toxicology also showed alcohol and a sedative prescribed to {VL}. {DL} says {DL} was passing along pills from {DL}'s own supply, didn't know they had fentanyl, and that {VL}'s mix of drugs, not {DL}'s pill, caused the death."
+            "On {DATE}, {V}, 24, was found dead in their apartment in {HOOD}. Beside {VL} were an empty pill bag and a rolled-up dollar bill. Texts show {D}, a longtime friend and fellow server, sold {VL} two pills the night before for $40, which {DL} described as \"perc 30s.\" The pills were counterfeit and contained fentanyl. {VL}'s toxicology also showed alcohol and a sedative prescribed to {VL}. {DL} says {DL} was passing along pills from {DL}'s own supply, didn't know they had fentanyl, and that {VL}'s mix of drugs, not {DL}'s pill, caused the death."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Text Messages", "{VL}: \"u got 2 of the perc 30s still?\" {DL}: \"ya 40 for both, come by after close.\" The night before {VL} died.", .search),

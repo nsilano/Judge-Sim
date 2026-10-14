@@ -504,7 +504,7 @@ extension CaseTemplates {
                             cross: ["\"I found no malware on the workstation.\""],
                             weight: 1, lay: false)
             ],
-            prosecutionTheory: ["{D} had the keys to the system and used them to pay {DL}self."],
+            prosecutionTheory: ["{D} had the keys to the system and used them to pay themself."],
             defenseTheory: ["Shared passwords and a phishing attack. The logs show the account, not the person."],
             aggravating: ["The defendant took advantage of a position of trust"],
             mitigating: ["No prior record"],
@@ -521,11 +521,11 @@ extension CaseTemplates {
             headlines: ["Drive or Else", "The Back Seat"],
             primaryLaw: "kidnapping2", lesserLaw: nil, threshold: 5, lesserThreshold: 5,
             specification: "Unlawfully restrained and removed {V} for the purpose of facilitating a felony, releasing {VL} in a safe place.",
-            secondary: [SecondaryCharge(lawID: "commonLawRobbery", specification: "Took {V}'s vehicle by putting {VL} in fear.", chance: 0.7, threshold: 0)],
+            secondary: [SecondaryCharge(lawID: "commonLawRobbery", specification: "Took {V}'s vehicle by putting them in fear.", chance: 0.7, threshold: 0)],
             ageRange: 18...32, hasVictim: true,
             summaries: [
                 "{V} was getting into the car outside a laundromat when someone got in the back seat and said, \"Drive.\" Twenty minutes later, {VL} was ordered out on a dirt road. The car was found burned. {D}'s fingerprints were on the rear door.",
-                "At a gas pump in {HOOD}, {D} allegedly forced {V} into the passenger seat and drove off with {VL} for nine miles before letting {VL} out at a church."
+                "At a gas pump in {HOOD}, {D} allegedly forced {V} into the passenger seat and drove off with them for nine miles before letting {VL} out at a church."
             ],
             prosecutionEvidence: [
                 E(.forensic, 4, "Fingerprints", "{DL}'s prints on the rear passenger door handle."),

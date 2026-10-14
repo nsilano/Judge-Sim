@@ -248,7 +248,7 @@ extension StoryCases {
                             .cross("You'd say anything to keep your cousin out of prison?", "\"I'm telling you what I know.\"")
                         ])
         ],
-        prosecutionTheory: ["{D}, a convicted felon, leaned down and pushed a loaded pistol under {DL}'s own seat when the officer approached."],
+        prosecutionTheory: ["{D}, a convicted felon, leaned down and pushed a loaded pistol under their own seat when the officer approached."],
         defenseTheory: ["{DL} had been in the car ten minutes. The backseat passenger had been in it all afternoon and could reach under that seat. No forensic evidence ties anyone to the gun."],
         aggravating: ["The firearm was loaded"],
         mitigating: ["{DL} has been employed and arrest-free for nine years"],
@@ -292,7 +292,7 @@ extension StoryCases {
         specification: "Presented a false statement in support of an insurance claim for the theft of {DL}'s vehicle.",
         ageRange: 26...45, occupations: ["real estate agent"], hasVictim: false,
         summaries: [
-            "On {DATE}, {D} reported {DL}'s pickup stolen from a restaurant parking lot in {HOOD} and filed a $41,000 insurance claim. Three days later the truck was found burned in a field six miles away. {DL} was three payments behind and owed more than the truck was worth. The fire was set with gasoline. Phone data puts {DL}'s phone a quarter mile from the field the night of the fire. {DL} says {DL} drives that road to a client's house and that real thieves burn cars to destroy evidence."
+            "On {DATE}, {D} reported their pickup stolen from a restaurant parking lot in {HOOD} and filed a $41,000 insurance claim. Three days later the truck was found burned in a field six miles away. {DL} was three payments behind and owed more than the truck was worth. The fire was set with gasoline. Phone data puts {DL}'s phone a quarter mile from the field the night of the fire. {DL} says {DL} drives that road to a client's house and that real thieves burn cars to destroy evidence."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Loan Records", "{DL} was three payments behind and owed $46,800 on a truck valued at $38,000. The lender had sent a repossession notice."),

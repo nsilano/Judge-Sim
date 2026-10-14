@@ -388,7 +388,7 @@ enum StoryCases {
         specification: "Assaulted {V} and inflicted physical injury by strangulation.",
         ageRange: 26...45, forcedPriorOffenses: ["Driving While Impaired"], hasVictim: true,
         summaries: [
-            "At about {TIME} on {DATE}, {V} called 911 from a bathroom in the house on {STREET} that {VL} shared with {D}, saying {DL} had choked {VL} in the kitchen. Deputies found red marks on {VL}'s neck and a broken skillet on the floor; {DL} had fresh scratches on the face and forearm. {DL} says {VL} came at {DL} with the skillet after a night of drinking and {DL} grabbed {VL} to stop it. By trial, {V} says {VL} had been drinking heavily and can't remember who started it."
+            "At about {TIME} on {DATE}, {V} called 911 from a bathroom in the house on {STREET} that they shared with {D}, saying {DL} had choked them in the kitchen. Deputies found red marks on {VL}'s neck and a broken skillet on the floor; {DL} had fresh scratches on the face and forearm. {DL} says {VL} came at {DL} with the skillet after a night of drinking and {DL} grabbed {VL} to stop it. By trial, {V} says they had been drinking heavily and can't remember who started it."
         ],
         prosecutionEvidence: [
             E(.statement, 3, "911 Recording", "{V}, whispering: \"They choked me. I couldn't breathe. I thought I was going to die. I'm locked in the bathroom.\" The call lasts four minutes."),
@@ -411,7 +411,7 @@ enum StoryCases {
                             .direct("What did {DL} say?", "\"That {VL} came at {DL} with the skillet and {DL} grabbed {VL} to stop it. {DL} said, 'I had to hold {VL} off me.' I asked where {DL}'s hands were. {DL} said 'on {VL}'s shoulders, maybe the neck, I don't know.'\""),
                             .direct("Who was arrested?", "\"{DL}. Under our policy I have to identify the primary aggressor. Strangulation is the more serious injury, and {VL} was the one locked in a bathroom calling for help.\""),
                             .cross("My client had four scratches on the face and a bruised forearm?", "\"Yes. Fresh ones.\""),
-                            .cross("{V} told you on camera that {VL} tried to hit {DL} with the pan?", "\"{VL} said 'I tried to hit them with the pan after.' After.\""),
+                            .cross("{V} told you on camera that they tried to hit {DL} with the pan?", "\"{VL} said 'I tried to hit them with the pan after.' After.\""),
                             .cross("Both of them had been drinking?", "\"Both had an odor of alcohol. {V} more so. There were a dozen empty cans on the counter.\""),
                             .cross("You didn't interview the neighbor that night?", "\"No. The neighbor called in a statement two days later.\"")
                         ]),
@@ -426,7 +426,7 @@ enum StoryCases {
                             .direct("Are those injuries consistent with someone being held off by the shoulders?", "\"Not really. Hands on the shoulders don't produce petechiae. Pressure on the neck does.\""),
                             .cross("Strangulation injuries can happen in a mutual struggle, can't they?", "\"They can happen in any struggle where hands end up on the neck.\""),
                             .cross("You can't tell the court who started the fight?", "\"No. I can tell the court what happened to {VL}'s neck.\""),
-                            .cross("{V} told you {VL} had about eight beers?", "\"{VL} said 'eight, maybe ten.'\"")
+                            .cross("{V} told you they had about eight beers?", "\"{VL} said 'eight, maybe ten.'\"")
                         ]),
             WitnessSeed(name: "{V}", role: "Complaining witness, testifying under subpoena",
                         direct: ["\"I don't remember who started it.\""],
@@ -455,14 +455,14 @@ enum StoryCases {
                             .cross("You're friends with {DL}?", "\"We wave. {DL} helped me jump my car once. That's it.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} put both hands on {V}'s neck and pressed hard enough to burst blood vessels in {VL}'s eyes. That's strangulation, whatever {VL} says now."],
+        prosecutionTheory: ["{D} put both hands on {V}'s neck and pressed hard enough to burst blood vessels in their eyes. That's strangulation, whatever {VL} says now."],
         defenseTheory: ["{V} came at {DL} with a cast-iron skillet, screaming a death threat. {DL} grabbed {VL} to survive. Self-defense."],
         aggravating: ["Petechiae indicate sustained pressure on the neck"],
         mitigating: ["{DL} was injured in the same incident", "{V} does not wish the prosecution to continue", "{DL} has no prior assault convictions"],
         victimImpacts: ["{V}: \"I'm not a victim of {DL}. We were both a mess that night. I'm in AA now. I'd like {DL} to go too, not to prison.\""],
         allocutions: ["\"I should have walked out the door. I didn't. I'll carry that.\""],
         guiltyTruths: ["{DL} later told a cellmate the skillet came out only after {DL} had {VL} against the counter."],
-        innocentTruths: ["Months after trial, {V} told a counselor {VL} swung the pan first and only remembered once sober."],
+        innocentTruths: ["Months after trial, {V} told a counselor they swung the pan first and only remembered once sober."],
         moods: [.divided], doctrines: ["selfDefense", "burdenOfProof"],
         extras: ["TIME": ["1:09 a.m."]],
         story: StoryExtras(
@@ -605,7 +605,7 @@ enum StoryCases {
         key: "story.caregiverAccount", category: .whiteCollar,
         headlines: ["Caregiver Accused of Draining Client's Savings", "Gifts or Theft? $68,000 From a 91-Year-Old"],
         primaryLaw: "exploitationElder", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
-        specification: "Knowingly exploited {V}, an older adult, by using {VL}'s funds for {DL}'s own benefit through deception and undue influence.",
+        specification: "Knowingly exploited {V}, an older adult, by using their funds for {DL}'s own benefit through deception and undue influence.",
         ageRange: 29...52, occupations: ["home health aide"], hasVictim: true,
         summaries: [
             "For two years {D}, a home health aide, cared for {V}, 91, a retired textile mill supervisor who lives alone in {HOOD}. Over fourteen months, $68,000 left {VL}'s savings: checks to {DL} written in {DL}'s handwriting and signed by {VL}, a used car titled to {DL}, and cash withdrawals made with {VL}'s debit card. {VL}'s niece, who lives in Ohio, found the statements after {VL} fell and was hospitalized. {DL} says {VL} insisted on every gift and called {DL} \"the only family who shows up.\" {VL}, who has mild dementia but sometimes recalls things clearly, has told different people different things."
@@ -720,7 +720,7 @@ enum StoryCases {
         prosecutionEvidence: [
             E(.video, 3, "Store Surveillance Video", "From sixty yards: {V} walks quickly to the truck and stands at the driver's window for about six seconds, arms moving. Two muzzle flashes. {V}'s left arm is near or inside the window frame; the angle and a light pole block the view of {VL}'s hands for most of it."),
             E(.forensic, 2, "Surgical and Wound Records", "Two entry wounds, left shoulder and left upper abdomen, no exit; trajectory slightly downward. Emergency surgery to repair the spleen and colon."),
-            E(.physical, 2, "No Weapon on {V}", "Officers found no weapon on {V} or in {VL}'s car. A phone was in {VL}'s right hand when officers arrived."),
+            E(.physical, 2, "No Weapon on {V}", "Officers found no weapon on {V} or in their car. A phone was in {VL}'s right hand when officers arrived."),
             E(.statement, 2, "911 Call by {DL}", "\"I just shot somebody, they came at my truck, they were grabbing me, send an ambulance.\" Call placed 40 seconds after the shots.")
         ],
         defenseEvidence: [
@@ -821,7 +821,7 @@ enum StoryCases {
         key: "story.contractorDeposits", category: .whiteCollar,
         headlines: ["Six Families, Six Deposits, No Kitchens", "Contractor Charged After Remodels Never Start"],
         primaryLaw: "falsePretenses", lesserLaw: nil, threshold: 6, lesserThreshold: 4,
-        specification: "Obtained a $14,500 deposit from {V} by falsely representing that materials had been ordered for {VL}'s kitchen remodel.",
+        specification: "Obtained a $14,500 deposit from {V} by falsely representing that materials had been ordered for their kitchen remodel.",
         ageRange: 35...58, occupations: ["remodeling contractor"], hasVictim: true,
         summaries: [
             "Over five months, {D}, owner of {BIZ} in {HOOD}, took deposits from six homeowners for kitchen and bathroom remodels, $61,000 in all. None of the work was finished; three jobs never started. {V} paid $14,500 after {DL} told {VL} the cabinets were \"already on order and arriving in three weeks.\" No cabinets were ever ordered. {DL} says the business collapsed when a supplier went under and {DL} was robbing Peter to pay Paul to keep it alive, not stealing. The State charged only {VL}'s deposit, because of what {DL} said to get it."
@@ -1040,10 +1040,10 @@ enum StoryCases {
         key: "story.homeInvasion", category: .robbery,
         headlines: ["Couple Tied Up in {HOOD} Home Invasion", "Accomplice Points Finger at Former Friend"],
         primaryLaw: "dangerousRobbery", lesserLaw: "commonLawRobbery", threshold: 6, lesserThreshold: 4,
-        specification: "With another person, robbed {V} in {VL}'s home while armed with a handgun.",
+        specification: "With another person, robbed {V} in their home while armed with a handgun.",
         ageRange: 20...33, forcedPriorOffenses: ["Misdemeanor Larceny", "Breaking or Entering"], hasVictim: true,
         summaries: [
-            "At about {TIME} on {DATE}, two masked people forced their way into the home of {V}, 67, and {VL}'s spouse on {STREET} in {HOOD}, held them at gunpoint, zip-tied their wrists, and took a gun safe's contents, jewelry, and $3,000 in cash. Two weeks later police arrested {ALT}, who sold one of the stolen rifles. {ALT} agreed to testify in exchange for a reduced charge and named {D} as the partner who carried the handgun. {DL} says {ALT} is protecting the real accomplice."
+            "At about {TIME} on {DATE}, two masked people forced their way into the home {V}, 67, shares with a spouse on {STREET} in {HOOD}, held them at gunpoint, zip-tied their wrists, and took a gun safe's contents, jewelry, and $3,000 in cash. Two weeks later police arrested {ALT}, who sold one of the stolen rifles. {ALT} agreed to testify in exchange for a reduced charge and named {D} as the partner who carried the handgun. {DL} says {ALT} is protecting the real accomplice."
         ],
         prosecutionEvidence: [
             E(.statement, 3, "Accomplice Testimony Agreement", "{ALT} pleaded guilty to common law robbery, with the State recommending 20 months instead of the 64-plus months {ALT} faced, in exchange for truthful testimony against {DL}."),
@@ -1376,7 +1376,7 @@ enum StoryCases {
         specification: "Willfully and maliciously burned the dwelling at {STREET}, occupied at the time by {V} and family.",
         ageRange: 45...66, occupations: ["owner of six rental houses"], hasVictim: true,
         summaries: [
-            "{D} owns six rental houses in {HOOD}. For four months {DL} had been trying to evict {V}, who withheld rent over a broken furnace and filed a complaint with the city housing inspector. At about {TIME} on {DATE}, fire broke out in the rental's back room while {V} and {VL}'s two children slept. A smoke alarm woke them and all three escaped. The fire marshal found gasoline in the back room. {DL} says {DL} was home asleep, and that the tenants were running a space heater on an extension cord because of the furnace."
+            "{D} owns six rental houses in {HOOD}. For four months {DL} had been trying to evict {V}, who withheld rent over a broken furnace and filed a complaint with the city housing inspector. At about {TIME} on {DATE}, fire broke out in the rental's back room while {V} and their two children slept. A smoke alarm woke them and all three escaped. The fire marshal found gasoline in the back room. {DL} says {DL} was home asleep, and that the tenants were running a space heater on an extension cord because of the furnace."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Laboratory Analysis of Debris", "The State Crime Laboratory identified gasoline in floor debris from two separate spots in the back room, about six feet apart."),

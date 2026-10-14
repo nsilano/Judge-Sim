@@ -115,10 +115,10 @@ extension StoryCases {
         key: "story.snowbank", category: .traffic,
         headlines: ["Deputy Found Dead in Snow After Party", "Hit-and-Run or Cover-Up?"],
         primaryLaw: "murder2", lesserLaw: "invManslaughter", threshold: 3, lesserThreshold: 1,
-        specification: "Killed {V} by striking {VL} with a motor vehicle while impaired, with malice.",
+        specification: "Killed {V} by striking them with a motor vehicle while impaired, with malice.",
         ageRange: 33...46, occupations: ["physical therapist"], hasVictim: true,
         summaries: [
-            "During an ice storm on {DATE}, {D} drove {DL}'s partner, {V}, a Hollis County sheriff's deputy, to a holiday party at a fellow deputy's house on {STREET}, after the two had argued at a bar. At 6:15 a.m., {DL} and two friends found {VL} unconscious in a ditch at the edge of the yard; {VL} died at the hospital of a head injury and hypothermia. {DL}'s SUV had a broken passenger mirror. The State says {DL}, drunk and furious, clipped {VL} while making a fast U-turn and drove away. The defense says {VL} went inside, something happened there, and the deputies at that party steered the investigation toward {DL}."
+            "During an ice storm on {DATE}, {D} drove their partner, {V}, a Hollis County sheriff's deputy, to a holiday party at a fellow deputy's house on {STREET}, after the two had argued at a bar. At 6:15 a.m., {DL} and two friends found {VL} unconscious in a ditch at the edge of the yard; {VL} died at the hospital of a head injury and hypothermia. {DL}'s SUV had a broken passenger mirror. The State says {DL}, drunk and furious, clipped {VL} while making a fast U-turn and drove away. The defense says {VL} went inside, something happened there, and the deputies at that party steered the investigation toward {DL}."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "Mirror Glass", "Mirror glass and a black plastic housing piece matching {DL}'s SUV, found in the ditch eleven days later during a second search of the yard."),
@@ -168,7 +168,7 @@ extension StoryCases {
                             .cross("You never examined the body yourself?", "\"No. I reviewed the autopsy photos and report.\"")
                         ])
         ],
-        prosecutionTheory: ["{D}, drunk and angry after a fight, whipped the SUV around in the dark and knocked {V} into a ditch, then left {VL} to freeze."],
+        prosecutionTheory: ["{D}, drunk and angry after a fight, whipped the SUV around in the dark and knocked {V} into a ditch, then left them to freeze."],
         defenseTheory: ["The injuries don't fit a car, the mirror pieces showed up eleven days later, and the investigator was a friend of the homeowner who mocked {DL}. The answer is inside that house."],
         aggravating: ["{DL} left {VL} in freezing conditions"],
         mitigating: ["No prior criminal record", "{DL} searched for {VL} and attempted CPR"],
@@ -218,7 +218,7 @@ extension StoryCases {
         specification: "Killed {V}, the defendant's spouse, with a rifle, with malice, premeditation, and deliberation.",
         ageRange: 47...60, occupations: ["owner of a car dealership"], forcedPriorOffenses: ["Driving While Impaired"], hasVictim: true,
         summaries: [
-            "{D} owns the biggest car dealership in Hollis County, founded by {DL}'s grandparent. At 9:52 p.m. on {DATE}, {DL} called 911 to report finding {DL}'s spouse, {V}, shot in the horse barn on the family's farm outside {HOOD}. {DL} said they had been at the house watching a game and then drove to check on an elderly parent. That afternoon, the dealership's bank had frozen its accounts over $1.2 million in customer down payments that never reached lenders. A video {VL} took of a sick horse at 8:31 p.m. captured {DL}'s voice in the barn."
+            "{D} owns the biggest car dealership in Hollis County, founded by their grandparent. At 9:52 p.m. on {DATE}, {DL} called 911 to report finding {DL}'s spouse, {V}, shot in the horse barn on the family's farm outside {HOOD}. {DL} said they had been at the house watching a game and then drove to check on an elderly parent. That afternoon, the dealership's bank had frozen its accounts over $1.2 million in customer down payments that never reached lenders. A video {VL} took of a sick horse at 8:31 p.m. captured {DL}'s voice in the barn."
         ],
         prosecutionEvidence: [
             E(.video, 4, "Barn Video", "A 38-second video on {VL}'s phone, timestamped 8:31 p.m., of a lame horse. Two voices are heard; three family members identify the second as {DL}'s. {DL} told police they were never at the barn that night."),
@@ -266,7 +266,7 @@ extension StoryCases {
                             .cross("Thousands of rifles in this county share that caliber and rifling?", "\"Thousands.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} was caught stealing that afternoon and killed {V} before {VL} could find out, then lied about being at the barn."],
+        prosecutionTheory: ["{D} was caught stealing that afternoon and killed {V} before they could find out, then lied about being at the barn."],
         defenseTheory: ["No blood, no residue, no rifle. A fired farmhand who threatened {VL} was never seriously checked. {DL} lied out of panic, not guilt."],
         aggravating: ["The offense was committed to avoid exposure of other crimes"],
         mitigating: ["No prior violent record"],
@@ -407,7 +407,7 @@ extension StoryCases {
         specification: "Killed {V} with a rifle, with malice.",
         ageRange: 18...19, occupations: ["community college student"], hasVictim: true,
         summaries: [
-            "Two nights after Hurricane {STORM} knocked out power across {CITY}, {D}, 18, stood outside {DL}'s uncle's hardware store on {STREET} with an AR-style rifle, saying {DL} was protecting it from looters. At about {TIME} on {DATE}, {V} walked up, argued with {DL}, and grabbed for the rifle. {DL} fired three times, killing {VL}. As {DL} backed away, {VL}'s friend came at {DL} with a tire iron, and {DL} fired again, wounding the friend. The State says {DL} brought a war rifle to a dark street and provoked the fight. The defense says {VL} tried to take the gun."
+            "Two nights after Hurricane {STORM} knocked out power across {CITY}, {D}, 18, stood outside their uncle's hardware store on {STREET} with an AR-style rifle, saying {DL} was protecting it from looters. At about {TIME} on {DATE}, {V} walked up, argued with {DL}, and grabbed for the rifle. {DL} fired three times, killing {VL}. As {DL} backed away, {VL}'s friend came at {DL} with a tire iron, and {DL} fired again, wounding the friend. The State says {DL} brought a war rifle to a dark street and provoked the fight. The defense says {VL} tried to take the gun."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Store Camera on Battery Backup", "Grainy, no sound: {VL} approaches, points at {DL}, steps closer; both hands reach toward the rifle; three flashes in under a second."),
@@ -484,7 +484,7 @@ extension StoryCases {
                                   explanation: "The victim's prior arrest, unknown to {DL} at the time, isn't admissible to show {VL} was the aggressor through bad character; specific acts of violence would need a stronger foundation.",
                                   doctrineID: "characterEvidence", weight: 0))
             ],
-            prosecutionOpening: "A rifle, a challenge posted online, and a dark street. {D} got the confrontation {DL} invited.",
+            prosecutionOpening: "A rifle, a challenge posted online, and a dark street. {D} got the confrontation they invited.",
             defenseOpening: "{VL} grabbed the rifle and threatened to use it. That's when {DL} fired. On video.",
             prosecutionClosing: "Self-defense isn't available to someone who provokes the fight.",
             defenseClosing: "Words online aren't provocation. Grabbing a loaded rifle is deadly force."

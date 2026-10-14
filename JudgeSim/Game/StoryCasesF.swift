@@ -91,7 +91,7 @@ extension StoryCases {
                                   explanation: "The victim's private dishonesty in the affair has no bearing on who sent the demand; the court may protect witnesses from harassment (Rule 611).",
                                   doctrineID: "relevance", weight: 0))
             ],
-            prosecutionOpening: "A secret {D} knew, a threat at the exit interview, and {DL}'s own wallet.",
+            prosecutionOpening: "A secret {D} knew, a threat at the exit interview, and their own wallet.",
             defenseOpening: "The coworker had the secret, a bigger grudge, and the wallet's keys.",
             prosecutionClosing: "Revenge and access both point to {DL}.",
             defenseClosing: "Both point to the coworker too. That's reasonable doubt."
@@ -107,7 +107,7 @@ extension StoryCases {
         specification: "Killed {V} with a shotgun, with malice.",
         ageRange: 50...72, occupations: ["retired machinist"], hasVictim: true,
         summaries: [
-            "For two years {D} and {DL}'s neighbor {V} fought over a property line in {HOOD}: surveys, a lawsuit, a torn-down fence, a magistrate's order. At about {TIME} on {DATE}, {VL} came into {DL}'s backyard with a sledgehammer to knock down a new fence post. {DL} came out the back door with a shotgun and told {VL} to leave. {VL} walked toward the porch. {DL} fired once from the porch steps; {VL} died in the yard twelve feet away. {DL} says {VL} came at {DL} with the sledgehammer raised. The State says {VL} was turning away and the hammer was down."
+            "For two years {D} and their neighbor {V} fought over a property line in {HOOD}: surveys, a lawsuit, a torn-down fence, a magistrate's order. At about {TIME} on {DATE}, {VL} came into {DL}'s backyard with a sledgehammer to knock down a new fence post. {DL} came out the back door with a shotgun and told {VL} to leave. {VL} walked toward the porch. {DL} fired once from the porch steps; {VL} died in the yard twelve feet away. {DL} says {VL} came at {DL} with the sledgehammer raised. The State says {VL} was turning away and the hammer was down."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Autopsy", "A shotgun wound entering the left side and upper back, at an angle suggesting {VL} was turned partly away from the porch."),
@@ -153,7 +153,7 @@ extension StoryCases {
                             .cross("It's also consistent with someone turning away?", "\"It's consistent with both.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} promised it would be 'the last time,' came out armed, and shot {V} as {VL} turned away."],
+        prosecutionTheory: ["{D} promised it would be 'the last time,' came out armed, and shot {V} as they turned away."],
         defenseTheory: ["{VL} came into {DL}'s own yard with a sledgehammer after months of threats. North Carolina law presumes fear of death when someone unlawfully enters your home's curtilage with force."],
         aggravating: ["{DL} had announced an intent to harm {VL}"],
         mitigating: ["{VL} unlawfully entered {DL}'s yard with a weapon", "No prior criminal record", "{DL} immediately called 911"],
@@ -295,7 +295,7 @@ extension StoryCases {
         specification: "Drove a vehicle while impaired, having three prior DWI convictions within ten years.",
         ageRange: 35...58, occupations: ["welder"], forcedPriorOffenses: ["Driving While Impaired", "Driving While Impaired", "Driving While Impaired"], hasVictim: false,
         summaries: [
-            "At about {TIME} on {DATE}, an officer found {D} asleep in the driver's seat of {DL}'s running pickup in the parking lot of a bar on {STREET} in {HOOD}, headlights on, heater running, transmission in park. {DL} blew 0.14. {DL} has three DWI convictions in the last nine years, making this a felony if {DL} was \"driving.\" {DL} says {DL} knew {DL} was too drunk to drive, went to the truck to sleep it off in the heat, and never intended to move."
+            "At about {TIME} on {DATE}, an officer found {D} asleep in the driver's seat of their running pickup in the parking lot of a bar on {STREET} in {HOOD}, headlights on, heater running, transmission in park. {DL} blew 0.14. {DL} has three DWI convictions in the last nine years, making this a felony if {DL} was \"driving.\" {DL} says {DL} knew {DL} was too drunk to drive, went to the truck to sleep it off in the heat, and never intended to move."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Breath Test", "Intoxilyzer result of 0.14 at 2:51 a.m., about forty minutes after {DL} was found."),
