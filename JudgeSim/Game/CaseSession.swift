@@ -337,11 +337,37 @@ final class CaseSession: ObservableObject {
 
     /// Verdict choices left open after the motion to dismiss.
     func verdictOptions(_ charge: Charge) -> [Verdict] {
+        // The insanity verdict is open only when the defense gave notice of it (G.S. 15A-959).
+        let insanity: [Verdict] = insanityDefenseRaised ? [.insanity] : []
         switch rulings.halftime[charge.id] {
         case .dismiss?: return [.notGuilty]
-        case .lesserOnly?: return [.lesser, .notGuilty]
-        default: return charge.lesserLawID == nil ? [.guilty, .notGuilty] : [.guilty, .lesser, .notGuilty]
+        case .lesserOnly?: return [.lesser, .notGuilty] + insanity
+        default: return (charge.lesserLawID == nil ? [.guilty, .notGuilty] : [.guilty, .lesser, .notGuilty]) + insanity
         }
+    }
+
+    /// Whether the defense has given notice of an insanity defense.
+    var insanityDefenseRaised: Bool { courtCase.relatedDoctrines.contains("insanity") }
+
+    // MARK: Grouped judgments and the bench conference
+
+    func groupBinding(_ charge: Charge) -> Binding<Int> {
+        Binding(get: { self.rulings.groups[charge.id] ?? 1 },
+                set: { self.rulings.groups[charge.id] = $0; self.rulings.sentences = [:] })
+    }
+
+    func setGroupsConsecutive(_ value: Bool) {
+        rulings.groupsConsecutive = value
+        rulings.sentences = [:]
+    }
+
+    func toggleArrest(_ charge: Charge) {
+        if rulings.arrestedCounts.contains(charge.id) {
+            rulings.arrestedCounts.remove(charge.id)
+        } else {
+            rulings.arrestedCounts.insert(charge.id)
+        }
+        rulings.sentences = [:]
     }
 
     var verdictsComplete: Bool {
@@ -353,7 +379,7 @@ final class CaseSession: ObservableObject {
     }
 
     var anyConviction: Bool {
-        courtCase.charges.contains { (rulings.verdicts[$0.id] ?? .notGuilty) != .notGuilty }
+        courtCase.charges.contains { rulings.verdicts[$0.id]?.isConviction == true }
     }
 
     var needsHabitualDecision: Bool {

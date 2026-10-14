@@ -497,7 +497,7 @@ enum CounselDialogue {
         guard let term = c.defendant.probation else { return [] }
         let s = style(c, side: .prosecution)
         let d = style(c, side: .defense)
-        let convicted = c.charges.contains { (r.verdicts[$0.id] ?? .notGuilty) != .notGuilty }
+        let convicted = c.charges.contains { r.verdicts[$0.id]?.isConviction == true }
         return [
             CounselQuestion(id: "pv.state.position", side: .prosecution,
                             question: "What is the State's position on the violation?",
