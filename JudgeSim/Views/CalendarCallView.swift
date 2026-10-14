@@ -37,7 +37,7 @@ struct CalendarCallView: View {
                 }
                 .padding()
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.background)
             .navigationTitle("Calendar Call")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

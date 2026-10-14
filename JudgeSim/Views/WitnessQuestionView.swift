@@ -65,7 +65,7 @@ struct WitnessQuestionSheet: View {
                         TextField("Ask \(witness.name) a question…", text: $draft, axis: .vertical)
                             .lineLimit(1...4)
                             .padding(10)
-                            .background(RoundedRectangle(cornerRadius: 18).fill(Color(.secondarySystemGroupedBackground)))
+                            .background(RoundedRectangle(cornerRadius: 18).fill(Theme.surface))
                             .onSubmit { send(draft) }
                         Button { send(draft) } label: {
                             Image(systemName: "arrow.up.circle.fill").font(.system(size: 32))
@@ -81,7 +81,7 @@ struct WitnessQuestionSheet: View {
                 .padding(.vertical, 8)
                 .background(.bar)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.background)
             .navigationTitle("Questions from the Bench")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -105,7 +105,7 @@ struct CounselSheet<Provider: CounselProvider>: View {
                     .lineLimit(1...4)
                     .focused($inputFocused)
                     .padding(10)
-                    .background(RoundedRectangle(cornerRadius: 18).fill(Color(.secondarySystemGroupedBackground)))
+                    .background(RoundedRectangle(cornerRadius: 18).fill(Theme.surface))
                     .submitLabel(.send)
                     .onSubmit { send(draft) }
                 Button {
@@ -221,7 +221,7 @@ struct CounselSheet<Provider: CounselProvider>: View {
                                             Image(systemName: "arrow.up.circle.fill").foregroundStyle(Theme.gold)
                                         }
                                         .padding(12)
-                                        .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemFill)))
+                                        .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -240,7 +240,7 @@ struct CounselSheet<Provider: CounselProvider>: View {
 
                 inputBar
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.background)
             .navigationTitle("Bench Conference")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -282,7 +282,7 @@ struct TranscriptBubble: View {
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Color(.secondarySystemGroupedBackground)))
+            .background(RoundedRectangle(cornerRadius: 14).fill(Theme.surface))
             .padding(.trailing, 30)
         }
     }

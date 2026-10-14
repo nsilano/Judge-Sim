@@ -27,7 +27,7 @@ struct HearingView: View {
                 }
                 .padding()
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.background)
             .navigationTitle("Probation Violation")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

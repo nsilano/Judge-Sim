@@ -48,6 +48,7 @@ struct LawLibraryView: View {
                 }
             }
             .listStyle(.insetGrouped)
+            .benchBackground()
             .navigationTitle("Law Library")
             .searchable(text: $query, prompt: "Search statutes, rules, defenses")
             .overlay {
@@ -154,7 +155,7 @@ struct LawDetailView: View {
             }
             .padding()
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Theme.background)
         .navigationTitle(law.title)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -252,7 +253,7 @@ struct PunishmentChartView: View {
             }
             .padding()
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Theme.background)
         .navigationTitle("Punishment Charts")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -267,7 +268,7 @@ struct PunishmentChartView: View {
                         Text(cls.rawValue)
                             .font(.headline)
                             .frame(minWidth: 44, minHeight: 36)
-                            .background(RoundedRectangle(cornerRadius: 8).fill(selected == cls ? Theme.gold : Color(.tertiarySystemFill)))
+                            .background(RoundedRectangle(cornerRadius: 8).fill(selected == cls ? Theme.gold : Theme.raised))
                             .foregroundStyle(selected == cls ? Color.black : Color.primary)
                     }
                     .buttonStyle(.plain)

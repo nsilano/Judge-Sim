@@ -123,6 +123,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            .benchBackground()
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -191,17 +191,21 @@ struct ObjectionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(objection.question).font(.callout.weight(.semibold))
+            Text("Objection · \(objection.grounds)".uppercased())
+                .font(.caption.weight(.bold))
+                .tracking(1.2)
+                .foregroundStyle(Theme.objectionLabel)
+            Text(objection.question).font(.callout).foregroundStyle(Theme.quoteText)
             Text(objection.answer)
-                .font(.system(.callout, design: .serif))
+                .font(.system(.body, design: .serif))
                 .strikethrough(selection == true)
-                .foregroundStyle(selection == true ? Color.secondary : Color.primary)
+                .foregroundStyle(selection == true ? Theme.secondaryText : Theme.text)
             HStack(spacing: 6) {
                 Image(systemName: "hand.raised.fill")
                 Text("\(objection.raisedBy == .prosecution ? "Prosecutor" : "Defense"): \"Objection, Your Honor! \(objection.grounds).\"")
             }
-            .font(.callout.weight(.bold))
-            .foregroundStyle(Theme.color(for: objection.raisedBy))
+            .font(.callout.weight(.semibold))
+            .foregroundStyle(Theme.text)
             LawLink(lawID: objection.doctrineID)
             RulingPicker(first: "Sustain", second: "Overrule",
                          firstDetail: "Answer is struck", secondDetail: "Answer stays in",
@@ -212,9 +216,9 @@ struct ObjectionView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color.orange.opacity(0.08)))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.orange.opacity(0.4)))
+        .padding(14)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.objectionFill))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.objectionBorder, lineWidth: 1))
     }
 }
 
@@ -300,7 +304,7 @@ struct HalftimeMotionCard: View {
                                     .font(.caption.weight(.bold))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 10)
-                                    .background(RoundedRectangle(cornerRadius: 10).fill(selected ? Theme.gold.opacity(0.3) : Color(.tertiarySystemFill)))
+                                    .background(RoundedRectangle(cornerRadius: 10).fill(selected ? Theme.gold.opacity(0.3) : Theme.raised))
                             }
                             .buttonStyle(.plain)
                         }
@@ -387,16 +391,21 @@ struct ExaminationTranscript: View {
             DisclosureGroup(isExpanded: $expanded) {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 3) {
                             if !line.question.isEmpty {
-                                Text("Q (\(line.examiner == .prosecution ? "State" : "Defense")): \(line.question)")
-                                    .font(.caption.weight(.semibold))
+                                Text(line.examiner == .prosecution ? "State" : "Defense")
+                                    .font(.caption.weight(.bold))
                                     .foregroundStyle(Theme.color(for: line.examiner))
+                                Text(line.question)
+                                    .font(.subheadline)
+                                    .foregroundStyle(Theme.quoteText)
                             }
-                            Text(line.question.isEmpty ? line.answer : "A: \(line.answer)")
-                                .font(.system(.callout, design: .serif))
+                            Text(line.question.isEmpty ? line.answer : "\u{201C}\(line.answer)\u{201D}")
+                                .font(.system(.body, design: .serif))
+                                .foregroundStyle(Theme.text)
                                 .italic(line.question.isEmpty)
                         }
+                        .padding(.vertical, 2)
                     }
                 }
                 .padding(.top, 6)

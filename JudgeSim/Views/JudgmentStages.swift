@@ -156,7 +156,7 @@ struct VerdictCard: View {
                 Spacer()
             }
             .padding(10)
-            .background(RoundedRectangle(cornerRadius: 10).fill(isSelected ? Theme.gold.opacity(0.15) : Color(.tertiarySystemFill)))
+            .background(RoundedRectangle(cornerRadius: 10).fill(isSelected ? Theme.gold.opacity(0.15) : Theme.raised))
         }
         .buttonStyle(.plain)
     }
@@ -486,7 +486,7 @@ struct DollarField: View {
                 }
             }
             .padding(10)
-            .background(RoundedRectangle(cornerRadius: 10).fill(Color(.tertiarySystemFill)))
+            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.raised))
         }
     }
 }
@@ -600,7 +600,7 @@ struct CustomConditionsCard: View {
                 TextField("Type an order or condition", text: $draft, axis: .vertical)
                     .lineLimit(1...3)
                     .padding(10)
-                    .background(RoundedRectangle(cornerRadius: 10).fill(Color(.tertiarySystemFill)))
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Theme.raised))
                 Button {
                     session.addCustomCondition(draft)
                     draft = ""
@@ -749,7 +749,7 @@ struct ChoiceRow: View {
                 Spacer()
             }
             .padding(10)
-            .background(RoundedRectangle(cornerRadius: 10).fill(selected ? Theme.gold.opacity(0.15) : Color(.tertiarySystemFill)))
+            .background(RoundedRectangle(cornerRadius: 10).fill(selected ? Theme.gold.opacity(0.15) : Theme.raised))
             .opacity(enabled ? 1 : 0.4)
         }
         .buttonStyle(.plain)

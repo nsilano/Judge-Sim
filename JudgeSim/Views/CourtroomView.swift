@@ -21,16 +21,29 @@ struct CourtroomView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: 16) {
-                        StageTracker(stages: session.visibleStages, current: session.stage) { tapped in
-                            reviewSection = section(for: tapped)
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Text("Hollis County Superior Court".uppercased())
+                                    .font(.caption)
+                                    .tracking(1.6)
+                                    .foregroundStyle(Theme.gold)
+                                Spacer()
+                                Text(session.courtCase.docket)
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                            }
+                            Text("State v. \(session.courtCase.defendant.lastName)")
+                                .font(.system(.title, design: .serif).weight(.semibold))
+                                .foregroundStyle(Theme.text)
+                            StageTracker(stages: session.visibleStages, current: session.stage) { tapped in
+                                reviewSection = section(for: tapped)
+                            }
                         }
+                        .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.surface))
+                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.border, lineWidth: 1))
                         .id("top")
-
-                        if session.stage != .judgment {
-                            CourtActionBar(counselCount: session.unaskedCount, next: session.nextStep,
-                                           onCounsel: { showCounsel = true },
-                                           onReview: { reviewSection = session.stage == .briefing ? .file : .evidence })
-                        }
 
                         switch session.stage {
                         case .briefing:
@@ -63,7 +76,18 @@ struct CourtroomView: View {
                     withAnimation { proxy.scrollTo("top", anchor: .top) }
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Theme.background)
+            .safeAreaInset(edge: .bottom) {
+                if session.stage != .judgment {
+                    CourtActionBar(counselCount: session.unaskedCount, next: session.nextStep,
+                                   onCounsel: { showCounsel = true },
+                                   onReview: { reviewSection = session.stage == .briefing ? .file : .evidence })
+                        .padding(.horizontal, 16)
+                        .padding(.top, 10)
+                        .padding(.bottom, 6)
+                        .background(Theme.surface.overlay(alignment: .top) { Rectangle().fill(Theme.border).frame(height: 1) })
+                }
+            }
             .navigationTitle(session.stage.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -145,28 +169,33 @@ struct StageTracker: View {
     var onReview: ((CaseSession.Stage) -> Void)? = nil
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(stages) { stage in
-                let reached = stage.rawValue <= current.rawValue
-                VStack(spacing: 4) {
-                    Image(systemName: stage.rawValue < current.rawValue ? "checkmark" : stage.icon)
-                        .font(.system(size: 13, weight: .semibold))
-                        .frame(width: 30, height: 30)
-                        .background(Circle().fill(reached ? Theme.gold : Color(.tertiarySystemFill)))
-                        .foregroundStyle(reached ? Color.black : Color.secondary)
-                    Text(stage.shortTitle)
-                        .font(.system(size: 10, weight: stage == current ? .bold : .regular))
-                        .foregroundStyle(stage == current ? Color.primary : Color.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                ForEach(stages) { stage in
+                    let reached = stage.rawValue <= current.rawValue
+                    VStack(spacing: 5) {
+                        Capsule()
+                            .fill(reached ? Theme.gold : Theme.border)
+                            .frame(height: 4)
+                        Text(stage.shortTitle)
+                            .font(.system(size: 10, weight: stage == current ? .bold : .regular))
+                            .foregroundStyle(stage == current ? Theme.lightGold : (reached ? Theme.gold : Theme.secondaryText))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if stage.rawValue < current.rawValue { onReview?(stage) }
+                    }
+                    .accessibilityLabel(stage.title)
+                    .accessibilityHint(stage.rawValue < current.rawValue ? "Review this part of the case" : "")
                 }
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if stage.rawValue < current.rawValue { onReview?(stage) }
-                }
-                .accessibilityLabel(stage.title)
-                .accessibilityHint(stage.rawValue < current.rawValue ? "Review this part of the case" : "")
+            }
+            if let index = stages.firstIndex(of: current) {
+                Text("Stage \(index + 1) of \(stages.count) · \(current.title)")
+                    .font(.footnote)
+                    .foregroundStyle(Theme.secondaryText)
             }
         }
     }
@@ -309,7 +338,7 @@ struct BriefingStage: View {
                                     .font(.subheadline.weight(.bold))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
-                                    .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemFill)))
+                                    .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))
                             }
                             .buttonStyle(.plain)
                         }
@@ -384,7 +413,7 @@ struct ContinuanceMotionCard: View {
                             .font(.subheadline.weight(.bold))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
-                            .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemFill)))
+                            .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))
                     }
                     .buttonStyle(.plain)
                 }
@@ -653,7 +682,7 @@ struct PleaColloquySheet: View {
                                 .font(.subheadline.weight(.bold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
-                                .background(RoundedRectangle(cornerRadius: 12).fill(Color(.tertiarySystemFill)))
+                                .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))
                         }
                         .buttonStyle(.plain)
                         Button("Skip to the end") { withAnimation { asked = exchanges.count } }
@@ -682,6 +711,7 @@ struct PleaColloquySheet: View {
                 }
                 .padding()
             }
+            .background(Theme.background)
             .navigationTitle("Plea Colloquy")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -777,6 +807,7 @@ struct ContinuanceSheet: View {
                     .labelsHidden()
                 }
             }
+            .benchBackground()
             .navigationTitle("Continuance")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
