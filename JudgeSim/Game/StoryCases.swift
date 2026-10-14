@@ -264,7 +264,7 @@ enum StoryCases {
         headlines: ["Intruder in the Hallway on {STREET}", "Night Break-In Ends in Pawn Shop Arrest"],
         primaryLaw: "burglary1", lesserLaw: "burglary2", threshold: 7, lesserThreshold: 5,
         specification: "Broke and entered the occupied dwelling of {V} at night with intent to commit larceny.",
-        ageRange: 20...36, hasVictim: true,
+        ageRange: 20...36, forcedPriorOffenses: ["Misdemeanor Larceny", "Possession of Stolen Goods"], hasVictim: true,
         summaries: [
             "At about {TIME} on {DATE}, {V} woke to a noise in a duplex on {STREET} in {HOOD} and saw a stranger in the hallway, lit only by a nightlight. The intruder ran out the back door, which had been pried open, taking a laptop, a wallet, and a bottle of prescription pain pills. Four days later {D} sold the laptop to a pawn shop across town. {DL} says the laptop came from a man at a gas station who sold it for $80, and that {DL} was home asleep that night."
         ],
@@ -361,6 +361,7 @@ enum StoryCases {
                 .direct("Were you in that duplex?", "\"No. I've never been on that street.\""),
                 .cross("You told the pawn clerk the laptop was your cousin's.", "\"I did. That was a lie. I didn't want to explain the gas station.\""),
                 .cross("So you lie when it helps you.", "\"I lied to a pawn clerk about where a laptop came from. I'm not lying about breaking into somebody's home.\""),
+                .cross("You've been convicted of possession of stolen goods before.", "\"Six years ago. I was nineteen. It's exactly why I should have known better than to buy that laptop.\""),
                 .cross("You can't name the man, describe his plate, or show any video.", "\"No. I asked my lawyer to get the video. It was gone.\"")
             ],
             objections: [
@@ -384,7 +385,7 @@ enum StoryCases {
         headlines: ["Domestic Call on {STREET} Ends in Strangulation Charge", "Two Stories From One Kitchen"],
         primaryLaw: "strangulation", lesserLaw: "simpleAssault", threshold: 5, lesserThreshold: 3,
         specification: "Assaulted {V} and inflicted physical injury by strangulation.",
-        ageRange: 26...45, hasVictim: true,
+        ageRange: 26...45, forcedPriorOffenses: ["Driving While Impaired"], hasVictim: true,
         summaries: [
             "At about {TIME} on {DATE}, {V} called 911 from a bathroom in the house on {STREET} that {VL} shared with {D}, saying {DL} had choked {VL} in the kitchen. Deputies found red marks on {VL}'s neck and a broken skillet on the floor; {DL} had fresh scratches on the face and forearm. {DL} says {VL} came at {DL} with the skillet after a night of drinking and {DL} grabbed {VL} to stop it. By trial, {V} says {VL} had been drinking heavily and can't remember who started it."
         ],
@@ -1039,7 +1040,7 @@ enum StoryCases {
         headlines: ["Couple Tied Up in {HOOD} Home Invasion", "Accomplice Points Finger at Former Friend"],
         primaryLaw: "dangerousRobbery", lesserLaw: "commonLawRobbery", threshold: 6, lesserThreshold: 4,
         specification: "With another person, robbed {V} in {VL}'s home while armed with a handgun.",
-        ageRange: 20...33, hasVictim: true,
+        ageRange: 20...33, forcedPriorOffenses: ["Misdemeanor Larceny", "Breaking or Entering"], hasVictim: true,
         summaries: [
             "At about {TIME} on {DATE}, two masked people forced their way into the home of {V}, 67, and {VL}'s spouse on {STREET} in {HOOD}, held them at gunpoint, zip-tied their wrists, and took a gun safe's contents, jewelry, and $3,000 in cash. Two weeks later police arrested {ALT}, who sold one of the stolen rifles. {ALT} agreed to testify in exchange for a reduced charge and named {D} as the partner who carried the handgun. {DL} says {ALT} is protecting the real accomplice."
         ],
@@ -1132,6 +1133,7 @@ enum StoryCases {
                 .direct("What about the zip ties in your car?", "\"I work landscaping on weekends. We use them on every job, for tarps and plants. Half the trucks at the yard have that same bag.\""),
                 .cross("{ALT} told you about the gun safe weeks before.", "\"{ALT} told a lot of people about a lot of things. I didn't go.\""),
                 .cross("Your phone, busy every other night, went silent for fifty minutes at 2 a.m.", "\"I was asleep. It's allowed.\""),
+                .cross("You have a felony breaking-and-entering conviction.", "\"From when I was twenty. Empty storage unit. I did my probation and I haven't been in trouble since.\""),
                 .cross("You're six feet, slim, with a deep voice.", "\"So is {COUSIN}. Ask {ALT} who that is.\"")
             ],
             objections: [
@@ -1155,12 +1157,12 @@ enum StoryCases {
         headlines: ["Ex-Partner Cut During Visit Under Protective Order", "A Box Cutter and Two Stories"],
         primaryLaw: "awdwisi", lesserLaw: "awdw", threshold: 4, lesserThreshold: 2,
         specification: "Assaulted {V} with a box cutter, a deadly weapon, inflicting serious injury, while a domestic violence protective order was in effect.",
-        ageRange: 25...44, hasVictim: true,
+        ageRange: 25...44, forcedPriorOffenses: ["Simple Assault"], hasVictim: true,
         summaries: [
             "{V} held a domestic violence protective order against {D}, the other parent of their eight-year-old, that barred contact except for exchanges arranged through a relative. On {DATE}, {DL} came to {VL}'s apartment on {STREET} unannounced at about {TIME} to pick up the child's medicine and school clothes. Minutes later {VL} called 911 with a deep cut across the forearm that took nineteen stitches and nerve repair. {VL} says {DL} pulled a box cutter. {DL} says {VL} grabbed the box cutter off the counter and {DL} was cut too trying to take it away."
         ],
         prosecutionEvidence: [
-            E(.document, 3, "Protective Order", "A one-year domestic violence protective order entered seven months earlier after {VL} testified {DL} had pushed {VL} into a wall. It barred {DL} from {VL}'s residence."),
+            E(.document, 3, "Protective Order", "A one-year domestic violence protective order entered seven months earlier after {VL} testified {DL} had pushed {VL} into a wall; {DL} later pleaded guilty to simple assault for that incident. It barred {DL} from {VL}'s residence."),
             E(.forensic, 3, "Hand Surgeon's Records", "A 9-centimeter laceration across the left forearm with a partial tendon cut and nerve damage; surgical repair; permanent numbness in two fingers."),
             E(.statement, 2, "911 Call", "{V}: \"{DL} cut me, {DL}'s got a box cutter, my kid's here, please hurry.\""),
             E(.physical, 1, "Box Cutter", "A yellow box cutter found on the kitchen floor. {DL}'s and {VL}'s fingerprints are both on it.", .search)

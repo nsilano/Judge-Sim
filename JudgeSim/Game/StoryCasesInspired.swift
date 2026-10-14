@@ -215,7 +215,7 @@ extension StoryCases {
         headlines: ["Car Dealer Charged in Spouse's Shooting", "The Video in the Horse Barn"],
         primaryLaw: "murder1", lesserLaw: "murder2", threshold: 5, lesserThreshold: 3,
         specification: "Killed {V}, the defendant's spouse, with a rifle, with malice, premeditation, and deliberation.",
-        ageRange: 47...60, occupations: ["owner of a car dealership"], hasVictim: true,
+        ageRange: 47...60, occupations: ["owner of a car dealership"], forcedPriorOffenses: ["Driving While Impaired"], hasVictim: true,
         summaries: [
             "{D} owns the biggest car dealership in Hollis County, founded by {DL}'s grandparent. At 9:52 p.m. on {DATE}, {DL} called 911 to report finding {DL}'s spouse, {V}, shot in the horse barn on the family's farm outside {HOOD}. {DL} said {DL} had been at the house watching a game and then drove to check on an elderly parent. That afternoon, the dealership's bank had frozen its accounts over $1.2 million in customer down payments that never reached lenders. A video {VL} took of a sick horse at 8:31 p.m. captured {DL}'s voice in the barn."
         ],
@@ -310,7 +310,7 @@ extension StoryCases {
         headlines: ["Parent Charged After Child Missing 19 Days", "Cadaver Dog Alerts in Garage"],
         primaryLaw: "murder1", lesserLaw: "felonyChildAbuse", threshold: 4, lesserThreshold: 2,
         specification: "Killed {KID}, age three, the defendant's child, with malice, premeditation, and deliberation.",
-        ageRange: 20...28, occupations: ["cell phone store sales associate"], hasVictim: true,
+        ageRange: 20...28, occupations: ["cell phone store sales associate"], forcedPriorOffenses: ["Misdemeanor Larceny"], hasVictim: true,
         summaries: [
             "{KID}, three, was last seen at day care on {DATE}. For nineteen days {D} told family that {KID} was at the beach with a coworker's relative. When {DL}'s parent pressed and called the Sheriff's Office, {DL} admitted {KID} was missing but said {KID} had been taken from a park. Five weeks later, {KID}'s remains were found in a storage tote in a creek bed four miles from the apartment. The medical examiner could not determine a cause of death. The State says {DL} drugged and suffocated {KID}. The defense says {KID} died of an accidental overdose of allergy medicine and {DL}, terrified, hid it."
         ],
@@ -363,7 +363,7 @@ extension StoryCases {
         prosecutionTheory: ["{D} drugged and smothered {KID}, hid the body in a tote, and partied for nineteen days."],
         defenseTheory: ["{KID} died of an accidental overdose, and {DL}, a lifelong liar when scared, hid it. Lies and hiding are crimes, but not murder."],
         aggravating: ["The victim was very young"],
-        mitigating: ["No prior criminal record"],
+        mitigating: ["No prior violent record"],
         allocutions: ["\"I loved my child. I made a mistake with the medicine, and then I made the worst choices of my life to hide it.\""],
         guiltyTruths: ["A message later recovered from {DL}'s deleted folder read: \"I just want my life back.\""],
         innocentTruths: ["A coroner's re-examination years later found trace antihistamine in hair from the remains."],
