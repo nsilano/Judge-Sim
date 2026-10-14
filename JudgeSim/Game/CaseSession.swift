@@ -125,7 +125,10 @@ final class CaseSession: ObservableObject {
         }
     }
 
-    let courtCase: CourtCase
+    /// The case as charged; a count's lesser offense changes when the court picks a different one.
+    @Published private(set) var courtCase: CourtCase
+    /// Each count's lesser-included offense as the case was charged.
+    let originalLesser: [UUID: String]
     let judgeName: String
     let county: County
     let halftimeMotion: HalftimeMotion
@@ -144,11 +147,15 @@ final class CaseSession: ObservableObject {
 
     init(courtCase: CourtCase, judgeName: String, county: County, resume: CaseSnapshot? = nil) {
         self.courtCase = courtCase
+        self.originalLesser = Dictionary(uniqueKeysWithValues: courtCase.charges.compactMap { c in c.lesserLawID.map { (c.id, $0) } })
         self.judgeName = judgeName
         self.county = county
         self.halftimeMotion = HalftimeMotion.make(for: courtCase)
         if let resume {
             rulings = resume.rulings
+            for (id, lawID) in resume.rulings.lesserChoices ?? [:] {
+                if let charge = self.courtCase.charges.first(where: { $0.id == id }) { chooseLesser(charge, lawID: lawID) }
+            }
             stage = Stage(rawValue: resume.stage) ?? .briefing
             sentencingPrepared = stage.rawValue >= Stage.sentencing.rawValue
             revealedAggravating = resume.revealedAggravating
@@ -191,7 +198,14 @@ final class CaseSession: ObservableObject {
 
     func verdictBinding(_ charge: Charge) -> Binding<Verdict?> {
         Binding(get: { self.rulings.verdicts[charge.id] },
-                set: { self.rulings.verdicts[charge.id] = $0 })
+                set: { verdict in
+                    // A count charged without a lesser offense gets the first one on its ladder.
+                    if verdict == .lesser, let current = self.courtCase.charges.first(where: { $0.id == charge.id }),
+                       current.lesserLawID == nil, let first = self.lesserOptions(current).first {
+                        self.chooseLesser(current, lawID: first.id)
+                    }
+                    self.rulings.verdicts[charge.id] = verdict
+                })
     }
 
     func factorBinding(_ factor: String, aggravating: Bool) -> Binding<Bool> {
@@ -342,8 +356,25 @@ final class CaseSession: ObservableObject {
         switch rulings.halftime[charge.id] {
         case .dismiss?: return [.notGuilty]
         case .lesserOnly?: return [.lesser, .notGuilty] + insanity
-        default: return (charge.lesserLawID == nil ? [.guilty, .notGuilty] : [.guilty, .lesser, .notGuilty]) + insanity
+        default: return (lesserOptions(charge).isEmpty ? [.guilty, .notGuilty] : [.guilty, .lesser, .notGuilty]) + insanity
         }
+    }
+
+    /// Lesser-included offenses the court may find on this count.
+    func lesserOptions(_ charge: Charge) -> [Law] {
+        LesserIncluded.options(for: charge, original: originalLesser[charge.id])
+    }
+
+    func chooseLesser(_ charge: Charge, lawID: String) {
+        guard let index = courtCase.charges.firstIndex(where: { $0.id == charge.id }) else { return }
+        courtCase.charges[index].lesserLawID = lawID
+        // Without a lesser offense in the original charging, proof of the lesser counts as somewhat easier.
+        if originalLesser[charge.id] == nil {
+            courtCase.charges[index].lesserThreshold = max(1, courtCase.charges[index].threshold - 2)
+        }
+        var choices = rulings.lesserChoices ?? [:]
+        choices[charge.id] = lawID
+        rulings.lesserChoices = choices
     }
 
     /// Whether the defense has given notice of an insanity defense.
