@@ -212,7 +212,7 @@ extension StoryCases {
         specification: "By culpable negligence, through repeated messages encouraging {VL}'s suicide, unintentionally caused the death of {V}.",
         ageRange: 18...19, occupations: ["college freshman"], hasVictim: true,
         summaries: [
-            "{V}, 18, died by suicide in {HOOD} on {DATE}. Over the previous six weeks, {D}, {VL}'s partner of two years, sent hundreds of messages urging {VL} to stop delaying and follow through, and was on a video call during the final hour without calling for help. Earlier in the relationship, {DL} had repeatedly urged {VL} to get treatment. The State says {DL}'s pressure was the cause, and that the failure to call for help was culpable negligence. The defense says {VL} had struggled for years, that words alone aren't a cause of death, and that {DL} was a teenager in crisis too."
+            "{V}, 18, died by suicide in {HOOD} on {DATE}. Over the previous six weeks, {D}, {VL}'s partner of two years, sent hundreds of messages urging {VL} to stop delaying and follow through, and was on a video call during the final hour without calling for help. Earlier in the relationship, {DL} had repeatedly urged {VL} to get treatment. The State says {DL}'s pressure was the cause, and that the failure to call for help was culpable negligence. The defense says they had struggled for years, that words alone aren't a cause of death, and that {DL} was a teenager in crisis too."
         ],
         prosecutionEvidence: [
             E(.digital, 4, "Messages in the Final Weeks", "Hundreds of messages from {DL} pressing {VL} to stop postponing, including on the final day: \"You said tonight. Don't back out again.\"", .search),
@@ -302,7 +302,7 @@ extension StoryCases {
         key: "story.restraintDeath", category: .violent,
         headlines: ["Jail Officer Charged in Inmate's Death", "Six Minutes on the Floor of Cell Block C"],
         primaryLaw: "murder2", lesserLaw: "invManslaughter", threshold: 6, lesserThreshold: 4,
-        specification: "Killed {V}, a detainee, by kneeling on {VL}'s back and neck during a cell extraction, with malice.",
+        specification: "Killed {V}, a detainee, by kneeling on their back and neck during a cell extraction, with malice.",
         ageRange: 30...48, occupations: ["detention officer sergeant"], hasVictim: true,
         summaries: [
             "On {DATE}, {V}, 34, held in the Hollis County Detention Center on a probation violation, refused to leave a cell for a medical check during a mental health crisis. {D}, the sergeant leading a five-officer extraction team, pinned {VL} face-down and knelt across {VL}'s upper back and neck for about six minutes after {VL} was handcuffed. On jail video, {VL} says \"I can't breathe\" eleven times. {VL} stopped responding and died at the hospital. The defense says {VL} was violently resisting, had cocaine in {VL}'s system, and died of an enlarged heart under stress."
@@ -397,7 +397,7 @@ extension StoryCases {
         specification: "Willfully made a false report to the {CITY} Police Department that {DL} had been assaulted.",
         ageRange: 32...45, occupations: ["city council candidate and small business owner"], hasVictim: false,
         summaries: [
-            "Eleven days before a close {CITY} council election, {D} told police two masked people jumped {DL} outside {DL}'s campaign office at about {TIME} on {DATE}, spray-painting a slur on the window and punching {DL}. The story went national. Police spent three weeks on it. Then two campaign volunteers said {DL} had paid them $1,800 to stage it, walked them through it the day before, and told them where the cameras were. {DL} says the attack was real and the volunteers turned on {DL} to avoid charges."
+            "Eleven days before a close {CITY} council election, {D} told police two masked people jumped them outside {DL}'s campaign office at about {TIME} on {DATE}, spray-painting a slur on the window and punching {DL}. The story went national. Police spent three weeks on it. Then two campaign volunteers said {DL} had paid them $1,800 to stage it, walked them through it the day before, and told them where the cameras were. {DL} says the attack was real and the volunteers turned on {DL} to avoid charges."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Payment", "A $1,800 payment from {DL}'s personal account to one volunteer, memo \"door-knocking stipend,\" sent the day before. Other volunteers were paid $100 a week."),

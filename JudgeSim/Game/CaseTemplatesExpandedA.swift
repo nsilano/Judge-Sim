@@ -337,7 +337,7 @@ extension CaseTemplates {
                             cross: ["\"I was inside at the window. I saw it through the curtain.\""],
                             weight: 2, lay: true)
             ],
-            prosecutionTheory: ["Twenty years of threats, then {D} finally did what {DL} had promised."],
+            prosecutionTheory: ["Twenty years of threats, then {D} finally did what they had promised."],
             defenseTheory: ["A 71-year-old with a cane saw a neighbor charging with a raised shovel. North Carolina doesn't require you to wait to be hit."],
             aggravating: ["Prior threats against the victim"],
             mitigating: ["The defendant's age and physical infirmity", "The victim was the aggressor in prior incidents", "No prior criminal record"],
@@ -614,7 +614,7 @@ extension CaseTemplates {
             key: "caregiverExploitation", category: .whiteCollar,
             headlines: ["The Home Health Aide", "Power of Attorney"],
             primaryLaw: "exploitationElder", lesserLaw: nil, threshold: 7, lesserThreshold: 7,
-            specification: "As caregiver to {V}, 88, knowingly used {VL}'s funds by deception, totaling {AMT}.",
+            specification: "As caregiver to {V}, 88, knowingly used their funds by deception, totaling {AMT}.",
             ageRange: 30...60, occupations: ["home health aide", "caregiver"], hasVictim: true,
             summaries: [
                 "{D} cared for {V}, 88, five days a week for three years. When {VL}'s son reviewed the accounts after a fall, {AMT} had gone to {DL} through checks, a car purchase, and a power of attorney {VL} doesn't remember signing.",
@@ -734,7 +734,7 @@ extension CaseTemplates {
                             cross: ["\"I never saw who paid {DL}.\""],
                             weight: 1, lay: true)
             ],
-            prosecutionTheory: ["{D} cashed the checks with {DL}'s own face and license. There's no mystery here."],
+            prosecutionTheory: ["{D} cashed the checks with their own face and license. There's no mystery here."],
             defenseTheory: ["Who uses their own ID to commit forgery? {DL} was paid with bad checks and got used."],
             aggravating: ["The victim was very old"],
             mitigating: ["Restitution has been paid in full"],

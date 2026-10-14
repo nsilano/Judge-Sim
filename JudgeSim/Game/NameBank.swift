@@ -107,9 +107,16 @@ enum NameBank {
         "Grand Theft (felony), 2 years probation"
     ]
 
+    /// Surnames that also name places in the county, so no one shares a name with a street, town, or county.
+    static let placeWords: Set<String> = {
+        let places = streets + ["Port Hollis", "Wexley", "Cane Creek", "Dunmore Mills", "Bayard", "Hollis", "Robeson", "Riverbend", "Harbor Point", "Cedar Hill"]
+        return Set(places.flatMap { $0.components(separatedBy: " ") })
+    }()
+    static let personSurnames = lastNames.filter { !placeWords.contains($0) }
+
     static func person(using rng: inout SeededRNG, excluding used: inout Set<String>) -> String {
         for _ in 0..<40 {
-            let name = "\(rng.pick(firstNames)) \(rng.pick(lastNames))"
+            let name = "\(rng.pick(firstNames)) \(rng.pick(personSurnames))"
             let last = name.components(separatedBy: " ").last ?? name
             if !used.contains(name) && !used.contains(last) {
                 used.insert(name)
@@ -117,6 +124,6 @@ enum NameBank {
                 return name
             }
         }
-        return "\(rng.pick(firstNames)) \(rng.pick(lastNames))"
+        return "\(rng.pick(firstNames)) \(rng.pick(personSurnames))"
     }
 }

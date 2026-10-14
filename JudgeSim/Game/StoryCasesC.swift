@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "Robbed {V}, a pharmacist at {PHARM}, of oxycodone while armed with what appeared to be a handgun.",
         ageRange: 26...41, occupations: ["roofer"], forcedPriorOffenses: ["Possession of Schedule II (cocaine)"], hasVictim: true,
         summaries: [
-            "At about {TIME} on {DATE}, a person in a hooded sweatshirt and surgical mask walked up to the pharmacy counter at {PHARM} in {HOOD}, lifted a black pistol from a jacket pocket, and told {V}, the pharmacist on duty, to empty the oxycodone drawer. {V} handed over 340 tablets. Police arrested {D}, a roofer with a pain-pill addiction, a week later after a tip; in {DL}'s truck they found a black CO2-powered BB pistol. {DL} admits the robbery and is pleading for the lesser charge: {DL} says it was a BB gun, not a firearm, and nobody's life was ever in danger."
+            "At about {TIME} on {DATE}, a person in a hooded sweatshirt and surgical mask walked up to the pharmacy counter at {PHARM} in {HOOD}, lifted a black pistol from a jacket pocket, and told {V}, the pharmacist on duty, to empty the oxycodone drawer. {V} handed over 340 tablets. Police arrested {D}, a roofer with a pain-pill addiction, a week later after a tip; in their truck they found a black CO2-powered BB pistol. {DL} admits the robbery and is pleading for the lesser charge: {DL} says it was a BB gun, not a firearm, and nobody's life was ever in danger."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Pharmacy Video", "Clear footage of the robber lifting a black pistol and pointing it at {V} from four feet away for about eight seconds."),
@@ -112,7 +112,7 @@ extension StoryCases {
         specification: "Intentionally inflicted serious physical injury on {INFANT}, a seven-month-old, by violent shaking.",
         ageRange: 19...32, occupations: ["in-home child care provider"], hasVictim: true,
         summaries: [
-            "{D} ran a small licensed day care from {DL}'s home in {HOOD}. On {DATE}, {DL} called 911 at about {TIME} to say seven-month-old {INFANT} had gone limp after falling from a changing table. At the hospital, doctors found bleeding beneath the skull, bleeding in both retinas, and brain swelling, and diagnosed abusive head trauma. {INFANT} survived with lasting developmental delays. {DL} says the baby rolled off the table while {DL} reached for a diaper, and that the parents had noticed {INFANT} was fussy and vomiting the night before."
+            "{D} ran a small licensed day care from their home in {HOOD}. On {DATE}, {DL} called 911 at about {TIME} to say seven-month-old {INFANT} had gone limp after falling from a changing table. At the hospital, doctors found bleeding beneath the skull, bleeding in both retinas, and brain swelling, and diagnosed abusive head trauma. {INFANT} survived with lasting developmental delays. {DL} says the baby rolled off the table while {DL} reached for a diaper, and that the parents had noticed {INFANT} was fussy and vomiting the night before."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Child Abuse Pediatrician's Report", "Subdural hemorrhage, extensive multilayered retinal hemorrhages in both eyes, and brain swelling, which the hospital's child abuse team found \"diagnostic of abusive head trauma\" and inconsistent with a three-foot fall."),

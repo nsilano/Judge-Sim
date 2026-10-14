@@ -515,7 +515,7 @@ enum CaseTemplates {
                         cross: ["\"There are charity programs. I didn't think to mention them.\""],
                         weight: 1, lay: true)
         ],
-        prosecutionTheory: ["Sympathy is not a defense. {D} knowingly took property that wasn't {DL}'s. The law is the same for everyone."],
+        prosecutionTheory: ["Sympathy is not a defense. {D} knowingly took property that wasn't theirs. The law is the same for everyone."],
         defenseTheory: ["Necessity: a child's life against a corporation's merchandise. Any parent would have done the same."],
         aggravating: ["Prior theft conviction"],
         mitigating: ["Took life-sustaining medicine for a child", "Attempted to arrange payment first", "Items recovered undamaged"],
@@ -711,7 +711,7 @@ enum CaseTemplates {
                         cross: ["\"I never saw the account statements.\""],
                         weight: 1, lay: false)
         ],
-        prosecutionTheory: ["{D} lied to people who trusted {DL} with everything, and kept lying until the money ran out."],
+        prosecutionTheory: ["{D} lied to people who trusted them with everything, and kept lying until the money ran out."],
         defenseTheory: ["A real fund that failed. Bad judgment and bad advice, but not a criminal scheme."],
         aggravating: ["140 victims", "Retirees' life savings", "Years-long scheme"],
         mitigating: ["Surrendered personal assets", "No prior record"],
@@ -936,7 +936,7 @@ enum CaseTemplates {
         secondary: [SecondaryCharge(lawID: "cyberstalking", specification: "Repeatedly sent electronic messages to {V} to harass and terrify.", chance: 0.35, threshold: 10)],
         ageRange: 20...35, hasVictim: true,
         summaries: [
-            "Weeks after their breakup, private photos of {V} appeared on a forum and were emailed to {VL}'s employer. {VL} says only {D} ever had them.",
+            "Weeks after their breakup, private photos of {V} appeared on a forum and were emailed to their employer. {VL} says only {D} ever had them.",
             "{V} lost a teaching job after intimate photos were sent to the school board. {VL} accuses ex-partner {D}, who denies everything."
         ],
         prosecutionEvidence: [

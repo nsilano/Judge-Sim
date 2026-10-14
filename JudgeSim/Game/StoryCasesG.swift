@@ -63,7 +63,7 @@ extension StoryCases {
                             .cross("Did you ever see anyone else near {VL}'s thermos?", "\"No.\"")
                         ])
         ],
-        prosecutionTheory: ["{D}, about to be fired by {V}, searched how to hide antifreeze in coffee and was alone at the fridge with {VL}'s thermos on eight mornings."],
+        prosecutionTheory: ["{D}, about to be fired by {V}, searched how to hide antifreeze in coffee and was alone at the fridge with the victim's thermos on eight mornings."],
         defenseTheory: ["{DL} came in early for two years, shared a computer with others, and was one of many people who resented {VL}. The State has suspicion, not proof."],
         aggravating: ["The offense was committed over weeks with planning", "The victim suffered permanent injury"],
         mitigating: ["No prior criminal record"],
@@ -201,7 +201,7 @@ extension StoryCases {
         specification: "Willfully on more than one occasion followed and surveilled {V} without legal purpose, causing substantial emotional distress.",
         ageRange: 25...45, occupations: ["sales manager"], hasVictim: true,
         summaries: [
-            "Two months after {V} moved out, {VL}'s phone alerted that an unknown tracker was moving with {VL}. A mechanic found a small Bluetooth tracker taped inside the rear bumper of {VL}'s car. The tracker was registered to {D}'s account. Over the next weeks {DL} \"happened\" to appear at {VL}'s gym and at a restaurant {VL} visited with a new partner. {DL} says the tracker had been on the car since they bought it together, to find it in parking lots, and that {DL} forgot to remove it; and that the gym and restaurant were places they'd always gone together."
+            "Two months after {V} moved out, their phone alerted that an unknown tracker was moving with {VL}. A mechanic found a small Bluetooth tracker taped inside the rear bumper of {VL}'s car. The tracker was registered to {D}'s account. Over the next weeks {DL} \"happened\" to appear at {VL}'s gym and at a restaurant {VL} visited with a new partner. {DL} says the tracker had been on the car since they bought it together, to find it in parking lots, and that {DL} forgot to remove it; and that the gym and restaurant were places they'd always gone together."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "The Tracker", "A Bluetooth tracker registered to {DL}'s account, wrapped in black electrical tape inside the rear bumper cavity.", .search),
