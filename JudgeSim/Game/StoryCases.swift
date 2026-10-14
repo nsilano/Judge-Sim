@@ -6,7 +6,8 @@ private typealias E = EvidenceSeed
 /// exhibit to the last answer. Only names, places, and dates change from one telling to the next.
 enum StoryCases {
     static let all: [CaseTemplate] = [oldMillRoad, churchBooks, duplexBurglary, kitchenStrangulation, sharedApartment,
-                                       caregiverAccount, parkingLotShooting, contractorDeposits]
+                                       caregiverAccount, parkingLotShooting, contractorDeposits,
+                                       fishingCabin, homeInvasion, protectiveOrder, afterTheParty, rentalFire]
 
     // MARK: - 1. A fatal crash after a closing shift
 
@@ -910,6 +911,560 @@ enum StoryCases {
             defenseOpening: "Forty-one finished kitchens. A supplier bankruptcy. A second mortgage. {DL} made promises {DL} couldn't keep, but believed {DL} could. Broken promises are for civil court.",
             prosecutionClosing: "Intent is judged at the moment of the lie. {DL} knew there was no account, said the cabinets were ordered, and took the money for something else.",
             defenseClosing: "If {DL} believed another supplier would come through, that text wasn't a knowing lie. The State never pulled the phone records that would have settled it."
+        )
+    )
+
+    // MARK: - 9. A shot at the fishing cabin
+
+    static let fishingCabin = CaseTemplate(
+        key: "story.fishingCabin", category: .violent,
+        headlines: ["Business Partner Shot Dead at {LAKE} Cabin", "Accident or Murder at the Lake?"],
+        primaryLaw: "murder1", lesserLaw: "murder2", threshold: 5, lesserThreshold: 3,
+        specification: "Killed {V} with a shotgun, with malice, premeditation, and deliberation.",
+        ageRange: 38...60, occupations: ["co-owner of a marine supply business"], hasVictim: true,
+        summaries: [
+            "{D} and {V} owned {SHOP} together for eleven years. On {DATE}, during a cold snap, the two drove to {VL}'s cabin on {LAKE} to hunt ducks. At about {TIME}, {DL} called 911 to say the shotgun had gone off while {DL} was unloading it on the porch and {VL} was dead. The medical examiner says the shot was fired from about four feet away. Three weeks earlier, {VL} had told a lawyer {VL} wanted to force {DL} out of the business, and the company held a $500,000 life insurance policy on each partner payable to the other."
+        ],
+        prosecutionEvidence: [
+            E(.forensic, 3, "Autopsy and Wound Analysis", "A single 12-gauge wound to the left chest. Shot pattern spread of about 3 inches puts the muzzle roughly 3 to 5 feet away, level or slightly downward. Death within a minute."),
+            E(.document, 3, "Buy-Sell Insurance Policy", "A $500,000 policy on each partner, payable to the surviving partner, purchased six years earlier. {DL} called the insurer to ask about the claim process four days after the death."),
+            E(.document, 2, "Attorney's Notes", "{VL}'s business lawyer's notes from three weeks before: \"Wants out of partnership or wants {DL} out. Suspects {DL} of skimming from the parts account. Will raise at the quarterly meeting.\" The meeting was set for the Monday after the trip."),
+            E(.statement, 2, "Statement to Deputies", "{DL}: \"I was unloading on the porch, the shell stuck, I was working the slide and it went off. {VL} was right there by the door.\"")
+        ],
+        defenseEvidence: [
+            E(.forensic, 3, "Firearm Examination", "The State Crime Laboratory found the shotgun's trigger pull light at 2.1 pounds and noted wear on the sear consistent with an older gun that can fire if jarred while the action is partly closed."),
+            E(.document, 2, "Twenty Years of Hunting Trips", "Photos and guest books from the cabin show the two partners hunting together every season for nineteen years."),
+            E(.document, 2, "Business Audit", "An outside accountant hired by the estate found $11,400 in parts orders that couldn't be matched, but couldn't attribute them to either partner.")
+        ],
+        prosecutionWitnesses: [
+            WitnessSeed(name: "{DET}", role: "Lead investigator, Sheriff's Office",
+                        direct: ["\"The story of a stuck shell doesn't fit the distance or the angle.\""],
+                        cross: ["\"The lab found the gun could fire if jarred.\""],
+                        weight: 2, lay: false,
+                        exam: [
+                            .direct("What did you find at the cabin?", "\"{VL} was on the porch floor just outside the door, on {VL}'s back, wearing waders and a camouflage jacket. The shotgun was on a bench by the steps. A box of shells was on the rail. {DL} was sitting in the truck with the door open, hands shaking.\""),
+                            .direct("What did {DL} say happened?", "\"That a shell jammed while {DL} was unloading, and while {DL} worked the slide it fired. {DL} said {VL} was 'right there by the door.'\""),
+                            .direct("Does that fit what you found?", "\"Not well. The medical examiner puts the muzzle three to five feet from {VL}, level with the chest. Someone clearing a jam usually points the barrel down or away. For it to hit {VL} that way, the gun had to be up and pointed across the porch.\""),
+                            .direct("What did you learn about the business?", "\"{VL} had met with a lawyer three weeks earlier about forcing {DL} out, and suspected skimming. There was a meeting set for the Monday after the trip. And four days after the death, {DL} called the insurance company about the half-million-dollar policy.\""),
+                            .cross("The lab found the gun's trigger was light and could fire if jarred while partly closed?", "\"That's what the report says.\""),
+                            .cross("You've cleared a jammed pump shotgun yourself?", "\"Many times.\""),
+                            .cross("In a hurry, cold, wearing gloves, a person might hold it up at chest level to see the jam?", "\"Some people might. It's not how I was taught.\""),
+                            .cross("You have no evidence {DL} knew about the lawyer meeting?", "\"Nothing direct. The meeting was on the shared office calendar.\""),
+                            .cross("Calling about a policy is something every surviving partner does eventually, isn't it?", "\"Eventually. Four days is quick.\"")
+                        ]),
+            WitnessSeed(name: nil, role: "Medical examiner",
+                        direct: ["\"The muzzle was about three to five feet from the chest.\""],
+                        cross: ["\"The wound can't tell me whether the trigger was pulled on purpose.\""],
+                        weight: 1, lay: false,
+                        exam: [
+                            .direct("What did the autopsy show?", "\"A single shotgun wound to the left chest, with pellets through the heart and left lung. Death within a minute or so.\""),
+                            .direct("How do you estimate distance?", "\"From the spread of the shot. At contact, the wound is one round hole. As distance grows the pellets spread. Here the pattern was about three inches across, which in test firing with that gun and those shells corresponds to roughly three to five feet.\""),
+                            .direct("And the angle?", "\"Level to slightly downward, front to back. The gun was at about chest height.\""),
+                            .cross("You can't tell the court whether the trigger was pulled deliberately?", "\"No. A wound records distance and direction. Not intent.\""),
+                            .cross("If someone holding the gun at chest height to look at a jammed shell were three or four feet from {VL}, this wound would result?", "\"Yes. The wound is consistent with that, and with an intentional shot.\"")
+                        ]),
+            WitnessSeed(name: nil, role: "{VL}'s business lawyer",
+                        direct: ["\"{VL} wanted {DL} out of the business.\""],
+                        cross: ["\"{VL} said {VL} wasn't sure about the skimming.\""],
+                        weight: 1, lay: false,
+                        exam: [
+                            .direct("Why did {VL} come to see you?", "\"To talk about getting out of the partnership, or buying {DL} out. {VL} thought money was missing from the parts account and wanted to bring it up at the quarterly meeting.\""),
+                            .direct("What was {VL}'s state of mind?", "\"Upset. {VL} said, 'Nineteen years, and I think {DL}'s stealing from me.' {VL} was also afraid to say it out loud.\""),
+                            .cross("{VL} told you {VL} wasn't sure about the skimming?", "\"{VL} said 'I could be wrong, I hope I'm wrong.'\""),
+                            .cross("Did {VL} ever say {VL} was afraid of {DL}?", "\"No. Afraid of the conversation, not of {DL}.\"")
+                        ])
+        ],
+        defenseWitnesses: [
+            WitnessSeed(name: nil, role: "Retired gunsmith",
+                        direct: ["\"That shotgun could fire while you were clearing a jam.\""],
+                        cross: ["\"Someone still has to have a finger near the trigger.\""],
+                        weight: 2, lay: false,
+                        exam: [
+                            .direct("What is your experience?", "\"Forty years as a gunsmith in {HOOD}. I've repaired thousands of pump shotguns, including this model.\""),
+                            .direct("What did you find on this gun?", "\"The sear is worn and the trigger breaks at about two pounds, about half of what it should. If the slide isn't fully closed and you slam it forward with your hand near the grip, it can go off. I've seen it happen on three guns of this model.\""),
+                            .direct("Would a person clearing a jam hold it at chest height?", "\"In the cold with gloves on, trying to see the shell? Sure. You tip it up to look in the ejection port. People do it all the time. It's why I tell them never to do it pointed at anybody.\""),
+                            .cross("For it to fire, something has to touch the trigger?", "\"With a sear this worn, a glove brushing it could do it. But yes, something touches the trigger.\""),
+                            .cross("You've been paid for your examination?", "\"Four hundred dollars. I'd have said the same for free.\"")
+                        ])
+        ],
+        prosecutionTheory: ["{VL} was about to accuse {DL} of stealing and force {DL} out. {D} took {VL} to a cabin far from anyone, shot {VL} from four feet away, and called it an accident."],
+        defenseTheory: ["Two friends of nineteen years, a worn-out shotgun with a hair trigger, a jammed shell on a cold morning. This is the worst day of {DL}'s life, not a murder."],
+        aggravating: ["The offense was committed for pecuniary gain"],
+        mitigating: ["{DL} called 911 immediately and stayed with {VL}", "No prior criminal record"],
+        victimImpacts: ["{VL}'s son: \"I grew up calling {DL} my uncle. I don't know what to believe. I just want the truth.\""],
+        allocutions: ["\"I've hunted with {VL} since we were in our twenties. I'd give anything to have that morning back. I didn't do this on purpose.\""],
+        guiltyTruths: ["{DL}'s second phone, found later in the shop, held a search from the night before the trip: \"shotgun accident what happens legally.\""],
+        innocentTruths: ["The same shotgun fired by itself on a sheriff's office test range a year later when the slide was closed hard, a finger nowhere near the trigger."],
+        moods: [.divided], doctrines: ["burdenOfProof", "lesserIncluded"],
+        extras: ["TIME": ["7:14 a.m."], "LAKE": ["Lake Hollis", "Sutton Lake", "Black Creek Reservoir"],
+                 "SHOP": ["Tidewater Marine Supply", "Harbor Point Outboard", "Riverbend Boat & Motor"]],
+        story: StoryExtras(
+            timeline: [(-21, "{VL} meets with a business lawyer about leaving or dissolving the partnership."),
+                       (0, "7:14 a.m.: {DL} calls 911 from the cabin. Deputies arrive at 7:41 a.m."),
+                       (1, "Autopsy performed; shotgun and shells sent to the State Crime Laboratory."),
+                       (4, "{DL} calls the insurer about the buy-sell policy."),
+                       (33, "Laboratory test-fires the shotgun and reports the light trigger pull and worn sear."),
+                       (47, "{DL} charged with first-degree murder.")],
+            howIdentified: "{DL} was the only other person at the cabin and reported the shooting.",
+            notDone: ["The porch was not measured to reconstruct where each partner stood.", "The parts-account shortfall was never traced to either partner."],
+            defendantExam: [
+                .direct("What happened that morning?", "\"We'd hunted the dawn flight and come back up for coffee. I was unloading on the porch. The last shell hung up. I tipped the gun up to look in the port and worked the slide, and it went off. {VL} was coming out the door.\""),
+                .direct("Did you know about the lawyer?", "\"No. I knew {VL} was unhappy about the parts account. We'd argued about it. I didn't know {VL} had gone to a lawyer.\""),
+                .direct("Did you take money from the business?", "\"No. Parts orders get messed up in that system all the time. I'd have opened every book I had.\""),
+                .direct("Why call the insurance company four days later?", "\"Because the bank called me. The business couldn't make payroll without {VL}. I didn't want the money. I needed to keep twelve people employed.\""),
+                .cross("You've hunted for thirty years. You know never to point a gun at a person.", "\"I know it. I wasn't pointing it at {VL}. I didn't know {VL} was coming out the door.\""),
+                .cross("Your finger was on the trigger.", "\"I don't think it was. I had gloves on. I don't know.\""),
+                .cross("The Monday meeting was on the shared calendar. You saw it.", "\"I saw a quarterly meeting. We have one every quarter.\"")
+            ],
+            objections: [
+                (2, ObjectionSeed(question: "Prosecutor: \"What did {VL} tell you {DL} was doing with the money?\"",
+                                  answer: "\"{VL} said, 'I think {DL}'s stealing from me.'\"",
+                                  raisedBy: .defense, onCross: false, grounds: "Hearsay", shouldSustain: false,
+                                  explanation: "Offered to show {VL}'s state of mind and plan to confront {DL}, which bears on motive. It is admissible for that purpose under Rule 803(3), not to prove {DL} actually stole.",
+                                  doctrineID: "hearsayExceptions", weight: 2))
+            ],
+            prosecutionOpening: "A partnership about to end, an accusation coming on Monday, a half-million-dollar policy, and a shot from four feet at chest height. The State will prove {D} killed {V} on purpose.",
+            defenseOpening: "Nineteen years of hunting together. A gun with a hair trigger the State's own lab confirmed. {DL} called 911 within a minute and tried to stop the bleeding. This was a terrible accident.",
+            prosecutionClosing: "Premeditation can form in moments. But this was planned: the cabin, the timing before Monday, the gun at chest level. That's first-degree murder.",
+            defenseClosing: "The medical examiner can't tell you intent. The gunsmith and the lab say this gun could fire on its own. That's reasonable doubt about murder of any degree."
+        )
+    )
+
+    // MARK: - 10. Masks at the door
+
+    static let homeInvasion = CaseTemplate(
+        key: "story.homeInvasion", category: .robbery,
+        headlines: ["Couple Tied Up in {HOOD} Home Invasion", "Accomplice Points Finger at Former Friend"],
+        primaryLaw: "dangerousRobbery", lesserLaw: "commonLawRobbery", threshold: 6, lesserThreshold: 4,
+        specification: "With another person, robbed {V} in {VL}'s home while armed with a handgun.",
+        ageRange: 20...33, hasVictim: true,
+        summaries: [
+            "At about {TIME} on {DATE}, two masked people forced their way into the home of {V}, 67, and {VL}'s spouse on {STREET} in {HOOD}, held them at gunpoint, zip-tied their wrists, and took a gun safe's contents, jewelry, and $3,000 in cash. Two weeks later police arrested {ALT}, who sold one of the stolen rifles. {ALT} agreed to testify in exchange for a reduced charge and named {D} as the partner who carried the handgun. {DL} says {ALT} is protecting the real accomplice."
+        ],
+        prosecutionEvidence: [
+            E(.statement, 3, "Accomplice Testimony Agreement", "{ALT} pleaded guilty to common law robbery, with the State recommending 20 months instead of the 64-plus months {ALT} faced, in exchange for truthful testimony against {DL}."),
+            E(.digital, 3, "Cell-Site Records", "{DL}'s phone connected to the tower nearest the {STREET} home between 1:40 and 2:30 a.m., then went silent for 50 minutes.", .search),
+            E(.physical, 2, "Zip Ties", "A bag of the same brand and color of zip ties was found in {DL}'s car trunk.", .search),
+            E(.document, 1, "Victim's Description", "{V} described the gunman as \"slim, about six feet, with a deep voice.\" {DL} is 5'11\" and 160 pounds.")
+        ],
+        defenseEvidence: [
+            E(.document, 3, "Accomplice's Text", "Two days after the robbery, {ALT} texted a cousin: \"me and {COUSIN} hit a lick, dont say nothing.\" {COUSIN} is not {DL}."),
+            E(.document, 2, "Cell Tower Coverage Map", "The same tower serves {DL}'s girlfriend's apartment, where {DL} says {DL} spent the night, 1.1 miles from the home."),
+            E(.physical, 1, "No Stolen Property", "A search of {DL}'s apartment and car found none of the stolen jewelry, guns, or cash.")
+        ],
+        prosecutionWitnesses: [
+            WitnessSeed(name: "{V}", role: "Homeowner",
+                        direct: ["\"The one with the handgun did the talking.\""],
+                        cross: ["\"I never saw a face.\""],
+                        weight: 2, lay: true,
+                        exam: [
+                            .direct("What happened that night?", "\"The doorbell rang twice around a quarter to two. I thought it was a neighbor in trouble. When I opened the door, two people in masks pushed in. One had a pistol right against my chest.\""),
+                            .direct("What did they do?", "\"Made us lie face down on the living room floor. The one with the pistol zip-tied our hands while the other one went through the house. The one with the gun kept asking where the safe key was. Deep voice. Calm. That was the worst part, how calm.\""),
+                            .direct("What did they take?", "\"Everything in the gun safe, four rifles and two shotguns, my late mother's rings, and three thousand in cash we kept for emergencies.\""),
+                            .direct("How long were they there?", "\"Twenty-five minutes, maybe. After they left it took us another twenty to get loose and call.\""),
+                            .cross("You never saw either person's face?", "\"No. Ski masks, gloves, dark clothes.\""),
+                            .cross("'Slim, about six feet, deep voice' describes a lot of young men in this county?", "\"I suppose it does.\""),
+                            .cross("You couldn't recognize {DL}'s voice today if you heard it?", "\"I don't know. I'd be afraid of getting it wrong.\"")
+                        ]),
+            WitnessSeed(name: "{ALT}", role: "Co-defendant testifying for the State",
+                        direct: ["\"{DL} had the gun. I went through the house.\""],
+                        cross: ["\"I got a deal. Twenty months instead of five years.\""],
+                        weight: 1, lay: true,
+                        exam: [
+                            .direct("How do you know {DL}?", "\"We came up together. Same block, same school. We were tight until all this.\""),
+                            .direct("Whose idea was the robbery?", "\"Mine, honestly. I'd done some yard work for them and saw the gun safe. I told {DL} about it and {DL} said 'say less.'\""),
+                            .direct("What did each of you do?", "\"{DL} had the pistol and did the talking. I went through the bedrooms and the safe. {DL} zip-tied them. We split the cash, fifteen hundred each, and I took the guns to sell.\""),
+                            .direct("Why are you testifying?", "\"Because I got caught, and because I'm done. I'm not going to lie for anybody.\""),
+                            .cross("Your deal takes you from more than five years to twenty months?", "\"Yes.\""),
+                            .cross("Two days after the robbery you texted your cousin 'me and {COUSIN} hit a lick.' Who is {COUSIN}?", "\"A friend. I was trying to keep {DL}'s name out of my phone.\""),
+                            .cross("{COUSIN} is about six feet with a deep voice, isn't that right?", "\"I guess so. A lot of people are.\""),
+                            .cross("You'd say whatever got you the best deal, wouldn't you?", "\"The deal says I have to tell the truth. That's what I'm doing.\"")
+                        ]),
+            WitnessSeed(name: "{DET}", role: "Robbery detective",
+                        direct: ["\"{DL}'s phone was near the home during the robbery.\""],
+                        cross: ["\"The tower also covers where {DL} says {DL} was.\""],
+                        weight: 1, lay: false,
+                        exam: [
+                            .direct("How did you identify {ALT}?", "\"One of the stolen rifles turned up in a pawn database, sold by {ALT} under {ALT}'s own name. We arrested {ALT} the next day.\""),
+                            .direct("How did {DL} come into it?", "\"{ALT} named {DL} after agreeing to cooperate. I then got {DL}'s phone records by warrant and searched {DL}'s car.\""),
+                            .direct("What did the phone records show?", "\"{DL}'s phone was on the tower nearest the home from 1:40 to 2:30 a.m., then no activity for 50 minutes, which is unusual for that phone. Normally it's busy all night.\""),
+                            .cross("That tower also covers the apartment where {DL} says {DL} slept?", "\"It does.\""),
+                            .cross("You never got a warrant for {COUSIN}'s phone?", "\"No. We had a cooperating witness naming {DL}.\""),
+                            .cross("Zip ties of that brand are sold at every hardware store in the county?", "\"They're common.\"")
+                        ])
+        ],
+        defenseWitnesses: [
+            WitnessSeed(name: nil, role: "{DL}'s girlfriend",
+                        direct: ["\"{DL} was asleep next to me.\""],
+                        cross: ["\"I was asleep too.\""],
+                        weight: 1, lay: true,
+                        exam: [
+                            .direct("Where was {DL} that night?", "\"At my apartment. We got takeout around nine, watched a show, and went to bed around midnight. {DL} was there when I got up for work at six.\""),
+                            .direct("Why would {DL}'s phone go quiet?", "\"Because {DL} was asleep. {DL} games on that phone half the night when {DL} can't sleep. That night {DL} slept.\""),
+                            .cross("You were asleep from midnight to six?", "\"Yes.\""),
+                            .cross("So you can't say whether {DL} left between 1:30 and 3?", "\"I'd have felt the bed. I'm a light sleeper.\""),
+                            .cross("You love {DL} and don't want {DL} to go to prison?", "\"Yes. That doesn't make me a liar.\"")
+                        ])
+        ],
+        prosecutionTheory: ["{D} held a pistol on a retired couple in their own living room while {ALT} emptied the safe. The accomplice, the phone, and the zip ties all point to {DL}."],
+        defenseTheory: ["The State's case is a co-defendant who sold stolen rifles under {ALT}'s own name and bought four years off by naming {DL}, after texting that someone else was the partner."],
+        aggravating: ["The victims were elderly and restrained in their own home", "The offense involved a firearm pointed at a victim's chest"],
+        mitigating: ["{DL} has no prior violent convictions"],
+        victimImpacts: ["{V}: \"We sold the house. My spouse can't sleep there. Every doorbell, we both jump.\""],
+        allocutions: ["\"I'm sorry for what happened to those people. I'm not the one who did it.\""],
+        guiltyTruths: ["One of the stolen rings turned up a year later with {DL}'s sister, who said {DL} gave it to her."],
+        innocentTruths: ["{COUSIN} was arrested for another home invasion months later and confessed to this one, with {ALT}."],
+        moods: [.wantsConviction], doctrines: ["burdenOfProof", "lesserIncluded"],
+        extras: ["TIME": ["1:45 a.m."], "COUSIN": ["\"Peanut\"", "\"Tank\"", "\"Lil Dre\""]],
+        story: StoryExtras(
+            timeline: [(0, "1:45 a.m.: home invasion. Victims free themselves and call 911 at 2:31 a.m."),
+                       (13, "Stolen rifle flagged in pawn database, sold by {ALT}."),
+                       (14, "{ALT} arrested; interviewed; agrees to cooperate and names {DL}."),
+                       (17, "Search warrant for {DL}'s car: zip ties recovered. Phone records requested."),
+                       (40, "{ALT} pleads guilty to common law robbery under a cooperation agreement.")],
+            howIdentified: "{DL} was named by the co-defendant, {ALT}, after {ALT} agreed to cooperate.",
+            notDone: ["{COUSIN}, named in {ALT}'s own text message, was never identified or interviewed.", "No DNA testing of the zip ties left on the victims."],
+            defendantExam: [
+                .direct("Where were you that night?", "\"At my girlfriend's place, all night. We ate, watched TV, went to bed. I didn't go anywhere.\""),
+                .direct("Why would {ALT} name you?", "\"Because {ALT} needed a name the cops would believe, and we grew up together. If {ALT} names the real partner, that person comes after {ALT}. I'm the safe name.\""),
+                .direct("What about the zip ties in your car?", "\"I work landscaping on weekends. We use them on every job, for tarps and plants. Half the trucks at the yard have that same bag.\""),
+                .cross("{ALT} told you about the gun safe weeks before.", "\"{ALT} told a lot of people about a lot of things. I didn't go.\""),
+                .cross("Your phone, busy every other night, went silent for fifty minutes at 2 a.m.", "\"I was asleep. It's allowed.\""),
+                .cross("You're six feet, slim, with a deep voice.", "\"So is {COUSIN}. Ask {ALT} who that is.\"")
+            ],
+            objections: [
+                (1, ObjectionSeed(question: "Defense attorney: \"Isn't it true you've lied to police before, in your 2019 larceny case?\"",
+                                  answer: "\"I said I found the bike. That was a lie.\"",
+                                  raisedBy: .prosecution, onCross: true, grounds: "Improper impeachment", shouldSustain: false,
+                                  explanation: "Specific instances of untruthfulness may be inquired into on cross to attack credibility (Rule 608(b)). It's especially relevant for an accomplice testifying under a plea deal.",
+                                  doctrineID: "characterEvidence", weight: 1))
+            ],
+            prosecutionOpening: "A pistol against a 67-year-old's chest, zip ties on two people face-down in their own living room. The person who planned it is telling you who held the gun: {D}.",
+            defenseOpening: "The State's case rides on {ALT}, who got years off a prison term for naming somebody, and who texted that the partner was {COUSIN}. Nobody ever looked for {COUSIN}.",
+            prosecutionClosing: "Accomplice testimony is scrutinized, and here it's corroborated: the phone near the house, the silence during the robbery, the zip ties in the trunk.",
+            defenseClosing: "The court should view a bargained-for accomplice with great caution. Strip away {ALT}, and the State has a cell tower that covers {DL}'s bed and zip ties from a hardware store."
+        )
+    )
+
+    // MARK: - 11. The protective order
+
+    static let protectiveOrder = CaseTemplate(
+        key: "story.protectiveOrder", category: .violent,
+        headlines: ["Ex-Partner Cut During Visit Under Protective Order", "A Box Cutter and Two Stories"],
+        primaryLaw: "awdwisi", lesserLaw: "awdw", threshold: 4, lesserThreshold: 2,
+        specification: "Assaulted {V} with a box cutter, a deadly weapon, inflicting serious injury, while a domestic violence protective order was in effect.",
+        ageRange: 25...44, hasVictim: true,
+        summaries: [
+            "{V} held a domestic violence protective order against {D}, the other parent of their eight-year-old, that barred contact except for exchanges arranged through a relative. On {DATE}, {DL} came to {VL}'s apartment on {STREET} unannounced at about {TIME} to pick up the child's medicine and school clothes. Minutes later {VL} called 911 with a deep cut across the forearm that took nineteen stitches and nerve repair. {VL} says {DL} pulled a box cutter. {DL} says {VL} grabbed the box cutter off the counter and {DL} was cut too trying to take it away."
+        ],
+        prosecutionEvidence: [
+            E(.document, 3, "Protective Order", "A one-year domestic violence protective order entered seven months earlier after {VL} testified {DL} had pushed {VL} into a wall. It barred {DL} from {VL}'s residence."),
+            E(.forensic, 3, "Hand Surgeon's Records", "A 9-centimeter laceration across the left forearm with a partial tendon cut and nerve damage; surgical repair; permanent numbness in two fingers."),
+            E(.statement, 2, "911 Call", "{V}: \"{DL} cut me, {DL}'s got a box cutter, my kid's here, please hurry.\""),
+            E(.physical, 1, "Box Cutter", "A yellow box cutter found on the kitchen floor. {DL}'s and {VL}'s fingerprints are both on it.", .search)
+        ],
+        defenseEvidence: [
+            E(.physical, 2, "Defendant's Hand Wound", "{DL} had a 3-centimeter cut across the right palm, treated at urgent care that night, consistent with grabbing a blade."),
+            E(.document, 2, "Child's Statement", "The child told a forensic interviewer that {VL} \"picked up the cutter thing because of being mad and then they were fighting over it.\""),
+            E(.document, 1, "Text Messages", "That afternoon {VL} texted {DL}: \"come get her stuff yourself, I'm not driving it over again.\"")
+        ],
+        prosecutionWitnesses: [
+            WitnessSeed(name: "{V}", role: "Protected party",
+                        direct: ["\"{DL} pulled the box cutter out of a pocket.\""],
+                        cross: ["\"I did text {DL} to come get the stuff.\""],
+                        weight: 1, lay: true,
+                        exam: [
+                            .direct("Why did you have a protective order?", "\"Last spring {DL} shoved me into a wall during an argument in front of our daughter. I went to court and got the order. I didn't want our daughter growing up like that.\""),
+                            .direct("What happened that evening?", "\"I heard knocking, and it was {DL}. I told {DL} through the door I'd call the police. {DL} said just give me the medicine and the clothes. I opened the door a few inches and {DL} pushed it open.\""),
+                            .direct("Then what?", "\"We argued in the kitchen. I was opening a box from the pharmacy with the cutter and I put it down. {DL} picked it up and I grabbed {DL}'s wrist and then my arm was open. There was blood everywhere.\""),
+                            .direct("How has the injury affected you?", "\"I've got two fingers that don't feel anything. I do hair for a living. I'm still learning to hold the shears.\""),
+                            .cross("You texted {DL} that afternoon to come get the things in person.", "\"I said come get them. I meant through my sister like the order says.\""),
+                            .cross("Earlier you told the deputy {DL} pulled the box cutter from a pocket. Today you said it was yours, from the counter.", "\"It was mine. I was confused that night. I'd lost a lot of blood.\""),
+                            .cross("You grabbed for the blade first?", "\"I grabbed {DL}'s wrist. I don't know who had what.\""),
+                            .cross("Your daughter told the interviewer you picked it up because you were mad.", "\"She's eight. She was scared. I had it in my hand earlier, opening the box.\"")
+                        ]),
+            WitnessSeed(name: "{OFF}", role: "Responding officer",
+                        direct: ["\"There was a protective order and {DL} was inside the residence.\""],
+                        cross: ["\"{DL} had a fresh cut on the palm.\""],
+                        weight: 1, lay: false,
+                        exam: [
+                            .direct("What did you find?", "\"{VL} in the kitchen with a towel around the arm, soaked through. The child in a back bedroom crying. {DL} standing in the hall with a bloody hand, saying 'it was an accident, it was an accident.'\""),
+                            .direct("What did {VL} tell you?", "\"That {DL} pulled a box cutter out of a pocket during an argument and cut {VL}. That's what's in my report.\""),
+                            .direct("What did you confirm about the protective order?", "\"It was active and served. {DL} was inside the protected residence, a violation on its own.\""),
+                            .cross("{DL} had a fresh cut across the palm?", "\"Yes. Bleeding. I had EMS look at it.\""),
+                            .cross("A palm cut like that is what you see when someone grabs a blade, isn't it?", "\"It can be.\""),
+                            .cross("{DL} stayed and waited for you?", "\"Yes. Didn't try to leave.\"")
+                        ])
+        ],
+        defenseWitnesses: [
+            WitnessSeed(name: nil, role: "Child forensic interviewer",
+                        direct: ["\"The child said {VL} picked up the cutter.\""],
+                        cross: ["\"Children's accounts of fast, frightening events can be incomplete.\""],
+                        weight: 2, lay: false,
+                        exam: [
+                            .direct("What is your role?", "\"I'm a forensic interviewer at the county's child advocacy center. I use a structured, non-leading protocol and the interview is recorded.\""),
+                            .direct("What did the child say?", "\"That both parents were yelling, and that {VL} 'picked up the cutter thing, mad, and then they were fighting over it, and then there was blood.'\""),
+                            .direct("Was the child coached, in your view?", "\"I saw no signs of coaching. The language was age-appropriate and the account was spontaneous.\""),
+                            .cross("The child was in the hallway, partly out of sight of the kitchen?", "\"The child said 'by the door,' which from the photos was partly behind the wall.\""),
+                            .cross("An eight-year-old's account of a few frightening seconds can miss things?", "\"It can. I report what was said, not whether it's complete.\"")
+                        ])
+        ],
+        prosecutionTheory: ["{D} violated a protective order, forced the door, and opened {V}'s arm to the tendon with a box cutter in front of their child."],
+        defenseTheory: ["{DL} came because {VL} said to come. {VL} picked up the box cutter, as their own child says, and {DL} was cut trying to take it away. Being somewhere you shouldn't isn't the same as attacking someone."],
+        aggravating: ["The offense was committed in the presence of a child", "The offense was committed in violation of a protective order"],
+        mitigating: ["{DL} stayed at the scene and called for help", "{DL} was also injured"],
+        victimImpacts: ["{V}: \"I can't do what I used to do for a living. I just want to be safe and for my daughter to be safe.\""],
+        allocutions: ["\"I should never have gone to that door, order or no order. I would never cut {VL}. I was trying to get it away from both of us.\""],
+        guiltyTruths: ["A neighbor's doorbell camera, recovered later, recorded {DL} saying \"you're going to regret this\" before forcing the door."],
+        innocentTruths: ["{VL} later told a counselor {VL} had picked up the cutter first and swung it when {DL} pushed in."],
+        moods: [.divided], doctrines: ["selfDefense", "burdenOfProof"],
+        extras: ["TIME": ["6:40 p.m."]],
+        story: StoryExtras(
+            timeline: [(-210, "Domestic violence protective order entered against {DL}."),
+                       (0, "6:40 p.m.: {DL} arrives at {VL}'s apartment. 6:47 p.m.: 911 call. {OFF} arrives at 6:54 p.m."),
+                       (0, "{VL} undergoes surgical repair of the forearm. {DL} treated at urgent care for a palm laceration, then arrested."),
+                       (3, "Forensic interview of the child at the child advocacy center."),
+                       (21, "Latent print report: both parties' prints on the box cutter.")],
+            howIdentified: "{DL} was present when officers arrived; both parties described a struggle over the box cutter.",
+            notDone: ["The neighbors along the hallway were not canvassed.", "No blood-pattern analysis of the kitchen."],
+            defendantExam: [
+                .direct("Why did you go to the apartment?", "\"Our daughter needed her inhaler for school and {VL} texted 'come get her stuff yourself.' I knew the order said no. I went anyway. That was wrong.\""),
+                .direct("What happened in the kitchen?", "\"We were yelling about the medicine. {VL} picked up the box cutter off the counter and pointed it at me and said get out. I grabbed for it. We were both pulling and it went across {VL}'s arm and my hand.\""),
+                .direct("Did you bring a box cutter?", "\"No. It was {VL}'s, from opening the pharmacy box. I've never carried one.\""),
+                .cross("You pushed the door open on someone with a protective order against you.", "\"I pushed it when {VL} started to close it. I shouldn't have.\""),
+                .cross("You're stronger than {VL}. You could have walked out.", "\"With a blade pointed at me and our daughter down the hall? I didn't think. I grabbed.\""),
+                .cross("You were already under an order for putting {VL} into a wall.", "\"Yes. And I've done the classes since. I'm not that person.\"")
+            ],
+            objections: [
+                (0, ObjectionSeed(question: "Prosecutor: \"Tell the court about the other times {DL} hurt you.\"",
+                                  answer: "\"There were times before the wall. A lot of times.\"",
+                                  raisedBy: .defense, onCross: false, grounds: "Other bad acts (Rule 404(b))", shouldSustain: true,
+                                  explanation: "Vague, unproven prior acts offered to show {DL} is violent are propensity evidence. The protective order itself is already in evidence; unspecific additional acts add prejudice without a proper purpose.",
+                                  doctrineID: "priorActs", weight: 1))
+            ],
+            prosecutionOpening: "A protective order. A forced door. A box cutter, and a forearm laid open to the tendon in front of an eight-year-old. {D} did this.",
+            defenseOpening: "{DL} broke the order by coming over, and should answer for that. But the child who saw it says {VL} picked up the box cutter, and {DL}'s own hand was cut grabbing for it.",
+            prosecutionClosing: "Even if {VL} touched the cutter first, {DL} wasn't supposed to be in that kitchen at all. The injury and the order tell you who brought the danger.",
+            defenseClosing: "Being where you shouldn't be isn't assault with a deadly weapon. The child, the palm wound, and {VL}'s own changed story leave reasonable doubt about who wielded that blade."
+        )
+    )
+
+    // MARK: - 12. After the party
+
+    static let afterTheParty = CaseTemplate(
+        key: "story.afterTheParty", category: .violent,
+        headlines: ["Rape Charge After Off-Campus Party", "Consent and Memory at Trial"],
+        primaryLaw: "rape2", lesserLaw: "sexualBattery", threshold: 9, lesserThreshold: 7,
+        specification: "Engaged in vaginal intercourse with {V}, who was physically helpless and mentally incapacitated by alcohol, when {DL} knew or should reasonably have known of that condition.",
+        ageRange: 20...26, occupations: ["college senior and part-time restaurant server"], hasVictim: true,
+        summaries: [
+            "On {DATE}, {V} and {D}, students at Hollis State University, were both at an off-campus party on {STREET}. Friends say {VL} drank heavily over several hours. At about {TIME}, {DL} and {VL} left together for {DL}'s apartment two blocks away. The next morning {VL} woke there with no memory after the party and went to the hospital, where a sexual assault examination was done. {DL} says {VL} was drunk but awake, talking, and an eager participant. {VL} says {VL} could not have agreed to anything."
+        ],
+        prosecutionEvidence: [
+            E(.forensic, 3, "Toxicology Back-Calculation", "{VL}'s blood alcohol at 9:20 a.m. was 0.04. A toxicologist estimates 0.20 to 0.26 at 1:30 a.m., a range associated with blackouts, confusion, and loss of motor control."),
+            E(.video, 3, "Party Video", "A guest's phone video at 1:12 a.m. shows {VL} unable to stand without help, eyes half closed, slurring. {DL} is next to {VL}, holding {VL}'s waist."),
+            E(.statement, 2, "Text from {DL}", "At 9:51 a.m. the next morning, to a friend: \"they were gone last night lol. hope they remember my name\""),
+            E(.forensic, 2, "Sexual Assault Examination", "Evidence of recent intercourse; DNA consistent with {DL}. No injuries documented.")
+        ],
+        defenseEvidence: [
+            E(.video, 2, "Building Hallway Camera", "At 1:34 a.m., {VL} walks down {DL}'s apartment hallway under {VL}'s own power, holding {DL}'s hand, and appears to laugh."),
+            E(.document, 2, "Rideshare Message", "At 2:47 a.m., {VL}'s phone sent {DL}'s roommate's number a message: \"is ur roommate always this cute\" The roommate never answered."),
+            E(.document, 1, "Prior Dating", "{DL} and {VL} went on two dates the previous month, according to messages between them.")
+        ],
+        prosecutionWitnesses: [
+            WitnessSeed(name: "{V}", role: "Complaining witness",
+                        direct: ["\"The last thing I remember is the kitchen at the party.\""],
+                        cross: ["\"I don't remember texting anyone at 2:47.\""],
+                        weight: 2, lay: true,
+                        exam: [
+                            .direct("What do you remember about the party?", "\"Getting there around ten. Doing shots in the kitchen with my roommate. Talking to {DL} by the speakers. After about midnight it's pieces. A staircase. Somebody's hand on my arm. Then nothing.\""),
+                            .direct("What happened the next morning?", "\"I woke up in {DL}'s bed. I didn't know where I was at first. My clothes were on the floor. I felt sick and confused and scared, and I didn't know what had happened to me. I got dressed and left while {DL} was in the shower.\""),
+                            .direct("Why did you go to the hospital?", "\"Because I didn't know. My roommate drove me. I wanted someone to tell me what happened, since I couldn't.\""),
+                            .direct("Did you and {DL} have a relationship before that night?", "\"We'd gone out twice. I liked {DL}. I don't think I'd have said no to {DL} sober. But I wasn't sober. I wasn't anything.\""),
+                            .cross("The hallway video shows you walking on your own, holding {DL}'s hand, laughing.", "\"I've seen it. I don't remember it. People can walk in a blackout.\""),
+                            .cross("Your phone sent a flirtatious message at 2:47 a.m.", "\"I don't remember sending it. I don't doubt my phone sent it.\""),
+                            .cross("You told the nurse you 'might have wanted to go home with {DL}.'", "\"I said I didn't know. That's the whole point.\"")
+                        ]),
+            WitnessSeed(name: nil, role: "Forensic toxicologist",
+                        direct: ["\"At 0.20 to 0.26, many people are in an alcohol blackout.\""],
+                        cross: ["\"A person in a blackout can walk, talk, and appear to make choices.\""],
+                        weight: 2, lay: false,
+                        exam: [
+                            .direct("What was {VL}'s alcohol level during the night?", "\"Working back from 0.04 at 9:20 a.m., using standard elimination rates, {VL} was between 0.20 and 0.26 around 1:30 a.m.\""),
+                            .direct("What does that level do to a person?", "\"For most people it's severe impairment: unsteadiness, slurred speech, nausea, and very often an alcohol blackout, where the brain stops recording memories.\""),
+                            .direct("Can someone at that level consent to sex?", "\"That's a legal question, not mine. I can say that judgment and awareness are profoundly affected, and that a person may be unable to understand what's happening.\""),
+                            .cross("A person in a blackout can walk, talk, and laugh?", "\"Yes. Blackout isn't unconsciousness. Others may not be able to tell.\""),
+                            .cross("So an observer might reasonably think the person was making choices?", "\"An observer might. Whether that's reasonable depends on what the observer saw.\"")
+                        ]),
+            WitnessSeed(name: nil, role: "{VL}'s roommate",
+                        direct: ["\"{VL} couldn't stand up by one o'clock.\""],
+                        cross: ["\"{VL} said {VL} wanted to go with {DL}.\""],
+                        weight: 1, lay: true,
+                        exam: [
+                            .direct("How was {VL} by the end of the party?", "\"Gone. I had to hold {VL}'s hair while {VL} threw up in the bathroom around 12:45. {VL} couldn't stand without leaning on the wall.\""),
+                            .direct("What happened when {VL} left?", "\"{DL} said 'I'll take {VL} home.' I said I'd take {VL}. {DL} said {DL}'s place was closer and {VL} could sleep it off there. {VL} was leaning on {DL}. I let it happen. I think about that every day.\""),
+                            .cross("{VL} said {VL} wanted to go with {DL}?", "\"{VL} said 'I'm fine, I'm going with {DL}.' {VL} was slurring it.\""),
+                            .cross("You'd also been drinking that night?", "\"Some. Not like {VL}.\"")
+                        ])
+        ],
+        defenseWitnesses: [
+            WitnessSeed(name: nil, role: "{DL}'s roommate",
+                        direct: ["\"They came in laughing at about one-thirty.\""],
+                        cross: ["\"I went to my room and put headphones on.\""],
+                        weight: 1, lay: true,
+                        exam: [
+                            .direct("What did you see when they came in?", "\"I was on the couch. They came in laughing. {VL} said hi, asked my name, said our apartment was nicer than theirs. {VL} was clearly drunk, but talking, making jokes.\""),
+                            .direct("Did {VL} seem to know where {VL} was?", "\"{VL} seemed to. {VL} asked for water and asked which room was {DL}'s.\""),
+                            .cross("You went to your room and put on headphones right away?", "\"After a few minutes.\""),
+                            .cross("You didn't see anything after that?", "\"No.\""),
+                            .cross("Someone who can't remember the night can still ask for water and make jokes, can't they?", "\"I guess so. I'm not a doctor.\"")
+                        ])
+        ],
+        prosecutionTheory: ["{V} couldn't stand at the party, and {D} held {VL} up on the way out. {DL} knew {VL} was incapacitated and had sex with {VL} anyway, then joked about it the next morning."],
+        defenseTheory: ["{VL} was drunk, but awake, walking, laughing, and texting. Two people who had dated went home together. Regret and memory loss are not proof that {DL} knew {VL} couldn't consent."],
+        aggravating: ["{DL} took advantage of {VL}'s helpless condition"],
+        mitigating: ["{DL} has no prior criminal record", "{DL} was also drinking"],
+        victimImpacts: ["{V}: \"I left school for a semester. I don't go to parties. I don't trust my own memory anymore, and that's the part I can't get back.\""],
+        allocutions: ["\"I thought {VL} wanted to be with me. If I was wrong, I'm sorry. I'd never knowingly hurt {VL}.\""],
+        guiltyTruths: ["A second roommate later told investigators {VL} was unresponsive on {DL}'s bed when the roommate looked in at 1:50 a.m."],
+        innocentTruths: ["{VL} later told a counselor fragments came back: {VL} remembered asking {DL} to stay and being happy about it."],
+        moods: [.divided], doctrines: ["burdenOfProof", "lesserIncluded"],
+        extras: ["TIME": ["1:28 a.m."]],
+        story: StoryExtras(
+            timeline: [(0, "1:12 a.m.: party video shows {VL} unable to stand. 1:28 a.m.: {DL} and {VL} leave. 1:34 a.m.: hallway camera."),
+                       (1, "9:20 a.m.: {VL} arrives at Hollis Regional; sexual assault examination performed; blood drawn."),
+                       (1, "9:51 a.m.: {DL} sends text to a friend."),
+                       (4, "{VL} reports to Hollis State University police and the Sheriff's Office."),
+                       (52, "State Crime Laboratory DNA results consistent with {DL}."),
+                       (60, "{DL} charged with second-degree forcible rape.")],
+            howIdentified: "{VL} woke in {DL}'s apartment; DNA confirmed intercourse with {DL}.",
+            notDone: ["The other partygoers in the video were not all interviewed.", "{DL}'s second roommate was interviewed only briefly."],
+            defendantExam: [
+                .direct("How did you and {VL} know each other?", "\"We had a class together and went out twice. I really liked {VL}. At the party we talked most of the night.\""),
+                .direct("How drunk was {VL}?", "\"Drunk. I'm not going to say otherwise. But talking, joking, making plans. {VL} asked to come to my place.\""),
+                .direct("What happened at your apartment?", "\"We talked to my roommate, got water, went to my room. {VL} kissed me first. We were both into it, as far as I could tell. Afterward we fell asleep.\""),
+                .direct("What did your text the next morning mean?", "\"It was a stupid, gross thing to send a friend. It meant {VL} had been really drunk. I didn't think {VL} wouldn't remember anything.\""),
+                .cross("You were holding {VL} upright at the party at 1:12.", "\"{VL} was wobbly. I was helping.\""),
+                .cross("{VL}'s roommate offered to take {VL} home and you said no.", "\"I said my place was closer. {VL} said {VL} wanted to come.\""),
+                .cross("'They were gone last night.' Those are your words.", "\"They are. I'm ashamed of them.\"")
+            ],
+            objections: [
+                (0, ObjectionSeed(question: "Defense attorney: \"How many sexual partners have you had in the last year?\"",
+                                  answer: "\"I don't want to answer that.\"",
+                                  raisedBy: .prosecution, onCross: true, grounds: "Rape Shield (Rule 412)", shouldSustain: true,
+                                  explanation: "North Carolina's Rape Shield rule bars evidence of the complainant's sexual behavior with others except in narrow circumstances not present here. The prior dates with {DL} are in evidence; this question is not permitted.",
+                                  doctrineID: "relevance", weight: 0))
+            ],
+            prosecutionOpening: "{V} couldn't stand by one in the morning, and {D} was holding {VL} up. The next morning {DL} texted, 'they were gone last night.' {DL} knew.",
+            defenseOpening: "Two people who had dated, both drinking, left a party together. On video, {VL} walks down the hall laughing. The question isn't whether {VL} remembers. It's whether {DL} knew {VL} couldn't consent.",
+            prosecutionClosing: "Incapacity doesn't mean unconscious. It means unable to understand or resist. The vomiting, the video, the roommate's warning, and {DL}'s own text show {DL} knew.",
+            defenseClosing: "Even the State's toxicologist says an observer might not be able to tell. The hallway video and the 2:47 message are reasonable doubt about what {DL} knew."
+        )
+    )
+
+    // MARK: - 13. Fire in the rental
+
+    static let rentalFire = CaseTemplate(
+        key: "story.rentalFire", category: .property,
+        headlines: ["Landlord Charged After Fire Guts Rental with Tenants Inside", "Arson or a Bad Space Heater?"],
+        primaryLaw: "arson1", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
+        specification: "Willfully and maliciously burned the dwelling at {STREET}, occupied at the time by {V} and family.",
+        ageRange: 45...66, occupations: ["owner of six rental houses"], hasVictim: true,
+        summaries: [
+            "{D} owns six rental houses in {HOOD}. For four months {DL} had been trying to evict {V}, who withheld rent over a broken furnace and filed a complaint with the city housing inspector. At about {TIME} on {DATE}, fire broke out in the rental's back room while {V} and {VL}'s two children slept. A smoke alarm woke them and all three escaped. The fire marshal found gasoline in the back room. {DL} says {DL} was home asleep, and that the tenants were running a space heater on an extension cord because of the furnace."
+        ],
+        prosecutionEvidence: [
+            E(.forensic, 3, "Laboratory Analysis of Debris", "The State Crime Laboratory identified gasoline in floor debris from two separate spots in the back room, about six feet apart."),
+            E(.document, 2, "Eviction Filings and Texts", "{DL}'s magistrate filings and a text to {VL} the week before: \"You will be out of my house one way or another.\""),
+            E(.digital, 2, "Neighbor's Doorbell Camera", "At 3:41 a.m., a pickup similar in shape and color to {DL}'s passes the house slowly without headlights. The plate isn't visible.", .search),
+            E(.document, 2, "Insurance Policy", "{DL} raised the house's fire coverage from $90,000 to $140,000 seven weeks before the fire.")
+        ],
+        defenseEvidence: [
+            E(.physical, 3, "Space Heater and Extension Cord", "A melted space heater and a light-duty extension cord were found in the back room. The defense's electrical engineer found arcing on the cord."),
+            E(.document, 2, "Housing Inspector Report", "The city inspector cited the furnace as inoperable four weeks before the fire and noted the tenants were heating with \"portable electric units.\""),
+            E(.document, 1, "Lawn Equipment", "{V} kept a gas can and a push mower in the back room, according to the tenant's own statement.")
+        ],
+        prosecutionWitnesses: [
+            WitnessSeed(name: nil, role: "Deputy State Fire Marshal",
+                        direct: ["\"Gasoline in two separate places means it was poured.\""],
+                        cross: ["\"There was a gas can in the room.\""],
+                        weight: 2, lay: false,
+                        exam: [
+                            .direct("What is your training?", "\"I'm a certified fire investigator with the Office of State Fire Marshal. I've investigated about five hundred fires over fourteen years.\""),
+                            .direct("Where did the fire start?", "\"In the back room, near the floor. The burn patterns, the depth of charring, and the floor damage all point to that room as the origin.\""),
+                            .direct("What did the lab find?", "\"Gasoline in floor samples from two separate locations about six feet apart. Two separate pools of gasoline on a floor is what we see when someone pours it.\""),
+                            .direct("Did you consider the space heater?", "\"I did. The heater was badly melted, but the arcing on its cord was at the far end, near the outlet, not at the origin area. And a heater doesn't put gasoline in two places.\""),
+                            .cross("There was a gas can in that room, for the mower?", "\"There was, and it ruptured in the fire. That could account for gasoline in one area. I don't believe it explains two.\""),
+                            .cross("A ruptured can could spill and flow along a sloped floor?", "\"The floor was fairly level. But I can't rule it out completely.\""),
+                            .cross("You found nothing that identifies who set the fire, if it was set?", "\"No. That's not my job. I determine the cause.\"")
+                        ]),
+            WitnessSeed(name: "{V}", role: "Tenant",
+                        direct: ["\"{DL} told me I'd be out one way or another.\""],
+                        cross: ["\"Yes, we ran the space heater on an extension cord.\""],
+                        weight: 1, lay: true,
+                        exam: [
+                            .direct("Why weren't you paying rent?", "\"The furnace broke in October. I told {DL} for six weeks. Nothing. My kids were sleeping in coats. A legal aid lawyer told me to put the rent in escrow and file with the housing inspector, so I did.\""),
+                            .direct("How did {DL} react?", "\"Furious. Filed to evict me twice. Texted me I'd be out one way or another. Came by and banged on the door once and yelled at my oldest.\""),
+                            .direct("What happened the night of the fire?", "\"The smoke alarm went off a little before four. The back of the house was orange. I got both kids out the front window. We stood across the street in our socks and watched it burn.\""),
+                            .cross("You ran a space heater in the back room on an extension cord?", "\"Yes, because the furnace didn't work.\""),
+                            .cross("Was it on that night?", "\"I think I turned it off before bed. I'm not sure.\""),
+                            .cross("And you kept a gas can in the same room?", "\"For the mower. On the far side.\"")
+                        ])
+        ],
+        defenseWitnesses: [
+            WitnessSeed(name: nil, role: "Electrical engineer",
+                        direct: ["\"The extension cord shows arcing. It could have started this fire.\""],
+                        cross: ["\"Arcing can also be caused by the fire.\""],
+                        weight: 2, lay: false,
+                        exam: [
+                            .direct("What did you examine?", "\"The space heater, the extension cord, and the room's wiring, from the evidence the fire marshal collected.\""),
+                            .direct("What did you find?", "\"Arc beads on the extension cord, which is rated for a lamp, not a 1,500-watt heater. Running that heater on that cord for hours can overheat it until it fails and ignites what's around it.\""),
+                            .direct("Could that explain gasoline in two places?", "\"If the cord ignited near the gas can, the can would fail, and gasoline would flow and burn wherever the floor took it, including under the shelving. Two samples six feet apart don't require two pours.\""),
+                            .cross("Arc beads can form when a fire burns a live cord, not just when the cord starts the fire?", "\"Yes. That's the hard part of these cases.\""),
+                            .cross("The arcing you found was near the outlet end, away from where the fire started?", "\"Some of it. Some was mid-cord. I can't place the cord's exact position that night.\""),
+                            .cross("You're being paid by the defense?", "\"I'm paid for my time. I'd say the same to the State.\"")
+                        ])
+        ],
+        prosecutionTheory: ["A landlord who wanted a tenant gone, raised the insurance, threatened 'one way or another,' and drove past at 3:41 with the headlights off. Twenty minutes later, gasoline was burning in two places."],
+        defenseTheory: ["A broken furnace, a 1,500-watt heater on a lamp cord, and a gas can in the same room. The State has a motive story and a pickup without a plate. It doesn't have an arsonist."],
+        aggravating: ["The dwelling was occupied by children at the time of the fire"],
+        mitigating: ["No prior criminal record"],
+        victimImpacts: ["{V}: \"We lost everything we owned. My youngest still asks if the house is going to catch fire when we turn the heat on.\""],
+        allocutions: ["\"I was angry at a tenant. I'd never burn a house with children in it.\""],
+        guiltyTruths: ["A hardware store receipt for a two-gallon gas can, bought by {DL} the afternoon before the fire, turned up in an insurance audit."],
+        innocentTruths: ["A second engineer's analysis after trial placed the cord's failure precisely at the fire's origin, beside the gas can."],
+        moods: [.wantsConviction, .divided], doctrines: ["burdenOfProof"],
+        extras: ["TIME": ["3:58 a.m."]],
+        story: StoryExtras(
+            timeline: [(-120, "{V} begins paying rent into escrow over the broken furnace."),
+                       (-49, "{DL} raises the property's fire coverage to $140,000."),
+                       (-28, "City housing inspector cites the furnace as inoperable."),
+                       (0, "3:41 a.m.: pickup passes without headlights. 3:58 a.m.: 911 call. All occupants escape."),
+                       (2, "Fire marshal's scene examination; debris samples collected."),
+                       (38, "Laboratory reports gasoline in two samples."),
+                       (55, "{DL} charged with first-degree arson.")],
+            howIdentified: "Investigators focused on {DL} based on the eviction dispute, the threatening text, the insurance increase, and a pickup resembling {DL}'s on a neighbor's camera.",
+            notDone: ["{DL}'s truck was not examined for gasoline residue.", "Cell-site records for {DL}'s phone were never requested."],
+            defendantExam: [
+                .direct("Why did you want {V} out?", "\"I hadn't been paid in four months. I've got a mortgage on that house. I filed to evict the legal way, through the magistrate.\""),
+                .direct("What about the text, 'one way or another'?", "\"I meant through the court. I was angry. It was a stupid way to say it.\""),
+                .direct("Why raise the insurance?", "\"My agent told me the old policy was below replacement cost. I raised all six houses that month. The paperwork shows all six.\""),
+                .direct("Where were you at 3:41 a.m.?", "\"Asleep at home, eleven miles away. My truck was in my driveway.\""),
+                .cross("Nobody can confirm you were home.", "\"My wife was asleep. No, nobody watched me sleep.\""),
+                .cross("You yelled at a child on that porch.", "\"I raised my voice at the door. I'm not proud of it.\""),
+                .cross("You never fixed the furnace in six weeks.", "\"The part was backordered. I offered space heaters.\"")
+            ],
+            objections: [
+                (0, ObjectionSeed(question: "Prosecutor: \"In your opinion, who set this fire?\"",
+                                  answer: "\"Somebody with a reason to want that house empty.\"",
+                                  raisedBy: .defense, onCross: false, grounds: "Speculation; beyond expertise", shouldSustain: true,
+                                  explanation: "A fire investigator may give an opinion on cause and origin, not on who set a fire or why. That's outside the witness's expertise and the factfinder's question.",
+                                  doctrineID: "expertTestimony", weight: 2))
+            ],
+            prosecutionOpening: "Two pools of gasoline in a house with three people asleep inside. A landlord who wanted them out 'one way or another,' a bigger insurance policy, and a truck with its lights off. The State will prove {D} set that fire.",
+            defenseOpening: "No furnace, a space heater on a lamp cord, and a can of gas for the mower in the same back room. That's a recipe for an accidental fire, and the State never looked at {DL}'s truck or phone.",
+            prosecutionClosing: "One spill doesn't make two pools six feet apart. Motive, threat, insurance, and the truck at 3:41 make this an intentional fire, and the fire marshal says so.",
+            defenseClosing: "The State's own investigator can't rule out the can. Its case on who did it is a pickup with no plate. Arson is about proof, and this isn't enough."
         )
     )
 }
