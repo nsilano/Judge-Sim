@@ -311,7 +311,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("Why did this claim get flagged?", "\"An owner behind on payments with negative equity, a truck that burned within days of being reported stolen, and no forced entry to the ignition. Those are the top three signs of owner give-up fraud.\""),
-                            .direct("What did the phone records show?", "\"{DL}'s phone near the field at 1:12 a.m. the night of the fire. {DL} told me {DL} was home asleep.\""),
+                            .direct("What did the phone records show?", "\"{DL}'s phone near the field at 1:12 a.m. the night of the fire. {DL} told me they were home asleep.\""),
                             .cross("A spare key under the bumper would explain an undamaged ignition?", "\"If the thief found it, yes.\""),
                             .cross("Two other trucks were stolen and burned in the county that month?", "\"I've read that.\""),
                             .cross("You're paid by the insurance company that would owe $41,000?", "\"I'm employed by them, yes.\"")

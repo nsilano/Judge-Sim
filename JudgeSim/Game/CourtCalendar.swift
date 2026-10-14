@@ -148,6 +148,8 @@ enum ContinuanceMotions {
 
     /// A motion with a concrete, case-specific reason, or nil if the follow-up it would need doesn't fit this case.
     static func make(for c: CourtCase, rng: inout SeededRNG) -> ContinuanceMotion? {
+        // Written cases carry only what was written for them.
+        guard !c.templateKey.hasPrefix("story.") else { return nil }
         let options = EvidenceRequest.options(for: c)
         guard !options.isEmpty else { return nil }
         let request = rng.pick(options)
@@ -222,7 +224,7 @@ enum ContinuanceMotions {
             }
             return ContinuanceMotion(
                 movant: .defense, title: "Cell-site records subpoenaed",
-                argument: "\(defense): \"The defense moves to continue. We subpoenaed the carrier for the cell-site location records for \(dl)'s phone that night. They haven't come back, and we expect them to place my client somewhere else.\"",
+                argument: "\(defense): \"The defense moves to continue. We subpoenaed the carrier for the cell-site location records for \(dl)'s phone on the day in question. They haven't come back, and we expect them to place my client somewhere else.\"",
                 opposition: "\(ada): \"The State opposes. Carriers take time, and the defense waited until the last minute to ask.\"",
                 request: request,
                 ifDenied: "The trial goes forward without the location records.",

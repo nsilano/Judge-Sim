@@ -24,7 +24,7 @@ enum CaseGenerator {
         var pool = CaseTemplates.all
         // Written cases come up first, until each has been heard once.
         let unheardStories = StoryCases.all.filter { story in !context.usedSignatures.contains { $0.hasPrefix(story.key + "|") } }
-        if context.returning == nil, !unheardStories.isEmpty, rng.chance(0.6) {
+        if context.returning == nil, !unheardStories.isEmpty {
             let story = rng.pick(unheardStories)
             return build(story, seed: seed, band: .close, context: context, rng: &rng)
         }
@@ -151,7 +151,8 @@ enum CaseGenerator {
             ? CastMember(name: NameBank.person(using: &rng, excluding: &used), title: "Trooper", agency: "N.C. State Highway Patrol")
             : rng.pick(county.officers)
         // The day it happened, fixed once so every report, witness, and exhibit agrees.
-        let incident = Calendar.current.date(byAdding: .day, value: -rng.int(150...330), to: context.date) ?? context.date
+        var incident = Calendar.current.date(byAdding: .day, value: -rng.int(150...330), to: context.date) ?? context.date
+        if let pinned = t.story?.when?.incident(before: context.date, minDays: 150, using: &rng) { incident = pinned }
         let prosecutor = rng.pick(county.assistantDAs)
         let usePublicDefender = rng.chance(0.6)
         let defenseLawyer = usePublicDefender ? rng.pick(county.assistantPDs) : rng.pick(county.privateCounsel)

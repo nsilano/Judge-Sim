@@ -969,7 +969,7 @@ enum StoryCases {
                         ]),
             WitnessSeed(name: nil, role: "{VL}'s business lawyer",
                         direct: ["\"{VL} wanted {DL} out of the business.\""],
-                        cross: ["\"{VL} said {VL} wasn't sure about the skimming.\""],
+                        cross: ["\"{VL} said they weren't sure about the skimming.\""],
                         weight: 1, lay: false,
                         exam: [
                             .direct("Why did {VL} come to see you?", "\"To talk about getting out of the partnership, or buying {DL} out. {VL} thought money was missing from the parts account and wanted to bring it up at the quarterly meeting.\""),
@@ -1303,12 +1303,12 @@ enum StoryCases {
                         ]),
             WitnessSeed(name: nil, role: "{VL}'s roommate",
                         direct: ["\"{VL} couldn't stand up by one o'clock.\""],
-                        cross: ["\"{VL} said {VL} wanted to go with {DL}.\""],
+                        cross: ["\"{VL} said they wanted to go with {DL}.\""],
                         weight: 1, lay: true,
                         exam: [
                             .direct("How was {VL} by the end of the party?", "\"Gone. I had to hold {VL}'s hair while {VL} threw up in the bathroom around 12:45. {VL} couldn't stand without leaning on the wall.\""),
-                            .direct("What happened when {VL} left?", "\"{DL} said 'I'll take {VL} home.' I said I'd take {VL}. {DL} said {DL}'s place was closer and {VL} could sleep it off there. {VL} was leaning on {DL}. I let it happen. I think about that every day.\""),
-                            .cross("{VL} said {VL} wanted to go with {DL}?", "\"{VL} said 'I'm fine, I'm going with {DL}.' {VL} was slurring it.\""),
+                            .direct("What happened when {VL} left?", "\"{DL} said 'I'll take {VL} home.' I said I'd take {VL}. {DL} said their place was closer and {VL} could sleep it off there. {VL} was leaning on {DL}. I let it happen. I think about that every day.\""),
+                            .cross("{VL} said they wanted to go with {DL}?", "\"{VL} said 'I'm fine, I'm going with {DL}.' {VL} was slurring it.\""),
                             .cross("You'd also been drinking that night?", "\"Some. Not like {VL}.\"")
                         ])
         ],
@@ -1350,7 +1350,7 @@ enum StoryCases {
                 .direct("What happened at your apartment?", "\"We talked to my roommate, got water, went to my room. {VL} kissed me first. We were both into it, as far as I could tell. Afterward we fell asleep.\""),
                 .direct("What did your text the next morning mean?", "\"It was a stupid, gross thing to send a friend. It meant {VL} had been really drunk. I didn't think {VL} wouldn't remember anything.\""),
                 .cross("You were holding {VL} upright at the party at 1:12.", "\"{VL} was wobbly. I was helping.\""),
-                .cross("{VL}'s roommate offered to take {VL} home and you said no.", "\"I said my place was closer. {VL} said {VL} wanted to come.\""),
+                .cross("{VL}'s roommate offered to take {VL} home and you said no.", "\"I said my place was closer. {VL} said they wanted to come.\""),
                 .cross("'They were gone last night.' Those are your words.", "\"They are. I'm ashamed of them.\"")
             ],
             objections: [

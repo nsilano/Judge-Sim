@@ -249,6 +249,13 @@ struct SentencingStage: View {
                         session.rulings.special = option
                     }
                 }
+                if session.rulings.special == .conditionalDischarge {
+                    AmountStepper(title: "Probation: \(session.rulings.dischargeMonths ?? 12) months",
+                                  caption: "Typical: 12 months. Charges are dismissed when probation is completed.",
+                                  value: Binding(get: { session.rulings.dischargeMonths ?? 12 },
+                                                 set: { session.rulings.dischargeMonths = $0 }),
+                                  range: 1...60, fine: 1, coarse: 6, fineLabel: "± 1 month", coarseLabel: "± 6 months")
+                }
                 HStack {
                     LawLink(lawID: "pjc")
                     LawLink(lawID: "conditionalDischarge")
@@ -985,6 +992,15 @@ struct ProbationStage: View {
                     }
                 }
 
+                if session.rulings.probationDecision == .modify {
+                    let extraMonths = session.rulings.extensionMonths ?? 12
+                    AmountStepper(title: extraMonths == 0 ? "No extension" : "Extend probation \(extraMonths) month\(extraMonths == 1 ? "" : "s")",
+                                  caption: "Probation now ends \(SentenceFormat.shortDate(probation.ends)). Total probation generally may not exceed 5 years (G.S. 15A-1342(a)).",
+                                  value: Binding(get: { session.rulings.extensionMonths ?? 12 },
+                                                 set: { session.rulings.extensionMonths = $0 }),
+                                  range: 0...60, fine: 1, coarse: 6, fineLabel: "± 1 month", coarseLabel: "± 6 months")
+                }
+
                 if session.anyActive && [.revoke, .crv].contains(session.rulings.probationDecision) {
                     Toggle(isOn: $session.rulings.revocationConsecutive) {
                         VStack(alignment: .leading, spacing: 2) {
@@ -1178,7 +1194,7 @@ struct JudgmentSummaryCard: View {
             case .prayerForJudgment:
                 Text("Prayer for judgment continued. No sentence.").font(.callout)
             case .conditionalDischarge:
-                Text("Conditional discharge with 12 months of probation.").font(.callout)
+                Text("Conditional discharge with \(r.dischargeMonths ?? 12) months of probation.").font(.callout)
             case .none:
                 ForEach(Array(session.units.enumerated()), id: \.offset) { index, unit in
                     let choice = session.choice(for: unit)

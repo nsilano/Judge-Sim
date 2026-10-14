@@ -243,7 +243,7 @@ extension StoryCases {
                         cross: ["\"Checking the tracker was unhealthy.\""],
                         weight: 1, lay: false,
                         exam: [
-                            .direct("What was {DL}'s state after the breakup?", "\"Acute grief, insomnia, rumination. {DL} told me {DL} checked the tracker at night to know {VL} was safe, and was ashamed of it.\""),
+                            .direct("What was {DL}'s state after the breakup?", "\"Acute grief, insomnia, rumination. {DL} told me they checked the tracker at night to know {VL} was safe, and was ashamed of it.\""),
                             .cross("Checking an ex's location 212 times is unhealthy?", "\"Very.\""),
                             .cross("{DL} never told you {DL} removed it?", "\"No.\"")
                         ])
