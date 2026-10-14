@@ -10,6 +10,7 @@ enum StoryCases {
                                        fishingCabin, homeInvasion, protectiveOrder, afterTheParty, rentalFire,
                                        nurseryNight, snowbank, kennelShooting, missingToddler, streetRifle,
                                        harborDisappearance, bloodTestStartup, textMessages, restraintDeath, stagedAttack]
+        + batchC + batchD + batchE + batchF + batchG
 
     // MARK: - 1. A fatal crash after a closing shift
 
