@@ -28,7 +28,8 @@ enum CaseGenerator {
             let story = rng.pick(unheardStories)
             return build(story, seed: seed, band: .close, context: context, rng: &rng)
         }
-        pool += StoryCases.all
+        // A written case is heard once per career; after that only generated cases can repeat a kind of crime.
+        pool += unheardStories
         if let person = context.returning {
             let hasFelony = person.priors.contains { $0.ncClass.isFelony }
             let age = person.age(on: context.date)
