@@ -7,7 +7,9 @@ private typealias E = EvidenceSeed
 enum StoryCases {
     static let all: [CaseTemplate] = [oldMillRoad, churchBooks, duplexBurglary, kitchenStrangulation, sharedApartment,
                                        caregiverAccount, parkingLotShooting, contractorDeposits,
-                                       fishingCabin, homeInvasion, protectiveOrder, afterTheParty, rentalFire]
+                                       fishingCabin, homeInvasion, protectiveOrder, afterTheParty, rentalFire,
+                                       nurseryNight, snowbank, kennelShooting, missingToddler, streetRifle,
+                                       harborDisappearance, bloodTestStartup, textMessages, restraintDeath, stagedAttack]
 
     // MARK: - 1. A fatal crash after a closing shift
 
