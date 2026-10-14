@@ -318,7 +318,7 @@ extension StoryCases {
                             .direct("Why is that 'driving'?", "\"Under North Carolina law, being in the driver's seat with the engine running is being in actual physical control. That's driving.\""),
                             .cross("The truck was in park and never moved?", "\"Correct.\""),
                             .cross("It was nineteen degrees?", "\"It was cold.\""),
-                            .cross("{DL} told you right away {DL} was there to sleep, not drive?", "\"{DL} said that.\"")
+                            .cross("{DL} told you right away they were there to sleep, not drive?", "\"{DL} said that.\"")
                         ]),
             WitnessSeed(name: nil, role: "Bartender",
                         direct: ["\"I cut {DL} off at midnight.\""],
@@ -373,7 +373,8 @@ extension StoryCases {
             prosecutionOpening: "Driver's seat, keys in the ignition, engine on, lights on, 0.14, and three prior DWIs.",
             defenseOpening: "A parked truck that never moved, a canceled ride, and nineteen degrees.",
             prosecutionClosing: "Our law defines driving as actual physical control.",
-            defenseClosing: "The court can find {DL} was impaired but not driving."
+            defenseClosing: "The court can find {DL} was impaired but not driving.",
+            when: .months([11, 12, 1, 2])
         )
     )
 

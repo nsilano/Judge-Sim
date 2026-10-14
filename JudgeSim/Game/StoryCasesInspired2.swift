@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "Killed {V}, the defendant's spouse, with malice, premeditation, and deliberation.",
         ageRange: 28...36, occupations: ["pharmaceutical sales representative"], hasVictim: true,
         summaries: [
-            "On Thanksgiving morning, {DATE}, {V}, seven months pregnant, was reported missing from the couple's home in {HOOD} by {D}, who said {DL} had gone kayaking alone on {LAKE}, forty miles away, and came home to find {VL} gone and the dog in the yard. Three months later {VL}'s remains surfaced in a cove of {LAKE} about a mile from the boat ramp {DL} said {DL} used. Investigators learned {DL} had a secret relationship with a coworker, had bought the kayak six days before without telling anyone, and was stopped at the Charlotte airport with a newly issued passport and $9,000 in cash the week the remains were found."
+            "On Thanksgiving morning, {DATE}, {V}, seven months pregnant, was reported missing from the couple's home in {HOOD} by {D}, who said they had gone kayaking alone on {LAKE}, forty miles away, and came home to find {VL} gone and the dog in the yard. Three months later {VL}'s remains surfaced in a cove of {LAKE} about a mile from the boat ramp {DL} said they used. Investigators learned {DL} had a secret relationship with a coworker, had bought the kayak six days before without telling anyone, and was stopped at the Charlotte airport with a newly issued passport and $9,000 in cash the week the remains were found."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Location of the Remains", "The remains surfaced in a cove about a mile from the boat ramp {DL} named as {DL}'s only alibi. Weights matching cinder-block fragments were found nearby."),
@@ -29,11 +29,11 @@ extension StoryCases {
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: nil, role: "{DL}'s coworker",
-                        direct: ["\"{DL} told me {DL} was single and had 'lost' a spouse.\""],
+                        direct: ["\"{DL} told me they were single and had 'lost' a spouse.\""],
                         cross: ["\"{DL} never said anything violent.\""],
                         weight: 2, lay: true,
                         exam: [
-                            .direct("How did you come to know {DL}?", "\"We worked the same sales territory. In September {DL} asked me out. {DL} said {DL} was single.\""),
+                            .direct("How did you come to know {DL}?", "\"We worked the same sales territory. In September {DL} asked me out. {DL} said they were single.\""),
                             .direct("What did {DL} tell you in early November?", "\"That {DL} had 'lost' a spouse and this would be the first holiday season without them. I thought {DL} meant a death, years ago. Three weeks later {VL} disappeared.\""),
                             .direct("Why did you record your calls?", "\"When I saw {VL}'s face on the news, I called the detective. They asked me to keep talking to {DL} and record it.\""),
                             .direct("What did {DL} say on those calls?", "\"That {DL} was in Denver for work, that {DL} missed me, that we'd go to Portugal in the spring. I could hear the vigil in the background.\""),
@@ -100,7 +100,8 @@ extension StoryCases {
             prosecutionOpening: "Of every lake in North Carolina, {V} surfaced a mile from {D}'s alibi. Add the secret relationship and the one-way ticket.",
             defenseOpening: "No cause of death. No crime scene. Neighbors who saw {VL} alive. {DL} is a liar, and the State wants you to stop there.",
             prosecutionClosing: "Coincidence can't put a body a mile from the alibi.",
-            defenseClosing: "Suspicion, however strong, isn't proof beyond a reasonable doubt."
+            defenseClosing: "Suspicion, however strong, isn't proof beyond a reasonable doubt.",
+            when: .thanksgiving
         )
     )
 

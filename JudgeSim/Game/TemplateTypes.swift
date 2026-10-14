@@ -122,6 +122,39 @@ struct StoryExtras {
     var defenseOpening: String
     var prosecutionClosing: String
     var defenseClosing: String
+    /// When the story has to happen at a particular time of year.
+    var when: StoryDate? = nil
+}
+
+enum StoryDate {
+    /// Thanksgiving Day: the fourth Thursday of November.
+    case thanksgiving
+    /// Any day in one of these months (1 = January).
+    case months([Int])
+
+    /// The most recent qualifying day that leaves at least `minDays` before the session.
+    func incident(before session: Date, minDays: Int, using rng: inout SeededRNG) -> Date? {
+        let cal = Calendar.current
+        guard let latest = cal.date(byAdding: .day, value: -minDays, to: session) else { return nil }
+        let year = cal.component(.year, from: latest)
+        var candidates: [Date] = []
+        for y in [year, year - 1, year - 2] {
+            switch self {
+            case .thanksgiving:
+                var c = DateComponents(year: y, month: 11, weekday: 5, weekdayOrdinal: 4)
+                c.hour = 12
+                if let d = cal.date(from: c) { candidates.append(d) }
+            case .months(let months):
+                for m in months {
+                    guard let first = cal.date(from: DateComponents(year: y, month: m, day: 1, hour: 12)),
+                          let days = cal.range(of: .day, in: .month, for: first)?.count,
+                          let d = cal.date(byAdding: .day, value: rng.int(0...(days - 1)), to: first) else { continue }
+                    candidates.append(d)
+                }
+            }
+        }
+        return candidates.filter { $0 <= latest }.max()
+    }
 }
 
 struct ObjectionSeed {

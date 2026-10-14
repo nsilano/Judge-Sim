@@ -204,7 +204,8 @@ extension StoryCases {
             prosecutionOpening: "A fight, drinks, a U-turn at 19 miles an hour, a broken mirror, and {D}'s own words: 'I did this.'",
             defenseOpening: "No impact injuries. Mirror glass found eleven days later. An investigator who was friends with the homeowner. You'll see why the doubt here is not just reasonable but overwhelming.",
             prosecutionClosing: "The data, the glass, and the admission all point to the same moment: 12:24 a.m.",
-            defenseClosing: "When the investigation itself can't be trusted, neither can its conclusion."
+            defenseClosing: "When the investigation itself can't be trusted, neither can its conclusion.",
+            when: .months([12, 1, 2])
         )
     )
 
@@ -217,10 +218,10 @@ extension StoryCases {
         specification: "Killed {V}, the defendant's spouse, with a rifle, with malice, premeditation, and deliberation.",
         ageRange: 47...60, occupations: ["owner of a car dealership"], forcedPriorOffenses: ["Driving While Impaired"], hasVictim: true,
         summaries: [
-            "{D} owns the biggest car dealership in Hollis County, founded by {DL}'s grandparent. At 9:52 p.m. on {DATE}, {DL} called 911 to report finding {DL}'s spouse, {V}, shot in the horse barn on the family's farm outside {HOOD}. {DL} said {DL} had been at the house watching a game and then drove to check on an elderly parent. That afternoon, the dealership's bank had frozen its accounts over $1.2 million in customer down payments that never reached lenders. A video {VL} took of a sick horse at 8:31 p.m. captured {DL}'s voice in the barn."
+            "{D} owns the biggest car dealership in Hollis County, founded by {DL}'s grandparent. At 9:52 p.m. on {DATE}, {DL} called 911 to report finding {DL}'s spouse, {V}, shot in the horse barn on the family's farm outside {HOOD}. {DL} said they had been at the house watching a game and then drove to check on an elderly parent. That afternoon, the dealership's bank had frozen its accounts over $1.2 million in customer down payments that never reached lenders. A video {VL} took of a sick horse at 8:31 p.m. captured {DL}'s voice in the barn."
         ],
         prosecutionEvidence: [
-            E(.video, 4, "Barn Video", "A 38-second video on {VL}'s phone, timestamped 8:31 p.m., of a lame horse. Two voices are heard; three family members identify the second as {DL}'s. {DL} told police {DL} was never at the barn that night."),
+            E(.video, 4, "Barn Video", "A 38-second video on {VL}'s phone, timestamped 8:31 p.m., of a lame horse. Two voices are heard; three family members identify the second as {DL}'s. {DL} told police they were never at the barn that night."),
             E(.document, 3, "Bank Freeze", "The bank froze the dealership's accounts at 3:15 p.m. over $1.2 million in diverted down payments. {VL} was a co-signer on the business loans and had asked the bookkeeper that week for the account statements."),
             E(.digital, 2, "Phone and Vehicle Data", "{DL}'s phone shows no movement from 8:20 to 8:45 p.m., then 2,100 steps in 6 minutes. The truck's data shows {DL} driving 85 mph to the parent's house and back.", .search)
         ],
@@ -235,7 +236,7 @@ extension StoryCases {
                         cross: ["\"We never found the rifle.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("What did {DL} tell you that night?", "\"That {DL} was at the house from about eight watching a game, left around 9:00 to check on {DL}'s parent, came back, and found {VL}. {DL} said {DL} never went to the barn.\""),
+                            .direct("What did {DL} tell you that night?", "\"That {DL} was at the house from about eight watching a game, left around 9:00 to check on {DL}'s parent, came back, and found {VL}. {DL} said they never went to the barn.\""),
                             .direct("What did the video show?", "\"That at 8:31 {DL} was in the barn with {VL}. We got it off {VL}'s phone nine months later. {VL}'s phone has no activity after 8:37.\""),
                             .direct("Why the money?", "\"The bank froze the accounts that afternoon. {VL} had been asking for statements. The State's theory is that {VL} was about to find out, and that a tragedy would buy {DL} sympathy and time.\""),
                             .direct("What about the steps and the drive?", "\"Twenty-five minutes of no movement while {DL} says {DL} was on the couch, then a burst of 2,100 steps, then a drive at 85 to establish an alibi at the parent's house.\""),
