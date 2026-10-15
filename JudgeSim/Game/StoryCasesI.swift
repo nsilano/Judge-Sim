@@ -12,7 +12,8 @@ extension StoryCases {
         headlines: ["Fire Destroys {REST} After Hours", "Restaurant Owner Charged With Burning Own Business"],
         primaryLaw: "burningBuildings", lesserLaw: nil, threshold: 8, lesserThreshold: 6,
         specification: "Willfully and wantonly set fire to {REST}, a business building on {STREET} in {HOOD}.",
-        secondary: [SecondaryCharge(lawID: "insuranceFraud", specification: "Knowingly presented a false insurance claim for fire damage to {REST} in the amount of $310,000.", chance: 1.0, threshold: 0)],
+        secondary: [SecondaryCharge(lawID: "burningBuildings", specification: "Willfully set fire spreading to the dental office adjoining {REST}.", chance: 1.0, threshold: 7),
+                    SecondaryCharge(lawID: "insuranceFraud", specification: "Knowingly presented a false insurance claim for fire damage to {REST} in the amount of $310,000.", chance: 1.0, threshold: 0)],
         ageRange: 38...60, occupations: ["restaurant owner"], hasVictim: false,
         summaries: [
             "At 2:50 a.m. on {DATE}, a fire gutted {REST}, a family restaurant on {STREET} in {HOOD} owned by {D}. The fire marshal found the origin in the kitchen near the fryers and traces of gasoline on the floor. {REST} was four months behind on rent and had raised its insurance coverage from $150,000 to $310,000 six weeks earlier. {DL}'s phone connected to a tower near the restaurant at 2:31 a.m.; {DL} says {D.he} drove past on the way home from {D.his} sibling's house and that a fired cook had threatened to \"burn the place down.\""
@@ -109,6 +110,10 @@ extension StoryCases {
         headlines: ["Fired IT Manager Accused of Wiping Company Servers", "Logistics Firm Loses Three Years of Records"],
         primaryLaw: "accessingComputers", lesserLaw: nil, threshold: 6, lesserThreshold: 4,
         specification: "Willfully and without authorization accessed the computer network of {CO} to destroy data, causing damage over $1,000.",
+        secondary: [
+            SecondaryCharge(lawID: "accessingComputers", specification: "Accessed {CO}'s backup server without authorization to delete backup volumes.", chance: 1.0, threshold: 6),
+            SecondaryCharge(lawID: "injuryPersonalProperty", specification: "Damaged {CO}'s data and records worth more than $186,000.", chance: 1.0, threshold: 5)
+        ],
         ageRange: 30...50, occupations: ["IT systems administrator"], hasVictim: false,
         summaries: [
             "On {DATE}, three days after {D} was fired as IT manager at {CO} in Port Hollis, someone logged in with a forgotten service account at 11:47 p.m. and deleted three years of shipping records and backups. The company spent $186,000 recovering what it could. The login came from a home internet address assigned to {DL}'s apartment. {DL} says the password for that account was on a sticky note in the server room for years, that two other employees knew it, and that {D.his} wireless network had no password."
@@ -207,6 +212,9 @@ extension StoryCases {
         headlines: ["Witness Says Defendant's Brother Threatened Her at Gas Station", "Intimidation Charge Filed Days Before Shooting Trial"],
         primaryLaw: "witnessIntimidation", lesserLaw: "communicatingThreats", threshold: 6, lesserThreshold: 4,
         specification: "By threats, attempted to intimidate {V}, a State's witness in a pending felony case, from testifying.",
+        secondary: [
+            SecondaryCharge(lawID: "communicatingThreats", specification: "Threatened {V} with harm in a manner a reasonable person would believe.", chance: 1.0, threshold: 5)
+        ],
         ageRange: 22...40, occupations: ["barber", "delivery driver"], forcedPriorOffenses: ["Possession of Schedule II (cocaine)"], hasVictim: true,
         summaries: [
             "{V} is the State's eyewitness in a pending shooting case against {D}'s younger sibling. On {DATE}, at a gas station on {STREET} in {HOOD}, {DL} walked up to {VL}'s pump and, according to {VL}, said: \"You know you don't have to go to court. Nobody needs to get hurt over this.\" {VL} reported it that night and asked to be moved. {DL} says {D.he} only asked {VL} to \"tell the truth\" and that {D.he} doesn't know what {VL} saw. The station's camera has video but no audio."
@@ -391,7 +399,12 @@ extension StoryCases {
         headlines: ["Nine Storage Units Broken Into Overnight", "Self-Storage Break-Ins: Keypad Code Leads to Tenant"],
         primaryLaw: "feloniousBE", lesserLaw: nil, threshold: 5, lesserThreshold: 3,
         specification: "Broke and entered storage units at {FAC} on {STREET} with intent to commit larceny therein.",
-        secondary: [SecondaryCharge(lawID: "felonyLarceny", specification: "Stole tools, electronics, and a generator valued at more than $1,000 from storage units at {FAC}.", chance: 1.0, threshold: 0)],
+        secondary: [SecondaryCharge(lawID: "feloniousBE", specification: "Broke and entered a second storage unit at {FAC} with intent to commit larceny.", chance: 1.0, threshold: 5),
+                    SecondaryCharge(lawID: "feloniousBE", specification: "Broke and entered a third storage unit at {FAC} with intent to commit larceny.", chance: 1.0, threshold: 5),
+                    SecondaryCharge(lawID: "feloniousBE", specification: "Broke and entered a fourth storage unit at {FAC} with intent to commit larceny.", chance: 1.0, threshold: 5),
+                    SecondaryCharge(lawID: "possStolen", specification: "Possessed a generator belonging to {V}, knowing it to be stolen.", chance: 1.0, threshold: 4),
+                    SecondaryCharge(lawID: "injuryRealProperty", specification: "Damaged nine storage unit locks at {FAC}.", chance: 1.0, threshold: 3),
+                    SecondaryCharge(lawID: "felonyLarceny", specification: "Stole tools, electronics, and a generator valued at more than $1,000 from storage units at {FAC}.", chance: 1.0, threshold: 0)],
         ageRange: 25...45, occupations: ["online reseller"], forcedPriorOffenses: ["Breaking or Entering"], hasVictim: true,
         summaries: [
             "Overnight on {DATE}, nine units at {FAC} on {STREET} were opened with bolt cutters, and tools, electronics, and a generator were taken, including {V}'s. The gate keypad log shows {D}'s personal code entered at 1:12 a.m. and again at 3:40 a.m. {DL} rents a unit there and sells used tools online; two weeks later, a listing on {DL}'s account showed a generator matching {VL}'s, with a serial number one digit off. {DL} says {D.he} came that night to pick up inventory, that {D.his} code was on a lanyard {D.he} lent to a friend, and that {D.he} bought the generator at a flea market."

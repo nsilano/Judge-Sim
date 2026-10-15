@@ -318,10 +318,23 @@ struct SentencingStage: View {
                                     .pickerStyle(.menu)
                                 }
                             }
-                            Toggle("Run the judgments consecutively",
-                                   isOn: Binding(get: { session.rulings.groupsConsecutive },
-                                                 set: { session.setGroupsConsecutive($0) }))
-                                .font(.callout)
+                            let groupUnits = session.units
+                            if groupUnits.count > 1 {
+                                Divider()
+                                Text("How the judgments run").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                                ForEach(Array(groupUnits.enumerated()).dropFirst(), id: \.element.id) { index, unit in
+                                    Toggle(isOn: session.unitConsecutiveBinding(unit, index: index)) {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Judgment \(index + 1): \(unit.counts.count == 1 ? "Count" : "Counts") \(unit.counts.map(String.init).joined(separator: ", "))")
+                                                .font(.callout.weight(.semibold))
+                                            Text(session.rulings.consecutive(unit.id, index: index)
+                                                 ? "Begins when Judgment \(index) ends (consecutive)"
+                                                 : "Runs at the same time as the others (concurrent)")
+                                                .font(.caption).foregroundStyle(.secondary)
+                                        }
+                                    }
+                                }
+                            }
                         }
                         LawLink(lawID: "consolidation")
                     }
@@ -976,6 +989,26 @@ struct UnitSentenceCard: View {
                 if choice.probationMonths < 1 { choice.probationMonths = months.lowerBound }
             }
         }
+        if choice.disposition == .active && !choice.lifeWithoutParole {
+            ConditionToggle(title: "Follow the active term with probation",
+                            detail: "Probation begins on release, even if jail credit means release is today. Revocation can impose up to the same active term again.",
+                            isOn: Binding(get: { choice.probationAfterActive == true },
+                                          set: { choice.probationAfterActive = $0 }))
+            if choice.probationAfterActive == true {
+                let unitName = unit.isFelony ? "month" : "day"
+                AmountStepper(title: "Serve before release: \(choice.servedTerm) of \(choice.minimum) \(unitName)s",
+                              caption: choice.suspendedBalance > 0
+                                ? "The other \(choice.suspendedBalance) \(unitName)s are suspended; a violation can send the defendant back to serve them."
+                                : "The whole term is served before probation begins.",
+                              value: Binding(get: { choice.servedTerm }, set: { choice.servedBeforeProbation = $0 }),
+                              range: 0...max(0, choice.minimum),
+                              fine: 1, coarse: unit.isFelony ? 6 : 30, fineLabel: unit.isFelony ? "± 1 month" : "± 1 day", coarseLabel: unit.isFelony ? "± 6 months" : "± 30 days")
+                AmountStepper(title: "Probation after release: \(choice.probationMonths) months",
+                              caption: "Any length you choose. Conditions are set in the probation section below.",
+                              value: $choice.probationMonths, range: 1...240,
+                              fine: 1, coarse: 12, fineLabel: "± 1 month", coarseLabel: "± 1 year")
+            }
+        }
         if let disposition = choice.disposition, disposition != .active {
             let typical = StructuredSentencing.probationMonths(felony: unit.isFelony, disposition: disposition)
             AmountStepper(title: "Probation: \(choice.probationMonths) months",
@@ -1274,7 +1307,7 @@ struct JudgmentSummaryCard: View {
                 ForEach(Array(session.units.enumerated()), id: \.offset) { index, unit in
                     let choice = session.choice(for: unit)
                     let disposition = choice.lifeWithoutParole ? "" : (choice.disposition == .active ? ", active" : ", suspended, \(choice.probationMonths) months probation")
-                    let relation = index == 0 ? "" : (r.runsConsecutively ? " (consecutive)" : " (concurrent)")
+                    let relation = index == 0 ? "" : (r.consecutive(unit.id, index: index) ? " (consecutive)" : " (concurrent)")
                     Text("• \(unit.title): \(Judgment.termText(for: unit, choice: choice))\(disposition)\(relation)")
                         .font(.callout)
                 }

@@ -12,6 +12,10 @@ extension StoryCases {
         headlines: ["Pregnant Spouse Vanishes on Thanksgiving Morning", "Kayaking Alibi Under Scrutiny"],
         primaryLaw: "murder1", lesserLaw: "murder2", threshold: 6, lesserThreshold: 4,
         specification: "Killed {V}, the defendant's spouse, with malice, premeditation, and deliberation.",
+        secondary: [
+            SecondaryCharge(lawID: "concealingDeath", specification: "Concealed the death of {V} by disposing of {V.his} body in {LAKE}.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "obstruction", specification: "Obstructed justice by giving investigators a false account of the morning {V} disappeared.", chance: 1.0, threshold: 4)
+        ],
         ageRange: 28...36, occupations: ["pharmaceutical sales representative"], hasVictim: true,
         summaries: [
             "On Thanksgiving morning, {DATE}, {V}, seven months pregnant, was reported missing from the couple's home in {HOOD} by {D}, who said {D.he} had gone kayaking alone on {LAKE}, forty miles away, and came home to find {VL} gone and the dog in the yard. Three months later {VL}'s remains surfaced in a cove of {LAKE} about a mile from the boat ramp {DL} said {D.he} used. Investigators learned {DL} had a secret relationship with a coworker, had bought the kayak six days before without telling anyone, and was stopped at the Charlotte airport with a newly issued passport and $9,000 in cash the week the remains were found."
@@ -112,6 +116,13 @@ extension StoryCases {
         headlines: ["Startup Founder Charged in Heart-Monitor Fraud", "The Device That Never Worked"],
         primaryLaw: "securitiesFraud", lesserLaw: nil, threshold: 8, lesserThreshold: 6,
         specification: "In the offer and sale of securities, made untrue statements of material fact to {V} and other North Carolina investors.",
+        secondary: [
+            SecondaryCharge(lawID: "securitiesFraud", specification: "Made untrue statements of material fact to a Raleigh pension fund in the sale of {STARTUP} securities.", chance: 1.0, threshold: 8),
+            SecondaryCharge(lawID: "securitiesFraud", specification: "Made untrue statements of material fact to a Charlotte family office in the sale of {STARTUP} securities.", chance: 1.0, threshold: 8),
+            SecondaryCharge(lawID: "falsePretenses100k", specification: "Obtained $2.4 million from investors by false pretenses using pre-recorded demo results.", chance: 1.0, threshold: 7),
+            SecondaryCharge(lawID: "forgery", specification: "Forged a letter of endorsement from a hospital's chief of cardiology.", chance: 1.0, threshold: 7),
+            SecondaryCharge(lawID: "uttering", specification: "Used the forged hospital endorsement letter in investor presentations, knowing it was forged.", chance: 1.0, threshold: 7)
+        ],
         ageRange: 29...42, occupations: ["startup founder and CEO"], hasVictim: true,
         summaries: [
             "{D} founded {STARTUP}, a {CITY} company promising a ring that could detect heart attacks hours before they happened. North Carolina investors, including {V}, a retired dentist, put in $11 million. Former engineers say the ring never detected anything reliably, that demo results were pre-recorded, and that a letter of endorsement from a major hospital was written by {DL}. {DL} says the technology was close, that the chief engineer told {D.him} it worked, and that startups always sell the future."
@@ -210,6 +221,9 @@ extension StoryCases {
         headlines: ["Teen Charged After Messages Urged Partner's Suicide", "Can Words Be Manslaughter?"],
         primaryLaw: "invManslaughter", lesserLaw: nil, threshold: 3, lesserThreshold: 1,
         specification: "By culpable negligence, through repeated messages encouraging {VL}'s suicide, unintentionally caused the death of {V.him}.",
+        secondary: [
+            SecondaryCharge(lawID: "cyberstalking", specification: "Repeatedly sent electronic messages to {V} for the purpose of harassing and abusing {V.him}.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 18...19, occupations: ["college freshman"], hasVictim: true,
         summaries: [
             "{V}, 18, died by suicide in {HOOD} on {DATE}. Over the previous six weeks, {D}, {VL}'s partner of two years, sent hundreds of messages urging {V.him} to stop delaying and follow through, and was on a video call during the final hour without calling for help. Earlier in the relationship, {DL} had repeatedly urged {VL} to get treatment. The State says {DL}'s pressure was the cause, and that the failure to call for help was culpable negligence. The defense says {VL} had struggled for years, that words alone aren't a cause of death, and that {DL} was a teenager in crisis too."
@@ -395,6 +409,10 @@ extension StoryCases {
         headlines: ["Council Candidate Charged With Faking Assault", "Campaign Volunteers Tell Police It Was Staged"],
         primaryLaw: "falseReport", lesserLaw: nil, threshold: 5, lesserThreshold: 3,
         specification: "Willfully made a false report to the {CITY} Police Department that {DL} had been assaulted.",
+        secondary: [
+            SecondaryCharge(lawID: "obstruction", specification: "Obstructed justice by staging a fake hate crime scene at the campaign office.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "injuryPersonalProperty", specification: "Arranged the spray-painting of the campaign office window to stage a hate crime.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 32...45, occupations: ["city council candidate and small business owner"], hasVictim: false,
         summaries: [
             "Eleven days before a close {CITY} council election, {D} told police two masked people jumped {D.him} outside {D.his} campaign office at about {TIME} on {DATE}, spray-painting a slur on the window and punching {D.him}. The story went national. Police spent three weeks on it. Then two campaign volunteers said {DL} had paid them $1,800 to stage it, walked them through it the day before, and told them where the cameras were. {DL} says the attack was real and the volunteers turned on {D.him} to avoid charges."

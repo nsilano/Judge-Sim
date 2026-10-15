@@ -387,6 +387,15 @@ final class CaseSession: ObservableObject {
                 set: { self.rulings.groups[charge.id] = $0; self.rulings.sentences = [:] })
     }
 
+    func unitConsecutiveBinding(_ unit: SentencingUnit, index: Int) -> Binding<Bool> {
+        Binding(get: { self.rulings.consecutive(unit.id, index: index) },
+                set: { value in
+                    var choices = self.rulings.unitConsecutive ?? [:]
+                    choices[unit.id] = value
+                    self.rulings.unitConsecutive = choices
+                })
+    }
+
     func setGroupsConsecutive(_ value: Bool) {
         rulings.groupsConsecutive = value
         rulings.sentences = [:]

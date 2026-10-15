@@ -12,6 +12,9 @@ extension StoryCases {
         headlines: ["Former Employee Charged With Extorting Executive", "'Pay or Your Family Finds Out'"],
         primaryLaw: "extortion", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
         specification: "Threatened to disclose {V}'s private affair unless paid $60,000.",
+        secondary: [
+            SecondaryCharge(lawID: "cyberstalking", specification: "Sent electronic messages to {V} threatening to expose {V.him} to extort money.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 27...45, occupations: ["former executive assistant"], hasVictim: true,
         summaries: [
             "{D} worked for two years as executive assistant to {V}, a regional bank vice president in {CITY}, until being laid off in a restructuring. A month later, {VL} received an anonymous message with photos of {V.him} and a coworker at a hotel and the line: \"$60,000 or your spouse, your board, and the newspaper get these. You have a week.\" The payment instructions led to a crypto wallet. The State says {DL} sent it out of anger over the layoff. {DL} says {D.he} knew about the affair but never sent any message, and that the coworker, also laid off, had more reason to."
@@ -198,6 +201,9 @@ extension StoryCases {
         headlines: ["County Inspector Charged With Taking Bribes", "Cash Envelopes and Passed Inspections"],
         primaryLaw: "bribery", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
         specification: "As a public officer, accepted cash from a contractor in exchange for passing building inspections.",
+        secondary: [
+            SecondaryCharge(lawID: "obstruction", specification: "Obstructed justice by certifying fire blocking in two homes that had none.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 40...60, occupations: ["county building inspector"], hasVictim: false,
         summaries: [
             "{D}, a Hollis County building inspector for nineteen years, was recorded by an FBI-assisted sting taking an envelope with $1,500 from {CONTRACTOR}, a developer cooperating with investigators, at a job site on {STREET}. Over the prior year, {DL} had passed 38 inspections for that developer, including two homes later found with missing fire blocking. {DL} says the envelope was repayment of a personal loan to the developer, and that the developer set {D.him} up to escape {CONTRACTOR}'s own fraud charges."
@@ -293,6 +299,9 @@ extension StoryCases {
         headlines: ["Driver Found Asleep in Running Car Charged With Habitual DWI", "Driving, or Sleeping It Off?"],
         primaryLaw: "habitualDWI", lesserLaw: "dwi", threshold: 2, lesserThreshold: 1,
         specification: "Drove a vehicle while impaired, having three prior DWI convictions within ten years.",
+        secondary: [
+            SecondaryCharge(lawID: "dwlr", specification: "Drove while {D.his} license was revoked for a prior impaired driving conviction.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 35...58, occupations: ["welder"], forcedPriorOffenses: ["Driving While Impaired", "Driving While Impaired", "Driving While Impaired"], hasVictim: false,
         summaries: [
             "At about {TIME} on {DATE}, an officer found {D} asleep in the driver's seat of {D.his} running pickup in the parking lot of a bar on {STREET} in {HOOD}, headlights on, heater running, transmission in park. {DL} blew 0.14. {DL} has three DWI convictions in the last nine years, making this a felony if {D.he} was \"driving.\" {DL} says {D.he} knew {D.he} was too drunk to drive, went to the truck to sleep it off in the heat, and never intended to move."

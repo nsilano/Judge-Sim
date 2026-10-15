@@ -12,6 +12,11 @@ extension StoryCases {
         headlines: ["Ex-Partner Charged With Kidnapping After Five-Hour Drive", "Held Against Will, or a Long Talk?"],
         primaryLaw: "kidnapping2", lesserLaw: nil, threshold: 5, lesserThreshold: 3,
         specification: "Unlawfully restrained and removed {V} for the purpose of terrorizing {V.him}.",
+        secondary: [
+            SecondaryCharge(lawID: "communicatingThreats", specification: "Threatened to drive {V} and {D.himself} off a bridge.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "interferingEmergency", specification: "Interfered with {V}'s ability to call for help by taking {V.his} phone.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "misdLarceny", specification: "Took {V}'s phone and kept it during the drive.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 26...42, occupations: ["HVAC technician"], hasVictim: true,
         summaries: [
             "On {DATE}, {D} showed up at {V}'s workplace parking lot in {HOOD} at shift change, six weeks after {V.he} ended their relationship. {VL} got into {DL}'s car. Five hours later {VL} jumped out at a gas station in Virginia and called 911, saying {DL} had locked the doors, taken {VL}'s phone, and threatened to drive them both off a bridge. {DL} says {VL} got in willingly to talk, that they argued for hours, and that {V.he} could have left at any of three stops."
@@ -108,6 +113,13 @@ extension StoryCases {
         headlines: ["Neighbor Charged in Identity Theft of Retiree", "Credit Cards in a Shared Mailbox"],
         primaryLaw: "identityTheft", lesserLaw: nil, threshold: 3, lesserThreshold: 1,
         specification: "Knowingly used identifying information of {V} to open credit accounts and obtain goods.",
+        secondary: [
+            SecondaryCharge(lawID: "identityTheft", specification: "Used {V}'s identifying information to open a second store credit account.", chance: 1.0, threshold: 3),
+            SecondaryCharge(lawID: "identityTheft", specification: "Used {V}'s identifying information to open a third credit card account.", chance: 1.0, threshold: 3),
+            SecondaryCharge(lawID: "cardFraud", specification: "Used credit cards issued in {V}'s name to buy $23,000 in electronics.", chance: 1.0, threshold: 2),
+            SecondaryCharge(lawID: "possStolen", specification: "Possessed laptops and gaming consoles bought with stolen credit, knowing they were obtained by fraud.", chance: 1.0, threshold: 2),
+            SecondaryCharge(lawID: "misdLarceny", specification: "Stole mail addressed to {V} from the cluster mailbox.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 24...40, occupations: ["online reseller"], hasVictim: true,
         summaries: [
             "{V}, 79, lives in a duplex on {STREET} in {HOOD}, sharing a cluster mailbox with {D}, who lives next door and resells electronics online. Over four months, five credit cards were opened in {VL}'s name and used to buy $23,000 in laptops, gaming consoles, and phones, delivered to the cluster box or to a locker at a nearby store. {DL} sold more than thirty of those same models online during those months. {DL} says {D.he} buys inventory in bulk from liquidation sales, and that a mail carrier substitute that season was later fired for mail theft."
@@ -294,6 +306,10 @@ extension StoryCases {
         headlines: ["Friend Charged in Fentanyl Death", "Death by Distribution Case Tests Causation"],
         primaryLaw: "deathByDistribution", lesserLaw: "deliverSchedII", threshold: 5, lesserThreshold: 3,
         specification: "Delivered a pill containing fentanyl to {V}, whose ingestion of it caused {V.his} death.",
+        secondary: [
+            SecondaryCharge(lawID: "deliverSchedII", specification: "Delivered a counterfeit oxycodone pill containing fentanyl to {V}.", chance: 1.0, threshold: 3),
+            SecondaryCharge(lawID: "saleSchedII", specification: "Sold two pills containing fentanyl to {V} for $40.", chance: 1.0, threshold: 4)
+        ],
         ageRange: 21...30, occupations: ["restaurant server"], hasVictim: true,
         summaries: [
             "On {DATE}, {V}, 24, was found dead in {V.his} apartment in {HOOD}. Beside {VL} were an empty pill bag and a rolled-up dollar bill. Texts show {D}, a longtime friend and fellow server, sold {VL} two pills the night before for $40, which {DL} described as \"perc 30s.\" The pills were counterfeit and contained fentanyl. {VL}'s toxicology also showed alcohol and a sedative prescribed to {V.him}. {DL} says {D.he} was passing along pills from {D.his} own supply, didn't know they had fentanyl, and that {VL}'s mix of drugs, not {DL}'s pill, caused the death."

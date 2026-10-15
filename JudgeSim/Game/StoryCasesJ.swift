@@ -12,6 +12,11 @@ extension StoryCases {
         headlines: ["Catalytic Converters Cut From Church Vans", "Converter Thefts: Suspect Caught With Saw and Six Converters"],
         primaryLaw: "felonyLarceny", lesserLaw: "misdLarceny", threshold: 5, lesserThreshold: 3,
         specification: "Stole catalytic converters valued at more than $1,000 from vehicles belonging to {CHURCH}.",
+        secondary: [
+            SecondaryCharge(lawID: "felonyLarceny", specification: "Stole catalytic converters from three other vehicles found in the hatchback.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "possStolen", specification: "Possessed six catalytic converters, knowing or having reason to believe they were stolen.", chance: 1.0, threshold: 3),
+            SecondaryCharge(lawID: "injuryPersonalProperty", specification: "Damaged three passenger vans belonging to {CHURCH} by cutting out their exhaust components.", chance: 1.0, threshold: 4)
+        ],
         ageRange: 20...35, occupations: ["unemployed", "construction laborer"], forcedPriorOffenses: ["Possession of Stolen Goods"], hasVictim: false,
         summaries: [
             "Before dawn on {DATE}, someone cut the catalytic converters from three passenger vans in the lot of {CHURCH} in {HOOD}. Twenty minutes later, a deputy stopped {D}'s hatchback four miles away for a broken taillight and saw six converters and a battery-powered reciprocating saw in the back. Three of the converters had fresh cuts and paint flecks matching the vans. {DL} says a man named \"Tank\" paid {D.him} $100 to drive the converters to a scrap yard in Bayard and that {D.he} never went to the church."
@@ -197,6 +202,10 @@ extension StoryCases {
         headlines: ["Sibling Charged With Cashing Late Parent's $22,000 Check", "Estate Dispute Becomes Forgery Case"],
         primaryLaw: "uttering", lesserLaw: nil, threshold: 5, lesserThreshold: 3,
         specification: "Knowingly passed a forged check for $22,000 drawn on the account of the late {PARENT}, with intent to defraud.",
+        secondary: [
+            SecondaryCharge(lawID: "forgery", specification: "Forged the signature of {PARENT} on a $22,000 check.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "falsePretenses", specification: "Obtained $22,000 from the estate of {PARENT} by presenting the forged check.", chance: 1.0, threshold: 4)
+        ],
         ageRange: 40...60, occupations: ["real estate agent", "hair stylist"], hasVictim: true,
         summaries: [
             "Three days after {PARENT} died on {DATE}, {D} deposited a $22,000 check from {PARENT}'s account, made out to {DL} and dated the day before the death. {V}, {DL}'s sibling and executor of the estate, says their parent was in a coma by then and could not have signed anything. A State Bureau of Investigation document examiner says the signature is \"probably not genuine.\" {DL} says {PARENT} signed the check two weeks earlier as repayment for years of caregiving and told {D.him} to fill in the date later."
@@ -383,6 +392,9 @@ extension StoryCases {
         headlines: ["Woman Says Fake Accounts Harassed Her for Months", "Cyberstalking Charge Rests on IP Addresses and a Typo"],
         primaryLaw: "cyberstalking", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
         specification: "Repeatedly sent electronic messages to {V} for the purpose of abusing, annoying, threatening, or harassing {V.him}.",
+        secondary: [
+            SecondaryCharge(lawID: "cyberstalking", specification: "Created a second set of accounts to send messages to {V} after being blocked.", chance: 1.0, threshold: 4)
+        ],
         ageRange: 24...40, occupations: ["physical therapist", "retail manager"], hasVictim: true,
         summaries: [
             "For four months beginning on {DATE}, {V} received more than 200 messages from nine different social media accounts calling {V.him} names, mocking {V.his} weight, and saying {V.his} new partner \"will leave you like he left me.\" The new partner is {D}'s ex. Four of the accounts were created from an IP address at {D}'s gym; two used an email recovery address with {DL}'s initials. Many messages misspelled \"definitely\" as \"definately,\" which {DL} also does in texts. {DL} says {D.he} has never contacted {VL}, that hundreds of people use that gym's Wi-Fi, and that half the internet can't spell \"definitely.\" {DL} was convicted in district court and appealed."

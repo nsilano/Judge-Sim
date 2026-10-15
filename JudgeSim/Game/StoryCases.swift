@@ -19,6 +19,9 @@ enum StoryCases {
         headlines: ["Head-On Crash on Old Mill Road", "A Nurse Killed Driving Home"],
         primaryLaw: "felonyDBV", lesserLaw: "misdDBV", threshold: 10, lesserThreshold: 7,
         specification: "While impaired, unlawfully and unintentionally caused the death of {V} in a collision on Old Mill Road.",
+        secondary: [
+            SecondaryCharge(lawID: "recklessDriving", specification: "Drove carelessly and heedlessly across the center line on a curve on Old Mill Road.", chance: 1.0, threshold: 8)
+        ],
         ageRange: 24...41, occupations: ["line cook"], hasVictim: true,
         summaries: [
             "At about {TIME} on {DATE}, {D}'s Honda Civic crossed the center line on a curve on Old Mill Road outside {HOOD} and struck a Toyota Corolla head-on. The Corolla's driver, {V}, 34, a nurse driving home from a twelve-hour shift, died at the scene. {D}, a line cook at {REST}, had stayed after closing that night. A hospital blood test about ninety minutes after the crash and a second, State Crime Laboratory test about three hours after it disagree on whether {DL} was over the legal limit when the cars collided. {DL} says a deer came out of the tree line and {D.he} swerved."
@@ -265,6 +268,11 @@ enum StoryCases {
         headlines: ["Intruder in the Hallway on {STREET}", "Night Break-In Ends in Pawn Shop Arrest"],
         primaryLaw: "burglary1", lesserLaw: "burglary2", threshold: 7, lesserThreshold: 5,
         specification: "Broke and entered the occupied dwelling of {V} at night with intent to commit larceny.",
+        secondary: [
+            SecondaryCharge(lawID: "felonyLarceny", specification: "Stole a laptop, wallet, and prescription medication from {V} during a burglary.", chance: 1.0, threshold: 6),
+            SecondaryCharge(lawID: "possStolen", specification: "Possessed a laptop belonging to {V}, knowing it to be stolen, and sold it to a pawn shop.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "injuryRealProperty", specification: "Damaged the rear door of {V}'s home by prying it open.", chance: 1.0, threshold: 5)
+        ],
         ageRange: 20...36, forcedPriorOffenses: ["Misdemeanor Larceny", "Possession of Stolen Goods"], hasVictim: true,
         summaries: [
             "At about {TIME} on {DATE}, {V} woke to a noise in a duplex on {STREET} in {HOOD} and saw a stranger in the hallway, lit only by a nightlight. The intruder ran out the back door, which had been pried open, taking a laptop, a wallet, and a bottle of prescription pain pills. Four days later {D} sold the laptop to a pawn shop across town. {DL} says the laptop came from a man at a gas station who sold it for $80, and that {D.he} was home asleep that night."
@@ -502,6 +510,11 @@ enum StoryCases {
         headlines: ["Cocaine Found in Shared Apartment", "Whose Shoebox Is It?"],
         primaryLaw: "pwisd", lesserLaw: "possSchedII", threshold: 4, lesserThreshold: 2,
         specification: "Possessed cocaine with intent to sell or deliver.",
+        secondary: [
+            SecondaryCharge(lawID: "possSchedII", specification: "Possessed cocaine, a Schedule II controlled substance.", chance: 1.0, threshold: 2),
+            SecondaryCharge(lawID: "maintainingDwelling", specification: "Kept and maintained the apartment on {STREET} for keeping and selling controlled substances.", chance: 1.0, threshold: 3),
+            SecondaryCharge(lawID: "possParaphernalia", specification: "Possessed a digital scale and baggies for packaging controlled substances.", chance: 1.0, threshold: 2)
+        ],
         ageRange: 21...34, hasVictim: false,
         summaries: [
             "On {DATE}, narcotics detectives executed a search warrant at a three-bedroom apartment on {STREET} in {HOOD}, leased to {D} and shared with two roommates. In a shoebox on the top shelf of the hall closet they found 31 knotted baggies of cocaine totaling 22.4 grams and $1,840 in cash; a digital scale was in a kitchen drawer. {DL} was the only person home. One roommate, {ALT}, who has a prior conviction for selling cocaine, moved out two days later. {DL}, a warehouse forklift operator, says the closet was shared and the box wasn't {D.hers}."
@@ -606,6 +619,10 @@ enum StoryCases {
         headlines: ["Caregiver Accused of Draining Client's Savings", "Gifts or Theft? $68,000 From a 91-Year-Old"],
         primaryLaw: "exploitationElder", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
         specification: "Knowingly exploited {V}, an older adult, by using {V.his} funds for {DL}'s own benefit through deception and undue influence.",
+        secondary: [
+            SecondaryCharge(lawID: "exploitationElder", specification: "Knowingly exploited {V} by having a used car purchased with {V.his} funds and titled in {DL}'s name.", chance: 1.0, threshold: 3),
+            SecondaryCharge(lawID: "cardFraud", specification: "Used {V}'s debit card without consent for $9,400 in cash withdrawals over fourteen months.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 29...52, occupations: ["home health aide"], hasVictim: true,
         summaries: [
             "For two years {D}, a home health aide, cared for {V}, 91, a retired textile mill supervisor who lives alone in {HOOD}. Over fourteen months, $68,000 left {VL}'s savings: checks to {DL} written in {D.his} handwriting and signed by {VL}, a used car titled to {DL}, and cash withdrawals made with {VL}'s debit card. {VL}'s niece, who lives in Ohio, found the statements after {V.he} fell and was hospitalized. {DL} says {VL} insisted on every gift and called {DL} \"the only family who shows up.\" {VL}, who has mild dementia but sometimes recalls things clearly, has told different people different things."
@@ -823,9 +840,16 @@ enum StoryCases {
         headlines: ["Six Families, Six Deposits, No Kitchens", "Contractor Charged After Remodels Never Start"],
         primaryLaw: "falsePretenses", lesserLaw: nil, threshold: 6, lesserThreshold: 4,
         specification: "Obtained a $14,500 deposit from {V} by falsely representing that materials had been ordered for {V.his} kitchen remodel.",
+        secondary: [
+            SecondaryCharge(lawID: "falsePretenses", specification: "Obtained an $8,200 deposit from a homeowner on {STREET} by falsely representing that tile had been ordered.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "falsePretenses", specification: "Obtained an $11,000 deposit from a homeowner in {HOOD} by falsely representing that a crew was scheduled.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "falsePretenses", specification: "Obtained a $9,600 deposit from a retired couple in {HOOD} by falsely representing that permits had been pulled.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "falsePretenses", specification: "Obtained a $7,700 deposit from a homeowner in {CITY} by falsely representing that cabinets were on order.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "falsePretenses", specification: "Obtained a $10,000 deposit from a homeowner in {HOOD} by falsely representing that countertops had been fabricated.", chance: 1.0, threshold: 5)
+        ],
         ageRange: 35...58, occupations: ["remodeling contractor"], hasVictim: true,
         summaries: [
-            "Over five months, {D}, owner of {BIZ} in {HOOD}, took deposits from six homeowners for kitchen and bathroom remodels, $61,000 in all. None of the work was finished; three jobs never started. {V} paid $14,500 after {DL} told {VL} the cabinets were \"already on order and arriving in three weeks.\" No cabinets were ever ordered. {DL} says the business collapsed when a supplier went under and {D.he} was robbing Peter to pay Paul to keep it alive, not stealing. The State charged only {VL}'s deposit, because of what {DL} said to get it."
+            "Over five months, {D}, owner of {BIZ} in {HOOD}, took deposits from six homeowners for kitchen and bathroom remodels, $61,000 in all. None of the work was finished; three jobs never started. {V} paid $14,500 after {DL} told {VL} the cabinets were \"already on order and arriving in three weeks.\" No cabinets were ever ordered. {DL} says the business collapsed when a supplier went under and {D.he} was robbing Peter to pay Paul to keep it alive, not stealing. The State charged each family's deposit as its own count; {VL}'s leads the indictment because of what {DL} said to get it."
         ],
         prosecutionEvidence: [
             E(.statement, 3, "Text Message to {V}", "From {DL}, the day before the deposit: \"Cabinets are already on order, arriving in 3 wks. Need the deposit to lock in install date.\""),
@@ -926,6 +950,9 @@ enum StoryCases {
         headlines: ["Business Partner Shot Dead at {LAKE} Cabin", "Accident or Murder at the Lake?"],
         primaryLaw: "murder1", lesserLaw: "murder2", threshold: 5, lesserThreshold: 3,
         specification: "Killed {V} with a shotgun, with malice, premeditation, and deliberation.",
+        secondary: [
+            SecondaryCharge(lawID: "insuranceFraud", specification: "Presented a claim on the $500,000 partnership life insurance policy on {V}, knowing it contained false statements about how {VL} died.", chance: 1.0, threshold: 4)
+        ],
         ageRange: 38...60, occupations: ["co-owner of a marine supply business"], hasVictim: true,
         summaries: [
             "{D} and {V} owned {SHOP} together for eleven years. On {DATE}, during a cold snap, the two drove to {VL}'s cabin on {LAKE} to hunt ducks. At about {TIME}, {DL} called 911 to say the shotgun had gone off while {D.he} was unloading it on the porch and {VL} was dead. The medical examiner says the shot was fired from about four feet away. Three weeks earlier, {VL} had told a lawyer {V.he} wanted to force {DL} out of the business, and the company held a $500,000 life insurance policy on each partner payable to the other."
@@ -1043,6 +1070,15 @@ enum StoryCases {
         headlines: ["Couple Tied Up in {HOOD} Home Invasion", "Accomplice Points Finger at Former Friend"],
         primaryLaw: "dangerousRobbery", lesserLaw: "commonLawRobbery", threshold: 6, lesserThreshold: 4,
         specification: "With another person, robbed {V} in {V.his} home while armed with a handgun.",
+        secondary: [
+            SecondaryCharge(lawID: "dangerousRobbery", specification: "With another person, robbed {V}'s spouse in their home while armed with a handgun.", chance: 1.0, threshold: 6),
+            SecondaryCharge(lawID: "kidnapping2", specification: "Restrained {V} by binding {V.his} wrists with zip ties to facilitate the robbery.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "kidnapping2", specification: "Restrained {V}'s spouse by binding their wrists with zip ties to facilitate the robbery.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "conspiracyRobbery", specification: "Agreed with {ALT} to rob {V} with a dangerous weapon.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "larcenyFirearm", specification: "Stole three rifles from {V}'s gun safe.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "larcenyFirearm", specification: "Stole a shotgun and a revolver from {V}'s gun safe.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "feloniousBE", specification: "Broke and entered the dwelling of {V} with intent to commit robbery therein.", chance: 1.0, threshold: 5)
+        ],
         ageRange: 20...33, forcedPriorOffenses: ["Misdemeanor Larceny", "Breaking or Entering"], hasVictim: true,
         summaries: [
             "At about {TIME} on {DATE}, two masked people forced their way into the home of {V}, 67, and {V.his} spouse on {STREET} in {HOOD}, held them at gunpoint, zip-tied their wrists, and took a gun safe's contents, jewelry, and $3,000 in cash. Two weeks later police arrested {ALT}, who sold one of the stolen rifles. {ALT} agreed to testify in exchange for a reduced charge and named {D} as the partner who carried the handgun. {DL} says {ALT} is protecting the real accomplice."
@@ -1160,6 +1196,9 @@ enum StoryCases {
         headlines: ["Ex-Partner Cut During Visit Under Protective Order", "A Box Cutter and Two Stories"],
         primaryLaw: "awdwisi", lesserLaw: "awdw", threshold: 4, lesserThreshold: 2,
         specification: "Assaulted {V} with a box cutter, a deadly weapon, inflicting serious injury, while a domestic violence protective order was in effect.",
+        secondary: [
+            SecondaryCharge(lawID: "dvpoViolation", specification: "Knowingly violated a domestic violence protective order by going to {V}'s apartment without arrangement.", chance: 1.0, threshold: 2)
+        ],
         ageRange: 25...44, forcedPriorOffenses: ["Simple Assault"], hasVictim: true,
         summaries: [
             "{V} held a domestic violence protective order against {D}, the other parent of their eight-year-old, that barred contact except for exchanges arranged through a relative. On {DATE}, {DL} came to {VL}'s apartment on {STREET} unannounced at about {TIME} to pick up the child's medicine and school clothes. Minutes later {VL} called 911 with a deep cut across the forearm that took nineteen stitches and nerve repair. {VL} says {DL} pulled a box cutter. {DL} says {VL} grabbed the box cutter off the counter and {DL} was cut too trying to take it away."
@@ -1263,6 +1302,9 @@ enum StoryCases {
         headlines: ["Rape Charge After Off-Campus Party", "Consent and Memory at Trial"],
         primaryLaw: "rape2", lesserLaw: "sexualBattery", threshold: 9, lesserThreshold: 7,
         specification: "Engaged in vaginal intercourse with {V}, who was physically helpless and mentally incapacitated by alcohol, when {DL} knew or should reasonably have known of that condition.",
+        secondary: [
+            SecondaryCharge(lawID: "sexualBattery", specification: "Engaged in sexual contact with {V} while {V.he} was mentally incapacitated and physically helpless.", chance: 1.0, threshold: 8)
+        ],
         ageRange: 20...26, occupations: ["college senior and part-time restaurant server"], hasVictim: true,
         summaries: [
             "On {DATE}, {V} and {D}, students at Hollis State University, were both at an off-campus party on {STREET}. Friends say {VL} drank heavily over several hours. At about {TIME}, {DL} and {VL} left together for {DL}'s apartment two blocks away. The next morning {VL} woke there with no memory after the party and went to the hospital, where a sexual assault examination was done. {DL} says {VL} was drunk but awake, talking, and an eager participant. {VL} says {V.he} could not have agreed to anything."

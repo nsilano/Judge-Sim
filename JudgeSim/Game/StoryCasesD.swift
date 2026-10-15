@@ -12,6 +12,9 @@ extension StoryCases {
         headlines: ["One Punch Outside {CLUB} Leaves One Dead", "Manslaughter Trial for Former Bouncer"],
         primaryLaw: "invManslaughter", lesserLaw: nil, threshold: 3, lesserThreshold: 1,
         specification: "Unintentionally killed {V} by an unlawful assault, a single punch.",
+        secondary: [
+            SecondaryCharge(lawID: "simpleAssault", specification: "Assaulted {V} by punching {V.him} in the face.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 23...38, occupations: ["gym trainer and former bouncer"], hasVictim: true,
         summaries: [
             "At closing time on {DATE}, outside {CLUB} in {CITY}, {V}, 31, and {D} exchanged words after {VL} bumped {DL}'s friend in the line for rides. Video shows {VL} stepping toward {DL} and pointing in {D.his} face. {DL} threw a single punch. {VL} fell backward, struck the curb, and died two days later of a skull fracture and brain bleed. {DL} stayed, called 911, and held {VL}'s head still until paramedics came. The State says an unprovoked punch that kills is manslaughter. {DL} says {VL} was about to swing first."
@@ -106,6 +109,9 @@ extension StoryCases {
         headlines: ["Private Images Posted After Breakup", "Ex Says Account Was Hacked"],
         primaryLaw: "privateImages", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
         specification: "Knowingly disclosed private intimate images of {V} without consent, with intent to cause harm.",
+        secondary: [
+            SecondaryCharge(lawID: "cyberstalking", specification: "Repeatedly sent electronic messages to {V}'s coworkers to harass and embarrass {V.him}.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 23...35, occupations: ["IT help desk technician"], hasVictim: true,
         summaries: [
             "Three weeks after {V} ended a two-year relationship with {D}, private photos {VL} had shared only with {DL} appeared on a fake social media account tagged with {VL}'s employer and coworkers. The account was created from an IP address at {DL}'s apartment complex. {DL}, an IT help desk technician, says {D.his} old phone with the photos was stolen from {D.his} car two weeks earlier, that the complex's Wi-Fi is shared by 200 units, and that {D.he} would never do this."
@@ -199,6 +205,9 @@ extension StoryCases {
         headlines: ["Felon Charged After Gun Found Under Car Seat", "Three People, One Pistol"],
         primaryLaw: "felonFirearm", lesserLaw: nil, threshold: 2, lesserThreshold: 1,
         specification: "Having been convicted of a felony, possessed a handgun.",
+        secondary: [
+            SecondaryCharge(lawID: "concealedWeapon", specification: "Carried a concealed handgun about {D.his} person in a vehicle without a permit.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 25...40, occupations: ["line cook"], forcedPriorOffenses: ["PWISD Cocaine"], hasVictim: false,
         summaries: [
             "At about {TIME} on {DATE}, officers stopped a sedan for a broken taillight on {STREET} in {HOOD}. {D}, who has a felony drug conviction from nine years ago, was in the front passenger seat. The car belonged to the driver, {DL}'s cousin; a third person sat in the back. Under the front passenger seat, officers found a loaded pistol. The cousin and the backseat passenger both say they've never seen it. {DL} says the same. Nobody's fingerprints were on it."
@@ -290,6 +299,9 @@ extension StoryCases {
         headlines: ["Stolen Car Found Burned; Owner Charged With Fraud", "Behind on Payments, Then 'Stolen'"],
         primaryLaw: "insuranceFraud", lesserLaw: nil, threshold: 5, lesserThreshold: 3,
         specification: "Presented a false statement in support of an insurance claim for the theft of {DL}'s vehicle.",
+        secondary: [
+            SecondaryCharge(lawID: "falseReport", specification: "Made a false report to the Hollis County Sheriff's Office that {D.his} pickup had been stolen.", chance: 1.0, threshold: 4)
+        ],
         ageRange: 26...45, occupations: ["real estate agent"], hasVictim: false,
         summaries: [
             "On {DATE}, {D} reported {D.his} pickup stolen from a restaurant parking lot in {HOOD} and filed a $41,000 insurance claim. Three days later the truck was found burned in a field six miles away. {DL} was three payments behind and owed more than the truck was worth. The fire was set with gasoline. Phone data puts {DL}'s phone a quarter mile from the field the night of the fire. {DL} says {D.he} drives that road to a client's house and that real thieves burn cars to destroy evidence."
@@ -381,6 +393,10 @@ extension StoryCases {
         headlines: ["Senior Charged After 'Don't Come Friday' Post", "Joke or Threat?"],
         primaryLaw: "massViolenceThreat", lesserLaw: "communicatingThreats", threshold: 1, lesserThreshold: 1,
         specification: "Threatened to commit an act of mass violence on educational property.",
+        secondary: [
+            SecondaryCharge(lawID: "communicatingThreats", specification: "Threatened students of {SCHOOL} with gun violence in a manner a reasonable person would believe.", chance: 1.0, threshold: 1),
+            SecondaryCharge(lawID: "disorderly", specification: "Disrupted the operation of {SCHOOL} by a post that caused half the student body to stay home.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 18...19, occupations: ["high school senior"], hasVictim: false,
         summaries: [
             "On {DATE}, {D}, an 18-year-old senior at {SCHOOL}, posted a short video to a private story seen by about 140 classmates: a photo of the school with the caption \"don't come friday 💀\" and a song with gunshot sound effects. Within an hour, parents flooded the school with calls; Friday attendance dropped by half. Deputies found no weapons in {DL}'s home, though {D.his} parent owns two hunting rifles kept in a locked safe. {DL} says it was a joke about a canceled pep rally and a big test, and that everyone who knows {D.he} knew that."

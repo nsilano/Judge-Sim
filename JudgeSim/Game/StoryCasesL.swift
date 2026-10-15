@@ -12,6 +12,11 @@ extension StoryCases {
         headlines: ["Undercover Buy Leads to Cocaine Sale Charge", "Defense Attacks Paid Informant's Credibility"],
         primaryLaw: "saleSchedII", lesserLaw: "possSchedII", threshold: 5, lesserThreshold: 3,
         specification: "Sold 3.4 grams of cocaine, a Schedule II controlled substance, to a confidential informant.",
+        secondary: [
+            SecondaryCharge(lawID: "deliverSchedII", specification: "Delivered 3.4 grams of cocaine to a confidential informant.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "possSchedII", specification: "Possessed cocaine, a Schedule II controlled substance.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "pwisd", specification: "Possessed cocaine with intent to sell or deliver.", chance: 1.0, threshold: 5)
+        ],
         ageRange: 21...35, occupations: ["barber", "line cook"], forcedPriorOffenses: ["Possession of Schedule II (cocaine)"], hasVictim: false,
         summaries: [
             "On {DATE}, a paid confidential informant working with the Hollis County Sheriff's narcotics unit met {D} in the parking lot of a laundromat on {STREET} and, according to the informant, bought 3.4 grams of cocaine for $200 in marked bills. The informant wore an audio recorder; the video camera hidden in the informant's car pointed the wrong way. Deputies searched the informant before and after. {DL} was arrested two months later. {DL} says {D.he} met the informant to collect a $200 debt and that the informant had the cocaine all along. The informant has been paid $6,800 over two years and is hoping to get two pending felony charges reduced."
@@ -199,6 +204,10 @@ extension StoryCases {
         headlines: ["Motorcycle Flees Trooper at 130 MPH on I-40", "Rider Charged From Plate, Not Face"],
         primaryLaw: "fleeing", lesserLaw: nil, threshold: 5, lesserThreshold: 3,
         specification: "Operated a motorcycle on I-40 while fleeing a law enforcement officer, with speed more than 15 mph over the limit and reckless driving.",
+        secondary: [
+            SecondaryCharge(lawID: "recklessDriving", specification: "Drove a motorcycle at over 130 mph through traffic on I-40.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "resisting", specification: "Resisted and delayed a state trooper by fleeing a traffic stop.", chance: 1.0, threshold: 4)
+        ],
         ageRange: 21...32, occupations: ["mechanic", "warehouse worker"], hasVictim: false,
         summaries: [
             "At 9:30 p.m. on {DATE}, a state trooper clocked a black sport motorcycle at 112 mph on I-40 near the {HOOD} exit. When the trooper turned on the blue lights, the rider accelerated past 130, weaved through traffic, and escaped. The trooper's dashcam caught the plate, registered to {D}. The rider wore a full-face helmet. {DL} says {D.he} sold the bike two weeks earlier for cash to someone from a social media marketplace and never transferred the title."
@@ -293,6 +302,9 @@ extension StoryCases {
         headlines: ["Officer Charged With Deleting Body Camera Video", "Arrest Video Vanished; Sergeant Says It Was a Glitch"],
         primaryLaw: "obstruction", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
         specification: "Obstructed public justice by deleting body camera video of an arrest that was the subject of a use-of-force complaint.",
+        secondary: [
+            SecondaryCharge(lawID: "accessingComputers", specification: "Accessed the department's camera system to destroy records for an unauthorized purpose.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 32...50, occupations: ["police sergeant"], hasVictim: false,
         summaries: [
             "On {DATE}, Port Hollis officers arrested {V} outside a convenience store; {VL} later complained that an officer slammed {V.his} head against the patrol car. When internal affairs requested the footage, the body camera video from that arrest was gone. The camera system's audit log shows the video was deleted at 2:14 a.m. the next morning from a desktop login belonging to {D}, the shift sergeant, who was not the arresting officer. {DL} says {D.he} was bulk-clearing \"non-evidentiary\" recordings, which the system allows sergeants to do, and the arrest video was miscategorized."
@@ -387,6 +399,10 @@ extension StoryCases {
         headlines: ["Ex-Partner Charged With Burglary After Late-Night Entry", "'It Was Still My Stuff,' Burglary Defendant Says"],
         primaryLaw: "burglary2", lesserLaw: "feloniousBE", threshold: 3, lesserThreshold: 1,
         specification: "Broke and entered the dwelling house of {V} on {STREET} in the nighttime with intent to commit larceny therein.",
+        secondary: [
+            SecondaryCharge(lawID: "felonyLarceny", specification: "Stole a television and jewelry box valued over $1,000 belonging to {V}.", chance: 1.0, threshold: 2),
+            SecondaryCharge(lawID: "trespass2", specification: "Entered {V}'s home after being told in writing not to.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 28...45, occupations: ["real estate agent", "HVAC technician"], hasVictim: true,
         summaries: [
             "Six weeks after {D} moved out of the house {D.he} had shared with {V} on {STREET} in {HOOD}, {VL} woke at 1:30 a.m. on {DATE} to find {DL} in the living room carrying a television and a box of jewelry. {DL} still had a key, and nothing was forced. {DL} says the television and half the jewelry were {D.his}, that {VL} had refused for weeks to let {D.him} get {D.his} things, and that {D.he} came at night to avoid a fight. {VL} had texted {DL} two weeks earlier: \"Don't you dare come in this house again.\" The house is in {VL}'s name alone."
