@@ -99,7 +99,8 @@ extension StoryCases {
             prosecutionOpening: "{VL} looked into the face of the person who knocked {V.him} down, and picked that face out of six.",
             defenseOpening: "One second, a frightened witness, and a time clock eleven miles away.",
             prosecutionClosing: "{VL} was sure enough to point. The bus pass was behind {DL}'s door.",
-            defenseClosing: "Pretty sure isn't proof beyond a reasonable doubt."
+            defenseClosing: "Pretty sure isn't proof beyond a reasonable doubt.",
+            genders: ["V": .female]
         )
     )
 
