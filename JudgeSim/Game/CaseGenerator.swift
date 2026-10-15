@@ -125,17 +125,17 @@ enum CaseGenerator {
             for (offset, name) in t.forcedPriorOffenses.enumerated() {
                 guard let seed = GenericPools.priorSeeds.first(where: { $0.offense == name }) else { continue }
                 priors.append(PriorConviction(offense: seed.offense, ncClass: seed.ncClass,
-                                              year: currentYear - 1 - offset * 2 - rng.int(0...1),
+                                              year: max(currentYear - max(1, age - 17), currentYear - 1 - offset * 2 - rng.int(0...1)),
                                               county: rng.chance(0.6) ? county.name : rng.pick(GenericPools.otherCounties),
                                               sentence: rng.pick(seed.sentences)))
             }
             priors.sort { $0.year < $1.year }
             if t.requiresFelonyPrior && !priors.contains(where: { $0.ncClass.isFelony }) {
-                priors.insert(PriorConviction(offense: "Possession of Stolen Goods", ncClass: .H, year: currentYear - 12,
+                priors.insert(PriorConviction(offense: "Possession of Stolen Goods", ncClass: .H, year: max(currentYear - max(1, age - 17), currentYear - 12),
                                               county: rng.pick(GenericPools.otherCounties),
                                               sentence: "6–17 months active"), at: 0)
             }
-            let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(rng.pick(NameBank.backgrounds))
+            let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(NameBank.background(age: age, occupation: occupation, rng: &rng))
             defendant = Defendant(personID: UUID(), name: name, age: age, occupation: occupation.capitalizedFirst,
                                   background: background, priors: priors, probation: nil, history: [])
         }
@@ -286,7 +286,7 @@ enum CaseGenerator {
 
         // The investigation file and fact sheet come first: every generated witness reads from them.
         var profiledDefendant = defendant
-        profiledDefendant.profile = DefendantProfiles.make(for: defendant, county: county)
+        profiledDefendant.profile = DefendantProfiles.make(for: defendant, county: county, year: currentYear)
         let factText = (t.summaries.map { fill($0) } + charges.map(\.specification) + evidence.map { $0.title + ". " + $0.detail }
                         + witnesses.flatMap { $0.direct + $0.cross }).joined(separator: " ")
         let facts = CaseFacts(key: t.key, category: t.category, hasVictim: t.hasVictim, text: factText)
