@@ -139,6 +139,13 @@ enum DefendantProfiles {
 
     private static let employersByKeyword: [(String, [String])] = [
         ("sheriff", ["Hollis County Sheriff's Office"]),
+        ("restaurant", ["own restaurant"]),
+        ("pawn", ["own shop"]),
+        ("rescue", ["self-employed (dog rescue)"]),
+        ("machinist", ["Port Hollis Shipyard", "Dunmore Mills Manufacturing"]),
+        ("massage", ["Harbor Wellness Spa", "self-employed"]),
+        ("cafeteria", ["Hollis County Schools"]),
+        ("systems administrator", ["Tidewater Freight Logistics", "Coastal Carriers Inc."]),
         ("hvac", ["Coastal Heating & Air", "Ridgeview Mechanical"]),
         ("freshman", ["Hollis Community College"]),
         ("college", ["Hollis Community College", "East Carolina University"]),
