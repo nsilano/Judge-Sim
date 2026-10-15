@@ -14,18 +14,103 @@ struct PersonDetail: View {
                               scheduled: game.scheduled, today: game.currentDate)
         DocumentDesk {
             PersonStatusCard(person: current, today: game.currentDate, appeals: file.appeals, upcoming: file.upcoming)
-                .card(tint: statusTint(current.status))
-            PersonFileDocuments(file: file)
+                .card(tint: statusTint(current))
+            ForEach(PersonFileSection.allCases.filter { $0.isAvailable(in: file) }) { section in
+                DeskLink(title: section.title(in: file), detail: section.preview(in: file, today: game.currentDate), icon: section.icon) {
+                    DocumentDesk {
+                        PersonFileDocuments(file: file, section: section)
+                    }
+                    .navigationTitle(section.title(in: file))
+                    .navigationBarTitleDisplayMode(.inline)
+                }
+            }
         }
         .navigationTitle(current.name)
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func statusTint(_ status: PersonRecord.Status) -> Color? {
-        switch status {
+    private func statusTint(_ person: PersonRecord) -> Color? {
+        switch person.status {
         case .incarcerated: return .red
         case .probation: return .orange
-        case .free: return nil
+        case .free: return person.postRelease != nil ? .orange : nil
+        }
+    }
+}
+
+/// The parts of a person's file, each opened on its own page from the summary.
+enum PersonFileSection: String, CaseIterable, Identifiable {
+    case status, supervision, record, cases, appearances, appeals, news
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .status: return "person.text.rectangle.fill"
+        case .supervision: return "person.badge.clock.fill"
+        case .record: return "list.bullet.rectangle.portrait.fill"
+        case .cases: return "hammer.fill"
+        case .appearances: return "calendar"
+        case .appeals: return "building.columns.fill"
+        case .news: return "newspaper.fill"
+        }
+    }
+
+    func isAvailable(in file: PersonFile) -> Bool {
+        let p = file.person
+        switch self {
+        case .status, .record: return true
+        case .supervision: return p.probation != nil || p.postRelease != nil || p.pendingPostRelease != nil
+        case .cases: return !file.records.isEmpty || !file.calendarLines.isEmpty
+        case .appearances: return !p.appearances.isEmpty
+        case .appeals: return !file.appeals.isEmpty
+        case .news: return !file.news.isEmpty
+        }
+    }
+
+    func title(in file: PersonFile) -> String {
+        switch self {
+        case .status: return "Status & sentence"
+        case .supervision: return "Supervision"
+        case .record: return "Criminal record"
+        case .cases: return "Cases in your court (\(file.records.count))"
+        case .appearances: return "Appearances (\(file.person.appearances.count))"
+        case .appeals: return "Appeals (\(file.appeals.count))"
+        case .news: return "News (\(file.news.count))"
+        }
+    }
+
+    func preview(in file: PersonFile, today: Date) -> String? {
+        let p = file.person
+        switch self {
+        case .status:
+            if p.status == .incarcerated, let release = p.releaseDate {
+                return release == .distantFuture ? "In custody for life" : "In custody · release \(SentenceFormat.shortDate(release))"
+            }
+            return p.status.label
+        case .supervision:
+            var parts: [String] = []
+            if let term = p.probation {
+                parts.append((p.status == .incarcerated ? "Probation after release" : "Probation") + " until \(SentenceFormat.shortDate(term.ends))")
+            }
+            if let prs = p.postRelease {
+                parts.append("Post-release supervision until \(SentenceFormat.shortDate(prs.ends))")
+            } else if let prs = p.pendingPostRelease {
+                parts.append("\(prs.supervisionMonths) months of post-release supervision after release")
+            }
+            return parts.joined(separator: " · ")
+        case .record:
+            let felonies = p.priors.filter { $0.ncClass.isFelony }.count
+            if p.priors.isEmpty { return "No convictions" }
+            return "\(p.priors.count) conviction\(p.priors.count == 1 ? "" : "s")" + (felonies > 0 ? " · \(felonies) felon\(felonies == 1 ? "y" : "ies")" : "")
+        case .cases:
+            return file.records.first.map { "Latest: \($0.docket) · \(SentenceFormat.shortDate($0.date))" }
+        case .appearances:
+            return p.appearances.last.map { "Last: \($0.charges) · \(SentenceFormat.shortDate($0.date))" }
+        case .appeals:
+            return file.appeals.first?.statusText(on: today)
+        case .news:
+            return file.news.first?.headline
         }
     }
 }
@@ -33,30 +118,43 @@ struct PersonDetail: View {
 struct PersonFileDocuments: View {
     @EnvironmentObject private var game: GameState
     let file: PersonFile
+    /// Show only one part of the file, or everything when nil.
+    var section: PersonFileSection? = nil
 
     private var person: PersonRecord { file.person }
+    private func shows(_ part: PersonFileSection) -> Bool { section == nil || section == part }
     private var county: String { CourtForms.countyShortName(game.county) }
     private var judge: String { game.judgeName ?? "Presiding Judge" }
     private var leadFile: String { file.records.first?.docket ?? person.appearances.last?.docket ?? "—" }
 
     var body: some View {
-        DeskLabel(text: "Defendant", icon: "person.text.rectangle.fill")
-        identityDocument
+        if shows(.status) {
+            DeskLabel(text: "Defendant", icon: "person.text.rectangle.fill")
+            identityDocument
 
-        if let active = file.activeSentence {
-            DeskLabel(text: "Active sentence", icon: "lock.fill")
-            activeDocument(active)
+            if let active = file.activeSentence {
+                DeskLabel(text: "Active sentence", icon: "lock.fill")
+                activeDocument(active)
+            }
         }
 
-        if let term = person.probation {
-            DeskLabel(text: person.status == .incarcerated ? "Probation to follow release" : "Probation", icon: "person.badge.clock.fill")
-            probationDocument(term)
+        if shows(.supervision) {
+            if let term = person.probation {
+                DeskLabel(text: person.status == .incarcerated ? "Probation to follow release" : "Probation", icon: "person.badge.clock.fill")
+                probationDocument(term)
+            }
+            if let prs = person.postRelease ?? person.pendingPostRelease {
+                DeskLabel(text: person.postRelease == nil ? "Post-release supervision to follow release" : "Post-release supervision", icon: "person.badge.clock.fill")
+                postReleaseDocument(prs, pending: person.postRelease == nil)
+            }
         }
 
-        DeskLabel(text: "Criminal record", icon: "list.bullet.rectangle.portrait.fill")
-        criminalHistoryDocument
+        if shows(.record) {
+            DeskLabel(text: "Criminal record", icon: "list.bullet.rectangle.portrait.fill")
+            criminalHistoryDocument
+        }
 
-        if !file.records.isEmpty || !file.calendarLines.isEmpty {
+        if shows(.cases) && (!file.records.isEmpty || !file.calendarLines.isEmpty) {
             DeskLabel(text: "Judgments you entered", icon: "hammer.fill")
             judgmentsDocument
             ForEach(file.records) { record in
@@ -68,12 +166,12 @@ struct PersonFileDocuments: View {
             }
         }
 
-        if !person.appearances.isEmpty {
+        if shows(.appearances) && !person.appearances.isEmpty {
             DeskLabel(text: "Appearances", icon: "calendar")
             appearancesDocument
         }
 
-        if !file.appeals.isEmpty {
+        if shows(.appeals) && !file.appeals.isEmpty {
             DeskLabel(text: "Appeals", icon: "building.columns.fill")
             ForEach(file.appeals) { appeal in
                 DeskLink(title: "\(CourtForms.appealsNumber(for: appeal)) · \(appeal.docket)",
@@ -83,11 +181,21 @@ struct PersonFileDocuments: View {
             }
         }
 
-        if !file.news.isEmpty {
+        if shows(.news) && !file.news.isEmpty {
             DeskLabel(text: game.county?.newspaper ?? "In the news", icon: "newspaper.fill")
             ForEach(file.news) { item in
                 NewsClipping(item: item)
             }
+        }
+    }
+
+    private func postReleaseDocument(_ prs: PostReleaseTerm, pending: Bool) -> some View {
+        CourtDocument(caption: .superior(county: county), title: "Post-Release Supervision",
+                      subtitle: "G.S. 15A-1368.2", fileNumber: prs.docket, defendant: person.name) {
+            DocField(label: "Offense", value: prs.offense)
+            DocFieldPair(first: ("Term", "\(prs.supervisionMonths) months"),
+                         second: ("Ends", pending ? "\(prs.supervisionMonths) months after release" : SentenceFormat.shortDate(prs.ends)))
+            DocField(label: "Unserved maximum term", value: "\(prs.remainingMonths) months, which revocation would activate")
         }
     }
 
