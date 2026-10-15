@@ -489,6 +489,17 @@ struct DefendantCard: View {
                     PriorRow(prior: prior)
                 }
             }
+            if let violations = defendant.violations, !violations.isEmpty {
+                Text("Supervision violations").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                ForEach(violations.sorted { $0.date > $1.date }) { v in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(v.kind) · \(v.docket) · \(SentenceFormat.shortDate(v.date))")
+                            .font(.callout.weight(.semibold))
+                            .foregroundStyle(.orange)
+                        Text("\(v.conduct). \(v.result).").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
         }
         .card()
     }

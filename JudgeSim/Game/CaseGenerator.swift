@@ -115,7 +115,8 @@ enum CaseGenerator {
                                   occupation: person.occupation, background: person.background, priors: person.priors,
                                   probation: person.status == .probation ? person.probation : nil,
                                   history: person.appearances,
-                                  postRelease: person.status == .incarcerated ? nil : person.postRelease)
+                                  postRelease: person.status == .incarcerated ? nil : person.postRelease,
+                                  violations: person.violations)
         } else {
             let name = NameBank.person(using: &rng, excluding: &used, gender: t.story?.genders["D"])
             let age = rng.int(t.ageRange)

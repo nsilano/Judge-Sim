@@ -356,6 +356,8 @@ struct CaseOutcome {
     var continuedPostRelease: PostReleaseTerm? = nil
     /// Post-release supervision that will follow today's prison term.
     var newPostRelease: PostReleaseTerm? = nil
+    /// Supervision violations the court found in this case.
+    var violations: [SupervisionViolation] = []
 }
 
 enum Judgment {
@@ -1361,6 +1363,18 @@ enum Judgment {
             if let text { probationHearing = [probationHearing, text].compactMap { $0 }.joined(separator: " ") }
         }
 
+        // Violations found today, for the record.
+        var violationsFound: [SupervisionViolation] = []
+        let conduct = "New criminal offense charged in \(c.docket)"
+        if let existing = d.probation, let decision = r.probationDecision, decision != .continueAsIs {
+            violationsFound.append(SupervisionViolation(docket: existing.docket, date: date, kind: "Probation violation",
+                                                        conduct: conduct, result: decision.label))
+        }
+        if let prs = d.postRelease, let decision = r.postReleaseDecision, decision != .continueAsIs {
+            violationsFound.append(SupervisionViolation(docket: prs.docket, date: date, kind: "Post-release supervision violation",
+                                                        conduct: conduct, result: decision.label))
+        }
+
         // New probation from today's judgment, including split sentences that begin after release
         var newProbation = continuedProbation
         if !life && (!suspendedTerms.isEmpty || !afterActiveTerms.isEmpty || special == .conditionalDischarge) {
@@ -1672,7 +1686,8 @@ enum Judgment {
                            newProbation: newProbation, newPriors: newPriors, propensity: propensity,
                            appealNotice: appealNotice, reactions: reactions, news: news, ethicsResult: ethicsResult,
                            pending: pending, appearanceSummary: appearance, releaseBasis: releaseBasis,
-                           continuedPostRelease: continuedPostRelease, newPostRelease: newPostRelease)
+                           continuedPostRelease: continuedPostRelease, newPostRelease: newPostRelease,
+                           violations: violationsFound)
     }
 
     // MARK: Appeals

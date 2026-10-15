@@ -105,12 +105,28 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     var postRelease: PostReleaseTerm? = nil
     /// Post-release supervision that begins when the current prison term ends.
     var pendingPostRelease: PostReleaseTerm? = nil
+    /// Probation and post-release supervision violations the court found (optional for older saves).
+    var violations: [SupervisionViolation]? = nil
 
     func age(on date: Date) -> Int {
         Calendar.current.component(.year, from: date) - birthYear
     }
 
     var lastName: String { name.components(separatedBy: " ").last ?? name }
+}
+
+/// A violation of probation or post-release supervision the court found.
+struct SupervisionViolation: Codable, Hashable, Identifiable {
+    var id = UUID()
+    /// The case the supervision came from.
+    var docket: String
+    var date: Date
+    /// "Probation violation" or "Post-release supervision violation".
+    var kind: String
+    /// What the person did.
+    var conduct: String
+    /// What the court ordered.
+    var result: String
 }
 
 /// Supervision after release from a felony prison term (G.S. 15A-1368.2). Revoking it sends the person back

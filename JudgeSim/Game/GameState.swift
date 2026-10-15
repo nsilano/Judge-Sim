@@ -514,6 +514,7 @@ final class GameState: ObservableObject {
         c.defendant.priors = person.priors
         c.defendant.probation = person.status == .probation ? person.probation : nil
         c.defendant.postRelease = person.status == .incarcerated ? nil : person.postRelease
+        c.defendant.violations = person.violations
         c.defendant.history = person.appearances
         c.defendant.age = person.age(on: c.sessionDate)
     }
@@ -570,6 +571,7 @@ final class GameState: ObservableObject {
             people[index].releaseNote = outcome.releaseDate == nil ? nil : outcome.lines.first
             people[index].probation = outcome.probation
             people[index].propensity = min(0.85, max(0.03, people[index].propensity + outcome.propensityChange))
+            if let violation = outcome.violation { people[index].violations = (people[index].violations ?? []) + [violation] }
             people[index].appearances.append(appearance)
         }
         history.insert(CaseRecord(docket: hearing.probation.docket + " (PV)", caption: "Probation violation: \(hearing.personName)",
@@ -681,6 +683,7 @@ final class GameState: ObservableObject {
             people[index].releaseNote = outcome.releaseBasis
             people[index].probation = outcome.newProbation
             people[index].postRelease = outcome.continuedPostRelease
+            if !outcome.violations.isEmpty { people[index].violations = (people[index].violations ?? []) + outcome.violations }
             people[index].pendingPostRelease = outcome.newPostRelease ?? (outcome.personStatus == .incarcerated ? people[index].pendingPostRelease : nil)
 
             people[index].propensity = (people[index].propensity + outcome.propensity) / 2 + 0.05
