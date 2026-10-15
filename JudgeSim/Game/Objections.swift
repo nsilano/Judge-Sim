@@ -249,9 +249,13 @@ enum ObjectionEngine {
         }
 
         // Narrative answers.
-        if asker == w.calledBy && kind == .lay {
-            out.append(Draft(question: "Just tell the court everything you know about \(dl).",
-                             answer: "Where do I start? I've known \(dl) for years, and there were always rumors, and then on \(day) around \(time)...",
+        // Never put to the defendant, who can't be asked to tell everything known about themself.
+        if asker == w.calledBy && kind == .lay && !isDefendant {
+            let aboutDefendant = w.calledBy == .prosecution
+            out.append(Draft(question: aboutDefendant ? "Just tell the court everything you know about \(dl)." : "Just tell the court everything that happened that night.",
+                             answer: aboutDefendant
+                                ? "Where do I start? I've known \(dl) for years, and there were always rumors, and then on \(day) around \(time)..."
+                                : "Where do I start? It was \(day), around \(time), and before that there was a whole history, and people were saying...",
                              grounds: "Calls for a narrative", sustain: true,
                              explanation: "An open-ended request for everything the witness knows invites inadmissible material; the court may require question-and-answer form (Rule 611(a)).",
                              doctrine: "relevance", weight: 0))
