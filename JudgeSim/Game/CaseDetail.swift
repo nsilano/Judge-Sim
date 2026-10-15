@@ -139,7 +139,7 @@ enum DefendantProfiles {
 
     private static let employersByKeyword: [(String, [String])] = [
         ("sheriff", ["Hollis County Sheriff's Office"]),
-        ("restaurant", ["own restaurant"]),
+        ("restaurant owner", ["own restaurant"]),
         ("pawn", ["own shop"]),
         ("rescue", ["self-employed (dog rescue)"]),
         ("machinist", ["Port Hollis Shipyard", "Dunmore Mills Manufacturing"]),
@@ -249,16 +249,31 @@ enum DefendantProfiles {
         let bytes = withUnsafeBytes(of: defendant.personID.uuid) { Array($0) }
         let seed = bytes.prefix(8).reduce(UInt64(0)) { ($0 << 8) | UInt64($1) }
         var rng = SeededRNG(seed: seed | 1)
-        let occupation = defendant.occupation
-        let lower = occupation.lowercased()
+        // Split a compound occupation into the main role, a part-time job, and a former job:
+        // "college senior and part-time restaurant server", "gym trainer and former bouncer".
+        var role = defendant.occupation.lowercased()
+        var partTime: String?
+        var former: String?
+        if let r = role.range(of: " and part-time ") { partTime = String(role[r.upperBound...]); role = String(role[..<r.lowerBound]) }
+        if let r = role.range(of: " and former ") { former = String(role[r.upperBound...]); role = String(role[..<r.lowerBound]) }
+        for prefix in ["unemployed former ", "former "] where role.hasPrefix(prefix) {
+            former = String(role.dropFirst(prefix.count)); role = "unemployed"
+        }
+        for prefix in ["city council candidate and ", "volunteer treasurer and "] where role.hasPrefix(prefix) {
+            role = String(role.dropFirst(prefix.count))
+        }
+        let occupation = role
+        let lower = role
         let background = defendant.background
         let age = defendant.age
         let currentYear = year ?? Calendar.current.component(.year, from: Date())
         let birthYear = currentYear - age
         var jobs: [Job] = []
         let unemployed = lower.contains("unemployed")
-        let highSchool = lower.contains("high school")
-        let student = highSchool || lower.contains("student") || lower.contains("college freshman")
+        let highSchool = lower.hasPrefix("high school")
+        let student = highSchool || lower.contains("student") || lower.hasPrefix("college ") || lower.hasPrefix("university ")
+        let schoolYear = ["freshman": "First-year", "sophomore": "Second-year", "junior": "Third-year", "senior": "Fourth-year"]
+            .first { lower.contains($0.key) }?.value
         let retired = lower.hasPrefix("retired ")
         let has = { (keys: [String]) in keys.contains(where: lower.contains) }
 
@@ -270,8 +285,9 @@ enum DefendantProfiles {
         if highSchool {
             education = lower.contains("senior") ? "Senior at Hollis County High School; expected to graduate in \(currentYear + 1)." : "Currently enrolled at Hollis County High School."
         } else if student {
-            education = (lower.contains("freshman") ? "First-year student at East Carolina University" : "Currently enrolled at Hollis Community College")
-                + "; high school diploma, Hollis County High School, \(min(hsYear, currentYear))."
+            let school = lower.contains("community college") ? "Hollis Community College" : (schoolYear != nil || lower.contains("college") ? "East Carolina University" : "Hollis Community College")
+            let field = lower.contains("computer science") ? " in computer science" : ""
+            education = "\(schoolYear.map { "\($0) student" } ?? "Currently enrolled")\(field) at \(school); high school diploma, Hollis County High School, \(min(hsYear, currentYear))."
         } else if has(["nurse practitioner"]) {
             careerAge = 26
             education = "BSN, East Carolina University, \(grad(22)); Master of Science in Nursing, \(grad(26))."
@@ -323,7 +339,10 @@ enum DefendantProfiles {
         let careerStart = birthYear + careerAge
         let firstWork = birthYear + 16
         var cursor = currentYear
-        if student {
+        if student, let job = partTime {
+            let start = max(firstWork, currentYear - rng.int(0...2))
+            timeline.append((start, Job(title: "Part-time \(job)", employer: employer(for: job, rng: &rng), years: "\(start)–present", current: true)))
+        } else if student {
             if rng.chance(0.45) {
                 let (title, place) = rng.pick([("Part-time cashier", "Pell Avenue Quik Stop"), ("Part-time line cook", "The Brickyard Grill"),
                                                ("Weekend lifeguard", "Hollis County Parks and Recreation"), ("Part-time stocker", "Cane Creek Hardware")])
@@ -343,7 +362,10 @@ enum DefendantProfiles {
             let start = max(earliest, currentYear - rng.int(1...12))
             timeline.append((start, Job(title: base.capitalizedFirst, employer: employer(for: base, rng: &rng),
                                         years: "\(min(start, currentYear))–present", current: true)))
-            if rng.chance(0.3) && !has(["owner", "founder", "ceo", "therapist", "practitioner", "sergeant", "sheriff"]) {
+            if let job = partTime {
+                let sideStart = max(start, currentYear - rng.int(1...3))
+                timeline.append((sideStart, Job(title: "Part-time \(job)", employer: employer(for: job, rng: &rng), years: "\(sideStart)–present", current: true)))
+            } else if rng.chance(0.3) && !has(["owner", "founder", "ceo", "therapist", "practitioner", "sergeant", "sheriff"]) {
                 let side = rng.pick(["weekend server", "weekend security guard", "weekend delivery driver", "part-time rideshare driver"])
                 let sideEmployer: String = switch side {
                 case "weekend server": rng.pick(["The Lantern Row Tavern", "Pell Avenue Diner"])
@@ -364,6 +386,7 @@ enum DefendantProfiles {
                 timeline.append((cursor - 4, Job(title: "U.S. Navy (honorably discharged)", employer: "U.S. Navy", years: "\(cursor - 4)–\(cursor)", current: false)))
                 cursor -= 4
             }
+            var formerPending = former
             for _ in 0..<rng.int(1...3) {
                 // Step back past any prison term that ends at or after the cursor.
                 if let term = custody.first(where: { $0.start < cursor && $0.end >= cursor - 1 }) { cursor = term.start }
@@ -372,7 +395,11 @@ enum DefendantProfiles {
                 if let term = custody.first(where: { start < $0.end && cursor > $0.start }) { start = term.end }
                 guard start >= firstWork, start < cursor, clear(start, cursor) else { break }
                 let job: Job
-                if let path = careerPaths.first(where: { $0.0.contains(where: lower.contains) }), start >= birthYear + 18 {
+                if let earlier = formerPending, start >= birthYear + 18 {
+                    // The job the occupation says they used to have comes first.
+                    job = Job(title: earlier.capitalizedFirst, employer: employer(for: earlier, rng: &rng), years: "\(start)–\(cursor)", current: false)
+                    formerPending = nil
+                } else if let path = careerPaths.first(where: { $0.0.contains(where: lower.contains) }), start >= birthYear + 18 {
                     let (title, place) = rng.pick(path.1)
                     job = Job(title: title, employer: place, years: "\(start)–\(cursor)", current: false)
                 } else {
