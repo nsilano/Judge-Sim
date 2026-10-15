@@ -138,6 +138,41 @@ enum Clock {
 enum DefendantProfiles {
 
     private static let employersByKeyword: [(String, [String])] = [
+        ("sheriff", ["Hollis County Sheriff's Office"]),
+        ("hvac", ["Coastal Heating & Air", "Ridgeview Mechanical"]),
+        ("freshman", ["Hollis Community College"]),
+        ("college", ["Hollis Community College", "East Carolina University"]),
+        ("student", ["Hollis Community College"]),
+        ("building inspector", ["Hollis County Inspections Department"]),
+        ("dispatcher", ["Tidewater Freight Logistics"]),
+        ("executive assistant", ["Pinewood Analytics", "Ashby & Greer, CPAs"]),
+        ("trainer", ["Iron Harbor Fitness"]),
+        ("bouncer", ["The Lantern Row Tavern"]),
+        ("hair", ["Salon Bayard", "self-employed"]),
+        ("child care", ["self-employed (licensed home day care)"]),
+        ("reseller", ["self-employed (online sales)"]),
+        ("dealership", ["Hollis County Motors (owner)"]),
+        ("rental", ["self-employed (rental properties)"]),
+        ("pharmaceutical", ["Meridian Pharmaceuticals"]),
+        ("physical therap", ["Hollis Regional Medical Center", "Bayard Rehabilitation and Nursing"]),
+        ("real estate", ["Coastal Realty Group"]),
+        ("roofer", ["Kestrel Roofing", "self-employed"]),
+        ("sales manager", ["Marlowe Motors", "Port Hollis Marine Supply"]),
+        ("startup", ["own company"]),
+        ("founder", ["own company"]),
+        ("welder", ["Port Hollis Shipyard", "Kestrel Builders"]),
+        ("landscap", ["Greenline Landscaping", "self-employed"]),
+        ("poultry", ["Cane Creek Poultry"]),
+        ("security guard", ["Allied Coastal Security"]),
+        ("call center", ["Harborview Call Center"]),
+        ("server", ["The Brickyard Grill", "Pell Avenue Diner", "Harbor House Seafood"]),
+        ("forklift", ["Harborview Distribution Center", "Tidewater Freight Logistics"]),
+        ("gas station", ["Pell Avenue Quik Stop"]),
+        ("army", ["U.S. Army"]),
+        ("navy", ["U.S. Navy"]),
+        ("rideshare", ["self-employed (rideshare apps)"]),
+        ("manager", ["Marlowe Boulevard Home Goods", "Cane Creek Hardware"]),
+        ("aide", ["Cane Creek Home Care", "Bayard Rehabilitation and Nursing"]),
         ("high school", ["Hollis County High School"]),
         ("student", ["Hollis Community College", "East Carolina University"]),
         ("police", ["Port Hollis Police Department"]),
@@ -181,10 +216,25 @@ enum DefendantProfiles {
                                    "security guard", "delivery driver", "call center representative", "roofer", "server",
                                    "forklift operator", "gas station clerk", "Army infantryman (honorably discharged)"]
 
+    /// Earlier jobs that lead to a career, so a deputy's past isn't a poultry line.
+    private static let careerPaths: [([String], [(String, String)])] = [
+        (["sheriff", "police", "sergeant", "detective", "officer"], [("Detention officer", "Hollis County Detention Center"), ("Patrol officer", "Bayard Police Department"), ("Military police", "U.S. Army")]),
+        (["teacher", "principal"], [("Teacher assistant", "Hollis County Schools"), ("Substitute teacher", "Hollis County Schools")]),
+        (["nurs", "therap", "medical", "aide"], [("Certified nursing assistant", "Bayard Rehabilitation and Nursing"), ("Patient care technician", "Hollis Regional Medical Center")]),
+        (["software", "analyst", "engineer"], [("Help desk technician", "Hollis Regional Medical Center"), ("IT support specialist", "Tidewater Freight Logistics")]),
+        (["account", "treasurer", "bookkeep", "payroll"], [("Bookkeeper", "Cane Creek Hardware"), ("Accounts payable clerk", "Harborview Distribution Center")]),
+        (["sales", "pharmaceutical", "real estate", "dealership"], [("Car salesperson", "Marlowe Motors"), ("Retail associate", "Marlowe Boulevard Home Goods")]),
+        (["inspector", "contractor", "electric", "hvac", "welder", "construction"], [("Carpenter", "Kestrel Builders"), ("Apprentice", "Ridgeview Electrical Contractors")]),
+        (["dental"], [("Dental assistant", "Wexley Family Dentistry")]),
+        (["executive assistant", "secretary"], [("Receptionist", "Ashby & Greer, CPAs"), ("Office assistant", "Pinewood Analytics")]),
+        (["founder", "ceo", "executive"], [("Product manager", "Pinewood Analytics"), ("Management consultant", "self-employed")]),
+    ]
+
     private static func employer(for title: String, rng: inout SeededRNG) -> String {
         let lower = title.lowercased()
         for (key, list) in employersByKeyword where lower.contains(key) { return rng.pick(list) }
-        return rng.pick(generalEmployers)
+        // No employer that obviously fits: a generic one only for generic work, otherwise self-employed.
+        return ["worker", "laborer", "associate", "clerk", "helper"].contains(where: lower.contains) ? rng.pick(generalEmployers) : "self-employed"
     }
 
     /// The same person always gets the same history.
@@ -211,17 +261,28 @@ enum DefendantProfiles {
             jobs.append(Job(title: base.capitalizedFirst, employer: employer(for: base, rng: &rng),
                             years: "\(currentYear - years)–present", current: true))
             if rng.chance(0.35) && !student {
-                jobs.append(Job(title: rng.pick(["weekend " + rng.pick(["server", "security guard", "delivery driver"]), "part-time rideshare driver"]),
-                                employer: rng.pick(["Coastal Courier Services", "The Lantern Row Tavern", "self-employed"]),
+                let side = rng.pick(["weekend server", "weekend security guard", "weekend delivery driver", "part-time rideshare driver"])
+                let sideEmployer: String = switch side {
+                case "weekend server": rng.pick(["The Lantern Row Tavern", "Pell Avenue Diner"])
+                case "weekend security guard": "Allied Coastal Security"
+                case "weekend delivery driver": "Coastal Courier Services"
+                default: "self-employed (rideshare apps)"
+                }
+                jobs.append(Job(title: side, employer: sideEmployer,
                                 years: "\(currentYear - rng.int(1...3))–present", current: true))
             }
         }
         var start = currentYear - (jobs.first.map { _ in rng.int(2...12) } ?? rng.int(1...3))
         for _ in 0..<rng.int(1...2) where defendant.age > 22 && !retired {
             let length = rng.int(1...4)
-            let past = rng.pick(pastJobs)
-            jobs.append(Job(title: past.capitalizedFirst, employer: employer(for: past, rng: &rng),
-                            years: "\(start - length)–\(start)", current: false))
+            if let path = careerPaths.first(where: { $0.0.contains(where: lower.contains) }) {
+                let (title, place) = rng.pick(path.1)
+                jobs.append(Job(title: title, employer: place, years: "\(start - length)–\(start)", current: false))
+            } else {
+                let past = rng.pick(pastJobs)
+                jobs.append(Job(title: past.capitalizedFirst, employer: employer(for: past, rng: &rng),
+                                years: "\(start - length)–\(start)", current: false))
+            }
             start -= length + rng.int(0...1)
         }
         if unemployed, let last = jobs.first(where: { !$0.current }) {
@@ -239,13 +300,24 @@ enum DefendantProfiles {
         let children = rng.int(0...3)
         let family = rng.pick(["Married", "Single", "Divorced", "Separated", "In a long-term relationship"])
             + (children == 0 ? ", no children." : ", \(children) child\(children == 1 ? "" : "ren")" + (children > 0 && rng.chance(0.4) ? ", pays child support." : "."))
-        let residence = rng.pick([
-            "Rents an apartment on \(rng.pick(NameBank.streets)) in \(rng.pick(county.towns)).",
-            "Lives with a parent on \(rng.pick(NameBank.streets)) in \(rng.pick(county.towns)).",
-            "Owns a small house in \(rng.pick(county.towns)).",
-            "Rents a room from a friend in \(rng.pick(county.towns)).",
-            "Has moved three times in the past year; most recently staying with family in \(rng.pick(county.towns))."
-        ])
+        // Where the defendant lives agrees with the background: same town, and an apartment if it says so.
+        let town = county.towns.first { defendant.background.contains($0) } ?? rng.pick(county.towns)
+        let street = rng.pick(NameBank.streets)
+        let residence: String
+        if defendant.background.contains("same apartment") {
+            residence = "Rents an apartment on \(street) in \(town)."
+        } else {
+            var options = [
+                "Rents an apartment on \(street) in \(town).",
+                "Owns a small house on \(street) in \(town).",
+                "Rents a room from a friend in \(town)."
+            ]
+            if defendant.age < 40 { options.append("Lives with a parent on \(street) in \(town).") }
+            if !defendant.background.contains("eleven years") {
+                options.append("Has moved three times in the past year; most recently staying with family in \(town).")
+            }
+            residence = rng.pick(options)
+        }
         let income: String
         if unemployed { income = "No reported income." }
         else if retired { income = "Retirement income of about $\(rng.int(24...52)),000 a year." }
