@@ -74,6 +74,15 @@ jobs:
           fi
           echo "KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
 
+      - name: Clear certificates left by earlier runs
+        # Each run signs on a fresh machine and Xcode makes a new certificate, so revoke the ones
+        # earlier runs created before Apple's limit is reached. Never blocks the build.
+        continue-on-error: true
+        run: |
+          python3 -m venv "$RUNNER_TEMP/certs-venv"
+          "$RUNNER_TEMP/certs-venv/bin/pip" install --quiet pyjwt cryptography
+          "$RUNNER_TEMP/certs-venv/bin/python" scripts/revoke_api_certs.py
+
       - name: Archive
         run: |
           set -o pipefail
