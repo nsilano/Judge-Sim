@@ -1157,12 +1157,20 @@ enum Judgment {
 
             if activeTerms.count > 0 {
                 var lines = r.recommendations.lines + (suspendedTerms.isEmpty && afterActiveTerms.isEmpty ? r.customConditions : [])
-                if let projection = custodyProjection(c, r, units: sentencingUnits, from: date) {
+                if life {
+                    // Life without parole: no release date, no credit toward release, no supervision after.
+                    lines.insert("The defendant is committed for the remainder of the defendant's natural life and will not be released.", at: 0)
+                } else if let projection = custodyProjection(c, r, units: sentencingUnits, from: date) {
                     lines.insert(contentsOf: projection.lines, at: 0)
                 } else if let days = bg?.custodyDays, days > 0 {
                     lines.insert("Credit for \(days) days of pretrial confinement (G.S. 15-196.1).", at: 0)
                 }
-                if activeFelony {
+                // Supervision follows release only from a felony term that ends; split terms are on probation instead.
+                let releasedFelony = sentencingUnits.contains { unit in
+                    let selected = choice(unit, r)
+                    return unit.isFelony && selected.disposition == .active && !selected.lifeWithoutParole && selected.suspendedBalance == 0
+                }
+                if releasedFelony && !life {
                     lines.append("Upon release, the defendant will serve a period of post-release supervision (G.S. 15A-1368.2).")
                 }
                 if !lines.isEmpty { judgments.append(JudgmentEntry(title: "Commitment", lines: lines)) }

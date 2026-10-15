@@ -269,7 +269,7 @@ struct PersonFile {
         return ActiveSentenceSummary(docket: record.docket, date: record.date, source: source, terms: terms,
                                      commitment: commitment, recommendations: recommendations,
                                      advancedSupervisedRelease: asr, revocationLines: revocation,
-                                     postReleaseMonths: isHearing ? nil : terms.compactMap(\.postReleaseMonths).max(),
+                                     postReleaseMonths: isHearing || terms.contains(where: \.isLife) ? nil : terms.compactMap(\.postReleaseMonths).max(),
                                      custody: custody)
     }
 
