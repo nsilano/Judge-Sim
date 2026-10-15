@@ -69,7 +69,6 @@ extension StoryCases {
         guiltyTruths: ["After the trial, two more former clients came forward with nearly identical accounts."],
         innocentTruths: ["{VL} later told a therapist {V.he} had a past trauma triggered when {DL} began pectoral work without warning."],
         moods: [.divided], doctrines: ["burdenOfProof", "priorActs"],
-        genders: ["V": .female],
         extras: ["SPA": ["Harbor Wellness Spa", "Serenity Day Spa", "Coastal Massage Studio"]],
         story: StoryExtras(
             timeline: [(0, "3:00 p.m.: session begins."),
@@ -96,7 +95,8 @@ extension StoryCases {
             prosecutionOpening: "A drape pulled down, a hand where it never belonged, and a text from the parking lot.",
             defenseOpening: "A signed intake form, a standard technique, and twelve clean years.",
             prosecutionClosing: "No technique involves the breast. {VL} ran because it happened.",
-            defenseClosing: "Fear and misunderstanding aren't proof beyond a reasonable doubt."
+            defenseClosing: "Fear and misunderstanding aren't proof beyond a reasonable doubt.",
+            genders: ["V": .female]
         )
     )
 
@@ -258,7 +258,6 @@ extension StoryCases {
         guiltyTruths: ["A dashcam in a parked car later showed {DL} turning back toward {VL} after {VL} dropped the bottle."],
         innocentTruths: ["A dashcam in a parked car later showed {VL} slashing at {DL}'s face with the bottle before {DL} pulled the knife."],
         moods: [.divided], doctrines: ["selfDefense", "imperfectSelfDefense"],
-        genders: ["D": .male, "V": .male],
         extras: ["BAR": ["The Anchor Tavern", "Rusty's Pool Hall", "The Spillway Bar"]],
         story: StoryExtras(
             timeline: [(0, "1:15 a.m.: argument over a pool game inside {BAR}."),
@@ -284,7 +283,8 @@ extension StoryCases {
             prosecutionOpening: "A threat inside, three wounds outside, a knife in the creek.",
             defenseOpening: "A drunk man with a broken bottle chasing someone who walked away.",
             prosecutionClosing: "A wound in the back isn't self-defense.",
-            defenseClosing: "{VL} brought a bottle to a man who was leaving. At most, it's manslaughter."
+            defenseClosing: "{VL} brought a bottle to a man who was leaving. At most, it's manslaughter.",
+            genders: ["D": .male, "V": .male]
         )
     )
 
@@ -442,7 +442,6 @@ extension StoryCases {
         guiltyTruths: ["{DL}'s phone, obtained later, connected to a tower on Route 17 at 11:03 p.m."],
         innocentTruths: ["Another of the fourteen sedans belonged to a man later caught doing the same thing in a neighboring county."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
-        genders: ["D": .male, "V": .female],
         story: StoryExtras(
             timeline: [(0, "11:05 p.m.: stop on Route 17; {VL} calls 911 at 11:09."),
                        (3, "DMV search for dark sedans with plates beginning 7KR."),
@@ -467,7 +466,8 @@ extension StoryCases {
             prosecutionOpening: "Blue lights, a badge, and a question no real officer asks: is anyone waiting for you?",
             defenseOpening: "Fourteen cars, a work badge, and a frightened 'I think.'",
             prosecutionClosing: "Every detail fits {DL}, and {D.he} has the lights and the badge.",
-            defenseClosing: "Fits isn't proven. The State checked one car out of fourteen."
+            defenseClosing: "Fits isn't proven. The State checked one car out of fourteen.",
+            genders: ["D": .male, "V": .female]
         )
     )
 }

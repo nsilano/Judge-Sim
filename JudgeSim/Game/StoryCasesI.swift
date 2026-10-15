@@ -265,7 +265,6 @@ extension StoryCases {
         guiltyTruths: ["Jail call recordings later showed {DL}'s sibling telling {DL} to \"go talk to\" {VL} the day before."],
         innocentTruths: ["A second customer, found later, heard {DL} say only \"tell the truth, please\" and \"I'm sorry.\""],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
-        genders: ["V": .female],
         story: StoryExtras(
             timeline: [(-14, "State's witness list naming {VL} served on the defense in the shooting case."),
                        (0, "Encounter at the gas station; {VL} calls 911."),
@@ -289,7 +288,8 @@ extension StoryCases {
             prosecutionOpening: "Forty seconds at a gas pump, and a message delivered quietly.",
             defenseOpening: "A brother's plea for the truth, heard through a witness's fear.",
             prosecutionClosing: "'Nobody needs to get hurt' only means one thing to a witness.",
-            defenseClosing: "Words without audio, a station {DL} uses every day, and reasonable doubt."
+            defenseClosing: "Words without audio, a station {DL} uses every day, and reasonable doubt.",
+            genders: ["V": .female]
         )
     )
 

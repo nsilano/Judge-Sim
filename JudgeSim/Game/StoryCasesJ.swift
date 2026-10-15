@@ -440,7 +440,6 @@ extension StoryCases {
         guiltyTruths: ["A later warrant for {DL}'s cloud backup found screenshots of {VL}'s profile saved the night each new account was created."],
         innocentTruths: ["The other member with the same initials was later found to have dated the same ex years earlier."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
-        genders: ["V": .female],
         extras: ["GYM": ["Iron Harbor Fitness", "Coastal CrossFit", "Pell Avenue Athletic Club"]],
         story: StoryExtras(
             timeline: [(0, "First message from an anonymous account."),
@@ -466,7 +465,8 @@ extension StoryCases {
             prosecutionOpening: "Two hundred messages, nine accounts, and a trail back to one person's gym and initials.",
             defenseOpening: "An open network, a shared set of initials, and a common typo.",
             prosecutionClosing: "Each piece alone could be coincidence. Together they're {DL}.",
-            defenseClosing: "Coincidences stacked up are still coincidences."
+            defenseClosing: "Coincidences stacked up are still coincidences.",
+            genders: ["V": .female]
         )
     )
 }

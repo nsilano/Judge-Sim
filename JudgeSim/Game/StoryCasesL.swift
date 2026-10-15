@@ -163,7 +163,6 @@ extension StoryCases {
         guiltyTruths: ["The grandson later told a cellmate his grandparent counted the money with him some nights."],
         innocentTruths: ["The grandson's girlfriend later confirmed the grandparent was never told and never entered the back room."],
         moods: [.sympathetic], doctrines: ["burdenOfProof"],
-        genders: ["D": .female],
         story: StoryExtras(
             timeline: [(-60, "Neighbor complaints begin."),
                        (-14, "Four nights of surveillance; 23 short visits logged."),
@@ -188,7 +187,8 @@ extension StoryCases {
             prosecutionOpening: "{D.His} house, {D.his} bills, {D.his} neighbor's warning.",
             defenseOpening: "A locked door, a grandson's confession, and a grandmother asleep by nine.",
             prosecutionClosing: "{DL} was told, and {DL} did nothing.",
-            defenseClosing: "Knowledge is an element. The only person who knew says {DL} didn't."
+            defenseClosing: "Knowledge is an element. The only person who knew says {DL} didn't.",
+            genders: ["D": .female]
         )
     )
 
