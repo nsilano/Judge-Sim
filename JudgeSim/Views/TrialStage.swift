@@ -20,7 +20,13 @@ struct TrialStage: View {
             caseInChief(for: .prosecution, title: "The State's case", icon: "building.columns.fill")
 
             if session.stateRested {
-                HalftimeMotionCard(session: session)
+                if session.halftimeMotion.isMade {
+                    HalftimeMotionCard(session: session)
+                } else {
+                    Label("The State rests. The defense makes no motion to dismiss.", systemImage: "checkmark.seal")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
                 if session.halftimeComplete {
                     RightToTestifyCard(session: session)
                 }
@@ -40,9 +46,11 @@ struct TrialStage: View {
                         .foregroundStyle(.secondary)
                     WitnessCard(witness: testimony, objections: c.objections(for: testimony), session: session)
                 }
-                Label(session.halftimeMotion.renewal, systemImage: "hand.raised")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if session.halftimeMotion.isMade {
+                    Label(session.halftimeMotion.renewal, systemImage: "hand.raised")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             if session.halftimeComplete && session.testimonyDecided {

@@ -495,7 +495,7 @@ enum CaseGenerator {
                                   question: fill(line.question(0)), answer: fill(line.answer(0)))
             }
         }
-        if let objection = rng.chance(0.4) ? ObjectionEngine.make(for: fullTestimony, ctx: testimonyContext, rng: &rng) : nil {
+        if let objection = t.story == nil && rng.chance(0.4) ? ObjectionEngine.make(for: fullTestimony, ctx: testimonyContext, rng: &rng) : nil {
             objections.append(objection)
         }
 

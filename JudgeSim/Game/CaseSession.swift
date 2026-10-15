@@ -20,15 +20,17 @@ struct HalftimeMotion {
     /// What happens at the close of all the evidence.
     let renewal: String
 
+    var isMade: Bool { !challenged.isEmpty }
+
     static func make(for c: CourtCase) -> HalftimeMotion {
         var rng = SeededRNG(seed: c.seed ^ 0x1227)
         let defense = c.defenseAttorney.components(separatedBy: ",").first ?? c.defenseAttorney
         let dl = c.defendant.lastName
-        var challenged = Set(c.charges.map(\.id))
-        if c.charges.count > 1 && rng.chance(0.45) {
-            let keep = rng.int(1...max(1, c.charges.count - 1))
-            challenged = Set(rng.pick(c.charges, count: keep).map(\.id))
-        }
+        // The defense moves to dismiss the counts the State's proof is close on; a strong count is
+        // challenged only now and then, and often there is no motion at all.
+        let strength = Judgment.properStrength(c)
+        var challenged = Set(c.charges.filter { strength <= $0.threshold || rng.chance(0.1) }.map(\.id))
+        if challenged.isEmpty, let lead = c.charges.first, rng.chance(0.15) { challenged = [lead.id] }
         let stateWitness = c.witnesses.filter { $0.calledBy == .prosecution }
         let stateEvidence = c.evidence.filter { $0.side == .prosecution }.sorted { $0.weight > $1.weight }
         var arguments: [UUID: String] = [:]
