@@ -12,6 +12,9 @@ extension StoryCases {
         headlines: ["Coworker Charged With Poisoning Supervisor's Coffee", "Antifreeze in the Break Room"],
         primaryLaw: "awdwikisi", lesserLaw: "awdwisi", threshold: 7, lesserThreshold: 5,
         specification: "Assaulted {V} with ethylene glycol, a deadly weapon, with intent to kill, inflicting serious injury.",
+        secondary: [
+            SecondaryCharge(lawID: "attemptedMurder1", specification: "With premeditation and deliberation, attempted to kill {V} by poisoning {V.his} coffee.", chance: 1.0, threshold: 8)
+        ],
         ageRange: 30...55, occupations: ["dispatcher at a trucking company"], hasVictim: true,
         summaries: [
             "Over three weeks at a trucking company in {HOOD}, {V}, the dispatch supervisor, grew sicker: nausea, confusion, then kidney failure. Doctors found ethylene glycol, the main ingredient in antifreeze. {VL} survives on dialysis. {VL} drank from the same personal coffee thermos every day, kept in the break room fridge. {D}, a dispatcher {VL} had written up twice and recommended for firing, was the only coworker seen on camera opening the fridge at odd hours. {DL} says {D.he} kept {D.his} own lunch there, and that half the office resented {VL}."
@@ -108,6 +111,13 @@ extension StoryCases {
         headlines: ["Deputy Charged With Stealing Seized Cash", "$31,000 Missing From Evidence Room"],
         primaryLaw: "embezzlement", lesserLaw: nil, threshold: 2, lesserThreshold: 1,
         specification: "As evidence custodian for the Hollis County Sheriff's Office, embezzled $31,000 in seized cash.",
+        secondary: [
+            SecondaryCharge(lawID: "embezzlement", specification: "As evidence custodian, embezzled $11,500 seized in a second drug case.", chance: 1.0, threshold: 1),
+            SecondaryCharge(lawID: "embezzlement", specification: "As evidence custodian, embezzled $8,000 seized in a third drug case.", chance: 1.0, threshold: 1),
+            SecondaryCharge(lawID: "embezzlement", specification: "As evidence custodian, embezzled $13,500 seized in three other cases.", chance: 1.0, threshold: 1),
+            SecondaryCharge(lawID: "obstruction", specification: "Obstructed justice by replacing seized cash with cut newspaper in sealed evidence bags.", chance: 1.0, threshold: 1),
+            SecondaryCharge(lawID: "obstruction", specification: "Obstructed justice by falsifying evidence room logs.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 38...55, occupations: ["sheriff's deputy and evidence custodian"], hasVictim: false,
         summaries: [
             "{D}, a nineteen-year deputy, ran the Hollis County Sheriff's Office evidence room. On {DATE}, a prosecutor asked for $31,000 seized in a drug case to be brought to court; the sealed bag held cut newspaper. An audit found $64,000 missing from nine cases over two years. {DL} had keys and kept the logs. {DL} had also been paying down large medical bills for a child's cancer treatment. {DL} says the evidence room's lock had been broken for months and two other deputies had keys."
@@ -199,6 +209,9 @@ extension StoryCases {
         headlines: ["Tracker Found Hidden in Ex's Car", "Stalking or Shared Device?"],
         primaryLaw: "stalking", lesserLaw: nil, threshold: 6, lesserThreshold: 4,
         specification: "Willfully on more than one occasion followed and surveilled {V} without legal purpose, causing substantial emotional distress.",
+        secondary: [
+            SecondaryCharge(lawID: "cyberstalking", specification: "Used an electronic tracking device to monitor {V}'s location without consent.", chance: 1.0, threshold: 5)
+        ],
         ageRange: 25...45, occupations: ["sales manager"], hasVictim: true,
         summaries: [
             "Two months after {V} moved out, {V.his} phone alerted that an unknown tracker was moving with {V.him}. A mechanic found a small Bluetooth tracker taped inside the rear bumper of {VL}'s car. The tracker was registered to {D}'s account. Over the next weeks {DL} \"happened\" to appear at {VL}'s gym and at a restaurant {V.he} visited with a new partner. {DL} says the tracker had been on the car since they bought it together, to find it in parking lots, and that {D.he} forgot to remove it; and that the gym and restaurant were places they'd always gone together."
@@ -292,6 +305,9 @@ extension StoryCases {
         headlines: ["Driver Plows Through Protesters, Injuring One", "Fear or Rage on {STREET}?"],
         primaryLaw: "awdwisi", lesserLaw: "awdw", threshold: 2, lesserThreshold: 1,
         specification: "Assaulted {V} with a motor vehicle, a deadly weapon, inflicting serious injury.",
+        secondary: [
+            SecondaryCharge(lawID: "recklessDriving", specification: "Drove into a crowd of protesters on {STREET}.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 30...60, occupations: ["home health nurse"], hasVictim: true,
         summaries: [
             "On {DATE}, about forty protesters blocked {STREET} in {CITY}. {D}, a home health nurse on the way to a patient, stopped, then inched forward as protesters surrounded the car. Someone struck the windshield with a sign pole and another kicked the door. {DL} accelerated. The car struck {V}, a protester standing in front of the bumper, who suffered a fractured pelvis. {DL} drove three blocks, stopped, and called 911. The State says {DL} chose to drive through people. The defense says {DL} was surrounded, attacked, and fled in fear."
@@ -382,6 +398,13 @@ extension StoryCases {
         headlines: ["Nurse Practitioner Charged With Selling Prescriptions", "Pain Clinic or Pill Mill?"],
         primaryLaw: "deliverSchedII", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
         specification: "Delivered oxycodone by writing prescriptions without a legitimate medical purpose.",
+        secondary: [
+            SecondaryCharge(lawID: "deliverSchedII", specification: "Delivered oxycodone to a patient who later died of an overdose, by a prescription without legitimate medical purpose.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "deliverSchedII", specification: "Delivered oxycodone to a second patient who later died of an overdose.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "deliverSchedII", specification: "Delivered 90 oxycodone pills to an undercover officer after a seven-minute visit with no exam.", chance: 1.0, threshold: 3),
+            SecondaryCharge(lawID: "deathByDistribution", specification: "Delivered oxycodone to a patient whose ingestion of it caused death.", chance: 1.0, threshold: 5),
+            SecondaryCharge(lawID: "maintainingDwelling", specification: "Kept and maintained the clinic in {HOOD} for distributing controlled substances.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 38...60, occupations: ["nurse practitioner"], hasVictim: false,
         summaries: [
             "{D}, a nurse practitioner, ran a cash-only pain clinic in {HOOD}. Over two years {DL} wrote more oxycodone prescriptions than any provider in the county. An undercover officer posing as a patient with \"back pain\" got a 90-pill prescription after a seven-minute visit with no exam and no records. Two of {DL}'s patients died of overdoses. {DL} says {D.he} treated a rural population of injured laborers abandoned by other providers, and that the undercover officer lied on the intake form."

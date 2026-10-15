@@ -249,6 +249,8 @@ struct Rulings: Codable, Hashable {
     var groups: [UUID: Int] = [:]
     /// With grouped judgments: whether the judgments run one after another.
     var groupsConsecutive = false
+    /// With grouped judgments: each judgment's own choice to run after the one before it (optional for older saves).
+    var unitConsecutive: [UUID: Bool]?
     /// Counts on which the court arrested judgment at sentencing, after a bench conference.
     var arrestedCounts: Set<UUID> = []
     /// Length of probation under a conditional discharge (nil: 12 months).
@@ -261,7 +263,17 @@ struct Rulings: Codable, Hashable {
     var lesserChoices: [UUID: String]?
 
     /// Whether separate judgments run one after another.
-    var runsConsecutively: Bool { mode == .consecutive || (mode == .grouped && groupsConsecutive) }
+    var runsConsecutively: Bool {
+        mode == .consecutive || (mode == .grouped && (groupsConsecutive || (unitConsecutive ?? [:]).values.contains(true)))
+    }
+
+    /// Whether the judgment at this position runs after the one before it. With grouped judgments the court
+    /// decides each one; otherwise the mode decides for all.
+    func consecutive(_ unitID: UUID, index: Int) -> Bool {
+        guard index > 0 else { return false }
+        if mode == .grouped, let choice = unitConsecutive?[unitID] { return choice }
+        return mode == .consecutive || (mode == .grouped && groupsConsecutive)
+    }
 
     func excludedEvidence(in courtCase: CourtCase) -> Set<UUID> {
         Set(courtCase.motions.compactMap { motion in
@@ -952,7 +964,21 @@ enum Judgment {
         var latest: Date
         let minText: String
         let maxText: String
-        if r.runsConsecutively && terms.count > 1 {
+        let flags = active.enumerated().map { i, unit in i > 0 && r.consecutive(unit.id, index: allUnits.firstIndex(of: unit) ?? i) }
+        let mixed = flags.dropFirst().contains(true) && flags.dropFirst().contains(false)
+        if mixed {
+            var minEnd = date, lateEnd = date, bestEnd = date, bestLate = date, maxRun = 0, bestMax = 0
+            for (i, term) in terms.enumerated() {
+                minEnd = add(term.minM, term.minD, to: flags[i] ? minEnd : date)
+                lateEnd = add(term.lateM, term.lateD, to: flags[i] ? lateEnd : date)
+                maxRun = (flags[i] ? maxRun : 0) + term.maxM
+                bestEnd = max(bestEnd, minEnd); bestLate = max(bestLate, lateEnd); bestMax = max(bestMax, maxRun)
+            }
+            earliest = bestEnd
+            latest = bestLate
+            minText = "\(monthsBetween(date, bestEnd)) months in all (some judgments consecutive, others concurrent)"
+            maxText = "\(bestMax) months in all"
+        } else if flags.dropFirst().contains(true) && terms.count > 1 {
             let minM = terms.map { $0.minM }.reduce(0, +), minD = terms.map { $0.minD }.reduce(0, +)
             let lateM = terms.map { $0.lateM }.reduce(0, +), lateD = terms.map { $0.lateD }.reduce(0, +)
             earliest = add(minM, minD, to: date)
@@ -1078,7 +1104,7 @@ enum Judgment {
                 if index > 0 {
                     let first = sentencingUnits[0].counts.first ?? 1
                     let previous = sentencingUnits[index - 1].counts.first ?? 1
-                    lines.append(r.runsConsecutively
+                    lines.append(r.consecutive(unit.id, index: index)
                         ? "This sentence shall begin at the expiration of the sentence imposed in Count \(previous)."
                         : "This sentence shall run concurrently with the sentence imposed in Count \(first).")
                 }
@@ -1201,6 +1227,7 @@ enum Judgment {
 
         let combine: ([Int]) -> Int = { terms in
             r.runsConsecutively ? terms.reduce(0, +) : (terms.max() ?? 0)
+            // (Grouped judgments with mixed choices are figured exactly in the custody projection.)
         }
         let projection = special == .none ? custodyProjection(c, r, units: sentencingUnits, from: date) : nil
         var releaseOn = projection?.earliest ?? date

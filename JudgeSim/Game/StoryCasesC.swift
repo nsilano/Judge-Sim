@@ -12,6 +12,9 @@ extension StoryCases {
         headlines: ["Pharmacy Robbed of Painkillers at Gunpoint", "Was It a Real Gun?"],
         primaryLaw: "dangerousRobbery", lesserLaw: "commonLawRobbery", threshold: 6, lesserThreshold: 4,
         specification: "Robbed {V}, a pharmacist at {PHARM}, of oxycodone while armed with what appeared to be a handgun.",
+        secondary: [
+            SecondaryCharge(lawID: "possSchedII", specification: "Possessed oxycodone, a Schedule II controlled substance, taken in the robbery.", chance: 1.0, threshold: 4)
+        ],
         ageRange: 26...41, occupations: ["roofer"], forcedPriorOffenses: ["Possession of Schedule II (cocaine)"], hasVictim: true,
         summaries: [
             "At about {TIME} on {DATE}, a person in a hooded sweatshirt and surgical mask walked up to the pharmacy counter at {PHARM} in {HOOD}, lifted a black pistol from a jacket pocket, and told {V}, the pharmacist on duty, to empty the oxycodone drawer. {V} handed over 340 tablets. Police arrested {D}, a roofer with a pain-pill addiction, a week later after a tip; in {DL}'s truck they found a black CO2-powered BB pistol. {DL} admits the robbery and is pleading for the lesser charge: {DL} says it was a BB gun, not a firearm, and nobody's life was ever in danger."
@@ -208,6 +211,9 @@ extension StoryCases {
         headlines: ["Bank Teller Charged With $38,000 Theft", "A Shared Drawer and a Missing Bag"],
         primaryLaw: "embezzlement", lesserLaw: nil, threshold: 3, lesserThreshold: 1,
         specification: "As an employee of {BANK}, embezzled $38,000 entrusted to {DL}.",
+        secondary: [
+            SecondaryCharge(lawID: "felonyLarceny", specification: "Stole a sealed bag containing $38,000 from the vault of {BANK}.", chance: 1.0, threshold: 2)
+        ],
         ageRange: 22...36, occupations: ["bank teller"], hasVictim: false,
         summaries: [
             "On {DATE}, a cash shipment of $38,000 in sealed bags arrived at the {HOOD} branch of {BANK}. {D}, a teller, signed for it and placed it in the vault. At the end-of-day count, one bag was gone. Only {DL} and the assistant manager had vault access that afternoon, and the vault camera had been offline for nine days awaiting repair. Three weeks later, {DL} paid off a $14,000 car loan in cash. {DL} says the money came from a relative's settlement, and that the assistant manager had gambling debts."
@@ -399,6 +405,11 @@ extension StoryCases {
         headlines: ["Fentanyl Pills Found in Rental Car on I-40", "Driver Says Passenger's Bag"],
         primaryLaw: "traffickingOpioid", lesserLaw: "possSchedII", threshold: 2, lesserThreshold: 1,
         specification: "Trafficked in opioids by possessing 28 grams or more of fentanyl pills.",
+        secondary: [
+            SecondaryCharge(lawID: "traffickingOpioid", specification: "Trafficked in opioids by transporting 28 grams or more of fentanyl pills on I-40.", chance: 1.0, threshold: 2),
+            SecondaryCharge(lawID: "pwisd", specification: "Possessed fentanyl pills with intent to sell or deliver.", chance: 1.0, threshold: 1),
+            SecondaryCharge(lawID: "maintainingDwelling", specification: "Kept and maintained a rental vehicle for keeping and transporting controlled substances.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 22...35, occupations: ["warehouse supervisor"], hasVictim: false,
         summaries: [
             "At about {TIME} on {DATE}, a trooper stopped a rental SUV for following too closely on I-40 near {HOOD}. {D} was driving; {ALT} was the passenger. A drug dog alerted, and in a duffel bag behind the passenger seat troopers found 1,100 blue pills, 121 grams, later confirmed as fentanyl. The SUV was rented in {DL}'s name. {DL} says {ALT} asked for a ride to Charlotte and brought the bag. {ALT} told the trooper the bag was {DL}'s and has since disappeared."

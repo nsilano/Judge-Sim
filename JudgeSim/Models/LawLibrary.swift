@@ -26,6 +26,22 @@ enum LawLibrary {
     static let offenses: [Law] = violent + robbery + property + drugs + whiteCollar + publicOrder + traffic + cyber + family
 
     static let violent: [Law] = [
+        Law(id: "attemptedMurder1", statute: "G.S. 14-17; 14-2.5", title: "Attempted First-Degree Murder", category: .violent, ncClass: .B2,
+            summary: "An overt act, done with premeditation, deliberation, and the specific intent to kill, that goes beyond preparation but falls short of killing.",
+            elements: ["The defendant intended to kill the victim.", "With premeditation and deliberation.", "The defendant committed an overt act calculated to bring about the killing.", "The act went beyond mere preparation.", "The killing did not occur."],
+            defenses: ["Lack of specific intent", "Self-defense", "Abandonment is not a defense once the attempt is complete"],
+            related: ["murder1"],
+            notes: "Punished as a Class B2 felony."),
+        Law(id: "assaultPointingGun", statute: "G.S. 14-34", title: "Assault by Pointing a Gun", category: .violent, ncClass: .misdA1,
+            summary: "Intentionally pointing a gun at another person without legal justification, whether or not it is loaded.",
+            elements: ["The defendant pointed a gun at the victim.", "Intentionally.", "Without legal justification."],
+            defenses: ["Self-defense", "Defense of others", "Accident"],
+            related: ["awdw"]),
+        Law(id: "interferingEmergency", statute: "G.S. 14-286.2", title: "Interfering with an Emergency Communication", category: .violent, ncClass: .misdA1,
+            summary: "Intentionally interfering with another person's attempt to call 911 or otherwise seek emergency help while that person reasonably believes they need it.",
+            elements: ["The victim was attempting to make an emergency communication.", "The victim reasonably believed they needed help.", "The defendant intentionally interfered."],
+            defenses: ["No interference", "No emergency reasonably believed"],
+            related: ["dvpoViolation"]),
         Law(id: "dischargingOccupied", statute: "G.S. 14-34.1(b)", title: "Discharging a Weapon into Occupied Property", category: .violent, ncClass: .D,
             summary: "Willfully discharging a firearm into an occupied dwelling or occupied vehicle in operation.",
             elements: ["The defendant willfully discharged a firearm.", "Into a dwelling, or a vehicle in operation.", "The property was occupied at the time.", "The defendant knew or had reasonable grounds to believe it was occupied."],
@@ -127,6 +143,12 @@ enum LawLibrary {
     ]
 
     static let robbery: [Law] = [
+        Law(id: "conspiracyRobbery", statute: "G.S. 14-2.4; 14-87", title: "Conspiracy to Commit Robbery with a Dangerous Weapon", category: .robbery, ncClass: .E,
+            summary: "An agreement between two or more people to commit armed robbery. The crime is complete when the agreement is made.",
+            elements: ["The defendant agreed with at least one other person.", "To commit robbery with a dangerous weapon.", "Intending that the agreement be carried out."],
+            defenses: ["No agreement", "Mere presence or association"],
+            related: ["dangerousRobbery"],
+            notes: "Punished one class lower than the robbery itself."),
         Law(id: "witnessIntimidation", statute: "G.S. 14-226", title: "Intimidating a Witness", category: .robbery, ncClass: .G,
             summary: "Attempting by threats, menaces, or force to intimidate or deter a person summoned or acting as a witness in a court proceeding.",
             elements: ["The victim was a witness or prospective witness in a court proceeding.", "The defendant, by threats, menaces, or force, attempted to intimidate or deter the witness from testifying or to influence the testimony."],
@@ -175,6 +197,16 @@ enum LawLibrary {
     ]
 
     static let property: [Law] = [
+        Law(id: "larcenyFirearm", statute: "G.S. 14-72(b)(4)", title: "Larceny of a Firearm", category: .property, ncClass: .H,
+            summary: "Stealing a firearm, regardless of its value.",
+            elements: ["The defendant took a firearm belonging to another.", "Carried it away.", "Without consent.", "Intending to deprive the owner of it permanently."],
+            defenses: ["Claim of right", "Lack of intent to permanently deprive"],
+            related: ["felonyLarceny"]),
+        Law(id: "trespass2", statute: "G.S. 14-159.13", title: "Second-Degree Trespass", category: .property, ncClass: .misd3,
+            summary: "Entering or remaining on another's premises after being told not to enter or to leave.",
+            elements: ["The defendant entered or remained on the premises of another.", "After being notified not to enter or to leave."],
+            defenses: ["Consent", "Claim of right"],
+            related: ["burglary2"]),
         Law(id: "breakingVehicle", statute: "G.S. 14-56", title: "Breaking or Entering a Motor Vehicle", category: .property, ncClass: .I,
             summary: "Breaking or entering a motor vehicle containing goods or other things of value, with intent to commit larceny or a felony inside.",
             elements: ["The defendant broke or entered a motor vehicle.", "The vehicle contained goods, wares, or other things of value.", "The defendant intended to commit larceny or a felony."],
@@ -311,6 +343,16 @@ enum LawLibrary {
     ]
 
     static let whiteCollar: [Law] = [
+        Law(id: "forgery", statute: "G.S. 14-119", title: "Forgery of an Instrument", category: .whiteCollar, ncClass: .I,
+            summary: "Falsely making or altering a check or other financial instrument with intent to defraud.",
+            elements: ["The defendant falsely made or altered an instrument.", "The instrument could defraud.", "With intent to defraud."],
+            defenses: ["Authority to sign", "Lack of intent to defraud"],
+            related: ["uttering"]),
+        Law(id: "cardFraud", statute: "G.S. 14-113.13", title: "Financial Transaction Card Fraud", category: .whiteCollar, ncClass: .I,
+            summary: "Using another person's card or account number without consent to obtain money, goods, or services, more than $500 in six months.",
+            elements: ["The defendant used a card or account number.", "Without the cardholder's consent.", "With intent to defraud.", "Obtaining more than $500 within six months."],
+            defenses: ["Consent", "Lack of intent to defraud"],
+            related: ["identityTheft"]),
         Law(id: "uttering", statute: "G.S. 14-120", title: "Uttering a Forged Instrument", category: .whiteCollar, ncClass: .I,
             summary: "Offering a forged or counterfeit check or other instrument as true, knowing it to be false, with intent to defraud.",
             elements: ["The defendant offered a forged instrument as genuine.", "The defendant knew it was forged.", "With intent to defraud or injure."],
@@ -435,6 +477,11 @@ enum LawLibrary {
     ]
 
     static let traffic: [Law] = [
+        Law(id: "recklessDriving", statute: "G.S. 20-140", title: "Reckless Driving", category: .traffic, ncClass: .misd2,
+            summary: "Driving carelessly and heedlessly in willful or wanton disregard of the rights or safety of others.",
+            elements: ["The defendant drove a vehicle on a highway or public vehicular area.", "Carelessly and heedlessly.", "In willful or wanton disregard of others' safety."],
+            defenses: ["Necessity", "Not the driver"],
+            related: ["fleeing"]),
         Law(id: "fleeing", statute: "G.S. 20-141.5(b)", title: "Felony Speeding to Elude Arrest", category: .traffic, ncClass: .H,
             summary: "Operating a motor vehicle to flee or elude a law enforcement officer performing lawful duties, with two or more aggravating factors (e.g. speeding 15+ over the limit, reckless driving, gross impairment, driving while license revoked, a child in the car).",
             elements: ["The defendant operated a motor vehicle on a street, highway, or public vehicular area.", "While fleeing or attempting to elude a law enforcement officer in the lawful performance of duties.", "Two or more statutory aggravating factors were present."],
@@ -499,6 +546,12 @@ enum LawLibrary {
     ]
 
     static let family: [Law] = [
+        Law(id: "concealingDeath", statute: "G.S. 14-401.22", title: "Concealment of Death", category: .family, ncClass: .I,
+            summary: "Concealing or failing to report the death of a person, intending to conceal the death, when the person died of unnatural causes.",
+            elements: ["A person died.", "The defendant concealed the death or the body.", "Intending to conceal that the person had died."],
+            defenses: ["No concealment", "Death reported within a reasonable time"],
+            related: ["murder1"],
+            notes: "A Class I felony; Class D if the defendant also caused the death."),
         Law(id: "felonyChildAbuse", statute: "G.S. 14-318.4(a)", title: "Felony Child Abuse Inflicting Serious Physical Injury", category: .family, ncClass: .D,
             summary: "A parent or other person providing care to a child under 16 who intentionally inflicts serious physical injury on the child, or intentionally commits an assault that results in serious physical injury.",
             elements: ["The defendant was a parent or caretaker of a child under 16.", "The defendant intentionally inflicted serious physical injury, or intentionally assaulted the child resulting in serious physical injury."],

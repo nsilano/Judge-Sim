@@ -318,10 +318,23 @@ struct SentencingStage: View {
                                     .pickerStyle(.menu)
                                 }
                             }
-                            Toggle("Run the judgments consecutively",
-                                   isOn: Binding(get: { session.rulings.groupsConsecutive },
-                                                 set: { session.setGroupsConsecutive($0) }))
-                                .font(.callout)
+                            let groupUnits = session.units
+                            if groupUnits.count > 1 {
+                                Divider()
+                                Text("How the judgments run").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                                ForEach(Array(groupUnits.enumerated()).dropFirst(), id: \.element.id) { index, unit in
+                                    Toggle(isOn: session.unitConsecutiveBinding(unit, index: index)) {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Judgment \(index + 1): \(unit.counts.count == 1 ? "Count" : "Counts") \(unit.counts.map(String.init).joined(separator: ", "))")
+                                                .font(.callout.weight(.semibold))
+                                            Text(session.rulings.consecutive(unit.id, index: index)
+                                                 ? "Begins when Judgment \(index) ends (consecutive)"
+                                                 : "Runs at the same time as the others (concurrent)")
+                                                .font(.caption).foregroundStyle(.secondary)
+                                        }
+                                    }
+                                }
+                            }
                         }
                         LawLink(lawID: "consolidation")
                     }
@@ -1294,7 +1307,7 @@ struct JudgmentSummaryCard: View {
                 ForEach(Array(session.units.enumerated()), id: \.offset) { index, unit in
                     let choice = session.choice(for: unit)
                     let disposition = choice.lifeWithoutParole ? "" : (choice.disposition == .active ? ", active" : ", suspended, \(choice.probationMonths) months probation")
-                    let relation = index == 0 ? "" : (r.runsConsecutively ? " (consecutive)" : " (concurrent)")
+                    let relation = index == 0 ? "" : (r.consecutive(unit.id, index: index) ? " (consecutive)" : " (concurrent)")
                     Text("• \(unit.title): \(Judgment.termText(for: unit, choice: choice))\(disposition)\(relation)")
                         .font(.callout)
                 }

@@ -107,6 +107,10 @@ extension StoryCases {
         headlines: ["Shots Fired Into {HOOD} Home With Children Inside", "Drive-By Suspect Tied to Car, Not Trigger"],
         primaryLaw: "dischargingOccupied", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
         specification: "Willfully discharged a firearm into the occupied residence of {V} on {STREET}.",
+        secondary: [
+            SecondaryCharge(lawID: "dischargingOccupied", specification: "Discharged a firearm into the occupied bedroom where {V}'s two children were asleep.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "awdwik", specification: "Assaulted {V} with a firearm, with intent to kill, by shooting into the home.", chance: 1.0, threshold: 5)
+        ],
         ageRange: 18...26, occupations: ["unemployed", "delivery driver"], forcedPriorOffenses: ["Possession of Drug Paraphernalia"], hasVictim: true,
         summaries: [
             "At 11:20 p.m. on {DATE}, six shots were fired from a passing car into {V}'s house on {STREET} in {HOOD}. One went through the bedroom where {VL}'s two children were asleep. A neighbor's camera recorded a silver sedan with a dented rear quarter panel. Three days later police stopped {D} in a silver sedan with that dent; a shell casing that matched the scene was under the passenger seat. {DL} says {D.he} lends the car to friends, wasn't driving that night, and doesn't own a gun. {VL}'s nephew had been in a fight with {DL}'s cousin the week before."
@@ -200,6 +204,9 @@ extension StoryCases {
         headlines: ["Man Stabbed to Death in Bar Parking Lot", "Killer Says Victim Came at Him With a Bottle"],
         primaryLaw: "murder2", lesserLaw: "volManslaughter", threshold: 2, lesserThreshold: 1,
         specification: "Unlawfully and with malice killed {V} by stabbing him with a knife.",
+        secondary: [
+            SecondaryCharge(lawID: "obstruction", specification: "Obstructed justice by throwing the knife into a creek after the stabbing.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 24...40, occupations: ["welder", "roofer"], forcedPriorOffenses: ["Assault with a Deadly Weapon"], hasVictim: true,
         summaries: [
             "At 1:40 a.m. on {DATE}, in the parking lot of {BAR} on {STREET}, {D} stabbed {V} three times after an argument that began inside over a pool game. {VL} died at the scene. Witnesses agree {VL} followed {DL} outside, shouting. They disagree whether {VL} swung a beer bottle first. A broken bottle was found near {VL}'s body. {DL} carried a folding knife for work, left the scene, and turned himself in the next morning. {DL} has a prior conviction for assault with a deadly weapon."
@@ -295,6 +302,9 @@ extension StoryCases {
         headlines: ["Parent Charged After Youth Soccer Referee's Jaw Broken", "Sideline Fight: 'The Ref Pushed Me First'"],
         primaryLaw: "aisi", lesserLaw: "simpleAssault", threshold: 5, lesserThreshold: 3,
         specification: "Assaulted {V}, a youth soccer referee, by punching {V.him}, inflicting serious injury.",
+        secondary: [
+            SecondaryCharge(lawID: "disorderly", specification: "Disrupted a youth soccer event by entering the field and fighting.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 35...50, occupations: ["pharmaceutical sales representative", "HVAC technician"], hasVictim: true,
         summaries: [
             "On {DATE}, after a U-12 soccer game at the {HOOD} recreation fields, {D}, a parent, confronted {V}, the 19-year-old referee, over a red card given to {D}'s child. Video from another parent's phone shows {DL} walking onto the field, the two standing chest to chest, a blur of movement, and {VL} on the ground. {VL}'s jaw was broken in two places. {DL} says {VL} shoved {D.him} in the chest first and {D.he} reacted. {DL} was convicted in district court and appealed."

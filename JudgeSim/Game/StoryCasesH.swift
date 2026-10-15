@@ -12,6 +12,10 @@ extension StoryCases {
         headlines: ["Woman, 74, Shoved to Ground in Bus Stop Purse Snatching", "Bus Stop Robbery Suspect Picked From Photo Lineup"],
         primaryLaw: "commonLawRobbery", lesserLaw: "misdLarceny", threshold: 3, lesserThreshold: 1,
         specification: "Took a purse and its contents from the person of {V} by violence, shoving {V.him} to the ground.",
+        secondary: [
+            SecondaryCharge(lawID: "aisi", specification: "Assaulted {V} by shoving {V.him} to the sidewalk, inflicting a broken wrist.", chance: 1.0, threshold: 2),
+            SecondaryCharge(lawID: "misdLarceny", specification: "Stole a purse and its contents belonging to {V}.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 19...30, occupations: ["warehouse worker", "unemployed"], forcedPriorOffenses: ["Misdemeanor Larceny"], hasVictim: true,
         summaries: [
             "At about 5:40 p.m. on {DATE}, {V}, 74, was waiting for the bus on {STREET} in {HOOD} when someone in a gray hooded sweatshirt grabbed {V.his} purse, shoved {V.him} to the sidewalk, and ran toward the apartments behind the stop. {VL} broke a wrist. Two days later {VL} picked {D} from a photo lineup, saying {V.he} was \"pretty sure.\" {DL}, who lives in those apartments and has a prior shoplifting conviction, says {D.he} was at work across town until 6:00. {VL}'s bus pass turned up in a storm drain near {DL}'s building."
@@ -111,6 +115,9 @@ extension StoryCases {
         headlines: ["Bar Patron Charged With Breaking Officer's Nose", "Body Camera Footage Disputed in Officer Assault Case"],
         primaryLaw: "assaultLEO", lesserLaw: "simpleAssault", threshold: 3, lesserThreshold: 1,
         specification: "Assaulted Officer {OFFICER}, a law enforcement officer performing official duties, by striking the officer in the face and inflicting physical injury.",
+        secondary: [
+            SecondaryCharge(lawID: "resisting", specification: "Resisted Officer {OFFICER} in the discharge of official duties during an arrest.", chance: 1.0, threshold: 2)
+        ],
         ageRange: 23...38, occupations: ["electrician's apprentice", "line cook"], hasVictim: false,
         summaries: [
             "At 1:15 a.m. on {DATE}, Port Hollis officers were called to The Lantern Row Tavern for a fight that had already broken up. Officer {OFFICER} told {D}, who was arguing with a bouncer on the sidewalk, to leave. Within twenty seconds {DL} and the officer were on the ground and the officer's nose was broken. The officer says {DL} swung after being told {D.he} was under arrest. {DL} says the officer grabbed {D.his} neck from behind without a word and {D.he} threw an elbow by reflex. The officer's body camera fell off in the struggle. A bystander's phone video catches the last eight seconds."
@@ -207,6 +214,9 @@ extension StoryCases {
         headlines: ["Road Rage on {STREET}: Driver Swings Tire Iron", "Two Drivers, One Tire Iron, Two Stories"],
         primaryLaw: "awdw", lesserLaw: "simpleAssault", threshold: 3, lesserThreshold: 1,
         specification: "Assaulted {V} with a deadly weapon, a tire iron, by swinging it at {V.him}.",
+        secondary: [
+            SecondaryCharge(lawID: "injuryPersonalProperty", specification: "Damaged {V}'s side mirror with a tire iron.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 35...60, occupations: ["HVAC technician", "construction laborer"], hasVictim: true,
         summaries: [
             "On {DATE}, after {V} cut off {D} merging onto {STREET} in {HOOD}, both drivers stopped at the next red light. {VL} got out and walked to {DL}'s window. {DL} got out with a tire iron. Witnesses agree {DL} swung it once and hit {VL}'s side mirror, not {VL}. They disagree about what {VL} was doing: one says {VL} was pounding on {DL}'s window and reaching inside; another says {VL} was just yelling. {VL} had a folding knife clipped to {V.his} pocket. This case was tried in district court, and {DL} appealed a conviction there."
@@ -392,6 +402,10 @@ extension StoryCases {
         headlines: ["43 Dogs Seized From {HOOD} Home", "Rescue Founder Charged With Animal Cruelty"],
         primaryLaw: "animalCruelty", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
         specification: "Intentionally deprived animals of necessary sustenance and shelter, causing unjustifiable pain and suffering.",
+        secondary: [
+            SecondaryCharge(lawID: "animalCruelty", specification: "Deprived eleven dogs of necessary veterinary care, causing untreated skin infections.", chance: 1.0, threshold: 3),
+            SecondaryCharge(lawID: "animalCruelty", specification: "Deprived three dogs of necessary care, causing suffering severe enough to require euthanasia.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 50...70, occupations: ["owner of a small dog rescue"], hasVictim: false,
         summaries: [
             "On {DATE}, Hollis County Animal Services seized 43 dogs from {D}'s home and backyard kennels on {STREET} in {HOOD}, after a neighbor complained of the smell. Officers found waste inches deep in two rooms, empty water bowls, and eleven dogs with untreated skin infections; three had to be euthanized. {DL} ran an unlicensed rescue for nine years and says {D.he} took dogs nobody else would, that {D.his} helper quit three weeks earlier, and that {D.he} was days away from getting help. Veterinary receipts show {DL} spent more than $14,000 on the dogs that year. {DL} was convicted in district court and appealed."

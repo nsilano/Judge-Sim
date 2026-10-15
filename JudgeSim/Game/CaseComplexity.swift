@@ -105,7 +105,7 @@ enum CaseComplexity {
         }
         guard !fitting.isEmpty else { return [] }
         let roll = Double.random(in: 0..<1, using: &rng)
-        let count = roll < 0.3 ? 0 : (roll < 0.72 ? 1 : 2)
+        let count = roll < 0.15 ? 0 : (roll < 0.45 ? 1 : (roll < 0.75 ? 2 : (roll < 0.92 ? 3 : 4)))
         return rng.pick(fitting, count: min(count, fitting.count))
     }
 

@@ -116,6 +116,9 @@ extension StoryCases {
         headlines: ["Deputy Found Dead in Snow After Party", "Hit-and-Run or Cover-Up?"],
         primaryLaw: "murder2", lesserLaw: "invManslaughter", threshold: 3, lesserThreshold: 1,
         specification: "Killed {V} by striking {V.him} with a motor vehicle while impaired, with malice.",
+        secondary: [
+            SecondaryCharge(lawID: "hitAndRun", specification: "Knowing the vehicle struck {V}, failed to stop and remain at the scene.", chance: 1.0, threshold: 2)
+        ],
         ageRange: 33...46, occupations: ["physical therapist"], hasVictim: true,
         summaries: [
             "During an ice storm on {DATE}, {D} drove {D.his} partner, {V}, a Hollis County sheriff's deputy, to a holiday party at a fellow deputy's house on {STREET}, after the two had argued at a bar. At 6:15 a.m., {DL} and two friends found {VL} unconscious in a ditch at the edge of the yard; {VL} died at the hospital of a head injury and hypothermia. {DL}'s SUV had a broken passenger mirror. The State says {DL}, drunk and furious, clipped {VL} while making a fast U-turn and drove away. The defense says {VL} went inside, something happened there, and the deputies at that party steered the investigation toward {DL}."
@@ -216,6 +219,10 @@ extension StoryCases {
         headlines: ["Car Dealer Charged in Spouse's Shooting", "The Video in the Horse Barn"],
         primaryLaw: "murder1", lesserLaw: "murder2", threshold: 5, lesserThreshold: 3,
         specification: "Killed {V}, the defendant's spouse, with a rifle, with malice, premeditation, and deliberation.",
+        secondary: [
+            SecondaryCharge(lawID: "embezzlement100k", specification: "As dealership owner, embezzled $1.2 million in customer down payments meant for lenders.", chance: 1.0, threshold: 4),
+            SecondaryCharge(lawID: "obstruction", specification: "Obstructed justice by lying to investigators about being at the house during the shooting.", chance: 1.0, threshold: 4)
+        ],
         ageRange: 47...60, occupations: ["owner of a car dealership"], forcedPriorOffenses: ["Driving While Impaired"], hasVictim: true,
         summaries: [
             "{D} owns the biggest car dealership in Hollis County, founded by {D.his} grandparent. At 9:52 p.m. on {DATE}, {DL} called 911 to report finding {D.his} spouse, {V}, shot in the horse barn on the family's farm outside {HOOD}. {DL} said {D.he} had been at the house watching a game and then drove to check on an elderly parent. That afternoon, the dealership's bank had frozen its accounts over $1.2 million in customer down payments that never reached lenders. A video {VL} took of a sick horse at 8:31 p.m. captured {DL}'s voice in the barn."
@@ -311,6 +318,12 @@ extension StoryCases {
         headlines: ["Parent Charged After Child Missing 19 Days", "Cadaver Dog Alerts in Garage"],
         primaryLaw: "murder1", lesserLaw: "felonyChildAbuse", threshold: 4, lesserThreshold: 2,
         specification: "Killed {KID}, age three, the defendant's child, with malice, premeditation, and deliberation.",
+        secondary: [
+            SecondaryCharge(lawID: "concealingDeath", specification: "Concealed the death of {KID} by hiding {KID}'s body in a storage tote in a creek bed.", chance: 1.0, threshold: 2),
+            SecondaryCharge(lawID: "falseReport", specification: "Made a false report to the Hollis County Sheriff's Office that {KID} had been taken from a park.", chance: 1.0, threshold: 2),
+            SecondaryCharge(lawID: "obstruction", specification: "Obstructed justice by telling family and investigators for nineteen days that {KID} was at the beach.", chance: 1.0, threshold: 2),
+            SecondaryCharge(lawID: "felonyChildAbuse", specification: "Inflicted serious physical injury on {KID} by giving {KID} a sedating dose of allergy medicine.", chance: 1.0, threshold: 3)
+        ],
         ageRange: 20...28, occupations: ["cell phone store sales associate"], forcedPriorOffenses: ["Misdemeanor Larceny"], hasVictim: true,
         summaries: [
             "{KID}, three, was last seen at day care on {DATE}. For nineteen days {D} told family that {KID} was at the beach with a coworker's relative. When {DL}'s parent pressed and called the Sheriff's Office, {D.he} admitted {KID} was missing but said {KID} had been taken from a park. Five weeks later, {KID}'s remains were found in a storage tote in a creek bed four miles from the apartment. The medical examiner could not determine a cause of death. The State says {DL} drugged and suffocated {KID}. The defense says {KID} died of an accidental overdose of allergy medicine and {DL}, terrified, hid it."
@@ -405,6 +418,9 @@ extension StoryCases {
         headlines: ["Teen Guarding Store Shoots Two After Hurricane", "Protector or Vigilante?"],
         primaryLaw: "murder2", lesserLaw: "volManslaughter", threshold: 1, lesserThreshold: 1,
         specification: "Killed {V} with a rifle, with malice.",
+        secondary: [
+            SecondaryCharge(lawID: "awdwikisi", specification: "Assaulted {VL}'s friend with a rifle, with intent to kill, inflicting serious injury.", chance: 1.0, threshold: 1)
+        ],
         ageRange: 18...19, occupations: ["community college student"], hasVictim: true,
         summaries: [
             "Two nights after Hurricane {STORM} knocked out power across {CITY}, {D}, 18, stood outside {D.his} uncle's hardware store on {STREET} with an AR-style rifle, saying {D.he} was protecting it from looters. At about {TIME} on {DATE}, {V} walked up, argued with {DL}, and grabbed for the rifle. {DL} fired three times, killing {VL}. As {DL} backed away, {VL}'s friend came at {DL} with a tire iron, and {D.he} fired again, wounding the friend. The State says {DL} brought a war rifle to a dark street and provoked the fight. The defense says {VL} tried to take the gun."
