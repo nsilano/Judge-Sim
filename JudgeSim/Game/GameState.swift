@@ -513,6 +513,7 @@ final class GameState: ObservableObject {
         guard let person = person(c.defendant.personID) else { return }
         c.defendant.priors = person.priors
         c.defendant.probation = person.status == .probation ? person.probation : nil
+        c.defendant.postRelease = person.status == .incarcerated ? nil : person.postRelease
         c.defendant.history = person.appearances
         c.defendant.age = person.age(on: c.sessionDate)
     }
@@ -620,7 +621,7 @@ final class GameState: ObservableObject {
         if recentTemplates.count > 8 { recentTemplates.removeFirst(recentTemplates.count - 8) }
 
         if let returning {
-            let lead = returning.status == .probation ? "while on probation" : "again"
+            let lead = returning.status == .probation ? "while on probation" : returning.postRelease != nil ? "while on post-release supervision" : "again"
             post(NewsItem(date: date, kind: .arrest,
                           headline: "\(returning.name) charged \(lead)",
                           body: "\(returning.name), \(returning.age(on: date)), who has previously appeared in Hollis County Superior Court, has been charged with \(newCase.charges.first?.law.title.lowercased() ?? "a new offense"). The case is set for trial before Judge \(lastName(judgeName)).",
@@ -679,6 +680,8 @@ final class GameState: ObservableObject {
             people[index].releaseDate = outcome.releaseDate
             people[index].releaseNote = outcome.releaseBasis
             people[index].probation = outcome.newProbation
+            people[index].postRelease = outcome.continuedPostRelease
+            people[index].pendingPostRelease = outcome.newPostRelease ?? (outcome.personStatus == .incarcerated ? people[index].pendingPostRelease : nil)
             people[index].propensity = (people[index].propensity + outcome.propensity) / 2 + 0.05
             people[index].appearances.append(appearance)
         } else {
@@ -687,7 +690,8 @@ final class GameState: ObservableObject {
                                        background: d.background, priors: d.priors + outcome.newPriors,
                                        status: outcome.personStatus, releaseDate: outcome.releaseDate,
                                        probation: outcome.newProbation, propensity: outcome.propensity,
-                                       appearances: [appearance], releaseNote: outcome.releaseBasis))
+                                       appearances: [appearance], releaseNote: outcome.releaseBasis,
+                                       pendingPostRelease: outcome.newPostRelease))
         }
 
         var verdictNews = outcome.news
@@ -818,6 +822,7 @@ final class GameState: ObservableObject {
 
         // Sentences expire
         for index in people.indices {
+            if let prs = people[index].postRelease, prs.ends <= currentDate { people[index].postRelease = nil }
             let person = people[index]
             let lastDocket = person.appearances.last?.docket
             switch person.status {
@@ -825,6 +830,11 @@ final class GameState: ObservableObject {
                 if let release = person.releaseDate, release <= currentDate {
                     people[index].releaseDate = nil
                     people[index].releaseNote = nil
+                    if var prs = person.pendingPostRelease {
+                        prs.ends = Calendar.current.date(byAdding: .month, value: prs.supervisionMonths, to: release) ?? release
+                        people[index].postRelease = prs
+                        people[index].pendingPostRelease = nil
+                    }
                     if let probation = person.probation, probation.ends > currentDate {
                         people[index].status = .probation
                     } else {

@@ -1045,12 +1045,55 @@ struct ProbationStage: View {
                 }
             }
 
+            if let prs = c.defendant.postRelease {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Post-release supervision violation").font(.headline)
+                    Text("\(prs.docket): \(prs.offense)").font(.subheadline.weight(.semibold))
+                    Text("Released from prison onto \(prs.supervisionMonths) months of post-release supervision, ending \(SentenceFormat.shortDate(prs.ends)). Unserved maximum term: \(prs.remainingMonths) months.")
+                        .font(.callout)
+                    Divider()
+                    Text("Alleged violation: commission of a new criminal offense (\(c.docket)).").font(.callout)
+                    Text("In North Carolina this decision normally belongs to the Post-Release Supervision and Parole Commission; in Hollis County the court hears it with the new charge.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .card(tint: .orange)
+
+                ForEach(PostReleaseDecision.allCases, id: \.self) { decision in
+                    ChoiceRow(title: decision.label,
+                              subtitle: postReleaseSubtitle(decision, prs),
+                              selected: session.rulings.postReleaseDecision == decision) {
+                        session.rulings.postReleaseDecision = decision
+                    }
+                }
+
+                if session.anyActive && [.revoke, .confine].contains(session.rulings.postReleaseDecision) && c.defendant.probation == nil {
+                    Toggle(isOn: $session.rulings.revocationConsecutive) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Run consecutively to today's sentence").font(.subheadline.weight(.semibold))
+                            Text("Off: the time runs at the same time as today's active sentence.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .card()
+                }
+            }
+
             PrimaryButton(title: "Enter Order", icon: "hammer.fill",
-                          enabled: session.rulings.probationDecision != nil || c.defendant.probation == nil,
-                          hint: "Choose how to handle the probation violation.") {
+                          enabled: (session.rulings.probationDecision != nil || c.defendant.probation == nil)
+                            && (session.rulings.postReleaseDecision != nil || c.defendant.postRelease == nil),
+                          hint: "Decide the supervision violation.") {
                 Haptics.gavel()
                 session.advance()
             }
+        }
+    }
+
+    private func postReleaseSubtitle(_ decision: PostReleaseDecision, _ prs: PostReleaseTerm) -> String? {
+        switch decision {
+        case .revoke: return "Serves the remaining \(prs.remainingMonths) months of the maximum term in prison. No further supervision on that sentence."
+        case .confine: return "\(min(3, prs.remainingMonths)) months in custody, then back on supervision."
+        case .continueAsIs: return "No additional time on the old sentence."
         }
     }
 
@@ -1199,10 +1242,10 @@ struct PriorRecordRulings: View {
                                                     session.rulings.sentences = [:]
                                                 }))
             }
-            if c.defendant.probation != nil {
+            if c.defendant.underSupervision {
                 Divider()
                 let notice = Judgment.probationNoticeGiven(c)
-                ConditionToggle(title: "Count the point for offending while on probation",
+                ConditionToggle(title: "Count the point for offending while on \(c.defendant.probation != nil ? "probation" : "post-release supervision")",
                                 detail: notice
                                     ? "The State served written notice 30 days before trial."
                                     : "The State did not serve the 30-day notice the statute requires (G.S. 15A-1340.16(a6)).",

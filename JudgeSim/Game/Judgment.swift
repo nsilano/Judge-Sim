@@ -8,6 +8,18 @@ enum Verdict: String, Codable, Hashable {
     var isConviction: Bool { self == .guilty || self == .lesser }
 }
 
+enum PostReleaseDecision: String, CaseIterable, Codable, Hashable {
+    case revoke, confine, continueAsIs
+
+    var label: String {
+        switch self {
+        case .revoke: return "Revoke post-release supervision; return to prison for the rest of the sentence"
+        case .confine: return "Find a violation; three months' confinement, then supervision resumes"
+        case .continueAsIs: return "Continue post-release supervision"
+        }
+    }
+}
+
 enum JudgmentMode: String, CaseIterable, Codable, Hashable {
     case consolidated, concurrent, consecutive, grouped
 
@@ -230,6 +242,8 @@ struct Rulings: Codable, Hashable {
     var dischargeMonths: Int?
     /// How long a modified probation is extended after a violation (nil: 12 months).
     var extensionMonths: Int?
+    /// What the court did about the defendant's post-release supervision.
+    var postReleaseDecision: PostReleaseDecision?
     /// The lesser-included offense the court chose for each count, when it differs from the one the case came with.
     var lesserChoices: [UUID: String]?
 
@@ -313,6 +327,10 @@ struct CaseOutcome {
     var appearanceSummary: String
     /// How the release date was figured, for the person's status card.
     var releaseBasis: String? = nil
+    /// Post-release supervision that carries on after this case (nil when revoked or none).
+    var continuedPostRelease: PostReleaseTerm? = nil
+    /// Post-release supervision that will follow today's prison term.
+    var newPostRelease: PostReleaseTerm? = nil
 }
 
 enum Judgment {
@@ -380,7 +398,7 @@ enum Judgment {
     }
 
     static func countsProbationPoint(_ c: CourtCase, _ r: Rulings) -> Bool {
-        guard c.defendant.probation != nil else { return false }
+        guard c.defendant.underSupervision else { return false }
         return r.countProbationPoint ?? probationNoticeGiven(c)
     }
 
@@ -1238,6 +1256,38 @@ enum Judgment {
             }
         }
 
+        // Existing post-release supervision
+        var continuedPostRelease: PostReleaseTerm?
+        var postReleaseMonths = 0
+        if let prs = d.postRelease {
+            let stacked = r.revocationConsecutive && releaseOn > date
+            func confine(months: Int) {
+                let alone = Calendar.current.date(byAdding: .month, value: months, to: date) ?? date
+                releaseOn = stacked ? (Calendar.current.date(byAdding: .month, value: months, to: releaseOn) ?? releaseOn) : max(releaseOn, alone)
+                custodyMonths = monthsBetween(date, releaseOn)
+            }
+            let decided = r.postReleaseDecision != nil
+            var text: String?
+            switch r.postReleaseDecision ?? .continueAsIs {
+            case .revoke:
+                postReleaseMonths = max(1, prs.remainingMonths)
+                confine(months: postReleaseMonths)
+                text = "Post-release supervision in \(prs.docket) revoked. The defendant is returned to the custody of the Department of Adult Correction to serve the remaining \(postReleaseMonths) months of the maximum term" + (stacked ? ", beginning at the expiration of today's sentence." : ".")
+            case .confine:
+                postReleaseMonths = min(3, max(1, prs.remainingMonths))
+                confine(months: postReleaseMonths)
+                var continued = prs
+                continued.remainingMonths = max(0, prs.remainingMonths - postReleaseMonths)
+                continued.ends = Calendar.current.date(byAdding: .month, value: postReleaseMonths, to: prs.ends) ?? prs.ends
+                continuedPostRelease = continued
+                text = "Violation of post-release supervision found in \(prs.docket). The defendant is confined for \(postReleaseMonths) months, after which supervision resumes."
+            case .continueAsIs:
+                continuedPostRelease = prs
+                text = decided ? "Post-release supervision in \(prs.docket) continued." : nil
+            }
+            if let text { probationHearing = [probationHearing, text].compactMap { $0 }.joined(separator: " ") }
+        }
+
         // New probation from today's judgment, including split sentences that begin after release
         var newProbation = continuedProbation
         if !life && (!suspendedTerms.isEmpty || special == .conditionalDischarge) {
@@ -1282,12 +1332,28 @@ enum Judgment {
                 }
             }
             if revokedMonths > 0 { parts.append("Includes \(revokedMonths) months activated on probation revocation" + (r.revocationConsecutive ? ", consecutive." : ", concurrent.")) }
+            if postReleaseMonths > 0 { parts.append("Includes \(postReleaseMonths) months on the post-release supervision violation" + (r.revocationConsecutive ? ", consecutive." : ", concurrent.")) }
             if parts.isEmpty { parts.append("Confinement ordered on the probation violation.") }
             releaseBasis = parts.joined(separator: " ")
         }
 
         if let projection, releaseOn > date, projection.creditDays > 0 || projection.usesASR {
             newsExtras.append("Counting \(projection.creditDays > 0 ? "\(projection.creditDays) days already served" : "Advanced Supervised Release"), the earliest possible release is \(SentenceFormat.date(projection.earliest)).")
+        }
+
+        // Post-release supervision that follows today's active felony term (G.S. 15A-1368.2): 12 months for
+        // Class B1 through E, 9 months for F through I. Revocation activates the unserved part of the maximum.
+        var newPostRelease: PostReleaseTerm?
+        if !life && special == .none {
+            let felonyActive = sentencingUnits.filter { $0.isFelony && choice($0, r).disposition == .active && !choice($0, r).lifeWithoutParole }
+            if let first = felonyActive.first {
+                let minima = felonyActive.map { choice($0, r).minimum }
+                let maxima = felonyActive.map { maximum(for: $0, choice: choice($0, r)) }
+                let serious = felonyActive.contains { [NCClass.B1, .B2, .C, .D, .E].contains($0.sentencingClass) }
+                let months = serious ? 12 : 9
+                newPostRelease = PostReleaseTerm(docket: c.docket, offense: first.law.title, ends: releaseOn, supervisionMonths: months,
+                                                 remainingMonths: max(months, combine(maxima) - combine(minima)))
+            }
         }
 
         let status: PersonRecord.Status
@@ -1530,7 +1596,8 @@ enum Judgment {
                            custodyMonths: custodyMonths, personStatus: status, releaseDate: releaseDate,
                            newProbation: newProbation, newPriors: newPriors, propensity: propensity,
                            appealNotice: appealNotice, reactions: reactions, news: news, ethicsResult: ethicsResult,
-                           pending: pending, appearanceSummary: appearance, releaseBasis: releaseBasis)
+                           pending: pending, appearanceSummary: appearance, releaseBasis: releaseBasis,
+                           continuedPostRelease: continuedPostRelease, newPostRelease: newPostRelease)
     }
 
     // MARK: Appeals

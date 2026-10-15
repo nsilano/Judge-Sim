@@ -45,6 +45,11 @@ struct Defendant: Codable, Hashable {
     var history: [PersonRecord.Appearance]
     /// Work, education, family, and residence (optional for older saves).
     var profile: DefendantProfile? = nil
+    /// Post-release supervision the defendant is on (optional for older saves).
+    var postRelease: PostReleaseTerm? = nil
+
+    /// On probation or post-release supervision, so the court rules on a violation after the new case.
+    var underSupervision: Bool { probation != nil || postRelease != nil }
 
     var lastName: String { name.components(separatedBy: " ").last ?? name }
     var isReturning: Bool { !history.isEmpty }
@@ -322,6 +327,7 @@ struct CourtCase: Identifiable, Codable, Hashable {
         }
         if habitualIndicted { ids.append("habitualFelon") }
         if defendant.probation != nil { ids.append("probationViolation") }
+        if defendant.postRelease != nil { ids.append("postRelease") }
         ids.append(contentsOf: motions.flatMap(\.doctrineIDs))
         ids.append(contentsOf: objections.map(\.doctrineID))
         ids.append(contentsOf: relatedDoctrines)
