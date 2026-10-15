@@ -109,6 +109,24 @@ enum NameBank {
         "Was in foster care from age 9 to 18."
     ]
 
+    /// A background line that fits the person's age and situation.
+    static func background(age: Int, occupation: String, rng: inout SeededRNG) -> String {
+        let lower = occupation.lowercased()
+        let inHighSchool = lower.contains("high school")
+        let inCollege = lower.contains("student") || lower.contains("freshman")
+        let fits = backgrounds.filter { line in
+            if line.contains("finish high school") { return !inHighSchool }
+            if line.contains("losing a job") { return age >= 23 && !inHighSchool && !inCollege }
+            if line.contains("eleven years") { return age >= 30 }
+            if line.contains("Dropped out of community college") { return age >= 20 && !inCollege && !inHighSchool }
+            if line.contains("Navy") { return age >= 24 && !inHighSchool && !inCollege }
+            if line.contains("Coaches") { return age >= 22 }
+            if line.contains("foster care from age 9 to 18") { return age >= 18 }
+            return true
+        }
+        return rng.pick(fits.isEmpty ? backgrounds : fits)
+    }
+
     static let priorOffenses = [
         "Petty Theft (misdemeanor), 6 months probation",
         "Possession of a Controlled Substance, completed Drug Court",

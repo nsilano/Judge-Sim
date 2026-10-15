@@ -135,7 +135,7 @@ enum CaseGenerator {
                                               county: rng.pick(GenericPools.otherCounties),
                                               sentence: "6–17 months active"), at: 0)
             }
-            let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(rng.pick(NameBank.backgrounds))
+            let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(NameBank.background(age: age, occupation: occupation, rng: &rng))
             defendant = Defendant(personID: UUID(), name: name, age: age, occupation: occupation.capitalizedFirst,
                                   background: background, priors: priors, probation: nil, history: [])
         }
