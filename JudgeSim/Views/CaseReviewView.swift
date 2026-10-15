@@ -272,24 +272,56 @@ struct InvestigationReportView: View {
 
 struct DefendantProfileView: View {
     let profile: DefendantProfile
+    @State private var tab: Tab = .life
+
+    enum Tab: String, CaseIterable, Identifiable {
+        case life = "Life", work = "Work", education = "Education"
+        var id: String { rawValue }
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("WORK HISTORY").font(.caption2.weight(.heavy)).tracking(0.5).foregroundStyle(.secondary)
-            ForEach(Array(profile.jobs.enumerated()), id: \.offset) { _, job in
-                HStack(alignment: .firstTextBaseline) {
-                    Image(systemName: job.current ? "briefcase.fill" : "briefcase").foregroundStyle(job.current ? Theme.gold : .secondary)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(job.title).font(.callout.weight(.semibold))
-                        Text("\(job.employer) · \(job.years)").font(.caption).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 10) {
+            Picker("Profile", selection: $tab) {
+                ForEach(Tab.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+
+            switch tab {
+            case .life:
+                Label(profile.family, systemImage: "house.fill").font(.callout)
+                Label(profile.residence, systemImage: "mappin.and.ellipse").font(.callout)
+                Label(profile.income, systemImage: "dollarsign.circle").font(.callout)
+            case .work:
+                if profile.jobs.isEmpty {
+                    Label("No work history", systemImage: "briefcase").font(.callout).foregroundStyle(.secondary)
+                }
+                ForEach(Array(profile.jobs.enumerated()), id: \.offset) { _, job in
+                    HStack(alignment: .firstTextBaseline) {
+                        Image(systemName: job.title == "In custody" ? "lock.fill" : (job.current ? "briefcase.fill" : "briefcase"))
+                            .foregroundStyle(job.current ? Theme.gold : .secondary)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(job.title).font(.callout.weight(.semibold))
+                            Text("\(job.employer) · \(job.years)").font(.caption).foregroundStyle(.secondary)
+                        }
                     }
                 }
+            case .education:
+                // One line per school or credential, most recent last.
+                ForEach(Array(educationLines.enumerated()), id: \.offset) { _, line in
+                    Label(line, systemImage: "graduationcap.fill").font(.callout)
+                }
             }
-            Divider()
-            Label(profile.education, systemImage: "graduationcap.fill").font(.callout)
-            Label(profile.family, systemImage: "house.fill").font(.callout)
-            Label(profile.residence, systemImage: "mappin.and.ellipse").font(.callout)
-            Label(profile.income, systemImage: "dollarsign.circle").font(.callout)
         }
+    }
+
+    private var educationLines: [String] {
+        profile.education
+            .split(separator: ";")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .map { line in
+                var text = line.prefix(1).uppercased() + line.dropFirst()
+                if !text.hasSuffix(".") { text += "." }
+                return text
+            }
     }
 }
