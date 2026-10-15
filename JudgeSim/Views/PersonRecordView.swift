@@ -106,7 +106,9 @@ struct PersonFileDocuments: View {
             DocCheck(checked: person.status == .incarcerated, text: "In custody")
             DocCheck(checked: person.status == .probation || (person.status == .incarcerated && person.probation != nil),
                      text: person.status == .incarcerated && person.probation != nil ? "Probation to begin on release" : "On probation")
-            DocCheck(checked: person.status == .free, text: "At liberty")
+            DocCheck(checked: person.postRelease != nil || person.pendingPostRelease != nil,
+                     text: person.pendingPostRelease != nil ? "Post-release supervision to begin on release" : "On post-release supervision")
+            DocCheck(checked: person.status == .free && person.postRelease == nil, text: "At liberty")
             DocField(label: "Custody / supervision", value: file.custodyLine)
             if person.status == .incarcerated, let release = person.releaseDate {
                 DocField(label: "Projected release",

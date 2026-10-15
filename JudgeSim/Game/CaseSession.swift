@@ -95,7 +95,7 @@ final class CaseSession: ObservableObject {
             case .trial: return "Trial"
             case .verdict: return "Verdict"
             case .sentencing: return "Sentencing"
-            case .probation: return "Probation Violation"
+            case .probation: return "Supervision Violation"
             case .judgment: return "Judgment"
             }
         }
@@ -107,7 +107,7 @@ final class CaseSession: ObservableObject {
             case .trial: return "Trial"
             case .verdict: return "Verdict"
             case .sentencing: return "Sentence"
-            case .probation: return "Probation"
+            case .probation: return "Supervision"
             case .judgment: return "Done"
             }
         }
@@ -161,7 +161,7 @@ final class CaseSession: ObservableObject {
             revealedAggravating = resume.revealedAggravating
             revealedMitigating = resume.revealedMitigating
             // The probation may have ended while the case was continued; pick up at the step before it.
-            if stage == .probation && courtCase.defendant.probation == nil {
+            if stage == .probation && !courtCase.defendant.underSupervision {
                 stage = anyConviction ? .sentencing : .verdict
             }
         }
@@ -178,7 +178,7 @@ final class CaseSession: ObservableObject {
             if rulings.pleaAccepted == true && [Stage.motions, .trial, .verdict].contains(stage) { return false }
             switch stage {
             case .motions: return !courtCase.motions.isEmpty
-            case .probation: return courtCase.defendant.probation != nil
+            case .probation: return courtCase.defendant.underSupervision
             default: return true
             }
         }
@@ -545,7 +545,7 @@ final class CaseSession: ObservableObject {
         case .sentencing:
             return sentencingHint ?? "Work through the steps, then enter judgment."
         case .probation:
-            return rulings.probationDecision == nil ? "Decide what to do about the probation violation." : "Enter the order."
+            return (courtCase.defendant.probation != nil && rulings.probationDecision == nil) || (courtCase.defendant.postRelease != nil && rulings.postReleaseDecision == nil) ? "Decide what to do about the supervision violation." : "Enter the order."
         case .judgment:
             return nil
         }
@@ -663,7 +663,7 @@ final class CaseSession: ObservableObject {
                 stage = courtCase.motions.isEmpty ? .trial : .motions
             case .motions:
                 if dismissedBySpeedyTrial {
-                    if courtCase.defendant.probation != nil { stage = .probation } else { finish() }
+                    if courtCase.defendant.underSupervision { stage = .probation } else { finish() }
                 } else { stage = .trial }
             case .trial:
                 for charge in courtCase.charges where rulings.halftime[charge.id] == .dismiss {
@@ -674,7 +674,7 @@ final class CaseSession: ObservableObject {
                 if anyConviction {
                     prepareSentencing()
                     stage = .sentencing
-                } else if courtCase.defendant.probation != nil {
+                } else if courtCase.defendant.underSupervision {
                     stage = .probation
                 } else {
                     finish()
@@ -687,7 +687,7 @@ final class CaseSession: ObservableObject {
                     pendingPleaDeparture = departure
                     return
                 }
-                if courtCase.defendant.probation != nil { stage = .probation } else { finish() }
+                if courtCase.defendant.underSupervision { stage = .probation } else { finish() }
             case .probation:
                 finish()
             case .judgment:

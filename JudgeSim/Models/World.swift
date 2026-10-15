@@ -101,12 +101,27 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     var appearances: [Appearance] = []
     /// How the projected release date was figured: minimum and maximum terms, credit, and any revocation (optional for older saves).
     var releaseNote: String? = nil
+    /// Post-release supervision after a prison term: active once released.
+    var postRelease: PostReleaseTerm? = nil
+    /// Post-release supervision that begins when the current prison term ends.
+    var pendingPostRelease: PostReleaseTerm? = nil
 
     func age(on date: Date) -> Int {
         Calendar.current.component(.year, from: date) - birthYear
     }
 
     var lastName: String { name.components(separatedBy: " ").last ?? name }
+}
+
+/// Supervision after release from a felony prison term (G.S. 15A-1368.2). Revoking it sends the person back
+/// to serve the rest of the maximum term.
+struct PostReleaseTerm: Codable, Hashable {
+    var docket: String
+    var offense: String
+    var ends: Date
+    var supervisionMonths: Int
+    /// The unserved part of the maximum term, which revocation activates.
+    var remainingMonths: Int
 }
 
 /// A suspended sentence that can be activated if probation is revoked.

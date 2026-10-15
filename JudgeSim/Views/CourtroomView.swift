@@ -275,7 +275,7 @@ struct BriefingStage: View {
             }
 
             CollapsibleSection(title: "The defendant", icon: "person.fill",
-                               summary: "\(c.defendant.name), \(c.defendant.age) · \(c.defendant.profile?.jobs.first?.title ?? c.defendant.occupation) · " + (c.defendant.priors.isEmpty ? "no prior record" : "\(c.defendant.priors.count) prior conviction\(c.defendant.priors.count == 1 ? "" : "s")") + (c.defendant.probation != nil ? " · on probation" : ""),
+                               summary: "\(c.defendant.name), \(c.defendant.age) · \(c.defendant.profile?.jobs.first?.title ?? c.defendant.occupation) · " + (c.defendant.priors.isEmpty ? "no prior record" : "\(c.defendant.priors.count) prior conviction\(c.defendant.priors.count == 1 ? "" : "s")") + (c.defendant.probation != nil ? " · on probation" : c.defendant.postRelease != nil ? " · on post-release supervision" : ""),
                                expanded: false) {
                 DefendantCard(defendant: c.defendant, county: session.county)
             }
@@ -465,6 +465,12 @@ struct DefendantCard: View {
                 }
             }
 
+            if let prs = defendant.postRelease {
+                Label("On post-release supervision: \(prs.docket), \(prs.offense). Supervision ends \(SentenceFormat.shortDate(prs.ends)); \(prs.remainingMonths) months of the maximum term unserved.",
+                      systemImage: "person.badge.clock.fill")
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+            }
             if let probation = defendant.probation {
                 Label("On probation: \(probation.docket), \(probation.offense). Suspended sentence: \(probation.suspendedSentence). Term ends \(SentenceFormat.shortDate(probation.ends)).",
                       systemImage: "person.badge.clock.fill")
