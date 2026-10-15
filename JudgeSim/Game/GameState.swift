@@ -682,6 +682,7 @@ final class GameState: ObservableObject {
             people[index].probation = outcome.newProbation
             people[index].postRelease = outcome.continuedPostRelease
             people[index].pendingPostRelease = outcome.newPostRelease ?? (outcome.personStatus == .incarcerated ? people[index].pendingPostRelease : nil)
+
             people[index].propensity = (people[index].propensity + outcome.propensity) / 2 + 0.05
             people[index].appearances.append(appearance)
         } else {
@@ -692,6 +693,13 @@ final class GameState: ObservableObject {
                                        probation: outcome.newProbation, propensity: outcome.propensity,
                                        appearances: [appearance], releaseNote: outcome.releaseBasis,
                                        pendingPostRelease: outcome.newPostRelease))
+        }
+        // Credit already satisfied the prison term: post-release supervision starts today.
+        if outcome.personStatus != .incarcerated, let index = people.firstIndex(where: { $0.id == d.personID }),
+           var prs = people[index].pendingPostRelease {
+            prs.ends = Calendar.current.date(byAdding: .month, value: prs.supervisionMonths, to: currentDate) ?? currentDate
+            people[index].postRelease = prs
+            people[index].pendingPostRelease = nil
         }
 
         var verdictNews = outcome.news

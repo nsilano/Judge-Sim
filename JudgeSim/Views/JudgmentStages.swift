@@ -976,6 +976,26 @@ struct UnitSentenceCard: View {
                 if choice.probationMonths < 1 { choice.probationMonths = months.lowerBound }
             }
         }
+        if choice.disposition == .active && !choice.lifeWithoutParole {
+            ConditionToggle(title: "Follow the active term with probation",
+                            detail: "Probation begins on release, even if jail credit means release is today. Revocation can impose up to the same active term again.",
+                            isOn: Binding(get: { choice.probationAfterActive == true },
+                                          set: { choice.probationAfterActive = $0 }))
+            if choice.probationAfterActive == true {
+                let unitName = unit.isFelony ? "month" : "day"
+                AmountStepper(title: "Serve before release: \(choice.servedTerm) of \(choice.minimum) \(unitName)s",
+                              caption: choice.suspendedBalance > 0
+                                ? "The other \(choice.suspendedBalance) \(unitName)s are suspended; a violation can send the defendant back to serve them."
+                                : "The whole term is served before probation begins.",
+                              value: Binding(get: { choice.servedTerm }, set: { choice.servedBeforeProbation = $0 }),
+                              range: 0...max(0, choice.minimum),
+                              fine: 1, coarse: unit.isFelony ? 6 : 30, fineLabel: unit.isFelony ? "± 1 month" : "± 1 day", coarseLabel: unit.isFelony ? "± 6 months" : "± 30 days")
+                AmountStepper(title: "Probation after release: \(choice.probationMonths) months",
+                              caption: "Any length you choose. Conditions are set in the probation section below.",
+                              value: $choice.probationMonths, range: 1...240,
+                              fine: 1, coarse: 12, fineLabel: "± 1 month", coarseLabel: "± 1 year")
+            }
+        }
         if let disposition = choice.disposition, disposition != .active {
             let typical = StructuredSentencing.probationMonths(felony: unit.isFelony, disposition: disposition)
             AmountStepper(title: "Probation: \(choice.probationMonths) months",

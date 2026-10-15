@@ -192,6 +192,19 @@ struct SentenceChoice: Codable, Hashable {
     var customTerm = false
     /// Custom maximum (felonies only). nil uses the statutory formula.
     var customMaximum: Int?
+    /// With an active term: probation that begins on release (optional for older saves).
+    var probationAfterActive: Bool?
+    /// With probation after an active term: how much of the term (months for felonies, days for misdemeanors)
+    /// is served before release onto probation. nil serves all of it.
+    var servedBeforeProbation: Int?
+
+    /// The part of the active term actually served before release.
+    var servedTerm: Int {
+        guard probationAfterActive == true, let served = servedBeforeProbation else { return minimum }
+        return min(max(0, served), minimum)
+    }
+    /// The part of the term suspended when the court releases early onto probation.
+    var suspendedBalance: Int { minimum - servedTerm }
 }
 
 /// Everything the judge decided during a case.
@@ -486,8 +499,14 @@ enum Judgment {
         return !selected.lifeWithoutParole && selected.disposition != nil && selected.disposition != .active
     }
 
+    /// The judgment puts the defendant on probation: a suspended term, or probation ordered to follow an active one.
+    static func hasProbation(_ unit: SentencingUnit, _ r: Rulings) -> Bool {
+        let selected = choice(unit, r)
+        return isSuspended(unit, r) || (!selected.lifeWithoutParole && selected.disposition == .active && selected.probationAfterActive == true)
+    }
+
     static func anySuspended(_ c: CourtCase, _ r: Rulings) -> Bool {
-        r.special == .conditionalDischarge || units(c, r).contains { isSuspended($0, r) }
+        r.special == .conditionalDischarge || units(c, r).contains { hasProbation($0, r) }
     }
 
     static func anyIntermediate(_ c: CourtCase, _ r: Rulings) -> Bool {
@@ -508,7 +527,7 @@ enum Judgment {
 
     static func probationLength(_ c: CourtCase, _ r: Rulings) -> Int {
         if r.special == .conditionalDischarge { return 12 }
-        return units(c, r).filter { isSuspended($0, r) }.map { choice($0, r).probationMonths }.max() ?? 0
+        return units(c, r).filter { hasProbation($0, r) }.map { choice($0, r).probationMonths }.max() ?? 0
     }
 
     /// Advanced Supervised Release (G.S. 15A-1340.18): active sentences in the presumptive or mitigated range for
@@ -727,7 +746,7 @@ enum Judgment {
                         add("\(title): the fine exceeds the \(SentenceFormat.dollars(cap)) statutory maximum.", against: true)
                     }
                 }
-                if isSuspended(unit, r) && selected.probationMonths > 60 {
+                if hasProbation(unit, r) && selected.probationMonths > 60 {
                     add("\(title): probation may not exceed five years.", against: true)
                 }
             }
@@ -917,10 +936,15 @@ enum Judgment {
                     usesASR = true
                 }
                 let maxTerm = Judgment.maximum(for: unit, choice: selected)
+                if selected.suspendedBalance > 0 {
+                    // Released early onto probation: the served part is the whole stay.
+                    terms.append((selected.servedTerm, 0, selected.servedTerm, 0, maxTerm))
+                    continue
+                }
                 let supervision = [NCClass.B1, .B2, .C, .D, .E].contains(unit.sentencingClass) ? 12 : 9
                 terms.append((minimum, 0, max(selected.minimum, maxTerm - supervision), 0, maxTerm))
             } else {
-                terms.append((0, selected.minimum, 0, selected.minimum, 0))
+                terms.append((0, selected.servedTerm, 0, selected.servedTerm, 0))
             }
         }
         let credit = max(0, c.background?.custodyDays ?? 0)
@@ -1033,6 +1057,9 @@ enum Judgment {
         var activeTerms: [Int] = []
         var activeFelony = false
         var suspendedTerms: [Int] = []
+        /// Active terms the court ordered probation to follow; revoking that probation can impose them again.
+        var afterActiveTerms: [Int] = []
+        var afterActiveText: [String] = []
         var probationMonths = 0
         var suspendedText: [String] = []
         var anyFelonySuspended = false
@@ -1073,6 +1100,24 @@ enum Judgment {
                     }
                     activeTerms.append(months)
                     if unit.isFelony { activeFelony = true }
+                    if !selected.lifeWithoutParole && selected.probationAfterActive == true {
+                        let unitName = unit.isFelony ? "month" : "day"
+                        let balance = selected.suspendedBalance
+                        let toMonths = { (n: Int) in unit.isFelony ? n : Int((Double(n) / 30).rounded(.up)) }
+                        // Revocation activates the suspended balance, or the whole term again if all of it was served.
+                        let exposure = max(1, toMonths(balance > 0 ? balance : selected.minimum))
+                        afterActiveTerms.append(exposure)
+                        probationMonths = max(probationMonths, selected.probationMonths)
+                        if unit.isFelony { anyFelonySuspended = true }
+                        if balance > 0 {
+                            activeTerms[activeTerms.count - 1] = toMonths(selected.servedTerm)
+                            afterActiveText.append("\(balance) \(unitName)s of \(termText(for: unit, choice: selected)) suspended after \(selected.servedTerm) served")
+                            lines.append("The defendant shall serve \(selected.servedTerm) \(unitName)\(selected.servedTerm == 1 ? "" : "s") of this term, after which the remaining \(balance) \(unitName)\(balance == 1 ? "" : "s") are suspended and the defendant is placed on \(selected.probationMonths) months of supervised probation.")
+                        } else {
+                            afterActiveText.append("probation following an active term of \(termText(for: unit, choice: selected))")
+                            lines.append("Upon release, the defendant is placed on \(selected.probationMonths) months of supervised probation. A violation may result in an additional active term of up to \(exposure) months.")
+                        }
+                    }
                 } else {
                     suspendedTerms.append(months)
                     probationMonths = max(probationMonths, selected.probationMonths)
@@ -1083,7 +1128,7 @@ enum Judgment {
             }
 
             if activeTerms.count > 0 {
-                var lines = r.recommendations.lines + (suspendedTerms.isEmpty ? r.customConditions : [])
+                var lines = r.recommendations.lines + (suspendedTerms.isEmpty && afterActiveTerms.isEmpty ? r.customConditions : [])
                 if let projection = custodyProjection(c, r, units: sentencingUnits, from: date) {
                     lines.insert(contentsOf: projection.lines, at: 0)
                 } else if let days = bg?.custodyDays, days > 0 {
@@ -1094,7 +1139,7 @@ enum Judgment {
                 }
                 if !lines.isEmpty { judgments.append(JudgmentEntry(title: "Commitment", lines: lines)) }
             }
-            if !suspendedTerms.isEmpty {
+            if !suspendedTerms.isEmpty || !afterActiveTerms.isEmpty {
                 var lines = r.conditions.descriptions(victimName: c.victimName) + r.customConditions
                 lines.insert("Regular conditions of probation under G.S. 15A-1343(b) apply.", at: 0)
                 if !activeTerms.isEmpty {
@@ -1186,9 +1231,10 @@ enum Judgment {
         let truthGuilty = c.truth.actuallyGuilty
         let need = bg?.treatmentNeed ?? TreatmentNeed.none
         let k = r.conditions
-        let treatedSubstance = (k.substanceTreatment || k.drugTreatmentCourt) && !suspendedTerms.isEmpty
+        let onProbation = !suspendedTerms.isEmpty || !afterActiveTerms.isEmpty
+        let treatedSubstance = (k.substanceTreatment || k.drugTreatmentCourt) && onProbation
             || (r.recommendations.substanceTreatment && !activeTerms.isEmpty)
-        let treatedMental = (k.mentalHealthTreatment && !suspendedTerms.isEmpty)
+        let treatedMental = (k.mentalHealthTreatment && onProbation)
             || (r.recommendations.mentalHealth && !activeTerms.isEmpty)
 
         var propensity = truthGuilty ? 0.42 : 0.1
@@ -1198,8 +1244,8 @@ enum Judgment {
         if convicted {
             if need.substance { propensity *= treatedSubstance ? 0.7 : 1.15 }
             if need.mentalHealth { propensity *= treatedMental ? 0.75 : 1.1 }
-            if k.maintainEmployment && bg?.employmentPlan != nil && !suspendedTerms.isEmpty { propensity *= 0.9 }
-            if (k.education && !suspendedTerms.isEmpty) || (r.recommendations.vocational && !activeTerms.isEmpty) { propensity *= 0.93 }
+            if k.maintainEmployment && bg?.employmentPlan != nil && onProbation { propensity *= 0.9 }
+            if (k.education && onProbation) || (r.recommendations.vocational && !activeTerms.isEmpty) { propensity *= 0.93 }
             if k.angerManagement && (c.category == .violent || c.category == .robbery) { propensity *= 0.92 }
         }
         propensity = min(0.8, max(0.03, propensity))
@@ -1290,15 +1336,15 @@ enum Judgment {
 
         // New probation from today's judgment, including split sentences that begin after release
         var newProbation = continuedProbation
-        if !life && (!suspendedTerms.isEmpty || special == .conditionalDischarge) {
+        if !life && (!suspendedTerms.isEmpty || !afterActiveTerms.isEmpty || special == .conditionalDischarge) {
             let start = releaseOn
             let ends = Calendar.current.date(byAdding: .month, value: probationMonths, to: start) ?? start
             let fallbackMonths = sentencingUnits.first.flatMap { $0.felonyCell?.presumptive.low } ?? 3
             var term = ProbationTerm(docket: c.docket,
                                      offense: sentencingUnits.first?.law.title ?? principalTitle,
                                      isFelony: anyFelonySuspended || special == .conditionalDischarge,
-                                     suspendedSentence: special == .conditionalDischarge ? "conditional discharge (judgment would be entered)" : suspendedText.joined(separator: "; "),
-                                     activeMonths: special == .conditionalDischarge ? fallbackMonths : combine(suspendedTerms),
+                                     suspendedSentence: special == .conditionalDischarge ? "conditional discharge (judgment would be entered)" : (suspendedText + afterActiveText).joined(separator: "; "),
+                                     activeMonths: special == .conditionalDischarge ? fallbackMonths : max(combine(suspendedTerms), combine(afterActiveTerms)),
                                      ends: ends, imposedInThisCourt: true,
                                      supervised: k.supervised || special == .conditionalDischarge,
                                      conditions: Array(k.descriptions(victimName: c.victimName).dropFirst()) + r.customConditions,
@@ -1345,7 +1391,9 @@ enum Judgment {
         // Class B1 through E, 9 months for F through I. Revocation activates the unserved part of the maximum.
         var newPostRelease: PostReleaseTerm?
         if !life && special == .none {
-            let felonyActive = sentencingUnits.filter { $0.isFelony && choice($0, r).disposition == .active && !choice($0, r).lifeWithoutParole }
+            // A term the court split with probation is supervised by probation, not post-release supervision.
+            let felonyActive = sentencingUnits.filter { $0.isFelony && choice($0, r).disposition == .active && !choice($0, r).lifeWithoutParole
+                && choice($0, r).suspendedBalance == 0 }
             if let first = felonyActive.first {
                 let minima = felonyActive.map { choice($0, r).minimum }
                 let maxima = felonyActive.map { maximum(for: $0, choice: choice($0, r)) }
@@ -1405,7 +1453,7 @@ enum Judgment {
                     ? "concurrent sentences, the longest \(low) to \(high) months in prison"
                     : "concurrent sentences, the longest \(low) days in jail"
             }
-            if !suspendedTerms.isEmpty { newsSentence += ", followed by \(probationMonths) months of probation" }
+            if !suspendedTerms.isEmpty || !afterActiveTerms.isEmpty { newsSentence += ", followed by \(probationMonths) months of probation" }
         } else if probationMonths > 0 {
             newsSentence = "a suspended sentence and \(probationMonths) months of probation"
         }
