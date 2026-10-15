@@ -105,7 +105,8 @@ extension StoryCases {
             prosecutionOpening: "A night arranged to be alone. A note about doing it while they slept. And {D}'s own words: 'I knew people would say it was wrong.'",
             defenseOpening: "This is a case about an illness that a doctor's note nine days before called a 'darkness coming for the children.' {DL} asked for help and was told to wait five weeks.",
             prosecutionClosing: "Mental illness is real, and tragic. But knowing that others would call it wrong is knowing it's wrong.",
-            defenseClosing: "The defense has shown by the greater weight of the evidence that {DL} was psychotic and could not know right from wrong. The verdict the law provides is not guilty by reason of insanity."
+            defenseClosing: "The defense has shown by the greater weight of the evidence that {DL} was psychotic and could not know right from wrong. The verdict the law provides is not guilty by reason of insanity.",
+            genders: ["D": .female]
         )
     )
 

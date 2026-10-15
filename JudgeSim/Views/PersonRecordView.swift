@@ -209,6 +209,7 @@ struct PersonFileDocuments: View {
                       fileNumber: leadFile, defendant: person.name) {
             DocFieldPair(first: ("Year of birth", String(person.birthYear)),
                          second: ("Age", "\(person.age(on: file.today))"))
+            DocField(label: "Sex", value: NameBank.gender(of: person.name).label)
             DocField(label: "Occupation", value: person.occupation)
             DocField(label: "Background", value: person.background)
 

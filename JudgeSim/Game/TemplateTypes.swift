@@ -106,6 +106,20 @@ struct CaseTemplate {
     var extras: [String: [String]] = [:]
     /// A fully written case: every witness, objection, and argument is authored, and nothing generic is mixed in.
     var story: StoryExtras? = nil
+    /// People whose sex the case fixes, keyed "D", "V", or "ALT".
+    var genders: [String: Gender] = [:]
+
+    /// Every sex the case requires: its own, the written story's, and what the charges themselves require
+    /// (assault on a female is committed by a male on a female, G.S. 14-33(c)(2)).
+    var requiredGenders: [String: Gender] {
+        var result = genders.merging(story?.genders ?? [:]) { a, _ in a }
+        let laws = [primaryLaw] + [lesserLaw].compactMap { $0 } + secondary.map(\.lawID)
+        if laws.contains("assaultFemale") {
+            result["D"] = result["D"] ?? .male
+            result["V"] = result["V"] ?? .female
+        }
+        return result
+    }
 }
 
 /// The parts of a written case that templates don't otherwise carry.

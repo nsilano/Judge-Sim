@@ -440,7 +440,7 @@ struct DefendantCard: View {
                     .foregroundStyle(Theme.mahogany)
                 VStack(alignment: .leading) {
                     Text(defendant.name).font(.title3.weight(.bold))
-                    Text("Age \(defendant.age) · \(defendant.occupation)")
+                    Text("Age \(defendant.age) · \(NameBank.gender(of: defendant.name).label) · \(defendant.occupation)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

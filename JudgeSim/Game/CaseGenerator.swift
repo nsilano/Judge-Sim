@@ -33,8 +33,10 @@ enum CaseGenerator {
         if let person = context.returning {
             let hasFelony = person.priors.contains { $0.ncClass.isFelony }
             let age = person.age(on: context.date)
+            let sex = NameBank.gender(of: person.name)
             let fitting = pool.filter { template in
                 template.occupations.isEmpty
+                    && (template.requiredGenders["D"] ?? sex) == sex
                     && (!template.requiresFelonyPrior || hasFelony)
                     && template.forcedPriorOffenses.isEmpty
                     && age >= template.ageRange.lowerBound - 3 && age <= template.ageRange.upperBound + 8
@@ -118,7 +120,7 @@ enum CaseGenerator {
                                   postRelease: person.status == .incarcerated ? nil : person.postRelease,
                                   violations: person.violations)
         } else {
-            let name = NameBank.person(using: &rng, excluding: &used, gender: t.story?.genders["D"])
+            let name = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"])
             let age = rng.int(t.ageRange)
             let occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
             // Written cases describe the defendant's record themselves; most say there is none.
@@ -141,8 +143,8 @@ enum CaseGenerator {
                                   background: background, priors: priors, probation: nil, history: [])
         }
 
-        let victimName = t.hasVictim ? NameBank.person(using: &rng, excluding: &used, gender: t.story?.genders["V"]) : nil
-        let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.story?.genders["ALT"])
+        let victimName = t.hasVictim ? NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"]) : nil
+        let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"])
         let setting = CaseSetting.of(category: t.category, key: t.key)
         // Highway crashes and impaired driving are worked by the Highway Patrol.
         let trooperName = rng.pick(county.troopers)

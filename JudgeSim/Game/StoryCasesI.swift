@@ -297,7 +297,7 @@ extension StoryCases {
             defenseOpening: "A brother's plea for the truth, heard through a witness's fear.",
             prosecutionClosing: "'Nobody needs to get hurt' only means one thing to a witness.",
             defenseClosing: "Words without audio, a station {DL} uses every day, and reasonable doubt.",
-            genders: ["V": .female]
+            genders: ["D": .male, "V": .female]
         )
     )
 

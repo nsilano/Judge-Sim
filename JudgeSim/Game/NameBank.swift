@@ -2,6 +2,7 @@ import Foundation
 
 enum Gender { case male, female
 
+    var label: String { self == .female ? "Female" : "Male" }
     var he: String { self == .female ? "she" : "he" }
     var him: String { self == .female ? "her" : "him" }
     var his: String { self == .female ? "her" : "his" }

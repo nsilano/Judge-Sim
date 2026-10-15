@@ -203,6 +203,8 @@ struct PersonStatusCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(person.status.label, systemImage: icon).font(.headline).foregroundStyle(color)
+            Text("\(NameBank.gender(of: person.name).label) · age \(person.age(on: today)) · \(person.occupation)")
+                .font(.caption).foregroundStyle(.secondary)
             switch person.status {
             case .incarcerated:
                 if let release = person.releaseDate {
