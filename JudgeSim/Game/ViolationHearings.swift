@@ -68,6 +68,8 @@ struct HearingOutcome {
     var news: NewsItem
     var appearance: String
     var pending: [PendingEvent] = []
+    /// The violation the court found, for the person's record (nil when none was found).
+    var violation: SupervisionViolation? = nil
 }
 
 enum ViolationHearings {
@@ -325,7 +327,11 @@ enum ViolationHearings {
                               probation: keepsProbation ? term : nil,
                               propensityChange: propensityChange, news: news,
                               appearance: "Probation violation hearing: \(decision.label.lowercased())",
-                              pending: pending)
+                              pending: pending,
+                              violation: decision == .continueAsIs ? nil
+                                : SupervisionViolation(docket: term.docket, date: date, kind: "Probation violation",
+                                                       conduct: h.violations.joined(separator: "; "),
+                                                       result: decision.label))
     }
 }
 

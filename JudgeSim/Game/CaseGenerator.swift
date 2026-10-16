@@ -12,6 +12,8 @@ enum CaseGenerator {
         /// Scenario signatures already heard in this career, so no exact scenario repeats.
         var usedSignatures: Set<String> = []
         let returning: PersonRecord?
+        /// Backgrounds already given to people in this career, so each new defendant gets a fresh one.
+        var usedBackgrounds: Set<String> = []
     }
 
     /// How strong the State's case should be, so that the evidence doesn't always point one way.
@@ -33,8 +35,10 @@ enum CaseGenerator {
         if let person = context.returning {
             let hasFelony = person.priors.contains { $0.ncClass.isFelony }
             let age = person.age(on: context.date)
+            let sex = NameBank.gender(of: person.name)
             let fitting = pool.filter { template in
                 template.occupations.isEmpty
+                    && (template.requiredGenders["D"] ?? sex) == sex
                     && (!template.requiresFelonyPrior || hasFelony)
                     && template.forcedPriorOffenses.isEmpty
                     && age >= template.ageRange.lowerBound - 3 && age <= template.ageRange.upperBound + 8
@@ -115,9 +119,10 @@ enum CaseGenerator {
                                   occupation: person.occupation, background: person.background, priors: person.priors,
                                   probation: person.status == .probation ? person.probation : nil,
                                   history: person.appearances,
-                                  postRelease: person.status == .incarcerated ? nil : person.postRelease)
+                                  postRelease: person.status == .incarcerated ? nil : person.postRelease,
+                                  violations: person.violations)
         } else {
-            let name = NameBank.person(using: &rng, excluding: &used, gender: t.story?.genders["D"])
+            let name = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"])
             let age = rng.int(t.ageRange)
             let occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
             // Written cases describe the defendant's record themselves; most say there is none.
@@ -135,13 +140,13 @@ enum CaseGenerator {
                                               county: rng.pick(GenericPools.otherCounties),
                                               sentence: "6–17 months active"), at: 0)
             }
-            let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(NameBank.background(age: age, occupation: occupation, rng: &rng))
+            let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(BackgroundLines.pick(age: age, occupation: occupation, used: context.usedBackgrounds, towns: county.towns, rng: &rng))
             defendant = Defendant(personID: UUID(), name: name, age: age, occupation: occupation.capitalizedFirst,
                                   background: background, priors: priors, probation: nil, history: [])
         }
 
-        let victimName = t.hasVictim ? NameBank.person(using: &rng, excluding: &used, gender: t.story?.genders["V"]) : nil
-        let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.story?.genders["ALT"])
+        let victimName = t.hasVictim ? NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"]) : nil
+        let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"])
         let setting = CaseSetting.of(category: t.category, key: t.key)
         // Highway crashes and impaired driving are worked by the Highway Patrol.
         let trooperName = rng.pick(county.troopers)

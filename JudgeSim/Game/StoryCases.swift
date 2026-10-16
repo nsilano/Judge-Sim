@@ -11,6 +11,7 @@ enum StoryCases {
                                        nurseryNight, snowbank, kennelShooting, missingToddler, streetRifle,
                                        harborDisappearance, bloodTestStartup, textMessages, restraintDeath, stagedAttack]
         + batchC + batchD + batchE + batchF + batchG + batchH + batchI + batchJ + batchK + batchL
+        + batchM + batchN + batchO + batchP + batchQ
 
     // MARK: - 1. A fatal crash after a closing shift
 
@@ -1407,7 +1408,8 @@ enum StoryCases {
             prosecutionOpening: "{V} couldn't stand by one in the morning, and {D} was holding {VL} up. The next morning {DL} texted, 'they were gone last night.' {D.he} knew.",
             defenseOpening: "Two people who had dated, both drinking, left a party together. On video, {VL} walks down the hall laughing. The question isn't whether {VL} remembers. It's whether {DL} knew {VL} couldn't consent.",
             prosecutionClosing: "Incapacity doesn't mean unconscious. It means unable to understand or resist. The vomiting, the video, the roommate's warning, and {DL}'s own text show {D.he} knew.",
-            defenseClosing: "Even the State's toxicologist says an observer might not be able to tell. The hallway video and the 2:47 message are reasonable doubt about what {DL} knew."
+            defenseClosing: "Even the State's toxicologist says an observer might not be able to tell. The hallway video and the 2:47 message are reasonable doubt about what {DL} knew.",
+            genders: ["D": .male, "V": .female]
         )
     )
 

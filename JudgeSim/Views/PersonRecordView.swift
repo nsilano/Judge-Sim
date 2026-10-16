@@ -101,8 +101,10 @@ enum PersonFileSection: String, CaseIterable, Identifiable {
             return parts.joined(separator: " · ")
         case .record:
             let felonies = p.priors.filter { $0.ncClass.isFelony }.count
-            if p.priors.isEmpty { return "No convictions" }
-            return "\(p.priors.count) conviction\(p.priors.count == 1 ? "" : "s")" + (felonies > 0 ? " · \(felonies) felon\(felonies == 1 ? "y" : "ies")" : "")
+            let violations = p.violations?.count ?? 0
+            let violationText = violations > 0 ? " · \(violations) violation\(violations == 1 ? "" : "s")" : ""
+            if p.priors.isEmpty { return "No convictions" + violationText }
+            return "\(p.priors.count) conviction\(p.priors.count == 1 ? "" : "s")" + (felonies > 0 ? " · \(felonies) felon\(felonies == 1 ? "y" : "ies")" : "") + violationText
         case .cases:
             return file.records.first.map { "Latest: \($0.docket) · \(SentenceFormat.shortDate($0.date))" }
         case .appearances:
@@ -207,6 +209,7 @@ struct PersonFileDocuments: View {
                       fileNumber: leadFile, defendant: person.name) {
             DocFieldPair(first: ("Year of birth", String(person.birthYear)),
                          second: ("Age", "\(person.age(on: file.today))"))
+            DocField(label: "Sex", value: NameBank.gender(of: person.name).label)
             DocField(label: "Occupation", value: person.occupation)
             DocField(label: "Background", value: person.background)
 
@@ -391,6 +394,18 @@ struct PersonFileDocuments: View {
             }
             if priors.contains(where: \.fromThisCourt) {
                 DocText("✦ Judgment entered in your court.", italic: true)
+            }
+
+            let violations = (person.violations ?? []).sorted { $0.date > $1.date }
+            if !violations.isEmpty {
+                DocSection(title: "Supervision violations")
+                ForEach(violations) { v in
+                    DocTableRow(left: String(Calendar.current.component(.year, from: v.date)),
+                                right: "\(v.kind) · \(v.docket)",
+                                detail: "\(v.conduct). \(v.result).",
+                                leftWidth: 40)
+                }
+                DocText("Violations are not convictions and add no prior record points.", italic: true)
             }
 
             DocSection(title: "Prior record level (if sentenced today)")

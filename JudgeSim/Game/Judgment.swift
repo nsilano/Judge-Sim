@@ -356,6 +356,8 @@ struct CaseOutcome {
     var continuedPostRelease: PostReleaseTerm? = nil
     /// Post-release supervision that will follow today's prison term.
     var newPostRelease: PostReleaseTerm? = nil
+    /// Supervision violations the court found in this case.
+    var violations: [SupervisionViolation] = []
 }
 
 enum Judgment {
@@ -1155,12 +1157,20 @@ enum Judgment {
 
             if activeTerms.count > 0 {
                 var lines = r.recommendations.lines + (suspendedTerms.isEmpty && afterActiveTerms.isEmpty ? r.customConditions : [])
-                if let projection = custodyProjection(c, r, units: sentencingUnits, from: date) {
+                if life {
+                    // Life without parole: no release date, no credit toward release, no supervision after.
+                    lines.insert("The defendant is committed for the remainder of the defendant's natural life and will not be released.", at: 0)
+                } else if let projection = custodyProjection(c, r, units: sentencingUnits, from: date) {
                     lines.insert(contentsOf: projection.lines, at: 0)
                 } else if let days = bg?.custodyDays, days > 0 {
                     lines.insert("Credit for \(days) days of pretrial confinement (G.S. 15-196.1).", at: 0)
                 }
-                if activeFelony {
+                // Supervision follows release only from a felony term that ends; split terms are on probation instead.
+                let releasedFelony = sentencingUnits.contains { unit in
+                    let selected = choice(unit, r)
+                    return unit.isFelony && selected.disposition == .active && !selected.lifeWithoutParole && selected.suspendedBalance == 0
+                }
+                if releasedFelony && !life {
                     lines.append("Upon release, the defendant will serve a period of post-release supervision (G.S. 15A-1368.2).")
                 }
                 if !lines.isEmpty { judgments.append(JudgmentEntry(title: "Commitment", lines: lines)) }
@@ -1359,6 +1369,18 @@ enum Judgment {
                 text = decided ? "Post-release supervision in \(prs.docket) continued." : nil
             }
             if let text { probationHearing = [probationHearing, text].compactMap { $0 }.joined(separator: " ") }
+        }
+
+        // Violations found today, for the record.
+        var violationsFound: [SupervisionViolation] = []
+        let conduct = "New criminal offense charged in \(c.docket)"
+        if let existing = d.probation, let decision = r.probationDecision, decision != .continueAsIs {
+            violationsFound.append(SupervisionViolation(docket: existing.docket, date: date, kind: "Probation violation",
+                                                        conduct: conduct, result: decision.label))
+        }
+        if let prs = d.postRelease, let decision = r.postReleaseDecision, decision != .continueAsIs {
+            violationsFound.append(SupervisionViolation(docket: prs.docket, date: date, kind: "Post-release supervision violation",
+                                                        conduct: conduct, result: decision.label))
         }
 
         // New probation from today's judgment, including split sentences that begin after release
@@ -1672,7 +1694,8 @@ enum Judgment {
                            newProbation: newProbation, newPriors: newPriors, propensity: propensity,
                            appealNotice: appealNotice, reactions: reactions, news: news, ethicsResult: ethicsResult,
                            pending: pending, appearanceSummary: appearance, releaseBasis: releaseBasis,
-                           continuedPostRelease: continuedPostRelease, newPostRelease: newPostRelease)
+                           continuedPostRelease: continuedPostRelease, newPostRelease: newPostRelease,
+                           violations: violationsFound)
     }
 
     // MARK: Appeals

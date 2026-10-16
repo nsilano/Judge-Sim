@@ -179,7 +179,7 @@ struct ChambersView: View {
         NavigationStack {
             Form {
                 Section {
-                    Stepper("\(leaveWeeks) week\(leaveWeeks == 1 ? "" : "s")", value: $leaveWeeks, in: 1...12)
+                    Stepper("Skip \(leaveWeeks) court week\(leaveWeeks == 1 ? "" : "s")", value: $leaveWeeks, in: 1...12)
                     LabeledContent("Back on the bench", value: CourtCalendar.dayTitle(game.leaveReturnDate(weeks: leaveWeeks)))
                 } footer: {
                     Text("Time keeps moving while you're away: sentences end, people are released, probation runs its course, and appeals are decided. Matters continued into your leave are reset to your first day back. You'll get a summary when you return.")
@@ -214,7 +214,7 @@ struct ChambersView: View {
                 Text("\(game.title) · \(game.county?.name ?? "")")
                     .font(.subheadline)
                     .foregroundStyle(Theme.gold)
-                Text(SentenceFormat.date(game.currentDate) + (game.scheduled.isEmpty ? "" : " · \(game.scheduled.count) continued matter\(game.scheduled.count == 1 ? "" : "s") pending"))
+                Text("Week \(game.weekNumber) · " + SentenceFormat.date(game.currentDate) + (game.scheduled.isEmpty ? "" : " · \(game.scheduled.count) continued matter\(game.scheduled.count == 1 ? "" : "s") pending"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -226,18 +226,20 @@ struct ChambersView: View {
         VStack(alignment: .leading, spacing: 12) {
             if let day = game.today {
                 HStack(alignment: .firstTextBaseline) {
-                    SectionTitle(text: "Today's calendar", icon: "calendar")
+                    SectionTitle(text: "This week's calendar", icon: "calendar")
                     Spacer()
-                    Label(CourtCalendar.time(day.clock), systemImage: "clock.fill")
+                    Label(day.clock.formatted(.dateTime.weekday(.abbreviated)) + " " + CourtCalendar.time(day.clock), systemImage: "clock.fill")
                         .font(.subheadline.monospacedDigit().weight(.semibold))
                         .foregroundStyle(Theme.gold)
                 }
-                Text(CourtCalendar.dayTitle(day.date)).font(.system(.title3, design: .serif).weight(.bold))
-                Text(day.kind.label + (day.sessionDay > 0 ? " · Day \(day.sessionDay) of \(day.sessionDay + max(0, 6 - Calendar.current.component(.weekday, from: day.date)))" : ""))
+                Text(CourtCalendar.weekTitle(day.date)).font(.system(.title3, design: .serif).weight(.bold))
+                let remaining = day.entries.filter(\.isOpen).count
+                Text("Week \(game.weekNumber) on the bench · Now in court: \(day.clock.formatted(.dateTime.weekday(.wide)))"
+                     + (day.isComplete ? "" : " · \(remaining) matter\(remaining == 1 ? "" : "s") left"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if Calendar.current.component(.hour, from: day.clock) >= 17 && !day.isComplete {
-                    Label("Court is running late.", systemImage: "moon.fill").font(.caption).foregroundStyle(.orange)
+                    Label("Friday is running late. Finish the week's calendar before you adjourn.", systemImage: "moon.fill").font(.caption).foregroundStyle(.orange)
                 }
 
                 ForEach(day.entries) { entry in
@@ -280,14 +282,11 @@ struct ChambersView: View {
 
                 if day.isComplete {
                     let next = game.nextCourtDate
-                    PrimaryButton(title: "Adjourn for the Day", icon: "moon.stars.fill") {
+                    PrimaryButton(title: "Adjourn for the Week", icon: "moon.stars.fill") {
                         Haptics.gavel()
                         withAnimation { game.adjourn() }
                     }
-                    let plan = game.nextCourtDayKind
-                    Text("Next court date: \(CourtCalendar.dayTitle(next))"
-                         + (plan.newSession ? ". Your criminal session is over; the next one starts then."
-                            : (plan.kind == .specialSetting ? ", a special setting for continued matters." : ".")))
+                    Text("Next week's calendar opens \(CourtCalendar.dayTitle(next)). The world moves a week: sentences run, appeals come down, and new cases are filed.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Button {
@@ -300,7 +299,7 @@ struct ChambersView: View {
                     }
                     .buttonStyle(.bordered)
                 } else {
-                    Text("Take the matters in any order. When the calendar is clear, you can adjourn.")
+                    Text("Take the week's matters in any order. Court sits until 5 p.m.; when a day fills up, the next matter is heard the following morning. When the calendar is clear, you can adjourn for the week.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

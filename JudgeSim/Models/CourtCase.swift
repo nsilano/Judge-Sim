@@ -47,6 +47,8 @@ struct Defendant: Codable, Hashable {
     var profile: DefendantProfile? = nil
     /// Post-release supervision the defendant is on (optional for older saves).
     var postRelease: PostReleaseTerm? = nil
+    /// Earlier supervision violations (optional for older saves).
+    var violations: [SupervisionViolation]? = nil
 
     /// On probation or post-release supervision, so the court rules on a violation after the new case.
     var underSupervision: Bool { probation != nil || postRelease != nil }

@@ -94,6 +94,13 @@ struct CourtDay: Codable {
     var entries: [DocketEntry]
     /// Which day of the week-long session this is (1–5), or 0 for a special setting.
     var sessionDay: Int
+    /// How the week's trials came out, for the week in review.
+    struct Tally: Codable {
+        var convictions = 0
+        var withoutConviction = 0
+        var active = 0
+    }
+    var tally: Tally? = nil
 
     var isComplete: Bool { !entries.contains { $0.isOpen } }
 }
@@ -121,6 +128,12 @@ enum CourtCalendar {
         weekday(onOrAfter: calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date)) ?? date)
     }
 
+    static func monday(onOrBefore date: Date) -> Date {
+        var day = calendar.startOfDay(for: date)
+        while calendar.component(.weekday, from: day) != 2 { day = calendar.date(byAdding: .day, value: -1, to: day) ?? day }
+        return day
+    }
+
     static func monday(onOrAfter date: Date) -> Date {
         var day = calendar.startOfDay(for: date)
         while calendar.component(.weekday, from: day) != 2 { day = calendar.date(byAdding: .day, value: 1, to: day) ?? day }
@@ -138,6 +151,15 @@ enum CourtCalendar {
 
     static func dayTitle(_ date: Date) -> String {
         date.formatted(.dateTime.weekday(.wide).month(.wide).day().year())
+    }
+
+    /// "Week of October 19–23, 2026"
+    static func weekTitle(_ date: Date) -> String {
+        let monday = monday(onOrBefore: date)
+        let friday = calendar.date(byAdding: .day, value: 4, to: monday) ?? monday
+        let sameMonth = calendar.component(.month, from: monday) == calendar.component(.month, from: friday)
+        let end = sameMonth ? friday.formatted(.dateTime.day()) : friday.formatted(.dateTime.month(.wide).day())
+        return "Week of " + monday.formatted(.dateTime.month(.wide).day()) + "–" + end + ", " + friday.formatted(.dateTime.year())
     }
 
     static func isSameDay(_ a: Date, _ b: Date) -> Bool { calendar.isDate(a, inSameDayAs: b) }

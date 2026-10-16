@@ -105,7 +105,8 @@ extension StoryCases {
             defenseOpening: "No cause of death. No crime scene. Neighbors who saw {VL} alive. {DL} is a liar, and the State wants you to stop there.",
             prosecutionClosing: "Coincidence can't put a body a mile from the alibi.",
             defenseClosing: "Suspicion, however strong, isn't proof beyond a reasonable doubt.",
-            when: .thanksgiving
+            when: .thanksgiving,
+            genders: ["V": .female]
         )
     )
 

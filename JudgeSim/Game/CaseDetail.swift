@@ -382,9 +382,27 @@ enum DefendantProfiles {
         }
         let unemployedSince = cursor
         if !student {
-            if background.contains("Navy") && cursor - 4 >= birthYear + 18 && clear(cursor - 4, cursor) {
-                timeline.append((cursor - 4, Job(title: "U.S. Navy (honorably discharged)", employer: "U.S. Navy", years: "\(cursor - 4)–\(cursor)", current: false)))
-                cursor -= 4
+            // Service the background mentions appears in the work history, before civilian jobs.
+            let service: [(key: String, title: String, employer: String, years: Int)] = [
+                ("Navy", "U.S. Navy (honorably discharged)", "U.S. Navy", 4),
+                ("medically discharged", "U.S. Army (medical discharge)", "U.S. Army", 1),
+                ("Afghanistan", "U.S. Army infantry (honorably discharged)", "U.S. Army", 6),
+                ("Marine Corps", "U.S. Marine Corps", "U.S. Marine Corps", 6),
+                ("Air Force", "Aircraft mechanic, U.S. Air Force", "U.S. Air Force", 4),
+                ("Coast Guard", "U.S. Coast Guard", "U.S. Coast Guard, Station Wilmington", 3),
+                ("EMT", "Emergency medical technician", "Hollis County EMS", 4),
+                ("corrections officer", "Correctional officer", "N.C. Department of Adult Correction", 3),
+                ("long-haul", "Long-haul truck driver", "Tidewater Freight Logistics", 8),
+                ("fishing boats in Alaska", "Deckhand", "Commercial fishing fleet, Alaska", 3),
+                ("textile plant", "Line supervisor", "Dunmore Mills Textiles", 10),
+                ("carnival", "Carnival ride operator", "Coastal Amusements", 5),
+                ("call center", "Customer service representative", "Charlotte bank call center", 5)
+            ]
+            if let stint = service.first(where: { background.contains($0.key) }),
+               cursor - stint.years >= birthYear + 18, clear(cursor - stint.years, cursor) {
+                timeline.append((cursor - stint.years, Job(title: stint.title, employer: stint.employer,
+                                                           years: "\(cursor - stint.years)–\(cursor)", current: false)))
+                cursor -= stint.years
             }
             var formerPending = former
             for _ in 0..<rng.int(1...3) {

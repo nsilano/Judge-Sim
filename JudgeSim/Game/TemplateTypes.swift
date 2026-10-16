@@ -106,6 +106,20 @@ struct CaseTemplate {
     var extras: [String: [String]] = [:]
     /// A fully written case: every witness, objection, and argument is authored, and nothing generic is mixed in.
     var story: StoryExtras? = nil
+    /// People whose sex the case fixes, keyed "D", "V", or "ALT".
+    var genders: [String: Gender] = [:]
+
+    /// Every sex the case requires: its own, the written story's, and what the charges themselves require
+    /// (assault on a female is committed by a male on a female, G.S. 14-33(c)(2)).
+    var requiredGenders: [String: Gender] {
+        var result = genders.merging(story?.genders ?? [:]) { a, _ in a }
+        let laws = [primaryLaw] + [lesserLaw].compactMap { $0 } + secondary.map(\.lawID)
+        if laws.contains("assaultFemale") {
+            result["D"] = result["D"] ?? .male
+            result["V"] = result["V"] ?? .female
+        }
+        return result
+    }
 }
 
 /// The parts of a written case that templates don't otherwise carry.
@@ -133,10 +147,15 @@ enum StoryDate {
     case thanksgiving
     /// Any day in one of these months (1 = January).
     case months([Int])
+    /// A cold case: about this many years before the session.
+    case yearsAgo(Int)
 
     /// The most recent qualifying day that leaves at least `minDays` before the session.
     func incident(before session: Date, minDays: Int, using rng: inout SeededRNG) -> Date? {
         let cal = Calendar.current
+        if case .yearsAgo(let years) = self {
+            return cal.date(byAdding: .day, value: -(years * 365 + rng.int(0...60)), to: session)
+        }
         guard let latest = cal.date(byAdding: .day, value: -minDays, to: session) else { return nil }
         let year = cal.component(.year, from: latest)
         var candidates: [Date] = []
@@ -146,6 +165,8 @@ enum StoryDate {
                 var c = DateComponents(year: y, month: 11, weekday: 5, weekdayOrdinal: 4)
                 c.hour = 12
                 if let d = cal.date(from: c) { candidates.append(d) }
+            case .yearsAgo:
+                break
             case .months(let months):
                 for m in months {
                     guard let first = cal.date(from: DateComponents(year: y, month: m, day: 1, hour: 12)),

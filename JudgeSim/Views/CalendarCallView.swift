@@ -27,7 +27,7 @@ struct CalendarCallView: View {
                         MatterCard(matter: matter, choice: Binding(get: { choices[matter.id] }, set: { choices[matter.id] = $0 }))
                     }
 
-                    PrimaryButton(title: "Adjourn the Session", icon: "hammer.fill",
+                    PrimaryButton(title: "Close the Calendar Call", icon: "hammer.fill",
                                   enabled: call.matters.allSatisfy { choices[$0.id] != nil },
                                   hint: "Rule on every matter on the calendar.") {
                         Haptics.gavel()
