@@ -598,7 +598,8 @@ final class GameState: ObservableObject {
         if let person = returning, used.contains(person.id) { returning = nil }
         let context = CaseGenerator.Context(county: county, judgeName: judgeName, date: date,
                                             docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
-                                            usedSignatures: Set(usedSignatures), returning: returning)
+                                            usedSignatures: Set(usedSignatures), returning: returning,
+                                            usedBackgrounds: Set(people.map(\.background)))
         // Draw a few candidates, cut lines that don't fit, and keep the one that holds together and reads newest.
         let recent = Set(recentLineKeys)
         var best: (score: Int, value: CourtCase)?

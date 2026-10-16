@@ -12,6 +12,8 @@ enum CaseGenerator {
         /// Scenario signatures already heard in this career, so no exact scenario repeats.
         var usedSignatures: Set<String> = []
         let returning: PersonRecord?
+        /// Backgrounds already given to people in this career, so each new defendant gets a fresh one.
+        var usedBackgrounds: Set<String> = []
     }
 
     /// How strong the State's case should be, so that the evidence doesn't always point one way.
@@ -138,7 +140,7 @@ enum CaseGenerator {
                                               county: rng.pick(GenericPools.otherCounties),
                                               sentence: "6–17 months active"), at: 0)
             }
-            let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(NameBank.background(age: age, occupation: occupation, rng: &rng))
+            let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(BackgroundLines.pick(age: age, occupation: occupation, used: context.usedBackgrounds, towns: county.towns, rng: &rng))
             defendant = Defendant(personID: UUID(), name: name, age: age, occupation: occupation.capitalizedFirst,
                                   background: background, priors: priors, probation: nil, history: [])
         }
