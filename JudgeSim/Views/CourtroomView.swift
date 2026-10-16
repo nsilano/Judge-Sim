@@ -778,11 +778,17 @@ struct ContinuanceSheet: View {
         self.requestOptions = requestOptions
         self.onContinue = onContinue
         let days = max(1, (initialDays ?? 7) - 1)
-        _date = State(initialValue: CourtCalendar.nextWeekday(after: Calendar.current.date(byAdding: .day, value: days, to: today) ?? today))
+        let suggested = CourtCalendar.nextWeekday(after: Calendar.current.date(byAdding: .day, value: days, to: today) ?? today)
+        _date = State(initialValue: max(suggested, Self.earliest(after: today)))
         let options = (initialReason.map { [$0] } ?? []) + Self.reasons
         _reasonOptions = State(initialValue: options)
         _reason = State(initialValue: options[0])
         _requests = State(initialValue: Set(initialRequests))
+    }
+
+    /// This week's calendar is already set, so a continued matter comes back next week at the earliest.
+    static func earliest(after today: Date) -> Date {
+        CourtCalendar.monday(onOrAfter: CourtCalendar.nextWeekday(after: today))
     }
 
     var body: some View {
@@ -791,15 +797,13 @@ struct ContinuanceSheet: View {
                 Section {
                     Text(subject).font(.headline)
                     DatePicker("Reconvene on", selection: $date,
-                               in: CourtCalendar.nextWeekday(after: today)...,
+                               in: Self.earliest(after: today)...,
                                displayedComponents: .date)
-                    if CourtCalendar.isWeekend(date) {
-                        Text("Court doesn't sit on weekends. The case will be heard \(CourtCalendar.dayTitle(CourtCalendar.weekday(onOrAfter: date))).")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                    }
+                    Text("It will be on the calendar for the \("w" + CourtCalendar.weekTitle(CourtCalendar.weekday(onOrAfter: date)).dropFirst()).")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 } footer: {
-                    Text("Every ruling you've made is kept. The case comes back on that day's calendar, right where you left it.")
+                    Text("Every ruling you've made is kept. The case comes back on that week's calendar, right where you left it.")
                 }
                 if !requestOptions.isEmpty {
                     Section {
