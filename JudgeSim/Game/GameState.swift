@@ -78,6 +78,11 @@ private struct SaveData: Codable {
     var recentLineKeys: [UInt64]?
     var careerStart: Date?
     var weekNumber: Int?
+    var lightWeeks: Bool?
+    var yearStartStats: CareerStats?
+    var reputation: [BarSurvey]?
+    var lastYearReviewed: Int?
+    var unseated: Bool?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -102,6 +107,15 @@ final class GameState: ObservableObject {
     @Published private(set) var digest: [NewsItem] = []
     /// The last day of the current court week.
     private var sessionEnds = Date()
+    /// A lighter docket each week: two trials and a hearing, for shorter sessions on the phone.
+    @Published private(set) var lightWeeks = false
+    /// Career standing: the bar's yearly survey of the judge, most recent first.
+    @Published private(set) var reputation: [BarSurvey] = []
+    /// Set when the judge lost an election; the career can continue on emergency assignment.
+    @Published private(set) var unseated = false
+    /// Career statistics as of January 1, for the year in review.
+    private var yearStartStats: CareerStats?
+    private var lastYearReviewed: Int?
     /// The Monday of the judge's first week on the bench.
     @Published private(set) var careerStart = Date()
     /// Which week on the bench the current calendar is, starting at 1. Weeks on leave don't count.
@@ -132,8 +146,87 @@ final class GameState: ObservableObject {
     /// The senior resident judge is the one with the longest continuous service in the district (G.S. 7A-41.1(a));
     /// the judges ahead of this one are assumed to have left the bench after about six years.
     var title: String {
+        if emergencyJudge { return "Emergency Superior Court Judge" }
         let years = CourtCalendar.calendar.dateComponents([.year], from: careerStart, to: currentDate).year ?? 0
         return years >= 6 ? "Senior Resident Superior Court Judge" : "Resident Superior Court Judge"
+    }
+
+    /// After losing an election, a former judge can keep hearing cases on emergency assignment (G.S. 7A-52).
+    var emergencyJudge: Bool { reputation.contains { $0.comments.contains(Self.unseatedMarker) } && !unseated }
+    private static let unseatedMarker = "Lost reelection."
+
+    func setLightWeeks(_ on: Bool) {
+        lightWeeks = on
+        save()
+    }
+
+    /// The judge keeps sitting, on emergency assignment, after losing an election.
+    func continueAsEmergencyJudge() {
+        unseated = false
+        save()
+    }
+
+    /// The bar survey at New Year's, the year in review, and every eighth November an election.
+    private func yearlyEvents(from previous: Date, to next: Date) {
+        guard let judgeName else { return }
+        let cal = CourtCalendar.calendar
+        let oldYear = cal.component(.year, from: previous)
+        let newYear = cal.component(.year, from: next)
+        let startYear = cal.component(.year, from: careerStart)
+        let last = lastName(judgeName)
+
+        // Election day: the first Tuesday after the first Monday in November.
+        let crossedIntoNovember = (cal.component(.month, from: previous) <= 10 || oldYear < newYear) && cal.component(.month, from: next) >= 11
+            && cal.component(.year, from: next) == newYear
+        if crossedIntoNovember, Reputation.isElectionYear(newYear, careerStartYear: startYear) {
+            var survey = Reputation.survey(year: newYear, stats: stats, appeals: appeals, history: history)
+            var rng = SeededRNG(seed: seedBase ^ UInt64(newYear))
+            let share = Reputation.voteShare(survey, rng: &rng)
+            let percent = Int((share * 100).rounded())
+            let won = share >= 0.5
+            post(NewsItem(date: next, kind: .community,
+                          headline: won ? "\(judgeName) wins another eight-year term" : "\(judgeName) unseated in Superior Court race",
+                          body: won
+                            ? "Voters returned Judge \(last) to the Hollis County Superior Court bench with \(percent) percent of the vote. " + (survey.affirmedPercent.map { "Supporters pointed to a record affirmed \($0) percent of the time on appeal." } ?? "")
+                            : "Judge \(last) lost the Superior Court race with \(percent) percent of the vote. The challenger campaigned on the judge's sentencing record and the cases that came apart after trial.",
+                          prominence: 3))
+            if !won {
+                survey.comments.append(Self.unseatedMarker)
+                reputation.insert(survey, at: 0)
+                unseated = true
+            }
+        }
+
+        guard newYear > oldYear, lastYearReviewed != oldYear else { return }
+        lastYearReviewed = oldYear
+        let survey = Reputation.survey(year: oldYear, stats: stats, appeals: appeals, history: history)
+        reputation.insert(survey, at: 0)
+        post(NewsItem(date: next, kind: .community, headline: "Bar survey: lawyers rate Judge \(last)",
+                      body: "In the Hollis County Bar's annual survey, lawyers who appeared before Judge \(last) gave an overall rating of \(survey.overall) out of 100. Prosecutors: \(survey.prosecutors). Defense lawyers: \(survey.defenseBar). A newspaper poll put public approval at \(survey.publicApproval) percent. " + survey.comments.joined(separator: " "),
+                      prominence: 2))
+
+        // The year in review.
+        let base = yearStartStats ?? CareerStats()
+        let inYear = history.filter { cal.component(.year, from: $0.date) == oldYear }
+        let trials = inYear.filter { $0.resolvedKind == "trial" }.count
+        let hearings = inYear.filter { $0.resolvedKind == "hearing" }.count
+        let returning = inYear.filter { $0.resolvedKind == "trial" && $0.returningDefendant }.count
+        let decided = appeals.filter { $0.decided.map { cal.component(.year, from: $0) == oldYear } ?? false }
+        let reversed = decided.filter(\.wasReversed).count
+        var lines = ["Judge \(last) heard \(trials) trial\(trials == 1 ? "" : "s") and \(hearings) violation hearing\(hearings == 1 ? "" : "s") in \(oldYear)."]
+        let active = stats.activeSentences - base.activeSentences, suspended = stats.suspendedSentences - base.suspendedSentences
+        if active + suspended > 0 { lines.append("\(active) active sentence\(active == 1 ? "" : "s") and \(suspended) suspended.") }
+        if !decided.isEmpty { lines.append("The Court of Appeals decided \(decided.count) appeal\(decided.count == 1 ? "" : "s") from the court and reversed \(reversed).") }
+        let released = stats.releasedFromPrison - base.releasedFromPrison
+        let finished = stats.probationCompleted - base.probationCompleted
+        let revoked = stats.probationRevoked - base.probationRevoked
+        if released > 0 { lines.append("\(released) \(released == 1 ? "person" : "people") sentenced here came home from prison.") }
+        if finished + revoked > 0 { lines.append("\(finished) finished probation; \(revoked) had it revoked.") }
+        if returning > 0 { lines.append("\(returning) defendant\(returning == 1 ? " was" : "s were") back in the courtroom a second time.") }
+        let exonerated = stats.exonerations - base.exonerations
+        if exonerated > 0 { lines.append("\(exonerated) conviction\(exonerated == 1 ? " was" : "s were") later overturned as wrongful.") }
+        post(NewsItem(date: next, kind: .community, headline: "\(oldYear): a year on the bench", body: lines.joined(separator: " "), prominence: 2))
+        yearStartStats = stats
     }
 
     // MARK: Career
@@ -288,6 +381,7 @@ final class GameState: ObservableObject {
         let appealsBefore = appeals.filter { !$0.isPending }.count
         let marker = news.first?.id
         advanceWorld(to: next)
+        yearlyEvents(from: day.date, to: next)
         var body = review
         let released = stats.releasedFromPrison - releasedBefore
         let completed = stats.probationCompleted - completedBefore
@@ -365,8 +459,10 @@ final class GameState: ObservableObject {
         let completedBefore = stats.probationCompleted
         let appealsBefore = appeals.filter { !$0.isPending }.count
         while cursor < back {
+            let previous = cursor
             cursor = min(back, CourtCalendar.calendar.date(byAdding: .day, value: 7, to: cursor) ?? back)
             advanceWorld(to: cursor)
+            yearlyEvents(from: previous, to: cursor)
         }
 
         var summary = ["Judge \(lastName(judgeName)) returned to the bench after \(weeks) week\(weeks == 1 ? "" : "s") away."]
@@ -572,10 +668,13 @@ final class GameState: ObservableObject {
                 call.matters.forEach { usedPeople.insert($0.personID) }
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
-            let wanted = rng.int(3...4)
+            let wanted = lightWeeks ? 2 : rng.int(3...4)
             let already = entries.filter { if case .trial = $0.matter { return true } else { return false } }.count
+            // One written story a week; the rest are generated cases.
+            var storyHeard = entries.contains { if case .trial(let c) = $0.matter { return c.templateKey.hasPrefix("story.") } else { return false } }
             for _ in 0..<max(1, wanted - already) {
-                if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople) {
+                if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: !storyHeard) {
+                    if c.templateKey.hasPrefix("story.") { storyHeard = true }
                     // Some cases are called with a party asking for more time.
                     if c.background?.arrangementPresented != true && rng.chance(0.25) {
                         c.continuanceMotion = ContinuanceMotions.make(for: c, rng: &rng)
@@ -583,12 +682,12 @@ final class GameState: ObservableObject {
                     entries.append(DocketEntry(matter: .trial(c)))
                 }
             }
-            for _ in 0..<rng.int(1...2) {
+            for _ in 0..<(lightWeeks ? 1 : rng.int(1...2)) {
                 if let hearing = makeViolationHearing(date: date, excluding: &usedPeople, rng: &rng) {
                     entries.append(DocketEntry(matter: .hearing(hearing)))
                 }
             }
-            if rng.chance(0.5), let hearing = makeOutsideHearing(date: date, rng: &rng) {
+            if !lightWeeks, rng.chance(0.5), let hearing = makeOutsideHearing(date: date, rng: &rng) {
                 entries.append(DocketEntry(matter: .hearing(hearing)))
             }
         }
@@ -771,14 +870,14 @@ final class GameState: ObservableObject {
     }
 
     /// A new case for the calendar.
-    private func generateCase(date: Date, rng: inout SeededRNG, excluding used: inout Set<UUID>) -> CourtCase? {
+    private func generateCase(date: Date, rng: inout SeededRNG, excluding used: inout Set<UUID>, storySlot: Bool = true) -> CourtCase? {
         guard let county, let judgeName else { return nil }
         var returning = pickReturningDefendant(rng: &rng, date: date)
         if let person = returning, used.contains(person.id) { returning = nil }
         let context = CaseGenerator.Context(county: county, judgeName: judgeName, date: date,
                                             docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
                                             usedSignatures: Set(usedSignatures), returning: returning,
-                                            usedBackgrounds: Set(people.map(\.background)))
+                                            usedBackgrounds: Set(people.map(\.background)), storySlot: storySlot)
         // Draw a few candidates, cut lines that don't fit, and keep the one that holds together and reads newest.
         let recent = Set(recentLineKeys)
         var best: (score: Int, value: CourtCase)?
@@ -969,6 +1068,10 @@ final class GameState: ObservableObject {
         recentLineKeys = []
         usedSignatures = []
         weekNumber = 1
+        reputation = []
+        unseated = false
+        yearStartStats = nil
+        lastYearReviewed = nil
         seedBase = UInt64.random(in: 1...UInt64.max / 2)
         save()
     }
@@ -1182,7 +1285,8 @@ final class GameState: ObservableObject {
                             currentCalendar: currentCalendar, retrials: retrials, stats: stats,
                             today: today, scheduled: scheduled, openingMinutes: openingMinutes, sessionEnds: sessionEnds,
                             digest: digest, appeals: appeals, recentLineKeys: recentLineKeys, careerStart: careerStart,
-                            weekNumber: weekNumber)
+                            weekNumber: weekNumber, lightWeeks: lightWeeks, yearStartStats: yearStartStats,
+                            reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -1226,6 +1330,11 @@ final class GameState: ObservableObject {
         // Older saves didn't record the first week; the earliest record stands in for it.
         careerStart = data.careerStart ?? CourtCalendar.monday(onOrBefore: ([currentDate] + history.map(\.date) + news.map(\.date)).min() ?? currentDate)
         weekNumber = data.weekNumber ?? calendarWeekNumber
+        lightWeeks = data.lightWeeks ?? false
+        reputation = data.reputation ?? []
+        unseated = data.unseated ?? false
+        yearStartStats = data.yearStartStats
+        lastYearReviewed = data.lastYearReviewed
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
         backfillAppeals()
         if today == nil && judgeName != nil {

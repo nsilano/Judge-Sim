@@ -14,6 +14,9 @@ enum CaseGenerator {
         let returning: PersonRecord?
         /// Backgrounds already given to people in this career, so each new defendant gets a fresh one.
         var usedBackgrounds: Set<String> = []
+        /// Whether this case may be a written story. One story a week keeps the generated cases, with their
+        /// motions and twists, in the mix.
+        var storySlot = true
     }
 
     /// How strong the State's case should be, so that the evidence doesn't always point one way.
@@ -26,12 +29,12 @@ enum CaseGenerator {
         var pool = CaseTemplates.all
         // Written cases come up first, until each has been heard once.
         let unheardStories = StoryCases.all.filter { story in !context.usedSignatures.contains { $0.hasPrefix(story.key + "|") } }
-        if context.returning == nil, !unheardStories.isEmpty {
+        if context.returning == nil, context.storySlot, !unheardStories.isEmpty {
             let story = rng.pick(unheardStories)
             return build(story, seed: seed, band: .close, context: context, rng: &rng)
         }
         // A written case is heard once per career, and only with a new defendant, whose history it describes.
-        if context.returning == nil { pool += unheardStories }
+        if context.returning == nil && context.storySlot { pool += unheardStories }
         if let person = context.returning {
             let hasFelony = person.priors.contains { $0.ncClass.isFelony }
             let age = person.age(on: context.date)
@@ -210,12 +213,15 @@ enum CaseGenerator {
         values.merge(NameBank.gender(of: alternate).tokens(for: "ALT")) { a, _ in a }
         let fill = TextFiller(values: values)
 
-        // Charges
+        // Charges. A written case is the same story every time, but how much proof it takes varies, so some
+        // stories are strong for the State and some are thin, and the motion to dismiss is a real decision.
+        let shift = t.story != nil ? rng.pick([-3, -2, -1, 0, 0, 1, 2, 3]) : 0
+        let primaryThreshold = max(1, t.threshold + shift)
         var charges = [Charge(count: 1, lawID: t.primaryLaw, lesserLawID: t.lesserLaw,
-                              specification: fill(t.specification), threshold: t.threshold,
-                              lesserThreshold: t.lesserThreshold)]
+                              specification: fill(t.specification), threshold: primaryThreshold,
+                              lesserThreshold: max(1, t.lesserThreshold + shift))]
         for extra in t.secondary where rng.chance(extra.chance) {
-            let threshold = extra.threshold == 0 ? t.threshold : extra.threshold
+            let threshold = extra.threshold == 0 ? primaryThreshold : max(1, extra.threshold + shift)
             charges.append(Charge(count: charges.count + 1, lawID: extra.lawID, lesserLawID: nil,
                                   specification: fill(extra.specification), threshold: threshold,
                                   lesserThreshold: threshold))
@@ -511,7 +517,7 @@ enum CaseGenerator {
         // The hidden truth. Suppressed evidence still counts here: the truth doesn't care about the exclusionary rule.
         let rawStrength = evidence.reduce(0) { $0 + ($1.side == .prosecution ? $1.weight : -$1.weight) }
             + witnesses.reduce(0) { $0 + ($1.calledBy == .prosecution ? $1.weight : -$1.weight) }
-        var guiltProbability = 0.5 + Double(rawStrength - t.threshold) * 0.08
+        var guiltProbability = 0.5 + Double(rawStrength - primaryThreshold) * 0.08
         if let person = context.returning { guiltProbability += (person.propensity - 0.3) * 0.3 }
         guiltProbability = min(0.93, max(0.1, guiltProbability))
         let actuallyGuilty = rng.chance(guiltProbability)

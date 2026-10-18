@@ -120,10 +120,12 @@ struct ChambersView: View {
                         VersionBadge()
                     }
                     header
+                    if game.unseated { unseatedCard }
                     if !game.digest.isEmpty {
                         digestCard
                     }
                     docketCard
+                    if let survey = game.reputation.first { standingCard(survey) }
 
                     if let county = game.county {
                         NavigationLink {
@@ -301,6 +303,13 @@ struct ChambersView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
+                    Toggle(isOn: Binding(get: { game.lightWeeks }, set: { game.setLightWeeks($0) })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Light weeks").font(.subheadline.weight(.semibold))
+                            Text("Two trials and one hearing a week, for shorter sessions. Starts next week.").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .tint(Theme.gold)
                 } else {
                     Text("Take the week's matters in any order. No new matter is called after 4:30 p.m.; when a day fills up, the next matter is heard the following morning. When the calendar is clear, you can adjourn for the week.")
                         .font(.caption)
@@ -309,6 +318,63 @@ struct ChambersView: View {
             }
         }
         .card(tint: Theme.gold)
+    }
+
+    /// The voters have spoken; the judge decides what comes next.
+    private var unseatedCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(text: "You lost the election", icon: "envelope.badge.fill")
+            Text("Your term ends at the close of the year. A former Superior Court judge can still be commissioned to hear cases on emergency assignment, or you can step down and begin a new career somewhere else.")
+                .font(.callout)
+            PrimaryButton(title: "Keep Sitting as an Emergency Judge", icon: "hammer.fill") {
+                withAnimation { game.continueAsEmergencyJudge() }
+            }
+            Button(role: .destructive) {
+                withAnimation { game.resetCareer() }
+            } label: {
+                Label("Step Down and Start a New Career", systemImage: "arrow.counterclockwise")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+        }
+        .card(tint: .orange)
+    }
+
+    /// The most recent bar survey.
+    private func standingCard(_ survey: BarSurvey) -> some View {
+        DisclosureGroup {
+            VStack(alignment: .leading, spacing: 8) {
+                surveyRow("Lawyers overall", survey.overall)
+                surveyRow("Prosecutors", survey.prosecutors)
+                surveyRow("Defense lawyers", survey.defenseBar)
+                surveyRow("Public approval", survey.publicApproval)
+                if let affirmed = survey.affirmedPercent {
+                    Text("Affirmed on appeal: \(affirmed)% of decided appeals").font(.caption).foregroundStyle(.secondary)
+                }
+                ForEach(survey.comments, id: \.self) { Text($0).font(.callout).italic() }
+                if game.reputation.count > 1 {
+                    Text("Earlier years: " + game.reputation.dropFirst().prefix(5).map { "\($0.year): \($0.overall)" }.joined(separator: " · "))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .padding(.top, 6)
+        } label: {
+            HStack {
+                SectionTitle(text: "Standing with the bar", icon: "person.3.sequence.fill")
+                Spacer()
+                Text("\(survey.year) · \(survey.overall)/100").font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
+            }
+        }
+        .card()
+    }
+
+    private func surveyRow(_ label: String, _ value: Int) -> some View {
+        HStack {
+            Text(label).font(.subheadline)
+            Spacer()
+            ProgressView(value: Double(value), total: 100).frame(width: 110).tint(value >= 60 ? Theme.good : (value >= 40 ? .orange : Theme.bad))
+            Text("\(value)").font(.subheadline.monospacedDigit()).frame(width: 30, alignment: .trailing)
+        }
     }
 
     /// Appeals decided, releases, and arrests since the last court day, with appeals first.
