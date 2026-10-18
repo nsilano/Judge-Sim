@@ -92,7 +92,14 @@ private struct MatterCard: View {
             ForEach(Array(matter.options.enumerated()), id: \.offset) { index, option in
                 ChoiceRow(title: option, selected: choice == index) { choice = index }
             }
-            if matter.concernsProbationer, let person = game.person(matter.personID) {
+            if let warrant = matter.warrant {
+                NavigationLink {
+                    WarrantApplicationView(application: warrant, judge: game.judgeName ?? "")
+                } label: {
+                    Label("Read the application and affidavit", systemImage: "doc.text.magnifyingglass")
+                        .font(.subheadline.weight(.semibold))
+                }
+            } else if matter.concernsProbationer, let person = game.person(matter.personID) {
                 NavigationLink {
                     PersonDetail(person: person, today: game.currentDate)
                 } label: {
@@ -180,6 +187,45 @@ struct PendingCaseFile: View {
         }
         .background(Theme.background)
         .navigationTitle("Case File")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// The warrant application as a court paper: the place, the items, and the sworn affidavit.
+struct WarrantApplicationView: View {
+    let application: WarrantApplication
+    let judge: String
+
+    var body: some View {
+        let w = application
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("APPLICATION FOR SEARCH WARRANT").font(DocInk.serif(.headline, weight: .bold))
+                Text("G.S. 15A-244 · \(w.kind.label)").font(DocInk.serif(.caption)).foregroundStyle(DocInk.faint)
+                DocRule(double: true)
+                DocField(label: "Applicant", value: "\(w.affiant), \(w.agency)")
+                DocField(label: "Date", value: SentenceFormat.date(w.applied))
+                DocSection(title: "Place to be searched")
+                DocText(w.place)
+                DocSection(title: "Items to be seized")
+                ForEach(Array(w.items.enumerated()), id: \.offset) { i, item in
+                    DocNumbered(number: i + 1, text: item)
+                }
+                DocSection(title: "Affidavit")
+                ForEach(Array(w.affidavit.enumerated()), id: \.offset) { i, paragraph in
+                    DocNumbered(number: i + 1, text: paragraph)
+                }
+                DocRule()
+                DocText("Ask: Is the source reliable, or corroborated by what the officers saw themselves? Is the information fresh? Does it tie evidence to this place? Are the items described with particularity? A judge may sign, strike language and sign, or deny (G.S. 15A-245, 15A-246).", italic: true)
+            }
+            .foregroundStyle(DocInk.ink)
+            .padding(16)
+            .background(RoundedRectangle(cornerRadius: 4).fill(DocInk.paper))
+            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(DocInk.rule, lineWidth: 0.5))
+            .padding(16)
+        }
+        .background(DocInk.desk)
+        .navigationTitle("Warrant Application")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

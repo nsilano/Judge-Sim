@@ -17,6 +17,8 @@ enum CaseGenerator {
         /// Whether this case may be a written story. One story a week keeps the generated cases, with their
         /// motions and twists, in the mix.
         var storySlot = true
+        /// Only cases of these kinds, e.g. a drug case for a search warrant the judge signed.
+        var categories: Set<LawCategory>? = nil
     }
 
     /// How strong the State's case should be, so that the evidence doesn't always point one way.
@@ -49,6 +51,10 @@ enum CaseGenerator {
             if !fitting.isEmpty { pool = fitting }
         }
 
+        if let wanted = context.categories {
+            let narrowed = pool.filter { wanted.contains($0.category) && $0.story == nil }
+            if !narrowed.isEmpty { pool = narrowed }
+        }
         // Serious felonies come up most; low-level cases still appear, but rarely.
         func weight(_ template: CaseTemplate) -> Double {
             switch LawLibrary.law(template.primaryLaw).ncClass {

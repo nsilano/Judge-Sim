@@ -3,7 +3,7 @@ import Foundation
 /// One short matter handled at an administrative calendar call.
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
-        case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination
+        case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant
 
         var label: String {
             switch self {
@@ -14,6 +14,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .capacity: return "Capacity motion"
             case .pvAdmission: return "Probation violation admission"
             case .earlyTermination: return "Motion to end probation early"
+            case .searchWarrant: return "Search warrant application"
             }
         }
 
@@ -26,6 +27,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .capacity: return "brain.head.profile"
             case .pvAdmission: return "person.badge.clock.fill"
             case .earlyTermination: return "checkmark.seal.fill"
+            case .searchWarrant: return "doc.text.magnifyingglass"
             }
         }
     }
@@ -53,6 +55,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     /// The real case behind a plea, a motion to continue, a failure to appear, or a capacity motion. Whatever the
     /// court orders puts it on an actual calendar (optional for older saves).
     var pendingCase: CourtCase? = nil
+    /// For a warrant application: the affidavit and what it asks to search.
+    var warrant: WarrantApplication? = nil
 
     /// The person's whole file is worth opening for these.
     var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination }
@@ -132,6 +136,19 @@ enum CalendarCalls {
             bound.defenseAsk = swap(m.defenseAsk)
         }
         return bound
+    }
+
+    /// An officer brings a search warrant application to the judge between matters.
+    static func warrantMatter(_ w: WarrantApplication, for c: CourtCase) -> CalendarMatter {
+        CalendarMatter(kind: .searchWarrant, personID: c.defendant.personID, personName: c.defendant.name, personAge: c.defendant.age,
+                       occupation: c.defendant.occupation, docket: "Warrant application",
+                       summary: "\(w.affiant) of the \(w.agency) asks you to sign a search warrant. To be searched: \(w.place). Read the affidavit before you rule.",
+                       stateAsk: "The officer swears to the affidavit before you (G.S. 15A-244).",
+                       defenseAsk: "No one appears for the person to be searched; a warrant is issued ex parte.",
+                       options: ["Sign the warrant as written",
+                                 "Strike the catch-all language and sign the rest",
+                                 "Deny: the affidavit doesn't show probable cause"],
+                       pendingCase: c, warrant: w)
     }
 
     static func make(county: County, date: Date, docketSequence: Int, people: [PersonRecord], excluding: Set<UUID> = [],

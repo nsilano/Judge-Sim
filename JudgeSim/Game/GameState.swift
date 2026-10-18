@@ -662,16 +662,23 @@ final class GameState: ObservableObject {
         if kind != .specialSetting {
             // A court week: Monday morning's administrative calendar call, then the week's trials and hearings.
             if let county {
-                let call = CalendarCalls.make(county: county, date: date, docketSequence: docketSequence, people: people,
+                var call = CalendarCalls.make(county: county, date: date, docketSequence: docketSequence, people: people,
                                               excluding: usedPeople, seed: rng.next())
                 docketSequence += 200
                 // Pleas, continuance motions, failures to appear, and capacity motions are about real cases:
                 // what the court orders puts each one on an actual calendar.
-                var call = call
                 for index in call.matters.indices
                 where [.quickPlea, .continuance, .failureToAppear, .capacity].contains(call.matters[index].kind) {
                     if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false) {
                         call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
+                    }
+                }
+                // Most weeks an officer brings a search warrant application.
+                if rng.chance(0.7) {
+                    let kind = rng.pick([WarrantApplication.Kind.residenceDrugs, .storageStolen, .phoneRecords])
+                    if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, categories: kind.categories) {
+                        let w = SearchWarrants.application(for: c, date: date, rng: &rng)
+                        call.matters.insert(CalendarCalls.warrantMatter(w, for: c), at: min(1, call.matters.count))
                     }
                 }
                 call.matters.forEach { usedPeople.insert($0.personID) }
@@ -825,6 +832,26 @@ final class GameState: ObservableObject {
                 default:
                     setFor(c, weeks: 3, note: "Continued at the calendar call on \(heard) after a failure to appear; new notice sent.", continuances: 1)
                 }
+            case .searchWarrant:
+                guard let w = m.warrant else { continue }
+                let judge = lastName(judgeName ?? "")
+                if choice == 2 {
+                    if w.probableCause && rng.chance(0.5) {
+                        // A sound application, denied: the detectives build more and come back to another judge.
+                        let rebuilt = SearchWarrants.executed(WarrantApplication(kind: w.kind, affiant: w.affiant, agency: w.agency,
+                                                                                 applied: call.date, target: w.target, place: w.place,
+                                                                                 items: w.items, affidavit: w.affidavit, flaw: .none),
+                                                              on: c, limited: true, signedBy: rng.pick(NameBank.lastNames), byThisJudge: false)
+                        setFor(rebuilt, weeks: rng.int(6...10), note: "You denied the first warrant application on \(heard); detectives added surveillance and another judge signed a second one.")
+                    } else if w.probableCause {
+                        post(NewsItem(date: call.date, kind: .community, headline: "Investigation stalls after warrant denied",
+                                      body: "Detectives with the \(w.agency) say an investigation in \(w.place.components(separatedBy: ",").dropFirst().first?.trimmingCharacters(in: .whitespaces) ?? "the county") has stalled after Judge \(judge) declined to sign a search warrant.",
+                                      prominence: 1))
+                    }
+                    continue
+                }
+                let executed = SearchWarrants.executed(w, on: c, limited: choice == 1, signedBy: judge)
+                setFor(executed, weeks: rng.int(5...9), note: "Charged after the search warrant you signed on \(heard) was executed.")
             case .capacity:
                 switch choice {
                 case 0:
@@ -972,14 +999,16 @@ final class GameState: ObservableObject {
     }
 
     /// A new case for the calendar.
-    private func generateCase(date: Date, rng: inout SeededRNG, excluding used: inout Set<UUID>, storySlot: Bool = true) -> CourtCase? {
+    private func generateCase(date: Date, rng: inout SeededRNG, excluding used: inout Set<UUID>, storySlot: Bool = true,
+                              categories: Set<LawCategory>? = nil) -> CourtCase? {
         guard let county, let judgeName else { return nil }
         var returning = pickReturningDefendant(rng: &rng, date: date)
         if let person = returning, used.contains(person.id) { returning = nil }
         let context = CaseGenerator.Context(county: county, judgeName: judgeName, date: date,
                                             docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
                                             usedSignatures: Set(usedSignatures), returning: returning,
-                                            usedBackgrounds: Set(people.map(\.background)), storySlot: storySlot)
+                                            usedBackgrounds: Set(people.map(\.background)), storySlot: storySlot,
+                                            categories: categories)
         // Draw a few candidates, cut lines that don't fit, and keep the one that holds together and reads newest.
         let recent = Set(recentLineKeys)
         var best: (score: Int, value: CourtCase)?
