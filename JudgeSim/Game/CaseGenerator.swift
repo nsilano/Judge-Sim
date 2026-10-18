@@ -309,11 +309,24 @@ enum CaseGenerator {
         // The investigation file and fact sheet come first: every generated witness reads from them.
         var profiledDefendant = defendant
         let deathLaws: Set<String> = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV", "deathByDistribution"]
-        let writtenText = (t.summaries + t.prosecutionEvidence.map(\.detail) + t.defenseEvidence.map(\.detail)
-                           + (t.prosecutionWitnesses + t.defenseWitnesses).flatMap { $0.direct + $0.cross + $0.exam.flatMap(\.answers) }
-                           + t.prosecutionTheory + t.defenseTheory + t.mitigating + t.victimImpacts + [t.specification]
-                           + t.secondary.map(\.specification)).joined(separator: " ")
-        let defendantVoice = (t.allocutions + (t.story?.defendantExam.flatMap(\.answers) ?? [])).joined(separator: " ")
+        var written: [String] = t.summaries
+        written += t.prosecutionEvidence.map(\.detail)
+        written += t.defenseEvidence.map(\.detail)
+        for seed in t.prosecutionWitnesses + t.defenseWitnesses {
+            written += seed.direct
+            written += seed.cross
+            for line in seed.exam { written += line.answers }
+        }
+        written += t.prosecutionTheory
+        written += t.defenseTheory
+        written += t.mitigating
+        written += t.victimImpacts
+        written.append(t.specification)
+        written += t.secondary.map(\.specification)
+        let writtenText = written.joined(separator: " ")
+        var voice: [String] = t.allocutions
+        for line in t.story?.defendantExam ?? [] { voice += line.answers }
+        let defendantVoice = voice.joined(separator: " ")
         let familyFacts = FamilyFacts.from(caseText: writtenText, defendantVoice: defendantVoice, victimDied: deathLaws.contains(t.primaryLaw))
         profiledDefendant.profile = DefendantProfiles.make(for: defendant, county: county, year: currentYear, family: familyFacts)
         let factText = (t.summaries.map { fill($0) } + charges.map(\.specification) + evidence.map { $0.title + ". " + $0.detail }
