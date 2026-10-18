@@ -665,6 +665,15 @@ final class GameState: ObservableObject {
                 let call = CalendarCalls.make(county: county, date: date, docketSequence: docketSequence, people: people,
                                               excluding: usedPeople, seed: rng.next())
                 docketSequence += 200
+                // Pleas, continuance motions, failures to appear, and capacity motions are about real cases:
+                // what the court orders puts each one on an actual calendar.
+                var call = call
+                for index in call.matters.indices
+                where [.quickPlea, .continuance, .failureToAppear, .capacity].contains(call.matters[index].kind) {
+                    if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false) {
+                        call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
+                    }
+                }
                 call.matters.forEach { usedPeople.insert($0.personID) }
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
@@ -764,6 +773,81 @@ final class GameState: ObservableObject {
         }
     }
 
+    /// Puts the cases behind the calendar call's rulings on a real calendar: this week, a later week, or (after an
+    /// order for arrest or a capacity evaluation) whenever the defendant can be brought to court.
+    private func scheduleCalendarCases(_ call: CalendarCall, choices: [UUID: Int]) {
+        var rng = SeededRNG(seed: seedBase ^ SeededRNG.stableHash(call.id.uuidString))
+        let heard = SentenceFormat.shortDate(call.date)
+        func later(weeks: Int) -> Date {
+            CourtCalendar.monday(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 7 * weeks, to: call.date) ?? call.date)
+        }
+        func setFor(_ c: CourtCase, weeks: Int, note: String, continuances: Int = 0) {
+            var entry = DocketEntry(matter: .trial(c), note: note)
+            entry.continuances = continuances
+            scheduled.append(ScheduledMatter(date: max(later(weeks: weeks), nextCourtDate), entry: entry))
+        }
+        func thisWeek(_ c: CourtCase, note: String) {
+            guard var day = today else { setFor(c, weeks: 1, note: note); return }
+            var c = c
+            c.sessionDate = day.date
+            day.entries.append(DocketEntry(matter: .trial(c), note: note))
+            today = day
+        }
+        for m in call.matters {
+            guard let c = m.pendingCase else { continue }
+            let choice = choices[m.id] ?? 0
+            switch m.kind {
+            case .quickPlea where choice == 3:
+                setFor(c, weeks: 2, note: "Plea rejected at the calendar call on \(heard); set for trial.")
+            case .continuance:
+                if choice == 0 {
+                    setFor(c, weeks: 4, note: "Continued at the calendar call on \(heard) on the defense's motion.", continuances: 1)
+                } else {
+                    thisWeek(c, note: "Motion to continue denied at the calendar call; the case is tried this week.")
+                }
+            case .failureToAppear:
+                switch choice {
+                case 0:
+                    // Picked up on the order for arrest some weeks later, and held.
+                    var held = c
+                    if var bg = held.background {
+                        bg.custodyDays = max(bg.custodyDays, rng.int(3...12))
+                        bg.bondStatus = "Arrested on the order for arrest after failing to appear; held without bond."
+                        held.background = bg
+                    }
+                    setFor(held, weeks: rng.int(2...6), note: "Arrested on the order for arrest issued at the calendar call on \(heard).")
+                case 1:
+                    if rng.chance(0.6) {
+                        thisWeek(c, note: "Appeared at the afternoon session after missing the morning call; tried this week.")
+                    } else {
+                        setFor(c, weeks: rng.int(2...5), note: "Never appeared on \(heard); arrested on an order for arrest issued that afternoon.")
+                    }
+                default:
+                    setFor(c, weeks: 3, note: "Continued at the calendar call on \(heard) after a failure to appear; new notice sent.", continuances: 1)
+                }
+            case .capacity:
+                switch choice {
+                case 0:
+                    if rng.chance(0.25) {
+                        post(NewsItem(date: call.date, kind: .community, headline: "\(c.defendant.name) found incapable to proceed",
+                                      body: "After an evaluation at Central Regional Hospital, \(c.defendant.name) was found incapable of proceeding to trial on \(c.charges.first?.law.title.lowercased() ?? "the charge"). The case is on hold while treatment to restore capacity continues (G.S. 15A-1002).",
+                                      docket: c.docket))
+                        setFor(c, weeks: rng.int(20...30), note: "Capacity restored after treatment at Central Regional Hospital; set for trial.")
+                    } else {
+                        setFor(c, weeks: rng.int(9...12), note: "Central Regional Hospital found the defendant capable to proceed; set for trial.")
+                    }
+                case 1:
+                    setFor(c, weeks: 3, note: "The local screening found the defendant capable to proceed; set for trial.")
+                default:
+                    thisWeek(c, note: "Found capable at the calendar call; the case is tried this week.")
+                }
+            default:
+                break
+            }
+        }
+        scheduled.sort { $0.date < $1.date }
+    }
+
     /// How many times a matter on this week's calendar has already been continued.
     func continuances(of matterID: UUID) -> Int {
         today?.entries.first { $0.matterID == matterID }?.continuances ?? 0
@@ -783,7 +867,22 @@ final class GameState: ObservableObject {
     func completeCalendar(_ call: CalendarCall, choices: [UUID: Int]) {
         guard let county, let judgeName else { return }
         let result = CalendarCalls.resolve(call, choices: choices, judgeName: judgeName, county: county)
-        people.append(contentsOf: result.newPeople)
+        for newcomer in result.newPeople {
+            // A returning defendant who pleads keeps one record.
+            if let index = people.firstIndex(where: { $0.id == newcomer.id }) {
+                people[index].priors.append(contentsOf: newcomer.priors.filter { prior in !people[index].priors.contains { $0.docket == prior.docket && $0.offense == prior.offense } })
+                people[index].appearances.append(contentsOf: newcomer.appearances)
+                if newcomer.status != .free || people[index].status == .free {
+                    people[index].status = newcomer.status
+                    people[index].releaseDate = newcomer.releaseDate ?? people[index].releaseDate
+                    people[index].releaseNote = newcomer.releaseNote ?? people[index].releaseNote
+                }
+                if let term = newcomer.probation { people[index].probation = term }
+                if let prs = newcomer.pendingPostRelease { people[index].pendingPostRelease = prs }
+            } else {
+                people.append(newcomer)
+            }
+        }
         for (id, update) in result.updates {
             if let index = people.firstIndex(where: { $0.id == id }) {
                 let wasHeld = people[index].status == .incarcerated
@@ -792,10 +891,13 @@ final class GameState: ObservableObject {
                 if !wasHeld && people[index].status == .incarcerated { people[index].custodyDocket = people[index].appearances.last?.docket }
             }
         }
-        for index in people.indices.suffix(result.newPeople.count) where people[index].status == .incarcerated {
-            people[index].custodyDocket = people[index].appearances.last?.docket
+        for newcomer in result.newPeople where newcomer.status == .incarcerated {
+            if let index = people.firstIndex(where: { $0.id == newcomer.id }) {
+                people[index].custodyDocket = newcomer.appearances.last?.docket
+            }
         }
         pending.append(contentsOf: result.pending)
+        scheduleCalendarCases(call, choices: choices)
         stats.activeSentences += result.activeSentences
         stats.suspendedSentences += result.suspendedSentences
         stats.probationCompleted += result.probationCompleted

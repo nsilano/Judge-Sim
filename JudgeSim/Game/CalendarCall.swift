@@ -50,6 +50,12 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var lawNote: String?
     /// For early termination: whether the probationer still owes money under the judgment (optional for older saves).
     var owesMoney: Bool?
+    /// The real case behind a plea, a motion to continue, a failure to appear, or a capacity motion. Whatever the
+    /// court orders puts it on an actual calendar (optional for older saves).
+    var pendingCase: CourtCase? = nil
+
+    /// The person's whole file is worth opening for these.
+    var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination }
 }
 
 struct CalendarCall: Identifiable, Codable, Hashable {
@@ -62,6 +68,71 @@ enum CalendarCalls {
 
     private static let pleaLaws = ["felonyLarceny", "possSchedII", "breakingVehicle", "larcenyMerchant", "feloniousBE",
                                    "uttering", "pwisd", "commonLawRobbery", "possStolen", "strangulation", "awdwisi", "burglary2"]
+
+    /// The sentence a plea would carry for this offense and record: the term for an active sentence, the range as
+    /// the parties describe it, and anything the court should know about what the chart allows.
+    static func pleaTerms(_ law: Law, priors: [PriorConviction]) -> (active: Int, rangeText: String, notes: [String]) {
+        let cls = law.ncClass ?? .misd1
+        let record = PriorRecord(priors: priors, onSupervision: false)
+        var notes: [String] = []
+        if cls.isFelony, let cell = StructuredSentencing.felonyCell(cls, level: record.felonyLevel) {
+            if [.A, .B1, .B2, .C, .D, .E].contains(cls) { notes.append("PJC not allowed for this class.") }
+            if !cell.dispositions.contains(.community) && !cell.dispositions.contains(.intermediate) {
+                notes.append("At prior record level \(SentenceFormat.romanLevels[record.felonyLevel - 1]) the chart calls for an active sentence; suspending it departs from Structured Sentencing.")
+            }
+            return (cell.presumptive.low, "\(cell.presumptive.low)–\(StructuredSentencing.maximum(forMinimum: cell.presumptive.low, cls: cls)) months", notes)
+        }
+        let cell = StructuredSentencing.misdemeanorCell(cls, level: record.misdemeanorLevel)
+        let active = max(1, (cell?.maxDays ?? 30) / 3)
+        if let cell, !cell.dispositions.contains(.active) {
+            notes.append("At this prior conviction level the chart allows only community punishment; an active term departs from it.")
+        }
+        return (active, "\(active) days", notes)
+    }
+
+    /// Ties a matter to the real case it is about: the defendant, the docket, the charge, and the record.
+    static func bind(_ m: CalendarMatter, to c: CourtCase) -> CalendarMatter {
+        var bound = m
+        let oldName = m.personName
+        let law = c.charges.first?.law
+        func swap(_ text: String) -> String {
+            var out = text.replacingOccurrences(of: oldName, with: c.defendant.name)
+            if let oldLaw = m.lawID.map({ LawLibrary.law($0).title }), let law { out = out.replacingOccurrences(of: oldLaw, with: law.title) }
+            return out
+        }
+        bound.personID = c.defendant.personID
+        bound.personName = c.defendant.name
+        bound.personAge = c.defendant.age
+        bound.occupation = c.defendant.occupation
+        bound.docket = c.docket
+        bound.pendingCase = c
+        if m.kind == .quickPlea, let law {
+            let cls = law.ncClass ?? .misd1
+            let terms = pleaTerms(law, priors: c.defendant.priors)
+            let priorCount = c.defendant.priors.count
+            bound.lawID = law.id
+            bound.priors = c.defendant.priors
+            bound.isFelony = cls.isFelony
+            bound.activeTerm = terms.active
+            bound.lawNote = terms.notes.isEmpty ? nil : terms.notes.joined(separator: " ")
+            bound.summary = "\(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation.lowercased().withIndefiniteArticle), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
+            bound.stateAsk = "The State and defense jointly recommend \(terms.rangeText), suspended, 12 months of supervised probation, and costs."
+            bound.options = ["Accept the plea; follow the joint recommendation",
+                             "Accept the plea; continue prayer for judgment on costs",
+                             "Accept the plea; impose \(terms.rangeText) active",
+                             "Reject the plea; set the case for trial in two weeks"]
+        } else {
+            bound.summary = m.summary.replacingOccurrences(of: oldName, with: c.defendant.name)
+            if let law {
+                for id in ["felonyLarceny", "pwisd", "awdw", "feloniousBE", "fleeing", "embezzlement"] {
+                    bound.summary = bound.summary.replacingOccurrences(of: " on \(LawLibrary.law(id).title)", with: " on \(law.title)")
+                }
+            }
+            bound.stateAsk = swap(m.stateAsk)
+            bound.defenseAsk = swap(m.defenseAsk)
+        }
+        return bound
+    }
 
     static func make(county: County, date: Date, docketSequence: Int, people: [PersonRecord], excluding: Set<UUID> = [],
                      seed: UInt64) -> CalendarCall {
@@ -139,7 +210,8 @@ enum CalendarCalls {
                     stateAsk: "The State asks for an order for arrest and forfeiture of the \(rng.pick(["$5,000", "$10,000", "$20,000"])) bond.",
                     defenseAsk: rng.pick(["I spoke with my client last week. They knew the date. I can't explain it.",
                                           "My client's mother called my office this morning. There may have been a hospital visit. I'd ask for a day to find out."]),
-                    options: ["Issue an order for arrest and forfeit the bond", "Hold the matter open until the afternoon session", "Continue the case and send a new notice"]))
+                    options: ["Issue an order for arrest and forfeit the bond", "Hold the matter open until the afternoon session",
+                              "Continue the case three weeks and send a new notice"]))
             case .continuance:
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
@@ -148,7 +220,7 @@ enum CalendarCalls {
                                         "The State doesn't object, Judge."]),
                     defenseAsk: rng.pick(["We just received the lab report Friday. I can't effectively cross-examine the analyst without our own expert.",
                                           "I was appointed two weeks ago. Prior counsel withdrew. I haven't met my client in person yet."]),
-                    options: ["Grant the continuance", "Deny; the case will be tried this session"]))
+                    options: ["Grant the continuance; reset for trial in four weeks", "Deny; the case is tried this week"]))
             case .bondModification:
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
@@ -163,7 +235,8 @@ enum CalendarCalls {
                     summary: "Defense counsel questions whether \(name) has the capacity to proceed to trial on \(law.title) (G.S. 15A-1001).",
                     stateAsk: "The State takes no position but notes the defendant seemed oriented at the bond hearing.",
                     defenseAsk: "My client believes I work for the District Attorney and won't discuss the case. I can't assist in a defense under these conditions.",
-                    options: ["Order a forensic evaluation at Central Regional Hospital", "Order a local screening evaluation", "Find the defendant capable and proceed"]))
+                    options: ["Order a forensic evaluation at Central Regional Hospital (about ten weeks)",
+                              "Order a local screening evaluation (about three weeks)", "Find the defendant capable; the case is tried this week"]))
             default:
                 break
             }

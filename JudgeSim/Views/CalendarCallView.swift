@@ -67,6 +67,7 @@ struct CalendarCallView: View {
 }
 
 private struct MatterCard: View {
+    @EnvironmentObject private var game: GameState
     let matter: CalendarMatter
     @Binding var choice: Int?
 
@@ -91,10 +92,94 @@ private struct MatterCard: View {
             ForEach(Array(matter.options.enumerated()), id: \.offset) { index, option in
                 ChoiceRow(title: option, selected: choice == index) { choice = index }
             }
+            if matter.concernsProbationer, let person = game.person(matter.personID) {
+                NavigationLink {
+                    PersonDetail(person: person, today: game.currentDate)
+                } label: {
+                    Label("Open \(person.lastName)'s full file: the case, the judgment, probation, and every violation",
+                          systemImage: "folder.fill")
+                        .font(.subheadline.weight(.semibold))
+                }
+            } else if let c = matter.pendingCase {
+                NavigationLink {
+                    PendingCaseFile(courtCase: c)
+                } label: {
+                    Label("Open the case file", systemImage: "folder.fill").font(.subheadline.weight(.semibold))
+                }
+                if let person = game.person(c.defendant.personID) {
+                    NavigationLink {
+                        PersonDetail(person: person, today: game.currentDate)
+                    } label: {
+                        Label("\(person.lastName) has been in your court before: open the file", systemImage: "arrow.uturn.left")
+                            .font(.caption.weight(.semibold))
+                    }
+                }
+            }
             if let lawID = matter.lawID {
                 LawLink(lawID: lawID)
             }
         }
         .card(tint: choice == nil ? nil : Theme.gold)
+    }
+}
+
+/// The file on a case that comes up at the calendar call: the charges, what happened, the bond, the defendant's
+/// record, and the evidence each side has listed, with each exhibit open to review.
+struct PendingCaseFile: View {
+    let courtCase: CourtCase
+
+    var body: some View {
+        let c = courtCase
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(c.docket).font(.caption.monospaced()).foregroundStyle(.secondary)
+                    Text(c.caption).font(.system(.title3, design: .serif).weight(.bold))
+                }
+                SectionTitle(text: "Charges", icon: "list.number")
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(c.charges, id: \.id) { charge in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Count \(charge.count): \(charge.law.title)").font(.subheadline.weight(.semibold))
+                            Text(charge.specification).font(.callout).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .card()
+                SectionTitle(text: "What happened", icon: "doc.text.fill")
+                Text(c.summary).font(.callout).fixedSize(horizontal: false, vertical: true).card()
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("\(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation)").font(.subheadline.weight(.semibold))
+                    if let bg = c.background { Text(bg.bondStatus).font(.callout) }
+                    Text(c.defendant.priors.isEmpty ? "No prior convictions."
+                         : "Prior convictions: " + c.defendant.priors.map { "\($0.offense) (\($0.year))" }.joined(separator: "; ") + ".")
+                        .font(.callout)
+                }
+                .card()
+                let state = c.evidence.filter { $0.side == .prosecution }
+                let defense = c.evidence.filter { $0.side == .defense }
+                if !state.isEmpty {
+                    SectionTitle(text: "The State's evidence", icon: "building.columns.fill")
+                    ForEach(state) { EvidenceCard(evidence: $0, suppressed: false, courtCase: c) }
+                }
+                if !defense.isEmpty {
+                    SectionTitle(text: "The defense's evidence", icon: "shield.fill")
+                    ForEach(defense) { EvidenceCard(evidence: $0, suppressed: false, courtCase: c) }
+                }
+                if !c.witnesses.isEmpty {
+                    SectionTitle(text: "Witnesses listed", icon: "person.2.fill")
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(c.witnesses) { w in
+                            Text("\(w.name), \(w.role) (\(w.calledBy == .prosecution ? "State" : "defense"))").font(.callout)
+                        }
+                    }
+                    .card()
+                }
+            }
+            .padding()
+        }
+        .background(Theme.background)
+        .navigationTitle("Case File")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
