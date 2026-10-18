@@ -841,7 +841,7 @@ final class GameState: ObservableObject {
         func later(weeks: Int) -> Date {
             CourtCalendar.monday(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 7 * weeks, to: call.date) ?? call.date)
         }
-        func setFor(_ c: CourtCase, _ weeks: Int, _ note: String, _ continuances: Int) {
+        func schedule(_ c: CourtCase, _ weeks: Int, _ note: String, _ continuances: Int) {
             setFor(c, weeks: weeks, note: note, continuances: continuances)
         }
         func setFor(_ c: CourtCase, weeks: Int, note: String, continuances: Int = 0) {
@@ -906,7 +906,7 @@ final class GameState: ObservableObject {
                                  "an unsecured bond with electronic house arrest"][min(choice, 2)]
                 }
                 decideRelease(c, bond: bond, amount: amount, monitored: monitored, condition: condition, heard: heard, date: call.date,
-                              rng: &rng, schedule: setFor)
+                              rng: &rng, schedule: schedule)
             case .arraignment:
                 let weeks = [2, 5, 10][min(choice, 2)]
                 var setCase = c

@@ -11,7 +11,7 @@ enum StoryCases {
                                        nurseryNight, snowbank, kennelShooting, missingToddler, streetRifle,
                                        harborDisappearance, bloodTestStartup, textMessages, restraintDeath, stagedAttack]
         + batchC + batchD + batchE + batchF + batchG + batchH + batchI + batchJ + batchK + batchL
-        + batchM + batchN + batchO + batchP + batchQ
+        + batchM + batchN + batchO + batchP + batchQ + batchR
 
     // MARK: - 1. A fatal crash after a closing shift
 
