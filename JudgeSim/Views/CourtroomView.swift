@@ -91,6 +91,9 @@ struct CourtroomView: View {
                 }
             }
             .background(Theme.background)
+            .safeAreaInset(edge: .top) {
+                if session.stage == .sentencing { SentenceSummaryBar(session: session) }
+            }
             .safeAreaInset(edge: .bottom) {
                 if session.stage != .judgment {
                     CourtActionBar(counselCount: session.unaskedCount, next: session.nextStep,
@@ -917,6 +920,43 @@ struct ContinuanceSheet: View {
                     }
                 }
             }
+        }
+    }
+}
+
+/// The sentence as it stands, pinned above the long sentencing screen and updated with every choice.
+struct SentenceSummaryBar: View {
+    @ObservedObject var session: CaseSession
+
+    var body: some View {
+        let units = session.units
+        let r = session.rulings
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(units.prefix(3), id: \.id) { unit in
+                let choice = Judgment.choice(unit, r)
+                HStack(spacing: 6) {
+                    Text(unit.title).font(.caption.weight(.semibold)).lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(Judgment.termText(for: unit, choice: choice)).font(.caption.monospacedDigit())
+                    Text("·").foregroundStyle(.secondary)
+                    Text(choice.lifeWithoutParole ? "Active" : (choice.disposition?.label ?? "Choose")).font(.caption)
+                        .foregroundStyle(choice.disposition == nil && !choice.lifeWithoutParole ? .orange : Theme.gold)
+                }
+            }
+            if units.count > 3 {
+                Text("and \(units.count - 3) more judgment\(units.count == 4 ? "" : "s")").font(.caption2).foregroundStyle(.secondary)
+            }
+            if let projection = Judgment.custodyProjection(session.courtCase, r, units: units, from: session.courtCase.sessionDate) {
+                Text("Release no earlier than \(SentenceFormat.shortDate(projection.earliest))")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            Theme.surface
+                .overlay(alignment: .bottom) { Rectangle().fill(Theme.border).frame(height: 1) }
         }
     }
 }

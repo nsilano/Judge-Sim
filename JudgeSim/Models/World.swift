@@ -109,6 +109,9 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     var violations: [SupervisionViolation]? = nil
     /// The docket whose commitment sets `releaseDate` (optional for older saves).
     var custodyDocket: String? = nil
+    /// Work, school, family, and home as the court learned them, kept so the person's life stays the same from case
+    /// to case and changes only when something happens to it (optional for older saves).
+    var profile: DefendantProfile? = nil
 
     func age(on date: Date) -> Int {
         CourtCalendar.calendar.component(.year, from: date) - birthYear

@@ -1058,6 +1058,48 @@ extension Array where Element: Hashable {
     }
 }
 
+extension DefendantProfiles {
+    /// A returning defendant's life as the court last recorded it, carried forward: a job ends when the person
+    /// goes to prison, and the facts of the new case can add to the family but never erase it.
+    static func continued(_ stored: DefendantProfile, person: PersonRecord, family known: FamilyFacts, on date: Date) -> DefendantProfile {
+        var profile = stored
+        let cal = CourtCalendar.calendar
+        let year = cal.component(.year, from: date)
+        // The most recent commitment to prison or jail in this court.
+        let committed = person.appearances.last { appearance in
+            let text = appearance.outcome.lowercased()
+            return text.contains("active") || text.contains("imprisonment") || text.contains("revoked") || text.contains("crv")
+        }
+        if let committed {
+            let goneYear = cal.component(.year, from: committed.date)
+            var lost = false
+            for i in profile.jobs.indices where profile.jobs[i].current {
+                let start = Int(profile.jobs[i].years.prefix(4)) ?? goneYear
+                if start <= goneYear {
+                    profile.jobs[i].current = false
+                    profile.jobs[i].years = "\(start)–\(goneYear) (lost the job when incarcerated)"
+                    lost = true
+                }
+            }
+            if lost && person.status != .incarcerated {
+                let release = max(goneYear, year - 1)
+                profile.jobs.insert(Job(title: "Unemployed", employer: "since release from custody", years: "\(release)–present", current: true), at: 0)
+            }
+        }
+        // New facts about family add to what was known.
+        if known.minChildren > 0, profile.family.contains("no children") {
+            let n = max(1, known.minChildren)
+            profile.family = profile.family.replacingOccurrences(of: ", no children.", with: ", \(n) child\(n == 1 ? "" : "ren").")
+        }
+        if let status = known.status, !profile.family.hasPrefix(status) {
+            let rest = profile.family.firstIndex(of: ",").map { String(profile.family[$0...]) } ?? "."
+            profile.family = status + rest
+        }
+        if let note = known.note, !profile.family.contains(note) { profile.family += " " + note }
+        return profile
+    }
+}
+
 /// What is known about a defendant's spouse and children from the background and the written facts of the case,
 /// so the profile never says "no children" about someone the case calls a parent.
 struct FamilyFacts {

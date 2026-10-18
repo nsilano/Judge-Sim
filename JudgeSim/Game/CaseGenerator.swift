@@ -340,7 +340,11 @@ enum CaseGenerator {
         for line in t.story?.defendantExam ?? [] { voice += line.answers }
         let defendantVoice = voice.joined(separator: " ")
         let familyFacts = FamilyFacts.from(caseText: writtenText, defendantVoice: defendantVoice, victimDied: deathLaws.contains(t.primaryLaw))
-        profiledDefendant.profile = DefendantProfiles.make(for: defendant, county: county, year: currentYear, family: familyFacts)
+        if let person = context.returning, let stored = person.profile {
+            profiledDefendant.profile = DefendantProfiles.continued(stored, person: person, family: familyFacts, on: context.date)
+        } else {
+            profiledDefendant.profile = DefendantProfiles.make(for: defendant, county: county, year: currentYear, family: familyFacts)
+        }
         let factText = (t.summaries.map { fill($0) } + charges.map(\.specification) + evidence.map { $0.title + ". " + $0.detail }
                         + witnesses.flatMap { $0.direct + $0.cross }).joined(separator: " ")
         let facts = CaseFacts(key: t.key, category: t.category, hasVictim: t.hasVictim, text: factText)

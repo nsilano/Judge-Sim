@@ -67,6 +67,9 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var relief: ReliefMotion? = nil
     /// For a bond hearing: what each option sets and what the court can't see.
     var bond: BondFacts? = nil
+
+    /// The person's whole file is worth opening for these.
+    var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination }
 }
 
 /// Pretrial release under G.S. 15A-534: the least restrictive conditions that will reasonably assure the
@@ -80,9 +83,6 @@ struct BondFacts: Codable, Hashable {
     /// Hidden: how likely the defendant is to miss court if released, and to be arrested again.
     var flightRisk: Double
     var danger: Double
-
-    /// The person's whole file is worth opening for these.
-    var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination }
 }
 
 struct CalendarCall: Identifiable, Codable, Hashable {

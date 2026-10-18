@@ -1245,6 +1245,7 @@ final class GameState: ObservableObject {
 
             people[index].propensity = (people[index].propensity + outcome.propensity) / 2 + 0.05
             people[index].appearances.append(appearance)
+            if let profile = d.profile { people[index].profile = profile }
         } else {
             let birthYear = CourtCalendar.calendar.component(.year, from: currentDate) - d.age
             people.append(PersonRecord(id: d.personID, name: d.name, birthYear: birthYear, occupation: d.occupation,
@@ -1253,7 +1254,8 @@ final class GameState: ObservableObject {
                                        probation: outcome.newProbation, propensity: outcome.propensity,
                                        appearances: [appearance], releaseNote: outcome.releaseBasis,
                                        pendingPostRelease: outcome.newPostRelease,
-                                       custodyDocket: outcome.personStatus == .incarcerated ? courtCase.docket : nil))
+                                       custodyDocket: outcome.personStatus == .incarcerated ? courtCase.docket : nil,
+                                       profile: d.profile))
         }
         // Credit already satisfied the prison term: post-release supervision starts today.
         if let index = people.firstIndex(where: { $0.id == d.personID }), people[index].status != .incarcerated,
