@@ -107,9 +107,23 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     var pendingPostRelease: PostReleaseTerm? = nil
     /// Probation and post-release supervision violations the court found (optional for older saves).
     var violations: [SupervisionViolation]? = nil
+    /// The docket whose commitment sets `releaseDate` (optional for older saves).
+    var custodyDocket: String? = nil
 
     func age(on date: Date) -> Int {
-        Calendar.current.component(.year, from: date) - birthYear
+        CourtCalendar.calendar.component(.year, from: date) - birthYear
+    }
+
+    /// Whether probation already under way picks up again on release (after a CRV), rather than beginning
+    /// for the first time after a split sentence.
+    var probationResumesOnRelease: Bool {
+        guard let term = probation, let last = appearances.last else { return false }
+        return last.docket != term.docket || last.charges.hasPrefix("Probation violation")
+    }
+
+    /// "supervised" or "unsupervised".
+    var probationKind: String {
+        (probation?.supervised ?? true) ? "supervised" : "unsupervised"
     }
 
     var lastName: String { name.components(separatedBy: " ").last ?? name }
@@ -160,6 +174,17 @@ struct ProbationTerm: Codable, Hashable {
     var treatmentNeed: TreatmentNeed?
     /// Where the sentence came from, when it wasn't this court.
     var origin: String?
+    // Added for supervision fixes; optional so earlier saves still load.
+    /// Misdemeanor exposure in days (nil: activeMonths × 30).
+    var activeDays: Int?
+    /// Days actually served on CRV so far (nil: 90 per CRV).
+    var crvDaysServed: Int?
+    /// When probation began (nil: unknown; the sentencing appearance is used).
+    var starts: Date?
+    /// Class of the offense, for post-release supervision after revocation and for a deferred judgment.
+    var offenseClass: NCClass?
+    /// A conditional discharge: no judgment has been entered yet.
+    var conditionalDischarge: Bool?
 }
 
 /// A probation violation report on a probationer, heard on the court's calendar.
@@ -187,6 +212,8 @@ struct ViolationHearing: Identifiable, Codable, Hashable {
     /// The probation officer's testimony if the violations are denied.
     var officerTestimony: [String]?
     var officerCross: [String]?
+    /// Violations already found in this case before this hearing (optional for older saves).
+    var priorViolationCount: Int?
 }
 
 struct NewsItem: Identifiable, Codable, Hashable {
@@ -244,4 +271,10 @@ struct PendingEvent: Codable, Hashable {
     var vacatesDocket: String?
     /// A new trial the District Attorney may bring back to this court.
     var retrial: CourtCase?
+    /// A probation sanction vacated on appeal: the probation as it stood before the order (optional for older saves).
+    var restoreProbation: ProbationTerm?
+    /// The violation the vacated order recorded, to strike from the person's record.
+    var removesViolationID: UUID?
+    /// The appeal this event decides or follows up on (optional for older saves).
+    var appealID: UUID?
 }

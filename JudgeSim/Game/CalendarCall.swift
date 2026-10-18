@@ -48,6 +48,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var activeTerm: Int = 0
     var isFelony = false
     var lawNote: String?
+    /// For early termination: whether the probationer still owes money under the judgment (optional for older saves).
+    var owesMoney: Bool?
 }
 
 struct CalendarCall: Identifiable, Codable, Hashable {
@@ -111,7 +113,7 @@ enum CalendarCalls {
             matters.append(CalendarMatter(
                 kind: .quickPlea, personID: UUID(), personName: name, personAge: age, occupation: occupation,
                 docket: docket(cls.isFelony),
-                summary: "\(name), \(age), a \(occupation.lowercased()), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")").",
+                summary: "\(name), \(age), \(occupation.lowercased().withIndefiniteArticle), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")").",
                 stateAsk: "The State and defense jointly recommend \(rangeText), suspended, 12 months of supervised probation, and costs.",
                 defenseAsk: rng.pick(["My client has a job and wants to keep it.", "My client has been sober since the arrest.", "This is about one bad night, Judge."]),
                 options: ["Accept the plea; follow the joint recommendation",
@@ -167,36 +169,56 @@ enum CalendarCalls {
             }
         }
 
-        // A probationer from this court admits a technical violation.
+        // A steady probationer asks to end probation early: only once at least half the term is served.
         let probationers = people.filter { $0.status == .probation && $0.probation != nil && !excluding.contains($0.id) }
-        let steady = probationers.filter { ($0.probation?.violationRisk ?? 0.2) < 0.25 }
+        let steady = probationers.filter { person in
+            guard let term = person.probation, (term.violationRisk ?? 0.2) < 0.25,
+                  let start = ViolationHearings.probationStart(person, term) else { return false }
+            let halfway = start.addingTimeInterval(term.ends.timeIntervalSince(start) / 2)
+            return halfway <= date
+        }
         if let person = steady.isEmpty ? nil : rng.pick(steady), let term = person.probation, rng.chance(0.5) {
             let whose = term.imposedInThisCourt ? "You placed \(person.lastName) on probation." : (term.origin ?? "Sentenced in another court.")
+            let owes = (term.monthlyObligation ?? 0) > 0
+            let compliance = (term.supervised ?? true)
+                ? "The probation officer reports every visit kept, clean drug screens, and steady work."
+                : "The clerk's file shows no new charges and steady work" + (owes ? ", with payments current." : ".")
             matters.append(CalendarMatter(
                 kind: .earlyTermination, personID: person.id, personName: person.name, personAge: person.age(on: date),
                 occupation: person.occupation, docket: term.docket,
-                summary: "\(person.name) asks the court to end probation in \(term.docket) (\(term.offense)) early. \(whose) The probation officer reports every visit kept, clean drug screens, and steady work.",
-                stateAsk: rng.pick(["The State takes no position.",
-                                    "The State opposes. Restitution still isn't paid in full.",
-                                    "The State doesn't object, provided all money owed is paid."]),
+                summary: "\(person.name) asks the court to end probation in \(term.docket) (\(term.offense)) early. \(whose) \(compliance)",
+                stateAsk: owes
+                    ? rng.pick(["The State takes no position.",
+                                "The State opposes. Money owed under the judgment still isn't paid in full.",
+                                "The State doesn't object, provided all money owed is paid."])
+                    : rng.pick(["The State takes no position.", "The State doesn't object."]),
                 defenseAsk: rng.pick(["My client has done everything asked. A new job requires travel that supervision makes impossible.",
-                                      "Two-thirds of the term is served without a single violation. The goal of probation has been met.",
+                                      "Half the term and more is served without a single violation. The goal of probation has been met.",
                                       "My client wants to move closer to family in another county and start over."]),
                 options: ["Grant: probation ends successfully (G.S. 15A-1342(b))",
-                          "Grant once all money owed is paid",
-                          "Deny: probation continues as ordered"]))
+                          owes ? "Grant once all money owed is paid" : "Grant; nothing is owed, so probation ends today",
+                          "Deny: probation continues as ordered"],
+                owesMoney: owes))
         }
         if let person = probationers.isEmpty ? nil : rng.pick(probationers), let term = person.probation, rng.chance(0.6),
            !matters.contains(where: { $0.personID == person.id }) {
+            let supervised = term.supervised ?? true
+            let crv = ViolationHearings.crvDays(term)
             matters.append(CalendarMatter(
                 kind: .pvAdmission, personID: person.id, personName: person.name, personAge: person.age(on: date),
                 occupation: person.occupation, docket: term.docket + " (PV)",
-                summary: "\(person.name) admits missing two office visits and one drug screen while on probation in \(term.docket).",
+                summary: "\(person.name) admits " + pvAdmissionConduct(supervised: supervised) + " while on probation in \(term.docket).",
                 stateAsk: "The State asks for a two-day quick dip.",
                 defenseAsk: "My client admits it and is back on track. We ask the court to continue probation.",
-                options: ["Continue probation on the same terms", "Modify: add substance abuse treatment", "Order a two-day quick dip", "Order a CRV"]))
+                options: ["Continue probation on the same terms", "Modify: add substance abuse treatment", "Order a two-day quick dip",
+                          crv > 0 ? "Order a \(crv)-day CRV" : "Order a CRV (no suspended time remains)"]))
         }
         return CalendarCall(date: date, matters: matters)
+    }
+
+    /// What a probationer admits at the calendar call. Unsupervised probation has no office visits or drug screens.
+    static func pvAdmissionConduct(supervised: Bool) -> String {
+        supervised ? "missing two office visits and one drug screen" : "falling behind on court-ordered payments and not finishing the community service ordered"
     }
 
     struct Result {
@@ -204,6 +226,10 @@ enum CalendarCalls {
         var newPeople: [PersonRecord]
         var updates: [(UUID, (inout PersonRecord) -> Void)]
         var pending: [PendingEvent]
+        /// For the career statistics: active and suspended sentences entered on pleas, and probation ended successfully today.
+        var activeSentences = 0
+        var suspendedSentences = 0
+        var probationCompleted = 0
     }
 
     static func resolve(_ call: CalendarCall, choices: [UUID: Int], judgeName: String, county: County) -> Result {

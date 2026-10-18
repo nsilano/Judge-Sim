@@ -15,6 +15,8 @@ struct CaseRecord: Identifiable, Codable, Hashable {
     var appealStatus: String?
     /// "trial", "hearing", or "calendar" (optional for older saves).
     var kind: String?
+    /// The appeal taken from this judgment, if any (optional for older saves).
+    var appealID: UUID? = nil
 
     var resolvedKind: String {
         if let kind { return kind }
@@ -75,6 +77,7 @@ private struct SaveData: Codable {
     var appeals: [AppealTracker]?
     var recentLineKeys: [UInt64]?
     var careerStart: Date?
+    var weekNumber: Int?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -101,6 +104,8 @@ final class GameState: ObservableObject {
     private var sessionEnds = Date()
     /// The Monday of the judge's first week on the bench.
     @Published private(set) var careerStart = Date()
+    /// Which week on the bench the current calendar is, starting at 1. Weeks on leave don't count.
+    @Published private(set) var weekNumber = 1
     // Kept only to bring forward a matter left open in an older save.
     private var currentCase: CourtCase?
     private var currentHearing: ViolationHearing?
@@ -124,8 +129,11 @@ final class GameState: ObservableObject {
     var trialsHeard: Int { history.filter { $0.resolvedKind == "trial" }.count }
     var hearingsHeard: Int { history.filter { $0.resolvedKind == "hearing" }.count }
 
+    /// The senior resident judge is the one with the longest continuous service in the district (G.S. 7A-41.1(a));
+    /// the judges ahead of this one are assumed to have left the bench after about six years.
     var title: String {
-        casesHeard >= 40 ? "Senior Resident Superior Court Judge" : "Resident Superior Court Judge"
+        let years = CourtCalendar.calendar.dateComponents([.year], from: careerStart, to: currentDate).year ?? 0
+        return years >= 6 ? "Senior Resident Superior Court Judge" : "Resident Superior Court Judge"
     }
 
     // MARK: Career
@@ -133,10 +141,11 @@ final class GameState: ObservableObject {
     func startCareer(name: String, start: Date) {
         judgeName = name
         county = County.generate(seed: seedBase)
-        let parts = Calendar.current.dateComponents([.hour, .minute], from: start)
-        openingMinutes = (parts.hour ?? 9) * 60 + (parts.minute ?? 30)
+        let parts = CourtCalendar.calendar.dateComponents([.hour, .minute], from: start)
+        openingMinutes = Self.courtOpening((parts.hour ?? 9) * 60 + (parts.minute ?? 30))
         currentDate = CourtCalendar.weekday(onOrAfter: start)
         careerStart = CourtCalendar.monday(onOrBefore: currentDate)
+        weekNumber = 1
         var rng = SeededRNG(seed: seedBase)
         docketSequence = rng.int(1_200...4_800)
         sessionEnds = sessionFriday(for: currentDate)
@@ -152,28 +161,39 @@ final class GameState: ObservableObject {
     // MARK: The day in court
 
     private func sessionFriday(for date: Date) -> Date {
-        var day = Calendar.current.startOfDay(for: date)
-        while Calendar.current.component(.weekday, from: day) != 6 { day = Calendar.current.date(byAdding: .day, value: 1, to: day) ?? day }
+        var day = CourtCalendar.calendar.startOfDay(for: date)
+        while CourtCalendar.calendar.component(.weekday, from: day) != 6 { day = CourtCalendar.calendar.date(byAdding: .day, value: 1, to: day) ?? day }
         return day
     }
 
-    /// Which week of the judge's career the current calendar falls in, starting at 1.
-    var weekNumber: Int {
+    /// Calendar weeks since the career began, counting any leave. Older saves didn't count weeks sat, so this stands in.
+    private var calendarWeekNumber: Int {
         let start = CourtCalendar.monday(onOrBefore: careerStart)
         let current = CourtCalendar.monday(onOrBefore: today?.date ?? currentDate)
-        let days = Calendar.current.dateComponents([.day], from: start, to: current).day ?? 0
+        let days = CourtCalendar.calendar.dateComponents([.day], from: start, to: current).day ?? 0
         return max(1, days / 7 + 1)
     }
 
-    /// Moves the courtroom clock forward. When the court day ends at 5 p.m., the next matter is taken up
-    /// the following morning; on Friday the week simply runs late.
+    /// Court opens between 8 and 11 in the morning.
+    static func courtOpening(_ minutes: Int) -> Int { min(11 * 60, max(8 * 60, minutes)) }
+
+    /// Moves the courtroom clock forward. No new matter is called after 4:30 p.m.: once the day's matters run that late,
+    /// the next one is taken up the following weekday morning. On Friday the week runs late, but never past midnight.
     private func advanceClock(_ day: inout CourtDay, minutes: Int) {
-        let cal = Calendar.current
+        let cal = CourtCalendar.calendar
+        let started = day.clock
         day.clock = cal.date(byAdding: .minute, value: minutes, to: day.clock) ?? day.clock
         let friday = sessionFriday(for: day.date)
-        if cal.component(.hour, from: day.clock) >= 17, cal.startOfDay(for: day.clock) < friday, !day.isComplete {
-            day.clock = CourtCalendar.opening(on: CourtCalendar.nextWeekday(after: day.clock), minutesAfterMidnight: openingMinutes)
+        let lastCall = cal.date(bySettingHour: 16, minute: 30, second: 0, of: started) ?? started
+        if !day.isComplete, day.clock >= lastCall || !cal.isDate(day.clock, inSameDayAs: started) {
+            let next = CourtCalendar.nextWeekday(after: started)
+            if next <= friday {
+                day.clock = CourtCalendar.opening(on: next, minutesAfterMidnight: openingMinutes)
+            }
         }
+        // Friday's calendar can run into the night, but not into the weekend.
+        let lastMinute = cal.date(bySettingHour: 23, minute: 59, second: 0, of: friday) ?? friday
+        day.clock = min(day.clock, lastMinute)
         currentDate = cal.startOfDay(for: day.clock)
     }
 
@@ -183,17 +203,20 @@ final class GameState: ObservableObject {
         let entry = day.entries[index]
         guard entry.isOpen else { return nil }
         day.entries[index].status = .inProgress
-        // A matter is heard on whatever day of the week the court reaches it.
-        let heard = Calendar.current.startOfDay(for: day.clock)
+        // A matter is heard on whatever day of the week the court reaches it, including a trial resumed after a continuance.
+        let heard = CourtCalendar.calendar.startOfDay(for: day.clock)
         if entry.status == .pending {
             switch entry.matter {
-            case .trial(var c) where entry.resume == nil:
+            case .trial(var c):
+                creditJailTime(&c, through: heard)
                 c.sessionDate = heard
                 day.entries[index].matter = .trial(c)
             case .hearing(var h):
                 h.date = heard
                 day.entries[index].matter = .hearing(h)
-            default: break
+            case .calendar(var call):
+                call.date = heard
+                day.entries[index].matter = .calendar(call)
             }
         }
         today = day
@@ -273,14 +296,14 @@ final class GameState: ObservableObject {
         if released > 0 { outside.append("\(released) \(released == 1 ? "person" : "people") you sentenced left custody") }
         if completed > 0 { outside.append("\(completed) finished probation") }
         if decided > 0 { outside.append("the Court of Appeals decided \(decided) appeal\(decided == 1 ? "" : "s") from your court") }
-        if !outside.isEmpty { body += " Over the weekend, " + outside.joined(separator: ", ") + "." }
+        if !outside.isEmpty { body += " This past week, " + outside.joined(separator: ", ") + "." }
         let waiting = scheduled.filter { $0.date <= sessionFriday(for: next) }.count
         if waiting > 0 { body += " \(waiting) continued matter\(waiting == 1 ? " is" : "s are") back on this week's calendar." }
+        post(NewsItem(date: sessionFriday(for: day.date), kind: .community, headline: "Week \(week) in review", body: body))
+        weekNumber = week + 1
         sessionEnds = sessionFriday(for: next)
         today = buildDay(next, kind: .trial, sessionDay: 1)
-        var fresh = Array(news.prefix { $0.id != marker })
-        fresh.insert(NewsItem(date: next, kind: .community, headline: "Week \(week) in review", body: body), at: 0)
-        digest = fresh
+        digest = Array(news.prefix { $0.id != marker })
         save()
     }
 
@@ -316,7 +339,7 @@ final class GameState: ObservableObject {
     /// The Monday the judge would return to the bench after skipping `weeks` court weeks.
     func leaveReturnDate(weeks: Int) -> Date {
         let next = nextCourtDate
-        return CourtCalendar.monday(onOrAfter: Calendar.current.date(byAdding: .day, value: 7 * max(1, weeks), to: next) ?? next)
+        return CourtCalendar.monday(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 7 * max(1, weeks), to: next) ?? next)
     }
 
     /// Steps away from the bench. The world keeps moving: sentences end, appeals come down, people are released.
@@ -325,6 +348,9 @@ final class GameState: ObservableObject {
         guard let day = today, day.isComplete, let judgeName else { return }
         let back = leaveReturnDate(weeks: weeks)
         let marker = news.first?.id
+        post(NewsItem(date: sessionFriday(for: day.date), kind: .community, headline: "Week \(weekNumber) in review",
+                      body: weekInReview(day, week: weekNumber)))
+        weekNumber += 1
 
         var reset = 0
         for index in scheduled.indices where scheduled[index].date < back {
@@ -339,7 +365,7 @@ final class GameState: ObservableObject {
         let completedBefore = stats.probationCompleted
         let appealsBefore = appeals.filter { !$0.isPending }.count
         while cursor < back {
-            cursor = min(back, Calendar.current.date(byAdding: .day, value: 7, to: cursor) ?? back)
+            cursor = min(back, CourtCalendar.calendar.date(byAdding: .day, value: 7, to: cursor) ?? back)
             advanceWorld(to: cursor)
         }
 
@@ -360,20 +386,21 @@ final class GameState: ObservableObject {
         save()
     }
 
-    /// Starts following each appeal taken today, and puts any oral argument on the calendar.
-    private func trackAppeals(_ events: [PendingEvent], docket: String, caption: String, personID: UUID, appellant: String, plea: Bool) {
-        var rng = SeededRNG(seed: seedBase ^ UInt64(abs(docket.hashValue % 1_000_000)) ^ UInt64(appeals.count))
+    /// Starts following each appeal taken today, and puts any oral argument on the calendar. Returns the events
+    /// tagged with the appeal they decide, ready to schedule.
+    private func trackAppeals(_ events: [PendingEvent], docket: String, caption: String, personID: UUID, appellant: String, plea: Bool) -> [PendingEvent] {
+        var rng = SeededRNG(seed: seedBase ^ SeededRNG.stableHash(docket) ^ UInt64(appeals.count))
         let decisions = events.filter { $0.news.kind == .appeal && $0.news.docket == docket && !Appeals.isFollowUp($0) }
-        guard let first = decisions.min(by: { $0.due < $1.due }) else { return }
+        guard let first = decisions.min(by: { $0.due < $1.due }) else { return events }
         let headline = first.news.headline
         let issue: String
         let byState = headline.contains("reinstates") || (first.news.body.contains("On appeal by the State"))
         if headline.contains("reinstates") {
             issue = "Whether the trial court erred in dismissing the charges for a speedy-trial violation"
-        } else if first.effect == .resentence || headline.contains("vacates sentence") || first.news.body.contains("remanded for resentencing") {
-            issue = "Whether the sentence is authorized by North Carolina law"
         } else if docket.hasSuffix("(PV)") {
             issue = "Whether the court had authority to sanction the probationer as it did"
+        } else if first.effect == .resentence || headline.contains("vacates sentence") || first.news.body.contains("remanded for resentencing") {
+            issue = "Whether the sentence is authorized by North Carolina law"
         } else if plea {
             issue = "Sentencing issues following a plea (G.S. 15A-1444)"
         } else {
@@ -383,6 +410,10 @@ final class GameState: ObservableObject {
                                       appellant: byState ? "the State" : appellant, issue: issue, rng: &rng)
         tracker.docket = docket
         appeals.insert(tracker, at: 0)
+        // The judgment appealed from was just entered.
+        if let index = history.firstIndex(where: { $0.docket == docket && $0.resolvedKind != "continuance" }) {
+            history[index].appealID = tracker.id
+        }
         if let argument = tracker.argument {
             pending.append(PendingEvent(due: argument,
                                         news: NewsItem(date: argument, kind: .community,
@@ -390,24 +421,30 @@ final class GameState: ObservableObject {
                                                        body: "A three-judge panel of the North Carolina Court of Appeals heard oral argument in Raleigh in the appeal from Judge \(lastName(judgeName ?? ""))'s judgment in \(caption). The issue: \(issue.prefix(1).lowercased() + issue.dropFirst()). A written opinion typically follows within a few months.",
                                                        docket: docket)))
         }
+        // The decision and any word on a retrial belong to this appeal.
+        return events.map { event in
+            var event = event
+            if event.news.kind == .appeal && event.news.docket == docket { event.appealID = tracker.id }
+            return event
+        }
     }
 
     /// Appeals taken before the tracker existed still have pending decisions; give each one a tracker.
     private func backfillAppeals() {
         var added = false
         for event in pending where event.news.kind == .appeal && !Appeals.isFollowUp(event) {
-            guard let docket = event.news.docket, !appeals.contains(where: { $0.docket == docket }) else { continue }
-            let record = history.first { $0.docket == docket }
+            guard let docket = event.news.docket, event.appealID == nil, !appeals.contains(where: { $0.docket == docket }) else { continue }
+            let record = history.first { $0.docket == docket && $0.resolvedKind != "continuance" }
             let filed = record?.date ?? currentDate
-            var rng = SeededRNG(seed: seedBase ^ UInt64(abs(docket.hashValue % 1_000_000)))
+            var rng = SeededRNG(seed: seedBase ^ SeededRNG.stableHash(docket))
             let byState = event.news.headline.contains("reinstates") || event.news.body.contains("On appeal by the State")
             let issue: String
             if event.news.headline.contains("reinstates") {
                 issue = "Whether the trial court erred in dismissing the charges for a speedy-trial violation"
-            } else if event.effect == .resentence || event.news.body.contains("remanded for resentencing") {
-                issue = "Whether the sentence is authorized by North Carolina law"
             } else if docket.hasSuffix("(PV)") {
                 issue = "Whether the court had authority to sanction the probationer as it did"
+            } else if event.effect == .resentence || event.news.body.contains("remanded for resentencing") {
+                issue = "Whether the sentence is authorized by North Carolina law"
             } else {
                 issue = "The sufficiency of the evidence and the trial court's rulings"
             }
@@ -434,33 +471,40 @@ final class GameState: ObservableObject {
         var used = Set(people.map(\.name))
         let name = NameBank.person(using: &rng, excluding: &used)
         let age = rng.int(20...58)
-        let year = Calendar.current.component(.year, from: date)
+        let year = CourtCalendar.calendar.component(.year, from: date)
         let seed = rng.pick(GenericPools.priorSeeds)
         var priors: [PriorConviction] = []
+        // Adult convictions only: none before age 18.
+        let earliest = max(2, min(12, age - 18))
         for _ in 0..<rng.int(0...3) {
             let p = rng.pick(GenericPools.priorSeeds)
-            priors.append(PriorConviction(offense: p.offense, ncClass: p.ncClass, year: year - rng.int(2...12),
+            priors.append(PriorConviction(offense: p.offense, ncClass: p.ncClass, year: year - rng.int(2...earliest),
                                           county: rng.pick(GenericPools.otherCounties), sentence: rng.pick(p.sentences)))
         }
         let otherCounty = rng.pick(GenericPools.otherCounties)
         let felony = seed.ncClass.isFelony
         let months = felony ? rng.int(6...20) : rng.int(1...4)
-        let docket = String(format: "%02d %@ %06d", (year - 1) % 100, felony ? "CRS" : "CR", rng.int(1_000...90_000))
+        // Probation began some months ago and runs its full length from then.
+        let served = rng.int(4...12)
+        let left = felony ? rng.int(6...20) : rng.int(6...12)
+        let sentenced = CourtCalendar.calendar.date(byAdding: .month, value: -served, to: date) ?? date
+        let sentencedYear = CourtCalendar.calendar.component(.year, from: sentenced)
+        let docket = String(format: "%02d %@ %06d", sentencedYear % 100, felony ? "CRS" : "CR", rng.int(1_000...90_000))
         let judge = "Judge " + (NameBank.person(using: &rng, excluding: &used).components(separatedBy: " ").last ?? "Ward")
-        priors.append(PriorConviction(offense: seed.offense, ncClass: seed.ncClass, year: year - 1, county: otherCounty,
-                                      sentence: felony ? "\(months) months suspended, 30 months probation" : "\(months * 30) days suspended, 18 months probation",
+        priors.append(PriorConviction(offense: seed.offense, ncClass: seed.ncClass, year: sentencedYear, county: otherCounty,
+                                      sentence: felony ? "\(months) months suspended, \(served + left) months probation" : "\(months * 30) days suspended, \(served + left) months probation",
                                       docket: docket))
         let term = ProbationTerm(docket: docket, offense: seed.offense, isFelony: felony,
                                  suspendedSentence: felony ? "\(months)–\(StructuredSentencing.maximum(forMinimum: months, cls: seed.ncClass)) months" : "\(months * 30) days",
                                  activeMonths: months,
-                                 ends: Calendar.current.date(byAdding: .month, value: rng.int(6...20), to: date) ?? date,
+                                 ends: CourtCalendar.calendar.date(byAdding: .month, value: left, to: date) ?? date,
                                  imposedInThisCourt: false, supervised: true,
                                  conditions: rng.chance(0.5) ? ["Obtain a substance abuse assessment and complete recommended treatment."] : [],
                                  monthlyObligation: rng.int(1...4) * 40, violationRisk: 0.25, crvCount: rng.chance(0.2) ? 1 : 0,
                                  treatmentNeed: rng.chance(0.5) ? .substance : TreatmentNeed.none,
                                  origin: "Sentenced by \(judge) in \(otherCounty); supervision transferred to \(county.name) when the probationer moved here.")
         let person = PersonRecord(id: UUID(), name: name, birthYear: year - age, occupation: rng.pick(NameBank.occupations).capitalizedFirst,
-                                  background: "Moved to \(rng.pick(county.towns)) last year.", priors: priors,
+                                  background: "Moved to \(rng.pick(county.towns)) after being placed on probation in \(otherCounty).", priors: priors,
                                   status: .probation, probation: term, propensity: rng.chance(0.5) ? 0.35 : 0.2)
         people.append(person)
         return ViolationHearings.make(person: person, county: county, date: date, seed: rng.next())
@@ -473,8 +517,8 @@ final class GameState: ObservableObject {
 
         // Continued matters set any day this week come first.
         let weekEnd = sessionFriday(for: date)
-        let due = scheduled.filter { Calendar.current.startOfDay(for: $0.date) <= weekEnd }
-        scheduled.removeAll { Calendar.current.startOfDay(for: $0.date) <= weekEnd }
+        let due = scheduled.filter { CourtCalendar.calendar.startOfDay(for: $0.date) <= weekEnd }
+        scheduled.removeAll { CourtCalendar.calendar.startOfDay(for: $0.date) <= weekEnd }
         for item in due {
             var entry = item.entry
             if case .hearing(var h) = entry.matter {
@@ -487,6 +531,7 @@ final class GameState: ObservableObject {
                 entry.matter = .hearing(h)
             }
             if case .trial(var c) = entry.matter {
+                creditJailTime(&c, through: date)
                 c.sessionDate = date
                 refreshDefendant(&c)
                 if let requests = entry.requests, !requests.isEmpty {
@@ -552,6 +597,18 @@ final class GameState: ObservableObject {
                         kind: kind, entries: entries, sessionDay: sessionDay)
     }
 
+    /// A defendant held in jail earns credit for every day the case waits to be heard (G.S. 15-196.1).
+    private func creditJailTime(_ c: inout CourtCase, through date: Date) {
+        guard var background = c.background, background.custodyDays > 0 else { return }
+        let cal = CourtCalendar.calendar
+        let waited = cal.dateComponents([.day], from: cal.startOfDay(for: c.sessionDate), to: cal.startOfDay(for: date)).day ?? 0
+        guard waited > 0 else { return }
+        let before = background.custodyDays
+        background.custodyDays += waited
+        background.bondStatus = background.bondStatus.replacingOccurrences(of: "for \(before) days", with: "for \(background.custodyDays) days")
+        c.background = background
+    }
+
     /// Brings a defendant's record up to date before a case is heard again.
     private func refreshDefendant(_ c: inout CourtCase) {
         guard let person = person(c.defendant.personID) else { return }
@@ -568,7 +625,15 @@ final class GameState: ObservableObject {
         let result = CalendarCalls.resolve(call, choices: choices, judgeName: judgeName, county: county)
         people.append(contentsOf: result.newPeople)
         for (id, update) in result.updates {
-            if let index = people.firstIndex(where: { $0.id == id }) { update(&people[index]) }
+            if let index = people.firstIndex(where: { $0.id == id }) {
+                let wasHeld = people[index].status == .incarcerated
+                update(&people[index])
+                // A CRV ordered at the calendar call is now the commitment in effect.
+                if !wasHeld && people[index].status == .incarcerated { people[index].custodyDocket = people[index].appearances.last?.docket }
+            }
+        }
+        for index in people.indices.suffix(result.newPeople.count) where people[index].status == .incarcerated {
+            people[index].custodyDocket = people[index].appearances.last?.docket
         }
         pending.append(contentsOf: result.pending)
         history.insert(CaseRecord(docket: "Calendar call", caption: "Administrative calendar call",
@@ -586,10 +651,12 @@ final class GameState: ObservableObject {
 
     private func makeViolationHearing(date: Date, excluding used: inout Set<UUID>, rng: inout SeededRNG) -> ViolationHearing? {
         guard let county else { return nil }
-        let recentCutoff = Calendar.current.date(byAdding: .day, value: -45, to: date) ?? date
+        let recentCutoff = CourtCalendar.calendar.date(byAdding: .day, value: -45, to: date) ?? date
         let candidates = people.filter { person in
+            // Only a supervised probationer has an officer to file a violation report.
             person.status == .probation
                 && person.probation != nil
+                && (person.probation?.supervised ?? true)
                 && (person.appearances.last?.date ?? .distantPast) < recentCutoff
                 && !used.contains(person.id)
         }
@@ -613,6 +680,7 @@ final class GameState: ObservableObject {
             people[index].status = outcome.status
             people[index].releaseDate = outcome.releaseDate
             people[index].releaseNote = outcome.releaseDate == nil ? nil : outcome.lines.first
+            people[index].custodyDocket = outcome.status == .incarcerated ? appearance.docket : nil
             people[index].probation = outcome.probation
             people[index].propensity = min(0.85, max(0.03, people[index].propensity + outcome.propensityChange))
             if let violation = outcome.violation { people[index].violations = (people[index].violations ?? []) + [violation] }
@@ -628,9 +696,9 @@ final class GameState: ObservableObject {
         var item = outcome.news
         item.date = currentDate
         post(item)
-        pending.append(contentsOf: outcome.pending)
-        trackAppeals(outcome.pending, docket: hearing.probation.docket + " (PV)", caption: "State v. \(hearing.personName) (probation violation)",
-                     personID: hearing.personID, appellant: "the probationer", plea: false)
+        pending.append(contentsOf: trackAppeals(outcome.pending, docket: hearing.probation.docket + " (PV)",
+                                                caption: "State v. \(hearing.personName) (probation violation)",
+                                                personID: hearing.personID, appellant: "the probationer", plea: false))
         finishEntry(matterID: hearing.id, outcome: outcome.appearance)
         save()
     }
@@ -678,7 +746,7 @@ final class GameState: ObservableObject {
     }
 
     private func pickReturningDefendant(rng: inout SeededRNG, date: Date) -> PersonRecord? {
-        let recentCutoff = Calendar.current.date(byAdding: .day, value: -30, to: date) ?? date
+        let recentCutoff = CourtCalendar.calendar.date(byAdding: .day, value: -30, to: date) ?? date
         let eligible = people.filter { person in
             person.status != .incarcerated
                 && (person.appearances.last?.date ?? .distantPast) < recentCutoff
@@ -698,11 +766,13 @@ final class GameState: ObservableObject {
         let d = courtCase.defendant
         let judgmentText = outcome.judgments.map { ([$0.title] + $0.lines).joined(separator: " · ") }
             + [outcome.habitualNote, outcome.probationHearing].compactMap { $0 }
+        // A retrial of the same case doesn't make the defendant a returning one.
+        let retried = history.contains { $0.docket == courtCase.docket && $0.resolvedKind == "trial" }
 
         history.insert(CaseRecord(docket: courtCase.docket, caption: courtCase.caption, headline: courtCase.headline,
                                   category: courtCase.category, date: currentDate, defendantID: d.personID,
                                   outcome: outcome.appearanceSummary, judgments: judgmentText,
-                                  returningDefendant: d.isReturning,
+                                  returningDefendant: d.isReturning && !retried,
                                   appealStatus: outcome.appealNotice == nil && !outcome.pending.contains(where: { $0.news.kind == .appeal && $0.news.docket == courtCase.docket }) ? nil : "Appeal pending",
                                   kind: "trial"), at: 0)
         if let position = outcome.sentencePosition {
@@ -722,37 +792,81 @@ final class GameState: ObservableObject {
             day.tally = tally
             today = day
         }
-        if courtCase.defendant.probation != nil && outcome.probationHearing?.contains("revoked") == true { stats.probationRevoked += 1 }
+        // Only the probation revocation counts here; a post-release supervision revocation reads "... revoked. The defendant is returned".
+        if courtCase.defendant.probation != nil && outcome.probationHearing?.contains("revoked. The suspended sentence") == true { stats.probationRevoked += 1 }
 
         // Update the person's record
         let appearance = PersonRecord.Appearance(docket: courtCase.docket, date: currentDate,
                                                  charges: courtCase.charges.map { $0.law.title }.joined(separator: ", "),
                                                  outcome: outcome.appearanceSummary)
         if let index = people.firstIndex(where: { $0.id == d.personID }) {
+            let before = people[index]
             people[index].priors.append(contentsOf: outcome.newPriors)
-            people[index].status = outcome.personStatus
-            people[index].releaseDate = outcome.releaseDate
-            people[index].releaseNote = outcome.releaseBasis
-            people[index].probation = outcome.newProbation
-            people[index].postRelease = outcome.continuedPostRelease
+            // Custody and supervision from other dockets carry on. Today's judgment adds to them; it never cuts them short.
+            let heldElsewhere = before.status == .incarcerated && before.custodyDocket != courtCase.docket
+                && (before.releaseDate ?? .distantPast) > currentDate
+            let todaysRelease = outcome.personStatus == .incarcerated ? (outcome.releaseDate ?? .distantPast) : .distantPast
+            let keepsEarlierCommitment = heldElsewhere && (before.releaseDate ?? .distantPast) >= todaysRelease
+            if !keepsEarlierCommitment {
+                people[index].status = outcome.personStatus
+                people[index].releaseDate = outcome.releaseDate
+                people[index].releaseNote = outcome.releaseBasis
+                people[index].custodyDocket = outcome.personStatus == .incarcerated ? courtCase.docket : nil
+            }
+
+            // Probation the case didn't know about (on another docket) continues alongside any new term.
+            var probation = outcome.newProbation
+            if d.probation == nil, let earlier = before.probation, earlier.docket != courtCase.docket {
+                if var merged = probation {
+                    merged.ends = max(merged.ends, earlier.ends)
+                    merged.suspendedSentence += "; also on probation in \(earlier.docket) (\(earlier.suspendedSentence))"
+                    merged.conditions = Array(Set((merged.conditions ?? []) + (earlier.conditions ?? []))).sorted()
+                    merged.supervised = (merged.supervised ?? true) || (earlier.supervised ?? true)
+                    merged.activeMonths = max(merged.activeMonths, earlier.activeMonths)
+                    probation = merged
+                } else {
+                    probation = earlier
+                }
+            }
+            people[index].probation = probation
+            if people[index].status == .free && probation != nil { people[index].status = .probation }
+
+            // A new prison term ends supervision on an old one; otherwise supervision the case didn't touch carries on.
+            let newPrisonTerm = outcome.newPriors.contains { $0.sentence.hasSuffix(" active") || $0.sentence.hasPrefix("Life") }
+            if newPrisonTerm {
+                people[index].postRelease = nil
+            } else if d.postRelease != nil || before.postRelease?.docket == courtCase.docket {
+                people[index].postRelease = outcome.continuedPostRelease
+            }
             if !outcome.violations.isEmpty { people[index].violations = (people[index].violations ?? []) + outcome.violations }
-            people[index].pendingPostRelease = outcome.newPostRelease ?? (outcome.personStatus == .incarcerated ? people[index].pendingPostRelease : nil)
+            if keepsEarlierCommitment {
+                people[index].pendingPostRelease = before.pendingPostRelease ?? outcome.newPostRelease
+            } else {
+                people[index].pendingPostRelease = outcome.newPostRelease ?? (outcome.personStatus == .incarcerated ? before.pendingPostRelease : nil)
+            }
+            // Life imprisonment: no probation or supervision will follow.
+            if people[index].releaseDate == .distantFuture {
+                people[index].probation = nil
+                people[index].postRelease = nil
+                people[index].pendingPostRelease = nil
+            }
 
             people[index].propensity = (people[index].propensity + outcome.propensity) / 2 + 0.05
             people[index].appearances.append(appearance)
         } else {
-            let birthYear = Calendar.current.component(.year, from: currentDate) - d.age
+            let birthYear = CourtCalendar.calendar.component(.year, from: currentDate) - d.age
             people.append(PersonRecord(id: d.personID, name: d.name, birthYear: birthYear, occupation: d.occupation,
                                        background: d.background, priors: d.priors + outcome.newPriors,
                                        status: outcome.personStatus, releaseDate: outcome.releaseDate,
                                        probation: outcome.newProbation, propensity: outcome.propensity,
                                        appearances: [appearance], releaseNote: outcome.releaseBasis,
-                                       pendingPostRelease: outcome.newPostRelease))
+                                       pendingPostRelease: outcome.newPostRelease,
+                                       custodyDocket: outcome.personStatus == .incarcerated ? courtCase.docket : nil))
         }
         // Credit already satisfied the prison term: post-release supervision starts today.
-        if outcome.personStatus != .incarcerated, let index = people.firstIndex(where: { $0.id == d.personID }),
+        if let index = people.firstIndex(where: { $0.id == d.personID }), people[index].status != .incarcerated,
            var prs = people[index].pendingPostRelease {
-            prs.ends = Calendar.current.date(byAdding: .month, value: prs.supervisionMonths, to: currentDate) ?? currentDate
+            prs.ends = CourtCalendar.calendar.date(byAdding: .month, value: prs.supervisionMonths, to: currentDate) ?? currentDate
             people[index].postRelease = prs
             people[index].pendingPostRelease = nil
         }
@@ -760,10 +874,9 @@ final class GameState: ObservableObject {
         var verdictNews = outcome.news
         verdictNews.date = currentDate
         post(verdictNews)
-        pending.append(contentsOf: outcome.pending)
         let appellant = (outcome.appealNotice ?? "").contains("The State") ? "the State" : "the defendant"
-        trackAppeals(outcome.pending, docket: courtCase.docket, caption: courtCase.caption, personID: d.personID,
-                     appellant: appellant, plea: outcome.verdictLines.contains { $0.verdictLabel.contains("plea") || $0.verdictLabel.contains("No contest") })
+        pending.append(contentsOf: trackAppeals(outcome.pending, docket: courtCase.docket, caption: courtCase.caption, personID: d.personID,
+                                                appellant: appellant, plea: outcome.verdictLines.contains { $0.verdictLabel.contains("plea") || $0.verdictLabel.contains("No contest") }))
         finishEntry(matterID: courtCase.id, outcome: outcome.appearanceSummary)
         save()
     }
@@ -788,6 +901,7 @@ final class GameState: ObservableObject {
         recentTemplates = []
         recentLineKeys = []
         usedSignatures = []
+        weekNumber = 1
         seedBase = UInt64.random(in: 1...UInt64.max / 2)
         save()
     }
@@ -819,24 +933,33 @@ final class GameState: ObservableObject {
                     if let docket = event.vacatesDocket {
                         people[index].priors.removeAll { $0.docket == docket || $0.docket == docket + " (PV)" }
                         if people[index].probation?.docket == docket { people[index].probation = nil }
+                        // Supervision after release from the vacated sentence goes with it.
+                        if people[index].postRelease?.docket == docket { people[index].postRelease = nil }
+                        if people[index].pendingPostRelease?.docket == docket { people[index].pendingPostRelease = nil }
                         // Custody imposed later in another case continues.
-                        let lastDocket = people[index].appearances.last?.docket
-                        custodyFromThisCase = lastDocket == nil || lastDocket == docket || lastDocket == docket + " (PV)"
+                        if let held = people[index].custodyDocket {
+                            custodyFromThisCase = held == docket || held == docket + " (PV)"
+                        } else {
+                            let lastDocket = people[index].appearances.last?.docket
+                            custodyFromThisCase = lastDocket == nil || lastDocket == docket || lastDocket == docket + " (PV)"
+                        }
                     } else {
                         people[index].probation = nil
                     }
-                    if people[index].status != .incarcerated || custodyFromThisCase {
+                    if people[index].status != .incarcerated {
                         people[index].status = people[index].probation == nil ? .free : .probation
-                        people[index].releaseDate = nil
+                    } else if custodyFromThisCase {
+                        // The decision itself is the news.
+                        releaseFromCustody(index, on: event.due, announce: false, rng: &rng)
                     }
                 case .raisePropensity:
                     people[index].propensity = min(0.85, people[index].propensity + 0.15)
                 case .resentence:
-                    if people[index].status == .incarcerated, let newRelease = event.newReleaseDate {
-                        // Resentencing on remand can only shorten the term the appeal attacked.
+                    // Resentencing on remand can only shorten the term the appeal attacked.
+                    let heldOnThisDocket = people[index].custodyDocket.map { $0 == event.news.docket } ?? true
+                    if people[index].status == .incarcerated, heldOnThisDocket, let newRelease = event.newReleaseDate {
                         if newRelease <= currentDate {
-                            people[index].status = people[index].probation == nil ? .free : .probation
-                            people[index].releaseDate = nil
+                            releaseFromCustody(index, on: event.due, announce: true, rng: &rng)
                         } else if newRelease < (people[index].releaseDate ?? .distantFuture) {
                             people[index].releaseDate = newRelease
                         }
@@ -845,41 +968,28 @@ final class GameState: ObservableObject {
                     break
                 }
             }
-            if event.news.kind == .appeal, let docket = event.news.docket,
-               let index = appeals.firstIndex(where: { $0.docket == docket }) {
-                if appeals[index].decided == nil && !Appeals.isFollowUp(event) {
-                    appeals[index].decided = event.due
-                    appeals[index].result = Appeals.status(for: event)
-                    appeals[index].opinion = event.news.body
-                } else {
-                    appeals[index].followUps.append("\(SentenceFormat.shortDate(event.due)): \(event.news.headline)")
-                    if Appeals.isFollowUp(event) { appeals[index].result = Appeals.status(for: event) }
+            if event.news.kind == .appeal, let docket = event.news.docket {
+                let followUp = Appeals.isFollowUp(event)
+                // Older saves didn't tag events with their appeal: match the docket, preferring the appeal this decision was set for.
+                let tracked = event.appealID.flatMap { id in appeals.firstIndex { $0.id == id } }
+                    ?? appeals.firstIndex { $0.docket == docket && $0.isPending == !followUp && $0.decisionDue == event.due }
+                    ?? appeals.firstIndex { $0.docket == docket && $0.isPending == !followUp }
+                    ?? appeals.firstIndex { $0.docket == docket }
+                if let index = tracked {
+                    if appeals[index].decided == nil && !followUp {
+                        appeals[index].decided = event.due
+                        appeals[index].result = Appeals.status(for: event)
+                        appeals[index].opinion = event.news.body
+                    } else {
+                        appeals[index].followUps.append("\(SentenceFormat.shortDate(event.due)): \(event.news.headline)")
+                        if followUp { appeals[index].result = Appeals.status(for: event) }
+                    }
                 }
-            }
-            if event.news.kind == .appeal, let docket = event.news.docket,
-               let index = history.firstIndex(where: { $0.docket == docket }) {
-                let headline = event.news.headline
-                let status: String
-                if event.effect == .resentence || headline.contains("vacates sentence") {
-                    status = "Sentence vacated; remanded for resentencing"
-                } else if headline.contains("will retry") {
-                    status = "New trial ordered; the State will retry"
-                } else if headline.contains("No retrial") {
-                    status = "New trial ordered; the State declined to retry"
-                } else if headline.contains("new trial") {
-                    status = "New trial ordered on appeal"
-                } else if headline.contains("vacates conviction") {
-                    status = "Conviction vacated on appeal"
-                } else if headline.contains("reinstates") {
-                    status = "Dismissal reversed; charges reinstated"
-                } else if headline.contains("Appeal dismissed") {
-                    status = "Appeal dismissed"
-                } else if headline.contains("vacates probation") || headline.contains("reverses probation") {
-                    status = "Probation order vacated on appeal"
-                } else {
-                    status = "Affirmed on appeal"
-                }
-                history[index].appealStatus = status
+                let appealID = tracked.map { appeals[$0].id }
+                let record = history.firstIndex { appealID != nil && $0.appealID == appealID }
+                    ?? history.lastIndex { $0.docket == docket && $0.appealStatus == "Appeal pending" }
+                    ?? history.firstIndex { $0.docket == docket && $0.resolvedKind != "continuance" }
+                if let record { history[record].appealStatus = Appeals.status(for: event) }
             }
         }
 
@@ -887,37 +997,14 @@ final class GameState: ObservableObject {
         for index in people.indices {
             if let prs = people[index].postRelease, prs.ends <= currentDate { people[index].postRelease = nil }
             let person = people[index]
-            let lastDocket = person.appearances.last?.docket
             switch person.status {
             case .incarcerated:
                 if let release = person.releaseDate, release <= currentDate {
-                    people[index].releaseDate = nil
-                    people[index].releaseNote = nil
-                    if var prs = person.pendingPostRelease {
-                        prs.ends = Calendar.current.date(byAdding: .month, value: prs.supervisionMonths, to: release) ?? release
-                        people[index].postRelease = prs
-                        people[index].pendingPostRelease = nil
-                    }
-                    if let probation = person.probation, probation.ends > currentDate {
-                        people[index].status = .probation
-                    } else {
-                        people[index].status = .free
-                        people[index].probation = nil
-                    }
-                    stats.releasedFromPrison += 1
-                    if rng.chance(0.4) {
-                        post(NewsItem(date: release, kind: .community,
-                                      headline: "\(person.name) released from custody",
-                                      body: "\(person.name), \(person.age(on: currentDate)), sentenced in Hollis County Superior Court, was released this week" + (people[index].status == .probation ? " and begins a term of supervised probation." : ".") + " " + rng.pick([
-                                        "A relative said the family plans a small dinner. \"We're just glad to have them home.\"",
-                                        "A reentry program in Port Hollis has offered a bed and job placement.",
-                                        "Neither \(person.lastName) nor counsel could be reached for comment."
-                                      ]),
-                                      docket: lastDocket, prominence: 1))
-                    }
+                    releaseFromCustody(index, on: release, announce: true, rng: &rng)
                 }
             case .probation:
-                if let probation = person.probation, probation.ends <= currentDate {
+                // Probation stays open while a violation hearing on it is still to be heard.
+                if let probation = person.probation, probation.ends <= currentDate, !violationHearingPending(for: person.id) {
                     people[index].status = .free
                     people[index].probation = nil
                     stats.probationCompleted += 1
@@ -940,6 +1027,62 @@ final class GameState: ObservableObject {
         }
     }
 
+    /// Releases a person whose custody has ended: post-release supervision starts, probation begins or resumes, and the
+    /// release is counted. A hospital commitment after an insanity verdict isn't a sentence, so it isn't counted as one.
+    private func releaseFromCustody(_ index: Int, on release: Date, announce: Bool, rng: inout SeededRNG) {
+        let person = people[index]
+        let hospital = person.releaseNote?.contains("not guilty by reason of insanity") ?? false
+        people[index].releaseDate = nil
+        people[index].releaseNote = nil
+        people[index].custodyDocket = nil
+        if var prs = person.pendingPostRelease {
+            prs.ends = CourtCalendar.calendar.date(byAdding: .month, value: prs.supervisionMonths, to: release) ?? release
+            people[index].postRelease = prs
+            people[index].pendingPostRelease = nil
+        }
+        if let probation = person.probation, probation.ends > currentDate {
+            people[index].status = .probation
+        } else {
+            people[index].status = .free
+            people[index].probation = nil
+        }
+        if !hospital { stats.releasedFromPrison += 1 }
+        guard announce, rng.chance(0.4) else { return }
+        let docket = person.custodyDocket ?? person.appearances.last?.docket
+        if hospital {
+            post(NewsItem(date: release, kind: .community,
+                          headline: "\(person.name) released from state hospital",
+                          body: "\(person.name), \(person.age(on: currentDate)), was released from a state psychiatric hospital this week after a hearing found that \(person.lastName) is no longer mentally ill or dangerous to others. \(person.lastName) had been committed after a verdict of not guilty by reason of insanity in Hollis County Superior Court.",
+                          docket: docket, prominence: 1))
+            return
+        }
+        var body = "\(person.name), \(person.age(on: currentDate)), sentenced in Hollis County Superior Court, was released this week"
+        if people[index].status == .probation {
+            body += person.probationResumesOnRelease ? " and returns to \(person.probationKind) probation." : " and begins a term of \(person.probationKind) probation."
+        } else if people[index].postRelease != nil {
+            body += " and begins post-release supervision."
+        } else {
+            body += "."
+        }
+        post(NewsItem(date: release, kind: .community,
+                      headline: "\(person.name) released from custody",
+                      body: body + " " + rng.pick([
+                        "A relative said the family plans a small dinner. \"We're just glad to have them home.\"",
+                        "A reentry program in Port Hollis has offered a bed and job placement.",
+                        "Neither \(person.lastName) nor counsel could be reached for comment."
+                      ]),
+                      docket: docket, prominence: 1))
+    }
+
+    /// Whether a probation violation hearing for this person is still waiting on the calendar.
+    private func violationHearingPending(for personID: UUID) -> Bool {
+        let waiting = scheduled.map(\.entry) + (today?.entries.filter(\.isOpen) ?? [])
+        return waiting.contains { entry in
+            if case .hearing(let h) = entry.matter { return h.personID == personID }
+            return false
+        }
+    }
+
     private func post(_ item: NewsItem) {
         news.insert(item, at: 0)
         if news.count > 150 { news.removeLast(news.count - 150) }
@@ -953,20 +1096,30 @@ final class GameState: ObservableObject {
 
     private func save() {
         let data = SaveData(judgeName: judgeName, county: county, currentDate: currentDate, docketSequence: docketSequence,
-                            history: Array(history.prefix(300)), people: people, news: news, pending: pending,
+                            history: history, people: people, news: news, pending: pending,
                             currentCase: currentCase, currentHearing: currentHearing, recentTemplates: recentTemplates,
                             usedSignatures: usedSignatures, seedBase: seedBase,
                             currentCalendar: currentCalendar, retrials: retrials, stats: stats,
                             today: today, scheduled: scheduled, openingMinutes: openingMinutes, sessionEnds: sessionEnds,
-                            digest: digest, appeals: appeals, recentLineKeys: recentLineKeys, careerStart: careerStart)
+                            digest: digest, appeals: appeals, recentLineKeys: recentLineKeys, careerStart: careerStart,
+                            weekNumber: weekNumber)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
     }
 
     private func load() {
-        guard let raw = UserDefaults.standard.data(forKey: saveKey),
-              let data = try? JSONDecoder().decode(SaveData.self, from: raw) else { return }
+        guard let raw = UserDefaults.standard.data(forKey: saveKey) else { return }
+        let data: SaveData
+        do {
+            data = try JSONDecoder().decode(SaveData.self, from: raw)
+        } catch {
+            // Keep the career that couldn't be read under its own key before a new one can be saved over it.
+            let backupKey = saveKey + ".backup-\(Int(Date().timeIntervalSince1970))"
+            UserDefaults.standard.set(raw, forKey: backupKey)
+            NSLog("JudgeSim: the saved career could not be read and was kept under %@: %@", backupKey, String(describing: error))
+            return
+        }
         judgeName = data.judgeName
         county = data.county
         currentDate = data.currentDate
@@ -987,11 +1140,12 @@ final class GameState: ObservableObject {
         digest = data.digest ?? []
         appeals = data.appeals ?? []
         recentLineKeys = data.recentLineKeys ?? []
-        openingMinutes = data.openingMinutes ?? openingMinutes
+        openingMinutes = Self.courtOpening(data.openingMinutes ?? openingMinutes)
         sessionEnds = data.sessionEnds ?? sessionFriday(for: currentDate)
         today = data.today
         // Older saves didn't record the first week; the earliest record stands in for it.
         careerStart = data.careerStart ?? CourtCalendar.monday(onOrBefore: ([currentDate] + history.map(\.date) + news.map(\.date)).min() ?? currentDate)
+        weekNumber = data.weekNumber ?? calendarWeekNumber
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
         backfillAppeals()
         if today == nil && judgeName != nil {

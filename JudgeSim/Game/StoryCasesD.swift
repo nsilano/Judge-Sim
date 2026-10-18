@@ -208,7 +208,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "concealedWeapon", specification: "Carried a concealed handgun about {D.his} person in a vehicle without a permit.", chance: 1.0, threshold: 1)
         ],
-        ageRange: 25...40, occupations: ["line cook"], forcedPriorOffenses: ["PWISD Cocaine"], hasVictim: false,
+        ageRange: 27...40, occupations: ["line cook"], forcedPriorOffenses: ["PWISD Cocaine@9"], hasVictim: false,
         summaries: [
             "At about {TIME} on {DATE}, officers stopped a sedan for a broken taillight on {STREET} in {HOOD}. {D}, who has a felony drug conviction from nine years ago, was in the front passenger seat. The car belonged to the driver, {DL}'s cousin; a third person sat in the back. Under the front passenger seat, officers found a loaded pistol. The cousin and the backseat passenger both say they've never seen it. {DL} says the same. Nobody's fingerprints were on it."
         ],
@@ -397,9 +397,9 @@ extension StoryCases {
             SecondaryCharge(lawID: "communicatingThreats", specification: "Threatened students of {SCHOOL} with gun violence in a manner a reasonable person would believe.", chance: 1.0, threshold: 1),
             SecondaryCharge(lawID: "disorderly", specification: "Disrupted the operation of {SCHOOL} by a post that caused half the student body to stay home.", chance: 1.0, threshold: 1)
         ],
-        ageRange: 18...19, occupations: ["high school senior"], hasVictim: false,
+        ageRange: 19...19, occupations: ["high school senior"], hasVictim: false,
         summaries: [
-            "On {DATE}, {D}, an 18-year-old senior at {SCHOOL}, posted a short video to a private story seen by about 140 classmates: a photo of the school with the caption \"don't come friday 💀\" and a song with gunshot sound effects. Within an hour, parents flooded the school with calls; Friday attendance dropped by half. Deputies found no weapons in {DL}'s home, though {D.his} parent owns two hunting rifles kept in a locked safe. {DL} says it was a joke about a canceled pep rally and a big test, and that everyone who knows {D.he} knew that."
+            "On {DATE}, {D}, a senior at {SCHOOL}, posted a short video to a private story seen by about 140 classmates: a photo of the school with the caption \"don't come friday 💀\" and a song with gunshot sound effects. Within an hour, parents flooded the school with calls; Friday attendance dropped by half. Deputies found no weapons in {DL}'s home, though {D.his} parent owns two hunting rifles kept in a locked safe. {DL} says it was a joke about a canceled pep rally and a big test, and that everyone who knows {D.him} knew that."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "The Post", "The school photo, \"don't come friday 💀,\" and a rap song with gunshot sound effects, viewed by 143 accounts.", .search),
@@ -449,7 +449,7 @@ extension StoryCases {
         prosecutionTheory: ["{D} posted a picture of the school, a skull, gunshots, and 'don't come Friday.' Half the school stayed home. That's a threat of mass violence, however it was meant."],
         defenseTheory: ["A bad joke about a calculus final, made to friends, by a kid with no weapons, no plan, and no history. A threat requires intent to threaten."],
         aggravating: ["The threat caused widespread fear and disruption"],
-        mitigating: ["{DL} was 18 with no prior record", "{DL} cooperated fully and apologized immediately", "No weapons or plan found"],
+        mitigating: ["{DL} was a teenager with no prior record", "{DL} cooperated fully and apologized immediately", "No weapons or plan found"],
         allocutions: ["\"I didn't think. I'd never hurt anyone. I'm so sorry for scaring people.\""],
         guiltyTruths: ["A deleted note on {DL}'s phone, recovered later, listed names of students who had bullied {D.him}."],
         innocentTruths: ["The calculus teacher later confirmed the 'don't come Friday' joke had started in class, from the teacher."],
@@ -478,7 +478,7 @@ extension StoryCases {
             prosecutionOpening: "A school, a skull, gunshots, and 'don't come Friday.' Seven hundred students stayed home.",
             defenseOpening: "A joke about a calculus test that went horribly wrong. No weapon, no plan, no intent to threaten.",
             prosecutionClosing: "In today's world, a reasonable person reads that as a threat.",
-            defenseClosing: "Intent matters. {DL} meant a joke, and every person who knew {D.he} took it as one."
+            defenseClosing: "Intent matters. {DL} meant a joke, and every person who knew {D.him} took it as one."
         )
     )
 }

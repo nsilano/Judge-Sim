@@ -9,7 +9,7 @@ enum HearingDecision: String, CaseIterable, Hashable {
         switch self {
         case .continueAsIs: return "No violation found / continue on the same terms"
         case .modify: return "Find a violation; modify conditions"
-        case .quickDip: return "Find a violation; order a quick dip (2–3 days in jail)"
+        case .quickDip: return "Find a violation; order a quick dip (3 days in jail)"
         case .crv: return "Find a violation; order a CRV"
         case .revoke: return "Revoke probation and activate the suspended sentence"
         case .terminate: return "Terminate probation unsuccessfully"
@@ -70,6 +70,43 @@ struct HearingOutcome {
     var pending: [PendingEvent] = []
     /// The violation the court found, for the person's record (nil when none was found).
     var violation: SupervisionViolation? = nil
+    /// A conditional discharge revoked: the conviction the court entered.
+    var newPriors: [PriorConviction] = []
+    /// A felony sentence activated: post-release supervision that follows release (G.S. 15A-1368.2).
+    var pendingPostRelease: PostReleaseTerm? = nil
+}
+
+extension ProbationTerm {
+    /// The suspended misdemeanor sentence in days; older saves fall back to months × 30.
+    var suspendedDays: Int { activeDays ?? activeMonths * 30 }
+    /// Days already served on CRV; older saves assume 90 days for each CRV.
+    var crvCreditDays: Int { crvDaysServed ?? (crvCount ?? 0) * 90 }
+    /// Misdemeanor days still suspended after CRV credit.
+    var remainingDays: Int { max(0, suspendedDays - crvCreditDays) }
+    /// Felony months still to serve on revocation after CRV credit.
+    var remainingFelonyMonths: Int { max(0, activeMonths - crvCreditDays / 30) }
+    var isConditionalDischarge: Bool { conditionalDischarge == true }
+}
+
+extension String {
+    /// The text without trailing periods, for joining sentences into one line.
+    var trimmingTrailingPeriods: String {
+        var text = self.trimmingCharacters(in: .whitespaces)
+        while text.hasSuffix(".") { text.removeLast() }
+        return text
+    }
+
+    /// Lowercases only the first character, so proper nouns later in the text keep their capitals.
+    var lowercasingFirstLetter: String {
+        guard let first else { return self }
+        return first.lowercased() + dropFirst()
+    }
+
+    /// "a" or "an" before this word.
+    var withIndefiniteArticle: String {
+        guard let first = first?.lowercased() else { return self }
+        return ("aeiou".contains(first) ? "an " : "a ") + self
+    }
 }
 
 enum ViolationHearings {
@@ -78,26 +115,94 @@ enum ViolationHearings {
         h.absconded || h.newCriminalConduct || (h.probation.crvCount ?? 0) >= 2
     }
 
-    /// Days of CRV: 90 for a felony; up to 90, or the rest of the suspended sentence, for a misdemeanor.
-    static func crvDays(_ h: ViolationHearing) -> Int {
-        if h.probation.isFelony { return 90 }
-        let remaining = max(1, h.probation.activeMonths * 30 - (h.probation.crvCount ?? 0) * 90)
-        return min(90, remaining)
+    /// Days of CRV: 90 for a felony; for a misdemeanor up to 90, but never more than the suspended time left (G.S. 15A-1344(d2)).
+    static func crvDays(_ term: ProbationTerm) -> Int {
+        term.isFelony ? 90 : min(90, term.remainingDays)
     }
 
-    /// Months left to serve on revocation, after credit for prior CRVs.
+    static func crvDays(_ h: ViolationHearing) -> Int { crvDays(h.probation) }
+
+    /// Months left to serve on revocation, after credit for prior CRVs (felony months; misdemeanor days rounded up).
     static func revocationMonths(_ term: ProbationTerm) -> Int {
-        max(1, term.activeMonths - (term.crvCount ?? 0) * 3)
+        term.isFelony ? term.remainingFelonyMonths : Int((Double(term.remainingDays) / 30).rounded(.up))
+    }
+
+    /// How much custody revocation activates, in words, e.g. "45 days" or "8 months".
+    static func exposureText(_ term: ProbationTerm) -> String {
+        term.isFelony
+            ? "\(term.remainingFelonyMonths) month\(term.remainingFelonyMonths == 1 ? "" : "s")"
+            : "\(term.remainingDays) day\(term.remainingDays == 1 ? "" : "s")"
+    }
+
+    /// Probation, including extensions, may not run more than five years in all (G.S. 15A-1342(a)).
+    static func maxExtensionMonths(_ term: ProbationTerm) -> Int {
+        guard let start = term.starts else { return 60 }
+        let served = Calendar.current.dateComponents([.month], from: start, to: term.ends).month ?? 0
+        return max(0, 60 - served)
+    }
+
+    /// When probation began: the date stored with the term, or the sentencing appearance on that docket.
+    static func probationStart(_ person: PersonRecord, _ term: ProbationTerm) -> Date? {
+        term.starts ?? person.appearances.first(where: { $0.docket == term.docket })?.date
+    }
+
+    /// What revoking probation (or a conditional discharge) puts into effect.
+    struct Activation {
+        var months = 0
+        var days = 0
+        var text: String
+        /// A conditional discharge revoked: the judgment the court now enters.
+        var prior: PriorConviction?
+        /// A felony term activated: post-release supervision follows release (G.S. 15A-1368.2).
+        var postRelease: PostReleaseTerm?
+    }
+
+    static func activation(_ term: ProbationTerm, county: County, date: Date) -> Activation {
+        let cls = term.offenseClass ?? (term.isFelony ? .H : .misd1)
+        let months = term.isFelony ? term.remainingFelonyMonths : 0
+        let days = term.isFelony ? 0 : term.remainingDays
+        let credit = term.crvCreditDays
+        let creditText = credit > 0 ? ", with credit for \(credit) days already served in confinement in response to violation" : ""
+        var result: Activation
+        if term.isConditionalDischarge {
+            let sentence = term.isFelony
+                ? "\(term.activeMonths) to \(StructuredSentencing.maximum(forMinimum: term.activeMonths, cls: cls)) months"
+                : "\(term.suspendedDays) days"
+            result = Activation(months: months, days: days,
+                                text: "The court finds the conditional discharge in \(term.docket) violated, ends the deferral, and enters judgment on \(term.offense) (\(cls.shortLabel)). The defendant is sentenced to \(sentence), active\(creditText).")
+            result.prior = PriorConviction(offense: term.offense, ncClass: cls, year: Calendar.current.component(.year, from: date),
+                                           county: county.name, sentence: "\(sentence) active, after a conditional discharge was revoked",
+                                           fromThisCourt: true, docket: term.docket,
+                                           sessionKey: Judgment.sessionKey(county: county, date: date))
+        } else if months == 0 && days == 0 {
+            result = Activation(text: "Probation in \(term.docket) is revoked. No suspended time remains to activate after credit for time served, so the defendant is released from supervision on that judgment.")
+        } else {
+            result = Activation(months: months, days: days,
+                                text: "Probation in \(term.docket) is revoked. The suspended sentence of \(term.suspendedSentence) is activated\(creditText).")
+        }
+        if term.isFelony && months > 0 && cls.isFelony {
+            let supervision = StructuredSentencing.postReleaseMonths(for: cls)
+            let unserved = StructuredSentencing.maximum(forMinimum: term.activeMonths, cls: cls) - term.activeMonths
+            result.postRelease = PostReleaseTerm(docket: term.docket, offense: term.offense, ends: date,
+                                                 supervisionMonths: supervision, remainingMonths: max(supervision, unserved))
+        }
+        return result
     }
 
     static func make(person: PersonRecord, county: County, date: Date, seed: UInt64) -> ViolationHearing? {
-        guard let term = person.probation else { return nil }
+        guard var term = person.probation else { return nil }
         var rng = SeededRNG(seed: seed)
         var used = Set([person.name])
         let officer = NameBank.person(using: &rng, excluding: &used)
         let conditions = (term.conditions ?? []).joined(separator: " ").lowercased()
         let need = term.treatmentNeed ?? TreatmentNeed.none
         let monthly = term.monthlyObligation ?? 0
+        let supervised = term.supervised ?? true
+        let cal = Calendar.current
+        // How long the person has been on probation shapes what can have gone wrong.
+        let start = probationStart(person, term)
+        if term.starts == nil { term.starts = start }
+        let elapsed = start.map { max(0, cal.dateComponents([.month], from: $0, to: date).month ?? 0) }
 
         var candidates: [(text: String, willfulChance: Double)] = []
         if need.substance || conditions.contains("drug") {
@@ -105,11 +210,14 @@ enum ViolationHearings {
             candidates.append(("Tested positive for \(rng.pick(["cocaine", "methamphetamine", "fentanyl", "marijuana"])) on \(count) occasions.", need.substance ? 0.45 : 0.8))
         }
         if conditions.contains("community service") {
-            candidates.append(("Completed \(rng.int(0...20)) of the ordered community service hours, with no hours in the last three months.", 0.6))
+            let recent = (elapsed ?? 12) > 3 ? "with no hours in the last three months" : "with no hours since the first weeks of probation"
+            candidates.append(("Completed \(rng.int(0...20)) of the ordered community service hours, \(recent).", 0.6))
         }
         if monthly > 0 {
-            let arrears = monthly * rng.int(3...8)
-            candidates.append(("\(SentenceFormat.dollars(arrears)) in arrears on court-ordered payments.", monthly > 150 ? 0.3 : 0.55))
+            // No more months behind than the months on probation.
+            let behind = rng.int(3...8)
+            let months = elapsed.map { max(1, min(behind, $0)) } ?? behind
+            candidates.append(("\(SentenceFormat.dollars(monthly * months)) in arrears on court-ordered payments.", monthly > 150 ? 0.3 : 0.55))
         }
         if conditions.contains("curfew") || conditions.contains("house arrest") {
             candidates.append(("Curfew violations recorded on \(rng.int(3...9)) nights by electronic monitoring.", 0.7))
@@ -120,29 +228,36 @@ enum ViolationHearings {
         if conditions.contains("no contact") {
             candidates.append(("Sent text messages to the victim on two occasions in violation of the no-contact condition.", 0.85))
         }
-        if candidates.isEmpty || rng.chance(0.3) {
+        // Unsupervised probation has no office visits; its regular conditions are to pay and to obey the law.
+        if supervised && (candidates.isEmpty || rng.chance(0.3)) {
             candidates.append(("Missed \(rng.int(2...4)) scheduled office visits with the probation officer.", 0.6))
         }
 
-        let absconded = rng.chance(0.12)
-        let newCrime = !absconded && rng.chance(0.15)
-        var picked = rng.pick(candidates, count: min(candidates.count, rng.int(1...3)))
+        // Only a supervised probationer can abscond from supervision (G.S. 15A-1343(b)(3a)).
+        let absconded = supervised && rng.chance(0.12)
+        // With nothing else to violate, an unsupervised probationer comes back to court on a new charge.
+        let newCrime = !absconded && (candidates.isEmpty || rng.chance(supervised ? 0.15 : 0.3))
+        var picked = candidates.isEmpty ? [] : rng.pick(candidates, count: min(candidates.count, rng.int(1...3)))
         if absconded {
             picked.insert(("Absconded: failed to report and whereabouts were unknown for \(rng.int(35...90)) days, until arrested on an order for arrest.", 0.9), at: 0)
         }
+        let female = NameBank.gender(of: person.name) == .female
         let newOffense = rng.pick(["misdemeanor larceny from a Dollar General in \(rng.pick(county.towns))",
                                    "possession of methamphetamine during a traffic stop",
-                                   "assault on a female, after a call to a residence in \(rng.pick(county.towns))",
+                                   female
+                                    ? "simple assault, after a call to a residence in \(rng.pick(county.towns))"
+                                    : "assault on a female, after a call to a residence in \(rng.pick(county.towns))",
                                    "driving while license revoked and resisting a public officer"])
         if newCrime {
-            picked.insert(("New criminal offense: charged with \(newOffense). The charge is pending in district court; the officer will testify to the underlying facts.", 0.85), at: 0)
+            picked.insert(("New criminal offense: charged with \(newOffense). The charge is pending in district court; the \(supervised ? "officer" : "State") will offer the underlying facts.", 0.85), at: 0)
         }
         let willfulChance = picked.map { $0.willfulChance }.reduce(0, +) / Double(max(1, picked.count))
         let willful = rng.chance(willfulChance)
 
         let circumstances = rng.pick([
             "\(person.lastName) lost a job at a warehouse two months in and has been staying with different friends since.",
-            "\(person.lastName) has no car, and the probation office is a 40-minute bus ride each way.",
+            supervised ? "\(person.lastName) has no car, and the probation office is a 40-minute bus ride each way."
+                       : "\(person.lastName) has no car, and the courthouse is a 40-minute bus ride each way.",
             "\(person.lastName)'s treatment provider closed its Hollis County office in the spring.",
             "\(person.lastName) has been working double shifts to cover rent and child support.",
             "\(person.lastName) was hospitalized for eight days during the reporting period."
@@ -153,7 +268,19 @@ enum ViolationHearings {
             : rng.pick(["These violations weren't willful, Judge. \(circumstances)",
                         "My client has been trying. \(circumstances) That's not the same as defiance."])
 
-        let report = "Probation/Parole Officer \(officer) of the N.C. Department of Adult Correction, Community Supervision, reports that \(person.name) has \(picked.count == 1 ? "one alleged violation" : "\(picked.count) alleged violations") of the judgment in \(term.docket) and requests a hearing."
+        let count = picked.count == 1 ? "one alleged violation" : "\(picked.count) alleged violations"
+        let report = supervised
+            ? "Probation/Parole Officer \(officer) of the N.C. Department of Adult Correction, Community Supervision, reports that \(person.name) has \(count) of the judgment in \(term.docket) and requests a hearing."
+            : "On unsupervised probation, no officer supervises \(person.name). Based on the clerk's records, the District Attorney's office moves for a hearing on \(count) of the judgment in \(term.docket)."
+        let witness = supervised ? "Officer \(officer)" : "Deputy Clerk \(officer)"
+        let mainProblem = picked.first.map { "The main problem: \($0.text.lowercasingFirstLetter)" } ?? ""
+        // The officer can't have supervised the person since before probation began.
+        var since = cal.date(byAdding: .month, value: -rng.int(5...16), to: date) ?? date
+        if let start { since = min(date, max(since, start)) }
+        let opening = supervised
+            ? "\(witness): \"I've supervised \(person.lastName) since \(SentenceFormat.shortDate(since)). " + mainProblem + "\""
+            : "\(witness): \"I keep the file in \(term.docket). " + mainProblem + "\""
+        let priorViolations = (person.violations ?? []).filter { $0.docket == term.docket }.count
         return ViolationHearing(seed: seed, date: date, personID: person.id, personName: person.name,
                                 personAge: person.age(on: date), probation: term,
                                 violations: picked.map { $0.text }, absconded: absconded, newCriminalConduct: newCrime,
@@ -163,17 +290,20 @@ enum ViolationHearings {
                                 willful: willful, circumstances: circumstances,
                                 admits: rng.chance(willful ? 0.7 : 0.3),
                                 officerTestimony: [
-                                    "Officer \(officer): \"I've supervised \(person.lastName) since \(SentenceFormat.shortDate(Calendar.current.date(byAdding: .month, value: -rng.int(5...16), to: date) ?? date)). " + (picked.first.map { "The main problem: \($0.text.lowercased())" } ?? "") + "\"",
+                                    opening,
                                     newCrime
-                                        ? "Officer \(officer): \"I reviewed the arrest report and spoke with the arresting officer. I'm satisfied it happened the way the report says.\""
-                                        : "Officer \(officer): \"I documented each violation in the case notes and reviewed them with \(person.lastName) at the time.\""
+                                        ? "\(witness): \"I reviewed the arrest report\(supervised ? " and spoke with the arresting officer" : ""). I'm satisfied it happened the way the report says.\""
+                                        : (supervised
+                                            ? "\(witness): \"I documented each violation in the case notes and reviewed them with \(person.lastName) at the time.\""
+                                            : "\(witness): \"The payment ledger and the community service reports are in the file.\"")
                                 ],
                                 officerCross: [
                                     willful
-                                        ? "On cross, the officer concedes \(person.lastName) never told the office about any hardship."
-                                        : "On cross, the officer concedes the hardship: \(circumstances)",
-                                    newCrime ? "The officer admits having no personal knowledge of the new offense and that the charge hasn't been tried." : "The officer agrees \(person.lastName) was never rude or threatening."
-                                ])
+                                        ? "On cross, the witness concedes \(person.lastName) never told the \(supervised ? "office" : "court") about any hardship."
+                                        : "On cross, the witness concedes the hardship: \(circumstances)",
+                                    newCrime ? "The witness admits having no personal knowledge of the new offense and that the charge hasn't been tried." : (supervised ? "The officer agrees \(person.lastName) was never rude or threatening." : "The clerk agrees \(person.lastName) was never contacted about the shortfall.")
+                                ],
+                                priorViolationCount: priorViolations)
     }
 
     // MARK: Questions
@@ -185,19 +315,23 @@ enum ViolationHearings {
         let d = CounselStyle.forName(defense, side: .defense)
         let last = h.personName.components(separatedBy: " ").last ?? h.personName
         let revocable = canRevoke(h)
+        let supervised = h.probation.supervised ?? true
         return [
             CounselQuestion(id: "hv.state.ask", side: .prosecution, question: "What is the State asking for?",
                             answer: s.opener + (revocable
                                 ? "revocation. " + (h.absconded ? "The probationer absconded from supervision." : (h.newCriminalConduct ? "The probationer committed a new criminal offense while on probation." : "This is the third violation after two CRVs.")) + " Under the statute, the court may revoke."
-                                : (s == .aggressive ? "a 90-day CRV. Probation only works if the conditions mean something." : "a modification with tighter conditions, and a quick dip so the message lands."))),
-            CounselQuestion(id: "hv.state.officer", side: .prosecution, question: "What does the probation officer say about compliance overall?",
-                            answer: s.opener + (h.willful
-                                ? "Officer \(h.officerName) describes the probationer as avoidant. Phone calls go unanswered, and home visits find no one home."
-                                : "Officer \(h.officerName) says \(last) shows up when transportation allows and has been honest about the problems.")),
+                                : (s == .aggressive ? "a \(crvDays(h))-day CRV. Probation only works if the conditions mean something." : "a modification with tighter conditions, and a quick dip so the message lands."))),
+            supervised
+                ? CounselQuestion(id: "hv.state.officer", side: .prosecution, question: "What does the probation officer say about compliance overall?",
+                                  answer: s.opener + (h.willful
+                                    ? "Officer \(h.officerName) describes the probationer as avoidant. Phone calls go unanswered, and home visits find no one home."
+                                    : "Officer \(h.officerName) says \(last) shows up when transportation allows and has been honest about the problems."))
+                : CounselQuestion(id: "hv.state.officer", side: .prosecution, question: "What does the clerk's file show about compliance overall?",
+                                  answer: s.opener + (h.willful
+                                    ? "the file shows no payments in months and no contact with the court. Unsupervised probation depends on the probationer doing it on their own."
+                                    : "the file shows partial payments, then a gap. \(last) has been in touch with the clerk's office about the problems.")),
             CounselQuestion(id: "hv.state.prior", side: .prosecution, question: "Has there been any prior violation or CRV?",
-                            answer: s.opener + ((h.probation.crvCount ?? 0) > 0
-                                ? "yes. This would be violation number \((h.probation.crvCount ?? 0) + 1), and there's been a prior CRV."
-                                : "no prior violations have been filed in this case.")),
+                            answer: s.opener + priorAnswer(h)),
             CounselQuestion(id: "hv.def.explain", side: .defense, question: "What's your client's explanation?",
                             answer: h.defenseExplanation),
             CounselQuestion(id: "hv.def.ask", side: .defense, question: "What is the defense asking for?",
@@ -213,6 +347,18 @@ enum ViolationHearings {
         ]
     }
 
+    /// The State's answer about earlier violations in this case, from the person's record.
+    static func priorAnswer(_ h: ViolationHearing) -> String {
+        let crvs = h.probation.crvCount ?? 0
+        let found = max(h.priorViolationCount ?? 0, crvs)
+        guard found > 0 else {
+            return h.priorViolationCount == nil ? "no CRV has been ordered in this case." : "no prior violations have been found in this case."
+        }
+        var text = "yes. The court has found \(found == 1 ? "one earlier violation" : "\(found) earlier violations") in this case, so this would be violation number \(found + 1)"
+        if crvs > 0 { text += ", and there \(crvs == 1 ? "has been one prior CRV" : "have been \(crvs) prior CRVs")" }
+        return text + "."
+    }
+
     // MARK: Decision
 
     static func evaluate(_ h: ViolationHearing, _ r: HearingRulings, judgeName: String, county: County, date: Date) -> HearingOutcome {
@@ -225,6 +371,8 @@ enum ViolationHearings {
         let decision = r.decision ?? .continueAsIs
         let judgeLast = judgeName.components(separatedBy: " ").last ?? judgeName
         var addedConditions: [String] = []
+        var newPriors: [PriorConviction] = []
+        var pendingPostRelease: PostReleaseTerm?
 
         if r.remitFees {
             term.monthlyObligation = 0
@@ -245,26 +393,39 @@ enum ViolationHearings {
             if r.addTesting { addedConditions.append("Submit to random drug testing."); risk += 0.03 }
             if r.addCurfew { addedConditions.append("Curfew from 9:00 p.m. to 6:00 a.m."); risk += 0.02; propensityChange -= 0.02 }
             if r.addHouseArrest { addedConditions.append("House arrest with electronic monitoring for 60 days."); risk += 0.03; propensityChange -= 0.03 }
-            if r.extendMonths > 0 {
-                term.ends = Calendar.current.date(byAdding: .month, value: r.extendMonths, to: term.ends) ?? term.ends
-                lines.append("Probation extended \(r.extendMonths) months.")
+            // Probation may not run more than five years in all (G.S. 15A-1342(a)).
+            let extend = min(r.extendMonths, maxExtensionMonths(term))
+            if extend > 0 {
+                term.ends = Calendar.current.date(byAdding: .month, value: extend, to: term.ends) ?? term.ends
+                lines.append("Probation extended \(extend) months.")
             }
         case .quickDip:
             lines.insert("The court finds a willful violation and orders the probationer to serve 3 days in the Hollis County jail as a quick dip, after which probation resumes.", at: 0)
             risk -= 0.03
         case .crv:
             let days = crvDays(h)
-            term.crvCount = (term.crvCount ?? 0) + 1
-            lines.insert("The court finds a willful violation and orders a \(days)-day period of confinement in response to violation (G.S. 15A-1344(d2)), credited against the suspended sentence. Probation resumes on release.", at: 0)
-            status = .incarcerated
-            release = Calendar.current.date(byAdding: .day, value: days, to: date)
+            if days > 0 {
+                term.crvCount = (term.crvCount ?? 0) + 1
+                term.crvDaysServed = term.crvCreditDays + days
+                lines.insert("The court finds a willful violation and orders a \(days)-day period of confinement in response to violation (G.S. 15A-1344(d2)), credited against the suspended sentence. Probation resumes on release.", at: 0)
+                status = .incarcerated
+                release = Calendar.current.date(byAdding: .day, value: days, to: date)
+            } else {
+                lines.insert("The court finds a willful violation, but no suspended time remains to serve as confinement in response to violation. Probation continues.", at: 0)
+            }
             risk -= 0.02
         case .revoke:
-            let months = revocationMonths(term)
-            let credit = (term.crvCount ?? 0) * 3
-            lines.insert("Probation is revoked. The suspended sentence of \(term.suspendedSentence) is activated" + (credit > 0 ? ", with credit for \(credit) months served on CRV." : "."), at: 0)
-            status = .incarcerated
-            release = Calendar.current.date(byAdding: .month, value: months, to: date)
+            let activated = activation(term, county: county, date: date)
+            lines.insert(activated.text, at: 0)
+            if let prior = activated.prior { newPriors.append(prior) }
+            pendingPostRelease = activated.postRelease
+            if activated.months > 0 || activated.days > 0 {
+                status = .incarcerated
+                let afterMonths = Calendar.current.date(byAdding: .month, value: activated.months, to: date) ?? date
+                release = Calendar.current.date(byAdding: .day, value: activated.days, to: afterMonths)
+            } else {
+                status = .free
+            }
         case .terminate:
             lines.insert("Probation is terminated unsuccessfully. Any unpaid monetary obligations are docketed as a civil judgment.", at: 0)
             status = .free
@@ -281,6 +442,12 @@ enum ViolationHearings {
         var appealRNG = SeededRNG(seed: h.seed ^ 0xA_9915)
         let appeals = appealRNG.chance(0.6)
         let finding = r.finding ?? .established
+        // A violation goes on the record only when the court finds one, whatever it then orders.
+        let violation: SupervisionViolation? = finding == .established
+            ? SupervisionViolation(docket: term.docket, date: date, kind: "Probation violation",
+                                   conduct: h.violations.map(\.trimmingTrailingPeriods).joined(separator: "; "),
+                                   result: decision.label)
+            : nil
         let sanction = [HearingDecision.quickDip, .crv, .revoke].contains(decision)
         if finding != .established {
             lines.insert(finding == .excused
@@ -296,7 +463,8 @@ enum ViolationHearings {
                                                        headline: "Court of Appeals vacates probation order for \(h.personName)",
                                                        body: "The Court of Appeals held that Judge \(judgeLast) could not impose a sanction after finding no willful violation of probation, and vacated the order.",
                                                        docket: term.docket + " (PV)"),
-                                        personID: h.personID, effect: .resentence, appealReversed: true, newReleaseDate: due))
+                                        personID: h.personID, effect: .resentence, appealReversed: true, newReleaseDate: due,
+                                        restoreProbation: h.probation, removesViolationID: violation?.id))
             }
         } else if decision == .revoke && !canRevoke(h) {
             lines.append("Note: the record does not show a new offense, absconding, or two prior CRVs.")
@@ -307,7 +475,8 @@ enum ViolationHearings {
                                                        headline: "Court of Appeals reverses probation revocation of \(h.personName)",
                                                        body: "The Court of Appeals held that Judge \(judgeLast) lacked statutory authority to revoke probation for technical violations alone under G.S. 15A-1344(a), and remanded. \(h.personName) was released from custody.",
                                                        docket: term.docket + " (PV)"),
-                                        personID: h.personID, effect: .resentence, appealReversed: true, newReleaseDate: due))
+                                        personID: h.personID, effect: .resentence, appealReversed: true, newReleaseDate: due,
+                                        restoreProbation: h.probation, removesViolationID: violation?.id))
             }
         }
 
@@ -326,12 +495,26 @@ enum ViolationHearings {
         return HearingOutcome(lines: lines, status: status, releaseDate: release,
                               probation: keepsProbation ? term : nil,
                               propensityChange: propensityChange, news: news,
-                              appearance: "Probation violation hearing: \(decision.label.lowercased())",
+                              appearance: "Probation violation hearing: " + appearanceSummary(decision, finding: finding, term: h.probation),
                               pending: pending,
-                              violation: decision == .continueAsIs ? nil
-                                : SupervisionViolation(docket: term.docket, date: date, kind: "Probation violation",
-                                                       conduct: h.violations.joined(separator: "; "),
-                                                       result: decision.label))
+                              violation: violation,
+                              newPriors: newPriors,
+                              pendingPostRelease: pendingPostRelease)
+    }
+
+    /// A short summary of the order for the person's record, e.g. "violation found; 45-day CRV".
+    static func appearanceSummary(_ decision: HearingDecision, finding: ViolationFinding, term: ProbationTerm) -> String {
+        let found = finding == .established ? "violation found; " : (finding == .excused ? "lawful excuse shown; " : "violation not proven; ")
+        switch decision {
+        case .continueAsIs: return found + "probation continued"
+        case .modify: return found + "conditions modified"
+        case .quickDip: return found + "3-day quick dip"
+        case .crv:
+            let days = crvDays(term)
+            return found + (days > 0 ? "\(days)-day CRV" : "probation continued")
+        case .revoke: return found + (term.isConditionalDischarge ? "conditional discharge revoked; judgment entered" : "probation revoked")
+        case .terminate: return found + "probation terminated unsuccessfully"
+        }
     }
 }
 

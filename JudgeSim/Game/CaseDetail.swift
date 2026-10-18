@@ -268,6 +268,11 @@ enum DefendantProfiles {
         let age = defendant.age
         let currentYear = year ?? Calendar.current.component(.year, from: Date())
         let birthYear = currentYear - age
+        // Everything random is laid out as of the person's first appearance in this court and counted from the
+        // birth year, so a returning defendant has the same history in every case, whatever year it is now.
+        let anchorYear = min(currentYear, defendant.history.map { Calendar.current.component(.year, from: $0.date) }.min() ?? currentYear)
+        let anchorAge = anchorYear - birthYear
+        let bg = background.lowercased()
         var jobs: [Job] = []
         let unemployed = lower.contains("unemployed")
         let highSchool = lower.hasPrefix("high school")
@@ -278,8 +283,19 @@ enum DefendantProfiles {
         let has = { (keys: [String]) in keys.contains(where: lower.contains) }
 
         // Education first: it decides when a career can begin. Every year below is counted from the birth year.
-        func grad(_ years: Int) -> Int { min(birthYear + years, currentYear - 1) }
+        func grad(_ years: Int) -> Int { min(birthYear + years, currentYear) }
+        // Graduation at about eighteen, unless the background says otherwise.
         let hsYear = grad(18)
+        let diploma: String
+        if bg.contains("ged in prison") {
+            diploma = "GED, earned while incarcerated"
+        } else if bg.contains("graduated at twenty-five") {
+            diploma = "High school diploma through an adult high school program, \(grad(25))"
+        } else if bg.contains("finished school at night") {
+            diploma = "High school diploma, earned in night classes, \(grad(19))"
+        } else {
+            diploma = "High school diploma, \(hsYear)"
+        }
         let education: String
         var careerAge = 18
         if highSchool {
@@ -297,9 +313,15 @@ enum DefendantProfiles {
         } else if has(["dental hygienist"]) {
             careerAge = 20
             education = "Associate degree in dental hygiene, Hollis Community College, \(grad(20))."
+        } else if bg.contains("ged in prison") {
+            careerAge = 20
+            education = "\(diploma); associate degree, Hollis Community College, \(grad(max(20, anchorAge - rng.int(1...3))))."
+        } else if bg.contains("graduated at twenty-five") {
+            careerAge = 16
+            education = "Left high school without finishing; \(diploma.prefix(1).lowercased() + diploma.dropFirst())."
         } else if has(["nursing assistant", "aide", "caregiver"]) {
             careerAge = 19
-            education = "High school diploma, \(hsYear); nurse aide certificate, Hollis Community College, \(hsYear + 1)."
+            education = "\(diploma); nurse aide certificate, Hollis Community College, \(hsYear + 1)."
         } else if has(["software", "engineer", "account", "cpa", "founder", "ceo", "executive", "pharmaceutical", "teacher", "real estate", "sales manager"]) {
             careerAge = 22
             education = "Bachelor's degree from \(rng.pick(["East Carolina University", "UNC Wilmington", "NC State University"])), \(grad(22))."
@@ -308,22 +330,24 @@ enum DefendantProfiles {
             education = "Associate degree in criminal justice, Hollis Community College, \(grad(20)); Basic Law Enforcement Training, \(grad(21))."
         } else if has(["electric", "hvac", "welder", "mechanic", "machinist", "massage"]) {
             careerAge = 19
-            education = "High school diploma, \(hsYear); vocational certificate, Hollis Community College, \(hsYear + 1)."
+            education = "\(diploma); vocational certificate, Hollis Community College, \(hsYear + 1)."
+        } else if bg.contains("finished school at night") {
+            education = "\(diploma)."
         } else if background.contains("finish high school") {
             education = "High school diploma, Hollis County High School, \(hsYear)."
         } else if background.contains("community college") {
-            education = "High school diploma, \(hsYear); some college at Hollis Community College."
+            education = "\(diploma); some college at Hollis Community College."
         } else {
             switch rng.int(0...5) {
             case 0, 1: education = "High school diploma, Hollis County High School, \(hsYear)."
-            case 2: education = "GED, earned at Hollis Community College, \(grad(rng.int(18...24)))."
+            case 2: education = "GED, earned at Hollis Community College, \(grad(min(rng.int(18...24), max(18, anchorAge))))."
             case 3: careerAge = 16; education = "Left school in the 10th grade, \(grad(16))."
-            case 4: careerAge = 20; education = "Associate degree in applied science, Hollis Community College, \(grad(20))."
+            case 4 where anchorAge >= 20: careerAge = 20; education = "Associate degree in applied science, Hollis Community College, \(grad(20))."
             default: education = "High school diploma, \(hsYear); some college, withdrew after two semesters."
             }
         }
 
-        careerAge = min(careerAge, max(16, age - 1))
+        careerAge = min(careerAge, max(16, anchorAge - 1))
 
         // Time in prison on a prior felony, from the record: no job overlaps it.
         var custody: [(start: Int, end: Int)] = []
@@ -334,19 +358,41 @@ enum DefendantProfiles {
         let lastRelease = custody.map { $0.end }.max() ?? 0
         func clear(_ start: Int, _ end: Int) -> Bool { !custody.contains { start < $0.end && end > $0.start } }
 
-        // Work history, laid out backward from today without overlaps.
+        // Service the background mentions appears in the work history, before civilian jobs.
+        let service: [(key: String, title: String, employer: String, years: Int)] = [
+            ("Navy", "U.S. Navy (honorably discharged)", "U.S. Navy", 4),
+            ("medically discharged", "U.S. Army (medical discharge)", "U.S. Army", 1),
+            ("Afghanistan", "U.S. Army infantry (honorably discharged)", "U.S. Army", 6),
+            ("Marine Corps", "U.S. Marine Corps", "U.S. Marine Corps", 6),
+            ("Air Force", "Aircraft mechanic, U.S. Air Force", "U.S. Air Force", 4),
+            ("Coast Guard", "U.S. Coast Guard", "U.S. Coast Guard, Station Wilmington", 3),
+            ("EMT", "Emergency medical technician", "Hollis County EMS", 4),
+            ("corrections officer", "Correctional officer", "N.C. Department of Adult Correction", 3),
+            ("long-haul", "Long-haul truck driver", "Tidewater Freight Logistics", 8),
+            ("fishing boats in Alaska", "Deckhand", "Commercial fishing fleet, Alaska", 3),
+            ("textile plant", "Line supervisor", "Dunmore Mills Textiles", 10),
+            ("carnival", "Carnival ride operator", "Coastal Amusements", 5),
+            ("call center", "Customer service representative", "Charlotte bank call center", 5)
+        ]
+        // Shortened if need be so it fits between eighteen and the current job.
+        let stint = student ? nil : service.first(where: { background.contains($0.key) })
+            .map { (title: $0.title, employer: $0.employer, years: min($0.years, max(1, anchorAge - 20))) }
+
+        // Work history, laid out backward from the first appearance without overlaps.
         var timeline: [(start: Int, job: Job)] = []
         let careerStart = birthYear + careerAge
         let firstWork = birthYear + 16
-        var cursor = currentYear
+        // The current job starts after any service the background describes.
+        let afterService = stint.map { birthYear + 18 + $0.years + 1 } ?? 0
+        var cursor = anchorYear
         if student, let job = partTime {
-            let start = max(firstWork, currentYear - rng.int(0...2))
+            let start = max(firstWork, anchorYear - rng.int(0...2))
             timeline.append((start, Job(title: "Part-time \(job)", employer: employer(for: job, rng: &rng), years: "\(start)–present", current: true)))
         } else if student {
             if rng.chance(0.45) {
                 let (title, place) = rng.pick([("Part-time cashier", "Pell Avenue Quik Stop"), ("Part-time line cook", "The Brickyard Grill"),
                                                ("Weekend lifeguard", "Hollis County Parks and Recreation"), ("Part-time stocker", "Cane Creek Hardware")])
-                let start = max(firstWork, currentYear - rng.int(0...2))
+                let start = max(firstWork, anchorYear - rng.int(0...2))
                 timeline.append((start, Job(title: title, employer: place, years: "\(start)–present", current: true)))
             }
         } else if retired {
@@ -358,12 +404,12 @@ enum DefendantProfiles {
             cursor = start
         } else if !unemployed {
             let base = occupation.components(separatedBy: ",").first ?? occupation
-            let earliest = max(careerStart, lastRelease, firstWork)
-            let start = max(earliest, currentYear - rng.int(1...12))
+            let earliest = min(max(careerStart, lastRelease, firstWork, afterService), anchorYear)
+            let start = max(earliest, anchorYear - rng.int(1...12))
             timeline.append((start, Job(title: base.capitalizedFirst, employer: employer(for: base, rng: &rng),
                                         years: "\(min(start, currentYear))–present", current: true)))
             if let job = partTime {
-                let sideStart = max(start, currentYear - rng.int(1...3))
+                let sideStart = max(start, anchorYear - rng.int(1...3))
                 timeline.append((sideStart, Job(title: "Part-time \(job)", employer: employer(for: job, rng: &rng), years: "\(sideStart)–present", current: true)))
             } else if rng.chance(0.3) && !has(["owner", "founder", "ceo", "therapist", "practitioner", "sergeant", "sheriff"]) {
                 let side = rng.pick(["weekend server", "weekend security guard", "weekend delivery driver", "part-time rideshare driver"])
@@ -373,33 +419,16 @@ enum DefendantProfiles {
                 case "weekend delivery driver": "Coastal Courier Services"
                 default: "self-employed (rideshare apps)"
                 }
-                let sideStart = max(start, currentYear - rng.int(1...3))
+                let sideStart = max(start, anchorYear - rng.int(1...3))
                 timeline.append((sideStart, Job(title: side, employer: sideEmployer, years: "\(sideStart)–present", current: true)))
             }
             cursor = start - rng.int(0...1)
         } else {
-            cursor = currentYear - rng.int(0...2)
+            cursor = anchorYear - rng.int(0...2)
         }
         let unemployedSince = cursor
         if !student {
-            // Service the background mentions appears in the work history, before civilian jobs.
-            let service: [(key: String, title: String, employer: String, years: Int)] = [
-                ("Navy", "U.S. Navy (honorably discharged)", "U.S. Navy", 4),
-                ("medically discharged", "U.S. Army (medical discharge)", "U.S. Army", 1),
-                ("Afghanistan", "U.S. Army infantry (honorably discharged)", "U.S. Army", 6),
-                ("Marine Corps", "U.S. Marine Corps", "U.S. Marine Corps", 6),
-                ("Air Force", "Aircraft mechanic, U.S. Air Force", "U.S. Air Force", 4),
-                ("Coast Guard", "U.S. Coast Guard", "U.S. Coast Guard, Station Wilmington", 3),
-                ("EMT", "Emergency medical technician", "Hollis County EMS", 4),
-                ("corrections officer", "Correctional officer", "N.C. Department of Adult Correction", 3),
-                ("long-haul", "Long-haul truck driver", "Tidewater Freight Logistics", 8),
-                ("fishing boats in Alaska", "Deckhand", "Commercial fishing fleet, Alaska", 3),
-                ("textile plant", "Line supervisor", "Dunmore Mills Textiles", 10),
-                ("carnival", "Carnival ride operator", "Coastal Amusements", 5),
-                ("call center", "Customer service representative", "Charlotte bank call center", 5)
-            ]
-            if let stint = service.first(where: { background.contains($0.key) }),
-               cursor - stint.years >= birthYear + 18, clear(cursor - stint.years, cursor) {
+            if let stint, cursor - stint.years >= birthYear + 18, clear(cursor - stint.years, cursor) {
                 timeline.append((cursor - stint.years, Job(title: stint.title, employer: stint.employer,
                                                            years: "\(cursor - stint.years)–\(cursor)", current: false)))
                 cursor -= stint.years

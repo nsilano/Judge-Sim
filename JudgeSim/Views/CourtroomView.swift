@@ -129,7 +129,9 @@ struct CourtroomView: View {
             }
             .sheet(isPresented: $showContinuance, onDismiss: { grantingMotion = nil }) {
                 ContinuanceSheet(today: session.courtCase.sessionDate, subject: session.courtCase.caption,
-                                 requestOptions: EvidenceRequest.options(for: session.courtCase),
+                                 // Follow-up investigation is only possible while the evidence is still open.
+                                 requestOptions: session.stage.rawValue <= CaseSession.Stage.trial.rawValue
+                                    ? EvidenceRequest.options(for: session.courtCase) : [],
                                  initialRequests: grantingMotion.map { [$0.request] } ?? [],
                                  initialReason: grantingMotion.map { "On the \($0.movant == .prosecution ? "State's" : "defense's") motion: \($0.title.lowercased())." },
                                  initialDays: grantingMotion?.suggestedDays) { date, reason, requests in
@@ -567,9 +569,24 @@ struct ChargeCard: View {
 struct MotionsStage: View {
     @ObservedObject var session: CaseSession
 
+    /// What was heard, matched to the motions actually filed.
+    private var intro: String {
+        let motions = session.courtCase.motions
+        let suppression = motions.contains { $0.kind != .dismissSpeedyTrial }
+        let speedy = motions.contains { $0.kind == .dismissSpeedyTrial }
+        let filed = motions.count == 1 ? "The defense has filed a pretrial motion." : "The defense has filed pretrial motions."
+        let heard: String
+        switch (suppression, speedy) {
+        case (true, true): heard = "You've heard testimony and argument at the suppression hearing and on the speedy-trial motion."
+        case (true, false): heard = "You've heard testimony and argument at the suppression hearing."
+        default: heard = "You've heard evidence and argument on the delay."
+        }
+        return filed + " " + heard + (motions.count == 1 ? " Rule on it." : " Rule on each.")
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("The defense has filed pretrial motions. You've heard testimony and argument at the suppression hearing. Rule on each.")
+            Text(intro)
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
@@ -582,7 +599,7 @@ struct MotionsStage: View {
             PrimaryButton(title: session.dismissedBySpeedyTrial ? "Dismiss the Case" : "Start the Trial",
                           icon: session.dismissedBySpeedyTrial ? "xmark.seal.fill" : "chevron.right",
                           enabled: session.motionsComplete,
-                          hint: "Grant or deny every motion to continue.") {
+                          hint: session.courtCase.motions.count == 1 ? "Grant or deny the motion first." : "Grant or deny every motion first.") {
                 Haptics.gavel()
                 session.advance()
             }

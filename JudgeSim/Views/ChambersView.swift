@@ -63,8 +63,10 @@ struct OnboardingView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Your first day on the bench").font(.caption.weight(.bold)).foregroundStyle(.secondary)
                     DatePicker("First court date", selection: $startDay, displayedComponents: .date)
-                    DatePicker("Court opens at", selection: $openingTime, displayedComponents: .hourAndMinute)
-                    Text("Court sits on weekdays. You'll hold week-long criminal sessions, with a few weeks between them.")
+                    DatePicker("Court opens at", selection: $openingTime,
+                               in: CourtCalendar.opening(on: Date(), minutesAfterMidnight: 8 * 60)...CourtCalendar.opening(on: Date(), minutesAfterMidnight: 11 * 60),
+                               displayedComponents: .hourAndMinute)
+                    Text("Court sits every week. Each week opens with a Monday calendar call, then you take the week's trials and hearings in any order, and adjourn for the week when the calendar is clear. There is no score: only the record you build.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -74,8 +76,8 @@ struct OnboardingView: View {
                 PrimaryButton(title: "Take the Oath of Office", icon: "hand.raised.fill",
                               enabled: !name.trimmingCharacters(in: .whitespaces).isEmpty) {
                     Haptics.gavel()
-                    let time = Calendar.current.dateComponents([.hour, .minute], from: openingTime)
-                    let start = Calendar.current.date(bySettingHour: time.hour ?? 9, minute: time.minute ?? 30, second: 0, of: startDay) ?? startDay
+                    let time = CourtCalendar.calendar.dateComponents([.hour, .minute], from: openingTime)
+                    let start = CourtCalendar.calendar.date(bySettingHour: time.hour ?? 9, minute: time.minute ?? 30, second: 0, of: startDay) ?? startDay
                     game.startCareer(name: name.trimmingCharacters(in: .whitespaces), start: start)
                 }
 
@@ -238,7 +240,8 @@ struct ChambersView: View {
                      + (day.isComplete ? "" : " · \(remaining) matter\(remaining == 1 ? "" : "s") left"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                if Calendar.current.component(.hour, from: day.clock) >= 17 && !day.isComplete {
+                if CourtCalendar.calendar.component(.weekday, from: day.clock) == 6
+                    && CourtCalendar.calendar.component(.hour, from: day.clock) >= 17 && !day.isComplete {
                     Label("Friday is running late. Finish the week's calendar before you adjourn.", systemImage: "moon.fill").font(.caption).foregroundStyle(.orange)
                 }
 
@@ -268,7 +271,7 @@ struct ChambersView: View {
                             }
                             Spacer()
                             if entry.isOpen {
-                                Text(entry.status == .inProgress ? "Resume" : "~\(entry.estimatedMinutes / 60 > 0 ? "\(entry.estimatedMinutes / 60)h " : "")\(entry.estimatedMinutes % 60)m")
+                                Text(entry.status == .inProgress ? (entry.resume == nil ? "Start over" : "Resume") : "~\(entry.estimatedMinutes / 60 > 0 ? "\(entry.estimatedMinutes / 60)h " : "")\(entry.estimatedMinutes % 60)m")
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(.secondary)
                             }
@@ -299,7 +302,7 @@ struct ChambersView: View {
                     }
                     .buttonStyle(.bordered)
                 } else {
-                    Text("Take the week's matters in any order. Court sits until 5 p.m.; when a day fills up, the next matter is heard the following morning. When the calendar is clear, you can adjourn for the week.")
+                    Text("Take the week's matters in any order. No new matter is called after 4:30 p.m.; when a day fills up, the next matter is heard the following morning. When the calendar is clear, you can adjourn for the week.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -518,7 +521,9 @@ struct RecordsView: View {
             ledgerRow("Convictions", trials.filter { $0.outcome.contains("Guilty") || $0.outcome.contains("No contest") }.count)
             ledgerRow("Acquittals and dismissals", trials.filter { $0.outcome.hasPrefix("Not guilty") || $0.outcome.hasPrefix("Dismissed") }.count)
             ledgerRow("Guilty pleas", trials.filter { $0.outcome.contains("plea)") || $0.outcome.contains("No contest") }.count)
-            ledgerRow("Returning defendants", trials.filter(\.returningDefendant).count)
+            // A retrial of the same case isn't a defendant returning.
+            let firstHeard = Dictionary(trials.map { ($0.docket, $0.date) }, uniquingKeysWith: { min($0, $1) })
+            ledgerRow("Returning defendants", trials.filter { $0.returningDefendant && $0.date <= (firstHeard[$0.docket] ?? $0.date) }.count)
             ledgerRow("Felony sentences below the presumptive range", s.belowPresumptive)
             ledgerRow("Felony sentences within the presumptive range", s.withinPresumptive)
             ledgerRow("Felony sentences above the presumptive range", s.abovePresumptive)
@@ -549,7 +554,8 @@ struct RecordsView: View {
     @ViewBuilder
     private var peopleSection: some View {
         let sentenced = game.people.filter { person in
-            person.status != .free && (person.priors.contains { $0.fromThisCourt } || (person.probation?.imposedInThisCourt ?? false))
+            (person.status != .free || person.postRelease != nil)
+                && (person.priors.contains { $0.fromThisCourt } || (person.probation?.imposedInThisCourt ?? false))
         }
         if !sentenced.isEmpty {
             Section("Serving a sentence you imposed") {
@@ -604,6 +610,9 @@ struct RecordsView: View {
         if person.status == .probation, let term = person.probation {
             return "\(term.docket) · \(term.offense)"
         }
+        if person.status == .free, let prs = person.postRelease {
+            return "\(prs.docket) · \(prs.offense)"
+        }
         guard let prior = person.priors.last(where: \.fromThisCourt) else { return nil }
         return [prior.docket, prior.offense].compactMap { $0 }.joined(separator: " · ")
     }
@@ -616,7 +625,7 @@ struct RecordsView: View {
         case .probation:
             return person.probation.map { "Probation ends \(SentenceFormat.shortDate($0.ends))" } ?? "On probation"
         case .free:
-            return ""
+            return person.postRelease.map { "Post-release supervision ends \(SentenceFormat.shortDate($0.ends))" } ?? ""
         }
     }
 

@@ -198,7 +198,7 @@ extension StoryCases {
                                   answer: "\"All three were unfounded.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Improper impeachment", shouldSustain: true,
                                   explanation: "Unproven complaints aren't convictions and aren't admissible to attack credibility without a proper basis under Rule 608.",
-                                  doctrineID: "characterEvidence", weight: 1))
+                                  doctrineID: "characterEvidence", weight: -1))
             ],
             prosecutionOpening: "A lawful order, a lawful arrest, and a broken nose.",
             defenseOpening: "An arm around the throat from behind, and a reflex.",
@@ -386,7 +386,7 @@ extension StoryCases {
                                   answer: "\"It could be.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Beyond the witness's expertise", shouldSustain: true,
                                   explanation: "A pathologist can describe wounds; whether a killing was in the heat of passion is a mental-state question outside that expertise.",
-                                  doctrineID: "expertTestimony", weight: 1))
+                                  doctrineID: "expertTestimony", weight: -1))
             ],
             prosecutionOpening: "A week of suspicion, a warning, and a knife driven through the heart.",
             defenseOpening: "A confession, a kitchen, and ninety seconds later, a 911 call.",

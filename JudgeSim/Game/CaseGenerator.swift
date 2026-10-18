@@ -127,10 +127,20 @@ enum CaseGenerator {
             let occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
             // Written cases describe the defendant's record themselves; most say there is none.
             var priors = t.story != nil ? [] : randomPriors(age: age, year: currentYear, county: county, rng: &rng)
-            for (offset, name) in t.forcedPriorOffenses.enumerated() {
+            for entry in t.forcedPriorOffenses {
+                // "Offense@N" pins the conviction to about N years ago; otherwise any year since the defendant turned 17 (at most 20 back).
+                let parts = entry.components(separatedBy: "@")
+                let name = parts[0]
                 guard let seed = GenericPools.priorSeeds.first(where: { $0.offense == name }) else { continue }
+                let earliest = currentYear - max(1, min(age - 17, 20))
+                let year: Int
+                if parts.count > 1, let yearsAgo = Int(parts[1].trimmingCharacters(in: .whitespaces)) {
+                    year = max(currentYear - max(1, age - 16), currentYear - max(1, yearsAgo))
+                } else {
+                    year = rng.int(earliest...(currentYear - 1))
+                }
                 priors.append(PriorConviction(offense: seed.offense, ncClass: seed.ncClass,
-                                              year: max(currentYear - max(1, age - 17), currentYear - 1 - offset * 2 - rng.int(0...1)),
+                                              year: year,
                                               county: rng.chance(0.6) ? county.name : rng.pick(GenericPools.otherCounties),
                                               sentence: rng.pick(seed.sentences)))
             }
@@ -157,8 +167,15 @@ enum CaseGenerator {
             ? CastMember(name: NameBank.person(using: &rng, excluding: &used), title: "Trooper", agency: "N.C. State Highway Patrol")
             : rng.pick(county.officers)
         // The day it happened, fixed once so every report, witness, and exhibit agrees.
-        var incident = Calendar.current.date(byAdding: .day, value: -rng.int(150...330), to: context.date) ?? context.date
-        if let pinned = t.story?.when?.incident(before: context.date, minDays: 150, using: &rng) { incident = pinned }
+        // A written case's file can run long past the incident (a cold case solved years later), so the incident
+        // sits far enough back that every entry in it still comes before trial.
+        let lastEntry = t.story?.timeline.map(\.0).max() ?? 0
+        let minDays = max(150, lastEntry + 45)
+        // A speedy-trial motion needs a case that has actually waited a long time.
+        let speedySeed: MotionSeed? = t.story == nil && rng.chance(0.07) ? rng.pick(GenericPools.speedyTrialSeeds) : nil
+        let daysBack = speedySeed != nil ? rng.int(560...900) : rng.int(150...330) + (minDays - 150)
+        var incident = Calendar.current.date(byAdding: .day, value: -daysBack, to: context.date) ?? context.date
+        if let pinned = t.story?.when?.incident(before: context.date, minDays: minDays, using: &rng) { incident = pinned }
         let prosecutor = rng.pick(county.assistantDAs)
         let usePublicDefender = rng.chance(0.6)
         let defenseLawyer = usePublicDefender ? rng.pick(county.assistantPDs) : rng.pick(county.privateCounsel)
@@ -345,6 +362,10 @@ enum CaseGenerator {
             investigation.timeline = story.timeline.map { offset, what in
                 InvestigationReport.Entry(when: CaseDates.dayYear(CaseDates.add(offset, to: incident)), what: fill(what))
             }
+            // The written file says when the arrest happened; the fact sheet follows it.
+            if let offset = story.timeline.first(where: { $0.1.lowercased().contains("arrested") })?.0 {
+                investigation.facts?.arrest = CaseDates.add(offset, to: incident)
+            }
             investigation.howIdentified = fill(story.howIdentified)
             investigation.notDone = story.notDone.map { fill($0) }
         } else {
@@ -375,9 +396,16 @@ enum CaseGenerator {
             let title = evidence.first { $0.id == target }?.title ?? "the statement"
             motions.append(makeMotion(option, target: target, targetTitle: title, fill: fill))
         }
-        if t.story == nil && rng.chance(0.07) {
-            motions.append(makeMotion(rng.pick(GenericPools.speedyTrialSeeds), target: nil, targetTitle: nil, fill: fill))
+        if let speedySeed {
+            // The delay the motion argues about is the real time from arrest to this session.
+            let delayMonths = max(1, CaseDates.days(from: sheet.arrest, to: context.date) / 30)
+            let delayFill = TextFiller(values: values.merging(["DELAY": "\(delayMonths)",
+                                                               "DEFDELAY": "\(max(1, delayMonths * 3 / 4))"]) { a, _ in a })
+            motions.append(makeMotion(speedySeed, target: nil, targetTitle: nil, fill: delayFill))
         }
+
+        // Time in jail can't be longer than the time since the arrest.
+        let maxCustodyDays = max(0, CaseDates.days(from: investigation.facts?.arrest ?? sheet.arrest, to: context.date))
 
         // Status and procedural posture
         let priorFelonies = defendant.priors.filter { $0.ncClass.isFelony }.count
@@ -427,13 +455,15 @@ enum CaseGenerator {
         var twistText: String?
         var twistKey: String?
         var chosenTwist: TwistSeed?
-        let twistPool = GenericPools.twists.filter { $0.ages.contains(defendant.age) }
+        let jailedDays = min(330, maxCustodyDays)
+        let jailedTime = jailedDays >= 60 ? "\(jailedDays / 30) months" : "\(jailedDays) days"
+        let twistPool = GenericPools.twists.filter { $0.ages.contains(defendant.age) && ($0.key != "jailed" || jailedDays >= 45) }
         if t.story == nil, rng.chance(0.5), !twistPool.isEmpty {
             let twist = rng.pick(twistPool)
             twistKey = twist.key
             chosenTwist = twist
-            twistText = fill(twist.text)
-            if let m = twist.mitigating { mitigating.append(fill(m)) }
+            twistText = fill(twist.text).replacingOccurrences(of: "{JAILTIME}", with: jailedTime)
+            if let m = twist.mitigating { mitigating.append(fill(m).replacingOccurrences(of: "{JAILTIME}", with: jailedTime)) }
             if let a = twist.aggravating { aggravating.append(fill(a)) }
             if let m = twist.mood { mood = m }
             media += twist.mediaBoost
@@ -506,15 +536,15 @@ enum CaseGenerator {
 
         var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                         publicDefender: usePublicDefender, mitigating: mitigating,
-                                        isFelony: isFelonyCase, habitual: habitual, rng: &rng)
+                                        isFelony: isFelonyCase, habitual: habitual, maxCustodyDays: maxCustodyDays, rng: &rng)
         if let twist = chosenTwist {
             if twist.trialOnly && background.arrangementPresented == true {
                 twistText = nil
                 if let a = twist.aggravating { aggravating.removeAll { $0 == fill(a) } }
             }
             if twistKey == "jailed" {
-                background.custodyDays = 330
-                background.bondStatus = "Held in the Hollis County jail on a $5,000 secured bond for 330 days."
+                background.custodyDays = jailedDays
+                background.bondStatus = "Held in the Hollis County jail on a $5,000 secured bond for \(jailedDays) days."
             }
             if twistKey == "rehab" && background.custodyDays > 0 {
                 background.custodyDays = 0
@@ -577,9 +607,26 @@ enum CaseGenerator {
 
     private static func makeBackground(_ t: CaseTemplate, defendant: Defendant, charges: [Charge], values: [String: String],
                                        mood: PublicMood, publicDefender: Bool, mitigating: [String], isFelony: Bool,
-                                       habitual: Bool, rng: inout SeededRNG) -> CaseBackground {
+                                       habitual: Bool, maxCustodyDays: Int, rng: inout SeededRNG) -> CaseBackground {
         let fill = TextFiller(values: values)
         let primary = charges[0]
+
+        // What the punishment chart allows for a class at this defendant's record level, so no deal promises
+        // a sentence the court couldn't lawfully impose. Nil when the chart doesn't govern (e.g. impaired driving).
+        let record = PriorRecord(priors: defendant.priors, onSupervision: defendant.underSupervision)
+        func allowed(_ cls: NCClass?) -> [Disposition]? {
+            guard let cls else { return nil }
+            if cls.isFelony { return StructuredSentencing.felonyCell(cls, level: record.felonyLevel)?.dispositions ?? [.active] }
+            return StructuredSentencing.misdemeanorCell(cls, level: record.misdemeanorLevel)?.dispositions
+        }
+        func canSuspend(_ cls: NCClass?) -> Bool {
+            allowed(cls).map { $0.contains(.community) || $0.contains(.intermediate) } ?? true
+        }
+        /// Class A has no ranges at all, only life or death.
+        func hasRanges(_ cls: NCClass?) -> Bool {
+            guard let cls, cls.isFelony else { return true }
+            return StructuredSentencing.felonyCell(cls, level: record.felonyLevel) != nil
+        }
 
         // Plea negotiations
         var pleaOffer: String?
@@ -588,13 +635,15 @@ enum CaseGenerator {
             if let lesser = primary.lesserLaw, let cls = lesser.ncClass {
                 pleaOffer = rng.pick([
                     "Plead guilty to \(lesser.title) (\(cls.shortLabel)), remaining charges dismissed, sentencing in the court's discretion.",
-                    "Plead guilty to \(lesser.title) (\(cls.shortLabel)) with a sentence at the bottom of the presumptive range."
+                    cls.isFelony
+                        ? "Plead guilty to \(lesser.title) (\(cls.shortLabel)) with a sentence at the bottom of the presumptive range."
+                        : "Plead guilty to \(lesser.title) (\(cls.shortLabel)) with a sentence at the low end of the authorized range."
                 ])
             } else if isFelony {
-                pleaOffer = rng.pick([
-                    "Plead guilty as charged with a mitigated-range sentence, remaining charges dismissed.",
-                    "Plead guilty as charged; the State would not oppose a suspended sentence."
-                ])
+                var offers = ["Plead guilty as charged, remaining charges dismissed, sentencing in the court's discretion."]
+                if hasRanges(primary.law.ncClass) { offers.append("Plead guilty as charged with a mitigated-range sentence, remaining charges dismissed.") }
+                if canSuspend(primary.law.ncClass) { offers.append("Plead guilty as charged; the State would not oppose a suspended sentence.") }
+                pleaOffer = rng.pick(offers)
             } else {
                 pleaOffer = "Plead guilty and receive a prayer for judgment continued on payment of costs."
             }
@@ -608,8 +657,8 @@ enum CaseGenerator {
         }
 
         // Custody
-        let inCustody = rng.chance(0.45)
-        let custodyDays = inCustody ? rng.int(21...420) : 0
+        let inCustody = rng.chance(0.45) && maxCustodyDays > 0
+        let custodyDays = inCustody ? min(rng.int(21...420), maxCustodyDays) : 0
         let bond = rng.pick(["$2,500", "$10,000", "$25,000", "$50,000", "$100,000"])
         let bondStatus = inCustody
             ? "Held in the Hollis County jail on a \(bond) secured bond for \(custodyDays) days."
@@ -749,14 +798,23 @@ enum CaseGenerator {
                 ? "a suspended sentence with supervised probation and \(restitution.formatted(.currency(code: "USD").precision(.fractionLength(0)))) in restitution"
                 : "a suspended sentence with supervised probation"
             let bottom = pleaFelony ? "a sentence at the bottom of the presumptive range" : "a sentence at the low end of the authorized range"
-            let kindIndex = rng.int(0...2)
-            arrangementKind = ["bottom", "suspended", "open"][kindIndex]
+            // Only recommendations the punishment chart allows for the class pleaded to (as a habitual felon, if admitted).
+            var pleaClass = pleaLaw.ncClass
+            if arrangementHabitual == true, let cls = pleaClass { pleaClass = StructuredSentencing.habitualClass(for: cls) }
+            var kinds = ["open"]
+            if hasRanges(pleaClass) { kinds.append("bottom") }
+            if canSuspend(pleaClass) { kinds.append("suspended") }
+            let kind = rng.pick(kinds)
+            arrangementKind = kind
             let withdrawNote = " If the court decides on a harsher sentence, the defendant may withdraw the plea (G.S. 15A-1024)."
-            arrangementTerms = [
-                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The State recommends \(bottom).\(withdrawNote)",
-                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The parties jointly recommend \(probationTerms).\(withdrawNote)",
-                "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) Sentencing is left to the discretion of the court."
-            ][kindIndex]
+            switch kind {
+            case "bottom":
+                arrangementTerms = "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The State recommends \(bottom).\(withdrawNote)"
+            case "suspended":
+                arrangementTerms = "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) The parties jointly recommend \(probationTerms).\(withdrawNote)"
+            default:
+                arrangementTerms = "The defendant will plead guilty to \(pleaLaw.title).\(dismissed) Sentencing is left to the discretion of the court."
+            }
             pleaRejection = nil
         }
 
@@ -775,8 +833,12 @@ enum CaseGenerator {
         }
         var districtSentence: String?
         if !isFelony, let cls = primary.law.ncClass {
-            let days = cls == .misdA1 ? rng.int(30...75) : (cls == .misd1 ? rng.int(20...45) : rng.int(10...30))
-            districtSentence = rng.chance(0.5)
+            // Within the chart for the class and record level: no more days than allowed, and active only where permitted.
+            let cell = StructuredSentencing.misdemeanorCell(cls, level: record.misdemeanorLevel)
+            let wanted = cls == .misdA1 ? rng.int(30...75) : (cls == .misd1 ? rng.int(20...45) : rng.int(10...30))
+            let days = min(wanted, cell?.maxDays ?? wanted)
+            let activeAllowed = cell?.dispositions.contains(.active) ?? true
+            districtSentence = rng.chance(0.5) || !activeAllowed
                 ? "\(days) days suspended, 12 months supervised probation"
                 : "\(days) days active"
         }

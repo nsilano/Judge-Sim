@@ -891,7 +891,7 @@ struct UnitSentenceCard: View {
     }
 
     private var supervisionMonths: Int {
-        [NCClass.B1, .B2, .C, .D, .E].contains(unit.sentencingClass) ? 12 : 9
+        StructuredSentencing.postReleaseMonths(for: unit.sentencingClass)
     }
 
     /// When this judgment, served alone, would let the defendant out.

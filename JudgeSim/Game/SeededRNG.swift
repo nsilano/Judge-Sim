@@ -31,6 +31,13 @@ struct SeededRNG: RandomNumberGenerator {
     mutating func int(_ range: ClosedRange<Int>) -> Int {
         Int.random(in: range, using: &self)
     }
+
+    /// A hash of the text that is the same on every launch (FNV-1a), for seeding. `hashValue` changes from run to run.
+    static func stableHash(_ text: String) -> UInt64 {
+        var hash: UInt64 = 0xCBF2_9CE4_8422_2325
+        for byte in text.utf8 { hash = (hash ^ UInt64(byte)) &* 0x0000_0100_0000_01B3 }
+        return hash
+    }
 }
 
 /// Replaces `{KEY}` tokens in template text.

@@ -17,7 +17,7 @@ extension StoryCases {
             SecondaryCharge(lawID: "possSchedII", specification: "Possessed cocaine, a Schedule II controlled substance.", chance: 1.0, threshold: 4),
             SecondaryCharge(lawID: "pwisd", specification: "Possessed cocaine with intent to sell or deliver.", chance: 1.0, threshold: 5)
         ],
-        ageRange: 21...35, occupations: ["barber", "line cook"], forcedPriorOffenses: ["Possession of Schedule II (cocaine)"], hasVictim: false,
+        ageRange: 23...35, occupations: ["barber", "line cook"], forcedPriorOffenses: ["Possession of Schedule II (cocaine)@5"], hasVictim: false,
         summaries: [
             "On {DATE}, a paid confidential informant working with the Hollis County Sheriff's narcotics unit met {D} in the parking lot of a laundromat on {STREET} and, according to the informant, bought 3.4 grams of cocaine for $200 in marked bills. The informant wore an audio recorder; the video camera hidden in the informant's car pointed the wrong way. Deputies searched the informant before and after. {DL} was arrested two months later. {DL} says {D.he} met the informant to collect a $200 debt and that the informant had the cocaine all along. The informant has been paid $6,800 over two years and is hoping to get two pending felony charges reduced."
         ],
@@ -107,12 +107,12 @@ extension StoryCases {
 
     static let grandparentHouse = CaseTemplate(
         key: "story.grandparentHouse", category: .drugs,
-        headlines: ["Grandparent, 71, Charged After Drug Raid on Family Home", "Was the House Hers, or Her Grandson's?"],
+        headlines: ["Grandparent Charged After Drug Raid on Family Home", "Was the House Hers, or Her Grandson's?"],
         primaryLaw: "maintainingDwelling", lesserLaw: nil, threshold: 6, lesserThreshold: 4,
         specification: "Knowingly kept or maintained a dwelling on {STREET} that was resorted to by persons using or selling controlled substances.",
-        ageRange: 66...78, occupations: ["retired school cafeteria manager"], hasVictim: false,
+        ageRange: 71...78, occupations: ["retired school cafeteria manager"], hasVictim: false,
         summaries: [
-            "On {DATE}, deputies executed a search warrant at {D}'s house on {STREET} in {HOOD} after weeks of complaints about short visits at all hours. They found 40 grams of cocaine, scales, and $3,100 in the back bedroom used by {DL}'s grandson, who pleaded guilty to trafficking. {D}, 71, owns the house and lives in the front bedroom. Deputies say neighbors complained to {DL} directly and that {D.he} told one, \"I can't control what grown folks do.\" {DL} says {D.he} never went into the back bedroom and had no idea what was happening."
+            "On {DATE}, deputies executed a search warrant at {D}'s house on {STREET} in {HOOD} after weeks of complaints about short visits at all hours. They found 40 grams of cocaine, scales, and $3,100 in the back bedroom used by {DL}'s grandson, who pleaded guilty to trafficking. {D} owns the house and lives in the front bedroom. Deputies say neighbors complained to {DL} directly and that {D.he} told one, \"I can't control what grown folks do.\" {DL} says {D.he} never went into the back bedroom and had no idea what was happening."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Deed and Utilities", "{DL} owns the house and pays every utility bill."),
@@ -160,7 +160,7 @@ extension StoryCases {
                         ])
         ],
         prosecutionTheory: ["{D} owns the house, was told what was happening, and chose to do nothing. Knowingly allowing it is maintaining a dwelling."],
-        defenseTheory: ["A 71-year-old who sleeps with no hearing aids, a locked bedroom, and a grandson who confessed and cleared {D.him}. Not doing something isn't the same as knowing."],
+        defenseTheory: ["A grandparent in {D.his} seventies who sleeps with no hearing aids, a locked bedroom, and a grandson who confessed and cleared {D.him}. Not doing something isn't the same as knowing."],
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has a support system in the community"],
         victimImpacts: [],
@@ -383,7 +383,7 @@ extension StoryCases {
                                   answer: "\"I'd like the truth to come out.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Argumentative", shouldSustain: false,
                                   explanation: "A witness's pending exposure is classic bias impeachment; the question is proper.",
-                                  doctrineID: "relevance", weight: 1))
+                                  doctrineID: "relevance", weight: 0))
             ],
             prosecutionOpening: "A question about the camera, an answer, and a deletion three hours later.",
             defenseOpening: "A bulk clear, a known bug, and seventeen clean years.",
@@ -477,7 +477,7 @@ extension StoryCases {
                                   answer: "\"I kept them because I wasn't ready.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Argumentative", shouldSustain: false,
                                   explanation: "The witness's motive for withholding the property bears directly on the defense of claim of right; it's proper cross.",
-                                  doctrineID: "relevance", weight: 1))
+                                  doctrineID: "relevance", weight: 0))
             ],
             prosecutionOpening: "A written warning, an old key, and 1:30 in the morning.",
             defenseOpening: "A person who wanted their own TV and their mother's rings.",

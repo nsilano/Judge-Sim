@@ -290,7 +290,7 @@ extension StoryCases {
                                   answer: "\"Once, three years ago.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Relevance and prior acts", shouldSustain: false,
                                   explanation: "Prior wrong-address raids by the same team are relevant to the reliability of the team's procedures and the reasonableness of {DL}'s fear.",
-                                  doctrineID: "relevance", weight: 1))
+                                  doctrineID: "relevance", weight: -1))
             ],
             prosecutionOpening: "Officers announced, wore marked vests, and {D} fired anyway, nearly killing {OFF}.",
             defenseOpening: "The wrong house, a stale warrant, and {DL}, woken by the door coming down. {DL} called 911 because {D.he} thought {D.he} was the victim.",

@@ -131,6 +131,20 @@ extension CaseRecord {
         resolvedKind == "hearing" && judgments.contains { $0.contains("revoked") || $0.contains("activated") }
     }
 
+    /// Whether this record's judgment sent the defendant into custody that lasts: an active term, a commitment,
+    /// a revocation, or a CRV. A quick dip is over within days.
+    var committedToCustody: Bool {
+        switch resolvedKind {
+        case "trial":
+            return imposedCustody || judgments.contains {
+                $0.hasPrefix("Order of Commitment") || $0.contains("is activated") || $0.contains("confinement in response to violation")
+                    || $0.contains("returned to the custody") || $0.contains("is confined for")
+            }
+        case "hearing": return judgments.contains { $0.contains("revoked") || $0.contains("confinement") }
+        default: return false
+        }
+    }
+
     /// Whether this record's judgment put the defendant in custody.
     var imposedCustody: Bool {
         switch resolvedKind {
@@ -144,7 +158,8 @@ extension CaseRecord {
 /// An active term, gathered from the judgment that produced it.
 struct ActiveSentenceSummary {
     var docket: String
-    var date: Date
+    /// When the commitment was entered (nil when no court record shows it).
+    var date: Date?
     var source: String
     var terms: [RecordEntry]
     var commitment: [String]
@@ -229,13 +244,35 @@ struct PersonFile {
         return records.first { $0.docket == term.docket && $0.resolvedKind == "trial" }
     }
 
-    /// The most recent judgment of this court that put the person in custody.
+    /// The commitment that holds the person now: the one that set the release date, or for older saves the latest one.
     var activeSentence: ActiveSentenceSummary? {
         guard person.status == .incarcerated else { return nil }
-        guard let record = records.first(where: \.imposedCustody) else {
-            // A calendar-call plea or another court: only the conviction line is stored.
+        let held = person.custodyDocket
+        let record = held.flatMap { docket in records.first { $0.docket == docket && $0.committedToCustody } }
+            ?? (held == nil ? records.first(where: \.committedToCustody) : nil)
+        // A calendar call keeps only the appearance; it may be newer than any judgment on file.
+        let calendar = person.appearances.last {
+            ($0.outcome.hasPrefix("Guilty plea at calendar call") && $0.outcome.hasSuffix(" active"))
+                || ($0.outcome.hasPrefix("Calendar call:") && $0.outcome.contains("CRV"))
+        }
+        let calendarHolds = calendar.map { appearance in
+            held.map { $0 == appearance.docket } ?? (appearance.date >= (record?.date ?? .distantPast))
+        } ?? false
+        guard let record, !calendarHolds else {
+            // A calendar-call plea or CRV, or another court: only the conviction line is stored.
+            if calendarHolds, let calendar {
+                let prior = person.priors.last { $0.docket == calendar.docket }
+                let felony = prior?.ncClass.isFelony ?? person.probation?.isFelony ?? false
+                let crv = calendar.charges.hasPrefix("Probation violation")
+                return ActiveSentenceSummary(docket: calendar.docket, date: calendar.date,
+                                             source: crv ? "Confinement in response to violation" : "Judgment of this court",
+                                             terms: [], commitment: [prior?.sentence ?? calendar.outcome], recommendations: [],
+                                             advancedSupervisedRelease: [], revocationLines: crv ? [calendar.outcome] : [], postReleaseMonths: nil,
+                                             custody: felony && !crv ? "N.C. Department of Adult Correction" : "Custody of the Sheriff")
+            }
             guard let prior = person.priors.last(where: { $0.sentence.contains("active") || $0.sentence.contains("Life") }) else { return nil }
-            return ActiveSentenceSummary(docket: prior.docket ?? "—", date: today, source: prior.fromThisCourt ? "Judgment of this court" : "\(prior.county) judgment",
+            let entered = person.appearances.last { $0.docket == prior.docket }?.date
+            return ActiveSentenceSummary(docket: prior.docket ?? "—", date: entered, source: prior.fromThisCourt ? "Judgment of this court" : "\(prior.county) judgment",
                                          terms: [], commitment: [prior.sentence], recommendations: [], advancedSupervisedRelease: [],
                                          revocationLines: [], postReleaseMonths: nil,
                                          custody: prior.ncClass.isFelony ? "N.C. Department of Adult Correction" : "Custody of the Sheriff")
@@ -254,6 +291,8 @@ struct PersonFile {
             custody = "N.C. Department of Adult Correction (state prison)"
         } else if !terms.isEmpty {
             custody = "Hollis County Sheriff (county jail)"
+        } else if record.judgments.contains(where: { $0.hasPrefix("Order of Commitment") }) {
+            custody = "Central Regional Hospital (state psychiatric hospital)"
         } else if record.judgments.contains(where: { $0.contains("jail") }) {
             custody = "Hollis County jail"
         } else if let prior = person.priors.first(where: { $0.docket == record.baseDocket }) {
@@ -278,7 +317,9 @@ struct PersonFile {
         switch person.status {
         case .incarcerated: return activeSentence?.custody ?? "In custody; facility not recorded"
         case .probation: return (person.probation?.supervised ?? true) ? "In the community under supervised probation" : "In the community on unsupervised probation"
-        case .free: return "At liberty; no sentence being served"
+        case .free:
+            if let prs = person.postRelease { return "In the community on post-release supervision in \(prs.docket)" }
+            return "At liberty; no sentence being served"
         }
     }
 

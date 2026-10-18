@@ -302,7 +302,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "dwlr", specification: "Drove while {D.his} license was revoked for a prior impaired driving conviction.", chance: 1.0, threshold: 1)
         ],
-        ageRange: 35...58, occupations: ["welder"], forcedPriorOffenses: ["Driving While Impaired", "Driving While Impaired", "Driving While Impaired"], hasVictim: false,
+        ageRange: 35...58, occupations: ["welder"], forcedPriorOffenses: ["Driving While Impaired@8", "Driving While Impaired@5", "Driving While Impaired@2"], hasVictim: false,
         summaries: [
             "At about {TIME} on {DATE}, an officer found {D} asleep in the driver's seat of {D.his} running pickup in the parking lot of a bar on {STREET} in {HOOD}, headlights on, heater running, transmission in park. {DL} blew 0.14. {DL} has three DWI convictions in the last nine years, making this a felony if {D.he} was \"driving.\" {DL} says {D.he} knew {D.he} was too drunk to drive, went to the truck to sleep it off in the heat, and never intended to move."
         ],

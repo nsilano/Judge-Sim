@@ -299,7 +299,7 @@ extension StoryCases {
                                   answer: "\"That was a different county and a different decade.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Relevance", shouldSustain: false,
                                   explanation: "Prior handling errors bear on the reliability of chain of custody, which the defense has put squarely at issue.",
-                                  doctrineID: "chainOfCustody", weight: 1))
+                                  doctrineID: "chainOfCustody", weight: 0))
             ],
             prosecutionOpening: "Nearly forty years ago someone tied up two people and killed them. Science finally named him.",
             defenseOpening: "A broken chain of custody, a warrantless search, and nothing else.",
@@ -322,7 +322,7 @@ extension StoryCases {
             SecondaryCharge(lawID: "kidnapping1", specification: "Kidnapped {V} by confining {V.him} in the sleeper cab of a tractor-trailer.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "kidnapping1", specification: "Kidnapped {VIC2} by confining the victim in the sleeper cab of a tractor-trailer.", chance: 1.0, threshold: 0)
         ],
-        ageRange: 40...58, occupations: ["long-haul truck driver"], forcedPriorOffenses: ["Assault on a Female"], hasVictim: true,
+        ageRange: 40...58, occupations: ["long-haul truck driver"], forcedPriorOffenses: ["Assault on a Female@20"], hasVictim: true,
         summaries: [
             "Seven months apart, two women who hitchhiked from truck stops were found strangled behind truck stops in North Carolina: {V}, 23, behind a stop on I-40 near {HOOD}, and {VIC2}, 29, behind one on I-95. Both had zip-tie marks on their wrists. The electronic logging device in {D}'s tractor-trailer puts {D.his} truck at both stops within an hour of each woman's last sighting. A zip tie of the same brand and an earring like one {VL} wore were found in {DL}'s sleeper cab. {DL} has a prior conviction for assault on a female. {DL} says thousands of trucks pass through those stops every day, that the zip ties are for securing loads, and that the earring was left by a different hitchhiker {D.he} gave a ride."
         ],
@@ -424,13 +424,13 @@ extension StoryCases {
         ],
         ageRange: 26...30, occupations: ["criminology graduate student"], hasVictim: true,
         summaries: [
-            "At about 4 a.m. on {DATE}, four Hollis State University students were stabbed to death in a rented house on {STREET} in {HOOD}: {V}, {VIC2}, {VIC3}, and {VIC4}. Two roommates on the ground floor survived; one saw a masked figure with bushy eyebrows walk past her door. A tan leather knife sheath left on a bed held touch DNA that, through genetic genealogy and a trash pull from {D.his} family's home, matched {D}, a criminology graduate student at a university an hour away. Phone records show {DL}'s phone near the house on twelve earlier nights, and a white sedan like {DL}'s circled the block that night. {DL} says {D.he} was driving alone that night looking at the stars, and that touch DNA can transfer without contact."
+            "At about 4 a.m. on {DATE}, four Hollis State University students were stabbed to death in a rented house on {STREET} in {HOOD}: {V}, {VIC2}, {VIC3}, and {VIC4}. Two roommates on the ground floor survived; one saw a masked figure with bushy eyebrows walk past a bedroom door. A tan leather knife sheath left on a bed held touch DNA that, through genetic genealogy and a trash pull from {D.his} family's home, matched {D}, a criminology graduate student at a university an hour away. Phone records show {DL}'s phone near the house on twelve earlier nights, and a white sedan like {DL}'s circled the block that night. {DL} says {D.he} was driving alone that night looking at the stars, and that touch DNA can transfer without contact."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Knife Sheath DNA", "Touch DNA on the snap of a knife sheath found on a victim's bed matches {DL}."),
             E(.digital, 3, "Phone Records", "{DL}'s phone connected to towers near the house on twelve nights in the prior four months, and went dark from 2:47 to 4:48 a.m. the night of the killings."),
             E(.video, 2, "Neighborhood Cameras", "A white sedan of the same make as {DL}'s passes the house four times between 3:29 and 4:20 a.m."),
-            E(.statement, 2, "Surviving Roommate", "A roommate saw a masked figure \"with bushy eyebrows\" walk past her door toward the sliding door at about 4:17 a.m.")
+            E(.statement, 2, "Surviving Roommate", "A roommate saw a masked figure \"with bushy eyebrows\" walk past the roommate's bedroom door toward the sliding door at about 4:17 a.m.")
         ],
         defenseEvidence: [
             E(.forensic, 2, "Touch DNA", "Touch DNA can transfer secondhand; no blood or DNA of the victims was found in {DL}'s car, apartment, or family home."),
@@ -475,7 +475,7 @@ extension StoryCases {
         defenseTheory: ["Touch DNA that can transfer without contact, three unidentified men's DNA in the house, no blood anywhere {DL} lived or drove, and a common car. The State has a profile, not proof."],
         aggravating: ["The offense involved multiple victims", "The offense was especially heinous, atrocious, or cruel"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{VL}'s father: \"Four families are sitting in this room. We had four Thanksgivings with an empty chair.\""],
+        victimImpacts: ["{VL}'s father: \"Four families are sitting in this room. Every holiday since, there has been an empty chair.\""],
         allocutions: ["\"I didn't know them. I didn't kill them.\""],
         guiltyTruths: ["The knife that fit the sheath was later found in a storage unit rented by {DL}'s relative, with a victim's blood in the handle seam."],
         innocentTruths: ["One of the three unidentified profiles in the house was later matched to a man with a history of stalking one of the victims."],
@@ -500,7 +500,7 @@ extension StoryCases {
                 (0, ObjectionSeed(question: "Prosecutor: \"Did the person you saw look like the defendant sitting right there?\"",
                                   answer: "\"The eyebrows do.\"",
                                   raisedBy: .defense, onCross: false, grounds: "Suggestive in-court identification", shouldSustain: false,
-                                  explanation: "The witness may describe what she saw and compare features; the reliability of the comparison is for cross-examination and the factfinder.",
+                                  explanation: "The witness may describe what the witness saw and compare features; the reliability of the comparison is for cross-examination and the factfinder.",
                                   doctrineID: "relevance", weight: 1))
             ],
             prosecutionOpening: "Four students, a knife sheath beside one of them, and the defendant's DNA on its snap.",

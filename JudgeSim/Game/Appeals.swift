@@ -51,7 +51,10 @@ enum Appeals {
     /// The status line an appellate decision gives the case.
     static func status(for event: PendingEvent) -> String {
         let headline = event.news.headline
-        if event.effect == .resentence || headline.contains("vacates sentence") { return "Sentence vacated; remanded for resentencing" }
+        // A probation appeal is also scheduled as a resentencing, so it is checked first.
+        let probationAppeal = (event.news.docket ?? "").hasSuffix("(PV)") || headline.contains("probation")
+        if probationAppeal && (headline.contains("vacates") || headline.contains("reverses")) { return "Probation order vacated on appeal" }
+        if !probationAppeal && (event.effect == .resentence || headline.contains("vacates sentence")) { return "Sentence vacated; remanded for resentencing" }
         if headline.contains("will retry") { return "New trial ordered; the State will retry" }
         if headline.contains("No retrial") { return "New trial ordered; the State declined to retry" }
         if headline.contains("new trial") { return "New trial ordered on appeal" }
@@ -72,11 +75,11 @@ enum Appeals {
     static func tracker(for event: PendingEvent, caption: String, personID: UUID, filed: Date, appellant: String,
                         issue: String, rng: inout SeededRNG) -> AppealTracker {
         let decision = event.due
-        let span = max(30, Calendar.current.dateComponents([.day], from: filed, to: decision).day ?? 120)
-        let briefs = Calendar.current.date(byAdding: .day, value: min(110, span / 3), to: filed) ?? filed
+        let span = max(30, CourtCalendar.calendar.dateComponents([.day], from: filed, to: decision).day ?? 120)
+        let briefs = CourtCalendar.calendar.date(byAdding: .day, value: min(110, span / 3), to: filed) ?? filed
         var argument: Date?
         if span > 120 && rng.chance(0.55) {
-            argument = CourtCalendar.weekday(onOrAfter: Calendar.current.date(byAdding: .day, value: -rng.int(28...56), to: decision) ?? decision)
+            argument = CourtCalendar.weekday(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: -rng.int(28...56), to: decision) ?? decision)
         }
         return AppealTracker(docket: event.news.docket ?? "", caption: caption, personID: personID, appellant: appellant,
                              issue: issue, filed: filed, briefsDue: briefs, argument: argument, decisionDue: decision)

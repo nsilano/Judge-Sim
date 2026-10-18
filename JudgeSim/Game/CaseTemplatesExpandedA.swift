@@ -114,7 +114,7 @@ extension CaseTemplates {
             primaryLaw: "breakingVehicle", lesserLaw: nil, threshold: 8, lesserThreshold: 8,
             specification: "Broke and entered a vehicle at {COMPLEX} containing things of value, with intent to commit larceny.",
             secondary: [SecondaryCharge(lawID: "misdLarceny", specification: "Stole {ITEM} from the vehicle.", chance: 0.7, threshold: 0)],
-            ageRange: 17...28, hasVictim: true,
+            ageRange: 18...28, hasVictim: true,
             summaries: [
                 "Residents of {COMPLEX} woke to find a dozen cars rummaged through. A doorbell camera caught someone trying door handles at {TIME}. {D} was stopped two blocks away with {ITEM}.",
                 "{V}'s car window was smashed in the {COMPLEX} parking lot and {ITEM} taken. A fingerprint from the door frame came back to {D}."
@@ -258,7 +258,7 @@ extension CaseTemplates {
             headlines: ["Shots on {STREET}", "Eleven Casings"],
             primaryLaw: "dischargingOccupied", lesserLaw: nil, threshold: 6, lesserThreshold: 6,
             specification: "Discharged a firearm into an occupied dwelling on {STREET}.",
-            ageRange: 17...30, hasVictim: true,
+            ageRange: 18...30, hasVictim: true,
             summaries: [
                 "Eleven shots hit a house on {STREET} where {V} was watching TV with two grandchildren. No one was hit. Detectives say {D} fired from a passing car over a social media feud with a grandson.",
                 "A bullet passed through a child's bedroom wall on {STREET} at {TIME}. The home belongs to {V}. Police arrested {D} after a tip and a ShotSpotter alert."
@@ -308,7 +308,7 @@ extension CaseTemplates {
             ageRange: 50...78, hasVictim: true,
             summaries: [
                 "Neighbors {D} and {V} had argued over a property line in rural {HOOD} for twenty years. When {VL} came over with a surveyor's stake and a shovel, {DL} fired a shotgun, hitting {VL} in the leg and hip.",
-                "A survey dispute in {HOOD} ended with {V} airlifted to Chapel Hill with shotgun wounds. {D}, 71, says {VL} charged at them with a shovel raised."
+                "A survey dispute in {HOOD} ended with {V} airlifted to Chapel Hill with shotgun wounds. {D}, a longtime landowner, says {VL} charged at them with a shovel raised."
             ],
             prosecutionEvidence: [
                 E(.forensic, 4, "Shotgun Wound Pattern", "Wound spread indicates a distance of 20 to 25 feet, not close range."),
@@ -441,10 +441,10 @@ extension CaseTemplates {
             headlines: ["The Snapchat Post", "Lockdown at Hollis High"],
             primaryLaw: "massViolenceThreat", lesserLaw: "communicatingThreats", threshold: 5, lesserThreshold: 3,
             specification: "Communicated a threat to commit an act of mass violence at {SCHOOL}.",
-            ageRange: 18...19, hasVictim: false,
+            ageRange: 19...19, hasVictim: false,
             summaries: [
                 "At 6:40 a.m., a post appeared on a student group chat: \"dont come to school tmrw. im serious. bringing the AR.\" {SCHOOL} locked down and 1,200 students were sent home. The post came from {D}, a senior.",
-                "{D}, 18, posted a photo of a rifle with the caption \"{SCHOOL} gonna remember my name.\" Deputies arrested {DL} that night. No gun was found in the home."
+                "{D}, a senior, posted a photo of a rifle with the caption \"{SCHOOL} gonna remember my name.\" Deputies arrested {DL} that night. No gun was found in the home."
             ],
             prosecutionEvidence: [
                 E(.digital, 5, "The Post", "Screenshots of the post, with metadata tied to {DL}'s account and phone."),

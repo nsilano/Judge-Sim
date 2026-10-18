@@ -18,7 +18,7 @@ extension StoryCases {
             SecondaryCharge(lawID: "felonyDBV", specification: "While impaired, unlawfully caused the death of {VIC4}, a youth pastor who stopped to help.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "misdLarceny", specification: "Stole two cases of beer from a {CITY} grocery store hours before the crash.", chance: 1.0, threshold: 0)
         ],
-        ageRange: 18...19, occupations: ["unemployed", "college student"], hasVictim: true,
+        ageRange: 18...18, occupations: ["unemployed", "college student"], hasVictim: true,
         summaries: [
             "On {DATE}, {D}, just past {D.his} eighteenth birthday, drove {D.his} parent's pickup at about 70 mph on a 40 mph stretch of Old Mill Road with seven friends in the truck. {D.His} blood alcohol was 0.24 three hours after the crash, and {D.he} had Valium in {D.his} system. Earlier that evening {DL} had been recorded on camera walking out of a grocery store with two cases of beer without paying. The truck plowed into a group on the shoulder: {V}, whose car had stalled; {VIC2} and {VIC4}, who had stopped to help; and {VIC3}, who lived next to the road. All four died. Two of {DL}'s passengers were thrown from the truck; one will never walk again. {DL}'s family has hired a psychologist who says {DL} never learned consequences because {D.his} parents never imposed any."
         ],
@@ -97,7 +97,7 @@ extension StoryCases {
                                   answer: "\"Studies show that young offenders in adult prisons tend to reoffend more.\"",
                                   raisedBy: .prosecution, onCross: false, grounds: "Beyond the scope of the witness's evaluation", shouldSustain: true,
                                   explanation: "The psychologist evaluated {DL}; general opinions about prison policy aren't based on that evaluation and aren't relevant to guilt. They may be offered at sentencing.",
-                                  doctrineID: "relevance", weight: 1))
+                                  doctrineID: "relevance", weight: -1))
             ],
             prosecutionOpening: "Four people stopped on a dark road to help a stranger. {DL} came around the curve at seventy.",
             defenseOpening: "No one disputes what happened. This case is about who {DL} was raised to be, and who {D.he} still can be.",
@@ -205,6 +205,7 @@ extension StoryCases {
             defenseOpening: "A tragedy, a sick man, and a defective car. Not a plan.",
             prosecutionClosing: "Steering around people is choosing where to hit people.",
             defenseClosing: "The honking was a warning. That's not someone who wants to kill.",
+            when: .months([12]),
             genders: ["D": .male]
         )
     )
@@ -298,7 +299,7 @@ extension StoryCases {
                                   answer: "\"{DL} told me {VL} said that.\"",
                                   raisedBy: .prosecution, onCross: false, grounds: "Hearsay", shouldSustain: true,
                                   explanation: "The witness is repeating what {DL} told the witness that {VL} said, offered for its truth; it's the defendant's own out-of-court statement offered by the defendant.",
-                                  doctrineID: "hearsay", weight: 1))
+                                  doctrineID: "hearsay", weight: -1))
             ],
             prosecutionOpening: "A search for how much would kill a man. Three days of poisoned water. A fall that wasn't.",
             defenseOpening: "A cruel marriage and a desperate, stupid act, not a plan to kill.",
@@ -396,7 +397,7 @@ extension StoryCases {
                                   answer: "\"In my opinion, yes.\"",
                                   raisedBy: .prosecution, onCross: false, grounds: "Relevance", shouldSustain: true,
                                   explanation: "Whether someone else could also be charged doesn't decide whether {DL}'s act was a proximate cause; the witness can testify that the shot was unreasonable, but not about charging decisions.",
-                                  doctrineID: "relevance", weight: 1))
+                                  doctrineID: "relevance", weight: -1))
             ],
             prosecutionOpening: "A man with a gun, gasoline, hostages. None of it was true. All of it was meant to bring armed police.",
             defenseOpening: "The call was wrong. The shot was worse, and the shot killed {VL}.",
