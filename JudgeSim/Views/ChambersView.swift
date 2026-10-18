@@ -712,7 +712,13 @@ struct RecordsView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    if let section = item.section {
+                        Text(section.uppercased()).font(.system(size: 9, weight: .bold)).tracking(0.8).foregroundStyle(Theme.gold)
+                    }
                     Text(item.headline).font(.system(.subheadline, design: .serif).weight(.semibold))
+                    if let byline = item.byline {
+                        Text(byline).font(.system(.caption2, design: .serif)).italic().foregroundStyle(.secondary)
+                    }
                     Text(item.body).font(.system(.caption, design: .serif))
                     if let docket = item.docket {
                         Text(docket).font(.caption2.monospaced()).foregroundStyle(.secondary)

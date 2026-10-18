@@ -6,6 +6,7 @@ struct CalendarCallView: View {
     @Environment(\.dismiss) private var dismiss
     let call: CalendarCall
     @State private var choices: [UUID: Int] = [:]
+    @State private var amounts: [UUID: Int] = [:]
     @State private var showLibrary = false
     @State private var confirmLeave = false
 
@@ -24,14 +25,16 @@ struct CalendarCallView: View {
                     }
 
                     ForEach(call.matters) { matter in
-                        MatterCard(matter: matter, choice: Binding(get: { choices[matter.id] }, set: { choices[matter.id] = $0 }))
+                        MatterCard(matter: matter, choice: Binding(get: { choices[matter.id] }, set: { choices[matter.id] = $0 }),
+                                   amount: Binding(get: { amounts[matter.id] ?? matter.suggestedAmount ?? 0 },
+                                                   set: { amounts[matter.id] = $0 }))
                     }
 
                     PrimaryButton(title: "Close the Calendar Call", icon: "hammer.fill",
                                   enabled: call.matters.allSatisfy { choices[$0.id] != nil },
                                   hint: "Rule on every matter on the calendar.") {
                         Haptics.gavel()
-                        game.completeCalendar(call, choices: choices)
+                        game.completeCalendar(call, choices: choices, amounts: amounts)
                         dismiss()
                     }
                 }
@@ -70,6 +73,7 @@ private struct MatterCard: View {
     @EnvironmentObject private var game: GameState
     let matter: CalendarMatter
     @Binding var choice: Int?
+    @Binding var amount: Int
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -91,6 +95,9 @@ private struct MatterCard: View {
             }
             ForEach(Array(matter.options.enumerated()), id: \.offset) { index, option in
                 ChoiceRow(title: option, selected: choice == index) { choice = index }
+            }
+            if let choice, matter.amountOptions?.contains(choice) == true, let range = matter.amountRange {
+                BondAmountPicker(amount: $amount, range: range)
             }
             if let warrant = matter.warrant {
                 NavigationLink {
@@ -227,5 +234,46 @@ struct WarrantApplicationView: View {
         .background(DocInk.desk)
         .navigationTitle("Warrant Application")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Sets a bond amount: type any figure, or tap a common one.
+private struct BondAmountPicker: View {
+    @Binding var amount: Int
+    let range: ClosedRange<Int>
+
+    private var presets: [Int] {
+        [500, 1_000, 2_500, 5_000, 10_000, 15_000, 25_000, 50_000, 75_000, 100_000, 250_000].filter { range.contains($0) }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Bond amount").font(.subheadline.weight(.semibold))
+                Spacer()
+                Text("$").font(.title3.weight(.bold))
+                TextField("Amount", value: Binding(get: { amount }, set: { amount = min(max($0, range.lowerBound), range.upperBound) }),
+                          format: .number)
+                    .keyboardType(.numberPad)
+                    .font(.title3.monospacedDigit().weight(.bold))
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 140)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    ForEach(presets, id: \.self) { value in
+                        Button("$\(value.formatted())") { amount = value }
+                            .buttonStyle(.bordered)
+                            .tint(amount == value ? Theme.gold : .secondary)
+                            .font(.caption.weight(.semibold))
+                    }
+                }
+            }
+            Stepper("Adjust by $500", value: Binding(get: { amount }, set: { amount = min(max($0, range.lowerBound), range.upperBound) }),
+                    in: range, step: 500)
+                .font(.caption)
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.raised))
     }
 }

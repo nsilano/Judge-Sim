@@ -1909,7 +1909,8 @@ enum Judgment {
                                       plea: plea ? r.pleaKind : nil, severity: severity, sentence: newsSentence, rng: &rng)
         var news = makeNews(c, county: county, judgeLast: judgeLast, date: date, convicted: convicted, dismissed: dismissed,
                             plea: plea ? r.pleaKind : nil, pleaLaw: plea ? sentencingUnits.first?.law : nil,
-                            sentence: newsSentence, active: custodyMonths > 0 || activeImposed, reactions: reactions)
+                            sentence: newsSentence, active: custodyMonths > 0 || activeImposed, reactions: reactions,
+                            countsConvicted: verdictLines.filter { $0.verdictLabel.lowercased().contains("guilty") && !$0.verdictLabel.lowercased().contains("not guilty") }.count)
         if !newsExtras.isEmpty { news.body += " " + newsExtras.joined(separator: " ") }
 
         let appearance: String
@@ -2284,57 +2285,79 @@ enum Judgment {
 
     private static func makeNews(_ c: CourtCase, county: County, judgeLast: String, date: Date, convicted: Bool,
                                  dismissed: Bool, plea: PleaKind?, pleaLaw: Law?, sentence: String, active: Bool,
-                                 reactions: [String]) -> NewsItem {
+                                 reactions: [String], countsConvicted: Int = 0) -> NewsItem {
         let d = c.defendant
+        var rng = SeededRNG(seed: c.seed ^ 0x5EED_AB1E)
         let title = c.charges.first?.law.title ?? "charges"
+        let facts = NewsDesk.VerdictFacts(name: d.name, last: d.lastName, age: d.age, judge: judgeLast, offense: title.lowercased(),
+                                          headline: c.headline, place: c.investigation?.facts?.town, countsTotal: c.charges.count,
+                                          countsConvicted: countsConvicted, sentence: sentence, active: active, returning: d.isReturning,
+                                          custodyDays: c.background?.custodyDays ?? 0, victim: c.victimName, mediaAttention: c.mediaAttention)
         let headline: String
         var body: String
         if dismissed {
-            headline = "Charges against \(d.name) dismissed over trial delays"
+            headline = rng.pick(["Charges against \(d.name) dismissed over trial delays", "Too long a wait: judge tosses \(d.lastName) case",
+                                 "Speedy-trial ruling ends \(d.lastName) prosecution"])
             body = "Superior Court Judge \(judgeLast) dismissed the \(title.lowercased()) case against \(d.name), \(d.age), finding the delay in bringing it to trial violated the constitutional right to a speedy trial."
         } else if let plea, convicted {
             let offense = (pleaLaw?.title ?? title).lowercased()
             switch plea {
             case .guilty:
-                headline = "\(d.name) pleads guilty to \(offense)"
+                headline = rng.pick(["\(d.name) pleads guilty to \(offense)", "\(d.lastName) admits \(offense) in plea deal", "Plea ends \(d.lastName) case before trial"])
                 body = "\(d.name), \(d.age), pleaded guilty to \(offense) before Judge \(judgeLast) in Hollis County Superior Court"
             case .alford:
-                headline = "\(d.name) enters Alford plea to \(offense)"
+                headline = rng.pick(["\(d.name) enters Alford plea to \(offense)", "Maintaining innocence, \(d.lastName) takes Alford plea"])
                 body = "\(d.name), \(d.age), entered an Alford plea to \(offense) before Judge \(judgeLast), maintaining innocence while conceding the State's evidence would likely convict"
             case .noContest:
-                headline = "\(d.name) pleads no contest to \(offense)"
+                headline = rng.pick(["\(d.name) pleads no contest to \(offense)", "No contest plea from \(d.lastName)"])
                 body = "\(d.name), \(d.age), pleaded no contest to \(offense) before Judge \(judgeLast) in Hollis County Superior Court"
             }
             body += sentence.isEmpty ? "." : ", and was sentenced to \(sentence)."
         } else if convicted {
-            headline = "\(d.name) convicted in \(title.lowercased()) case"
-            body = "Following a bench trial in Hollis County Superior Court, Judge \(judgeLast) found \(d.name), \(d.age), guilty"
-            body += sentence.isEmpty ? "." : " and imposed \(sentence)."
+            headline = NewsDesk.convictionHeadline(facts, rng: &rng)
+            body = NewsDesk.lede(facts, convicted: true, rng: &rng)
         } else {
-            headline = "\(d.name) found not guilty of \(title.lowercased())"
-            body = "Judge \(judgeLast) acquitted \(d.name), \(d.age), after a bench trial in Hollis County Superior Court."
+            headline = NewsDesk.acquittalHeadline(facts, rng: &rng)
+            body = NewsDesk.lede(facts, convicted: false, rng: &rng)
         }
-        if d.isReturning {
-            body += " It was not \(d.lastName)'s first appearance in Judge \(judgeLast)'s courtroom."
+        // What the case was about, in the paper's words.
+        if let first = Exhibits.sentences(c.summary).first, first.count < 320 {
+            body += " " + rng.pick(["Prosecutors said that ", "According to court records, ", ""]).capitalizedFirstIfStart(of: first)
         }
         switch (c.mood, convicted) {
         case (.wantsConviction, false):
-            body += " The verdict drew angry reactions from the gallery."
+            body += " " + rng.pick(["The verdict drew angry reactions from the gallery.", "Someone in the back row shouted as the verdict was read.", "Several people walked out before the judge finished."])
         case (.wantsConviction, true) where !active:
-            body += " Some in the community questioned whether the sentence was enough."
+            body += " " + rng.pick(["Some in the community questioned whether the sentence was enough.", "Outside, a small group said probation wasn't justice."])
         case (.sympathetic, true) where active:
-            body += " Several supporters wept as deputies led the defendant away."
+            body += " " + rng.pick(["Several supporters wept as deputies led the defendant away.", "A row of supporters in matching T-shirts sat silent."])
         case (.sympathetic, false):
-            body += " Supporters cheered outside the courthouse."
+            body += " " + rng.pick(["Supporters cheered outside the courthouse.", "Supporters hugged on the courthouse steps."])
         case (.divided, _):
-            body += " Reaction outside the courthouse was split."
+            body += " " + rng.pick(["Reaction outside the courthouse was split.", "Two groups gathered on opposite sides of the courthouse steps.", "Opinions in the hallway afterward were as divided as the evidence."])
         default:
             break
         }
-        if !reactions.isEmpty {
-            body += " " + reactions[Int(c.seed % UInt64(reactions.count))]
+        // Two or three voices, not one.
+        var quotes = reactions
+        let take = min(quotes.count, c.mediaAttention >= 2 ? 3 : 2)
+        for _ in 0..<take {
+            let index = Int(rng.next() % UInt64(max(1, quotes.count)))
+            body += " " + quotes.remove(at: index)
         }
+        body += " " + NewsDesk.kicker(facts, convicted: convicted, rng: &rng)
         return NewsItem(date: date, kind: .verdict, headline: headline, body: body, docket: c.docket,
-                        prominence: c.mediaAttention)
+                        prominence: c.mediaAttention, byline: NewsDesk.byline(NewsDesk.courts, paper: county.newspaper), section: "Courts")
+    }
+}
+
+private extension String {
+    /// Joins a lead-in like "According to court records, " to a sentence. A leading common word is lowercased to
+    /// fit after the lead-in; a name keeps its capital.
+    func capitalizedFirstIfStart(of sentence: String) -> String {
+        guard !isEmpty else { return sentence }
+        let common = ["On ", "At ", "In ", "After ", "When ", "Before ", "Two ", "Three ", "A ", "An ", "The ", "Late ", "Early ", "During "]
+        let body = common.contains(where: sentence.hasPrefix) ? sentence.prefix(1).lowercased() + sentence.dropFirst() : sentence
+        return self + body
     }
 }

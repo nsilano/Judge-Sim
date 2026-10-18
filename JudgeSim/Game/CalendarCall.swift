@@ -67,6 +67,17 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var relief: ReliefMotion? = nil
     /// For a bond hearing: what each option sets and what the court can't see.
     var bond: BondFacts? = nil
+    /// Options where the judge sets the dollar amount, and the range allowed.
+    var amountOptions: [Int]? = nil
+    var amountRange: ClosedRange<Int>? = nil
+    var suggestedAmount: Int? = nil
+
+    /// The option text with the amount the judge chose filled in.
+    func optionText(_ choice: Int, amount: Int?) -> String {
+        let option = options.indices.contains(choice) ? options[choice] : (options.first ?? "")
+        guard amountOptions?.contains(choice) == true, let amount else { return option }
+        return option.replacingOccurrences(of: "an amount you set", with: "$\(amount.formatted())")
+    }
 
     /// The person's whole file is worth opening for these.
     var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination }
@@ -191,9 +202,37 @@ enum CalendarCalls {
                                 : "My client can post about $\(canPost.formatted()). We ask for an unsecured bond so \(d.lastName) can keep working and help with the defense.",
                               options: ["Written promise to appear",
                                         "Unsecured bond of $\(moderate.formatted())",
-                                        "Secured bond of $\(moderate.formatted())",
-                                        "Secured bond of $\(high.formatted()) with electronic house arrest"],
-                              pendingCase: c, bond: BondFacts(moderate: moderate, high: high, canPost: canPost, flightRisk: flight, danger: danger))
+                                        "Secured bond of an amount you set",
+                                        "Secured bond of an amount you set, with electronic house arrest"],
+                              pendingCase: c, bond: BondFacts(moderate: moderate, high: high, canPost: canPost, flightRisk: flight, danger: danger),
+                              amountOptions: [2, 3], amountRange: 500...500_000, suggestedAmount: moderate)
+    }
+
+    /// A jailed defendant asks to have the bond lowered (G.S. 15A-538). The judge sets the new amount.
+    static func bondReductionMatter(for c: CourtCase, rng: inout SeededRNG) -> CalendarMatter {
+        let d = c.defendant
+        let held = c.background.map { max($0.custodyDays, 1) } ?? rng.int(40...210)
+        let current = rng.pick([25_000, 40_000, 50_000, 75_000, 100_000])
+        let employed = !d.occupation.lowercased().contains("unemployed")
+        let canPost = employed ? rng.pick([1_000, 2_500, 5_000, 10_000, 15_000]) : rng.pick([0, 500, 1_000, 2_500])
+        let ftas = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count + (rng.chance(0.3) ? 1 : 0)
+        let felonies = d.priors.filter { $0.ncClass.isFelony }.count
+        let violent = c.category == .violent || c.category == .robbery
+        let flight = min(0.6, 0.06 + 0.12 * Double(ftas) + (employed ? 0 : 0.06) + 0.02 * Double(d.priors.count))
+        let danger = min(0.5, 0.04 + (violent ? 0.08 : 0) + 0.05 * Double(felonies))
+        let law = c.charges.first?.law.title.lowercased() ?? "the charge"
+        return CalendarMatter(kind: .bondModification, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
+                              docket: c.docket,
+                              summary: "\(d.name), held \(held) days on a $\(current.formatted()) secured bond on \(law), asks the court to reduce it (G.S. 15A-538). \(d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s")")\(ftas > 0 ? ", \(ftas) prior failure\(ftas == 1 ? "" : "s") to appear" : ""). \(employed ? "\(d.lastName)'s employer will hold the job for two more weeks." : "\(d.lastName) was out of work before the arrest.")",
+                              stateAsk: ftas > 0 || violent
+                                ? "The State opposes any reduction. \(ftas > 0 ? "The defendant has missed court before." : "The charge is violent and the evidence is strong.")"
+                                : "The State would agree to a modest reduction with electronic monitoring.",
+                              defenseAsk: "My client can post about $\(canPost.formatted()). Anything higher is a detention order by another name. There's a job and a family waiting.",
+                              options: ["Reduce the bond to an amount you set", "Leave the bond at $\(current.formatted())",
+                                        "Unsecured bond with electronic house arrest"],
+                              pendingCase: c,
+                              bond: BondFacts(moderate: current, high: current, canPost: canPost, flightRisk: flight, danger: danger),
+                              amountOptions: [0], amountRange: 500...max(1_000, current - 500), suggestedAmount: max(500, current / 2))
     }
 
     /// Arraignment in superior court (G.S. 15A-941): the plea is entered and the court sets the trial date.
@@ -412,7 +451,7 @@ enum CalendarCalls {
         var probationCompleted = 0
     }
 
-    static func resolve(_ call: CalendarCall, choices: [UUID: Int], judgeName: String, county: County) -> Result {
+    static func resolve(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], judgeName: String, county: County) -> Result {
         var rng = SeededRNG(seed: UInt64(truncatingIfNeeded: call.date.timeIntervalSince1970.bitPattern) ^ UInt64(call.matters.count))
         var lines: [String] = []
         var newPeople: [PersonRecord] = []
@@ -425,7 +464,7 @@ enum CalendarCalls {
 
         for m in call.matters {
             let choice = choices[m.id] ?? 0
-            let option = m.options.indices.contains(choice) ? m.options[choice] : m.options[0]
+            let option = m.optionText(choice, amount: amounts[m.id] ?? m.suggestedAmount)
             lines.append("\(m.docket) · \(m.personName) · \(m.kind.label): \(option).")
             switch m.kind {
             case .quickPlea:
@@ -473,7 +512,7 @@ enum CalendarCalls {
                 person.appearances.append(PersonRecord.Appearance(docket: m.docket, date: date, charges: law.title,
                                                                   outcome: "Guilty plea at calendar call. \(sentence)"))
                 newPeople.append(person)
-            case .bondModification where choice == 0 && rng.chance(0.2):
+            case .bondModification where m.pendingCase == nil && choice == 0 && rng.chance(0.2):
                 pending.append(PendingEvent(due: Calendar.current.date(byAdding: .day, value: rng.int(20...90), to: date) ?? date,
                                             news: NewsItem(date: date, kind: .arrest,
                                                            headline: "Defendant released on reduced bond charged again",

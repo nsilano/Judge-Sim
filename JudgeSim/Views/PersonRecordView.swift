@@ -510,6 +510,9 @@ struct NewsClipping: View {
             Text(item.headline)
                 .font(.system(.headline, design: .serif))
                 .fixedSize(horizontal: false, vertical: true)
+            if let byline = item.byline {
+                Text(byline).font(.system(.caption2, design: .serif)).italic().foregroundStyle(.secondary)
+            }
             Text(item.body)
                 .font(.system(.footnote, design: .serif))
                 .foregroundStyle(.secondary)

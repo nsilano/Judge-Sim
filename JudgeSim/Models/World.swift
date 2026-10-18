@@ -244,6 +244,9 @@ struct NewsItem: Identifiable, Codable, Hashable {
     var docket: String?
     /// 1 inside pages, 2 metro front, 3 front page above the fold.
     var prominence: Int? = nil
+    /// Who wrote it, and where it ran (optional for older saves).
+    var byline: String? = nil
+    var section: String? = nil
 
     var placement: String? {
         switch prominence ?? 0 {
