@@ -532,6 +532,7 @@ final class GameState: ObservableObject {
             }
             if case .trial(var c) = entry.matter {
                 creditJailTime(&c, through: date)
+                applyDelayCosts(&c, entry: &entry, rng: &rng)
                 c.sessionDate = date
                 refreshDefendant(&c)
                 if let requests = entry.requests, !requests.isEmpty {
@@ -629,6 +630,44 @@ final class GameState: ObservableObject {
         background.custodyDays += served
         c.background = background
         c.proceduralNotes.append("Credit for \(served) days in custody on the vacated judgment is added to pretrial confinement (G.S. 15-196.1).")
+    }
+
+    /// Delay has a price. Each time a trial is put off, witnesses drift, the victim's family loses patience,
+    /// and a jailed defendant's lawyer builds a speedy-trial record.
+    private func applyDelayCosts(_ c: inout CourtCase, entry: inout DocketEntry, rng: inout SeededRNG) {
+        let times = entry.continuances
+        guard times > 0 else { return }
+        let jailed = (c.background?.custodyDays ?? 0) > 0
+        let started = (entry.resume?.stage ?? 0) >= CaseSession.Stage.trial.rawValue
+        var notes: [String] = []
+        // From the second continuance on, an ordinary State witness may no longer be available.
+        if times >= 2, !started, !c.templateKey.hasPrefix("story."), rng.chance(0.2 + 0.1 * Double(min(times, 4))) {
+            let candidates = c.witnesses.filter { $0.calledBy == .prosecution && $0.lay == true && $0.name != c.victimName && $0.isDefendant != true }
+            if c.witnesses.filter({ $0.calledBy == .prosecution }).count > 1, let gone = candidates.first {
+                c.witnesses.removeAll { $0.id == gone.id }
+                c.objections.removeAll { $0.witnessID == gone.id }
+                notes.append("\(gone.name) (\(gone.role.lowercased())) has moved out of state and can't be found for trial; the State proceeds without that testimony.")
+            }
+        }
+        if times >= 2, let victim = c.victimName, rng.chance(0.6) {
+            post(NewsItem(date: c.sessionDate, kind: .community,
+                          headline: "Family of \(victim) frustrated as \(c.defendant.lastName) case is delayed again",
+                          body: "The case against \(c.defendant.name) in Hollis County Superior Court has been continued \(times) times. \(victim)'s family told reporters they have taken days off work for every setting. \"We just want it over,\" a relative said.",
+                          docket: c.docket, prominence: 1))
+            notes.append("\(victim)'s family has written to the court about the delays.")
+        }
+        if times >= 2 && jailed {
+            notes.append("Defense counsel objects to further delay for the record: \(c.defendant.lastName) has been held \(c.background?.custodyDays ?? 0) days awaiting trial (Barker v. Wingo; N.C. Const. art. I, § 18).")
+        }
+        if !notes.isEmpty {
+            entry.note = (entry.note ?? "") + " " + notes.joined(separator: " ")
+            c.proceduralNotes.append(contentsOf: notes)
+        }
+    }
+
+    /// How many times a matter on this week's calendar has already been continued.
+    func continuances(of matterID: UUID) -> Int {
+        today?.entries.first { $0.matterID == matterID }?.continuances ?? 0
     }
 
     /// Brings a defendant's record up to date before a case is heard again.

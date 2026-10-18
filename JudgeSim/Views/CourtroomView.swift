@@ -12,6 +12,20 @@ struct CourtroomView: View {
     @State private var grantingMotion: ContinuanceMotion?
     @State private var reviewSection: CaseReviewSheet.Section?
 
+    /// What one more delay costs in this case.
+    private var delayCost: String? {
+        let c = session.courtCase
+        let times = game.continuances(of: c.id)
+        var parts: [String] = []
+        if times > 0 { parts.append("Already continued \(times) time\(times == 1 ? "" : "s").") }
+        if let days = c.background?.custodyDays, days > 0 {
+            parts.append("\(c.defendant.lastName) is in jail (\(days) days so far); every week adds to that, and to the speedy-trial claim.")
+        }
+        if times >= 1 { parts.append("Each delay makes it likelier a witness can't be found.") }
+        if c.victimName != nil && times >= 1 { parts.append("The victim's family has been to every setting.") }
+        return parts.isEmpty ? nil : parts.joined(separator: " ")
+    }
+
     init(courtCase: CourtCase, judgeName: String, county: County, resume: CaseSnapshot? = nil) {
         _session = StateObject(wrappedValue: CaseSession(courtCase: courtCase, judgeName: judgeName, county: county, resume: resume))
     }
@@ -134,7 +148,8 @@ struct CourtroomView: View {
                                     ? EvidenceRequest.options(for: session.courtCase) : [],
                                  initialRequests: grantingMotion.map { [$0.request] } ?? [],
                                  initialReason: grantingMotion.map { "On the \($0.movant == .prosecution ? "State's" : "defense's") motion: \($0.title.lowercased())." },
-                                 initialDays: grantingMotion?.suggestedDays) { date, reason, requests in
+                                 initialDays: grantingMotion?.suggestedDays,
+                                 cost: delayCost) { date, reason, requests in
                     showContinuance = false
                     game.continueMatter(session.courtCase.id, to: date, reason: reason, snapshot: session.snapshot, requests: requests)
                     dismiss()
@@ -772,6 +787,8 @@ struct ContinuanceSheet: View {
     var requestOptions: [EvidenceRequest] = []
     /// A trial keeps its rulings across a continuance; a hearing starts over.
     var keepsRulings = true
+    /// What another delay will cost, shown before the judge commits to it.
+    var cost: String? = nil
     let onContinue: (Date, String, [EvidenceRequest]) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var date: Date
@@ -799,8 +816,9 @@ struct ContinuanceSheet: View {
     ]
 
     init(today: Date, subject: String, requestOptions: [EvidenceRequest] = [], initialRequests: [EvidenceRequest] = [],
-         initialReason: String? = nil, initialDays: Int? = nil, keepsRulings: Bool = true,
+         initialReason: String? = nil, initialDays: Int? = nil, keepsRulings: Bool = true, cost: String? = nil,
          onContinue: @escaping (Date, String, [EvidenceRequest]) -> Void) {
+        self.cost = cost
         self.today = today
         self.subject = subject
         self.requestOptions = requestOptions
@@ -828,6 +846,9 @@ struct ContinuanceSheet: View {
                     DatePicker("Reconvene on", selection: $date,
                                in: Self.earliest(after: today)...,
                                displayedComponents: .date)
+                    if let cost {
+                        Label(cost, systemImage: "hourglass").font(.caption).foregroundStyle(.orange)
+                    }
                     Text("It will be on the calendar for the \("w" + CourtCalendar.weekTitle(CourtCalendar.weekday(onOrAfter: date)).dropFirst()).")
                         .font(.caption)
                         .foregroundStyle(.secondary)

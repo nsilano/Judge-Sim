@@ -89,7 +89,7 @@ struct TrialStage: View {
                 CollapsibleSection(title: "\(exhibits.count) exhibit\(exhibits.count == 1 ? "" : "s")", icon: "tray.full.fill",
                                    summary: exhibits.map(\.title).joined(separator: " · "), expanded: side == .prosecution) {
                     ForEach(exhibits) { item in
-                        EvidenceCard(evidence: item, suppressed: session.isSuppressed(item))
+                        EvidenceCard(evidence: item, suppressed: session.isSuppressed(item), courtCase: c)
                     }
                 }
             }
@@ -120,6 +120,9 @@ struct Statement: View {
 struct EvidenceCard: View {
     let evidence: Evidence
     let suppressed: Bool
+    /// The case the exhibit belongs to; when given, the exhibit can be opened and reviewed.
+    var courtCase: CourtCase? = nil
+    @State private var reviewing = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -146,10 +149,34 @@ struct EvidenceCard: View {
                 Text(evidence.detail)
                     .font(.callout)
                     .fixedSize(horizontal: false, vertical: true)
+                if courtCase != nil {
+                    Button {
+                        Haptics.tap()
+                        reviewing = true
+                    } label: {
+                        Label(reviewLabel, systemImage: "eye.fill").font(.subheadline.weight(.semibold))
+                    }
+                    .buttonStyle(.bordered)
+                    .padding(.top, 2)
+                }
             }
         }
         .opacity(suppressed ? 0.5 : 1)
         .card()
+        .sheet(isPresented: $reviewing) {
+            if let courtCase { ExhibitViewer(evidence: evidence, courtCase: courtCase, suppressed: suppressed) }
+        }
+    }
+
+    private var reviewLabel: String {
+        switch evidence.kind {
+        case .video: return "Watch the footage"
+        case .document: return "Read the document"
+        case .digital: return "Open the extraction"
+        case .statement: return "Read the transcript"
+        case .forensic: return "Read the lab report"
+        case .physical: return "Examine the item"
+        }
     }
 }
 

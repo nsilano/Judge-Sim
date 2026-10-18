@@ -1193,6 +1193,28 @@ struct JudgmentStage: View {
                 Text(habitual).font(.callout).card()
             }
 
+            if !outcome.rulingNotes.isEmpty {
+                let sound = outcome.rulingNotes.filter(\.sound).count
+                CollapsibleSection(title: "Your rulings on review", icon: "building.columns.fill",
+                                   summary: "\(sound) of \(outcome.rulingNotes.count) would hold up on appeal",
+                                   expanded: false) {
+                    ForEach(outcome.rulingNotes) { note in
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(alignment: .firstTextBaseline) {
+                                Image(systemName: note.sound ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                    .foregroundStyle(note.sound ? Theme.good : .orange)
+                                Text(note.title).font(.subheadline.weight(.semibold))
+                            }
+                            Text("You: \(note.yourRuling)" + (note.sound ? "" : " · The better ruling: \(note.proper)"))
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            Text(note.note).font(.callout).fixedSize(horizontal: false, vertical: true)
+                        }
+                        .card()
+                    }
+                }
+            }
+
             if !outcome.judgments.isEmpty {
                 SectionTitle(text: "Judgment and commitment", icon: "doc.text.fill")
                 ForEach(outcome.judgments) { entry in

@@ -406,6 +406,18 @@ struct CaseOutcome {
     var newPostRelease: PostReleaseTerm? = nil
     /// Supervision violations the court found in this case.
     var violations: [SupervisionViolation] = []
+    /// Each contested ruling, with how an appellate court would see it.
+    var rulingNotes: [RulingNote] = []
+}
+
+/// One ruling the judge made at trial and what the law says about it, shown once judgment is entered.
+struct RulingNote: Identifiable, Hashable, Codable {
+    var id = UUID()
+    var title: String
+    var yourRuling: String
+    var proper: String
+    var sound: Bool
+    var note: String
 }
 
 enum Judgment {
@@ -1924,7 +1936,45 @@ enum Judgment {
                            appealNotice: appealNotice, reactions: reactions, news: news, ethicsResult: ethicsResult,
                            pending: pending, appearanceSummary: appearance, releaseBasis: releaseBasis,
                            continuedPostRelease: continuedPostRelease, newPostRelease: newPostRelease,
-                           violations: violationsFound)
+                           violations: violationsFound, rulingNotes: rulingNotes(c, r))
+    }
+
+    /// Every motion, objection, and halftime motion the judge ruled on, and how the ruling would hold up.
+    static func rulingNotes(_ c: CourtCase, _ r: Rulings) -> [RulingNote] {
+        var notes: [RulingNote] = []
+        for m in c.motions {
+            guard let granted = r.motions[m.id] else { continue }
+            notes.append(RulingNote(title: m.kind.title, yourRuling: granted ? "Granted" : "Denied",
+                                    proper: m.shouldGrant ? "Grant" : "Deny", sound: granted == m.shouldGrant, note: m.appellateNote))
+        }
+        for o in c.objections {
+            guard let sustained = r.objections[o.id] else { continue }
+            let who = o.raisedBy == .defense ? "Defense" : "State"
+            notes.append(RulingNote(title: "\(who) objection: \(o.grounds)", yourRuling: sustained ? "Sustained" : "Overruled",
+                                    proper: o.shouldSustain ? "Sustain" : "Overrule", sound: sustained == o.shouldSustain,
+                                    note: o.appellateNote))
+        }
+        let state = stateStrength(c)
+        for charge in c.charges {
+            guard let ruling = r.halftime[charge.id] else { continue }
+            let substantial = state >= charge.threshold
+            let lesserSubstantial = state >= charge.lesserThreshold
+            let sound: Bool
+            switch ruling {
+            case .deny: sound = substantial
+            case .dismiss: sound = !substantial
+            case .lesserOnly: sound = !substantial && lesserSubstantial
+            }
+            let note = substantial
+                ? "Taken in the light most favorable to the State, there was substantial evidence of each element of \(charge.law.title). Credibility and conflicts in the evidence are for the factfinder, so the count should go forward."
+                : (lesserSubstantial && charge.lesserLawID != nil
+                    ? "The State's evidence was thin on an element of \(charge.law.title) but supported the lesser offense. Sending only the lesser offense forward is the careful ruling."
+                    : "The State's evidence did not reach substantial evidence of every element. Dismissal at the close of the State's case is proper, and it can't be appealed by the State.")
+            notes.append(RulingNote(title: "Motion to dismiss count \(charge.count): \(charge.law.title)", yourRuling: ruling.label,
+                                    proper: substantial ? "Deny" : (lesserSubstantial && charge.lesserLawID != nil ? "Lesser offense only" : "Dismiss"),
+                                    sound: sound, note: note))
+        }
+        return notes
     }
 
     // MARK: Appeals
