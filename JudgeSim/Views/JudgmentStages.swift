@@ -855,6 +855,18 @@ struct UnitSentenceCard: View {
                     choice.range = .presumptive
                     choice.minimum = min(max(choice.minimum, 1), cell.maxDays)
                 }
+            } else if unit.isDWI {
+                // G.S. 20-179: the court weighs grossly aggravating, aggravating, and mitigating factors to set the level.
+                ForEach(StructuredSentencing.dwiLevels.indices, id: \.self) { index in
+                    let level = StructuredSentencing.dwiLevels[index]
+                    ChoiceRow(title: level.label, subtitle: level.note,
+                              selected: choice.dwiLevel == index && !choice.customTerm) {
+                        choice.lifeWithoutParole = false
+                        choice.customTerm = false
+                        choice.dwiLevel = index
+                        choice.minimum = min(max(choice.minimum, level.minDays), level.maxDays)
+                    }
+                }
             }
             ChoiceRow(title: "Set my own term", subtitle: "Any length, inside or outside the chart",
                       selected: isCustom) {
@@ -969,7 +981,8 @@ struct UnitSentenceCard: View {
                 }
             }
         } else {
-            let cap = isCustom ? 3_650 : (unit.misdemeanorCell?.maxDays ?? 150)
+            let dwiCap = unit.isDWI ? choice.dwiLevel.flatMap { StructuredSentencing.dwiLevels.indices.contains($0) ? StructuredSentencing.dwiLevels[$0].maxDays : nil } : nil
+            let cap = isCustom ? 3_650 : (dwiCap ?? unit.misdemeanorCell?.maxDays ?? 150)
             AmountStepper(title: choice.minimum == 0 ? "No jail time (fine only)" : "\(choice.minimum) days",
                           value: $choice.minimum, range: 0...cap,
                           fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
@@ -978,7 +991,8 @@ struct UnitSentenceCard: View {
 
     @ViewBuilder
     private var dispositionPicker: some View {
-        let allowed = unit.felonyCell?.dispositions ?? unit.misdemeanorCell?.dispositions ?? [.active]
+        let allowed = unit.isDWI ? [Disposition.active, .intermediate, .community]
+            : (unit.felonyCell?.dispositions ?? unit.misdemeanorCell?.dispositions ?? [.active])
         Text("Disposition").font(.caption.weight(.bold)).foregroundStyle(.secondary)
         ForEach(Disposition.allCases.reversed(), id: \.self) { disposition in
             ChoiceRow(title: disposition.label,
@@ -991,7 +1005,7 @@ struct UnitSentenceCard: View {
         }
         if choice.disposition == .active && !choice.lifeWithoutParole {
             ConditionToggle(title: "Follow the active term with probation",
-                            detail: "Probation begins on release, even if jail credit means release is today. Revocation can impose up to the same active term again.",
+                            detail: "A split sentence: part of the term is served, the rest is suspended, and probation begins on release. Revocation can activate only the suspended balance.",
                             isOn: Binding(get: { choice.probationAfterActive == true },
                                           set: { choice.probationAfterActive = $0 }))
             if choice.probationAfterActive == true {

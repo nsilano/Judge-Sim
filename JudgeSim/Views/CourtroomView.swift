@@ -770,6 +770,8 @@ struct ContinuanceSheet: View {
     let today: Date
     let subject: String
     var requestOptions: [EvidenceRequest] = []
+    /// A trial keeps its rulings across a continuance; a hearing starts over.
+    var keepsRulings = true
     let onContinue: (Date, String, [EvidenceRequest]) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var date: Date
@@ -787,17 +789,27 @@ struct ContinuanceSheet: View {
         "Defense counsel has a conflict in another courtroom."
     ]
 
+    static let hearingReasons = [
+        "On the court's own motion.",
+        "On the probationer's motion, to prepare.",
+        "The probation officer is unavailable.",
+        "Awaiting the result of the new charge.",
+        "So the probationer can enter treatment before the hearing.",
+        "Defense counsel has a conflict in another courtroom."
+    ]
+
     init(today: Date, subject: String, requestOptions: [EvidenceRequest] = [], initialRequests: [EvidenceRequest] = [],
-         initialReason: String? = nil, initialDays: Int? = nil,
+         initialReason: String? = nil, initialDays: Int? = nil, keepsRulings: Bool = true,
          onContinue: @escaping (Date, String, [EvidenceRequest]) -> Void) {
         self.today = today
         self.subject = subject
         self.requestOptions = requestOptions
+        self.keepsRulings = keepsRulings
         self.onContinue = onContinue
         let days = max(1, (initialDays ?? 7) - 1)
         let suggested = CourtCalendar.nextWeekday(after: Calendar.current.date(byAdding: .day, value: days, to: today) ?? today)
         _date = State(initialValue: max(suggested, Self.earliest(after: today)))
-        let options = (initialReason.map { [$0] } ?? []) + Self.reasons
+        let options = (initialReason.map { [$0] } ?? []) + (keepsRulings ? Self.reasons : Self.hearingReasons)
         _reasonOptions = State(initialValue: options)
         _reason = State(initialValue: options[0])
         _requests = State(initialValue: Set(initialRequests))
@@ -820,7 +832,9 @@ struct ContinuanceSheet: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } footer: {
-                    Text("Every ruling you've made is kept. The case comes back on that week's calendar, right where you left it.")
+                    Text(keepsRulings
+                         ? "Every ruling you've made is kept. The case comes back on that week's calendar, right where you left it."
+                         : "The matter comes back on that week's calendar and is heard from the start.")
                 }
                 if !requestOptions.isEmpty {
                     Section {

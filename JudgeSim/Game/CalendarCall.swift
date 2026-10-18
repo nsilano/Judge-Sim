@@ -238,6 +238,7 @@ enum CalendarCalls {
         var newPeople: [PersonRecord] = []
         var updates: [(UUID, (inout PersonRecord) -> Void)] = []
         var pending: [PendingEvent] = []
+        var activeSentences = 0, suspendedSentences = 0, probationCompleted = 0
         let date = call.date
         let year = Calendar.current.component(.year, from: date)
         let judgeLast = judgeName.components(separatedBy: " ").last ?? judgeName
@@ -253,7 +254,9 @@ enum CalendarCalls {
                 let cls = law.ncClass ?? .misd1
                 let birthYear = year - m.personAge
                 var person = PersonRecord(id: m.personID, name: m.personName, birthYear: birthYear, occupation: m.occupation,
-                                          background: "Pleaded guilty at a calendar call.", priors: m.priors,
+                                          background: BackgroundLines.pick(age: m.personAge, occupation: m.occupation, used: [],
+                                                                           towns: county.towns, rng: &rng),
+                                          priors: m.priors,
                                           propensity: m.priors.isEmpty ? 0.18 : 0.3)
                 let termText = m.isFelony ? "\(m.activeTerm)–\(StructuredSentencing.maximum(forMinimum: m.activeTerm, cls: cls)) months" : "\(m.activeTerm) days"
                 let sentence: String
@@ -274,9 +277,19 @@ enum CalendarCalls {
                     sentence = "\(termText) active"
                     person.status = .incarcerated
                     person.releaseDate = Calendar.current.date(byAdding: m.isFelony ? .month : .day, value: m.activeTerm, to: date)
+                    person.releaseNote = "Committed on a guilty plea at the calendar call: \(termText) active."
+                    if m.isFelony, let release = person.releaseDate {
+                        // Felony actives carry post-release supervision after release (G.S. 15A-1368.2).
+                        let months = StructuredSentencing.postReleaseMonths(for: cls)
+                        person.pendingPostRelease = PostReleaseTerm(docket: m.docket, offense: law.title,
+                                                                    ends: Calendar.current.date(byAdding: .month, value: months, to: release) ?? release,
+                                                                    supervisionMonths: months, remainingMonths: months)
+                    }
                 }
+                if choice == 0 { suspendedSentences += 1 } else if choice != 1 { activeSentences += 1 }
                 person.priors.append(PriorConviction(offense: law.title, ncClass: cls, year: year, county: county.name,
-                                                     sentence: sentence, fromThisCourt: true, docket: m.docket))
+                                                     sentence: sentence, fromThisCourt: true, docket: m.docket,
+                                                     sessionKey: Judgment.sessionKey(county: county, date: date)))
                 person.appearances.append(PersonRecord.Appearance(docket: m.docket, date: date, charges: law.title,
                                                                   outcome: "Guilty plea at calendar call. \(sentence)"))
                 newPeople.append(person)
@@ -290,13 +303,26 @@ enum CalendarCalls {
                 lines.append("Order for arrest issued; bond forfeiture entered (G.S. 15A-544.3).")
             case .earlyTermination:
                 guard choice != 2 else { continue }
+                if choice == 1 && m.owesMoney == true {
+                    // Money is still owed: probation ends only once it is paid, within the next three months.
+                    updates.append((m.personID, { person in
+                        guard var term = person.probation else { return }
+                        term.conditions = (term.conditions ?? []) + ["Probation terminates upon payment in full of all money owed."]
+                        term.ends = min(term.ends, Calendar.current.date(byAdding: .month, value: 3, to: date) ?? term.ends)
+                        person.probation = term
+                        person.appearances.append(PersonRecord.Appearance(docket: term.docket, date: date, charges: "Motion to terminate probation early",
+                                                                          outcome: "Granted on condition: probation ends once all money owed is paid"))
+                    }))
+                    continue
+                }
+                probationCompleted += 1
                 updates.append((m.personID, { person in
                     guard let term = person.probation else { return }
                     person.probation = nil
                     person.status = .free
                     person.propensity = max(0.03, person.propensity * 0.85)
                     person.appearances.append(PersonRecord.Appearance(docket: term.docket, date: date, charges: "Motion to terminate probation early",
-                                                                      outcome: choice == 1 ? "Granted on payment of all money owed: probation ended early"
+                                                                      outcome: choice == 1 ? "Granted; nothing is owed: probation ended early"
                                                                                            : "Granted: probation ended early"))
                 }))
             case .pvAdmission:
@@ -309,13 +335,22 @@ enum CalendarCalls {
                     case 2:
                         term.violationRisk = max(0.05, (term.violationRisk ?? 0.2) - 0.03)
                     case 3:
+                        // Credit for earlier CRVs: a misdemeanor CRV never exceeds the suspended time left.
+                        let days = max(1, ViolationHearings.crvDays(term))
                         term.crvCount = (term.crvCount ?? 0) + 1
+                        term.crvDaysServed = term.crvCreditDays + days
                         person.status = .incarcerated
-                        person.releaseDate = Calendar.current.date(byAdding: .day, value: term.isFelony ? 90 : min(90, max(1, term.activeMonths * 30)), to: date)
+                        person.releaseDate = Calendar.current.date(byAdding: .day, value: days, to: date)
+                        person.releaseNote = "Confinement in response to violation: \(days) days, ordered at the calendar call. Probation resumes on release."
                     default:
                         break
                     }
                     person.probation = term
+                    // The admission is a violation found by the court.
+                    person.violations = (person.violations ?? []) + [SupervisionViolation(
+                        docket: term.docket, date: date, kind: "Probation violation",
+                        conduct: "Admitted the violation at the calendar call",
+                        result: option.trimmingTrailingPeriods)]
                     person.appearances.append(PersonRecord.Appearance(docket: m.docket, date: date, charges: "Probation violation (admitted)",
                                                                       outcome: "Calendar call: \(option)"))
                 }))
@@ -323,6 +358,7 @@ enum CalendarCalls {
                 break
             }
         }
-        return Result(lines: lines, newPeople: newPeople, updates: updates, pending: pending)
+        return Result(lines: lines, newPeople: newPeople, updates: updates, pending: pending,
+                      activeSentences: activeSentences, suspendedSentences: suspendedSentences, probationCompleted: probationCompleted)
     }
 }

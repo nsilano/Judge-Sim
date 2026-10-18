@@ -245,7 +245,7 @@ enum DefendantProfiles {
     }
 
     /// The same person always gets the same history.
-    static func make(for defendant: Defendant, county: County, year: Int? = nil) -> DefendantProfile {
+    static func make(for defendant: Defendant, county: County, year: Int? = nil, family known: FamilyFacts = FamilyFacts()) -> DefendantProfile {
         let bytes = withUnsafeBytes(of: defendant.personID.uuid) { Array($0) }
         let seed = bytes.prefix(8).reduce(UInt64(0)) { ($0 << 8) | UInt64($1) }
         var rng = SeededRNG(seed: seed | 1)
@@ -467,20 +467,25 @@ enum DefendantProfiles {
         }
         jobs = timeline.sorted { $0.start > $1.start }.map { $0.job }
 
-        // Family fits the person's age.
+        // Family fits the person's age, the background, and whatever the case itself says about spouse and children.
+        var facts = known
+        facts.merge(FamilyFacts.from(background: background))
         let family: String
-        if student || age < 20 {
+        if (student || age < 20) && facts.minChildren == 0 && facts.status == nil {
             family = rng.pick(["Single, no children.", "Single, no children.", "In a relationship, no children."])
         } else {
-            let maxChildren = min(3, max(0, (age - 18) / 4))
-            let children = maxChildren == 0 ? 0 : rng.int(0...maxChildren)
+            let maxChildren = max(facts.minChildren, min(3, max(0, (age - 18) / 4)))
+            let drawn = maxChildren == 0 ? 0 : rng.int(0...maxChildren)
+            let children = facts.exactChildren ?? max(facts.minChildren, drawn)
             var statuses = ["Single", "In a long-term relationship"]
             if age >= 21 { statuses += ["Married", "Married"] }
             if age >= 25 { statuses += ["Divorced", "Separated"] }
             if age >= 55 { statuses.append("Widowed") }
-            let status = rng.pick(statuses)
-            let support = children > 0 && ["Divorced", "Separated", "Single"].contains(status) && rng.chance(0.5)
+            let status = facts.status ?? rng.pick(statuses)
+            let support = facts.paysSupport
+                || (children > 0 && ["Divorced", "Separated", "Single"].contains(status) && rng.chance(0.5))
             family = status + (children == 0 ? ", no children." : ", \(children) child\(children == 1 ? "" : "ren")" + (support ? ", pays child support." : "."))
+                + (facts.note.map { " " + $0 } ?? "")
         }
 
         // Where the defendant lives agrees with the background and the person's age.
@@ -1050,5 +1055,92 @@ extension Array where Element: Hashable {
     func uniqued() -> [Element] {
         var seen = Set<Element>()
         return filter { seen.insert($0).inserted }
+    }
+}
+
+/// What is known about a defendant's spouse and children from the background and the written facts of the case,
+/// so the profile never says "no children" about someone the case calls a parent.
+struct FamilyFacts {
+    var minChildren = 0
+    var exactChildren: Int?
+    var status: String?
+    var note: String?
+    var paysSupport = false
+
+    mutating func merge(_ other: FamilyFacts) {
+        minChildren = max(minChildren, other.minChildren)
+        if exactChildren == nil { exactChildren = other.exactChildren }
+        if let exact = exactChildren, exact < minChildren { exactChildren = minChildren }
+        if status == nil { status = other.status }
+        if note == nil { note = other.note }
+        paysSupport = paysSupport || other.paysSupport
+    }
+
+    /// Family facts stated in a background line.
+    static func from(background: String) -> FamilyFacts {
+        var f = FamilyFacts()
+        let b = background.lowercased()
+        func has(_ words: String...) -> Bool { words.contains { b.contains($0) } }
+        if has("has five children") { f.exactChildren = 5 }
+        if has("raised two children", "estranged from both children") { f.exactChildren = 2 }
+        if has("grandchildren", "grandchild", "became a grandparent") { f.minChildren = max(f.minChildren, 2) }
+        if has("custody of a child", "custody fight", "became a parent", "child support", "a child plays on",
+               "had a child removed", "day a child was born", "lost children", "disabled adult child",
+               "teenage child", "adopted a former foster child") {
+            f.minChildren = max(f.minChildren, 1)
+        }
+        if has("child support") { f.paysSupport = true }
+        if has("widowed", "widow or widower") { f.status = "Widowed" }
+        if has("married to a high school sweetheart") { f.status = "Married" }
+        if has("going through a divorce") { f.status = "Separated, divorce pending" }
+        if has("after a divorce", "custody fight") { f.status = "Divorced" }
+        if has("recently got engaged") { f.status = "Engaged" }
+        if has("foster parent to two teenagers") { f.note = "Foster parent to two teenagers." }
+        if has("raising a niece and nephew") { f.note = "Raising a niece and nephew." }
+        return f
+    }
+
+    /// Family facts the written case states about the defendant. `text` is the unfilled template text, so the
+    /// defendant's own relationships can be told apart from everyone else's; `voice` is what the defendant says.
+    static func from(caseText text: String, defendantVoice voice: String, victimDied: Bool) -> FamilyFacts {
+        var f = FamilyFacts()
+        let mine = #"(\{D\.[Hh]is\}|\{DL?\}'s)"#
+        let kids = "(child|children|kids|son|sons|daughter|daughters|baby|toddler|infant|stepson|stepdaughter|stepchildren|grandchildren|grandson|granddaughter|boys|girls)"
+        func found(_ pattern: String, in source: String) -> Bool {
+            source.range(of: pattern, options: .regularExpression) != nil
+        }
+        if found(mine + #" (?:[A-Za-z0-9-]+ ){0,2}"# + kids + #"\b"#, in: text)
+            || found(#"\b[Mm]y (?:[a-z0-9-]+ ){0,2}"# + kids + #"\b"#, in: voice) {
+            f.minChildren = 1
+        }
+        for (word, n) in [("two", 2), ("three", 3), ("four", 4), ("five", 5)]
+        where found(mine + " " + word + #" (children|kids|sons|daughters|boys|girls)\b"#, in: text) {
+            f.minChildren = max(f.minChildren, n)
+        }
+        if found(#"\{DL?\}, the other parent of"#, in: text) { f.minChildren = max(f.minChildren, 1) }
+        // "{DL}, a married father of two"
+        for (word, n) in [("a", 1), ("one", 1), ("two", 2), ("three", 3), ("four", 4), ("five", 5)]
+        where found(#"\{DL?\}, an? (married |single |divorced )?(father|mother|parent) of "# + word + #"\b"#, in: text) {
+            f.minChildren = max(f.minChildren, n)
+            if found(#"\{DL?\}, an? married (father|mother|parent)"#, in: text) { f.status = "Married" }
+        }
+        let spouseIsVictim = found(mine + #" (wife|husband|spouse),? \{V"#, in: text)
+            || found(#"\{VL?\},? "# + mine + #" (wife|husband|spouse)\b"#, in: text)
+            || (found(#"\{V\}"#, in: text) && found("the couple's (home|house|apartment)", in: text))
+        if spouseIsVictim, f.status == nil || f.status == "Married" {
+            f.status = victimDied ? "Widowed" : "Married"
+            f.note = victimDied ? "The late spouse is the victim in this case." : "The spouse is the alleged victim in this case."
+        } else if found(mine + #" (wife|husband|spouse)\b"#, in: text) || found(#"\b[Mm]y (wife|husband)\b"#, in: voice) {
+            f.status = "Married"
+        } else if found(mine + #" late (wife|husband|spouse)\b"#, in: text) || found(#"\b[Mm]y late (wife|husband)\b"#, in: voice) {
+            f.status = "Widowed"
+        } else if found(mine + #" (fiancé|fiancée|fiance|fiancee)\b"#, in: text) {
+            f.status = "Engaged"
+        } else if found(mine + #" (ex-wife|ex-husband|ex-spouse|ex)\b"#, in: text) || found(#"\b[Mm]y (ex-wife|ex-husband|ex)\b"#, in: voice) {
+            f.status = "Divorced"
+        } else if found(mine + #" (girlfriend|boyfriend|partner)\b"#, in: text) {
+            f.status = "In a long-term relationship"
+        }
+        return f
     }
 }

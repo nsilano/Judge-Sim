@@ -308,7 +308,14 @@ enum CaseGenerator {
 
         // The investigation file and fact sheet come first: every generated witness reads from them.
         var profiledDefendant = defendant
-        profiledDefendant.profile = DefendantProfiles.make(for: defendant, county: county, year: currentYear)
+        let deathLaws: Set<String> = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV", "deathByDistribution"]
+        let writtenText = (t.summaries + t.prosecutionEvidence.map(\.detail) + t.defenseEvidence.map(\.detail)
+                           + (t.prosecutionWitnesses + t.defenseWitnesses).flatMap { $0.direct + $0.cross + $0.exam.flatMap(\.answers) }
+                           + t.prosecutionTheory + t.defenseTheory + t.mitigating + t.victimImpacts + [t.specification]
+                           + t.secondary.map(\.specification)).joined(separator: " ")
+        let defendantVoice = (t.allocutions + (t.story?.defendantExam.flatMap(\.answers) ?? [])).joined(separator: " ")
+        let familyFacts = FamilyFacts.from(caseText: writtenText, defendantVoice: defendantVoice, victimDied: deathLaws.contains(t.primaryLaw))
+        profiledDefendant.profile = DefendantProfiles.make(for: defendant, county: county, year: currentYear, family: familyFacts)
         let factText = (t.summaries.map { fill($0) } + charges.map(\.specification) + evidence.map { $0.title + ". " + $0.detail }
                         + witnesses.flatMap { $0.direct + $0.cross }).joined(separator: " ")
         let facts = CaseFacts(key: t.key, category: t.category, hasVictim: t.hasVictim, text: factText)

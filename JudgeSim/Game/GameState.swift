@@ -547,6 +547,7 @@ final class GameState: ObservableObject {
         while !retrials.isEmpty {
             var retrial = retrials.removeFirst()
             retrial.id = UUID()
+            creditVacatedTime(&retrial, through: date)
             retrial.sessionDate = date
             refreshDefendant(&retrial)
             entries.append(DocketEntry(matter: .trial(retrial), note: "Returned from the Court of Appeals"))
@@ -609,6 +610,27 @@ final class GameState: ObservableObject {
         c.background = background
     }
 
+    /// Time spent in custody on a judgment the Court of Appeals vacated counts toward any sentence on retrial
+    /// (G.S. 15-196.1): from the original trial until the person was released, or until today if still held on it.
+    private func creditVacatedTime(_ c: inout CourtCase, through date: Date) {
+        guard var background = c.background, let person = person(c.defendant.personID) else { return }
+        let cal = CourtCalendar.calendar
+        let heldThroughRetrial = person.status == .incarcerated && person.custodyDocket == c.docket
+        let released = person.appearances.last(where: { $0.docket == c.docket })?.date
+        let wasActive = heldThroughRetrial
+            || history.contains { $0.docket == c.docket && $0.resolvedKind == "trial" && $0.judgments.contains { $0.contains("active") || $0.contains("Life") } }
+        guard wasActive else { return }
+        // Released when the appeal was decided, unless still held on this judgment.
+        let decided = appeals.last(where: { $0.docket == c.docket })?.decided
+        let end = heldThroughRetrial ? date : min(date, decided ?? date)
+        let start = released ?? c.sessionDate
+        let served = max(0, cal.dateComponents([.day], from: cal.startOfDay(for: start), to: cal.startOfDay(for: end)).day ?? 0)
+        guard served > 0 else { return }
+        background.custodyDays += served
+        c.background = background
+        c.proceduralNotes.append("Credit for \(served) days in custody on the vacated judgment is added to pretrial confinement (G.S. 15-196.1).")
+    }
+
     /// Brings a defendant's record up to date before a case is heard again.
     private func refreshDefendant(_ c: inout CourtCase) {
         guard let person = person(c.defendant.personID) else { return }
@@ -636,6 +658,9 @@ final class GameState: ObservableObject {
             people[index].custodyDocket = people[index].appearances.last?.docket
         }
         pending.append(contentsOf: result.pending)
+        stats.activeSentences += result.activeSentences
+        stats.suspendedSentences += result.suspendedSentences
+        stats.probationCompleted += result.probationCompleted
         history.insert(CaseRecord(docket: "Calendar call", caption: "Administrative calendar call",
                                   headline: "\(call.matters.count) matters", category: .procedure, date: currentDate,
                                   defendantID: UUID(), outcome: "\(call.matters.count) matters handled", judgments: result.lines,
@@ -684,6 +709,9 @@ final class GameState: ObservableObject {
             people[index].probation = outcome.probation
             people[index].propensity = min(0.85, max(0.03, people[index].propensity + outcome.propensityChange))
             if let violation = outcome.violation { people[index].violations = (people[index].violations ?? []) + [violation] }
+            // A revoked conditional discharge enters the conviction; an activated felony term carries supervision after release.
+            people[index].priors.append(contentsOf: outcome.newPriors)
+            if let prs = outcome.pendingPostRelease { people[index].pendingPostRelease = prs }
             people[index].appearances.append(appearance)
         }
         history.insert(CaseRecord(docket: hearing.probation.docket + " (PV)", caption: "Probation violation: \(hearing.personName)",
@@ -957,7 +985,20 @@ final class GameState: ObservableObject {
                 case .resentence:
                     // Resentencing on remand can only shorten the term the appeal attacked.
                     let heldOnThisDocket = people[index].custodyDocket.map { $0 == event.news.docket } ?? true
-                    if people[index].status == .incarcerated, heldOnThisDocket, let newRelease = event.newReleaseDate {
+                    if let restore = event.restoreProbation {
+                        // A probation order vacated on appeal: the violation comes off the record and probation stands as it
+                        // was before the order, including any CRV it counted.
+                        if let id = event.removesViolationID { people[index].violations?.removeAll { $0.id == id } }
+                        people[index].probation = restore
+                        if people[index].status == .incarcerated && heldOnThisDocket {
+                            people[index].releaseDate = nil
+                            people[index].releaseNote = nil
+                            people[index].custodyDocket = nil
+                            people[index].status = .probation
+                        } else if people[index].status != .incarcerated {
+                            people[index].status = .probation
+                        }
+                    } else if people[index].status == .incarcerated, heldOnThisDocket, let newRelease = event.newReleaseDate {
                         if newRelease <= currentDate {
                             releaseFromCustody(index, on: event.due, announce: true, rng: &rng)
                         } else if newRelease < (people[index].releaseDate ?? .distantFuture) {
