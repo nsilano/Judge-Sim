@@ -3,7 +3,7 @@ import Foundation
 /// One short matter handled at an administrative calendar call.
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
-        case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant
+        case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief
 
         var label: String {
             switch self {
@@ -15,6 +15,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .pvAdmission: return "Probation violation admission"
             case .earlyTermination: return "Motion to end probation early"
             case .searchWarrant: return "Search warrant application"
+            case .motionForRelief: return "Motion for appropriate relief"
             }
         }
 
@@ -28,6 +29,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .pvAdmission: return "person.badge.clock.fill"
             case .earlyTermination: return "checkmark.seal.fill"
             case .searchWarrant: return "doc.text.magnifyingglass"
+            case .motionForRelief: return "arrow.uturn.backward.circle.fill"
             }
         }
     }
@@ -57,6 +59,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var pendingCase: CourtCase? = nil
     /// For a warrant application: the affidavit and what it asks to search.
     var warrant: WarrantApplication? = nil
+    /// For a motion for appropriate relief: the motion and the case as it would be retried.
+    var relief: ReliefMotion? = nil
 
     /// The person's whole file is worth opening for these.
     var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination }
@@ -136,6 +140,24 @@ enum CalendarCalls {
             bound.defenseAsk = swap(m.defenseAsk)
         }
         return bound
+    }
+
+    /// A convicted defendant asks the trial judge for a new trial on newly discovered evidence.
+    static func reliefMatter(_ m: ReliefMotion, judgeLast: String) -> CalendarMatter {
+        let hearing = m.hearingHeld == true
+        let heardText = hearing
+            ? (m.meritorious
+                ? " At the evidentiary hearing last week, the new witness testified in detail and held up on cross-examination; the documents check out."
+                : " At the evidentiary hearing last week, the witness contradicted the affidavit twice and admitted a relative of the defendant drafted it.")
+            : ""
+        var options = ["Grant: vacate the conviction and order a new trial", "Deny the motion"]
+        if !hearing { options.insert("Hold an evidentiary hearing next week before ruling", at: 1) }
+        return CalendarMatter(kind: .motionForRelief, personID: m.personID, personName: m.personName, personAge: m.retrial.defendant.age,
+                              occupation: m.retrial.defendant.occupation, docket: m.docket,
+                              summary: "\(m.personName), whom you convicted of \(m.offense.lowercased()), moves for a new trial on newly discovered evidence (G.S. 15A-1415(c)): \(m.newEvidence)" + heardText,
+                              stateAsk: "The State opposes. The evidence could have been found before trial with due diligence, and it wouldn't change the result.",
+                              defenseAsk: "This wasn't available at trial, and it goes to the heart of the case. Justice requires a new trial.",
+                              options: options, pendingCase: m.retrial, relief: m)
     }
 
     /// An officer brings a search warrant application to the judge between matters.

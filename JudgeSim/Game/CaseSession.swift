@@ -179,6 +179,7 @@ final class CaseSession: ObservableObject {
             }
             // The case on file is the one as indicted; a denied motion to continue changed what the trial had.
             if resume.rulings.continuanceMotionDenied == true { applyDeniedContinuance() }
+            applyIndictmentRulings()
         }
     }
 
@@ -203,7 +204,30 @@ final class CaseSession: ObservableObject {
 
     func motionBinding(_ motion: Motion) -> Binding<Bool?> {
         Binding(get: { self.rulings.motions[motion.id] },
-                set: { self.rulings.motions[motion.id] = $0 })
+                set: {
+                    self.rulings.motions[motion.id] = $0
+                    if motion.kind == .dismissIndictment { self.applyIndictmentRulings() }
+                })
+    }
+
+    /// Counts dismissed on a defective indictment are out of the case; denying the motion puts them back.
+    private var dismissedCounts: [UUID: Charge] = [:]
+
+    private func applyIndictmentRulings() {
+        for motion in courtCase.motions where motion.kind == .dismissIndictment {
+            guard let id = motion.targetChargeID else { continue }
+            let granted = rulings.motions[motion.id] == true
+            if granted, let index = courtCase.charges.firstIndex(where: { $0.id == id }) {
+                let charge = courtCase.charges.remove(at: index)
+                dismissedCounts[id] = charge
+                rulings.verdicts[id] = nil
+                courtCase.proceduralNotes.append("Count \(charge.count) (\(charge.law.title)) dismissed on the defense's motion: the indictment is defective.")
+            } else if !granted, let charge = dismissedCounts.removeValue(forKey: id) {
+                courtCase.charges.append(charge)
+                courtCase.charges.sort { $0.count < $1.count }
+                courtCase.proceduralNotes.removeAll { $0.hasPrefix("Count \(charge.count) (") && $0.hasSuffix("the indictment is defective.") }
+            }
+        }
     }
 
     func objectionBinding(_ objection: Objection) -> Binding<Bool?> {

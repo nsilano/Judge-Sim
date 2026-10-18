@@ -251,6 +251,24 @@ struct NewsItem: Identifiable, Codable, Hashable {
     }
 }
 
+/// A motion for appropriate relief on newly discovered evidence (G.S. 15A-1415(c)), filed after a conviction in
+/// this court and heard by the judge who tried the case.
+struct ReliefMotion: Codable, Hashable, Identifiable {
+    var id = UUID()
+    var docket: String
+    var personID: UUID
+    var personName: String
+    var offense: String
+    /// What the defense says it found.
+    var newEvidence: String
+    /// Whether the new evidence is real and would likely change the result. Never shown before the ruling.
+    var meritorious: Bool
+    /// The case as it would be retried, with the new evidence.
+    var retrial: CourtCase
+    /// Set once the court has held an evidentiary hearing.
+    var hearingHeld: Bool? = nil
+}
+
 /// Something that will happen later in the world, such as an appellate opinion or an exoneration.
 struct PendingEvent: Codable, Hashable {
     enum Effect: String, Codable {
@@ -277,4 +295,6 @@ struct PendingEvent: Codable, Hashable {
     var removesViolationID: UUID?
     /// The appeal this event decides or follows up on (optional for older saves).
     var appealID: UUID?
+    /// A post-conviction motion that comes to the judge's calendar when this event arrives.
+    var reliefMotion: ReliefMotion?
 }

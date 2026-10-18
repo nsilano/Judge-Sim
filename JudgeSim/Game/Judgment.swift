@@ -1825,6 +1825,26 @@ enum Judgment {
                                                         retryChance: rng.chance(0.7)))
             }
         }
+        // A motion for appropriate relief on newly discovered evidence, heard by this court (G.S. 15A-1415(c)).
+        if convicted && !plea && rng.chance(truthGuilty ? 0.1 : 0.6) {
+            var retrial = retrialCase(c, r)
+            let evidence = truthGuilty
+                ? "\(rng.pick(["A State witness", "The State's main eyewitness", "A co-defendant"])) has signed an affidavit recanting \(rng.pick(["their", "the"])) trial testimony and saying \(d.lastName) wasn't involved."
+                : c.truth.revelation
+            retrial.evidence.append(Evidence(exhibit: "Defendant's Exhibit \(c.evidence.filter { $0.side == .defense }.count + 1)",
+                                             title: "Newly Discovered Evidence", detail: evidence, side: .defense,
+                                             kind: .document, weight: truthGuilty ? 1 : 4, supplemental: "Found after the first trial"))
+            retrial.headline = "New trial: " + c.headline
+            let motion = ReliefMotion(docket: c.docket, personID: d.personID, personName: d.name, offense: principalTitle,
+                                      newEvidence: evidence, meritorious: !truthGuilty, retrial: retrial)
+            pending.append(PendingEvent(due: later(45...170),
+                                        news: NewsItem(date: date, kind: .revelation,
+                                                       headline: "\(d.name) asks for a new trial, citing new evidence",
+                                                       body: "Lawyers for \(d.name), convicted in Hollis County Superior Court of \(principalTitle.lowercased()), filed a motion for appropriate relief claiming newly discovered evidence. Judge \(judgeLast), who presided at trial, will hear it.",
+                                                       docket: c.docket),
+                                        personID: d.personID, reliefMotion: motion))
+        }
+
         // Things that may surface about what really happened
         switch (convicted, truthGuilty) {
         case (true, false):

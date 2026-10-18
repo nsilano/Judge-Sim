@@ -587,16 +587,16 @@ struct MotionsStage: View {
     /// What was heard, matched to the motions actually filed.
     private var intro: String {
         let motions = session.courtCase.motions
-        let suppression = motions.contains { $0.kind != .dismissSpeedyTrial }
-        let speedy = motions.contains { $0.kind == .dismissSpeedyTrial }
         let filed = motions.count == 1 ? "The defense has filed a pretrial motion." : "The defense has filed pretrial motions."
-        let heard: String
-        switch (suppression, speedy) {
-        case (true, true): heard = "You've heard testimony and argument at the suppression hearing and on the speedy-trial motion."
-        case (true, false): heard = "You've heard testimony and argument at the suppression hearing."
-        default: heard = "You've heard evidence and argument on the delay."
-        }
-        return filed + " " + heard + (motions.count == 1 ? " Rule on it." : " Rule on each.")
+        var heard: [String] = []
+        if motions.contains(where: { $0.kind == .suppressSearch || $0.kind == .suppressStatement }) { heard.append("testimony at the suppression hearing") }
+        if motions.contains(where: { $0.kind == .suppressIdentification }) { heard.append("evidence on how the identification was made") }
+        if motions.contains(where: { $0.kind == .excludePriorActs }) { heard.append("the State's proffer of other acts") }
+        if motions.contains(where: { $0.kind == .dismissIndictment }) { heard.append("argument on the indictment") }
+        if motions.contains(where: { $0.kind == .dismissSpeedyTrial }) { heard.append("evidence and argument on the delay") }
+        let list = heard.count <= 1 ? (heard.first ?? "argument")
+            : heard.dropLast().joined(separator: ", ") + ", and " + (heard.last ?? "")
+        return filed + " You've heard " + list + "." + (motions.count == 1 ? " Rule on it." : " Rule on each.")
     }
 
     var body: some View {
@@ -624,6 +624,26 @@ struct MotionsStage: View {
 
 struct MotionCard: View {
     let motion: Motion
+
+    private var grantEffect: String {
+        switch motion.kind {
+        case .dismissSpeedyTrial: return "Case is dismissed"
+        case .dismissIndictment: return "That count is dismissed"
+        case .suppressIdentification: return "The identification is excluded"
+        case .excludePriorActs: return "The other acts stay out"
+        case .suppressSearch, .suppressStatement: return "Evidence is excluded"
+        }
+    }
+
+    private var denyEffect: String {
+        switch motion.kind {
+        case .dismissSpeedyTrial: return "Case goes forward"
+        case .dismissIndictment: return "The count goes forward"
+        case .suppressIdentification: return "The identification comes in"
+        case .excludePriorActs: return "The State may offer them"
+        case .suppressSearch, .suppressStatement: return "Evidence comes in"
+        }
+    }
     let target: Evidence?
     @Binding var selection: Bool?
 
@@ -645,9 +665,7 @@ struct MotionCard: View {
                 HStack { ForEach(motion.doctrineIDs, id: \.self) { LawLink(lawID: $0) } }
             }
             RulingPicker(first: "Grant", second: "Deny",
-                         firstDetail: motion.kind == .dismissSpeedyTrial ? "Case is dismissed" : "Evidence is excluded",
-                         secondDetail: motion.kind == .dismissSpeedyTrial ? "Case goes forward" : "Evidence comes in",
-                         selection: $selection)
+                         firstDetail: grantEffect, secondDetail: denyEffect, selection: $selection)
         }
         .card(tint: selection == nil ? nil : Theme.gold)
     }

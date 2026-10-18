@@ -428,6 +428,25 @@ enum CaseGenerator {
             let title = evidence.first { $0.id == target }?.title ?? "the statement"
             motions.append(makeMotion(option, target: target, targetTitle: title, fill: fill))
         }
+        // An eyewitness identification the defense attacks.
+        if t.story == nil, rng.chance(0.6),
+           let id = evidence.first(where: { $0.side == .prosecution && ["lineup", "identif", "show-up", "photo array"].contains(where: $0.title.lowercased().contains) }) {
+            motions.append(makeMotion(rng.pick(GenericPools.identificationSeeds), target: id.id, targetTitle: id.title, fill: fill))
+        }
+        // Other acts the State wants to use.
+        if t.story == nil, rng.chance(0.5),
+           let prior = evidence.first(where: { $0.side == .prosecution && ["prior", "previous", "earlier", "history"].contains(where: $0.title.lowercased().contains) }) {
+            motions.append(makeMotion(rng.pick(GenericPools.priorActsSeeds), target: prior.id, targetTitle: prior.title, fill: fill))
+        }
+        // Now and then, a count on a defective indictment.
+        if t.story == nil, charges.count > 1, rng.chance(0.12), let count = charges.dropFirst().randomElement(using: &rng) {
+            let countFill = TextFiller(values: values.merging(["COUNT": "\(count.count)"]) { a, _ in a })
+            // The owner-allegation defect only arises on a larceny count.
+            let seeds = GenericPools.indictmentSeeds.filter { !$0.facts.contains("Dollar Mart") || count.lawID.lowercased().contains("larceny") }
+            var motion = makeMotion(rng.pick(seeds), target: nil, targetTitle: nil, fill: countFill)
+            motion.targetChargeID = count.id
+            motions.append(motion)
+        }
         if let speedySeed {
             // The delay the motion argues about is the real time from arrest to this session.
             let delayMonths = max(1, CaseDates.days(from: sheet.arrest, to: context.date) / 30)
@@ -996,6 +1015,15 @@ enum CaseGenerator {
         case .dismissSpeedyTrial:
             defense = "The defense moves to dismiss all charges for violation of the right to a speedy trial."
             prosecution = "The State contends the delay was justified and caused no prejudice."
+        case .suppressIdentification:
+            defense = "The defense moves to suppress \(item) and any in-court identification as the product of an unnecessarily suggestive procedure."
+            prosecution = "The State contends the procedure was proper and the identification is reliable under the totality of the circumstances."
+        case .excludePriorActs:
+            defense = "The defense moves in limine to exclude \(item) under Rules 404(b) and 403."
+            prosecution = "The State contends the evidence is admissible for a proper purpose: motive, intent, plan, or identity."
+        case .dismissIndictment:
+            defense = "The defense moves to dismiss the count as facially defective (G.S. 15A-924, 15A-954)."
+            prosecution = "The State contends the indictment alleges every element and gave the defendant fair notice."
         }
         return Motion(kind: seed.kind, facts: fill(seed.facts), defenseArgument: defense, prosecutionResponse: prosecution,
                       targetEvidenceID: target, shouldGrant: seed.shouldGrant, appellateNote: fill(seed.explanation),

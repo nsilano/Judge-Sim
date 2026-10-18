@@ -83,6 +83,7 @@ private struct SaveData: Codable {
     var reputation: [BarSurvey]?
     var lastYearReviewed: Int?
     var unseated: Bool?
+    var reliefQueue: [ReliefMotion]?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -116,6 +117,8 @@ final class GameState: ObservableObject {
     /// Career statistics as of January 1, for the year in review.
     private var yearStartStats: CareerStats?
     private var lastYearReviewed: Int?
+    /// Post-conviction motions waiting for the next calendar call.
+    private var reliefQueue: [ReliefMotion] = []
     /// The Monday of the judge's first week on the bench.
     @Published private(set) var careerStart = Date()
     /// Which week on the bench the current calendar is, starting at 1. Weeks on leave don't count.
@@ -673,6 +676,11 @@ final class GameState: ObservableObject {
                         call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
                     }
                 }
+                // Motions for appropriate relief in cases tried here come back to this judge.
+                if !reliefQueue.isEmpty, let judgeName {
+                    let relief = reliefQueue.removeFirst()
+                    call.matters.insert(CalendarCalls.reliefMatter(relief, judgeLast: lastName(judgeName)), at: 0)
+                }
                 // Most weeks an officer brings a search warrant application.
                 if rng.chance(0.7) {
                     let kind = rng.pick([WarrantApplication.Kind.residenceDrugs, .storageStolen, .phoneRecords])
@@ -832,6 +840,24 @@ final class GameState: ObservableObject {
                 default:
                     setFor(c, weeks: 3, note: "Continued at the calendar call on \(heard) after a failure to appear; new notice sent.", continuances: 1)
                 }
+            case .motionForRelief:
+                guard let relief = m.relief else { continue }
+                let options = m.options
+                let picked = options.indices.contains(choice) ? options[choice] : ""
+                if picked.hasPrefix("Hold an evidentiary hearing") {
+                    var heardMotion = relief
+                    heardMotion.hearingHeld = true
+                    reliefQueue.append(heardMotion)
+                } else if picked.hasPrefix("Grant") {
+                    vacateForNewTrial(relief, on: call.date, rng: &rng)
+                    setFor(relief.retrial, weeks: rng.int(4...8), note: "New trial ordered on your grant of a motion for appropriate relief on \(heard).")
+                } else if relief.meritorious {
+                    // The innocence commission may still take it up, and the record will show the denial.
+                    let judge = lastName(judgeName ?? "")
+                    for index in pending.indices where pending[index].vacatesDocket == relief.docket && pending[index].news.kind == .exoneration {
+                        pending[index].news.body += " Judge \(judge) had denied a motion for a new trial based on the same evidence."
+                    }
+                }
             case .searchWarrant:
                 guard let w = m.warrant else { continue }
                 let judge = lastName(judgeName ?? "")
@@ -873,6 +899,24 @@ final class GameState: ObservableObject {
             }
         }
         scheduled.sort { $0.date < $1.date }
+    }
+
+    /// A conviction vacated for a new trial: it comes off the record, and the person is released if held on it.
+    private func vacateForNewTrial(_ relief: ReliefMotion, on date: Date, rng: inout SeededRNG) {
+        pending.removeAll { $0.vacatesDocket == relief.docket && $0.news.kind == .exoneration }
+        guard let index = people.firstIndex(where: { $0.id == relief.personID }) else { return }
+        people[index].priors.removeAll { $0.docket == relief.docket }
+        if people[index].probation?.docket == relief.docket { people[index].probation = nil }
+        if people[index].pendingPostRelease?.docket == relief.docket { people[index].pendingPostRelease = nil }
+        if people[index].postRelease?.docket == relief.docket { people[index].postRelease = nil }
+        if people[index].status == .incarcerated && (people[index].custodyDocket == nil || people[index].custodyDocket == relief.docket) {
+            releaseFromCustody(index, on: date, announce: false, rng: &rng)
+        } else if people[index].status == .probation && people[index].probation == nil {
+            people[index].status = .free
+        }
+        post(NewsItem(date: date, kind: .community, headline: "Judge orders new trial for \(relief.personName)",
+                      body: "Citing newly discovered evidence, Judge \(lastName(judgeName ?? "")) vacated the conviction of \(relief.personName) for \(relief.offense.lowercased()) and ordered a new trial.",
+                      docket: relief.docket, prominence: 2))
     }
 
     /// How many times a matter on this week's calendar has already been continued.
@@ -1226,6 +1270,7 @@ final class GameState: ObservableObject {
             item.date = event.due
             post(item)
             if let retrial = event.retrial { retrials.append(retrial) }
+            if let relief = event.reliefMotion { reliefQueue.append(relief) }
             if item.kind == .exoneration { stats.exonerations += 1 }
             if let personID = event.personID, let index = people.firstIndex(where: { $0.id == personID }) {
                 switch event.effect {
@@ -1417,7 +1462,8 @@ final class GameState: ObservableObject {
                             today: today, scheduled: scheduled, openingMinutes: openingMinutes, sessionEnds: sessionEnds,
                             digest: digest, appeals: appeals, recentLineKeys: recentLineKeys, careerStart: careerStart,
                             weekNumber: weekNumber, lightWeeks: lightWeeks, yearStartStats: yearStartStats,
-                            reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated)
+                            reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated,
+                            reliefQueue: reliefQueue)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -1466,6 +1512,7 @@ final class GameState: ObservableObject {
         unseated = data.unseated ?? false
         yearStartStats = data.yearStartStats
         lastYearReviewed = data.lastYearReviewed
+        reliefQueue = data.reliefQueue ?? []
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
         backfillAppeals()
         if today == nil && judgeName != nil {

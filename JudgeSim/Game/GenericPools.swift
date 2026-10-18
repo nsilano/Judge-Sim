@@ -250,6 +250,75 @@ enum GenericPools {
                    doctrines: ["miranda", "voluntariness"])
     ]
 
+    static let identificationSeeds: [MotionSeed] = [
+        MotionSeed(kind: .suppressIdentification,
+                   facts: "{DET}, who built the photo array and knew which photo was {DL}'s, showed it to the witness personally. {DL}'s was the only photo of someone wearing a red jacket like the one described. The witness was never told the person might not be in the array.",
+                   shouldGrant: true,
+                   explanation: "The lineup broke the Eyewitness Identification Reform Act three ways and singled out the defendant with the jacket. An unnecessarily suggestive procedure, plus a fleeting view at night, made misidentification substantially likely; the identification is excluded.",
+                   doctrines: ["eyewitnessID"]),
+        MotionSeed(kind: .suppressIdentification,
+                   facts: "Two hours after the offense, officers drove the witness past {DL}, who was handcuffed beside a patrol car with a spotlight on {D.him}, three miles from the scene. The witness had described the person only as \"a guy in dark clothes.\"",
+                   shouldGrant: true,
+                   explanation: "A handcuffed, spotlighted show-up hours later and miles away is unnecessarily suggestive, and a vague description gives it no independent reliability. Suppression is required.",
+                   doctrines: ["eyewitnessID"]),
+        MotionSeed(kind: .suppressIdentification,
+                   facts: "An officer who didn't know the suspect ran a six-person photo lineup with fillers matching the witness's description, read the standard instruction that the person may not be present, and recorded the witness's statement: \"I'm sure. I'd know that face anywhere.\"",
+                   shouldGrant: false,
+                   explanation: "The lineup followed the Act. Nothing about it was suggestive, so there is no basis to suppress; any doubts go to weight.",
+                   doctrines: ["eyewitnessID"]),
+        MotionSeed(kind: .suppressIdentification,
+                   facts: "Ten minutes after the offense and two blocks away, the witness saw {DL} detained and said, \"That's him, same gray hoodie, same backpack,\" matching the description the witness gave the 911 dispatcher.",
+                   shouldGrant: false,
+                   explanation: "A prompt show-up near the scene is justified by the need to confirm or clear a suspect quickly, and the detailed prior description makes the identification reliable under Manson v. Brathwaite.",
+                   doctrines: ["eyewitnessID"])
+    ]
+
+    static let priorActsSeeds: [MotionSeed] = [
+        MotionSeed(kind: .excludePriorActs,
+                   facts: "The State intends to offer that {DL} was involved in a bar fight eleven years ago in another county, with a different person and different circumstances, to show {D.he} \"has a violent streak.\"",
+                   shouldGrant: true,
+                   explanation: "Offered only to show propensity, an old, dissimilar act is barred by Rule 404(b); even if marginally relevant, its prejudice substantially outweighs any probative value under Rule 403.",
+                   doctrines: ["priorActs", "relevance"]),
+        MotionSeed(kind: .excludePriorActs,
+                   facts: "The State intends to offer that, three weeks before the offense, {DL} sent {V} a text reading \"you'll regret this,\" and was seen slashing the tires on {V}'s car.",
+                   shouldGrant: false,
+                   explanation: "Recent threats and acts against the same victim are admissible under Rule 404(b) to show motive and intent, and their probative value isn't substantially outweighed by unfair prejudice.",
+                   doctrines: ["priorActs"]),
+        MotionSeed(kind: .excludePriorActs,
+                   facts: "The State intends to offer {DL}'s 2016 conviction for a break-in where the same unusual method was used: entering through a pet door with a hooked rod and taking only jewelry.",
+                   shouldGrant: false,
+                   explanation: "A distinctive modus operandi is admissible under Rule 404(b) to show identity; North Carolina treats the rule as one of inclusion when the acts are similar enough.",
+                   doctrines: ["priorActs"]),
+        MotionSeed(kind: .excludePriorActs,
+                   facts: "The State intends to offer that {DL} was arrested once for drug possession, a charge that was dismissed, to suggest {D.he} needed money.",
+                   shouldGrant: true,
+                   explanation: "A dismissed arrest for an unrelated offense, offered to suggest bad character and a motive by inference upon inference, is inadmissible propensity evidence.",
+                   doctrines: ["priorActs", "characterEvidence"])
+    ]
+
+    static let indictmentSeeds: [MotionSeed] = [
+        MotionSeed(kind: .dismissIndictment,
+                   facts: "The indictment on count {COUNT} charges larceny of property \"belonging to the Dollar Mart,\" without alleging that Dollar Mart is a corporation or other entity capable of owning property.",
+                   shouldGrant: true,
+                   explanation: "A larceny indictment must name an owner that is a person or a legal entity capable of owning property; failing to allege that Dollar Mart is one is a fatal defect in the count.",
+                   doctrines: ["indictment"]),
+        MotionSeed(kind: .dismissIndictment,
+                   facts: "The indictment on count {COUNT} omits the allegation that the defendant acted \"with intent to permanently deprive,\" an element of the offense charged.",
+                   shouldGrant: true,
+                   explanation: "An indictment that fails to allege an essential element doesn't charge the crime; the count must be dismissed.",
+                   doctrines: ["indictment"]),
+        MotionSeed(kind: .dismissIndictment,
+                   facts: "The indictment on count {COUNT} misspells the victim's middle name and lists the street address one digit off. The defense doesn't claim it was misled.",
+                   shouldGrant: false,
+                   explanation: "Minor clerical errors that don't affect the elements or mislead the defense aren't fatal; after State v. Singleton they are reviewed for prejudice, and there is none.",
+                   doctrines: ["indictment"]),
+        MotionSeed(kind: .dismissIndictment,
+                   facts: "The defense argues count {COUNT} should be dismissed because the indictment uses the statutory language but doesn't describe the evidence the State will offer.",
+                   shouldGrant: false,
+                   explanation: "An indictment tracking the statute and alleging the elements is sufficient; it need not lay out the State's evidence (G.S. 15A-924(a)(5)).",
+                   doctrines: ["indictment"])
+    ]
+
     static let speedyTrialSeeds: [MotionSeed] = [
         MotionSeed(kind: .dismissSpeedyTrial,
                    facts: "{DL} has been awaiting trial for {DELAY} months. The State requested nine continuances, twice because it misplaced the file. {DL} demanded a speedy trial in writing five times. A key defense witness has since died.",

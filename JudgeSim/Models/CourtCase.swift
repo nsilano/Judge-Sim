@@ -104,12 +104,18 @@ enum MotionKind: String, Codable, Hashable {
     case suppressSearch
     case suppressStatement
     case dismissSpeedyTrial
+    case suppressIdentification
+    case excludePriorActs
+    case dismissIndictment
 
     var title: String {
         switch self {
         case .suppressSearch: return "Motion to Suppress Evidence"
         case .suppressStatement: return "Motion to Suppress Statement"
         case .dismissSpeedyTrial: return "Motion to Dismiss: Speedy Trial"
+        case .suppressIdentification: return "Motion to Suppress Identification"
+        case .excludePriorActs: return "Motion in Limine: Other Acts (Rule 404(b))"
+        case .dismissIndictment: return "Motion to Dismiss: Defective Indictment"
         }
     }
 }
@@ -125,6 +131,8 @@ struct Motion: Identifiable, Codable, Hashable {
     var shouldGrant: Bool
     var appellateNote: String
     var doctrineIDs: [String]
+    /// For a motion to dismiss one count: the count it attacks (optional for older saves).
+    var targetChargeID: UUID? = nil
 }
 
 struct Charge: Identifiable, Codable, Hashable {
