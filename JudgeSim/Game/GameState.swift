@@ -676,6 +676,13 @@ final class GameState: ObservableObject {
                         call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
                     }
                 }
+                // A new arrest for conditions of release, and a case to arraign and set for trial.
+                if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false) {
+                    call.matters.append(CalendarCalls.bondMatter(for: c, rng: &rng))
+                }
+                if !lightWeeks, rng.chance(0.6), let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false) {
+                    call.matters.append(CalendarCalls.arraignmentMatter(for: c))
+                }
                 // Motions for appropriate relief in cases tried here come back to this judge.
                 if !reliefQueue.isEmpty, let judgeName {
                     let relief = reliefQueue.removeFirst()
@@ -840,6 +847,50 @@ final class GameState: ObservableObject {
                 default:
                     setFor(c, weeks: 3, note: "Continued at the calendar call on \(heard) after a failure to appear; new notice sent.", continuances: 1)
                 }
+            case .firstAppearance:
+                guard let bond = m.bond else { continue }
+                var held = c
+                guard var bg = held.background else { setFor(c, weeks: rng.int(5...8), note: "Set for trial at the bond hearing on \(heard)."); continue }
+                let amount = choice == 2 ? bond.moderate : (choice == 3 ? bond.high : 0)
+                let released = amount <= bond.canPost
+                let condition = ["a written promise to appear", "an unsecured bond of $\(bond.moderate.formatted())",
+                                 "a $\(bond.moderate.formatted()) secured bond", "a $\(bond.high.formatted()) secured bond with electronic house arrest"][min(choice, 3)]
+                if released {
+                    bg.custodyDays = 0
+                    bg.bondStatus = "Released on \(condition) at the bond hearing on \(heard)."
+                    held.background = bg
+                    // House arrest makes running and new arrests less likely.
+                    let watch = choice == 3 ? 0.4 : 1.0
+                    if rng.chance(bond.danger * watch) {
+                        post(NewsItem(date: call.date, kind: .arrest, headline: "\(c.defendant.name), out on bond, arrested again",
+                                      body: "\(c.defendant.name), released on \(condition) by Judge \(lastName(judgeName ?? "")), was arrested again this week, according to the Sheriff's Office.",
+                                      docket: c.docket, prominence: 2))
+                        bg.custodyDays = rng.int(5...20)
+                        bg.bondStatus = "Released on \(condition), then arrested on a new charge and held; bond revoked."
+                        held.background = bg
+                        setFor(held, weeks: rng.int(5...8), note: "Bond revoked after a new arrest while on release.")
+                    } else if rng.chance(bond.flightRisk * watch) {
+                        bg.custodyDays = rng.int(3...12)
+                        bg.bondStatus = "Released on \(condition); failed to appear and was arrested on an order for arrest. Held without bond."
+                        held.background = bg
+                        setFor(held, weeks: rng.int(7...12), note: "Missed the first trial setting after release; arrested on an order for arrest.")
+                    } else {
+                        setFor(held, weeks: rng.int(5...8), note: "On release since the bond hearing on \(heard).")
+                    }
+                } else {
+                    bg.custodyDays = max(1, bg.custodyDays)
+                    bg.bondStatus = "Held on \(condition) set at the bond hearing on \(heard); unable to post it."
+                    held.background = bg
+                    setFor(held, weeks: rng.int(5...8), note: "In custody since the bond hearing on \(heard): couldn't post \(condition).")
+                }
+            case .arraignment:
+                let weeks = [2, 5, 10][min(choice, 2)]
+                var setCase = c
+                if weeks == 2 && c.charges.count > 1 && rng.chance(0.6) {
+                    // Too soon for the defense to be ready.
+                    setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
+                }
+                setFor(setCase, weeks: weeks, note: "Arraigned on \(heard); pleaded not guilty and set for trial.")
             case .motionForRelief:
                 guard let relief = m.relief else { continue }
                 let options = m.options

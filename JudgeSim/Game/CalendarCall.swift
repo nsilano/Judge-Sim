@@ -3,7 +3,7 @@ import Foundation
 /// One short matter handled at an administrative calendar call.
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
-        case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief
+        case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief, firstAppearance, arraignment
 
         var label: String {
             switch self {
@@ -16,6 +16,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .earlyTermination: return "Motion to end probation early"
             case .searchWarrant: return "Search warrant application"
             case .motionForRelief: return "Motion for appropriate relief"
+            case .firstAppearance: return "Bond hearing"
+            case .arraignment: return "Arraignment"
             }
         }
 
@@ -30,6 +32,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .earlyTermination: return "checkmark.seal.fill"
             case .searchWarrant: return "doc.text.magnifyingglass"
             case .motionForRelief: return "arrow.uturn.backward.circle.fill"
+            case .firstAppearance: return "lock.open.fill"
+            case .arraignment: return "person.wave.2.fill"
             }
         }
     }
@@ -61,6 +65,21 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var warrant: WarrantApplication? = nil
     /// For a motion for appropriate relief: the motion and the case as it would be retried.
     var relief: ReliefMotion? = nil
+    /// For a bond hearing: what each option sets and what the court can't see.
+    var bond: BondFacts? = nil
+}
+
+/// Pretrial release under G.S. 15A-534: the least restrictive conditions that will reasonably assure the
+/// defendant appears and the public is safe.
+struct BondFacts: Codable, Hashable {
+    /// Secured bond amounts for options 2 and 3.
+    var moderate: Int
+    var high: Int
+    /// The most the defendant can post.
+    var canPost: Int
+    /// Hidden: how likely the defendant is to miss court if released, and to be arrested again.
+    var flightRisk: Double
+    var danger: Double
 
     /// The person's whole file is worth opening for these.
     var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination }
@@ -140,6 +159,55 @@ enum CalendarCalls {
             bound.defenseAsk = swap(m.defenseAsk)
         }
         return bound
+    }
+
+    /// A newly charged defendant's first appearance in superior court: setting conditions of release.
+    static func bondMatter(for c: CourtCase, rng: inout SeededRNG) -> CalendarMatter {
+        let d = c.defendant
+        let felonies = d.priors.filter { $0.ncClass.isFelony }.count
+        let ftas = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count + (rng.chance(0.25) ? 1 : 0)
+        let violent = c.category == .violent || c.category == .robbery
+        let employed = !d.occupation.lowercased().contains("unemployed")
+        let local = rng.chance(0.75)
+        let flight = min(0.6, 0.06 + 0.12 * Double(ftas) + (local ? 0 : 0.12) + (employed ? 0 : 0.06) + 0.02 * Double(d.priors.count))
+        let danger = min(0.5, 0.04 + (violent ? 0.08 : 0) + 0.05 * Double(felonies))
+        let base = violent ? 50_000 : 15_000
+        let moderate = base / 2 + 2_500 * felonies
+        let high = base * 2 + 10_000 * felonies
+        let canPost = employed ? rng.pick([1_000, 2_500, 5_000, 10_000, 25_000]) : rng.pick([0, 500, 1_000, 2_500])
+        let law = c.charges.first?.law
+        var record = d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s") (\(felonies) felon\(felonies == 1 ? "y" : "ies"))"
+        if ftas > 0 { record += "; \(ftas) prior failure\(ftas == 1 ? "" : "s") to appear" }
+        let ties = [employed ? "works as \(d.occupation.lowercased().withIndefiniteArticle)" : "is out of work",
+                    local ? "has lived in the county most of \(NameBank.gender(of: d.name) == .female ? "her" : "his") life" : "moved here from out of state last year"]
+        return CalendarMatter(kind: .firstAppearance, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
+                              docket: c.docket,
+                              summary: "\(d.name), \(d.age), arrested this week and charged with \(law?.title.lowercased() ?? "a felony"), is before the court on conditions of release (G.S. 15A-534). \(record). \(d.lastName) \(ties.joined(separator: " and ")). The magistrate set no bond pending this hearing.",
+                              stateAsk: violent || felonies >= 2
+                                ? "The State asks for a $\(high.formatted()) secured bond with electronic monitoring. The defendant is a danger to the community."
+                                : "The State asks for a $\(moderate.formatted()) secured bond.",
+                              defenseAsk: canPost == 0
+                                ? "My client has no money. Any secured bond is a detention order. We ask for a written promise to appear."
+                                : "My client can post about $\(canPost.formatted()). We ask for an unsecured bond so \(d.lastName) can keep working and help with the defense.",
+                              options: ["Written promise to appear",
+                                        "Unsecured bond of $\(moderate.formatted())",
+                                        "Secured bond of $\(moderate.formatted())",
+                                        "Secured bond of $\(high.formatted()) with electronic house arrest"],
+                              pendingCase: c, bond: BondFacts(moderate: moderate, high: high, canPost: canPost, flightRisk: flight, danger: danger))
+    }
+
+    /// Arraignment in superior court (G.S. 15A-941): the plea is entered and the court sets the trial date.
+    static func arraignmentMatter(for c: CourtCase) -> CalendarMatter {
+        let d = c.defendant
+        let jailed = (c.background?.custodyDays ?? 0) > 0
+        let counts = c.charges.count
+        return CalendarMatter(kind: .arraignment, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
+                              docket: c.docket,
+                              summary: "\(d.name) is arraigned on \(counts) count\(counts == 1 ? "" : "s"), led by \(c.charges.first?.law.title.lowercased() ?? "the indictment"), and pleads not guilty. \(jailed ? "\(d.lastName) is in custody." : "\(d.lastName) is out on bond.") Set the trial date.",
+                              stateAsk: "The State will be ready in three weeks; the lab work is back.",
+                              defenseAsk: counts > 2 ? "With this many counts we need time for discovery. Ten weeks." : "We'd like five weeks to review discovery.",
+                              options: ["Set the trial for two weeks from now", "Set the trial for five weeks from now", "Set the trial for ten weeks from now"],
+                              pendingCase: c)
     }
 
     /// A convicted defendant asks the trial judge for a new trial on newly discovered evidence.
