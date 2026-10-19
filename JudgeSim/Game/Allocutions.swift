@@ -326,7 +326,15 @@ enum Allocutions {
                                      "That's what the chart calls for, and nothing in this record justifies going below it."]))
         }
         reasons.shuffle(using: &rng)
-        return reasons.prefix(rng.int(1...2)).joined(separator: " ")
+        var said = Array(reasons.prefix(rng.int(1...2)))
+        if let bg = c.background, bg.restitution > 0 {
+            let amount = SentenceFormat.dollars(bg.restitution)
+            let basis = bg.restitutionBasis ?? "the losses"
+            said.append(rng.pick(["The State also asks for \(amount) in restitution for \(basis). The documentation is in the file.",
+                                  "And restitution: \(amount), for \(basis).",
+                                  "We're requesting \(amount) in restitution for \(basis), and we've handed up the receipts."]))
+        }
+        return said.joined(separator: " ")
     }
 
     /// The prosecutor asking for sentence at the bench: the request, then why.

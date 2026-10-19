@@ -21,6 +21,10 @@ enum CaseGenerator {
         var categories: Set<LawCategory>? = nil
         /// False when the week already has a murder trial, or had one last week.
         var allowMurder = true
+        /// A follow-up case: what kind it is, the victim it involves, and how long ago it happened.
+        var forcedTemplateKeys: [String]? = nil
+        var victimOverride: String? = nil
+        var incidentDaysAgo: Int? = nil
     }
 
     static func isMurder(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("murder") }
@@ -34,6 +38,21 @@ enum CaseGenerator {
         var rng = SeededRNG(seed: seed)
         var pool = CaseTemplates.all
         // Written cases come up first, until each has been heard once.
+        // A follow-up to an earlier case: one of the kinds named, fitted to the person.
+        if let keys = context.forcedTemplateKeys {
+            let sex = context.returning.map { NameBank.gender(of: $0.name) }
+            let named = keys.compactMap { key in CaseTemplates.all.first { $0.key == key } }.filter { t in
+                sex.map { (t.requiredGenders["D"] ?? $0) == $0 } ?? true
+            }
+            // Keep the same victim when the case allows that person; otherwise any of the kinds named.
+            let keepsVictim = named.filter { t in
+                context.victimOverride.map { v in t.hasVictim && (t.requiredGenders["V"].map { $0 == NameBank.gender(of: v) } ?? true) } ?? true
+            }
+            let fitting = keepsVictim.isEmpty ? named : keepsVictim
+            if let template = fitting.first(where: { _ in rng.chance(0.6) }) ?? fitting.first {
+                return build(template, seed: seed, band: rng.chance(0.6) ? .strong : .close, context: context, rng: &rng)
+            }
+        }
         // How many times each template has been heard, counted once rather than per template.
         var useCounts: [String: Int] = [:]
         for signature in context.usedSignatures {
@@ -179,7 +198,11 @@ enum CaseGenerator {
                                   background: background, priors: priors, probation: nil, history: [])
         }
 
-        let victimName = t.hasVictim ? NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"]) : nil
+        // A follow-up case can involve the same victim, if the story allows that person.
+        let sameVictim = context.victimOverride.flatMap { name in
+            t.requiredGenders["V"].map { $0 == NameBank.gender(of: name) } ?? true ? name : nil
+        }
+        let victimName = t.hasVictim ? (sameVictim ?? NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"])) : nil
         let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"])
         let setting = CaseSetting.of(category: t.category, key: t.key)
         // Highway crashes and impaired driving are worked by the Highway Patrol.
@@ -196,8 +219,8 @@ enum CaseGenerator {
         let lastEntry = t.story?.timeline.map(\.0).max() ?? 0
         let minDays = max(150, lastEntry + 45)
         // A speedy-trial motion needs a case that has actually waited a long time.
-        let speedySeed: MotionSeed? = t.story == nil && rng.chance(0.07) ? rng.pick(GenericPools.speedyTrialSeeds) : nil
-        let daysBack = speedySeed != nil ? rng.int(560...900) : rng.int(150...330) + (minDays - 150)
+        let speedySeed: MotionSeed? = t.story == nil && context.incidentDaysAgo == nil && rng.chance(0.07) ? rng.pick(GenericPools.speedyTrialSeeds) : nil
+        let daysBack = context.incidentDaysAgo.map { max(1, $0) } ?? (speedySeed != nil ? rng.int(560...900) : rng.int(150...330) + (minDays - 150))
         var incident = Calendar.current.date(byAdding: .day, value: -daysBack, to: context.date) ?? context.date
         if let pinned = t.story?.when?.incident(before: context.date, minDays: minDays, using: &rng) { incident = pinned }
         let prosecutor = rng.pick(county.assistantDAs)
@@ -690,6 +713,13 @@ enum CaseGenerator {
 
     // MARK: - Background known to counsel
 
+    /// The first dollar figure in a text, e.g. "$14,000" or "$2.3 million".
+    private static func firstDollarAmount(in text: String) -> Int? {
+        guard let range = text.range(of: "\\$[0-9][0-9,]*(\\.[0-9]+)?( million)?", options: .regularExpression) else { return nil }
+        let value = dollars(in: String(text[range]))
+        return value.map { max(100, $0) }
+    }
+
     private static func dollars(in text: String?) -> Int? {
         guard let text else { return nil }
         let lower = text.lowercased()
@@ -784,6 +814,31 @@ enum CaseGenerator {
             restitution = rng.int(2...9) * 500; basis = "counseling costs and lost wages"
         default:
             break
+        }
+        // Every other case with someone who lost money or was hurt: the State asks for what it can document.
+        if restitution == 0 && rng.chance(0.85) {
+            let text = fill(t.specification) + " " + t.secondary.map { fill($0.specification) }.joined(separator: " ")
+            let stated = firstDollarAmount(in: text)
+            let died = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV", "deathByDistribution", "patientNeglect"]
+                .contains(t.primaryLaw)
+            switch t.category {
+            case .property:
+                restitution = stated ?? rng.int(6...80) * 100; basis = rng.pick(["unrecovered property and repairs", "the value of what was taken and the damage to the door", "replacement costs the owner documented"])
+            case .robbery:
+                restitution = stated ?? rng.int(3...25) * 100; basis = rng.pick(["cash and property taken", "the stolen money and a replaced phone", "what was taken and the victim's lost wages"])
+            case .whiteCollar, .cyber:
+                restitution = stated ?? rng.int(4...90) * 1_000; basis = rng.pick(["money taken", "documented losses", "the victims' losses, per the bank records"])
+            case .violent, .family, .traffic:
+                if died {
+                    restitution = rng.int(7...18) * 1_000; basis = "funeral and burial expenses"
+                } else if t.hasVictim {
+                    restitution = rng.int(8...90) * 100 * (t.category == .traffic ? 4 : 1)
+                    basis = t.category == .traffic ? rng.pick(["medical bills and vehicle damage", "the other driver's medical bills"])
+                        : rng.pick(["medical bills", "emergency room and follow-up care", "medical bills and lost wages", "counseling and medical costs"])
+                }
+            default:
+                break
+            }
         }
 
         // Victim stance

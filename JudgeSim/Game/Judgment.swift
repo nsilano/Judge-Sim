@@ -247,6 +247,8 @@ struct Rulings: Codable, Hashable {
     var pleaDepartureDisclosed: Bool?
     /// The court denied a party's motion to continue and went forward (nil: none made or not yet ruled on).
     var continuanceMotionDenied: Bool?
+    /// Years of a stay-away order protecting the victim, entered with the judgment (0: none).
+    var stayAwayYears = 0
     /// With grouped judgments: which judgment each convicted count belongs to (1, 2, 3...).
     var groups: [UUID: Int] = [:]
     /// With grouped judgments: whether the judgments run one after another.
@@ -317,6 +319,7 @@ extension Rulings {
         pleaDepartureDisclosed = try c.decodeIfPresent(Bool.self, forKey: .pleaDepartureDisclosed)
         continuanceMotionDenied = try c.decodeIfPresent(Bool.self, forKey: .continuanceMotionDenied)
         groups = try c.decodeIfPresent([UUID: Int].self, forKey: .groups) ?? groups
+        stayAwayYears = try c.decodeIfPresent(Int.self, forKey: .stayAwayYears) ?? stayAwayYears
         groupsConsecutive = try c.decodeIfPresent(Bool.self, forKey: .groupsConsecutive) ?? groupsConsecutive
         unitConsecutive = try c.decodeIfPresent([UUID: Bool].self, forKey: .unitConsecutive)
         arrestedCounts = try c.decodeIfPresent(Set<UUID>.self, forKey: .arrestedCounts) ?? arrestedCounts
@@ -410,6 +413,8 @@ struct CaseOutcome {
     var rulingNotes: [RulingNote] = []
     /// What the appellant says the court got wrong, strongest arguments first.
     var appealGrounds: [String] = []
+    /// A stay-away order protecting the victim, entered with the judgment.
+    var stayAwayOrder: StayAwayOrder? = nil
 }
 
 /// One ruling the judge made at trial and what the law says about it, shown once judgment is entered.
@@ -1861,6 +1866,10 @@ enum Judgment {
                                         personID: d.personID, reliefMotion: motion))
         }
 
+        // What the defendant does next, if the judgment let a guilty person go.
+        pending.append(contentsOf: Consequences.afterJudgment(c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
+                                                              judgeLast: judgeLast, date: date, rng: &rng))
+
         // Things that may surface about what really happened
         switch (convicted, truthGuilty) {
         case (true, false):
@@ -1975,7 +1984,23 @@ enum Judgment {
                            pending: pending, appearanceSummary: appearance, releaseBasis: releaseBasis,
                            continuedPostRelease: continuedPostRelease, newPostRelease: newPostRelease,
                            violations: violationsFound, rulingNotes: rulingNotes(c, r),
-                           appealGrounds: appealGrounds(c, r, issues: issueDetails, byState: (appealNotice ?? "").contains("The State")))
+                           appealGrounds: appealGrounds(c, r, issues: issueDetails, byState: (appealNotice ?? "").contains("The State")),
+                           stayAwayOrder: stayAwayOrder(c, r, convicted: convicted, date: date, probationEnds: newProbation?.ends))
+    }
+
+    /// The order protecting the victim: one the court entered for a set number of years, or, failing that, the
+    /// no-contact condition of probation for as long as probation runs.
+    static func stayAwayOrder(_ c: CourtCase, _ r: Rulings, convicted: Bool, date: Date, probationEnds: Date?) -> StayAwayOrder? {
+        guard convicted, let victim = c.victimName else { return nil }
+        let expires: Date
+        if r.stayAwayYears > 0 {
+            expires = Calendar.current.date(byAdding: .year, value: r.stayAwayYears, to: date) ?? date
+        } else if r.conditions.noContactVictim, let ends = probationEnds {
+            expires = ends
+        } else {
+            return nil
+        }
+        return StayAwayOrder(docket: c.docket, protectedName: victim, issued: date, expires: expires, domestic: Consequences.isDomestic(c))
     }
 
     /// The assignments of error an appellant would brief: the rulings that went against them, the ones an appellate

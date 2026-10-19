@@ -177,6 +177,11 @@ struct PersonTimeline: View {
             list.append(Event(date: a.date, icon: pv ? "person.badge.clock.fill" : "hammer.fill", color: pv ? .orange : Theme.gold,
                               text: "\(a.charges) (\(a.docket)): \(a.outcome)"))
         }
+        for order in person.stayAwayOrders ?? [] {
+            list.append(Event(date: order.issued, icon: "hand.raised.fill", color: Theme.prosecution,
+                              text: "Stay-away order protecting \(order.protectedName) until \(SentenceFormat.shortDate(order.expires))"
+                                + (order.violations > 0 ? ". Violated \(order.violations) time\(order.violations == 1 ? "" : "s")." : ".")))
+        }
         for v in person.violations ?? [] {
             list.append(Event(date: v.date, icon: "exclamationmark.triangle.fill", color: .orange, text: "\(v.kind): \(v.conduct.trimmingTrailingPeriods). \(v.result)"))
         }

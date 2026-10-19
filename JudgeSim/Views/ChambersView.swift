@@ -503,6 +503,9 @@ struct RecordsView: View {
     @State private var focus: StatFocus?
     @State private var sort: PeopleSort = .recent
 
+    /// How many recent matters the Cases tab lists before pointing to the Calendar and News tabs.
+    static let recentLimit = 10
+
     enum StatFocus: String {
         case cases, hearings, custody, probation
 
@@ -626,10 +629,16 @@ struct RecordsView: View {
         switch focus {
         case .cases, .hearings:
             let records = game.history.filter { $0.resolvedKind == (focus == .cases ? "trial" : "hearing") }
-            Section(focus.title) {
+            Section {
                 if records.isEmpty { Text("None yet.").foregroundStyle(.secondary) }
-                ForEach(records) { record in
+                ForEach(records.prefix(Self.recentLimit)) { record in
                     NavigationLink { CaseRecordDetail(record: record) } label: { DocketIndexRow(record: record) }
+                }
+            } header: {
+                Text(focus.title)
+            } footer: {
+                if records.count > Self.recentLimit {
+                    Text("The last \(Self.recentLimit) of \(records.count). The rest are on the Calendar tab, and the coverage is in News.")
                 }
             }
         case .custody, .probation:
@@ -684,18 +693,27 @@ struct RecordsView: View {
             ledgerRow("Affirmed on appeal", trials.filter { $0.appealStatus == "Affirmed on appeal" }.count)
             ledgerRow("Reversed or vacated on appeal", trials.filter { ($0.appealStatus ?? "").contains("New trial") || ($0.appealStatus ?? "").contains("vacated") || ($0.appealStatus ?? "").contains("reversed") }.count)
             ledgerRow("Exonerations", s.exonerations)
+            ledgerRow("Let go, then charged again", s.chargedAgainAfterRelease ?? 0)
+            ledgerRow("Stay-away order violations", s.orderViolations ?? 0)
             }
         }
-        Section("Docket history") {
+        // An overview: the most recent matters only. The full history is on the Calendar tab, the stories in News.
+        Section {
             if game.history.isEmpty {
                 Text("No cases heard yet.").foregroundStyle(.secondary)
             }
-            ForEach(game.history) { record in
+            ForEach(game.history.prefix(Self.recentLimit)) { record in
                 NavigationLink {
                     CaseRecordDetail(record: record)
                 } label: {
                     DocketIndexRow(record: record)
                 }
+            }
+        } header: {
+            Text("Recent docket")
+        } footer: {
+            if game.history.count > Self.recentLimit {
+                Text("Showing your last \(Self.recentLimit). Every earlier matter is on the Calendar tab, and the coverage is in News.")
             }
         }
     }
