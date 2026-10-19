@@ -338,4 +338,7 @@ struct Reoffense: Codable, Hashable {
     var incident: Date
     /// Shown on the docket so the judge sees the connection to the earlier decision.
     var note: String
+    /// The earlier case in this court, for a written follow-up to refer to (optional for older saves).
+    var priorOffense: String? = nil
+    var priorDate: Date? = nil
 }

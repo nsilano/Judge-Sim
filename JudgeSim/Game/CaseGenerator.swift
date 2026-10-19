@@ -25,6 +25,9 @@ enum CaseGenerator {
         var forcedTemplateKeys: [String]? = nil
         var victimOverride: String? = nil
         var incidentDaysAgo: Int? = nil
+        /// The earlier case a written follow-up refers to.
+        var priorOffense: String? = nil
+        var priorDate: Date? = nil
     }
 
     static func isMurder(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("murder") }
@@ -41,7 +44,7 @@ enum CaseGenerator {
         // A follow-up to an earlier case: one of the kinds named, fitted to the person.
         if let keys = context.forcedTemplateKeys {
             let sex = context.returning.map { NameBank.gender(of: $0.name) }
-            let named = keys.compactMap { key in CaseTemplates.all.first { $0.key == key } }.filter { t in
+            let named = keys.compactMap { key in (FollowUpCases.all + CaseTemplates.all).first { $0.key == key } }.filter { t in
                 sex.map { (t.requiredGenders["D"] ?? $0) == $0 } ?? true
             }
             // Keep the same victim when the case allows that person; otherwise any of the kinds named.
@@ -265,7 +268,10 @@ enum CaseGenerator {
             "HOOD": rng.pick(county.towns),
             "CITY": county.seat,
             "V": victimName ?? "the complainant",
-            "VL": victimName.map(lastName) ?? "the complainant"
+            "VL": victimName.map(lastName) ?? "the complainant",
+            // A follow-up case names the earlier one in this court.
+            "PRIOR": context.priorOffense?.lowercased() ?? "an earlier charge",
+            "PRIORDATE": context.priorDate.map { $0.formatted(.dateTime.month(.wide).year()) } ?? "an earlier term of court"
         ]
         for key in t.extras.keys.sorted() {
             if let options = t.extras[key] { values[key] = rng.pick(options) }
