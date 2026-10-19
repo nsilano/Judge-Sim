@@ -90,6 +90,7 @@ private struct SaveData: Codable {
     var reliefQueue: [ReliefMotion]?
     var murderLastWeek: Bool?
     var reoffenseQueue: [Reoffense]?
+    var freshAppeals: [UUID]?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -127,6 +128,8 @@ final class GameState: ObservableObject {
     private var reliefQueue: [ReliefMotion] = []
     /// New cases against people this court already judged, waiting for a place on the calendar.
     private var reoffenseQueue: [Reoffense] = []
+    /// Appeals the Court of Appeals decided since the judge last sat, newest last.
+    @Published private(set) var freshAppeals: [UUID] = []
     /// Whether last week's trial calendar had a murder case, so two murder weeks don't come back to back.
     private var murderLastWeek = false
     /// The Monday of the judge's first week on the bench.
@@ -582,7 +585,7 @@ final class GameState: ObservableObject {
     /// Starts following each appeal taken today, and puts any oral argument on the calendar. Returns the events
     /// tagged with the appeal they decide, ready to schedule.
     private func trackAppeals(_ events: [PendingEvent], docket: String, caption: String, personID: UUID, appellant: String, plea: Bool,
-                              grounds: [String] = []) -> [PendingEvent] {
+                              grounds: [String] = [], groundErrors: [Bool] = []) -> [PendingEvent] {
         var rng = SeededRNG(seed: seedBase ^ SeededRNG.stableHash(docket) ^ UInt64(appeals.count))
         let decisions = events.filter { $0.news.kind == .appeal && $0.news.docket == docket && !Appeals.isFollowUp($0) }
         guard let first = decisions.min(by: { $0.due < $1.due }) else { return events }
@@ -604,6 +607,7 @@ final class GameState: ObservableObject {
                                       appellant: byState ? "the State" : appellant, issue: issue, rng: &rng)
         tracker.docket = docket
         tracker.grounds = grounds.isEmpty ? nil : grounds
+        tracker.groundErrors = groundErrors.isEmpty ? nil : groundErrors
         appeals.insert(tracker, at: 0)
         // The judgment appealed from was just entered.
         if let index = history.firstIndex(where: { $0.docket == docket && $0.resolvedKind != "continuance" }) {
@@ -657,6 +661,7 @@ final class GameState: ObservableObject {
 
     func clearDigest() {
         digest = []
+        freshAppeals = []
         save()
     }
 
@@ -1351,7 +1356,8 @@ final class GameState: ObservableObject {
         pending.append(contentsOf: trackAppeals(outcome.pending, docket: hearing.probation.docket + " (PV)",
                                                 caption: "State v. \(hearing.personName) (probation violation)",
                                                 personID: hearing.personID, appellant: "the probationer", plea: false,
-                                                grounds: outcome.lines.filter { $0.hasPrefix("Note:") }.map { String($0.dropFirst(6)) }))
+                                                grounds: outcome.lines.filter { $0.hasPrefix("Note:") }.map { String($0.dropFirst(6)) },
+                                                groundErrors: outcome.lines.filter { $0.hasPrefix("Note:") }.map { _ in true }))
         finishEntry(matterID: hearing.id, outcome: outcome.appearance)
         save()
     }
@@ -1560,7 +1566,7 @@ final class GameState: ObservableObject {
         let appellant = (outcome.appealNotice ?? "").contains("The State") ? "the State" : "the defendant"
         pending.append(contentsOf: trackAppeals(outcome.pending, docket: courtCase.docket, caption: courtCase.caption, personID: d.personID,
                                                 appellant: appellant, plea: outcome.verdictLines.contains { $0.verdictLabel.contains("plea") || $0.verdictLabel.contains("No contest") },
-                                                grounds: outcome.appealGrounds))
+                                                grounds: outcome.appealGrounds, groundErrors: outcome.appealGroundErrors))
         finishEntry(matterID: courtCase.id, outcome: outcome.appearanceSummary)
         save()
     }
@@ -1591,6 +1597,7 @@ final class GameState: ObservableObject {
         reliefQueue = []
         murderLastWeek = false
         reoffenseQueue = []
+        freshAppeals = []
         careerStart = Date()
         docketSequence = 0
         sessionEnds = Date()
@@ -1718,6 +1725,8 @@ final class GameState: ObservableObject {
                         appeals[index].decided = event.due
                         appeals[index].result = Appeals.status(for: event)
                         appeals[index].opinion = event.news.body
+                        appeals[index].holdings = Appeals.holdings(for: appeals[index], reversed: appeals[index].wasReversed)
+                        freshAppeals.append(appeals[index].id)
                     } else {
                         appeals[index].followUps.append("\(SentenceFormat.shortDate(event.due)): \(event.news.headline)")
                         if followUp { appeals[index].result = Appeals.status(for: event) }
@@ -1888,7 +1897,8 @@ final class GameState: ObservableObject {
                             digest: digest, appeals: appeals, recentLineKeys: recentLineKeys, careerStart: careerStart,
                             weekNumber: weekNumber, lightWeeks: lightWeeks, yearStartStats: yearStartStats,
                             reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated,
-                            reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue)
+                            reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
+                            freshAppeals: freshAppeals)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -1940,6 +1950,7 @@ final class GameState: ObservableObject {
         reliefQueue = data.reliefQueue ?? []
         murderLastWeek = data.murderLastWeek ?? false
         reoffenseQueue = data.reoffenseQueue ?? []
+        freshAppeals = data.freshAppeals ?? []
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
         backfillAppeals()
         if today == nil && judgeName != nil {

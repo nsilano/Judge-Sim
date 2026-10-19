@@ -122,6 +122,9 @@ struct ChambersView: View {
                     }
                     header
                     if game.unseated { unseatedCard }
+                    if !game.freshAppeals.isEmpty {
+                        appealsDecidedCard
+                    }
                     if !game.digest.isEmpty {
                         digestCard
                     }
@@ -390,6 +393,33 @@ struct ChambersView: View {
             ProgressView(value: Double(value), total: 100).frame(width: 110).tint(value >= 60 ? Theme.good : (value >= 40 ? .orange : Theme.bad))
             Text("\(value)").font(.subheadline.monospacedDigit()).frame(width: 30, alignment: .trailing)
         }
+    }
+
+    /// The Court of Appeals decided cases from this court since the judge last sat: upheld or changed, and why.
+    private var appealsDecidedCard: some View {
+        let decided = game.freshAppeals.compactMap { id in game.appeals.first { $0.id == id } }
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionTitle(text: "From the Court of Appeals", icon: "building.columns.fill")
+                Spacer()
+                Button("Dismiss") { withAnimation { game.clearDigest() } }
+                    .font(.caption.weight(.semibold))
+            }
+            Text("\(decided.filter { !$0.wasReversed }.count) upheld · \(decided.filter(\.wasReversed).count) changed")
+                .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            ForEach(decided) { appeal in
+                NavigationLink {
+                    AppealDetail(appeal: appeal, today: game.currentDate)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(appeal.caption).font(.system(.subheadline, design: .serif).weight(.semibold)).foregroundStyle(.primary)
+                        AppealDecisionCard(appeal: appeal, compact: true)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .card()
     }
 
     /// Appeals decided, releases, and arrests since the last court day, with appeals first.

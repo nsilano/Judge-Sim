@@ -413,6 +413,8 @@ struct CaseOutcome {
     var rulingNotes: [RulingNote] = []
     /// What the appellant says the court got wrong, strongest arguments first.
     var appealGrounds: [String] = []
+    /// For each ground: whether the ruling really was wrong (never shown until the appeal is decided).
+    var appealGroundErrors: [Bool] = []
     /// A stay-away order protecting the victim, entered with the judgment.
     var stayAwayOrder: StayAwayOrder? = nil
 }
@@ -1984,7 +1986,8 @@ enum Judgment {
                            pending: pending, appearanceSummary: appearance, releaseBasis: releaseBasis,
                            continuedPostRelease: continuedPostRelease, newPostRelease: newPostRelease,
                            violations: violationsFound, rulingNotes: rulingNotes(c, r),
-                           appealGrounds: appealGrounds(c, r, issues: issueDetails, byState: (appealNotice ?? "").contains("The State")),
+                           appealGrounds: appealGroundDetails(c, r, issues: issueDetails, byState: (appealNotice ?? "").contains("The State")).map(\.text),
+                           appealGroundErrors: appealGroundDetails(c, r, issues: issueDetails, byState: (appealNotice ?? "").contains("The State")).map(\.error),
                            stayAwayOrder: stayAwayOrder(c, r, convicted: convicted, date: date, probationEnds: newProbation?.ends))
     }
 
@@ -2005,16 +2008,19 @@ enum Judgment {
 
     /// The assignments of error an appellant would brief: the rulings that went against them, the ones an appellate
     /// court would likely find wrong listed first, and any unlawful part of the sentence.
-    static func appealGrounds(_ c: CourtCase, _ r: Rulings, issues: [LegalIssue], byState: Bool) -> [String] {
+    static func appealGroundDetails(_ c: CourtCase, _ r: Rulings, issues: [LegalIssue], byState: Bool) -> [(text: String, error: Bool)] {
         if byState {
-            let speedy = c.motions.contains { $0.kind == .dismissSpeedyTrial && r.motions[$0.id] == true }
-            var grounds = issues.filter { !$0.againstDefendant }.map { "The sentence: \($0.text)" }
-            if speedy { grounds.insert("You dismissed the charges for a speedy-trial violation. The State argues the delay didn't violate the Sixth Amendment under Barker v. Wingo.", at: 0) }
+            let speedy = c.motions.first { $0.kind == .dismissSpeedyTrial && r.motions[$0.id] == true }
+            var grounds = issues.filter { !$0.againstDefendant }.map { (text: "The sentence: \($0.text)", error: true) }
+            if let speedy {
+                grounds.insert((text: "You dismissed the charges for a speedy-trial violation. The State argues the delay didn't violate the Sixth Amendment under Barker v. Wingo.",
+                                error: !speedy.shouldGrant), at: 0)
+            }
             return grounds
         }
-        var strong: [String] = []
-        var lesser: [String] = []
-        func add(_ text: String, error: Bool) { if error { strong.append(text) } else { lesser.append(text) } }
+        var strong: [(text: String, error: Bool)] = []
+        var lesser: [(text: String, error: Bool)] = []
+        func add(_ text: String, error: Bool) { if error { strong.append((text, true)) } else { lesser.append((text, false)) } }
         for m in c.motions where r.motions[m.id] == false {
             let target = c.evidence(m.targetEvidenceID).map { " (\($0.exhibit), \($0.title.lowercased()))" } ?? ""
             add("You denied the \(m.kind.title.lowercased())\(target).", error: m.shouldGrant)
@@ -2038,10 +2044,10 @@ enum Judgment {
                 add("The evidence was insufficient to convict on Count \(charge.count) (\(charge.law.title)).", error: true)
             }
         }
-        for issue in issues where issue.againstDefendant { strong.append("The sentence: \(issue.text)") }
+        for issue in issues where issue.againstDefendant { strong.append(("The sentence: \(issue.text)", true)) }
         let grounds = strong + lesser
         return grounds.isEmpty
-            ? ["The defense argues the verdict is against the weight of the evidence and preserves every ruling for review. No single ruling is singled out."]
+            ? [("The defense argues the verdict is against the weight of the evidence and preserves every ruling for review. No single ruling is singled out.", false)]
             : Array(grounds.prefix(5))
     }
 
