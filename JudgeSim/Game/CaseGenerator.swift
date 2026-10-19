@@ -60,11 +60,23 @@ enum CaseGenerator {
         }
         var unheardStories = StoryCases.all.filter { useCounts[$0.key] == nil }
         if !context.allowMurder { unheardStories.removeAll(where: isMurder) }
-        if context.returning == nil, context.storySlot, !unheardStories.isEmpty {
-            // Murder trials come up now and then, not every week: most draws go to another kind of case.
-            let others = unheardStories.filter { !isMurder($0) }
-            let story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : unheardStories)
-            return build(story, seed: seed, band: .close, context: context, rng: &rng)
+        if context.returning == nil, context.storySlot {
+            // Every trial is a written case. Once all of them have been heard, the ones heard least come back with new people.
+            var candidates = unheardStories
+            if candidates.isEmpty {
+                var all = StoryCases.all
+                if !context.allowMurder { all.removeAll(where: isMurder) }
+                let fewest = all.map { useCounts[$0.key] ?? 0 }.min() ?? 0
+                candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
+                let notRecent = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
+                if !notRecent.isEmpty { candidates = notRecent }
+            }
+            if !candidates.isEmpty {
+                // Murder trials come up now and then, not every week: most draws go to another kind of case.
+                let others = candidates.filter { !isMurder($0) }
+                let story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : candidates)
+                return build(story, seed: seed, band: .close, context: context, rng: &rng)
+            }
         }
         // A written case is heard once per career, and only with a new defendant, whose history it describes.
         if context.returning == nil && context.storySlot { pool += unheardStories }

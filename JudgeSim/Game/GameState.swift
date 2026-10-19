@@ -877,13 +877,12 @@ final class GameState: ObservableObject {
             }
             let wanted = lightWeeks ? 2 : rng.int(2...3)
             let already = entries.filter { if case .trial = $0.matter { return true } else { return false } }.count
-            // Written stories make up most of the docket; now and then one slot goes to a generated case.
+            // Every trial on the docket is a written case.
             let slots = max(0, min(wanted, trialCap) - already)
-            let generatedSlot = slots > 0 && rng.chance(0.35) ? rng.int(0...(slots - 1)) : -1
-            for slot in 0..<slots {
+            for _ in 0..<slots {
                 // At most one murder trial a week, and not two weeks running.
                 let allowMurder = !murderThisWeek && !murderLastWeek
-                if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: slot != generatedSlot, allowMurder: allowMurder) {
+                if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: true, allowMurder: allowMurder) {
                     if Self.isMurder(c) { murderThisWeek = true }
                     // Some cases are called with a party asking for more time.
                     if c.background?.arrangementPresented != true && rng.chance(0.25) {
@@ -1367,7 +1366,8 @@ final class GameState: ObservableObject {
                               categories: Set<LawCategory>? = nil, allowMurder: Bool = true, announce: Bool = true,
                               followUp: Reoffense? = nil) -> CourtCase? {
         guard let county, let judgeName else { return nil }
-        var returning = followUp.flatMap { person($0.personID) } ?? pickReturningDefendant(rng: &rng, date: date)
+        // A written case brings its own defendant; returning defendants come back through calendar matters and follow-ups.
+        var returning = followUp.flatMap { person($0.personID) } ?? (storySlot && followUp == nil ? nil : pickReturningDefendant(rng: &rng, date: date))
         if followUp == nil, let person = returning, used.contains(person.id) { returning = nil }
         var context = CaseGenerator.Context(county: county, judgeName: judgeName, date: date,
                                             docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
