@@ -242,6 +242,14 @@ struct ChambersView: View {
                      + (day.isComplete ? "" : " · \(remaining) matter\(remaining == 1 ? "" : "s") left"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                ForEach(game.holidaysThisWeek, id: \.0) { holiday in
+                    Label("\(holiday.0.formatted(.dateTime.weekday(.wide))): \(holiday.1). The courthouse is closed.", systemImage: "flag.fill")
+                        .font(.caption).foregroundStyle(Theme.gold)
+                }
+                if game.trialBacklog > 0 {
+                    Label("\(game.trialBacklog) trial\(game.trialBacklog == 1 ? "" : "s") waiting for a later week (up to \(game.trialCap) a week)", systemImage: "tray.full.fill")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 if CourtCalendar.calendar.component(.weekday, from: day.clock) == 6
                     && CourtCalendar.calendar.component(.hour, from: day.clock) >= 17 && !day.isComplete {
                     Label("Friday is running late. Finish the week's calendar before you adjourn.", systemImage: "moon.fill").font(.caption).foregroundStyle(.orange)

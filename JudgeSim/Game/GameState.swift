@@ -84,6 +84,7 @@ private struct SaveData: Codable {
     var lastYearReviewed: Int?
     var unseated: Bool?
     var reliefQueue: [ReliefMotion]?
+    var murderLastWeek: Bool?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -119,6 +120,8 @@ final class GameState: ObservableObject {
     private var lastYearReviewed: Int?
     /// Post-conviction motions waiting for the next calendar call.
     private var reliefQueue: [ReliefMotion] = []
+    /// Whether last week's trial calendar had a murder case, so two murder weeks don't come back to back.
+    private var murderLastWeek = false
     /// The Monday of the judge's first week on the bench.
     @Published private(set) var careerStart = Date()
     /// Which week on the bench the current calendar is, starting at 1. Weeks on leave don't count.
@@ -310,7 +313,11 @@ final class GameState: ObservableObject {
         let cal = CourtCalendar.calendar
         let started = day.clock
         day.clock = cal.date(byAdding: .minute, value: minutes, to: day.clock) ?? day.clock
-        let friday = sessionFriday(for: day.date)
+        var friday = sessionFriday(for: day.date)
+        // When Friday is a holiday the week ends Thursday.
+        while !CourtCalendar.isCourtDay(friday) && friday > day.date {
+            friday = cal.date(byAdding: .day, value: -1, to: friday) ?? friday
+        }
         let lastCall = cal.date(bySettingHour: 16, minute: 30, second: 0, of: started) ?? started
         if !day.isComplete, day.clock >= lastCall || !cal.isDate(day.clock, inSameDayAs: started) {
             let next = CourtCalendar.nextWeekday(after: started)
@@ -398,7 +405,27 @@ final class GameState: ObservableObject {
     /// The next court date: the Monday after this court week.
     var nextCourtDate: Date {
         let base = today?.date ?? currentDate
-        return CourtCalendar.monday(onOrAfter: CourtCalendar.nextWeekday(after: sessionFriday(for: base)))
+        let saturday = CourtCalendar.calendar.date(byAdding: .day, value: 1, to: sessionFriday(for: base)) ?? base
+        return CourtCalendar.weekday(onOrAfter: CourtCalendar.monday(onOrAfter: saturday))
+    }
+
+    /// The most trials the court takes up in a week; anything more waits for the next week.
+    var trialCap: Int { lightWeeks ? 2 : 3 }
+    /// The most matters on Monday's calendar call.
+    private var calendarCap: Int { lightWeeks ? 4 : 6 }
+
+    /// Trials set for a later week and waiting their turn.
+    var trialBacklog: Int {
+        scheduled.filter { if case .trial = $0.entry.matter { return true } else { return false } }.count
+    }
+
+    /// The holidays that close the courthouse during the current court week.
+    var holidaysThisWeek: [(Date, String)] {
+        CourtCalendar.holidays(inWeekOf: CourtCalendar.monday(onOrBefore: today?.date ?? currentDate))
+    }
+
+    static func isMurder(_ c: CourtCase) -> Bool {
+        c.charges.contains { $0.law.id.hasPrefix("murder") }
     }
 
     /// The next court week always opens as a new criminal session.
@@ -429,6 +456,11 @@ final class GameState: ObservableObject {
         let waiting = scheduled.filter { $0.date <= sessionFriday(for: next) }.count
         if waiting > 0 { body += " \(waiting) continued matter\(waiting == 1 ? " is" : "s are") back on this week's calendar." }
         post(NewsItem(date: sessionFriday(for: day.date), kind: .community, headline: "Week \(week) in review", body: body))
+        for (date, name) in CourtCalendar.holidays(inWeekOf: CourtCalendar.monday(onOrBefore: next)) {
+            post(NewsItem(date: next, kind: .community, headline: "Courthouse closed \(date.formatted(.dateTime.weekday(.wide))) for \(name)",
+                          body: "The \(county?.courthouse ?? "courthouse") will be closed \(SentenceFormat.shortDate(date)) for \(name), a state court holiday. Matters set that day are heard the next day court is in session.",
+                          prominence: 0))
+        }
         weekNumber = week + 1
         sessionEnds = sessionFriday(for: next)
         today = buildDay(next, kind: .trial, sessionDay: 1)
@@ -468,7 +500,7 @@ final class GameState: ObservableObject {
     /// The Monday the judge would return to the bench after skipping `weeks` court weeks.
     func leaveReturnDate(weeks: Int) -> Date {
         let next = nextCourtDate
-        return CourtCalendar.monday(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 7 * max(1, weeks), to: next) ?? next)
+        return CourtCalendar.weekday(onOrAfter: CourtCalendar.monday(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 7 * max(1, weeks), to: next) ?? next))
     }
 
     /// Steps away from the bench. The world keeps moving: sentences end, appeals come down, people are released.
@@ -685,6 +717,31 @@ final class GameState: ObservableObject {
             entries.append(DocketEntry(matter: .trial(retrial), note: "Returned from the Court of Appeals"))
         }
 
+        // The week takes only so many trials: a trial already under way comes first, then a jailed defendant,
+        // then the oldest setting. The rest wait for next week.
+        if kind != .specialSetting {
+            func isTrial(_ e: DocketEntry) -> Bool { if case .trial = e.matter { return true } else { return false } }
+            func rank(_ e: DocketEntry) -> Int {
+                guard case .trial(let c) = e.matter else { return 0 }
+                if e.resume != nil { return 0 }
+                return (c.background?.custodyDays ?? 0) > 0 ? 1 : 2
+            }
+            let trials = entries.enumerated().filter { isTrial($0.element) }
+            if trials.count > trialCap {
+                let keep = Set(trials.sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }.prefix(trialCap).map(\.element.id))
+                let saturday = CourtCalendar.calendar.date(byAdding: .day, value: 1, to: weekEnd) ?? weekEnd
+                let nextWeek = CourtCalendar.weekday(onOrAfter: CourtCalendar.monday(onOrAfter: saturday))
+                for (_, entry) in trials where !keep.contains(entry.id) {
+                    var carried = entry
+                    carried.note = (carried.note ?? "") + " Carried over: the week's trial calendar was full."
+                    scheduled.append(ScheduledMatter(date: nextWeek, entry: carried))
+                }
+                entries.removeAll { isTrial($0) && !keep.contains($0.id) }
+                scheduled.sort { $0.date < $1.date }
+            }
+        }
+        var murderThisWeek = entries.contains { if case .trial(let c) = $0.matter { return Self.isMurder(c) } else { return false } }
+
         // Anyone already on today's calendar, or holding a continued matter, isn't given a second matter.
         var usedPeople = Set<UUID>()
         for entry in entries + scheduled.map(\.entry) {
@@ -700,11 +757,21 @@ final class GameState: ObservableObject {
                 var call = CalendarCalls.make(county: county, date: date, docketSequence: docketSequence, people: people,
                                               excluding: usedPeople, seed: rng.next())
                 docketSequence += 200
+                // Leave room on the calendar for the new arrest, a relief motion, and most weeks a warrant and an arraignment.
+                let wantsWarrant = rng.chance(0.7)
+                let wantsArraignment = !lightWeeks && rng.chance(0.6)
+                let reserved = 1 + (reliefQueue.isEmpty ? 0 : 1) + (wantsWarrant ? 1 : 0) + (wantsArraignment ? 1 : 0)
+                let room = max(1, calendarCap - reserved)
+                if call.matters.count > room {
+                    // The quick pleas and probation matters stay; the overflow goes to another session.
+                    call.matters = Array(call.matters.prefix(room))
+                }
+                call.matters.forEach { usedPeople.insert($0.personID) }
                 // Pleas, continuance motions, failures to appear, and capacity motions are about real cases:
                 // what the court orders puts each one on an actual calendar.
                 for index in call.matters.indices
                 where [.quickPlea, .continuance, .failureToAppear, .capacity, .bondModification].contains(call.matters[index].kind) {
-                    if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false) {
+                    if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, allowMurder: false) {
                         if call.matters[index].kind == .bondModification {
                             // A jailed defendant asking for a lower bond.
                             if var bg = c.background { bg.custodyDays = max(bg.custodyDays, rng.int(30...150)); c.background = bg }
@@ -715,10 +782,10 @@ final class GameState: ObservableObject {
                     }
                 }
                 // A new arrest for conditions of release, and a case to arraign and set for trial.
-                if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false) {
+                if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, allowMurder: false) {
                     call.matters.append(CalendarCalls.bondMatter(for: c, rng: &rng))
                 }
-                if !lightWeeks, rng.chance(0.6), let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false) {
+                if wantsArraignment, let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, allowMurder: false) {
                     call.matters.append(CalendarCalls.arraignmentMatter(for: c))
                 }
                 // Motions for appropriate relief in cases tried here come back to this judge.
@@ -727,9 +794,9 @@ final class GameState: ObservableObject {
                     call.matters.insert(CalendarCalls.reliefMatter(relief, judgeLast: lastName(judgeName)), at: 0)
                 }
                 // Most weeks an officer brings a search warrant application.
-                if rng.chance(0.7) {
+                if wantsWarrant {
                     let kind = rng.pick([WarrantApplication.Kind.residenceDrugs, .storageStolen, .phoneRecords])
-                    if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, categories: kind.categories) {
+                    if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, categories: kind.categories, allowMurder: false) {
                         let w = SearchWarrants.application(for: c, date: date, rng: &rng)
                         call.matters.insert(CalendarCalls.warrantMatter(w, for: c), at: min(1, call.matters.count))
                     }
@@ -737,13 +804,16 @@ final class GameState: ObservableObject {
                 call.matters.forEach { usedPeople.insert($0.personID) }
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
-            let wanted = lightWeeks ? 2 : rng.int(3...4)
+            let wanted = lightWeeks ? 2 : rng.int(2...3)
             let already = entries.filter { if case .trial = $0.matter { return true } else { return false } }.count
             // Written stories make up most of the docket; now and then one slot goes to a generated case.
-            let slots = max(1, wanted - already)
-            let generatedSlot = rng.chance(0.35) ? rng.int(0...(slots - 1)) : -1
+            let slots = max(0, min(wanted, trialCap) - already)
+            let generatedSlot = slots > 0 && rng.chance(0.35) ? rng.int(0...(slots - 1)) : -1
             for slot in 0..<slots {
-                if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: slot != generatedSlot) {
+                // At most one murder trial a week, and not two weeks running.
+                let allowMurder = !murderThisWeek && !murderLastWeek
+                if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: slot != generatedSlot, allowMurder: allowMurder) {
+                    if Self.isMurder(c) { murderThisWeek = true }
                     // Some cases are called with a party asking for more time.
                     if c.background?.arrangementPresented != true && rng.chance(0.25) {
                         c.continuanceMotion = ContinuanceMotions.make(for: c, rng: &rng)
@@ -763,6 +833,7 @@ final class GameState: ObservableObject {
         if entries.isEmpty, let c = generateCase(date: date, rng: &rng, excluding: &usedPeople) {
             entries.append(DocketEntry(matter: .trial(c)))
         }
+        if kind != .specialSetting { murderLastWeek = murderThisWeek }
         return CourtDay(date: date, clock: CourtCalendar.opening(on: date, minutesAfterMidnight: openingMinutes),
                         kind: kind, entries: entries, sessionDay: sessionDay)
     }
@@ -851,6 +922,13 @@ final class GameState: ObservableObject {
         }
         func thisWeek(_ c: CourtCase, note: String) {
             guard var day = today else { setFor(c, weeks: 1, note: note); return }
+            let openTrials = day.entries.filter { e in
+                if case .trial = e.matter { return e.isOpen } else { return false }
+            }.count
+            guard openTrials < trialCap else {
+                setFor(c, weeks: 1, note: note.replacingOccurrences(of: "tried this week", with: "set for next week") + " This week's trial calendar was already full.")
+                return
+            }
             var c = c
             c.sessionDate = day.date
             day.entries.append(DocketEntry(matter: .trial(c), note: note))
@@ -1155,7 +1233,7 @@ final class GameState: ObservableObject {
 
     /// A new case for the calendar.
     private func generateCase(date: Date, rng: inout SeededRNG, excluding used: inout Set<UUID>, storySlot: Bool = true,
-                              categories: Set<LawCategory>? = nil) -> CourtCase? {
+                              categories: Set<LawCategory>? = nil, allowMurder: Bool = true) -> CourtCase? {
         guard let county, let judgeName else { return nil }
         var returning = pickReturningDefendant(rng: &rng, date: date)
         if let person = returning, used.contains(person.id) { returning = nil }
@@ -1163,7 +1241,7 @@ final class GameState: ObservableObject {
                                             docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
                                             usedSignatures: Set(usedSignatures), returning: returning,
                                             usedBackgrounds: Set(people.map(\.background)), storySlot: storySlot,
-                                            categories: categories)
+                                            categories: categories, allowMurder: allowMurder)
         // Draw a few candidates, cut lines that don't fit, and keep the one that holds together and reads newest.
         let recent = Set(recentLineKeys)
         var best: (score: Int, value: CourtCase)?
@@ -1579,7 +1657,7 @@ final class GameState: ObservableObject {
                             digest: digest, appeals: appeals, recentLineKeys: recentLineKeys, careerStart: careerStart,
                             weekNumber: weekNumber, lightWeeks: lightWeeks, yearStartStats: yearStartStats,
                             reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated,
-                            reliefQueue: reliefQueue)
+                            reliefQueue: reliefQueue, murderLastWeek: murderLastWeek)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -1629,6 +1707,7 @@ final class GameState: ObservableObject {
         yearStartStats = data.yearStartStats
         lastYearReviewed = data.lastYearReviewed
         reliefQueue = data.reliefQueue ?? []
+        murderLastWeek = data.murderLastWeek ?? false
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
         backfillAppeals()
         if today == nil && judgeName != nil {

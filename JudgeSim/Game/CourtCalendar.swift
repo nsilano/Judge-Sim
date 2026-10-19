@@ -141,11 +141,78 @@ enum CourtCalendar {
         return weekday == 1 || weekday == 7
     }
 
-    /// The same date, or the next weekday if it falls on a weekend.
+    /// The same date, or the next day court sits: weekends and state court holidays are skipped.
     static func weekday(onOrAfter date: Date) -> Date {
         var day = calendar.startOfDay(for: date)
-        while isWeekend(day) { day = calendar.date(byAdding: .day, value: 1, to: day) ?? day }
+        while !isCourtDay(day) { day = calendar.date(byAdding: .day, value: 1, to: day) ?? day }
         return day
+    }
+
+    static func isCourtDay(_ date: Date) -> Bool {
+        !isWeekend(date) && holiday(on: date) == nil
+    }
+
+    /// The North Carolina Judicial Branch holiday on this date, if any. A holiday that falls on a Saturday is
+    /// observed the Friday before, and one on a Sunday the Monday after.
+    static func holiday(on date: Date) -> String? {
+        let day = calendar.startOfDay(for: date)
+        let year = calendar.component(.year, from: day)
+        for y in [year - 1, year, year + 1] {
+            for (when, name) in holidays(in: y) where calendar.isDate(when, inSameDayAs: day) { return name }
+        }
+        return nil
+    }
+
+    /// The court holidays observed in a year.
+    static func holidays(in year: Int) -> [(Date, String)] {
+        func date(_ month: Int, _ day: Int) -> Date {
+            calendar.date(from: DateComponents(year: year, month: month, day: day)) ?? Date()
+        }
+        /// The nth weekday (1 Sunday ... 7 Saturday) of a month; n = -1 for the last.
+        func nth(_ n: Int, _ weekday: Int, of month: Int) -> Date {
+            if n > 0 {
+                return calendar.date(from: DateComponents(year: year, month: month, weekday: weekday, weekdayOrdinal: n)) ?? date(month, 1)
+            }
+            var d = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: date(month, 1)) ?? date(month, 28)
+            while calendar.component(.weekday, from: d) != weekday { d = calendar.date(byAdding: .day, value: -1, to: d) ?? d }
+            return d
+        }
+        func observed(_ d: Date) -> Date {
+            switch calendar.component(.weekday, from: d) {
+            case 7: return calendar.date(byAdding: .day, value: -1, to: d) ?? d
+            case 1: return calendar.date(byAdding: .day, value: 1, to: d) ?? d
+            default: return d
+            }
+        }
+        // Easter Sunday (anonymous Gregorian algorithm), for Good Friday.
+        let a = year % 19, b = year / 100, c = year % 100, d = b / 4, e = b % 4
+        let f = (b + 8) / 25, g = (b - f + 1) / 3, h = (19 * a + b - d - g + 15) % 30
+        let i = c / 4, k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = (a + 11 * h + 22 * l) / 451
+        let easterMonth = (h + l - 7 * m + 114) / 31, easterDay = (h + l - 7 * m + 114) % 31 + 1
+        let goodFriday = calendar.date(byAdding: .day, value: -2, to: date(easterMonth, easterDay)) ?? date(4, 1)
+        let thanksgiving = nth(4, 5, of: 11)
+        return [
+            (observed(date(1, 1)), "New Year's Day"),
+            (nth(3, 2, of: 1), "Martin Luther King Jr. Day"),
+            (goodFriday, "Good Friday"),
+            (nth(-1, 2, of: 5), "Memorial Day"),
+            (observed(date(7, 4)), "Independence Day"),
+            (nth(1, 2, of: 9), "Labor Day"),
+            (observed(date(11, 11)), "Veterans Day"),
+            (thanksgiving, "Thanksgiving"),
+            (calendar.date(byAdding: .day, value: 1, to: thanksgiving) ?? thanksgiving, "Thanksgiving"),
+            (date(12, 24), "Christmas Eve"),
+            (date(12, 25), "Christmas Day"),
+            (date(12, 26), "Christmas"),
+        ]
+    }
+
+    /// The holidays that close the courthouse during the court week that starts on this Monday.
+    static func holidays(inWeekOf monday: Date) -> [(Date, String)] {
+        (0..<5).compactMap { offset in
+            guard let d = calendar.date(byAdding: .day, value: offset, to: monday), let name = holiday(on: d) else { return nil }
+            return (d, name)
+        }
     }
 
     static func nextWeekday(after date: Date) -> Date {

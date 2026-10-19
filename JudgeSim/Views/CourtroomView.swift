@@ -856,7 +856,7 @@ struct ContinuanceSheet: View {
 
     /// This week's calendar is already set, so a continued matter comes back next week at the earliest.
     static func earliest(after today: Date) -> Date {
-        CourtCalendar.monday(onOrAfter: CourtCalendar.nextWeekday(after: today))
+        CourtCalendar.monday(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 1, to: CourtCalendar.calendar.startOfDay(for: today)) ?? today)
     }
 
     var body: some View {

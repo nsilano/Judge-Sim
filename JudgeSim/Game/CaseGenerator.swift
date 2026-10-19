@@ -19,7 +19,11 @@ enum CaseGenerator {
         var storySlot = true
         /// Only cases of these kinds, e.g. a drug case for a search warrant the judge signed.
         var categories: Set<LawCategory>? = nil
+        /// False when the week already has a murder trial, or had one last week.
+        var allowMurder = true
     }
+
+    static func isMurder(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("murder") }
 
     /// How strong the State's case should be, so that the evidence doesn't always point one way.
     private enum Band {
@@ -30,9 +34,12 @@ enum CaseGenerator {
         var rng = SeededRNG(seed: seed)
         var pool = CaseTemplates.all
         // Written cases come up first, until each has been heard once.
-        let unheardStories = StoryCases.all.filter { story in !context.usedSignatures.contains { $0.hasPrefix(story.key + "|") } }
+        var unheardStories = StoryCases.all.filter { story in !context.usedSignatures.contains { $0.hasPrefix(story.key + "|") } }
+        if !context.allowMurder { unheardStories.removeAll(where: isMurder) }
         if context.returning == nil, context.storySlot, !unheardStories.isEmpty {
-            let story = rng.pick(unheardStories)
+            // Murder trials come up now and then, not every week: most draws go to another kind of case.
+            let others = unheardStories.filter { !isMurder($0) }
+            let story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : unheardStories)
             return build(story, seed: seed, band: .close, context: context, rng: &rng)
         }
         // A written case is heard once per career, and only with a new defendant, whose history it describes.
@@ -51,12 +58,17 @@ enum CaseGenerator {
             if !fitting.isEmpty { pool = fitting }
         }
 
+        if !context.allowMurder {
+            let narrowed = pool.filter { !isMurder($0) }
+            if !narrowed.isEmpty { pool = narrowed }
+        }
         if let wanted = context.categories {
             let narrowed = pool.filter { wanted.contains($0.category) && $0.story == nil }
             if !narrowed.isEmpty { pool = narrowed }
         }
         // Serious felonies come up most; low-level cases still appear, but rarely.
         func weight(_ template: CaseTemplate) -> Double {
+            if isMurder(template) { return 2 }
             switch LawLibrary.law(template.primaryLaw).ncClass {
             case .A?, .B1?, .B2?, .C?, .D?, .E?: return 5
             case .F?, .G?: return 3.5
