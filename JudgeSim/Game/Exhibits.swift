@@ -32,7 +32,19 @@ struct ExhibitReview {
         var fromDefendant = false
     }
 
+    /// How the exhibit looks on the screen: the paper or device it really came from.
+    enum Look {
+        case courtPaper, handwritten, bank, receipt, letterhead, medical, lab, autopsy, phoneRecords, gps
+        case email, social, messages, call911, jailCall, interview, transcript
+        case cctv, bodycam, dashcam, phoneVideo, propertyTag, photos
+    }
+
     var format: Format
+    var look: Look = .courtPaper
+    /// The business, agency, or person whose paper or system this is.
+    var source: String = ""
+    var sourceDetail: String = ""
+    var date: String = ""
     /// Labeled particulars at the top: source, date, custodian, and so on.
     var particulars: [(label: String, value: String)]
     var lines: [Line]
@@ -212,7 +224,102 @@ enum Exhibits {
         if e.side == .defense {
             considerations.append("The defense has no burden. Defense evidence only has to raise a reasonable doubt; it doesn't have to prove anything.")
         }
-        return ExhibitReview(format: format, particulars: particulars, lines: lines, considerations: considerations)
+        var review = ExhibitReview(format: format, particulars: particulars, lines: lines, considerations: considerations)
+        review.date = date
+        dress(&review, e, c, rng: &rng)
+        return review
+    }
+
+    // MARK: How each exhibit looks
+
+    /// Picks the look of the real thing, the organization behind it, and dates for its entries.
+    private static func dress(_ r: inout ExhibitReview, _ e: Evidence, _ c: CourtCase, rng: inout SeededRNG) {
+        let text = (e.title + " " + e.detail).lowercased()
+        let title = e.title.lowercased()
+        let named = organization(in: e.title + ". " + e.detail)
+        let town = c.investigation?.facts?.town ?? "Port Hollis"
+        func has(_ words: [String]) -> Bool { mentionsAny(text, words) }
+        func titled(_ words: [String]) -> Bool { mentionsAny(title, words) }
+
+        switch r.format {
+        case .video:
+            if titled(["body", "bodycam", "body-worn", "body cam"]) { r.look = .bodycam; r.source = c.investigatingAgency }
+            else if titled(["dash", "cruiser", "patrol car", "in-car"]) { r.look = .dashcam; r.source = c.investigatingAgency }
+            else if titled(["phone", "cell", "bystander", "facebook", "live", "snapchat", "instagram", "tiktok"]) { r.look = .phoneVideo; r.source = "Phone video" }
+            else {
+                r.look = .cctv
+                r.source = named ?? rng.pick(["Harbor Mart", "Gas & Go #17", "Cane Creek Apartments", "Bayard Storage", "Coastal Plaza", "Wexley Package Store"])
+            }
+        case .messages:
+            if has(["email", "e-mail"]) { r.look = .email }
+            else if has(["post", "facebook", "instagram", "tweet", "snapchat", "tiktok", "social media", "comment"]) { r.look = .social }
+            else { r.look = .messages }
+        case .transcript:
+            if titled(["911", "dispatch"]) { r.look = .call911; r.source = "Hollis County Emergency Communications" }
+            else if titled(["jail"]) { r.look = .jailCall; r.source = "Hollis County Detention Center inmate phone system" }
+            else if titled(["interview", "confession", "statement", "admission"]) { r.look = .interview; r.source = c.investigatingAgency }
+            else { r.look = .transcript }
+        case .lab:
+            if has(["autopsy", "medical examiner", "cause of death"]) { r.look = .autopsy; r.source = "Office of the Chief Medical Examiner" }
+            else if has(["hospital", "emergency room", "medical record", "er records", "discharge", "nurse", "treating"]) {
+                r.look = .medical; r.source = named ?? "Hollis Regional Medical Center"
+            } else { r.look = .lab; r.source = "North Carolina State Crime Laboratory" }
+        case .property:
+            r.look = titled(["photo", "picture", "image", "photograph"]) ? .photos : .propertyTag
+            r.source = c.investigatingAgency
+        case .document, .records:
+            if titled(["note", "letter", "diary", "journal", "card", "handwritten", "demand", "list"]) && !titled(["order", "court", "bank", "notice"]) {
+                r.look = .handwritten
+            } else if has(["gps", "ankle monitor", "tracking", "location history", "geofence"]) {
+                r.look = .gps; r.source = named ?? (has(["ankle"]) ? "Probation electronic monitoring vendor" : "Google location history (via warrant)")
+            } else if has(["call log", "phone record", "cell-site", "cell site", "tower", "call detail", "carrier", "subscriber"]) {
+                r.look = .phoneRecords; r.source = named ?? rng.pick(["Carolina Wireless", "Tidewater Mobile", "Piedmont Cellular"])
+            } else if titled(["receipt", "pawn", "purchase", "sales slip", "register", "ticket"]) {
+                r.look = .receipt; r.source = named ?? rng.pick(["Harbor Mart", "Cane Creek Hardware", "Gas & Go #17", "Hollis Pawn & Gold", "Bayard Feed & Supply"])
+            } else if has(["bank", "account", "wire", "deposit", "withdrawal", "atm", "credit union", "checking", "savings", "ledger", "transaction", "cashier's check"]) {
+                r.look = .bank; r.source = named ?? rng.pick(["Tidewater Community Bank", "Hollis Federal Credit Union", "Coastal Carolina Savings", "First Piedmont Bank"])
+            } else if has(["hospital", "medical", "emergency room", "discharge", "clinic", "doctor", "nurse", "x-ray", "injur"]) && !titled(["order"]) {
+                r.look = .medical; r.source = named ?? "Hollis Regional Medical Center"
+            } else if titled(["email", "e-mail"]) {
+                r.look = .email
+            } else if titled(["order", "judgment", "conviction", "warrant", "indictment", "court", "probation", "certified", "citation", "summons", "docket", "dmv", "license", "plea"]) {
+                r.look = .courtPaper
+            } else if has(["invoice", "estimate", "contract", "policy", "insurance", "claim", "agreement", "lease", "employer", "payroll", "personnel", "timesheet",
+                           "time card", "schedule", "company", "business", "work order", "inspection", "appraisal", "permit", "audit", "report"]) {
+                r.look = .letterhead
+                r.source = named ?? rng.pick(["Tidewater Freight Logistics", "Carolina Mutual Insurance", "Hollis Property Management", "Coastal Plains Construction",
+                                              "Bayard Auto Body", "Piedmont Staffing"])
+            } else {
+                r.look = e.side == .defense ? .letterhead : .courtPaper
+                if r.look == .letterhead { r.source = named ?? c.defenseAttorney.components(separatedBy: ",").first.map { "Law office of \($0)" } ?? "Defense counsel" }
+            }
+        }
+        r.sourceDetail = "\(rng.int(100...4_800)) \(rng.pick(["Main Street", "Market Street", "Commerce Drive", "Harbor Road", "Highway 17", "Front Street"])), \(town), N.C."
+
+        // Ledgers and logs read with real dates, counting up to the day it happened.
+        if [ExhibitReview.Look.bank, .phoneRecords, .receipt, .gps].contains(r.look), let incident = c.investigation?.facts?.incident {
+            let count = r.lines.count
+            var day = CourtCalendar.calendar.date(byAdding: .day, value: -max(1, count * rng.int(1...4)), to: incident) ?? incident
+            for i in r.lines.indices {
+                if r.lines[i].stamp.hasPrefix("Entry") || r.lines[i].stamp.hasPrefix("Note") || r.lines[i].stamp.hasPrefix("Photo") || r.lines[i].stamp.hasSuffix(".") {
+                    let minutes = rng.int(6 * 60...23 * 60)
+                    r.lines[i].stamp = day.formatted(.dateTime.month(.twoDigits).day(.twoDigits)) + " " + clock(minutes)
+                    day = min(incident, CourtCalendar.calendar.date(byAdding: .day, value: rng.int(0...3), to: day) ?? day)
+                }
+            }
+        }
+    }
+
+    /// A business or institution the exhibit names, like "Hollis Federal Credit Union" or "Seaboard Savings".
+    private static func organization(in text: String) -> String? {
+        let pattern = "((?:[A-Z][A-Za-z&'.]+ ){0,4}(?:Bank|Credit Union|Savings|Trust|Insurance|Mutual|Hospital|Medical Center|Clinic|Pharmacy|Motors|Logistics|Energy|Power & Light|Wireless|Mobile|Pawn|Mart|Market|Hardware|Construction|Realty|Properties|Company|Co\\.|Inc\\.|LLC|Church|Academy|School|Restaurant|Grill|Diner|Apartments|Storage|Plaza|Station))"
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let range = Range(match.range(at: 1), in: text) else { return nil }
+        let name = text[range].trimmingCharacters(in: .whitespaces)
+        let skip: Set<String> = ["The", "A", "An", "At", "From", "To", "In", "On", "Of"]
+        let words = name.components(separatedBy: " ").drop { skip.contains($0) }
+        return words.count >= 2 ? words.joined(separator: " ") : nil
     }
 
     // MARK: Text helpers

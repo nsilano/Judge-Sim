@@ -57,7 +57,7 @@ enum Consequences {
             lead = "\(d.name), whom Judge \(judgeLast) found not guilty of \(offense) in \(monthYear), was arrested again this week"
             note = "You acquitted \(d.lastName) of \(offense) on \(SentenceFormat.shortDate(date))."
         } else if convicted && !active && c.truth.actuallyGuilty && c.victimName != nil
-                    && [.violent, .family, .robbery].contains(c.category) {
+                    && [LawCategory.violent, .family, .robbery].contains(c.category) {
             chance = sameVictim ? 0.18 : 0.1
             lead = "\(d.name), sentenced to probation by Judge \(judgeLast) in \(monthYear) for \(offense), was arrested again this week"
             note = "You sentenced \(d.lastName) to probation for \(offense) on \(SentenceFormat.shortDate(date))."
