@@ -85,3 +85,24 @@ enum Appeals {
                              issue: issue, filed: filed, briefsDue: briefs, argument: argument, decisionDue: decision)
     }
 }
+
+extension AppealTracker {
+    /// Fields added since an appeal was first saved decode as their defaults, so an older save still loads.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        docket = try c.decodeIfPresent(String.self, forKey: .docket) ?? ""
+        caption = try c.decodeIfPresent(String.self, forKey: .caption) ?? "State v. Unknown"
+        personID = try c.decodeIfPresent(UUID.self, forKey: .personID) ?? UUID()
+        appellant = try c.decodeIfPresent(String.self, forKey: .appellant) ?? "the defendant"
+        issue = try c.decodeIfPresent(String.self, forKey: .issue) ?? ""
+        filed = try c.decodeIfPresent(Date.self, forKey: .filed) ?? Date()
+        briefsDue = try c.decodeIfPresent(Date.self, forKey: .briefsDue) ?? filed
+        argument = try c.decodeIfPresent(Date.self, forKey: .argument)
+        decisionDue = try c.decodeIfPresent(Date.self, forKey: .decisionDue) ?? briefsDue
+        decided = try c.decodeIfPresent(Date.self, forKey: .decided)
+        result = try c.decodeIfPresent(String.self, forKey: .result)
+        opinion = try c.decodeIfPresent(String.self, forKey: .opinion)
+        followUps = try c.decodeIfPresent([String].self, forKey: .followUps) ?? []
+    }
+}

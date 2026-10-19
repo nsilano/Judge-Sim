@@ -39,7 +39,7 @@ extension StoryCases {
                         weight: 3, lay: false,
                         exam: [
                             .direct("How did the fires start?", "\"Each was set at a back door with poured accelerant. Same method, same time of night, same fuel mix at two scenes.\""),
-                            .direct("And the firefighter's own arrival times?", "\"At two fires {DL} reported being on scene before anyone had called it in. That's a known pattern: firefighters who set fires so they can be heroes.\""),
+                            .direct("And the firefighter's own arrival times?", "\"At two fires {DL} reported being on scene before anyone had called it in. Both times {DL}'s pager log shows no page went out yet.\""),
                             .cross("The fuel mix is sold everywhere?", "\"It's common. That's why we also looked at the phone records.\"")
                         ]),
             WitnessSeed(name: nil, role: "Injured firefighter",
@@ -106,7 +106,7 @@ extension StoryCases {
         primaryLaw: "murder1", lesserLaw: "murder2", threshold: 7, lesserThreshold: 5,
         specification: "With premeditation and deliberation, killed {V}, the defendant's wife of 61 years, by shooting her as she slept.",
         secondary: [],
-        ageRange: 82...86, occupations: ["retired tobacco farmer"], hasVictim: true,
+        ageRange: 84...84, occupations: ["retired tobacco farmer"], hasVictim: true,
         summaries: [
             "On {DATE}, {D}, 84, called 911 from the farmhouse in {HOOD} where he had lived with his wife, {V}, for sixty-one years. \"I've shot my wife,\" he told the dispatcher. \"I'll be on the porch.\" {VL}, 81, had advanced Alzheimer's. She no longer knew him, screamed through the nights, and had been refused by two memory care facilities after striking aides. Their savings were gone. {DL} told deputies that years earlier, when she was first diagnosed, she made him promise he would never let her \"end up like that.\" He wrote a note, laid out his best suit, and shot her once while she slept. He had intended to shoot himself afterward but couldn't. The district attorney charged first-degree murder, saying the law doesn't allow anyone to decide another person's life is not worth living."
         ],
@@ -279,6 +279,7 @@ extension StoryCases {
             defenseOpening: "An old trade, an accident, and a man who ran into the fire.",
             prosecutionClosing: "The flame was always there. The danger was always known.",
             defenseClosing: "A tragedy isn't always a crime.",
+            when: .months([8, 9, 10]),
             genders: ["V": .male]
         )
     )
@@ -342,7 +343,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} followed the storm, faked a license and a FEMA badge, took deposits from frightened elderly people, and spent them on himself. It's the same scheme in every disaster."],
         defenseTheory: ["{DL} was an unlicensed contractor overwhelmed by demand and shortages, not a thief. Some work was done. This is a contract dispute dressed up as a felony."],
-        aggravating: ["The offense involved multiple victims", "The victim was especially vulnerable due to age", "The offense involved an actual loss of more than $100,000"],
+        aggravating: ["The offense involved multiple victims", "The victim was especially vulnerable due to age", "The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: [],
         victimImpacts: ["{VL}: \"I've lived in that house fifty years. The storm took my roof. He took the money to fix it.\""],
         allocutions: ["\"I got in over my head. I meant to do the work.\""],
@@ -389,7 +390,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "obstruction", specification: "Falsified care records showing {V} was turned every two hours when she was not.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "forgery", specification: "Signed the names of nursing assistants to 140 care entries they never made.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "exploitationElder", specification: "Knowingly permitted the neglect of {V}, a disabled adult in her care.", chance: 1.0, threshold: 0)
+            SecondaryCharge(lawID: "patientNeglect", specification: "As a person responsible for the care of {V}, a resident of a health care facility, culpably neglected her, proximately causing her death.", chance: 1.0, threshold: 0)
         ],
         ageRange: 44...58, occupations: ["director of nursing"], hasVictim: true,
         summaries: [
@@ -468,7 +469,7 @@ extension StoryCases {
             defenseOpening: "A nurse left alone by owners who wouldn't pay for help.",
             prosecutionClosing: "The paper lied, and the lie let her die.",
             defenseClosing: "Blame the company that built the failure, not the nurse who drowned in it.",
-            genders: ["V": .female]
+            genders: ["D": .female, "V": .female]
         )
     )
 }

@@ -136,7 +136,7 @@ extension StoryCases {
             E(.statement, 1, "Honking", "Several witnesses say the SUV was honking, which the defense says was a warning.")
         ],
         prosecutionWitnesses: [
-            WitnessSeed(name: "{DET}", role: "Police officer who stood in front of the SUV",
+            WitnessSeed(name: nil, role: "Police officer who stood in front of the SUV",
                         direct: ["\"I banged on the hood. The driver looked right at me and went around.\""],
                         cross: ["\"I couldn't see the driver's feet.\""],
                         weight: 3, lay: true,
@@ -346,7 +346,7 @@ extension StoryCases {
                             .cross("Did anyone try to call the house first?", "\"No. The protocol didn't require it then.\""),
                             .cross("Was the caller's number a local one?", "\"No. It came through an internet service.\"")
                         ]),
-            WitnessSeed(name: "{DET}", role: "FBI cyber agent",
+            WitnessSeed(name: nil, role: "FBI cyber agent",
                         direct: ["\"{DL} made 46 of these calls.\""],
                         cross: ["\"{DL} didn't pick the address.\""],
                         weight: 3, lay: false,

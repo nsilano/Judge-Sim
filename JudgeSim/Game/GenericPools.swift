@@ -267,7 +267,7 @@ enum GenericPools {
                    explanation: "The lineup followed the Act. Nothing about it was suggestive, so there is no basis to suppress; any doubts go to weight.",
                    doctrines: ["eyewitnessID"]),
         MotionSeed(kind: .suppressIdentification,
-                   facts: "Ten minutes after the offense and two blocks away, the witness saw {DL} detained and said, \"That's him, same gray hoodie, same backpack,\" matching the description the witness gave the 911 dispatcher.",
+                   facts: "Ten minutes after the offense and two blocks away, the witness saw {DL} detained and said, \"That's the one. Same clothes,\" matching the detailed description the witness gave the 911 dispatcher.",
                    shouldGrant: false,
                    explanation: "A prompt show-up near the scene is justified by the need to confirm or clear a suspect quickly, and the detailed prior description makes the identification reliable under Manson v. Brathwaite.",
                    doctrines: ["eyewitnessID"])
@@ -285,7 +285,7 @@ enum GenericPools {
                    explanation: "Recent threats and acts against the same victim are admissible under Rule 404(b) to show motive and intent, and their probative value isn't substantially outweighed by unfair prejudice.",
                    doctrines: ["priorActs"]),
         MotionSeed(kind: .excludePriorActs,
-                   facts: "The State intends to offer {DL}'s 2016 conviction for a break-in where the same unusual method was used: entering through a pet door with a hooked rod and taking only jewelry.",
+                   facts: "The State intends to offer {DL}'s earlier conviction for a break-in where the same unusual method was used: entering through a pet door with a hooked rod and taking only jewelry.",
                    shouldGrant: false,
                    explanation: "A distinctive modus operandi is admissible under Rule 404(b) to show identity; North Carolina treats the rule as one of inclusion when the acts are similar enough.",
                    doctrines: ["priorActs"]),

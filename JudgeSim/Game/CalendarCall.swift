@@ -118,6 +118,9 @@ enum CalendarCalls {
             if !cell.dispositions.contains(.community) && !cell.dispositions.contains(.intermediate) {
                 notes.append("At prior record level \(SentenceFormat.romanLevels[record.felonyLevel - 1]) the chart calls for an active sentence; suspending it departs from Structured Sentencing.")
             }
+            if !cell.dispositions.contains(.active) {
+                notes.append("At prior record level \(SentenceFormat.romanLevels[record.felonyLevel - 1]) the chart allows only community punishment; an active term departs from Structured Sentencing.")
+            }
             return (cell.presumptive.low, "\(cell.presumptive.low)–\(StructuredSentencing.maximum(forMinimum: cell.presumptive.low, cls: cls)) months", notes)
         }
         let cell = StructuredSentencing.misdemeanorCell(cls, level: record.misdemeanorLevel)
@@ -153,7 +156,7 @@ enum CalendarCalls {
             bound.isFelony = cls.isFelony
             bound.activeTerm = terms.active
             bound.lawNote = terms.notes.isEmpty ? nil : terms.notes.joined(separator: " ")
-            bound.summary = "\(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation.lowercased().withIndefiniteArticle), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
+            bound.summary = "\(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation.lowercasedPhrase.withIndefiniteArticle), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
             bound.stateAsk = "The State and defense jointly recommend \(terms.rangeText), suspended, 12 months of supervised probation, and costs."
             bound.options = ["Accept the plea; follow the joint recommendation",
                              "Accept the plea; continue prayer for judgment on costs",
@@ -178,7 +181,7 @@ enum CalendarCalls {
         let felonies = d.priors.filter { $0.ncClass.isFelony }.count
         let ftas = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count + (rng.chance(0.25) ? 1 : 0)
         let violent = c.category == .violent || c.category == .robbery
-        let employed = !d.occupation.lowercased().contains("unemployed")
+        let employed = !d.occupation.lowercasedPhrase.contains("unemployed")
         let local = rng.chance(0.75)
         let flight = min(0.6, 0.06 + 0.12 * Double(ftas) + (local ? 0 : 0.12) + (employed ? 0 : 0.06) + 0.02 * Double(d.priors.count))
         let danger = min(0.5, 0.04 + (violent ? 0.08 : 0) + 0.05 * Double(felonies))
@@ -189,7 +192,7 @@ enum CalendarCalls {
         let law = c.charges.first?.law
         var record = d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s") (\(felonies) felon\(felonies == 1 ? "y" : "ies"))"
         if ftas > 0 { record += "; \(ftas) prior failure\(ftas == 1 ? "" : "s") to appear" }
-        let ties = [employed ? "works as \(d.occupation.lowercased().withIndefiniteArticle)" : "is out of work",
+        let ties = [employed ? "works as \(d.occupation.lowercasedPhrase.withIndefiniteArticle)" : "is out of work",
                     local ? "has lived in the county most of \(NameBank.gender(of: d.name) == .female ? "her" : "his") life" : "moved here from out of state last year"]
         return CalendarMatter(kind: .firstAppearance, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
@@ -213,7 +216,15 @@ enum CalendarCalls {
         let d = c.defendant
         let held = c.background.map { max($0.custodyDays, 1) } ?? rng.int(40...210)
         let current = rng.pick([25_000, 40_000, 50_000, 75_000, 100_000])
-        let employed = !d.occupation.lowercased().contains("unemployed")
+        // The file shows the bond the defendant is actually held on.
+        var jailed = c
+        if var bg = jailed.background {
+            bg.custodyDays = held
+            bg.onRelease = false
+            bg.bondStatus = "Held on a $\(current.formatted()) secured bond; in custody for \(held) days."
+            jailed.background = bg
+        }
+        let employed = !d.occupation.lowercasedPhrase.contains("unemployed")
         let canPost = employed ? rng.pick([1_000, 2_500, 5_000, 10_000, 15_000]) : rng.pick([0, 500, 1_000, 2_500])
         let ftas = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count + (rng.chance(0.3) ? 1 : 0)
         let felonies = d.priors.filter { $0.ncClass.isFelony }.count
@@ -229,16 +240,16 @@ enum CalendarCalls {
                                 : "The State would agree to a modest reduction with electronic monitoring.",
                               defenseAsk: "My client can post about $\(canPost.formatted()). Anything higher is a detention order by another name. There's a job and a family waiting.",
                               options: ["Reduce the bond to an amount you set", "Leave the bond at $\(current.formatted())",
-                                        "Unsecured bond with electronic house arrest"],
-                              pendingCase: c,
+                                        "Reduce the bond to an amount you set, with electronic house arrest"],
+                              pendingCase: jailed,
                               bond: BondFacts(moderate: current, high: current, canPost: canPost, flightRisk: flight, danger: danger),
-                              amountOptions: [0], amountRange: 500...max(1_000, current - 500), suggestedAmount: max(500, current / 2))
+                              amountOptions: [0, 2], amountRange: 500...max(1_000, current - 500), suggestedAmount: max(500, current / 2))
     }
 
     /// Arraignment in superior court (G.S. 15A-941): the plea is entered and the court sets the trial date.
     static func arraignmentMatter(for c: CourtCase) -> CalendarMatter {
         let d = c.defendant
-        let jailed = (c.background?.custodyDays ?? 0) > 0
+        let jailed = c.background?.isJailed ?? false
         let counts = c.charges.count
         return CalendarMatter(kind: .arraignment, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
@@ -274,9 +285,11 @@ enum CalendarCalls {
                        summary: "\(w.affiant) of the \(w.agency) asks you to sign a search warrant. To be searched: \(w.place). Read the affidavit before you rule.",
                        stateAsk: "The officer swears to the affidavit before you (G.S. 15A-244).",
                        defenseAsk: "No one appears for the person to be searched; a warrant is issued ex parte.",
-                       options: ["Sign the warrant as written",
-                                 "Strike the catch-all language and sign the rest",
-                                 "Deny: the affidavit doesn't show probable cause"],
+                       // Striking is only an option when the list of items has catch-all language to strike.
+                       options: w.flaw == .overbroad
+                        ? ["Sign the warrant as written", "Strike the catch-all language and sign the rest",
+                           "Deny: the affidavit doesn't show probable cause"]
+                        : ["Sign the warrant as written", "Deny: the affidavit doesn't show probable cause"],
                        pendingCase: c, warrant: w)
     }
 
@@ -307,30 +320,13 @@ enum CalendarCalls {
                                               county: rng.chance(0.6) ? county.name : rng.pick(GenericPools.otherCounties),
                                               sentence: rng.pick(p.sentences)))
             }
-            let record = PriorRecord(priors: priors, onSupervision: false)
-            let active: Int
-            let rangeText: String
-            var notes: [String] = []
-            if cls.isFelony, let cell = StructuredSentencing.felonyCell(cls, level: record.felonyLevel) {
-                active = cell.presumptive.low
-                rangeText = "\(cell.presumptive.low)–\(StructuredSentencing.maximum(forMinimum: cell.presumptive.low, cls: cls)) months"
-                if [.A, .B1, .B2, .C, .D, .E].contains(cls) { notes.append("PJC not allowed for this class.") }
-                if !cell.dispositions.contains(.community) && !cell.dispositions.contains(.intermediate) {
-                    notes.append("At prior record level \(SentenceFormat.romanLevels[record.felonyLevel - 1]) the chart calls for an active sentence; suspending it departs from Structured Sentencing.")
-                }
-            } else {
-                let cell = StructuredSentencing.misdemeanorCell(cls, level: record.misdemeanorLevel)
-                active = max(1, (cell?.maxDays ?? 30) / 2)
-                rangeText = "\(active) days"
-                if let cell, !cell.dispositions.contains(.active) {
-                    notes.append("At this prior conviction level the chart allows only community punishment; an active term departs from it.")
-                }
-            }
+            // The same sentencing math as a plea bound to a real case.
+            let (active, rangeText, notes) = pleaTerms(law, priors: priors)
             let occupation = rng.pick(NameBank.occupations)
             matters.append(CalendarMatter(
                 kind: .quickPlea, personID: UUID(), personName: name, personAge: age, occupation: occupation,
                 docket: docket(cls.isFelony),
-                summary: "\(name), \(age), \(occupation.lowercased().withIndefiniteArticle), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")").",
+                summary: "\(name), \(age), \(occupation.lowercasedPhrase.withIndefiniteArticle), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")").",
                 stateAsk: "The State and defense jointly recommend \(rangeText), suspended, 12 months of supervised probation, and costs.",
                 defenseAsk: rng.pick(["My client has a job and wants to keep it.", "My client has been sober since the arrest.", "This is about one bad night, Judge."]),
                 options: ["Accept the plea; follow the joint recommendation",
@@ -479,6 +475,14 @@ enum CalendarCalls {
                                           propensity: m.priors.isEmpty ? 0.18 : 0.3)
                 let termText = m.isFelony ? "\(m.activeTerm)–\(StructuredSentencing.maximum(forMinimum: m.activeTerm, cls: cls)) months" : "\(m.activeTerm) days"
                 let sentence: String
+                var choice = choice
+                if choice == 1 && [.A, .B1, .B2, .C, .D, .E].contains(cls) {
+                    // A PJC isn't available for a Class A through E felony; the joint recommendation is entered instead.
+                    lines.append("A prayer for judgment continued isn't available for a \(cls.shortLabel) felony; the joint recommendation was entered instead.")
+                    choice = 0
+                }
+                // Days already spent in jail on this charge count against an active term (G.S. 15-196.1).
+                let credit = m.pendingCase?.background?.custodyDays ?? 0
                 switch choice {
                 case 0:
                     sentence = "\(termText) suspended, 12 months supervised probation"
@@ -493,16 +497,26 @@ enum CalendarCalls {
                 case 1:
                     sentence = "Prayer for judgment continued"
                 default:
-                    sentence = "\(termText) active"
-                    person.status = .incarcerated
-                    person.releaseDate = Calendar.current.date(byAdding: m.isFelony ? .month : .day, value: m.activeTerm, to: date)
-                    person.releaseNote = "Committed on a guilty plea at the calendar call: \(termText) active."
-                    if m.isFelony, let release = person.releaseDate {
+                    sentence = "\(termText) active" + (credit > 0 ? ", with credit for \(credit) days served" : "")
+                    let full = Calendar.current.date(byAdding: m.isFelony ? .month : .day, value: m.activeTerm, to: date) ?? date
+                    let release = Calendar.current.date(byAdding: .day, value: -credit, to: full) ?? full
+                    if release <= date {
+                        // The credit covers the whole term: released from the courtroom.
+                        person.status = .free
+                        person.releaseNote = "Pleaded guilty at the calendar call; \(termText) active, fully served by \(credit) days of pretrial credit."
+                    } else {
+                        person.status = .incarcerated
+                        person.releaseDate = release
+                        person.releaseNote = "Committed on a guilty plea at the calendar call: \(termText) active" + (credit > 0 ? ", less \(credit) days of credit." : ".")
+                    }
+                    if m.isFelony {
                         // Felony actives carry post-release supervision after release (G.S. 15A-1368.2).
+                        let start = person.releaseDate ?? date
                         let months = StructuredSentencing.postReleaseMonths(for: cls)
-                        person.pendingPostRelease = PostReleaseTerm(docket: m.docket, offense: law.title,
-                                                                    ends: Calendar.current.date(byAdding: .month, value: months, to: release) ?? release,
-                                                                    supervisionMonths: months, remainingMonths: months)
+                        let prs = PostReleaseTerm(docket: m.docket, offense: law.title,
+                                                  ends: Calendar.current.date(byAdding: .month, value: months, to: start) ?? start,
+                                                  supervisionMonths: months, remainingMonths: months)
+                        if person.status == .incarcerated { person.pendingPostRelease = prs } else { person.postRelease = prs }
                     }
                 }
                 if choice == 0 { suspendedSentences += 1 } else if choice != 1 { activeSentences += 1 }
@@ -552,10 +566,15 @@ enum CalendarCalls {
                         term.conditions = (term.conditions ?? []) + ["Obtain a substance abuse assessment and complete recommended treatment."]
                         term.violationRisk = max(0.05, (term.violationRisk ?? 0.2) - 0.06)
                     case 2:
+                        // A quick dip: two days in the county jail, then back on probation (G.S. 15A-1343(a1)(3)).
                         term.violationRisk = max(0.05, (term.violationRisk ?? 0.2) - 0.03)
+                        person.status = .incarcerated
+                        person.releaseDate = Calendar.current.date(byAdding: .day, value: 2, to: date)
+                        person.releaseNote = "Quick dip: two days in the county jail, ordered at the calendar call. Probation resumes on release."
                     case 3:
                         // Credit for earlier CRVs: a misdemeanor CRV never exceeds the suspended time left.
-                        let days = max(1, ViolationHearings.crvDays(term))
+                        let days = ViolationHearings.crvDays(term)
+                        guard days > 0 else { break }
                         term.crvCount = (term.crvCount ?? 0) + 1
                         term.crvDaysServed = term.crvCreditDays + days
                         person.status = .incarcerated
@@ -579,5 +598,36 @@ enum CalendarCalls {
         }
         return Result(lines: lines, newPeople: newPeople, updates: updates, pending: pending,
                       activeSentences: activeSentences, suspendedSentences: suspendedSentences, probationCompleted: probationCompleted)
+    }
+}
+
+extension CalendarMatter {
+    /// Fields added since a calendar call was first saved decode as their defaults, so an older save still loads.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        kind = try c.decode(Kind.self, forKey: .kind)
+        personID = try c.decodeIfPresent(UUID.self, forKey: .personID) ?? UUID()
+        personName = try c.decodeIfPresent(String.self, forKey: .personName) ?? ""
+        personAge = try c.decodeIfPresent(Int.self, forKey: .personAge) ?? 30
+        occupation = try c.decodeIfPresent(String.self, forKey: .occupation) ?? ""
+        docket = try c.decodeIfPresent(String.self, forKey: .docket) ?? ""
+        summary = try c.decodeIfPresent(String.self, forKey: .summary) ?? ""
+        stateAsk = try c.decodeIfPresent(String.self, forKey: .stateAsk) ?? ""
+        defenseAsk = try c.decodeIfPresent(String.self, forKey: .defenseAsk) ?? ""
+        options = try c.decodeIfPresent([String].self, forKey: .options) ?? []
+        lawID = try c.decodeIfPresent(String.self, forKey: .lawID)
+        priors = try c.decodeIfPresent([PriorConviction].self, forKey: .priors) ?? []
+        activeTerm = try c.decodeIfPresent(Int.self, forKey: .activeTerm) ?? 0
+        isFelony = try c.decodeIfPresent(Bool.self, forKey: .isFelony) ?? false
+        lawNote = try c.decodeIfPresent(String.self, forKey: .lawNote)
+        owesMoney = try c.decodeIfPresent(Bool.self, forKey: .owesMoney)
+        pendingCase = try c.decodeIfPresent(CourtCase.self, forKey: .pendingCase)
+        warrant = try c.decodeIfPresent(WarrantApplication.self, forKey: .warrant)
+        relief = try c.decodeIfPresent(ReliefMotion.self, forKey: .relief)
+        bond = try c.decodeIfPresent(BondFacts.self, forKey: .bond)
+        amountOptions = try c.decodeIfPresent([Int].self, forKey: .amountOptions)
+        amountRange = try c.decodeIfPresent(ClosedRange<Int>.self, forKey: .amountRange)
+        suggestedAmount = try c.decodeIfPresent(Int.self, forKey: .suggestedAmount)
     }
 }

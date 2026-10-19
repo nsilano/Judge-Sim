@@ -93,6 +93,12 @@ enum CaseComplexity {
               needsVictim: true)
     ]
 
+    /// Charges for taking the property itself.
+    private static func takes(_ lawID: String) -> Bool {
+        let id = lawID.lowercased()
+        return id.contains("larceny") || id.contains("robbery") || id.contains("embezzle")
+    }
+
     /// Picks extra counts that fit the template, so more cases carry several charges.
     static func pickAddOns(for t: CaseTemplate, hasFelonyPrior: Bool, existing: Set<String>, rng: inout SeededRNG) -> [AddOn] {
         let fitting = addOns.filter { addOn in
@@ -102,6 +108,8 @@ enum CaseComplexity {
                 && !addOn.excludedKeys.contains(t.key)
                 && (!addOn.needsVictim || t.hasVictim)
                 && (!addOn.needsFelonyPrior || hasFelonyPrior)
+                // A defendant can't be convicted of both stealing goods and possessing the same stolen goods (State v. Perry).
+                && !(addOn.lawID == "possStolen" && ([t.primaryLaw, t.lesserLaw ?? ""] + Array(existing)).contains { takes($0) })
         }
         guard !fitting.isEmpty else { return [] }
         let roll = Double.random(in: 0..<1, using: &rng)

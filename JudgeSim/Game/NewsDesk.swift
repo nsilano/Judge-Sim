@@ -97,7 +97,10 @@ enum NewsDesk {
     static func kicker(_ f: VerdictFacts, convicted: Bool, rng: inout SeededRNG) -> String {
         var options: [String] = []
         if convicted && f.active { options += ["\(f.last) was taken into custody in the courtroom.", "Deputies led \(f.last) out a side door."] }
-        if convicted && !f.active { options += ["\(f.last) left the courthouse with family.", "\(f.last) is to report to a probation officer within 72 hours."] }
+        if convicted && !f.active {
+            options.append("\(f.last) left the courthouse with family.")
+            if f.sentence.lowercased().contains("supervised probation") { options.append("\(f.last) is to report to a probation officer within 72 hours.") }
+        }
         if !convicted && f.custodyDays > 0 { options.append("\(f.last) had been held in the Hollis County Detention Center for \(f.custodyDays) days.") }
         if f.returning { options.append("It was not \(f.last)'s first case in Judge \(f.judge)'s courtroom.") }
         if f.mediaAttention >= 3 { options += ["Television trucks lined the street outside the courthouse.", "The gallery was full an hour before court opened."] }
@@ -112,13 +115,22 @@ enum NewsDesk {
                   "New charge for \(name) while case is pending", "\(name) arrested while awaiting trial"])
     }
 
-    static func releaseHeadline(_ name: String, last: String, rng: inout SeededRNG) -> String {
-        rng.pick(["\(name) released from custody", "\(last) comes home", "After prison, \(last) begins again",
+    static func releaseHeadline(_ name: String, last: String, jail: Bool = false, rng: inout SeededRNG) -> String {
+        if jail {
+            return rng.pick(["\(name) released from the county jail", "\(last) comes home", "\(name) completes jail term", "\(last) out of jail"])
+        }
+        return rng.pick(["\(name) released from custody", "\(last) comes home", "After prison, \(last) begins again",
                   "\(name) completes prison term", "Out of prison, \(last) faces the next step"])
     }
 
-    static func releaseColor(_ last: String, town: String, rng: inout SeededRNG) -> String {
-        rng.pick(["A relative said the family plans a small dinner. \"We're just glad to have them home.\"",
+    static func releaseColor(_ last: String, town: String, jail: Bool = false, rng: inout SeededRNG) -> String {
+        if jail {
+            return rng.pick(["A relative said the family plans a small dinner. \"We're just glad to have them home.\"",
+                             "Neither \(last) nor counsel could be reached for comment.",
+                             "A pastor from \(town) picked \(last) up outside the detention center.",
+                             "\(last)'s first stop, a relative said, was a barbershop on Main Street."])
+        }
+        return rng.pick(["A relative said the family plans a small dinner. \"We're just glad to have them home.\"",
                   "A reentry program in \(town) has offered a bed and job placement.",
                   "Neither \(last) nor counsel could be reached for comment.",
                   "\"I've got a lot to make up for,\" \(last) told a reporter outside the prison gate. \"I know that.\"",
@@ -208,8 +220,9 @@ enum NewsDesk {
         // Life around the courthouse.
         if rng.chance(0.5) {
             let ada = rng.pick(county.assistantDAs)
+            let graduates = rng.int(5...14)
             let pool: [(String, String)] = [
-                ("Drug Treatment Court graduates \(rng.int(5...14))", "In a ceremony in the jury assembly room, \(rng.int(5...14)) participants finished Hollis County's Drug Treatment Court. One graduate, two years sober, thanked the probation officer who \"never gave up on me, even when I did.\""),
+                ("Drug Treatment Court graduates \(graduates)", "In a ceremony in the jury assembly room, \(graduates) participants finished Hollis County's Drug Treatment Court. One graduate, two years sober, thanked the probation officer who \"never gave up on me, even when I did.\""),
                 ("Scam calls claim to be from the courthouse", "The \(county.sheriffsOffice) warns residents about callers who say they've missed jury duty and must pay a fine by gift card. \"No court will ever call you and demand money over the phone,\" Clerk of Superior Court \(county.clerk) said."),
                 ("Courthouse elevator out again", "For the third time this year, the main elevator at the \(county.courthouse) is out of service. Deputies carried a wheelchair user up two flights for a hearing Tuesday. County commissioners say repairs are budgeted for spring."),
                 ("Public defenders carry record caseloads", "Chief Public Defender \(county.chiefPublicDefender) told county commissioners that each assistant public defender is carrying more than \(rng.int(110...180)) open felony cases. \"We are triaging justice,\" \(county.chiefPublicDefender) said."),
@@ -230,11 +243,19 @@ enum NewsDesk {
         // Where are they now: someone sentenced here, after release.
         if let person = w.recentReleases.first(where: { !w.recentHeadlines.contains("Where are they now: \($0.name)") }), rng.chance(0.35) {
             let job = person.profile?.jobs.first(where: { $0.current && $0.title != "Unemployed" })
-            let line = job.map { "\(person.lastName) now works as \($0.title.lowercased().withIndefiniteArticle) at \($0.employer)." }
+            // Only someone still under supervision has an officer to describe them.
+            let supervised = person.postRelease != nil || (person.status == .probation && (person.probation?.supervised ?? true))
+            let line = job.map { "\(person.lastName) now works as \($0.title.lowercasedPhrase.withIndefiniteArticle) at \($0.employer)." }
                 ?? rng.pick(["\(person.lastName) is still looking for work. \"Every application asks about a record,\" \(person.lastName) said.",
                              "\(person.lastName) lives with family in \(rng.pick(towns)) and attends a reentry group on Thursdays."])
+            var closers = ["\"I think about that courtroom every day,\" \(person.lastName) said.", "\(person.lastName) declined to talk about the case."]
+            if supervised {
+                let officer = person.postRelease != nil ? "A post-release supervision officer" : "A probation officer"
+                closers.append("\(officer) described \(person.lastName) as \"doing the work.\"")
+            }
+            let closer = rng.pick(closers)
             items.append(NewsItem(date: w.date, kind: .community, headline: "Where are they now: \(person.name)",
-                                  body: "Months after leaving custody, \(person.name) is trying to build a life in Hollis County. \(line) \(rng.pick(["\"I think about that courtroom every day,\" \(person.lastName) said.", "A probation officer described \(person.lastName) as \"doing the work.\"", "\(person.lastName) declined to talk about the case."]))",
+                                  body: "Months after leaving custody, \(person.name) is trying to build a life in Hollis County. \(line) \(closer)",
                                   byline: byline(metro, paper: w.paper), section: "Local"))
         }
 

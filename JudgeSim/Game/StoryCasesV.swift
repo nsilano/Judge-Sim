@@ -10,10 +10,12 @@ extension StoryCases {
     static let wrongWayDriver = CaseTemplate(
         key: "story.wrongWayDriver", category: .traffic,
         headlines: ["Wrong-Way Driver Kills Mother and Daughter on I-95", "Driver's Blood Alcohol Three Times Legal Limit, Troopers Say"],
-        primaryLaw: "murder2", lesserLaw: "felonyDBV", threshold: 10, lesserThreshold: 8,
-        specification: "Unlawfully and with malice killed {V} by driving while impaired the wrong way on Interstate 95, with two prior impaired driving convictions.",
+        primaryLaw: "murder2", lesserLaw: nil, threshold: 10, lesserThreshold: 8,
+        specification: "Unlawfully and with malice killed {V} by driving while impaired the wrong way on Interstate 95, with three prior impaired driving convictions.",
         secondary: [
             SecondaryCharge(lawID: "murder2", specification: "Unlawfully and with malice killed {KID}, age 9, a passenger in {V}'s car.", chance: 1.0, threshold: 0),
+            // Felony death by vehicle isn't a lesser included offense of second-degree murder; the State charges it separately.
+            SecondaryCharge(lawID: "felonyDBV", specification: "Unintentionally caused the death of {V} while driving while impaired on Interstate 95.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "habitualDWI", specification: "Drove while impaired after three prior impaired driving convictions within ten years.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "dwlr", specification: "Drove while license revoked for impaired driving.", chance: 1.0, threshold: 0)
         ],
@@ -107,7 +109,7 @@ extension StoryCases {
         key: "story.copperTheft", category: .property,
         headlines: ["Man Electrocuted Stealing Copper From Substation; Partner Charged", "Copper Thieves Hit Power Substation, Cutting Power to 4,000"],
         primaryLaw: "felonyLarceny", lesserLaw: "misdLarceny", threshold: 10, lesserThreshold: 8,
-        specification: "Took and carried away copper grounding wire worth $2,800 from a Duke Energy substation, intending to permanently deprive the owner of it.",
+        specification: "Took and carried away copper grounding wire worth $2,800 from a Tidewater Power & Light substation, intending to permanently deprive the owner of it.",
         secondary: [
             SecondaryCharge(lawID: "invManslaughter", specification: "Unlawfully caused the death of {V}, the defendant's partner, by culpable negligence in leading him into an energized substation at night.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "injuryRealProperty", specification: "Damaged substation equipment, causing a power outage to 4,000 customers and $180,000 in repairs.", chance: 1.0, threshold: 0),
@@ -161,7 +163,7 @@ extension StoryCases {
         defenseTheory: ["{DL} admits the larceny. {VL} was an adult who chose to break into a substation. Two people committing a crime together don't make one of them guilty of the other's death."],
         aggravating: ["The defendant knowingly created a great risk of death to more than one person"],
         mitigating: ["{DL} sought medical help for the victim"],
-        victimImpacts: ["{VL}'s mother: \"He died for three hundred dollars of copper.\""],
+        victimImpacts: ["{VL}'s mother: \"He died for a truckload of scrap copper.\""],
         allocutions: ["\"He was my best friend. I told him it was dead. I'll never forgive myself.\""],
         guiltyTruths: ["A text from {DL} to a scrap buyer the day before read: \"got a guy who'll do the cutting, I'll do the pointing.\""],
         innocentTruths: ["The utility later found the transformer had a fault that morning that energized cables normally dead, something no one outside the utility could know."],
@@ -209,7 +211,7 @@ extension StoryCases {
         ],
         ageRange: 23...35, occupations: ["daycare teacher"], hasVictim: false,
         summaries: [
-            "On {DATE}, a mother checking the livestream app of a daycare in {HOOD} watched her son's teacher, {D}, throw him into a crib during nap time. She called police from her desk. Investigators reviewed three weeks of saved video from the toddler room: {DL} slapping a girl and pulling her hair, holding a blanket over a crying baby's face for eleven seconds, and, on three days, turning the camera toward the wall. The boy, {KID}, had a broken collarbone. {DL} had worked with the toddlers for eight months with no complaints. {DL} says she was handling four toddlers alone, against state ratios, and lost control on one bad day."
+            "On {DATE}, a mother checking the livestream app of a daycare in {HOOD} watched her son's teacher, {D}, throw him into a crib during nap time. She called police from her desk. Investigators reviewed three weeks of saved video from the toddler room: {DL} slapping a girl and pulling her hair, holding a blanket over a crying baby's face for eleven seconds, and, on three days, turning the camera toward the wall. The boy, {KID}, had a broken collarbone. {DL} had worked with the toddlers for eight months with no complaints. {DL} says she was handling eight toddlers alone, double what state ratios allow, and lost control on one bad day."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Nap Room Video", "Saved livestream video: {DL} throwing {KID} into a crib; slapping {KID2}; holding a blanket over {KID3}'s face.", .search),
@@ -293,17 +295,17 @@ extension StoryCases {
 
     static let sheriffEvidenceMoney = CaseTemplate(
         key: "story.sheriffEvidenceMoney", category: .whiteCollar,
-        headlines: ["Audit: $214,000 Missing From Sheriff's Seized Cash Account", "Sheriff Indicted; Accused of Spending Drug Money on Campaign and Cabin"],
+        headlines: ["Audit: $214,000 Missing From Sheriff's Seized Cash Account", "Former Sheriff Indicted; Accused of Spending Drug Money on Campaign and Cabin"],
         primaryLaw: "embezzlement100k", lesserLaw: "embezzlement", threshold: 11, lesserThreshold: 9,
-        specification: "As sheriff, embezzled $214,000 in seized drug money held in trust in the Sheriff's Office evidence account.",
+        specification: "While sheriff, embezzled $214,000 in seized drug money held in trust in the Sheriff's Office evidence account.",
         secondary: [
             SecondaryCharge(lawID: "obstruction", specification: "Ordered the evidence clerk to falsify the seized property log to cover the withdrawals.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "witnessIntimidation", specification: "Threatened the evidence clerk with firing and prosecution if she spoke to state auditors.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "bribery", specification: "Accepted $12,000 from a towing company in exchange for exclusive county towing referrals.", chance: 1.0, threshold: 0)
         ],
-        ageRange: 52...64, occupations: ["county sheriff"], hasVictim: false,
+        ageRange: 52...64, occupations: ["former county sheriff"], hasVictim: false,
         summaries: [
-            "A State Auditor's review of the Sheriff's Office found $214,000 missing from the account where cash seized in drug cases is held until the court orders it forfeited. On {DATE}, the sheriff, {D}, in {D.his} fourth term, was indicted. Bank records show cash withdrawals that line up with a down payment on a mountain cabin and campaign mailers. The evidence clerk, a 19-year employee, told auditors the sheriff ordered her to write \"returned to owner\" next to cases where no owner ever came. When she hesitated, she says, the sheriff told her, \"You can find another job, or you can find a lawyer.\" {DL} says the money was spent on drug investigations and confidential informants, as sheriffs are allowed, and the records were poorly kept."
+            "A State Auditor's review of the Sheriff's Office found $214,000 missing from the account where cash seized in drug cases is held until the court orders it forfeited. On {DATE}, the former sheriff, {D}, who served four terms before losing the last election, was indicted. Bank records show cash withdrawals that line up with a down payment on a mountain cabin and campaign mailers. The evidence clerk, a 19-year employee, told auditors the sheriff ordered her to write \"returned to owner\" next to cases where no owner ever came. When she hesitated, she says, the sheriff told her, \"You can find another job, or you can find a lawyer.\" {DL} says the money was spent on drug investigations and confidential informants, as sheriffs are allowed, and the records were poorly kept."
         ],
         prosecutionEvidence: [
             E(.document, 3, "State Audit", "Forty-one cash withdrawals totaling $214,000 with no court order; 23 entries marked \"returned to owner\" with no owner signature."),
@@ -346,7 +348,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["The county's chief law enforcement officer treated seized drug money as his own, had the books falsified, and threatened the clerk who knew."],
         defenseTheory: ["Sloppy records and a disgruntled clerk. Sheriffs have broad discretion over investigative spending; the State can't trace the cash to personal use."],
-        aggravating: ["The defendant abused a position of public trust", "The offense involved an actual loss of more than $100,000"],
+        aggravating: ["The defendant abused a position of public trust", "The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: ["No prior criminal record", "The defendant has a long record of public service"],
         victimImpacts: ["A county commissioner: \"Every deputy in this county now has to explain to people that they aren't crooks.\""],
         allocutions: ["\"I served this county for twenty-six years. I made mistakes with paperwork. I never stole.\""],
@@ -358,7 +360,7 @@ extension StoryCases {
                        (-300, "Cabin down payment."),
                        (-120, "State Auditor begins review."),
                        (-90, "Clerk interviewed; says she was threatened."),
-                       (0, "Sheriff indicted.")],
+                       (0, "Former sheriff indicted.")],
             howIdentified: "A routine State Auditor review.",
             notDone: ["The chief deputy's accounts were never subpoenaed."],
             defendantExam: [
@@ -475,7 +477,7 @@ extension StoryCases {
             defenseOpening: "A shared phone and a cousin who made a deal.",
             prosecutionClosing: "Planning a kidnapping is committing one.",
             defenseClosing: "Using someone's phone doesn't make them guilty.",
-            genders: ["V": .male]
+            genders: ["D": .female, "V": .male]
         )
     )
 }

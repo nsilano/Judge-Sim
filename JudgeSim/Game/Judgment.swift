@@ -1795,12 +1795,26 @@ enum Judgment {
             // The State may appeal a sentence the law doesn't authorize (G.S. 15A-1445(a)(3)), but seldom does.
             appealScheduled = true
             appealNotice = "The State gave notice of appeal from the judgment (G.S. 15A-1445(a)(3))."
+            // On remand the court enters the least sentence the law allows: the bottom of the presumptive range for a
+            // felony, with credit for time served.
+            var lawfulRelease: Date?
+            var resentenced = ""
+            if lenient.contains(where: { $0.affectsTerm }), let unit = sentencingUnits.first, let cell = unit.felonyCell, !life {
+                let months = cell.presumptive.low
+                let full = Calendar.current.date(byAdding: .month, value: months, to: date) ?? date
+                let lawful = Calendar.current.date(byAdding: .day, value: -(bg?.custodyDays ?? 0), to: full) ?? full
+                if lawful > (releaseDate ?? date) {
+                    lawfulRelease = lawful
+                    resentenced = " On remand, the defendant was resentenced to a minimum of \(months) months, with credit for time already served."
+                }
+            }
             pending.append(PendingEvent(due: later(120...300),
                                         news: NewsItem(date: date, kind: .appeal,
                                                        headline: "Appeals court vacates sentence in \(d.name) case",
-                                                       body: "On appeal by the State, the North Carolina Court of Appeals vacated the judgment Judge \(judgeLast) entered in \(c.caption) and remanded for resentencing. The court held: " + lenient.prefix(2).map { $0.text }.joined(separator: " "),
+                                                       body: "On appeal by the State, the North Carolina Court of Appeals vacated the judgment Judge \(judgeLast) entered in \(c.caption) and remanded for resentencing. The court held: " + lenient.prefix(2).map { $0.text }.joined(separator: " ") + resentenced,
                                                        docket: c.docket),
-                                        personID: d.personID, effect: .none, appealReversed: true))
+                                        personID: d.personID, effect: lawfulRelease == nil ? .none : .lengthen, appealReversed: true,
+                                        newReleaseDate: lawfulRelease))
         }
         if !issues.isEmpty {
             newsExtras.append("Courthouse observers said parts of the sentence appear to depart from North Carolina's sentencing laws.")
@@ -1827,7 +1841,7 @@ enum Judgment {
         }
         // A motion for appropriate relief on newly discovered evidence, heard by this court (G.S. 15A-1415(c)).
         if convicted && !plea && rng.chance(truthGuilty ? 0.1 : 0.6) {
-            var retrial = retrialCase(c, r)
+            var retrial = retrialCase(c, r, relief: true)
             let evidence = truthGuilty
                 ? "\(rng.pick(["A State witness", "The State's main eyewitness", "A co-defendant"])) has signed an affidavit recanting \(rng.pick(["their", "the"])) trial testimony and saying \(d.lastName) wasn't involved."
                 : c.truth.revelation
@@ -1910,7 +1924,8 @@ enum Judgment {
         var news = makeNews(c, county: county, judgeLast: judgeLast, date: date, convicted: convicted, dismissed: dismissed,
                             plea: plea ? r.pleaKind : nil, pleaLaw: plea ? sentencingUnits.first?.law : nil,
                             sentence: newsSentence, active: custodyMonths > 0 || activeImposed, reactions: reactions,
-                            countsConvicted: verdictLines.filter { $0.verdictLabel.lowercased().contains("guilty") && !$0.verdictLabel.lowercased().contains("not guilty") }.count)
+                            countsConvicted: verdictLines.filter { $0.verdictLabel.lowercased().contains("guilty") && !$0.verdictLabel.lowercased().contains("not guilty") }.count,
+                            lead: convictedLaws(c, r).min { ($0.ncClass?.severity ?? 99) < ($1.ncClass?.severity ?? 99) })
         if !newsExtras.isEmpty { news.body += " " + newsExtras.joined(separator: " ") }
 
         let appearance: String
@@ -1978,8 +1993,9 @@ enum Judgment {
         let state = stateStrength(c)
         for charge in c.charges {
             guard let ruling = r.halftime[charge.id] else { continue }
-            let substantial = state >= charge.threshold
-            let lesserSubstantial = state >= charge.lesserThreshold
+            // The same line the Court of Appeals draws on sufficiency review.
+            let substantial = isSupported(.guilty, charge: charge, strength: state)
+            let lesserSubstantial = charge.lesserLawID != nil && isSupported(.lesser, charge: charge, strength: state)
             let sound: Bool
             switch ruling {
             case .deny: sound = substantial
@@ -2024,9 +2040,16 @@ enum Judgment {
     }
 
     /// The case as it would be tried again: erroneously admitted evidence comes out, rulings start fresh.
-    static func retrialCase(_ c: CourtCase, _ r: Rulings, reinstated: Bool = false) -> CourtCase {
+    static func retrialCase(_ c: CourtCase, _ r: Rulings, reinstated: Bool = false, relief: Bool = false) -> CourtCase {
         var retrial = c
         retrial.id = UUID()
+        // A count on a defective indictment that should have been dismissed can't be tried again.
+        let defective = Set(c.motions.compactMap { m in
+            m.kind == .dismissIndictment && m.shouldGrant && r.motions[m.id] != true ? m.targetChargeID : nil
+        })
+        if !defective.isEmpty && c.charges.contains(where: { !defective.contains($0.id) }) {
+            retrial.charges.removeAll { defective.contains($0.id) }
+        }
         // Only rulings actually made and held wrong change the retrial; motions never reached are heard fresh.
         let wronglyAdmitted = Set(c.motions.compactMap { m in
             m.shouldGrant && r.motions[m.id] == false ? m.targetEvidenceID : nil
@@ -2041,7 +2064,9 @@ enum Judgment {
         retrial.headline = (reinstated ? "Reinstated: " : "Retrial: ") + c.headline
         retrial.proceduralNotes.insert(reinstated
             ? "The Court of Appeals reversed your speedy-trial dismissal and reinstated the charges. The case is back for trial."
-            : "The Court of Appeals ordered a new trial. Evidence it held inadmissible has been excluded, and the earlier verdict carries no weight.", at: 0)
+            : relief
+                ? "You granted a motion for appropriate relief and ordered a new trial. The earlier verdict carries no weight, and the newly discovered evidence is part of the case."
+                : "The Court of Appeals ordered a new trial. Evidence it held inadmissible has been excluded, and the earlier verdict carries no weight.", at: 0)
         if var bg = retrial.background {
             bg.arrangementPresented = false
             bg.arrangementTerms = nil
@@ -2285,10 +2310,11 @@ enum Judgment {
 
     private static func makeNews(_ c: CourtCase, county: County, judgeLast: String, date: Date, convicted: Bool,
                                  dismissed: Bool, plea: PleaKind?, pleaLaw: Law?, sentence: String, active: Bool,
-                                 reactions: [String], countsConvicted: Int = 0) -> NewsItem {
+                                 reactions: [String], countsConvicted: Int = 0, lead: Law? = nil) -> NewsItem {
         let d = c.defendant
         var rng = SeededRNG(seed: c.seed ^ 0x5EED_AB1E)
-        let title = c.charges.first?.law.title ?? "charges"
+        // A conviction story leads with the most serious count the defendant was actually convicted of.
+        let title = (convicted ? lead?.title : nil) ?? c.charges.first?.law.title ?? "charges"
         let facts = NewsDesk.VerdictFacts(name: d.name, last: d.lastName, age: d.age, judge: judgeLast, offense: title.lowercased(),
                                           headline: c.headline, place: c.investigation?.facts?.town, countsTotal: c.charges.count,
                                           countsConvicted: countsConvicted, sentence: sentence, active: active, returning: d.isReturning,
@@ -2322,7 +2348,11 @@ enum Judgment {
         }
         // What the case was about, in the paper's words.
         if let first = Exhibits.sentences(c.summary).first, first.count < 320 {
-            body += " " + rng.pick(["Prosecutors said that ", "According to court records, ", ""]).capitalizedFirstIfStart(of: first)
+            var names = Set((c.witnesses.map(\.name) + [d.name, c.victimName ?? "", county.name] + county.towns)
+                .flatMap { $0.components(separatedBy: " ") })
+            names.remove("")
+            body += " " + rng.pick(["Prosecutors said that ", "According to court records, ", ""])
+                .capitalizedFirstIfStart(of: first, names: names, context: c.summary)
         }
         switch (c.mood, convicted) {
         case (.wantsConviction, false):
@@ -2354,10 +2384,15 @@ enum Judgment {
 private extension String {
     /// Joins a lead-in like "According to court records, " to a sentence. A leading common word is lowercased to
     /// fit after the lead-in; a name keeps its capital.
-    func capitalizedFirstIfStart(of sentence: String) -> String {
+    func capitalizedFirstIfStart(of sentence: String, names: Set<String>, context: String) -> String {
         guard !isEmpty else { return sentence }
-        let common = ["On ", "At ", "In ", "After ", "When ", "Before ", "Two ", "Three ", "A ", "An ", "The ", "Late ", "Early ", "During "]
-        let body = common.contains(where: sentence.hasPrefix) ? sentence.prefix(1).lowercased() + sentence.dropFirst() : sentence
+        let word = String(sentence.prefix { $0.isLetter || $0 == "'" })
+        let letters = word.filter(\.isLetter)
+        // Keep the capital on a name, an acronym, "I", or any word the case text capitalizes mid-sentence.
+        let acronym = letters.count >= 2 && letters.allSatisfy(\.isUppercase)
+        let midSentence = context.range(of: "[a-z,;] \(NSRegularExpression.escapedPattern(for: word))\\b", options: .regularExpression) != nil
+        let keep = word.isEmpty || word == "I" || acronym || names.contains(word) || midSentence
+        let body = keep ? sentence : sentence.prefix(1).lowercased() + sentence.dropFirst()
         return self + body
     }
 }

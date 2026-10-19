@@ -63,7 +63,9 @@ enum Reputation {
 
     /// Superior court judges in North Carolina serve eight-year terms and stand for election in November.
     static func isElectionYear(_ year: Int, careerStartYear: Int) -> Bool {
-        year > careerStartYear && (year - careerStartYear) % 8 == 0
+        // Superior court races are on the even-year general election ballot, every eight years.
+        let first = careerStartYear + 8 + (careerStartYear % 2 == 0 ? 0 : 1)
+        return year >= first && (year - first) % 8 == 0
     }
 
     /// The share of the vote the judge wins, given the latest survey.

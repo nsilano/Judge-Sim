@@ -251,7 +251,7 @@ enum DefendantProfiles {
         var rng = SeededRNG(seed: seed | 1)
         // Split a compound occupation into the main role, a part-time job, and a former job:
         // "college senior and part-time restaurant server", "gym trainer and former bouncer".
-        var role = defendant.occupation.lowercased()
+        var role = defendant.occupation.lowercasedPhrase
         var partTime: String?
         var former: String?
         if let r = role.range(of: " and part-time ") { partTime = String(role[r.upperBound...]); role = String(role[..<r.lowerBound]) }
@@ -1073,7 +1073,8 @@ extension DefendantProfiles {
         if let committed {
             let goneYear = cal.component(.year, from: committed.date)
             var lost = false
-            for i in profile.jobs.indices where profile.jobs[i].current {
+            // Being out of work isn't a job to lose; it's only ever recorded once.
+            for i in profile.jobs.indices where profile.jobs[i].current && profile.jobs[i].title != "Unemployed" {
                 let start = Int(profile.jobs[i].years.prefix(4)) ?? goneYear
                 if start <= goneYear {
                     profile.jobs[i].current = false
@@ -1081,7 +1082,7 @@ extension DefendantProfiles {
                     lost = true
                 }
             }
-            if lost && person.status != .incarcerated {
+            if lost && person.status != .incarcerated && !profile.jobs.contains(where: { $0.current && $0.title == "Unemployed" }) {
                 let release = max(goneYear, year - 1)
                 profile.jobs.insert(Job(title: "Unemployed", employer: "since release from custody", years: "\(release)–present", current: true), at: 0)
             }

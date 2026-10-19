@@ -110,6 +110,7 @@ struct ChambersView: View {
     @State private var showSettings = false
     @State private var showLeave = false
     @State private var leaveWeeks = 2
+    @State private var confirmStepDown = false
 
     var body: some View {
         NavigationStack {
@@ -218,7 +219,7 @@ struct ChambersView: View {
                 Text("\(game.title) · \(game.county?.name ?? "")")
                     .font(.subheadline)
                     .foregroundStyle(Theme.gold)
-                Text("Week \(game.weekNumber) · " + SentenceFormat.date(game.currentDate) + (game.scheduled.isEmpty ? "" : " · \(game.scheduled.count) continued matter\(game.scheduled.count == 1 ? "" : "s") pending"))
+                Text("Week \(game.weekNumber) · " + SentenceFormat.date(game.currentDate) + (game.scheduled.isEmpty ? "" : " · \(game.scheduled.count) matter\(game.scheduled.count == 1 ? "" : "s") set for later weeks"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -242,6 +243,14 @@ struct ChambersView: View {
                      + (day.isComplete ? "" : " · \(remaining) matter\(remaining == 1 ? "" : "s") left"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                ForEach(game.holidaysThisWeek, id: \.0) { holiday in
+                    Label("\(holiday.0.formatted(.dateTime.weekday(.wide))): \(holiday.1). The courthouse is closed.", systemImage: "flag.fill")
+                        .font(.caption).foregroundStyle(Theme.gold)
+                }
+                if game.trialBacklog > 0 {
+                    Label("\(game.trialBacklog) trial\(game.trialBacklog == 1 ? "" : "s") waiting for a later week (up to \(game.trialCap) a week)", systemImage: "tray.full.fill")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 if CourtCalendar.calendar.component(.weekday, from: day.clock) == 6
                     && CourtCalendar.calendar.component(.hour, from: day.clock) >= 17 && !day.isComplete {
                     Label("Friday is running late. Finish the week's calendar before you adjourn.", systemImage: "moon.fill").font(.caption).foregroundStyle(.orange)
@@ -273,7 +282,7 @@ struct ChambersView: View {
                             }
                             Spacer()
                             if entry.isOpen {
-                                Text(entry.status == .inProgress ? (entry.resume == nil ? "Start over" : "Resume") : "~\(entry.estimatedMinutes / 60 > 0 ? "\(entry.estimatedMinutes / 60)h " : "")\(entry.estimatedMinutes % 60)m")
+                                Text(entry.status == .inProgress ? (entry.resume == nil ? "Start over (+30m)" : "Resume") : "~\(entry.estimatedMinutes / 60 > 0 ? "\(entry.estimatedMinutes / 60)h " : "")\(entry.estimatedMinutes % 60)m")
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(.secondary)
                             }
@@ -330,12 +339,18 @@ struct ChambersView: View {
                 withAnimation { game.continueAsEmergencyJudge() }
             }
             Button(role: .destructive) {
-                withAnimation { game.resetCareer() }
+                confirmStepDown = true
             } label: {
                 Label("Step Down and Start a New Career", systemImage: "arrow.counterclockwise")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
+            .confirmationDialog("Step down from the bench?", isPresented: $confirmStepDown, titleVisibility: .visible) {
+                Button("Step Down and Erase This Career", role: .destructive) { withAnimation { game.resetCareer() } }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Every case, person, and news story from this career is erased. This can't be undone.")
+            }
         }
         .card(tint: .orange)
     }
@@ -482,13 +497,14 @@ struct CourthouseView: View {
 
 struct RecordsView: View {
     @EnvironmentObject private var game: GameState
-    @State private var section = 3
+    @State private var section = 5
     @State private var confirmReset = false
 
     var body: some View {
         NavigationStack {
             List {
                 Picker("Records", selection: $section) {
+                    Text("Overview").tag(5)
                     Text("Calendar").tag(3)
                     Text("Cases").tag(0)
                     Text("Appeals").tag(4)
@@ -499,6 +515,7 @@ struct RecordsView: View {
                 .listRowBackground(Color.clear)
 
                 switch section {
+                case 5: overviewSection
                 case 0: casesSection
                 case 1: peopleSection
                 case 3: calendarSection
@@ -568,17 +585,49 @@ struct RecordsView: View {
     }
 
     @ViewBuilder
-    private var casesSection: some View {
+    private var overviewSection: some View {
+        let people = game.people
         Section {
-            HStack {
-                stat("\(game.trialsHeard)", "Cases")
-                Spacer()
-                stat("\(game.hearingsHeard)", "Hearings")
-                Spacer()
-                stat("\(game.people.filter { $0.status == .incarcerated }.count)", "In custody")
-                Spacer()
-                stat("\(game.people.filter { $0.status == .probation }.count)", "On probation")
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                StatTile(value: game.trialsHeard, label: "Cases", icon: "hammer.fill") {
+                    CaseRecordListView(title: "Cases heard", kind: "trial")
+                }
+                StatTile(value: game.hearingsHeard, label: "Hearings", icon: "person.badge.clock.fill") {
+                    CaseRecordListView(title: "Violation hearings", kind: "hearing")
+                }
+                StatTile(value: game.history.filter { $0.resolvedKind == "calendar" }.count, label: "Calendar calls", icon: "list.bullet.rectangle.portrait.fill") {
+                    CaseRecordListView(title: "Calendar calls", kind: "calendar")
+                }
+                StatTile(value: people.filter { $0.status == .incarcerated }.count, label: "In custody", icon: "lock.fill", tint: .red) {
+                    PeopleListView(filter: .custody)
+                }
+                StatTile(value: people.filter { $0.status == .probation }.count, label: "On probation", icon: "person.badge.clock.fill", tint: .orange) {
+                    PeopleListView(filter: .probation)
+                }
+                StatTile(value: people.filter { PeopleFilter.postRelease.includes($0, game: game) }.count, label: "Post-release", icon: "figure.walk.departure", tint: .orange) {
+                    PeopleListView(filter: .postRelease)
+                }
+                StatTile(value: awaitingTrialCount, label: "Awaiting trial", icon: "calendar.badge.clock") {
+                    AwaitingTrialView()
+                }
+                StatTile(value: people.filter { PeopleFilter.returning.includes($0, game: game) }.count, label: "Returning", icon: "arrow.uturn.left", tint: .purple) {
+                    PeopleListView(filter: .returning)
+                }
+                StatTile(value: game.appeals.filter(\.isPending).count, label: "Appeals pending", icon: "building.columns.fill", tint: .orange) {
+                    PeopleListView(filter: .appeals)
+                }
+                StatTile(value: people.count, label: "Everyone", icon: "person.3.fill") {
+                    PeopleListView(filter: .all)
+                }
+                StatTile(value: people.filter { PeopleFilter.violations.includes($0, game: game) }.count, label: "With violations", icon: "exclamationmark.triangle.fill", tint: .orange) {
+                    PeopleListView(filter: .violations)
+                }
+                StatTile(value: game.stats.exonerations, label: "Exonerations", icon: "lock.open.fill") {
+                    PeopleListView(filter: .exonerated)
+                }
             }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
         }
         Section {
             DisclosureGroup("Career ledger") {
@@ -603,6 +652,18 @@ struct RecordsView: View {
             ledgerRow("Exonerations", s.exonerations)
             }
         }
+    }
+
+    private var awaitingTrialCount: Int {
+        let thisWeek = (game.today?.entries ?? []).filter { entry in
+            if case .trial = entry.matter { return entry.isOpen }
+            return false
+        }.count
+        return thisWeek + game.scheduled.filter { if case .trial = $0.entry.matter { return true } else { return false } }.count
+    }
+
+    @ViewBuilder
+    private var casesSection: some View {
         Section("Docket history") {
             if game.history.isEmpty {
                 Text("No cases heard yet.").foregroundStyle(.secondary)
@@ -619,54 +680,41 @@ struct RecordsView: View {
 
     @ViewBuilder
     private var peopleSection: some View {
-        let sentenced = game.people.filter { person in
-            (person.status != .free || person.postRelease != nil)
-                && (person.priors.contains { $0.fromThisCourt } || (person.probation?.imposedInThisCourt ?? false))
-        }
-        if !sentenced.isEmpty {
-            Section("Serving a sentence you imposed") {
-                ForEach(sentenced.sorted { $0.name < $1.name }) { person in
-                    NavigationLink {
-                        PersonDetail(person: person, today: game.currentDate)
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(person.name).font(.system(.subheadline, design: .serif).weight(.semibold))
-                                if let line = sentenceLine(person) {
-                                    Text(line).font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
-                                }
-                                Text(statusLine(person)).font(.caption).foregroundStyle(.secondary)
-                                if game.appeals.contains(where: { $0.personID == person.id && $0.isPending }) {
-                                    Label("Appeal pending", systemImage: "building.columns.fill")
-                                        .font(.caption2.weight(.semibold)).foregroundStyle(.orange)
-                                }
-                            }
-                            Spacer()
-                            Pill(text: person.status.label, color: statusColor(person.status))
-                        }
-                    }
-                }
-            }
-        }
-        Section("Everyone who has appeared before you") {
-            if game.people.isEmpty {
-                Text("No one yet.").foregroundStyle(.secondary)
-            }
-            ForEach(game.people.sorted { ($0.appearances.last?.date ?? .distantPast) > ($1.appearances.last?.date ?? .distantPast) }) { person in
+        Section {
+            ForEach(PeopleFilter.allCases) { filter in
+                let count = game.people.filter { filter.includes($0, game: game) }.count
                 NavigationLink {
-                    PersonDetail(person: person, today: game.currentDate)
+                    PeopleListView(filter: filter)
                 } label: {
                     HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(person.name).font(.subheadline.weight(.semibold))
-                            Text("\(person.appearances.count) appearance\(person.appearances.count == 1 ? "" : "s") · \(person.priors.count) conviction\(person.priors.count == 1 ? "" : "s")")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+                        Label(filter.label, systemImage: filter.icon)
                         Spacer()
-                        Pill(text: person.status.label, color: statusColor(person.status))
+                        Text("\(count)").font(.callout.monospacedDigit().weight(.semibold)).foregroundStyle(.secondary)
                     }
                 }
+            }
+        } header: {
+            Text("Browse")
+        } footer: {
+            Text("Each list can be searched and sorted.")
+        }
+        let soon = CourtCalendar.calendar.date(byAdding: .day, value: 45, to: game.currentDate) ?? game.currentDate
+        let attention = game.people.filter { p in
+            (p.status == .incarcerated && (p.releaseDate ?? .distantFuture) <= soon)
+                || (p.status == .probation && (p.probation?.ends ?? .distantFuture) <= soon)
+                || (p.postRelease.map { $0.ends <= soon } ?? false)
+        }
+        if !attention.isEmpty {
+            Section("Coming up in the next six weeks") {
+                ForEach(PeopleSort.release.sorted(attention).prefix(8)) { person in
+                    NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
+                }
+            }
+        }
+        Section("Recently in your court") {
+            if game.people.isEmpty { Text("No one yet.").foregroundStyle(.secondary) }
+            ForEach(PeopleSort.recent.sorted(game.people).prefix(10)) { person in
+                NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
             }
         }
     }

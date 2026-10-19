@@ -282,6 +282,8 @@ struct PendingEvent: Codable, Hashable {
         case releasePerson
         case raisePropensity
         case resentence
+        /// Resentenced upward on remand after the State's appeal: the lawful term now runs.
+        case lengthen
     }
 
     var due: Date

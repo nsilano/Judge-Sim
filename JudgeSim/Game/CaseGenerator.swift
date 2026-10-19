@@ -19,7 +19,11 @@ enum CaseGenerator {
         var storySlot = true
         /// Only cases of these kinds, e.g. a drug case for a search warrant the judge signed.
         var categories: Set<LawCategory>? = nil
+        /// False when the week already has a murder trial, or had one last week.
+        var allowMurder = true
     }
+
+    static func isMurder(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("murder") }
 
     /// How strong the State's case should be, so that the evidence doesn't always point one way.
     private enum Band {
@@ -30,9 +34,17 @@ enum CaseGenerator {
         var rng = SeededRNG(seed: seed)
         var pool = CaseTemplates.all
         // Written cases come up first, until each has been heard once.
-        let unheardStories = StoryCases.all.filter { story in !context.usedSignatures.contains { $0.hasPrefix(story.key + "|") } }
+        // How many times each template has been heard, counted once rather than per template.
+        var useCounts: [String: Int] = [:]
+        for signature in context.usedSignatures {
+            if let bar = signature.firstIndex(of: "|") { useCounts[String(signature[..<bar]), default: 0] += 1 }
+        }
+        var unheardStories = StoryCases.all.filter { useCounts[$0.key] == nil }
+        if !context.allowMurder { unheardStories.removeAll(where: isMurder) }
         if context.returning == nil, context.storySlot, !unheardStories.isEmpty {
-            let story = rng.pick(unheardStories)
+            // Murder trials come up now and then, not every week: most draws go to another kind of case.
+            let others = unheardStories.filter { !isMurder($0) }
+            let story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : unheardStories)
             return build(story, seed: seed, band: .close, context: context, rng: &rng)
         }
         // A written case is heard once per career, and only with a new defendant, whose history it describes.
@@ -51,12 +63,17 @@ enum CaseGenerator {
             if !fitting.isEmpty { pool = fitting }
         }
 
+        if !context.allowMurder {
+            let narrowed = pool.filter { !isMurder($0) }
+            if !narrowed.isEmpty { pool = narrowed }
+        }
         if let wanted = context.categories {
             let narrowed = pool.filter { wanted.contains($0.category) && $0.story == nil }
             if !narrowed.isEmpty { pool = narrowed }
         }
         // Serious felonies come up most; low-level cases still appear, but rarely.
         func weight(_ template: CaseTemplate) -> Double {
+            if isMurder(template) { return 2 }
             switch LawLibrary.law(template.primaryLaw).ncClass {
             case .A?, .B1?, .B2?, .C?, .D?, .E?: return 5
             case .F?, .G?: return 3.5
@@ -66,9 +83,7 @@ enum CaseGenerator {
             }
         }
         // Rotate through the kinds of cases in proportion to their weight before any repeats.
-        func uses(_ template: CaseTemplate) -> Int {
-            context.usedSignatures.filter { $0.hasPrefix(template.key + "|") }.count
-        }
+        func uses(_ template: CaseTemplate) -> Int { useCounts[template.key] ?? 0 }
         func score(_ template: CaseTemplate) -> Double { Double(uses(template) + 1) / weight(template) }
         let lowest = pool.map(score).min() ?? 0
         var choices = pool.filter { score($0) <= lowest + 0.0001 }
@@ -193,7 +208,7 @@ enum CaseGenerator {
             "D": defendant.name,
             "DL": defendant.lastName,
             "DA": "\(defendant.age)",
-            "DO": defendant.occupation.lowercased(),
+            "DO": defendant.occupation.lowercasedPhrase,
             "DET": detective.display,
             "OFF": officer.display,
             "TROOPER": setting == .road ? detective.display : "Trooper \(trooperName)",
@@ -435,18 +450,40 @@ enum CaseGenerator {
         // An eyewitness identification the defense attacks.
         if t.story == nil, rng.chance(0.6),
            let id = evidence.first(where: { $0.side == .prosecution && ["lineup", "identif", "show-up", "photo array"].contains(where: $0.title.lowercased().contains) }) {
-            motions.append(makeMotion(rng.pick(GenericPools.identificationSeeds), target: id.id, targetTitle: id.title, fill: fill))
+            // A lineup motion argues about a lineup; a show-up motion about a show-up.
+            let title = id.title.lowercased()
+            let showUp = title.contains("show-up")
+            let lineup = title.contains("lineup") || title.contains("photo array")
+            let seeds = GenericPools.identificationSeeds.filter { seed in
+                let isShowUp = seed.facts.contains("detained") || seed.facts.contains("drove the witness past")
+                return showUp ? isShowUp : (lineup ? !isShowUp : true)
+            }
+            motions.append(makeMotion(rng.pick(seeds.isEmpty ? GenericPools.identificationSeeds : seeds), target: id.id, targetTitle: id.title, fill: fill))
         }
         // Other acts the State wants to use.
         if t.story == nil, rng.chance(0.5),
            let prior = evidence.first(where: { $0.side == .prosecution && ["prior", "previous", "earlier", "history"].contains(where: $0.title.lowercased().contains) }) {
-            motions.append(makeMotion(rng.pick(GenericPools.priorActsSeeds), target: prior.id, targetTitle: prior.title, fill: fill))
+            // Each fact pattern needs what it talks about: a victim to threaten, or a break-in on the record.
+            let brokeIn = defendant.priors.contains { ["break", "burglary"].contains(where: $0.offense.lowercased().contains) }
+            let seeds = GenericPools.priorActsSeeds.filter { seed in
+                if seed.facts.contains("{V}") { return t.hasVictim }
+                if seed.facts.contains("break-in") { return brokeIn }
+                return true
+            }
+            motions.append(makeMotion(rng.pick(seeds), target: prior.id, targetTitle: prior.title, fill: fill))
         }
         // Now and then, a count on a defective indictment.
         if t.story == nil, charges.count > 1, rng.chance(0.12), let count = charges.dropFirst().randomElement(using: &rng) {
             let countFill = TextFiller(values: values.merging(["COUNT": "\(count.count)"]) { a, _ in a })
             // The owner-allegation defect only arises on a larceny count.
-            let seeds = GenericPools.indictmentSeeds.filter { !$0.facts.contains("Dollar Mart") || count.lawID.lowercased().contains("larceny") }
+            let law = count.lawID.lowercased()
+            let takes = law.contains("larceny") || law.contains("robbery") || law.contains("embezzle")
+            let seeds = GenericPools.indictmentSeeds.filter { seed in
+                if seed.facts.contains("Dollar Mart") { return law.contains("larceny") && !t.hasVictim }
+                if seed.facts.contains("permanently deprive") { return takes }
+                if seed.facts.contains("victim's") { return t.hasVictim }
+                return true
+            }
             var motion = makeMotion(rng.pick(seeds), target: nil, targetTitle: nil, fill: countFill)
             motion.targetChargeID = count.id
             motions.append(motion)
@@ -501,7 +538,7 @@ enum CaseGenerator {
         } else {
             mitigating.removeAll(where: aboutRecord)
         }
-        if !defendant.occupation.lowercased().contains("unemployed") && rng.chance(0.5) {
+        if !defendant.occupation.lowercasedPhrase.contains("unemployed") && rng.chance(0.5) {
             mitigating.append("The defendant has a positive employment history and is gainfully employed")
         }
         var mood = rng.pick(t.moods)
@@ -769,6 +806,10 @@ enum CaseGenerator {
             case .none:
                 stanceDetail = "There's no identified victim in this case."
             }
+        } else if t.story != nil && !t.victimImpacts.isEmpty {
+            // No single named victim, but people were hurt, and their statements are in the file.
+            stance = .wantsAccountability
+            stanceDetail = "There isn't one named victim in this case, Judge, but people were hurt by it. The statements from those affected are in the sentencing file, and they want it taken seriously."
         } else {
             stance = .none
             stanceDetail = "There's no individual victim in this case, Judge."

@@ -43,7 +43,7 @@ extension StoryCases {
                             .cross("You fired the shots, and you pleaded guilty in exchange for this testimony?", "\"Yes.\""),
                             .cross("{VL} grabbed the shotgun?", "\"After I pointed it at {V.him}, yeah. {V.He} grabbed the barrel.\"")
                         ]),
-            WitnessSeed(name: "{DET}", role: "SBI agent",
+            WitnessSeed(name: nil, role: "SBI agent",
                         direct: ["\"Nothing was ever stolen.\""],
                         cross: ["\"There had been break-ins.\""],
                         weight: 2, lay: false,
@@ -127,7 +127,7 @@ extension StoryCases {
             E(.statement, 1, "911 Call", "{DL} on 911: \"I thought it was my apartment. Oh my God. I'm going to lose my job. I thought it was my apartment.\"", .statement)
         ],
         prosecutionWitnesses: [
-            WitnessSeed(name: "{DET}", role: "SBI agent",
+            WitnessSeed(name: nil, role: "SBI agent",
                         direct: ["\"The doormat was right there.\""],
                         cross: ["\"The floors are identical.\""],
                         weight: 2, lay: false,

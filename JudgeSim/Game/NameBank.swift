@@ -112,7 +112,7 @@ enum NameBank {
 
     /// A background line that fits the person's age and situation.
     static func background(age: Int, occupation: String, rng: inout SeededRNG) -> String {
-        let lower = occupation.lowercased()
+        let lower = occupation.lowercasedPhrase
         let inHighSchool = lower.contains("high school")
         let inCollege = lower.contains("student") || lower.contains("freshman")
         let fits = backgrounds.filter { line in
