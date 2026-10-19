@@ -25,6 +25,9 @@ enum CaseGenerator {
         var forcedTemplateKeys: [String]? = nil
         var victimOverride: String? = nil
         var incidentDaysAgo: Int? = nil
+        /// The earlier case a written follow-up refers to.
+        var priorOffense: String? = nil
+        var priorDate: Date? = nil
     }
 
     static func isMurder(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("murder") }
@@ -41,7 +44,7 @@ enum CaseGenerator {
         // A follow-up to an earlier case: one of the kinds named, fitted to the person.
         if let keys = context.forcedTemplateKeys {
             let sex = context.returning.map { NameBank.gender(of: $0.name) }
-            let named = keys.compactMap { key in CaseTemplates.all.first { $0.key == key } }.filter { t in
+            let named = keys.compactMap { key in (FollowUpCases.all + CaseTemplates.all).first { $0.key == key } }.filter { t in
                 sex.map { (t.requiredGenders["D"] ?? $0) == $0 } ?? true
             }
             // Keep the same victim when the case allows that person; otherwise any of the kinds named.
@@ -60,11 +63,23 @@ enum CaseGenerator {
         }
         var unheardStories = StoryCases.all.filter { useCounts[$0.key] == nil }
         if !context.allowMurder { unheardStories.removeAll(where: isMurder) }
-        if context.returning == nil, context.storySlot, !unheardStories.isEmpty {
-            // Murder trials come up now and then, not every week: most draws go to another kind of case.
-            let others = unheardStories.filter { !isMurder($0) }
-            let story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : unheardStories)
-            return build(story, seed: seed, band: .close, context: context, rng: &rng)
+        if context.returning == nil, context.storySlot {
+            // Every trial is a written case. Once all of them have been heard, the ones heard least come back with new people.
+            var candidates = unheardStories
+            if candidates.isEmpty {
+                var all = StoryCases.all
+                if !context.allowMurder { all.removeAll(where: isMurder) }
+                let fewest = all.map { useCounts[$0.key] ?? 0 }.min() ?? 0
+                candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
+                let notRecent = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
+                if !notRecent.isEmpty { candidates = notRecent }
+            }
+            if !candidates.isEmpty {
+                // Murder trials come up now and then, not every week: most draws go to another kind of case.
+                let others = candidates.filter { !isMurder($0) }
+                let story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : candidates)
+                return build(story, seed: seed, band: .close, context: context, rng: &rng)
+            }
         }
         // A written case is heard once per career, and only with a new defendant, whose history it describes.
         if context.returning == nil && context.storySlot { pool += unheardStories }
@@ -253,7 +268,10 @@ enum CaseGenerator {
             "HOOD": rng.pick(county.towns),
             "CITY": county.seat,
             "V": victimName ?? "the complainant",
-            "VL": victimName.map(lastName) ?? "the complainant"
+            "VL": victimName.map(lastName) ?? "the complainant",
+            // A follow-up case names the earlier one in this court.
+            "PRIOR": context.priorOffense?.lowercased() ?? "an earlier charge",
+            "PRIORDATE": context.priorDate.map { $0.formatted(.dateTime.month(.wide).year()) } ?? "an earlier term of court"
         ]
         for key in t.extras.keys.sorted() {
             if let options = t.extras[key] { values[key] = rng.pick(options) }

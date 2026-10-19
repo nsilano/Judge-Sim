@@ -222,7 +222,8 @@ enum ObjectionEngine {
         }
 
         // Records cases.
-        if setting == .paper {
+        // Only the State asks its own records witness to lay a foundation or to say who took the money.
+        if setting == .paper && asker == .prosecution && w.calledBy == .prosecution && onDirect {
             let record = ctx.state.first { $0.kind == .document } ?? exhibit
             if let record {
                 out.append(Draft(question: "I'm handing you \(record.exhibit). What is it?",

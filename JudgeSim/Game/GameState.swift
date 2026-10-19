@@ -863,6 +863,23 @@ final class GameState: ObservableObject {
                 call.matters.forEach { usedPeople.insert($0.personID) }
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
+            // Now and then someone this court has judged is arrested on something new, and the case comes back here.
+            let quiet = CourtCalendar.calendar.date(byAdding: .day, value: -120, to: date) ?? date
+            let candidates = people.filter { person in
+                person.status != .incarcerated && person.propensity >= 0.25 && !usedPeople.contains(person.id)
+                    && (person.appearances.last?.date ?? .distantFuture) < quiet
+                    && !reoffenseQueue.contains { $0.personID == person.id }
+            }
+            if rng.chance(0.18), !candidates.isEmpty {
+                let person = rng.pick(candidates)
+                if let last = person.appearances.last {
+                    let incident = CourtCalendar.calendar.date(byAdding: .day, value: -rng.int(30...70), to: date) ?? date
+                    reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: FollowUpCases.newCharges.shuffled(using: &rng), victimName: nil,
+                                                    incident: incident,
+                                                    note: "Back in your court: \(person.name) was before you on \(last.charges.lowercased()) on \(SentenceFormat.shortDate(last.date)).",
+                                                    priorOffense: last.charges, priorDate: last.date))
+                }
+            }
             // Cases that come back because of what this court decided before.
             var followUps = 0
             while followUps < 2, let index = reoffenseQueue.firstIndex(where: { !usedPeople.contains($0.personID) }) {
@@ -877,13 +894,12 @@ final class GameState: ObservableObject {
             }
             let wanted = lightWeeks ? 2 : rng.int(2...3)
             let already = entries.filter { if case .trial = $0.matter { return true } else { return false } }.count
-            // Written stories make up most of the docket; now and then one slot goes to a generated case.
+            // Every trial on the docket is a written case.
             let slots = max(0, min(wanted, trialCap) - already)
-            let generatedSlot = slots > 0 && rng.chance(0.35) ? rng.int(0...(slots - 1)) : -1
-            for slot in 0..<slots {
+            for _ in 0..<slots {
                 // At most one murder trial a week, and not two weeks running.
                 let allowMurder = !murderThisWeek && !murderLastWeek
-                if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: slot != generatedSlot, allowMurder: allowMurder) {
+                if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: true, allowMurder: allowMurder) {
                     if Self.isMurder(c) { murderThisWeek = true }
                     // Some cases are called with a party asking for more time.
                     if c.background?.arrangementPresented != true && rng.chance(0.25) {
@@ -1367,7 +1383,8 @@ final class GameState: ObservableObject {
                               categories: Set<LawCategory>? = nil, allowMurder: Bool = true, announce: Bool = true,
                               followUp: Reoffense? = nil) -> CourtCase? {
         guard let county, let judgeName else { return nil }
-        var returning = followUp.flatMap { person($0.personID) } ?? pickReturningDefendant(rng: &rng, date: date)
+        // A written case brings its own defendant; returning defendants come back through calendar matters and follow-ups.
+        var returning = followUp.flatMap { person($0.personID) } ?? (storySlot && followUp == nil ? nil : pickReturningDefendant(rng: &rng, date: date))
         if followUp == nil, let person = returning, used.contains(person.id) { returning = nil }
         var context = CaseGenerator.Context(county: county, judgeName: judgeName, date: date,
                                             docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
@@ -1378,6 +1395,8 @@ final class GameState: ObservableObject {
             context.forcedTemplateKeys = followUp.templateKeys
             context.victimOverride = followUp.victimName
             context.incidentDaysAgo = CourtCalendar.calendar.dateComponents([.day], from: followUp.incident, to: date).day
+            context.priorOffense = followUp.priorOffense
+            context.priorDate = followUp.priorDate
         }
         let announce = announce && followUp == nil
         // Draw a few candidates, cut lines that don't fit, and keep the one that holds together and reads newest.
@@ -1803,7 +1822,8 @@ final class GameState: ObservableObject {
                                             personID: person.id,
                                             reoffense: Reoffense(personID: person.id, templateKeys: Consequences.violationTemplates(domestic: order.domestic),
                                                                  victimName: order.protectedName, incident: currentDate,
-                                                                 note: "Charged with violating the stay-away order you entered on \(SentenceFormat.shortDate(order.issued)) in \(order.docket), protecting \(order.protectedName). It was \(person.lastName)'s violation number \(order.violations).")))
+                                                                 note: "Charged with violating the stay-away order you entered on \(SentenceFormat.shortDate(order.issued)) in \(order.docket), protecting \(order.protectedName). It was \(person.lastName)'s violation number \(order.violations).",
+                                                                 priorOffense: person.priors.first { $0.docket == order.docket }?.offense, priorDate: order.issued)))
                 break
             }
             people[index].stayAwayOrders = orders

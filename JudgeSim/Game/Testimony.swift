@@ -67,9 +67,42 @@ enum Testimony {
     }
 
     /// "a forensic accountant", "an investigator", "Smith's roommate".
+    /// Whether a witness's job puts them in the books: an employee, bookkeeper, manager, and so on.
+    static func handlesRecords(_ role: String) -> Bool {
+        let r = role.lowercased()
+        return ["coworker", "co-worker", "bookkeeper", "accountant", "manager", "cashier", "clerk", "employee", "teller", "auditor",
+                "treasurer", "board member", "office", "payroll", "finance", "owner", "partner", "supervisor", "crew"].contains { r.contains($0) }
+    }
+
+    /// The answer to "How do you know the defendant?": the relationship, not a number of years.
+    static func howTheyKnow(_ role: String, dl: String, years: Int, rng: inout SeededRNG) -> String {
+        let r = role.lowercased()
+        // Someone else's neighbor, friend, or relative knows the defendant through that person.
+        if let range = role.range(of: "'s "), !role[..<range.lowerBound].contains(dl) {
+            let through = String(role[..<range.lowerBound])
+            return rng.pick(["Through \(through). I'd see \(dl) over there all the time.", "From \(through)'s. \(dl) was around most days.",
+                             "Only through \(through). We'd talk in the yard sometimes."])
+        }
+        if r.contains("neighbor") { return rng.pick(["We live on the same street. Have for about \(years) years.", "I live next door. \(years) years now."]) }
+        if r.contains("coworker") || r.contains("crew") || r.contains("employee") || r.contains("cashier") {
+            return rng.pick(["We worked together. About \(years) years.", "Same job, same shift, for a long time."])
+        }
+        if r.contains("pastor") { return "\(dl) has been in my congregation about \(years) years." }
+        if r.contains("landlord") { return "\(dl) rents from me. Has for \(years) years." }
+        if r.contains("roommate") { return "We've shared an apartment for about \(years) years." }
+        for family in ["cousin", "spouse", "sibling", "mother", "father", "daughter", "son", "partner", "wife", "husband", "sister", "brother", "aunt", "uncle", "grandmother"]
+        where r.contains(family) {
+            return "\(dl) is family. I'm \(dl)'s \(family)."
+        }
+        if r.contains("friend") { return rng.pick(["We've been friends about \(years) years.", "Since high school. We've been friends a long time."]) }
+        return "We've known each other about \(years) years."
+    }
+
     static func withArticle(_ role: String) -> String {
         let lower = role.prefix(1).lowercased() + role.dropFirst()
-        if role.contains("'s ") || role.lowercased().hasPrefix("the ") { return lower }
+        // "Adeyemi's neighbor" starts with a name: no article, and the name keeps its capital.
+        if role.contains("'s ") { return role }
+        if role.lowercased().hasPrefix("the ") { return lower }
         let vowel = "aeiou".contains(lower.prefix(1))
         return (vowel ? "an " : "a ") + lower
     }
@@ -162,8 +195,12 @@ enum Testimony {
                             "father", "coworker", "crew", "board member", "daughter", "son", "partner", "former cashier"]
             if relation.contains(where: { role.contains($0) }) {
                 let years = rng.int(2...20)
-                ask(.direct, rng.pick(["How long have you known \(dl)?", "How do you know \(dl)?", "How well do you know \(dl)?"]),
-                    rng.pick(["About \(years) years.", "\(years) years, give or take. Well enough.", "Going on \(years) years. I'd say I know \(dl) as well as anybody."]))
+                if rng.chance(0.5) {
+                    ask(.direct, rng.pick(["How long have you known \(dl)?", "How well do you know \(dl)?"]),
+                        rng.pick(["About \(years) years.", "\(years) years, give or take. Well enough.", "Going on \(years) years. I'd say I know \(dl) as well as anybody."]))
+                } else {
+                    ask(.direct, "How do you know \(dl)?", howTheyKnow(w.role, dl: dl, years: years, rng: &rng))
+                }
             }
             if paper && !isVictim, let org = ctx.organization, rng.chance(0.6) {
                 ask(.direct, rng.pick(["What's your connection to \(org)?", "How long were you involved with \(org)?"]),
@@ -226,7 +263,10 @@ enum Testimony {
                         : rng.pick(["Pretty sure. It's what I remember.", "As sure as I can be. It happened fast.", "I saw enough."]))
             } else if paper {
                 ask(.direct, rng.pick(["Is that from your own knowledge?", "How do you know that?"]),
-                    rng.pick(["Yes. I saw the records myself.", "I worked with those records every day.", "I was there for it. I'm not repeating what somebody told me."]))
+                    Self.handlesRecords(role)
+                        ? rng.pick(["Yes. I saw the records myself.", "I worked with those records every day.", "I was there for it. I'm not repeating what somebody told me."])
+                        : rng.pick(["I saw it myself. I was over there most days.", "I was there. I'm not repeating what somebody told me.",
+                                    "From being around them. I saw how they were with each other."]))
             } else if calling == .defense {
                 ask(.direct, rng.pick(["Why did you come to court today?", "Has anyone asked you to say any of this?"]),
                     rng.pick(["Because I know what's true, and somebody should say it.", "No. I asked to be here.", "Because \(dl) asked, and because it's true."]))
@@ -251,7 +291,8 @@ enum Testimony {
                     ? [("You're not an accountant, are you?", "No. I'm telling you what I saw in our own records."),
                        ("You weren't the one keeping these records, were you?", "No. That wasn't my job."),
                        ("Somebody has to answer for the losses, and it's easier if it's \(dl), isn't it?", "I want whoever did it to answer for it. That's all.")]
-                    : [("You and \(dl) are friends?", "We worked together a long time. That doesn't change what I saw."),
+                    : [("You and \(dl) are friends?", Self.handlesRecords(role) ? "We worked together a long time. That doesn't change what I saw."
+                                                                               : "I'd say so. That doesn't change what I saw."),
                        ("You weren't part of every decision, were you?", "No. But I was there for the ones that mattered."),
                        ("You'd like to see \(dl) go home today?", "I'd like the court to have the whole story.")]
             } else if paper && isVictim {

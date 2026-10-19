@@ -19,25 +19,24 @@ enum Consequences {
 
     /// The new case a stay-away order violation brings.
     static func violationTemplates(domestic: Bool) -> [String] {
-        domestic ? ["protectiveOrderParty", "dvStrangulation"] : ["stalking"]
+        domestic ? FollowUpCases.domesticViolations : FollowUpCases.otherViolations
     }
 
     /// Something worse than the case the court let go, in the same line of conduct.
     static func escalation(for c: CourtCase) -> (keys: [String], sameVictim: Bool) {
-        if isDomestic(c) { return (["dvStrangulation", "protectiveOrderParty"], true) }
-        if c.templateKey.lowercased().contains("stalk") || c.charges.contains(where: { $0.lawID == "stalking" }) {
-            return (["stalking", "dvStrangulation"], true)
+        // Written follow-up cases only: the same person, and the same victim where the conduct was aimed at one.
+        if isDomestic(c) { return (["story.followup.kitchenAgain", "story.followup.hospitalNight"], true) }
+        if c.templateKey.lowercased().contains("stalk") || c.charges.contains(where: { $0.lawID.hasPrefix("stalking") }) {
+            return (["story.followup.hospitalNight"], true)
         }
         switch c.category {
-        case .violent: return (["roadRage", "protestAssault", "propertyLineShooting", "driveByShooting", "barFight"], false)
-        case .robbery: return (["storeRobbery", "carjacking", "homeInvasion", "purseSnatch"], false)
-        case .property: return (["homeInvasion", "burglary", "stolenWorkTruck", "organizedRetailTheft"], false)
-        case .drugs: return (["overdose", "trapHouse", "trafficStopDrugs"], false)
-        case .traffic: return (["drunkCrash", "pedestrianHitRun", "habitualDWI"], false)
-        case .whiteCollar: return (["elderScam", "caregiverExploitation", "romanceScam", "ponzi"], false)
-        case .cyber: return (["ransomware", "imageLeak"], false)
-        case .publicOrder: return (["felonGun", "driveByShooting"], false)
-        default: return (["roadRage", "burglary"], false)
+        case .violent: return (["story.followup.barParkingLot"], false)
+        case .robbery: return (["story.followup.gasStationKnife"], false)
+        case .property: return (["story.followup.occupiedHouse", "story.followup.carBreakIns"], false)
+        case .drugs: return (["story.followup.overdoseDeath"], false)
+        case .traffic: return (["story.followup.secondCrash"], false)
+        case .whiteCollar, .cyber: return (["story.followup.newMark"], false)
+        default: return (["story.followup.barParkingLot", "story.followup.occupiedHouse"], false)
         }
     }
 
@@ -81,7 +80,8 @@ enum Consequences {
                                                    body: "A Hollis County grand jury returned an indictment against \(d.name). The case is set for trial in Superior Court before Judge \(judgeLast), who presided over \(d.lastName)'s earlier case.",
                                                    docket: c.docket),
                                     personID: d.personID,
-                                    reoffense: Reoffense(personID: d.personID, templateKeys: keys, victimName: victim, incident: incident, note: note))
+                                    reoffense: Reoffense(personID: d.personID, templateKeys: keys, victimName: victim, incident: incident, note: note,
+                                                         priorOffense: c.charges.first?.law.title, priorDate: date))
         return [arrest, indicted]
     }
 }
