@@ -15,6 +15,7 @@ struct PersonDetail: View {
         DocumentDesk {
             PersonStatusCard(person: current, today: game.currentDate, appeals: file.appeals, upcoming: file.upcoming)
                 .card(tint: statusTint(current))
+            PersonTimeline(person: current)
             ForEach(PersonFileSection.allCases.filter { $0.isAvailable(in: file) }) { section in
                 DeskLink(title: section.title(in: file), detail: section.preview(in: file, today: game.currentDate), icon: section.icon) {
                     DocumentDesk {
