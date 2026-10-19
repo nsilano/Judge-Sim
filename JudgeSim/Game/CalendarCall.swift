@@ -600,3 +600,34 @@ enum CalendarCalls {
                       activeSentences: activeSentences, suspendedSentences: suspendedSentences, probationCompleted: probationCompleted)
     }
 }
+
+extension CalendarMatter {
+    /// Fields added since a calendar call was first saved decode as their defaults, so an older save still loads.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        kind = try c.decode(Kind.self, forKey: .kind)
+        personID = try c.decodeIfPresent(UUID.self, forKey: .personID) ?? UUID()
+        personName = try c.decodeIfPresent(String.self, forKey: .personName) ?? ""
+        personAge = try c.decodeIfPresent(Int.self, forKey: .personAge) ?? 30
+        occupation = try c.decodeIfPresent(String.self, forKey: .occupation) ?? ""
+        docket = try c.decodeIfPresent(String.self, forKey: .docket) ?? ""
+        summary = try c.decodeIfPresent(String.self, forKey: .summary) ?? ""
+        stateAsk = try c.decodeIfPresent(String.self, forKey: .stateAsk) ?? ""
+        defenseAsk = try c.decodeIfPresent(String.self, forKey: .defenseAsk) ?? ""
+        options = try c.decodeIfPresent([String].self, forKey: .options) ?? []
+        lawID = try c.decodeIfPresent(String.self, forKey: .lawID)
+        priors = try c.decodeIfPresent([PriorConviction].self, forKey: .priors) ?? []
+        activeTerm = try c.decodeIfPresent(Int.self, forKey: .activeTerm) ?? 0
+        isFelony = try c.decodeIfPresent(Bool.self, forKey: .isFelony) ?? false
+        lawNote = try c.decodeIfPresent(String.self, forKey: .lawNote)
+        owesMoney = try c.decodeIfPresent(Bool.self, forKey: .owesMoney)
+        pendingCase = try c.decodeIfPresent(CourtCase.self, forKey: .pendingCase)
+        warrant = try c.decodeIfPresent(WarrantApplication.self, forKey: .warrant)
+        relief = try c.decodeIfPresent(ReliefMotion.self, forKey: .relief)
+        bond = try c.decodeIfPresent(BondFacts.self, forKey: .bond)
+        amountOptions = try c.decodeIfPresent([Int].self, forKey: .amountOptions)
+        amountRange = try c.decodeIfPresent(ClosedRange<Int>.self, forKey: .amountRange)
+        suggestedAmount = try c.decodeIfPresent(Int.self, forKey: .suggestedAmount)
+    }
+}

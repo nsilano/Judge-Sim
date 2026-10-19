@@ -1636,6 +1636,22 @@ final class GameState: ObservableObject {
                             people[index].releaseDate = newRelease
                         }
                     }
+                case .lengthen:
+                    // Resentenced upward on the State's appeal: the lawful term runs from the original judgment.
+                    guard let lawful = event.newReleaseDate, lawful > currentDate, let docket = event.news.docket else { break }
+                    if people[index].status == .incarcerated {
+                        if people[index].custodyDocket == docket || people[index].custodyDocket == nil {
+                            people[index].releaseDate = max(people[index].releaseDate ?? lawful, lawful)
+                        }
+                    } else {
+                        if people[index].probation?.docket == docket { people[index].probation = nil }
+                        people[index].status = .incarcerated
+                        people[index].releaseDate = lawful
+                        people[index].custodyDocket = docket
+                        people[index].releaseNote = "Resentenced on remand after the State's appeal; committed to serve the lawful term."
+                        people[index].appearances.append(PersonRecord.Appearance(docket: docket, date: event.due, charges: "Resentencing on remand",
+                                                                                 outcome: "Committed: the Court of Appeals vacated the original sentence as unauthorized"))
+                    }
                 case .none:
                     break
                 }

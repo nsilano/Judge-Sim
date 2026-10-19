@@ -248,9 +248,14 @@ enum NewsDesk {
             let line = job.map { "\(person.lastName) now works as \($0.title.lowercasedPhrase.withIndefiniteArticle) at \($0.employer)." }
                 ?? rng.pick(["\(person.lastName) is still looking for work. \"Every application asks about a record,\" \(person.lastName) said.",
                              "\(person.lastName) lives with family in \(rng.pick(towns)) and attends a reentry group on Thursdays."])
+            var closers = ["\"I think about that courtroom every day,\" \(person.lastName) said.", "\(person.lastName) declined to talk about the case."]
+            if supervised {
+                let officer = person.postRelease != nil ? "A post-release supervision officer" : "A probation officer"
+                closers.append("\(officer) described \(person.lastName) as \"doing the work.\"")
+            }
+            let closer = rng.pick(closers)
             items.append(NewsItem(date: w.date, kind: .community, headline: "Where are they now: \(person.name)",
-                                  body: "Months after leaving custody, \(person.name) is trying to build a life in Hollis County. \(line) \(rng.pick(["\"I think about that courtroom every day,\" \(person.lastName) said.", "\(person.lastName) declined to talk about the case."]
-                                        + (supervised ? ["\(person.postRelease != nil ? "A post-release supervision officer" : "A probation officer") described \(person.lastName) as \"doing the work.\""] : [])))",
+                                  body: "Months after leaving custody, \(person.name) is trying to build a life in Hollis County. \(line) \(closer)",
                                   byline: byline(metro, paper: w.paper), section: "Local"))
         }
 

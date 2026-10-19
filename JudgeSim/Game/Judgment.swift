@@ -1795,12 +1795,26 @@ enum Judgment {
             // The State may appeal a sentence the law doesn't authorize (G.S. 15A-1445(a)(3)), but seldom does.
             appealScheduled = true
             appealNotice = "The State gave notice of appeal from the judgment (G.S. 15A-1445(a)(3))."
+            // On remand the court enters the least sentence the law allows: the bottom of the presumptive range for a
+            // felony, with credit for time served.
+            var lawfulRelease: Date?
+            var resentenced = ""
+            if lenient.contains(where: { $0.affectsTerm }), let unit = sentencingUnits.first, let cell = unit.felonyCell, !life {
+                let months = cell.presumptive.low
+                let full = Calendar.current.date(byAdding: .month, value: months, to: date) ?? date
+                let lawful = Calendar.current.date(byAdding: .day, value: -(bg?.custodyDays ?? 0), to: full) ?? full
+                if lawful > (releaseDate ?? date) {
+                    lawfulRelease = lawful
+                    resentenced = " On remand, the defendant was resentenced to a minimum of \(months) months, with credit for time already served."
+                }
+            }
             pending.append(PendingEvent(due: later(120...300),
                                         news: NewsItem(date: date, kind: .appeal,
                                                        headline: "Appeals court vacates sentence in \(d.name) case",
-                                                       body: "On appeal by the State, the North Carolina Court of Appeals vacated the judgment Judge \(judgeLast) entered in \(c.caption) and remanded for resentencing. The court held: " + lenient.prefix(2).map { $0.text }.joined(separator: " "),
+                                                       body: "On appeal by the State, the North Carolina Court of Appeals vacated the judgment Judge \(judgeLast) entered in \(c.caption) and remanded for resentencing. The court held: " + lenient.prefix(2).map { $0.text }.joined(separator: " ") + resentenced,
                                                        docket: c.docket),
-                                        personID: d.personID, effect: .none, appealReversed: true))
+                                        personID: d.personID, effect: lawfulRelease == nil ? .none : .lengthen, appealReversed: true,
+                                        newReleaseDate: lawfulRelease))
         }
         if !issues.isEmpty {
             newsExtras.append("Courthouse observers said parts of the sentence appear to depart from North Carolina's sentencing laws.")
