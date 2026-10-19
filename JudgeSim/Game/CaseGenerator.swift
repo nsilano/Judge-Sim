@@ -158,8 +158,12 @@ enum CaseGenerator {
         if let person = context.returning {
             used.insert(person.name)
             used.insert(person.lastName)
+            // A convicted officer doesn't keep the badge: a conviction from this court ends a law enforcement career.
+            let lostBadge = CaseComplexity.isLawEnforcement(person.occupation) && !person.priors.isEmpty
+                && !person.occupation.lowercased().hasPrefix("former")
             defendant = Defendant(personID: person.id, name: person.name, age: person.age(on: context.date),
-                                  occupation: person.occupation, background: person.background, priors: person.priors,
+                                  occupation: lostBadge ? "Former " + person.occupation.lowercased() : person.occupation,
+                                  background: person.background, priors: person.priors,
                                   probation: person.status == .probation ? person.probation : nil,
                                   history: person.appearances,
                                   postRelease: person.status == .incarcerated ? nil : person.postRelease,
@@ -168,9 +172,11 @@ enum CaseGenerator {
             let name = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"])
             let age = rng.int(t.ageRange)
             let occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
-            // Written cases describe the defendant's record themselves; most say there is none.
-            var priors = t.story != nil ? [] : randomPriors(age: age, year: currentYear, county: county, rng: &rng)
-            for entry in t.forcedPriorOffenses {
+            // Written cases describe the defendant's record themselves; most say there is none. A serving officer
+            // has none at all: a criminal record bars certification (12 NCAC 09B .0101).
+            let officer = CaseComplexity.isLawEnforcement(occupation)
+            var priors = t.story != nil || officer ? [] : randomPriors(age: age, year: currentYear, county: county, rng: &rng)
+            for entry in t.forcedPriorOffenses where !officer {
                 // "Offense@N" pins the conviction to about N years ago; otherwise any year since the defendant turned 17 (at most 20 back).
                 let parts = entry.components(separatedBy: "@")
                 let name = parts[0]
@@ -188,7 +194,7 @@ enum CaseGenerator {
                                               sentence: rng.pick(seed.sentences)))
             }
             priors.sort { $0.year < $1.year }
-            if t.requiresFelonyPrior && !priors.contains(where: { $0.ncClass.isFelony }) {
+            if t.requiresFelonyPrior && !officer && !priors.contains(where: { $0.ncClass.isFelony }) {
                 priors.insert(PriorConviction(offense: "Possession of Stolen Goods", ncClass: .H, year: max(currentYear - max(1, age - 17), currentYear - 12),
                                               county: rng.pick(GenericPools.otherCounties),
                                               sentence: "6–17 months active"), at: 0)
