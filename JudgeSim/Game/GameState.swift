@@ -570,7 +570,8 @@ final class GameState: ObservableObject {
 
     /// Starts following each appeal taken today, and puts any oral argument on the calendar. Returns the events
     /// tagged with the appeal they decide, ready to schedule.
-    private func trackAppeals(_ events: [PendingEvent], docket: String, caption: String, personID: UUID, appellant: String, plea: Bool) -> [PendingEvent] {
+    private func trackAppeals(_ events: [PendingEvent], docket: String, caption: String, personID: UUID, appellant: String, plea: Bool,
+                              grounds: [String] = []) -> [PendingEvent] {
         var rng = SeededRNG(seed: seedBase ^ SeededRNG.stableHash(docket) ^ UInt64(appeals.count))
         let decisions = events.filter { $0.news.kind == .appeal && $0.news.docket == docket && !Appeals.isFollowUp($0) }
         guard let first = decisions.min(by: { $0.due < $1.due }) else { return events }
@@ -591,6 +592,7 @@ final class GameState: ObservableObject {
         var tracker = Appeals.tracker(for: first, caption: caption, personID: personID, filed: currentDate,
                                       appellant: byState ? "the State" : appellant, issue: issue, rng: &rng)
         tracker.docket = docket
+        tracker.grounds = grounds.isEmpty ? nil : grounds
         appeals.insert(tracker, at: 0)
         // The judgment appealed from was just entered.
         if let index = history.firstIndex(where: { $0.docket == docket && $0.resolvedKind != "continuance" }) {
@@ -1325,7 +1327,8 @@ final class GameState: ObservableObject {
         post(item)
         pending.append(contentsOf: trackAppeals(outcome.pending, docket: hearing.probation.docket + " (PV)",
                                                 caption: "State v. \(hearing.personName) (probation violation)",
-                                                personID: hearing.personID, appellant: "the probationer", plea: false))
+                                                personID: hearing.personID, appellant: "the probationer", plea: false,
+                                                grounds: outcome.lines.filter { $0.hasPrefix("Note:") }.map { String($0.dropFirst(6)) }))
         finishEntry(matterID: hearing.id, outcome: outcome.appearance)
         save()
     }
@@ -1521,7 +1524,8 @@ final class GameState: ObservableObject {
         post(verdictNews)
         let appellant = (outcome.appealNotice ?? "").contains("The State") ? "the State" : "the defendant"
         pending.append(contentsOf: trackAppeals(outcome.pending, docket: courtCase.docket, caption: courtCase.caption, personID: d.personID,
-                                                appellant: appellant, plea: outcome.verdictLines.contains { $0.verdictLabel.contains("plea") || $0.verdictLabel.contains("No contest") }))
+                                                appellant: appellant, plea: outcome.verdictLines.contains { $0.verdictLabel.contains("plea") || $0.verdictLabel.contains("No contest") },
+                                                grounds: outcome.appealGrounds))
         finishEntry(matterID: courtCase.id, outcome: outcome.appearanceSummary)
         save()
     }

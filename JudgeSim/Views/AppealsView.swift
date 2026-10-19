@@ -17,6 +17,9 @@ struct AppealRow: View {
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
             Text(appeal.statusText(on: today)).font(.caption)
+            if let first = appeal.grounds?.first {
+                Text("Claims: \(first)").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+            }
         }
     }
 }
@@ -90,6 +93,12 @@ struct AppealDetail: View {
             Text("Appeal by \(appeal.appellant)").font(.callout)
             Text(appeal.statusText(on: today)).font(.callout.weight(.semibold))
             Text("Issue: \(appeal.issue)").font(.caption).foregroundStyle(.secondary)
+            if let grounds = appeal.grounds, !grounds.isEmpty {
+                Text("What \(appeal.appellant) says you got wrong").font(.caption.weight(.bold)).padding(.top, 4)
+                ForEach(Array(grounds.enumerated()), id: \.offset) { index, ground in
+                    Text("\(index + 1). \(ground)").font(.caption).fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
         .card(tint: appeal.isPending ? Theme.gold : (appeal.wasReversed ? .orange : .green))
     }
@@ -105,6 +114,12 @@ struct AppealDetail: View {
                          second: ("Notice filed", SentenceFormat.shortDate(appeal.filed)))
             DocField(label: "Appellant", value: appellantLabel)
             DocField(label: "Issue to be raised on appeal", value: appeal.issue)
+            if let grounds = appeal.grounds, !grounds.isEmpty {
+                DocSection(title: "Proposed issues on appeal")
+                ForEach(Array(grounds.enumerated()), id: \.offset) { index, ground in
+                    DocNumbered(number: index + 1, text: ground)
+                }
+            }
             DocCheck(checked: true, text: "The Clerk shall transmit the record to the Court of Appeals.")
         }
     }

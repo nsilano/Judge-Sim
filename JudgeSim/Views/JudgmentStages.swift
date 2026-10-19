@@ -1234,7 +1234,16 @@ struct JudgmentStage: View {
             }
 
             if let appeal = outcome.appealNotice {
-                Label(appeal, systemImage: "arrow.up.doc.fill").font(.callout).card()
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(appeal, systemImage: "arrow.up.doc.fill").font(.callout)
+                    if !outcome.appealGrounds.isEmpty {
+                        Text("Counsel says the appeal will argue:").font(.caption.weight(.bold))
+                        ForEach(Array(outcome.appealGrounds.enumerated()), id: \.offset) { index, ground in
+                            Text("\(index + 1). \(ground)").font(.caption).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .card()
             }
 
             if let ethics = outcome.ethicsResult {

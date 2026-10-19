@@ -18,6 +18,8 @@ struct AppealTracker: Identifiable, Codable {
     var result: String?
     var opinion: String?
     var followUps: [String] = []
+    /// What the appellant says the trial court got wrong (optional for older saves).
+    var grounds: [String]? = nil
 
     var isPending: Bool { decided == nil }
 
@@ -104,5 +106,6 @@ extension AppealTracker {
         result = try c.decodeIfPresent(String.self, forKey: .result)
         opinion = try c.decodeIfPresent(String.self, forKey: .opinion)
         followUps = try c.decodeIfPresent([String].self, forKey: .followUps) ?? []
+        grounds = try c.decodeIfPresent([String].self, forKey: .grounds)
     }
 }

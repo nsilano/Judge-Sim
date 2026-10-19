@@ -87,6 +87,10 @@ struct CaseReviewSheet: View {
         }
         SectionTitle(text: "The defendant", icon: "person.fill")
         DefendantCard(defendant: c.defendant, county: session.county)
+        if let victim = VictimProfiles.make(c, county: session.county) {
+            SectionTitle(text: "The victim", icon: "person.crop.circle.badge.exclamationmark")
+            VictimCard(victim: victim)
+        }
         SectionTitle(text: "Procedural posture", icon: "doc.plaintext")
         BulletList(items: c.proceduralNotes, symbol: "circle.fill").font(.callout).card()
         if let twist = c.twist {
@@ -323,5 +327,66 @@ struct DefendantProfileView: View {
                 if !text.hasSuffix(".") { text += "." }
                 return text
             }
+    }
+}
+
+/// The victim's profile: who they are, their history with the defendant, what the offense cost them, and what they want.
+struct VictimCard: View {
+    let victim: VictimProfile
+    @State private var tab: Tab = .life
+
+    enum Tab: String, CaseIterable, Identifiable {
+        case life = "Life", harm = "Impact", record = "Record"
+        var id: String { rawValue }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: victim.deceased ? "person.crop.square.filled.and.at.rectangle" : "person.crop.square")
+                    .font(.system(size: 40))
+                    .foregroundStyle(Theme.prosecution)
+                VStack(alignment: .leading) {
+                    Text(victim.name).font(.title3.weight(.bold))
+                    Text([victim.age.map { "Age \($0)" }, victim.gender.label, victim.deceased ? "Deceased" : nil].compactMap { $0 }.joined(separator: " · "))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Picker("Victim", selection: $tab) {
+                ForEach(Tab.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+
+            switch tab {
+            case .life:
+                Label(victim.occupation, systemImage: "briefcase.fill").font(.callout)
+                Label(victim.residence, systemImage: "mappin.and.ellipse").font(.callout)
+                Label(victim.family, systemImage: "house.fill").font(.callout)
+                Label(victim.relationship, systemImage: "link").font(.callout)
+            case .harm:
+                ForEach(Array(victim.harm.enumerated()), id: \.offset) { _, line in
+                    Label(line, systemImage: "bandage.fill").font(.callout)
+                }
+                if let position = victim.position {
+                    Text("Position on sentencing").font(.caption.weight(.bold)).foregroundStyle(Theme.prosecution)
+                    Text(position).font(.callout)
+                }
+                if let impact = victim.impactStatement {
+                    Text("Victim impact statement").font(.caption.weight(.bold)).foregroundStyle(Theme.prosecution)
+                    Text(impact).font(.system(.callout, design: .serif)).italic()
+                }
+            case .record:
+                Label(victim.record, systemImage: "doc.text.magnifyingglass").font(.callout)
+                Label(victim.testified, systemImage: "person.wave.2.fill").font(.callout)
+                if !victim.inTheFile.isEmpty {
+                    Text("In the case file").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                    ForEach(Array(victim.inTheFile.enumerated()), id: \.offset) { _, line in
+                        Text(line).font(.callout).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+        .card()
     }
 }

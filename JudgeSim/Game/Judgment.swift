@@ -408,6 +408,8 @@ struct CaseOutcome {
     var violations: [SupervisionViolation] = []
     /// Each contested ruling, with how an appellate court would see it.
     var rulingNotes: [RulingNote] = []
+    /// What the appellant says the court got wrong, strongest arguments first.
+    var appealGrounds: [String] = []
 }
 
 /// One ruling the judge made at trial and what the law says about it, shown once judgment is entered.
@@ -1972,7 +1974,50 @@ enum Judgment {
                            appealNotice: appealNotice, reactions: reactions, news: news, ethicsResult: ethicsResult,
                            pending: pending, appearanceSummary: appearance, releaseBasis: releaseBasis,
                            continuedPostRelease: continuedPostRelease, newPostRelease: newPostRelease,
-                           violations: violationsFound, rulingNotes: rulingNotes(c, r))
+                           violations: violationsFound, rulingNotes: rulingNotes(c, r),
+                           appealGrounds: appealGrounds(c, r, issues: issueDetails, byState: (appealNotice ?? "").contains("The State")))
+    }
+
+    /// The assignments of error an appellant would brief: the rulings that went against them, the ones an appellate
+    /// court would likely find wrong listed first, and any unlawful part of the sentence.
+    static func appealGrounds(_ c: CourtCase, _ r: Rulings, issues: [LegalIssue], byState: Bool) -> [String] {
+        if byState {
+            let speedy = c.motions.contains { $0.kind == .dismissSpeedyTrial && r.motions[$0.id] == true }
+            var grounds = issues.filter { !$0.againstDefendant }.map { "The sentence: \($0.text)" }
+            if speedy { grounds.insert("You dismissed the charges for a speedy-trial violation. The State argues the delay didn't violate the Sixth Amendment under Barker v. Wingo.", at: 0) }
+            return grounds
+        }
+        var strong: [String] = []
+        var lesser: [String] = []
+        func add(_ text: String, error: Bool) { if error { strong.append(text) } else { lesser.append(text) } }
+        for m in c.motions where r.motions[m.id] == false {
+            let target = c.evidence(m.targetEvidenceID).map { " (\($0.exhibit), \($0.title.lowercased()))" } ?? ""
+            add("You denied the \(m.kind.title.lowercased())\(target).", error: m.shouldGrant)
+        }
+        for o in c.objections {
+            guard let sustained = r.objections[o.id] else { continue }
+            let question = o.question.replacingOccurrences(of: "Prosecutor: ", with: "").replacingOccurrences(of: "Defense: ", with: "")
+            if o.raisedBy == .defense && !sustained {
+                add("You overruled the defense's objection (\(o.grounds.lowercased())) to the question \(question)", error: o.shouldSustain)
+            } else if o.raisedBy == .prosecution && sustained {
+                add("You sustained the State's objection (\(o.grounds.lowercased())) and kept out the answer to \(question)", error: !o.shouldSustain)
+            }
+        }
+        let state = stateStrength(c)
+        for charge in c.charges {
+            guard let verdict = r.verdicts[charge.id], verdict == .guilty || verdict == .lesser else { continue }
+            let supported = isSupported(verdict, charge: charge, strength: state)
+            if r.halftime[charge.id] == .deny || r.halftime[charge.id] == .lesserOnly {
+                add("You denied the motion to dismiss Count \(charge.count) (\(charge.law.title)) at the close of the State's evidence.", error: !supported)
+            } else if !supported {
+                add("The evidence was insufficient to convict on Count \(charge.count) (\(charge.law.title)).", error: true)
+            }
+        }
+        for issue in issues where issue.againstDefendant { strong.append("The sentence: \(issue.text)") }
+        let grounds = strong + lesser
+        return grounds.isEmpty
+            ? ["The defense argues the verdict is against the weight of the evidence and preserves every ruling for review. No single ruling is singled out."]
+            : Array(grounds.prefix(5))
     }
 
     /// Every motion, objection, and halftime motion the judge ruled on, and how the ruling would hold up.
