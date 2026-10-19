@@ -497,16 +497,31 @@ struct CourthouseView: View {
 
 struct RecordsView: View {
     @EnvironmentObject private var game: GameState
-    @State private var section = 5
+    @State private var section = 0
     @State private var confirmReset = false
+    /// The stat tapped in the bar at the top of Cases; its list replaces the ledger until tapped again.
+    @State private var focus: StatFocus?
+    @State private var sort: PeopleSort = .recent
+
+    enum StatFocus: String {
+        case cases, hearings, custody, probation
+
+        var title: String {
+            switch self {
+            case .cases: return "Cases heard"
+            case .hearings: return "Violation hearings"
+            case .custody: return "In custody now"
+            case .probation: return "On probation now"
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 Picker("Records", selection: $section) {
-                    Text("Overview").tag(5)
-                    Text("Calendar").tag(3)
                     Text("Cases").tag(0)
+                    Text("Calendar").tag(3)
                     Text("Appeals").tag(4)
                     Text("People").tag(1)
                     Text("News").tag(2)
@@ -515,7 +530,6 @@ struct RecordsView: View {
                 .listRowBackground(Color.clear)
 
                 switch section {
-                case 5: overviewSection
                 case 0: casesSection
                 case 1: peopleSection
                 case 3: calendarSection
@@ -585,50 +599,70 @@ struct RecordsView: View {
     }
 
     @ViewBuilder
-    private var overviewSection: some View {
-        let people = game.people
+    private var casesSection: some View {
         Section {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                StatTile(value: game.trialsHeard, label: "Cases", icon: "hammer.fill") {
-                    CaseRecordListView(title: "Cases heard", kind: "trial")
-                }
-                StatTile(value: game.hearingsHeard, label: "Hearings", icon: "person.badge.clock.fill") {
-                    CaseRecordListView(title: "Violation hearings", kind: "hearing")
-                }
-                StatTile(value: game.history.filter { $0.resolvedKind == "calendar" }.count, label: "Calendar calls", icon: "list.bullet.rectangle.portrait.fill") {
-                    CaseRecordListView(title: "Calendar calls", kind: "calendar")
-                }
-                StatTile(value: people.filter { $0.status == .incarcerated }.count, label: "In custody", icon: "lock.fill", tint: .red) {
-                    PeopleListView(filter: .custody)
-                }
-                StatTile(value: people.filter { $0.status == .probation }.count, label: "On probation", icon: "person.badge.clock.fill", tint: .orange) {
-                    PeopleListView(filter: .probation)
-                }
-                StatTile(value: people.filter { PeopleFilter.postRelease.includes($0, game: game) }.count, label: "Post-release", icon: "figure.walk.departure", tint: .orange) {
-                    PeopleListView(filter: .postRelease)
-                }
-                StatTile(value: awaitingTrialCount, label: "Awaiting trial", icon: "calendar.badge.clock") {
-                    AwaitingTrialView()
-                }
-                StatTile(value: people.filter { PeopleFilter.returning.includes($0, game: game) }.count, label: "Returning", icon: "arrow.uturn.left", tint: .purple) {
-                    PeopleListView(filter: .returning)
-                }
-                StatTile(value: game.appeals.filter(\.isPending).count, label: "Appeals pending", icon: "building.columns.fill", tint: .orange) {
-                    PeopleListView(filter: .appeals)
-                }
-                StatTile(value: people.count, label: "Everyone", icon: "person.3.fill") {
-                    PeopleListView(filter: .all)
-                }
-                StatTile(value: people.filter { PeopleFilter.violations.includes($0, game: game) }.count, label: "With violations", icon: "exclamationmark.triangle.fill", tint: .orange) {
-                    PeopleListView(filter: .violations)
-                }
-                StatTile(value: game.stats.exonerations, label: "Exonerations", icon: "lock.open.fill") {
-                    PeopleListView(filter: .exonerated)
+            HStack {
+                stat("\(game.trialsHeard)", "Cases", .cases)
+                Spacer()
+                stat("\(game.hearingsHeard)", "Hearings", .hearings)
+                Spacer()
+                stat("\(game.people.filter { $0.status == .incarcerated }.count)", "In custody", .custody)
+                Spacer()
+                stat("\(game.people.filter { $0.status == .probation }.count)", "On probation", .probation)
+            }
+        } footer: {
+            Text(focus == nil ? "Tap a number to see who or what it counts." : "Tap it again to go back.")
+        }
+        if let focus {
+            focusSection(focus)
+        } else {
+            ledgerAndHistory
+        }
+    }
+
+    /// The list behind a number in the bar, right here on the same screen.
+    @ViewBuilder
+    private func focusSection(_ focus: StatFocus) -> some View {
+        switch focus {
+        case .cases, .hearings:
+            let records = game.history.filter { $0.resolvedKind == (focus == .cases ? "trial" : "hearing") }
+            Section(focus.title) {
+                if records.isEmpty { Text("None yet.").foregroundStyle(.secondary) }
+                ForEach(records) { record in
+                    NavigationLink { CaseRecordDetail(record: record) } label: { DocketIndexRow(record: record) }
                 }
             }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets())
+        case .custody, .probation:
+            let people = sort.sorted(game.people.filter { $0.status == (focus == .custody ? .incarcerated : .probation) })
+            Section {
+                if people.isEmpty { Text("No one right now.").foregroundStyle(.secondary) }
+                ForEach(people) { person in
+                    NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
+                }
+            } header: {
+                sortHeader(focus.title)
+            }
         }
+    }
+
+    /// A section title with a sort menu beside it.
+    private func sortHeader(_ title: String) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Menu {
+                Picker("Sort", selection: $sort) {
+                    ForEach(PeopleSort.allCases) { Text($0.label).tag($0) }
+                }
+            } label: {
+                Label("Sort", systemImage: "arrow.up.arrow.down").font(.caption.weight(.semibold))
+            }
+            .textCase(nil)
+        }
+    }
+
+    @ViewBuilder
+    private var ledgerAndHistory: some View {
         Section {
             DisclosureGroup("Career ledger") {
             let trials = game.history.filter { $0.resolvedKind == "trial" }
@@ -652,18 +686,6 @@ struct RecordsView: View {
             ledgerRow("Exonerations", s.exonerations)
             }
         }
-    }
-
-    private var awaitingTrialCount: Int {
-        let thisWeek = (game.today?.entries ?? []).filter { entry in
-            if case .trial = entry.matter { return entry.isOpen }
-            return false
-        }.count
-        return thisWeek + game.scheduled.filter { if case .trial = $0.entry.matter { return true } else { return false } }.count
-    }
-
-    @ViewBuilder
-    private var casesSection: some View {
         Section("Docket history") {
             if game.history.isEmpty {
                 Text("No cases heard yet.").foregroundStyle(.secondary)
@@ -680,66 +702,28 @@ struct RecordsView: View {
 
     @ViewBuilder
     private var peopleSection: some View {
-        Section {
-            ForEach(PeopleFilter.allCases) { filter in
-                let count = game.people.filter { filter.includes($0, game: game) }.count
-                NavigationLink {
-                    PeopleListView(filter: filter)
-                } label: {
-                    HStack {
-                        Label(filter.label, systemImage: filter.icon)
-                        Spacer()
-                        Text("\(count)").font(.callout.monospacedDigit().weight(.semibold)).foregroundStyle(.secondary)
-                    }
-                }
-            }
-        } header: {
-            Text("Browse")
-        } footer: {
-            Text("Each list can be searched and sorted.")
+        let sentenced = game.people.filter { person in
+            (person.status != .free || person.postRelease != nil)
+                && (person.priors.contains { $0.fromThisCourt } || (person.probation?.imposedInThisCourt ?? false))
         }
-        let soon = CourtCalendar.calendar.date(byAdding: .day, value: 45, to: game.currentDate) ?? game.currentDate
-        let attention = game.people.filter { p in
-            (p.status == .incarcerated && (p.releaseDate ?? .distantFuture) <= soon)
-                || (p.status == .probation && (p.probation?.ends ?? .distantFuture) <= soon)
-                || (p.postRelease.map { $0.ends <= soon } ?? false)
-        }
-        if !attention.isEmpty {
-            Section("Coming up in the next six weeks") {
-                ForEach(PeopleSort.release.sorted(attention).prefix(8)) { person in
+        if !sentenced.isEmpty {
+            Section {
+                ForEach(sort.sorted(sentenced)) { person in
                     NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
                 }
+            } header: {
+                sortHeader("Serving a sentence you imposed")
             }
         }
-        Section("Recently in your court") {
-            if game.people.isEmpty { Text("No one yet.").foregroundStyle(.secondary) }
-            ForEach(PeopleSort.recent.sorted(game.people).prefix(10)) { person in
+        Section {
+            if game.people.isEmpty {
+                Text("No one yet.").foregroundStyle(.secondary)
+            }
+            ForEach(sort.sorted(game.people)) { person in
                 NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
             }
-        }
-    }
-
-    /// "26 CRS 001234 · Offense" for the sentence the person is serving.
-    private func sentenceLine(_ person: PersonRecord) -> String? {
-        if person.status == .probation, let term = person.probation {
-            return "\(term.docket) · \(term.offense)"
-        }
-        if person.status == .free, let prs = person.postRelease {
-            return "\(prs.docket) · \(prs.offense)"
-        }
-        guard let prior = person.priors.last(where: \.fromThisCourt) else { return nil }
-        return [prior.docket, prior.offense].compactMap { $0 }.joined(separator: " · ")
-    }
-
-    private func statusLine(_ person: PersonRecord) -> String {
-        switch person.status {
-        case .incarcerated:
-            guard let release = person.releaseDate else { return "In custody" }
-            return release == .distantFuture ? "Life without parole" : "Release projected \(SentenceFormat.shortDate(release))"
-        case .probation:
-            return person.probation.map { "Probation ends \(SentenceFormat.shortDate($0.ends))" } ?? "On probation"
-        case .free:
-            return person.postRelease.map { "Post-release supervision ends \(SentenceFormat.shortDate($0.ends))" } ?? ""
+        } header: {
+            sortHeader("Everyone who has appeared before you")
         }
     }
 
@@ -785,11 +769,18 @@ struct RecordsView: View {
         }
     }
 
-    private func stat(_ value: String, _ label: String) -> some View {
-        VStack {
-            Text(value).font(.system(.title3, design: .rounded).weight(.bold))
-            Text(label).font(.caption2).foregroundStyle(.secondary)
+    /// One number in the bar. Borderless, so each one in the row is its own button.
+    private func stat(_ value: String, _ label: String, _ target: StatFocus) -> some View {
+        Button {
+            withAnimation { focus = focus == target ? nil : target }
+        } label: {
+            VStack {
+                Text(value).font(.system(.title3, design: .rounded).weight(.bold))
+                    .foregroundStyle(focus == target ? Theme.gold : Color.primary)
+                Text(label).font(.caption2).foregroundStyle(focus == target ? Theme.gold : Color.secondary)
+            }
         }
+        .buttonStyle(.borderless)
     }
 
     private func statusColor(_ status: PersonRecord.Status) -> Color {
