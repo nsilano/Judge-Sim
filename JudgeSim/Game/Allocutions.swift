@@ -309,7 +309,7 @@ enum Allocutions {
                                      "The State isn't asking the court to throw away the key. We're asking for a sentence that fits the conduct."]))
         }
         if let factor = f.aggravating.first {
-            reasons.append("The evidence supports the aggravating factor: \(factor.prefix(1).lowercased() + factor.dropFirst()).")
+            reasons.append("The evidence supports the aggravating factor: \(factor.prefix(1).lowercased() + String(factor.dropFirst())).")
         }
         switch f.category {
         case .drugs: reasons.append(rng.pick(["What \(f.last) sold ended up in this county's neighborhoods.", "The overdose numbers in this county aren't an abstraction."]))
@@ -341,7 +341,7 @@ enum Allocutions {
     static func stateArgument(_ c: CourtCase, request: String, plea: Bool, salt: UInt64 = 0) -> String {
         var rng = SeededRNG(seed: c.seed ^ 0xB3A7 ^ salt)
         let opener = rng.pick(["", "Judge, ", "Your Honor, ", "Briefly, Judge. ", "The State's position is simple. "])
-        let body = opener.isEmpty ? request : opener + request.prefix(1).lowercased() + request.dropFirst()
+        let body = opener.isEmpty ? request : opener + request.prefix(1).lowercased() + String(request.dropFirst())
         return body + " " + stateReasons(c, plea: plea, salt: salt)
     }
 
