@@ -1362,6 +1362,12 @@ final class GameState: ObservableObject {
         docketSequence += rng.int(30...420)
         recentTemplates.append(newCase.templateKey)
         if let signature = newCase.scenarioSignature { usedSignatures.append(signature) }
+        // Written stories stay on the list for good so none repeats; older generated scenarios age off.
+        let generated = usedSignatures.filter { !$0.hasPrefix("story.") }
+        if generated.count > 1_500 {
+            let drop = Set(generated.prefix(generated.count - 1_500))
+            usedSignatures.removeAll { drop.contains($0) && !$0.hasPrefix("story.") }
+        }
         if recentTemplates.count > 8 { recentTemplates.removeFirst(recentTemplates.count - 8) }
 
         // Calendar-call matters and warrant cases aren't trials set before this judge; no "charged again" story for them.

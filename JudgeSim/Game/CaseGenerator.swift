@@ -34,7 +34,12 @@ enum CaseGenerator {
         var rng = SeededRNG(seed: seed)
         var pool = CaseTemplates.all
         // Written cases come up first, until each has been heard once.
-        var unheardStories = StoryCases.all.filter { story in !context.usedSignatures.contains { $0.hasPrefix(story.key + "|") } }
+        // How many times each template has been heard, counted once rather than per template.
+        var useCounts: [String: Int] = [:]
+        for signature in context.usedSignatures {
+            if let bar = signature.firstIndex(of: "|") { useCounts[String(signature[..<bar]), default: 0] += 1 }
+        }
+        var unheardStories = StoryCases.all.filter { useCounts[$0.key] == nil }
         if !context.allowMurder { unheardStories.removeAll(where: isMurder) }
         if context.returning == nil, context.storySlot, !unheardStories.isEmpty {
             // Murder trials come up now and then, not every week: most draws go to another kind of case.
@@ -78,9 +83,7 @@ enum CaseGenerator {
             }
         }
         // Rotate through the kinds of cases in proportion to their weight before any repeats.
-        func uses(_ template: CaseTemplate) -> Int {
-            context.usedSignatures.filter { $0.hasPrefix(template.key + "|") }.count
-        }
+        func uses(_ template: CaseTemplate) -> Int { useCounts[template.key] ?? 0 }
         func score(_ template: CaseTemplate) -> Double { Double(uses(template) + 1) / weight(template) }
         let lowest = pool.map(score).min() ?? 0
         var choices = pool.filter { score($0) <= lowest + 0.0001 }
@@ -803,6 +806,10 @@ enum CaseGenerator {
             case .none:
                 stanceDetail = "There's no identified victim in this case."
             }
+        } else if t.story != nil && !t.victimImpacts.isEmpty {
+            // No single named victim, but people were hurt, and their statements are in the file.
+            stance = .wantsAccountability
+            stanceDetail = "There isn't one named victim in this case, Judge, but people were hurt by it. The statements from those affected are in the sentencing file, and they want it taken seriously."
         } else {
             stance = .none
             stanceDetail = "There's no individual victim in this case, Judge."
