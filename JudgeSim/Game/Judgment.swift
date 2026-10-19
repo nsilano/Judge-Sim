@@ -819,7 +819,8 @@ enum Judgment {
         let convictedUnits = units(c, r)
         guard !convictedUnits.isEmpty else { return [] }
         let provenPriors = c.defendant.priors.filter { !r.priorsNotProven.contains($0.id) }
-        for charge in c.charges where r.arrestedCounts.contains(charge.id) && !BenchConference.stateConsents(c, r, charge: charge) {
+        for charge in c.charges where r.arrestedCounts.contains(charge.id) && !BenchConference.stateConsents(c, r, charge: charge)
+            && !BenchConference.merges(c, r, charge: charge) {
             add("Judgment arrested on Count \(charge.count) over the State's objection, without a merger or other legal basis.", against: false, term: true)
         }
 
