@@ -100,7 +100,15 @@ enum CaseComplexity {
     }
 
     /// Picks extra counts that fit the template, so more cases carry several charges.
-    static func pickAddOns(for t: CaseTemplate, hasFelonyPrior: Bool, existing: Set<String>, rng: inout SeededRNG) -> [AddOn] {
+    /// Officers, deputies, and troopers may carry concealed (G.S. 14-269(b)), so a concealed-weapon count never fits them.
+    static func isLawEnforcement(_ occupation: String) -> Bool {
+        let o = occupation.lowercased()
+        return ["police", "officer", "deputy", "trooper", "sheriff", "detective", "sergeant", "lieutenant", "corporal", "agent"].contains { o.contains($0) }
+            && !o.contains("probation") && !o.contains("loan") && !o.contains("compliance")
+    }
+
+    static func pickAddOns(for t: CaseTemplate, hasFelonyPrior: Bool, existing: Set<String>, lawEnforcement: Bool = false,
+                           rng: inout SeededRNG) -> [AddOn] {
         let fitting = addOns.filter { addOn in
             addOn.categories.contains(t.category)
                 && !existing.contains(addOn.lawID)
@@ -108,6 +116,7 @@ enum CaseComplexity {
                 && !addOn.excludedKeys.contains(t.key)
                 && (!addOn.needsVictim || t.hasVictim)
                 && (!addOn.needsFelonyPrior || hasFelonyPrior)
+                && !(lawEnforcement && addOn.lawID == "concealedWeapon")
                 // A defendant can't be convicted of both stealing goods and possessing the same stolen goods (State v. Perry).
                 && !(addOn.lawID == "possStolen" && ([t.primaryLaw, t.lesserLaw ?? ""] + Array(existing)).contains { takes($0) })
         }

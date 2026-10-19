@@ -356,8 +356,11 @@ struct SentencingStage: View {
                         ForEach(convictedCharges) { charge in
                             let arrested = session.rulings.arrestedCounts.contains(charge.id)
                             let consents = BenchConference.stateConsents(c, session.rulings, charge: charge)
+                            let merges = BenchConference.merges(c, session.rulings, charge: charge)
                             ChoiceRow(title: (arrested ? "Judgment arrested: " : "Arrest judgment on ") + "Count \(charge.count)",
-                                      subtitle: consents ? "The State consents." : "The State objects; arresting judgment here would be appealable.",
+                                      subtitle: consents ? "The State consents."
+                                        : (merges ? "The State objects, but this count merges with the lead count; arresting judgment is proper."
+                                                  : "The State objects; arresting judgment here would be appealable."),
                                       selected: arrested) {
                                 session.toggleArrest(charge)
                             }

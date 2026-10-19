@@ -272,7 +272,9 @@ enum CaseGenerator {
         }
         // Extra counts the facts support
         let addOns = CaseComplexity.pickAddOns(for: t, hasFelonyPrior: defendant.priors.contains { $0.ncClass.isFelony },
-                                               existing: Set(charges.map(\.lawID)), rng: &rng).filter { _ in t.story == nil }
+                                               existing: Set(charges.map(\.lawID)),
+                                               lawEnforcement: CaseComplexity.isLawEnforcement(defendant.occupation),
+                                               rng: &rng).filter { _ in t.story == nil }
 
         // Sometimes the State indicts a whole series of incidents: a big case with 7 to 9 counts.
         var seriesCount = 0
