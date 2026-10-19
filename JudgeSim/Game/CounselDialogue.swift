@@ -390,7 +390,8 @@ enum CounselDialogue {
 
         q.append(CounselQuestion(id: "sen.state.rec", side: .prosecution,
                                  question: "What sentence is the State requesting?",
-                                 answer: recommendation(c, side: .prosecution, units: units, rulings: r)))
+                                 answer: recommendation(c, side: .prosecution, units: units, rulings: r)
+                                    + " " + Allocutions.stateReasons(c, plea: r.pleaAccepted == true, salt: 0x51)))
         q.append(CounselQuestion(id: "sen.state.restitution", side: .prosecution,
                                  question: "Is the State seeking restitution?",
                                  answer: s.opener + (bg.restitution > 0
