@@ -270,7 +270,7 @@ enum ContinuanceMotions {
         let ada = c.prosecutor
         let defense = c.defenseAttorney.components(separatedBy: ",").first ?? c.defenseAttorney
         let agency = c.investigatingAgency
-        let jailed = (c.background?.custodyDays ?? 0) > 0
+        let jailed = c.background?.isJailed ?? false
         let weeks = rng.int(3...6)
         let stateEvidence = c.evidence.filter { $0.side == .prosecution }
         let place = rng.pick(["the convenience store across the street", "the apartment complex's front office", "a neighbor's doorbell camera",
@@ -318,7 +318,7 @@ enum ContinuanceMotions {
             let lawyer = movant == .prosecution ? ada : defense
             return ContinuanceMotion(
                 movant: movant, title: "Witness under subpoena unavailable",
-                argument: "\(lawyer): \"We move to continue, Your Honor. \(who) \(why). The testimony is material, we've used due diligence to secure it, and we expect the witness to be available at the next setting.\"",
+                argument: "\(lawyer): \"We move to continue, Your Honor. \(who.capitalizedFirst) \(why). The testimony is material, we've used due diligence to secure it, and we expect the witness to be available at the next setting.\"",
                 opposition: movant == .prosecution
                     ? "\(defense): \"We object. \(speedyObjection) The State could have taken a deposition or arranged remote testimony.\""
                     : "\(ada): \"The State opposes. Our witnesses took off work again to be here, and the victim wants this resolved.\"",

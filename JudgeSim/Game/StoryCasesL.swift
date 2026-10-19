@@ -305,7 +305,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "accessingComputers", specification: "Accessed the department's camera system to destroy records for an unauthorized purpose.", chance: 1.0, threshold: 3)
         ],
-        ageRange: 32...50, occupations: ["police sergeant"], hasVictim: false,
+        ageRange: 32...50, occupations: ["police sergeant"], hasVictim: true,
         summaries: [
             "On {DATE}, Port Hollis officers arrested {V} outside a convenience store; {VL} later complained that an officer slammed {V.his} head against the patrol car. When internal affairs requested the footage, the body camera video from that arrest was gone. The camera system's audit log shows the video was deleted at 2:14 a.m. the next morning from a desktop login belonging to {D}, the shift sergeant, who was not the arresting officer. {DL} says {D.he} was bulk-clearing \"non-evidentiary\" recordings, which the system allows sergeants to do, and the arrest video was miscategorized."
         ],

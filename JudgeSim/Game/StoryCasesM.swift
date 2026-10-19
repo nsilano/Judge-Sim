@@ -347,7 +347,7 @@ extension StoryCases {
                             .cross("Those earrings were sold at mall kiosks all over the state?", "\"Probably. These were hers.\""),
                             .cross("How can you tell this one is hers and not an identical one?", "\"One of the stones was chipped. This one's chipped.\"")
                         ]),
-            WitnessSeed(name: "{DET}", role: "SBI agent",
+            WitnessSeed(name: nil, role: "SBI agent",
                         direct: ["\"{DL}'s truck was at both stops when both women vanished.\""],
                         cross: ["\"Hundreds of trucks were there.\""],
                         weight: 3, lay: false,

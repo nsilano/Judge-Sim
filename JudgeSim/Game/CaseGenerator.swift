@@ -205,7 +205,7 @@ enum CaseGenerator {
             "D": defendant.name,
             "DL": defendant.lastName,
             "DA": "\(defendant.age)",
-            "DO": defendant.occupation.lowercased(),
+            "DO": defendant.occupation.lowercasedPhrase,
             "DET": detective.display,
             "OFF": officer.display,
             "TROOPER": setting == .road ? detective.display : "Trooper \(trooperName)",
@@ -447,18 +447,40 @@ enum CaseGenerator {
         // An eyewitness identification the defense attacks.
         if t.story == nil, rng.chance(0.6),
            let id = evidence.first(where: { $0.side == .prosecution && ["lineup", "identif", "show-up", "photo array"].contains(where: $0.title.lowercased().contains) }) {
-            motions.append(makeMotion(rng.pick(GenericPools.identificationSeeds), target: id.id, targetTitle: id.title, fill: fill))
+            // A lineup motion argues about a lineup; a show-up motion about a show-up.
+            let title = id.title.lowercased()
+            let showUp = title.contains("show-up")
+            let lineup = title.contains("lineup") || title.contains("photo array")
+            let seeds = GenericPools.identificationSeeds.filter { seed in
+                let isShowUp = seed.facts.contains("detained") || seed.facts.contains("drove the witness past")
+                return showUp ? isShowUp : (lineup ? !isShowUp : true)
+            }
+            motions.append(makeMotion(rng.pick(seeds.isEmpty ? GenericPools.identificationSeeds : seeds), target: id.id, targetTitle: id.title, fill: fill))
         }
         // Other acts the State wants to use.
         if t.story == nil, rng.chance(0.5),
            let prior = evidence.first(where: { $0.side == .prosecution && ["prior", "previous", "earlier", "history"].contains(where: $0.title.lowercased().contains) }) {
-            motions.append(makeMotion(rng.pick(GenericPools.priorActsSeeds), target: prior.id, targetTitle: prior.title, fill: fill))
+            // Each fact pattern needs what it talks about: a victim to threaten, or a break-in on the record.
+            let brokeIn = defendant.priors.contains { ["break", "burglary"].contains(where: $0.offense.lowercased().contains) }
+            let seeds = GenericPools.priorActsSeeds.filter { seed in
+                if seed.facts.contains("{V}") { return t.hasVictim }
+                if seed.facts.contains("break-in") { return brokeIn }
+                return true
+            }
+            motions.append(makeMotion(rng.pick(seeds), target: prior.id, targetTitle: prior.title, fill: fill))
         }
         // Now and then, a count on a defective indictment.
         if t.story == nil, charges.count > 1, rng.chance(0.12), let count = charges.dropFirst().randomElement(using: &rng) {
             let countFill = TextFiller(values: values.merging(["COUNT": "\(count.count)"]) { a, _ in a })
             // The owner-allegation defect only arises on a larceny count.
-            let seeds = GenericPools.indictmentSeeds.filter { !$0.facts.contains("Dollar Mart") || count.lawID.lowercased().contains("larceny") }
+            let law = count.lawID.lowercased()
+            let takes = law.contains("larceny") || law.contains("robbery") || law.contains("embezzle")
+            let seeds = GenericPools.indictmentSeeds.filter { seed in
+                if seed.facts.contains("Dollar Mart") { return law.contains("larceny") && !t.hasVictim }
+                if seed.facts.contains("permanently deprive") { return takes }
+                if seed.facts.contains("victim's") { return t.hasVictim }
+                return true
+            }
             var motion = makeMotion(rng.pick(seeds), target: nil, targetTitle: nil, fill: countFill)
             motion.targetChargeID = count.id
             motions.append(motion)
@@ -513,7 +535,7 @@ enum CaseGenerator {
         } else {
             mitigating.removeAll(where: aboutRecord)
         }
-        if !defendant.occupation.lowercased().contains("unemployed") && rng.chance(0.5) {
+        if !defendant.occupation.lowercasedPhrase.contains("unemployed") && rng.chance(0.5) {
             mitigating.append("The defendant has a positive employment history and is gainfully employed")
         }
         var mood = rng.pick(t.moods)

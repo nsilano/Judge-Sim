@@ -1033,7 +1033,7 @@ extension Testimony {
         func r(_ q: String, _ a: String) { ex.append(.init(phase: .redirect, examiner: .defense, question: q, answer: a)) }
 
         // Who
-        let occupation = ctx.defendant.occupation.lowercased()
+        let occupation = ctx.defendant.occupation.lowercasedPhrase
         let work: String
         if occupation.contains("unemployed") { work = "I'm between jobs right now." }
         else if occupation.hasPrefix("retired") { work = "I'm \(occupation)." }

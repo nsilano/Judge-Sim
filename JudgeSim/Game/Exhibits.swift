@@ -231,6 +231,7 @@ enum Exhibits {
             current.append(ch)
             if ch == "\"" || ch == "\u{201C}" || ch == "\u{201D}" { inQuote.toggle() }
             let next = i + 1 < chars.count ? chars[i + 1] : " "
+            if !inQuote && ch == "." && next == " " && endsWithAbbreviation(current, following: i + 2 < chars.count ? chars[i + 2] : " ") { continue }
             if !inQuote && (ch == "." || ch == "!" || ch == "?") && next == " " {
                 let trimmed = current.trimmingCharacters(in: .whitespaces)
                 if !trimmed.isEmpty { result.append(trimmed) }
@@ -240,6 +241,18 @@ enum Exhibits {
         let trimmed = current.trimmingCharacters(in: .whitespaces)
         if !trimmed.isEmpty { result.append(trimmed) }
         return result
+    }
+
+    /// Titles and abbreviations that end in a period without ending the sentence: "Dr. Shah", "N.C. Gen. Stat.",
+    /// "9:40 a.m. on Friday". A time ends a sentence only when a capitalized word follows.
+    private static let titles: Set<String> = ["mr.", "mrs.", "ms.", "dr.", "st.", "jr.", "sr.", "no.", "v.", "vs.", "co.", "inc.", "lt.",
+                                              "sgt.", "det.", "ofc.", "capt.", "gen.", "stat.", "approx.", "e.g.", "i.e.", "n.c.", "u.s.", "g.s.", "rev.", "hon."]
+    private static func endsWithAbbreviation(_ text: String, following: Character) -> Bool {
+        let word = String(text.split(separator: " ").last ?? "").lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "(\"\u{201C}"))
+        if titles.contains(word) { return true }
+        if word == "a.m." || word == "p.m." { return !following.isUppercase }
+        // A middle initial: "John Q. Smith".
+        return word.count == 2 && word.first?.isLetter == true && text.split(separator: " ").last?.first?.isUppercase == true && following.isUppercase
     }
 
     /// Text inside double quotation marks.

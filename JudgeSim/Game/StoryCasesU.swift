@@ -15,7 +15,8 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "commonLawRobbery", specification: "Took $2,260 from a teller at the Hollis Federal Credit Union by passing a note threatening violence.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "commonLawRobbery", specification: "Took $4,000 from a teller at the Seaboard Savings branch in Wexley by passing a note threatening violence.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "dangerousRobbery", specification: "Took $1,880 from a teller at Coastal Trust while implying, by a hand in a jacket pocket, that he had a gun.", chance: 1.0, threshold: 0),
+            // A hand in a pocket is not a dangerous weapon (State v. Hinton, 361 N.C. 207 (2007)): common law robbery.
+            SecondaryCharge(lawID: "commonLawRobbery", specification: "Took $1,880 from a teller at Coastal Trust while implying, by a hand in a jacket pocket, that he had a gun.", chance: 1.0, threshold: 0),
         ],
         ageRange: 48...60, occupations: ["unemployed roofer"], forcedPriorOffenses: ["Common Law Robbery", "Breaking or Entering", "Possession of Stolen Goods"], hasVictim: true,
         summaries: [
@@ -280,7 +281,8 @@ extension StoryCases {
             defenseOpening: "A careful hunter and a terrible mistake.",
             prosecutionClosing: "You don't shoot what you can't see.",
             defenseClosing: "Culpable negligence means more than a mistake.",
-            genders: ["V": .male]
+            when: .months([11, 12, 1]),
+            genders: ["D": .male, "V": .male]
         )
     )
 

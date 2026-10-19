@@ -68,7 +68,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} ran a chop shop: {D.he} ordered trucks by model, paid thieves cash, ground off the VINs, and sold the parts."],
         defenseTheory: ["{DL} buys salvage from many sellers and had no reason to suspect these parts. The State's case rests on two thieves trying to save themselves."],
-        aggravating: ["The offense involved an actual loss of more than $100,000"],
+        aggravating: ["The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: ["The defendant has been gainfully employed", "The defendant has a support system in the community"],
         victimImpacts: ["{VL}: \"That truck was my business. I lost three weeks of contracts and my insurance doubled.\""],
         allocutions: ["\"I should have asked more questions about where the parts came from.\""],
@@ -241,7 +241,7 @@ extension StoryCases {
                             .cross("You've got eight prior convictions and you're getting a reduced sentence?", "\"Yes.\""),
                             .cross("Fentanyl was coming in through the mail too?", "\"Some. The good stuff came from {DL}.\"")
                         ]),
-            WitnessSeed(name: "{DET}", role: "SBI agent",
+            WitnessSeed(name: nil, role: "SBI agent",
                         direct: ["\"The drugs matched the car.\""],
                         cross: ["\"The mail room was a problem.\""],
                         weight: 3, lay: false,
@@ -429,7 +429,7 @@ extension StoryCases {
             E(.document, 1, "Device Uses", "The programmer is also used for legitimate repairs like replacing a cluster.")
         ],
         prosecutionWitnesses: [
-            WitnessSeed(name: "{DET}", role: "DMV License and Theft Bureau inspector",
+            WitnessSeed(name: nil, role: "DMV License and Theft Bureau inspector",
                         direct: ["\"The auction sheets prove it.\""],
                         cross: ["\"Others had access to the device.\""],
                         weight: 3, lay: false,

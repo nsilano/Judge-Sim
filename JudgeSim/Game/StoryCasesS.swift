@@ -117,7 +117,7 @@ extension StoryCases {
         ],
         ageRange: 18...18, occupations: ["high school senior"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V}, 18, was found dead in his pickup in a store parking lot in {HOOD}, poisoned by a gas-powered water pump running in the cab. He had struggled with depression for years. Hundreds of texts from his girlfriend, {D}, over the previous weeks pushed him to do it: \"You keep pushing it off and you say you'll do it but you never do,\" and \"Tonight is the night.\" That evening, {DL} was on the phone with him. She later texted a friend: \"I told him to get back in.\" She never called 911 or his family. The defense says {VL} had been planning his death long before, that words aren't a weapon, and that the First Amendment protects speech."
+            "On the night of {DATE}, {V}, 18, died in his pickup in a store parking lot in {HOOD}, found the next morning, poisoned by a gas-powered water pump running in the cab. He had struggled with depression for years. Hundreds of texts from his girlfriend, {D}, over the previous weeks pushed him to do it: \"You keep pushing it off and you say you'll do it but you never do,\" and \"Tonight is the night.\" That evening, {DL} was on the phone with him. She later texted a friend: \"I told him to get back in.\" She never called 911 or his family. The defense says {VL} had been planning his death long before, that words aren't a weapon, and that the First Amendment protects speech."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Texts Urging Suicide", "Messages over two weeks: \"Tonight is the night,\" \"You just need to do it,\" \"When are you doing it?\" and a plan for the pump.", .search),
@@ -212,10 +212,10 @@ extension StoryCases {
         ],
         ageRange: 20...22, occupations: ["college junior and fraternity pledge master"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V}, 19, a pledge at a fraternity near the university in {HOOD}, was made to run a \"gauntlet\" of drinking stations, downing nearly a bottle and a half of vodka in under two hours. His blood alcohol later measured 0.36. He fell headfirst down the basement stairs. Brothers carried him to a couch. The house's own security cameras show him struggling for twelve hours: falling, trying to stand, hitting his head again, while brothers walked past, one slapped him, and another poured liquid on him. No one called 911 until the next morning. He died of a ruptured spleen and brain injuries. {D}, the pledge master who organized the gauntlet, is one of several brothers charged. Someone deleted footage from the cameras after the death; the police recovered it."
+            "On {DATE}, {V}, 19, a pledge at a fraternity near the university in {HOOD}, was made to run a \"gauntlet\" of drinking stations, downing nearly a bottle and a half of vodka in under two hours. His blood alcohol later measured 0.36. He fell headfirst down the basement stairs. Brothers carried him to a couch. The house's own security cameras show him struggling for twelve hours: falling, trying to stand, hitting his head again, while brothers walked past. At one point {DL} slapped him and poured a cup of liquid on his face. No one called 911 until the next morning. He died of a ruptured spleen and brain injuries. {D}, the pledge master who organized the gauntlet, is one of several brothers charged. Someone deleted footage from the cameras after the death; the police recovered it."
         ],
         prosecutionEvidence: [
-            E(.video, 3, "House Security Video", "Twelve hours of footage: {VL} falling down the stairs, carried to a couch, falling repeatedly, a brother slapping him, and others stepping over him.", .search),
+            E(.video, 3, "House Security Video", "Twelve hours of footage: {VL} falling down the stairs, carried to a couch, falling repeatedly, {DL} slapping him and pouring liquid on him, and others stepping over him.", .search),
             E(.digital, 3, "Group Messages", "The pledge master's messages planning the gauntlet, and a 3 a.m. message: \"he's fine, just let him sleep it off.\"", .search),
             E(.forensic, 2, "Autopsy", "BAC estimated at 0.36; ruptured spleen and traumatic brain injury; death came after hours of internal bleeding."),
             E(.document, 2, "Deleted Footage", "The camera system's log shows footage deleted the day after, from an account {DL} used.")
@@ -330,7 +330,7 @@ extension StoryCases {
                             .cross("You're not being charged?", "\"No.\""),
                             .cross("You didn't call anyone during three weeks of national news?", "\"She begged me not to. I should have.\"")
                         ]),
-            WitnessSeed(name: "{DET}", role: "FBI agent",
+            WitnessSeed(name: nil, role: "FBI agent",
                         direct: ["\"The abductors never existed.\""],
                         cross: ["\"Her injuries were real.\""],
                         weight: 2, lay: false,
@@ -351,7 +351,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} staged her own abduction, cost the community months of fear and the government thousands of hours, and then took money meant for real crime victims."],
         defenseTheory: ["{DL} is a deeply ill woman. The false report charge is real, but the compensation claim came from a person who may have believed her own story."],
-        aggravating: ["The offense involved an actual loss of more than $10,000"],
+        aggravating: ["The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: ["No prior criminal record", "The defendant suffered from a mental condition that significantly reduced culpability"],
         victimImpacts: ["A volunteer searcher: \"I took two weeks off work to walk ditches looking for her. My kids were afraid to go outside.\""],
         allocutions: ["\"I'm ashamed of the pain I caused. I'm getting help. I'll pay back every dollar.\""],
@@ -479,7 +479,7 @@ extension StoryCases {
             defenseOpening: "A dangerous stranger, a highway, and a split second.",
             prosecutionClosing: "You don't chase what you're afraid of.",
             defenseClosing: "Honest fear, even if unreasonable, makes this manslaughter.",
-            genders: ["D": .male, "ALT": .female]
+            genders: ["D": .male, "V": .male, "ALT": .female]
         )
     )
 }

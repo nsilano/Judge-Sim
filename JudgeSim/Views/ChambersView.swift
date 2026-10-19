@@ -110,6 +110,7 @@ struct ChambersView: View {
     @State private var showSettings = false
     @State private var showLeave = false
     @State private var leaveWeeks = 2
+    @State private var confirmStepDown = false
 
     var body: some View {
         NavigationStack {
@@ -218,7 +219,7 @@ struct ChambersView: View {
                 Text("\(game.title) · \(game.county?.name ?? "")")
                     .font(.subheadline)
                     .foregroundStyle(Theme.gold)
-                Text("Week \(game.weekNumber) · " + SentenceFormat.date(game.currentDate) + (game.scheduled.isEmpty ? "" : " · \(game.scheduled.count) continued matter\(game.scheduled.count == 1 ? "" : "s") pending"))
+                Text("Week \(game.weekNumber) · " + SentenceFormat.date(game.currentDate) + (game.scheduled.isEmpty ? "" : " · \(game.scheduled.count) matter\(game.scheduled.count == 1 ? "" : "s") set for later weeks"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -281,7 +282,7 @@ struct ChambersView: View {
                             }
                             Spacer()
                             if entry.isOpen {
-                                Text(entry.status == .inProgress ? (entry.resume == nil ? "Start over" : "Resume") : "~\(entry.estimatedMinutes / 60 > 0 ? "\(entry.estimatedMinutes / 60)h " : "")\(entry.estimatedMinutes % 60)m")
+                                Text(entry.status == .inProgress ? (entry.resume == nil ? "Start over (+30m)" : "Resume") : "~\(entry.estimatedMinutes / 60 > 0 ? "\(entry.estimatedMinutes / 60)h " : "")\(entry.estimatedMinutes % 60)m")
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(.secondary)
                             }
@@ -338,12 +339,18 @@ struct ChambersView: View {
                 withAnimation { game.continueAsEmergencyJudge() }
             }
             Button(role: .destructive) {
-                withAnimation { game.resetCareer() }
+                confirmStepDown = true
             } label: {
                 Label("Step Down and Start a New Career", systemImage: "arrow.counterclockwise")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
+            .confirmationDialog("Step down from the bench?", isPresented: $confirmStepDown, titleVisibility: .visible) {
+                Button("Step Down and Erase This Career", role: .destructive) { withAnimation { game.resetCareer() } }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Every case, person, and news story from this career is erased. This can't be undone.")
+            }
         }
         .card(tint: .orange)
     }

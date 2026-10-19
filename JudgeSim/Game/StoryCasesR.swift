@@ -49,7 +49,7 @@ extension StoryCases {
                             .direct("What did you see on arrival?", "\"A wet paper towel on the floor, and wiped smears on the wall at the bottom of the stairs. Someone had been cleaning.\""),
                             .direct("What about the finances?", "\"Credit card debt in six figures, a big house, and a wife about to lose her job and her insurance.\""),
                             .cross("You never found a weapon?", "\"No.\""),
-                            .cross("The blow poke you testified was missing turned up in the garage?", "\"Yes, after the trial started.\"")
+                            .cross("The blow poke you testified was missing turned up in the garage?", "\"Yes. The defense found it in the garage a few weeks ago.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -182,7 +182,7 @@ extension StoryCases {
             howIdentified: "Hospital testing, then exhumation of {DL}'s former boyfriend.",
             notDone: ["The water at {VL}'s parsonage was never tested."],
             defendantExam: [
-                .direct("Did you poison anyone?", "\"No. I cooked for them because I loved them. I sat with Raymond every day he was sick.\""),
+                .direct("Did you poison anyone?", "\"No. I cooked for them because I loved them. I sat with {VIC2} every day he was sick.\""),
                 .direct("The ant poison in your mother's shed?", "\"It's been there since the 1970s. Mama never threw anything away.\""),
                 .cross("Every time you brought food, his arsenic went up.", "\"Then something else was making him sick.\""),
                 .cross("Two men you loved, full of arsenic, and you got paid both times.", "\"I didn't kill anybody for money.\"")
@@ -191,7 +191,7 @@ extension StoryCases {
                 (1, ObjectionSeed(question: "Prosecutor: \"Doctor, did {DL}'s first husband and father also die of arsenic?\"",
                                   answer: "\"I wasn't asked to test them.\"",
                                   raisedBy: .defense, onCross: false, grounds: "Speculation and uncharged acts", shouldSustain: true,
-                                  explanation: "The witness has no basis to testify about deaths he never examined; insinuating other poisonings without evidence is improper under Rules 404(b) and 602.",
+                                  explanation: "The witness has no basis to testify about deaths the witness never examined; insinuating other poisonings without evidence is improper under Rules 404(b) and 602.",
                                   doctrineID: "priorActs", weight: 1))
             ],
             prosecutionOpening: "Banana pudding, a milkshake, and an arsenic level that spiked every time she visited.",
@@ -212,7 +212,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "murder1", specification: "With premeditation and deliberation, killed {VIC2} by strangulation in her apartment.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "murder1", specification: "With premeditation and deliberation, killed {VIC3} by strangulation in her apartment.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "felonyLarceny", specification: "Took {VIC3}'s car and bank card after her death.", chance: 1.0, threshold: 0),
+            SecondaryCharge(lawID: "felonyLarceny", specification: "Took {VIC3}'s purse and bank card after her death.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "cardFraud", specification: "Used {VIC3}'s bank card at three ATMs the night of her death.", chance: 1.0, threshold: 0)
         ],
         ageRange: 28...32, occupations: ["fast-food restaurant manager"], hasVictim: true,
@@ -394,6 +394,7 @@ extension StoryCases {
             defenseOpening: "A hidden leak, a contractor's assurance, and a medical examiner who took six weeks.",
             prosecutionClosing: "Skipping a permit on a gas line is gambling with other people's lives.",
             defenseClosing: "Negligence isn't a crime unless it's culpable, and {DL} didn't know.",
+            when: .months([4]),
             genders: ["V": .male]
         )
     )

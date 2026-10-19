@@ -200,8 +200,11 @@ enum TreatmentNeed: String, Codable, Hashable {
 struct CaseBackground: Codable, Hashable {
     var pleaOffer: String?
     var pleaRejection: String?
+    /// Days of pretrial confinement that count as credit. A defendant who has since made bond keeps the credit.
     var custodyDays: Int
     var bondStatus: String
+    /// True once the defendant has made bond after time in jail: the credit stands, but the clock stops.
+    var onRelease: Bool?
     var restitution: Int
     var restitutionBasis: String?
     var victimStance: VictimStance
@@ -345,4 +348,9 @@ struct CourtCase: Identifiable, Codable, Hashable {
         var seen = Set<String>()
         return ids.filter { seen.insert($0).inserted && LawLibrary.lawIfPresent($0) != nil }
     }
+}
+
+extension CaseBackground {
+    /// Held in jail awaiting trial right now.
+    var isJailed: Bool { custodyDays > 0 && onRelease != true }
 }

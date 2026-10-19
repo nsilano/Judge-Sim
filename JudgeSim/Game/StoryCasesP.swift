@@ -168,7 +168,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} ran a textbook Ponzi scheme: a fake fund, fake statements, guaranteed returns, and a lifestyle paid for with neighbors' retirements."],
         defenseTheory: ["{DL} started out legitimately, lost money, and dug a hole trying to make investors whole. {D.He} intended to repay everyone. That's poor judgment, not intent to defraud."],
-        aggravating: ["The offense involved multiple victims", "The defendant took advantage of a position of trust", "The offense involved an actual loss of more than $100,000"],
+        aggravating: ["The offense involved multiple victims", "The defendant took advantage of a position of trust", "The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: ["No prior criminal record", "The defendant has a support system in the community"],
         victimImpacts: ["{VL}: \"I was going to leave something for my grandchildren. Now my grandchildren are paying my light bill.\"",
                         "A retired firefighter: \"Thirty years of running into burning buildings and the pension's gone.\""],

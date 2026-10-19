@@ -157,7 +157,7 @@ struct HearingView: View {
             ForEach(HearingDecision.allCases, id: \.self) { decision in
                 ChoiceRow(title: decision.label,
                           subtitle: decision == .crv ? "\(ViolationHearings.crvDays(h)) days here. " + decision.detail
-                            : (decision == .revoke ? "Activates \(ViolationHearings.revocationMonths(h.probation)) months after CRV credit. " + decision.detail : decision.detail),
+                            : (decision == .revoke ? "Activates \(ViolationHearings.exposureText(h.probation)) after CRV credit. " + decision.detail : decision.detail),
                           selected: session.rulings.decision == decision) {
                     session.rulings.decision = decision
                 }

@@ -7,7 +7,7 @@ enum HearingDecision: String, CaseIterable, Hashable {
 
     var label: String {
         switch self {
-        case .continueAsIs: return "No violation found / continue on the same terms"
+        case .continueAsIs: return "Continue probation on the same terms"
         case .modify: return "Find a violation; modify conditions"
         case .quickDip: return "Find a violation; order a quick dip (3 days in jail)"
         case .crv: return "Find a violation; order a CRV"
@@ -104,8 +104,23 @@ extension String {
 
     /// "a" or "an" before this word.
     var withIndefiniteArticle: String {
-        guard let first = first?.lowercased() else { return self }
-        return ("aeiou".contains(first) ? "an " : "a ") + self
+        guard let firstChar = first else { return self }
+        // An acronym is read letter by letter: "an HVAC technician", "an EMT", "a CNA".
+        let word = prefix { $0 != " " }
+        if word.count >= 2 && word.allSatisfy({ $0.isUppercase || !$0.isLetter }) {
+            return ("AEFHILMNORSX".contains(firstChar) ? "an " : "a ") + self
+        }
+        return ("aeiou".contains(firstChar.lowercased()) ? "an " : "a ") + self
+    }
+
+    /// Lowercased for use mid-sentence, except acronyms and names with inner capitals ("HVAC", "IT", "McDonald's").
+    var lowercasedPhrase: String {
+        split(separator: " ", omittingEmptySubsequences: false).map { word -> String in
+            let letters = word.filter(\.isLetter)
+            let capitals = letters.filter(\.isUppercase).count
+            if capitals >= 2 || (capitals == 1 && letters.first?.isUppercase == false) { return String(word) }
+            return word.lowercased()
+        }.joined(separator: " ")
     }
 }
 
@@ -402,6 +417,8 @@ enum ViolationHearings {
         case .quickDip:
             lines.insert("The court finds a willful violation and orders the probationer to serve 3 days in the Hollis County jail as a quick dip, after which probation resumes.", at: 0)
             risk -= 0.03
+            status = .incarcerated
+            release = Calendar.current.date(byAdding: .day, value: 3, to: date)
         case .crv:
             let days = crvDays(h)
             if days > 0 {
@@ -484,7 +501,8 @@ enum ViolationHearings {
         let headline: String
         switch decision {
         case .revoke: headline = "Probation revoked for \(h.personName)"
-        case .crv: headline = "\(h.personName) ordered to \(crvDays(h)) days for probation violations"
+        case .crv where crvDays(h) > 0: headline = "\(h.personName) ordered to \(crvDays(h)) days for probation violations"
+        case .quickDip: headline = "\(h.personName) ordered to three days in jail for probation violations"
         case .terminate: headline = "Judge ends probation for \(h.personName)"
         default: headline = "\(h.personName) remains on probation after violation hearing"
         }

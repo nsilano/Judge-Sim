@@ -273,7 +273,7 @@ enum BackgroundLines {
 
     /// A background that fits the person, avoiding any already given to someone else in this career.
     static func pick(age: Int, occupation: String, used: Set<String>, towns: [String], rng: inout SeededRNG) -> String {
-        let lower = occupation.lowercased()
+        let lower = occupation.lowercasedPhrase
         let inSchool = lower.hasPrefix("high school") || lower.contains("student") || lower.hasPrefix("college ")
         let fits = all.filter { line in
             guard age >= line.minAge else { return false }
