@@ -9,6 +9,17 @@ struct CaseSnapshot: Codable, Hashable {
     var revealedMitigating: [String] = []
 }
 
+extension CaseSnapshot {
+    /// Fields added since a snapshot was first saved decode as their defaults, so an older save still loads.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        stage = try c.decode(Int.self, forKey: .stage)
+        rulings = try c.decodeIfPresent(Rulings.self, forKey: .rulings) ?? Rulings()
+        revealedAggravating = try c.decodeIfPresent([String].self, forKey: .revealedAggravating) ?? []
+        revealedMitigating = try c.decodeIfPresent([String].self, forKey: .revealedMitigating) ?? []
+    }
+}
+
 /// The defense motion to dismiss at the close of the State's evidence (G.S. 15A-1227), as argued in this case.
 struct HalftimeMotion {
     /// Counts the defense challenges; the rest go forward without argument.
@@ -133,7 +144,7 @@ final class CaseSession: ObservableObject {
     let originalLesser: [UUID: String]
     let judgeName: String
     let county: County
-    let halftimeMotion: HalftimeMotion
+    private(set) var halftimeMotion: HalftimeMotion
     @Published var stage: Stage = .briefing
     @Published var rulings = Rulings()
     @Published private(set) var outcome: CaseOutcome?
@@ -166,6 +177,9 @@ final class CaseSession: ObservableObject {
             if stage == .probation && !courtCase.defendant.underSupervision {
                 stage = anyConviction ? .sentencing : .verdict
             }
+            // The case on file is the one as indicted; a denied motion to continue changed what the trial had.
+            if resume.rulings.continuanceMotionDenied == true { applyDeniedContinuance() }
+            applyIndictmentRulings()
         }
     }
 
@@ -190,7 +204,30 @@ final class CaseSession: ObservableObject {
 
     func motionBinding(_ motion: Motion) -> Binding<Bool?> {
         Binding(get: { self.rulings.motions[motion.id] },
-                set: { self.rulings.motions[motion.id] = $0 })
+                set: {
+                    self.rulings.motions[motion.id] = $0
+                    if motion.kind == .dismissIndictment { self.applyIndictmentRulings() }
+                })
+    }
+
+    /// Counts dismissed on a defective indictment are out of the case; denying the motion puts them back.
+    private var dismissedCounts: [UUID: Charge] = [:]
+
+    private func applyIndictmentRulings() {
+        for motion in courtCase.motions where motion.kind == .dismissIndictment {
+            guard let id = motion.targetChargeID else { continue }
+            let granted = rulings.motions[motion.id] == true
+            if granted, let index = courtCase.charges.firstIndex(where: { $0.id == id }) {
+                let charge = courtCase.charges.remove(at: index)
+                dismissedCounts[id] = charge
+                rulings.verdicts[id] = nil
+                courtCase.proceduralNotes.append("Count \(charge.count) (\(charge.law.title)) dismissed on the defense's motion: the indictment is defective.")
+            } else if !granted, let charge = dismissedCounts.removeValue(forKey: id) {
+                courtCase.charges.append(charge)
+                courtCase.charges.sort { $0.count < $1.count }
+                courtCase.proceduralNotes.removeAll { $0.hasPrefix("Count \(charge.count) (") && $0.hasSuffix("the indictment is defective.") }
+            }
+        }
     }
 
     func objectionBinding(_ objection: Objection) -> Binding<Bool?> {
@@ -572,6 +609,39 @@ final class CaseSession: ObservableObject {
 
     func denyContinuanceMotion() {
         rulings.continuanceMotionDenied = true
+        applyDeniedContinuance()
+    }
+
+    /// The trial goes forward without what the motion asked to wait for: the absent witness doesn't testify, and lab work
+    /// without a final report comes in without results. Footage and records that were never produced were never in the record.
+    private func applyDeniedContinuance() {
+        guard let motion = courtCase.continuanceMotion else { return }
+        var removed: [UUID] = []
+        switch motion.request {
+        case .witnessFollowUp:
+            if let witness = courtCase.witnesses.first(where: { $0.calledBy == motion.movant && motion.argument.contains($0.name) }) {
+                removed.append(witness.id)
+            }
+        case .labTesting:
+            let note = " The State Crime Laboratory's final report was not completed before trial, so no analyst testifies to results."
+            guard let index = courtCase.evidence.firstIndex(where: { $0.side == .prosecution && motion.argument.contains("\"\($0.title)\"") }),
+                  !courtCase.evidence[index].detail.hasSuffix(note) else { break }
+            let item = courtCase.evidence[index]
+            // The analyst who would have reported these results isn't called.
+            removed += courtCase.witnesses.filter { witness in
+                witness.calledBy == .prosecution && witness.role.contains("State Crime Laboratory")
+                    && ((witness.exchanges ?? []).contains { $0.answer.contains(item.detail) || $0.question.contains(item.exhibit) }
+                        || (witness.direct + witness.cross).contains { $0.contains(item.detail) })
+            }.map(\.id)
+            courtCase.evidence[index].weight = 0
+            courtCase.evidence[index].detail += note
+        case .video, .phoneRecords, .financialRecords, .expertReview:
+            break
+        }
+        guard !removed.isEmpty else { return }
+        courtCase.witnesses.removeAll { removed.contains($0.id) }
+        courtCase.objections.removeAll { removed.contains($0.witnessID) }
+        halftimeMotion = HalftimeMotion.make(for: courtCase)
     }
 
     // MARK: Plea arrangement

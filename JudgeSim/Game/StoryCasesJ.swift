@@ -186,7 +186,7 @@ extension StoryCases {
                                   answer: "\"We could have caught it sooner.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Argumentative", shouldSustain: false,
                                   explanation: "Whether the police checked the database is relevant to the defense theory that the shop acted in good faith; the question is fair.",
-                                  doctrineID: "relevance", weight: 1))
+                                  doctrineID: "relevance", weight: -1))
             ],
             prosecutionOpening: "Seven cents on the dollar, a fake address, and a name engraved in the steel.",
             defenseOpening: "A shop owner who reported every detail to the police the same day.",
@@ -376,7 +376,7 @@ extension StoryCases {
                                   answer: "\"Before this, yes.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Improper character evidence", shouldSustain: false,
                                   explanation: "The defense may elicit testimony about a pertinent trait, such as care for children, under Rule 404(a)(1).",
-                                  doctrineID: "characterEvidence", weight: 1))
+                                  doctrineID: "characterEvidence", weight: -1))
             ],
             prosecutionOpening: "A chambered gun, an unlocked drawer, a dozen children, and a safe still in its box.",
             defenseOpening: "A closed door, clear instructions, and a family that lost a child.",
@@ -472,7 +472,7 @@ extension StoryCases {
                                   answer: "\"I'd like the messages to stop.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Argumentative", shouldSustain: false,
                                   explanation: "Exploring the witness's interest in the outcome is proper cross-examination for bias.",
-                                  doctrineID: "relevance", weight: 1))
+                                  doctrineID: "relevance", weight: 0))
             ],
             prosecutionOpening: "Two hundred messages, nine accounts, and a trail back to one person's gym and initials.",
             defenseOpening: "An open network, a shared set of initials, and a common typo.",

@@ -119,10 +119,10 @@ struct CaseReviewSheet: View {
         let state = c.evidence.filter { $0.side == .prosecution }
         let defense = c.evidence.filter { $0.side == .defense }
         SectionTitle(text: "State's exhibits", icon: "building.columns.fill")
-        ForEach(state) { item in EvidenceCard(evidence: item, suppressed: session.isSuppressed(item)) }
+        ForEach(state) { item in EvidenceCard(evidence: item, suppressed: session.isSuppressed(item), courtCase: c) }
         if !defense.isEmpty {
             SectionTitle(text: "Defense exhibits", icon: "shield.fill")
-            ForEach(defense) { item in EvidenceCard(evidence: item, suppressed: session.isSuppressed(item)) }
+            ForEach(defense) { item in EvidenceCard(evidence: item, suppressed: session.isSuppressed(item), courtCase: c) }
         }
     }
 

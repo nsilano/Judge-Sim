@@ -142,7 +142,7 @@ struct PersonFileDocuments: View {
 
         if shows(.supervision) {
             if let term = person.probation {
-                DeskLabel(text: person.status == .incarcerated ? "Probation to follow release" : "Probation", icon: "person.badge.clock.fill")
+                DeskLabel(text: person.status == .incarcerated ? (person.probationResumesOnRelease ? "Probation to resume on release" : "Probation to follow release") : "Probation", icon: "person.badge.clock.fill")
                 probationDocument(term)
             }
             if let prs = person.postRelease ?? person.pendingPostRelease {
@@ -216,7 +216,9 @@ struct PersonFileDocuments: View {
             DocSection(title: "Present status")
             DocCheck(checked: person.status == .incarcerated, text: "In custody")
             DocCheck(checked: person.status == .probation || (person.status == .incarcerated && person.probation != nil),
-                     text: person.status == .incarcerated && person.probation != nil ? "Probation to begin on release" : "On probation")
+                     text: person.status == .incarcerated && person.probation != nil
+                        ? "\(person.probationKind.capitalizedFirst) probation to \(person.probationResumesOnRelease ? "resume" : "begin") on release"
+                        : "On probation")
             DocCheck(checked: person.postRelease != nil || person.pendingPostRelease != nil,
                      text: person.pendingPostRelease != nil ? "Post-release supervision to begin on release" : "On post-release supervision")
             DocCheck(checked: person.status == .free && person.postRelease == nil, text: "At liberty")
@@ -235,13 +237,14 @@ struct PersonFileDocuments: View {
 
     private func activeDocument(_ active: ActiveSentenceSummary) -> some View {
         let fromThisCourt = file.records.contains { $0.docket == active.docket }
+        let entered = fromThisCourt ? active.date : nil
         return CourtDocument(caption: .superior(county: county),
                              formNumber: active.terms.contains(where: \.isFelony) ? "AOC-CR-601" : (active.terms.isEmpty ? nil : "AOC-CR-602"),
                              title: "Commitment Summary", subtitle: active.source,
                              fileNumber: active.docket, defendant: person.name,
-                             signature: fromThisCourt ? DocSignature(name: judge, date: active.date) : nil,
-                             filed: fromThisCourt ? DocFiling(date: active.date, office: CourtForms.clerkOffice(game.county)) : nil) {
-            DocFieldPair(first: ("Committed", SentenceFormat.shortDate(active.date)), second: ("Custody", active.custody))
+                             signature: entered.map { DocSignature(name: judge, date: $0) },
+                             filed: entered.map { DocFiling(date: $0, office: CourtForms.clerkOffice(game.county)) }) {
+            DocFieldPair(first: ("Committed", active.date.map(SentenceFormat.shortDate) ?? "Not recorded"), second: ("Custody", active.custody))
 
             ForEach(Array(active.terms.enumerated()), id: \.offset) { _, term in
                 DocSection(title: term.title ?? "Sentence")
@@ -275,7 +278,7 @@ struct PersonFileDocuments: View {
                     DocCheck(checked: true, text: line)
                 }
                 if let term = person.probation {
-                    DocCheck(checked: true, text: "On release, supervised probation begins in \(term.docket) (see the conditions of probation).")
+                    DocCheck(checked: true, text: "On release, \(person.probationKind) probation \(person.probationResumesOnRelease ? "resumes" : "begins") in \(term.docket) (see the conditions of probation).")
                 }
             }
 
@@ -507,6 +510,9 @@ struct NewsClipping: View {
             Text(item.headline)
                 .font(.system(.headline, design: .serif))
                 .fixedSize(horizontal: false, vertical: true)
+            if let byline = item.byline {
+                Text(byline).font(.system(.caption2, design: .serif)).italic().foregroundStyle(.secondary)
+            }
             Text(item.body)
                 .font(.system(.footnote, design: .serif))
                 .foregroundStyle(.secondary)

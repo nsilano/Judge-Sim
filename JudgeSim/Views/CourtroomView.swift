@@ -12,6 +12,20 @@ struct CourtroomView: View {
     @State private var grantingMotion: ContinuanceMotion?
     @State private var reviewSection: CaseReviewSheet.Section?
 
+    /// What one more delay costs in this case.
+    private var delayCost: String? {
+        let c = session.courtCase
+        let times = game.continuances(of: c.id)
+        var parts: [String] = []
+        if times > 0 { parts.append("Already continued \(times) time\(times == 1 ? "" : "s").") }
+        if let days = c.background?.custodyDays, days > 0 {
+            parts.append("\(c.defendant.lastName) is in jail (\(days) days so far); every week adds to that, and to the speedy-trial claim.")
+        }
+        if times >= 1 { parts.append("Each delay makes it likelier a witness can't be found.") }
+        if c.victimName != nil && times >= 1 { parts.append("The victim's family has been to every setting.") }
+        return parts.isEmpty ? nil : parts.joined(separator: " ")
+    }
+
     init(courtCase: CourtCase, judgeName: String, county: County, resume: CaseSnapshot? = nil) {
         _session = StateObject(wrappedValue: CaseSession(courtCase: courtCase, judgeName: judgeName, county: county, resume: resume))
     }
@@ -77,6 +91,9 @@ struct CourtroomView: View {
                 }
             }
             .background(Theme.background)
+            .safeAreaInset(edge: .top) {
+                if session.stage == .sentencing { SentenceSummaryBar(session: session) }
+            }
             .safeAreaInset(edge: .bottom) {
                 if session.stage != .judgment {
                     CourtActionBar(counselCount: session.unaskedCount, next: session.nextStep,
@@ -129,10 +146,13 @@ struct CourtroomView: View {
             }
             .sheet(isPresented: $showContinuance, onDismiss: { grantingMotion = nil }) {
                 ContinuanceSheet(today: session.courtCase.sessionDate, subject: session.courtCase.caption,
-                                 requestOptions: EvidenceRequest.options(for: session.courtCase),
+                                 // Follow-up investigation is only possible while the evidence is still open.
+                                 requestOptions: session.stage.rawValue <= CaseSession.Stage.trial.rawValue
+                                    ? EvidenceRequest.options(for: session.courtCase) : [],
                                  initialRequests: grantingMotion.map { [$0.request] } ?? [],
                                  initialReason: grantingMotion.map { "On the \($0.movant == .prosecution ? "State's" : "defense's") motion: \($0.title.lowercased())." },
-                                 initialDays: grantingMotion?.suggestedDays) { date, reason, requests in
+                                 initialDays: grantingMotion?.suggestedDays,
+                                 cost: delayCost) { date, reason, requests in
                     showContinuance = false
                     game.continueMatter(session.courtCase.id, to: date, reason: reason, snapshot: session.snapshot, requests: requests)
                     dismiss()
@@ -567,9 +587,24 @@ struct ChargeCard: View {
 struct MotionsStage: View {
     @ObservedObject var session: CaseSession
 
+    /// What was heard, matched to the motions actually filed.
+    private var intro: String {
+        let motions = session.courtCase.motions
+        let filed = motions.count == 1 ? "The defense has filed a pretrial motion." : "The defense has filed pretrial motions."
+        var heard: [String] = []
+        if motions.contains(where: { $0.kind == .suppressSearch || $0.kind == .suppressStatement }) { heard.append("testimony at the suppression hearing") }
+        if motions.contains(where: { $0.kind == .suppressIdentification }) { heard.append("evidence on how the identification was made") }
+        if motions.contains(where: { $0.kind == .excludePriorActs }) { heard.append("the State's proffer of other acts") }
+        if motions.contains(where: { $0.kind == .dismissIndictment }) { heard.append("argument on the indictment") }
+        if motions.contains(where: { $0.kind == .dismissSpeedyTrial }) { heard.append("evidence and argument on the delay") }
+        let list = heard.count <= 1 ? (heard.first ?? "argument")
+            : heard.dropLast().joined(separator: ", ") + ", and " + (heard.last ?? "")
+        return filed + " You've heard " + list + "." + (motions.count == 1 ? " Rule on it." : " Rule on each.")
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("The defense has filed pretrial motions. You've heard testimony and argument at the suppression hearing. Rule on each.")
+            Text(intro)
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
@@ -582,7 +617,7 @@ struct MotionsStage: View {
             PrimaryButton(title: session.dismissedBySpeedyTrial ? "Dismiss the Case" : "Start the Trial",
                           icon: session.dismissedBySpeedyTrial ? "xmark.seal.fill" : "chevron.right",
                           enabled: session.motionsComplete,
-                          hint: "Grant or deny every motion to continue.") {
+                          hint: session.courtCase.motions.count == 1 ? "Grant or deny the motion first." : "Grant or deny every motion first.") {
                 Haptics.gavel()
                 session.advance()
             }
@@ -592,6 +627,26 @@ struct MotionsStage: View {
 
 struct MotionCard: View {
     let motion: Motion
+
+    private var grantEffect: String {
+        switch motion.kind {
+        case .dismissSpeedyTrial: return "Case is dismissed"
+        case .dismissIndictment: return "That count is dismissed"
+        case .suppressIdentification: return "The identification is excluded"
+        case .excludePriorActs: return "The other acts stay out"
+        case .suppressSearch, .suppressStatement: return "Evidence is excluded"
+        }
+    }
+
+    private var denyEffect: String {
+        switch motion.kind {
+        case .dismissSpeedyTrial: return "Case goes forward"
+        case .dismissIndictment: return "The count goes forward"
+        case .suppressIdentification: return "The identification comes in"
+        case .excludePriorActs: return "The State may offer them"
+        case .suppressSearch, .suppressStatement: return "Evidence comes in"
+        }
+    }
     let target: Evidence?
     @Binding var selection: Bool?
 
@@ -613,9 +668,7 @@ struct MotionCard: View {
                 HStack { ForEach(motion.doctrineIDs, id: \.self) { LawLink(lawID: $0) } }
             }
             RulingPicker(first: "Grant", second: "Deny",
-                         firstDetail: motion.kind == .dismissSpeedyTrial ? "Case is dismissed" : "Evidence is excluded",
-                         secondDetail: motion.kind == .dismissSpeedyTrial ? "Case goes forward" : "Evidence comes in",
-                         selection: $selection)
+                         firstDetail: grantEffect, secondDetail: denyEffect, selection: $selection)
         }
         .card(tint: selection == nil ? nil : Theme.gold)
     }
@@ -753,6 +806,10 @@ struct ContinuanceSheet: View {
     let today: Date
     let subject: String
     var requestOptions: [EvidenceRequest] = []
+    /// A trial keeps its rulings across a continuance; a hearing starts over.
+    var keepsRulings = true
+    /// What another delay will cost, shown before the judge commits to it.
+    var cost: String? = nil
     let onContinue: (Date, String, [EvidenceRequest]) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var date: Date
@@ -770,17 +827,28 @@ struct ContinuanceSheet: View {
         "Defense counsel has a conflict in another courtroom."
     ]
 
+    static let hearingReasons = [
+        "On the court's own motion.",
+        "On the probationer's motion, to prepare.",
+        "The probation officer is unavailable.",
+        "Awaiting the result of the new charge.",
+        "So the probationer can enter treatment before the hearing.",
+        "Defense counsel has a conflict in another courtroom."
+    ]
+
     init(today: Date, subject: String, requestOptions: [EvidenceRequest] = [], initialRequests: [EvidenceRequest] = [],
-         initialReason: String? = nil, initialDays: Int? = nil,
+         initialReason: String? = nil, initialDays: Int? = nil, keepsRulings: Bool = true, cost: String? = nil,
          onContinue: @escaping (Date, String, [EvidenceRequest]) -> Void) {
+        self.cost = cost
         self.today = today
         self.subject = subject
         self.requestOptions = requestOptions
+        self.keepsRulings = keepsRulings
         self.onContinue = onContinue
         let days = max(1, (initialDays ?? 7) - 1)
         let suggested = CourtCalendar.nextWeekday(after: Calendar.current.date(byAdding: .day, value: days, to: today) ?? today)
         _date = State(initialValue: max(suggested, Self.earliest(after: today)))
-        let options = (initialReason.map { [$0] } ?? []) + Self.reasons
+        let options = (initialReason.map { [$0] } ?? []) + (keepsRulings ? Self.reasons : Self.hearingReasons)
         _reasonOptions = State(initialValue: options)
         _reason = State(initialValue: options[0])
         _requests = State(initialValue: Set(initialRequests))
@@ -799,11 +867,16 @@ struct ContinuanceSheet: View {
                     DatePicker("Reconvene on", selection: $date,
                                in: Self.earliest(after: today)...,
                                displayedComponents: .date)
+                    if let cost {
+                        Label(cost, systemImage: "hourglass").font(.caption).foregroundStyle(.orange)
+                    }
                     Text("It will be on the calendar for the \("w" + CourtCalendar.weekTitle(CourtCalendar.weekday(onOrAfter: date)).dropFirst()).")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } footer: {
-                    Text("Every ruling you've made is kept. The case comes back on that week's calendar, right where you left it.")
+                    Text(keepsRulings
+                         ? "Every ruling you've made is kept. The case comes back on that week's calendar, right where you left it."
+                         : "The matter comes back on that week's calendar and is heard from the start.")
                 }
                 if !requestOptions.isEmpty {
                     Section {
@@ -847,6 +920,43 @@ struct ContinuanceSheet: View {
                     }
                 }
             }
+        }
+    }
+}
+
+/// The sentence as it stands, pinned above the long sentencing screen and updated with every choice.
+struct SentenceSummaryBar: View {
+    @ObservedObject var session: CaseSession
+
+    var body: some View {
+        let units = session.units
+        let r = session.rulings
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(units.prefix(3), id: \.id) { unit in
+                let choice = Judgment.choice(unit, r)
+                HStack(spacing: 6) {
+                    Text(unit.title).font(.caption.weight(.semibold)).lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(Judgment.termText(for: unit, choice: choice)).font(.caption.monospacedDigit())
+                    Text("·").foregroundStyle(.secondary)
+                    Text(choice.lifeWithoutParole ? "Active" : (choice.disposition?.label ?? "Choose")).font(.caption)
+                        .foregroundStyle(choice.disposition == nil && !choice.lifeWithoutParole ? .orange : Theme.gold)
+                }
+            }
+            if units.count > 3 {
+                Text("and \(units.count - 3) more judgment\(units.count == 4 ? "" : "s")").font(.caption2).foregroundStyle(.secondary)
+            }
+            if let projection = Judgment.custodyProjection(session.courtCase, r, units: units, from: session.courtCase.sessionDate) {
+                Text("Release no earlier than \(SentenceFormat.shortDate(projection.earliest))")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            Theme.surface
+                .overlay(alignment: .bottom) { Rectangle().fill(Theme.border).frame(height: 1) }
         }
     }
 }

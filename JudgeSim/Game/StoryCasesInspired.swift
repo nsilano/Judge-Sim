@@ -422,9 +422,9 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "awdwikisi", specification: "Assaulted {VL}'s friend with a rifle, with intent to kill, inflicting serious injury.", chance: 1.0, threshold: 1)
         ],
-        ageRange: 18...19, occupations: ["community college student"], hasVictim: true,
+        ageRange: 19...19, occupations: ["community college student"], hasVictim: true,
         summaries: [
-            "Two nights after Hurricane {STORM} knocked out power across {CITY}, {D}, 18, stood outside {D.his} uncle's hardware store on {STREET} with an AR-style rifle, saying {D.he} was protecting it from looters. At about {TIME} on {DATE}, {V} walked up, argued with {DL}, and grabbed for the rifle. {DL} fired three times, killing {VL}. As {DL} backed away, {VL}'s friend came at {DL} with a tire iron, and {D.he} fired again, wounding the friend. The State says {DL} brought a war rifle to a dark street and provoked the fight. The defense says {VL} tried to take the gun."
+            "Two nights after Hurricane {STORM} knocked out power across {CITY}, {D}, a teenager, stood outside {D.his} uncle's hardware store on {STREET} with an AR-style rifle, saying {D.he} was protecting it from looters. At about {TIME} on {DATE}, {V} walked up, argued with {DL}, and grabbed for the rifle. {DL} fired three times, killing {VL}. As {DL} backed away, {VL}'s friend came at {DL} with a tire iron, and {D.he} fired again, wounding the friend. The State says {DL} brought a war rifle to a dark street and provoked the fight. The defense says {VL} tried to take the gun."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Store Camera on Battery Backup", "Grainy, no sound: {VL} approaches, points at {DL}, steps closer; both hands reach toward the rifle; three flashes in under a second."),
@@ -474,7 +474,7 @@ extension StoryCases {
         prosecutionTheory: ["{D} went looking for trouble with a rifle and a public challenge, and found it. You can't create the danger and then claim self-defense."],
         defenseTheory: ["{DL} was asked to guard a family store when police weren't coming. {VL} tried to take the rifle and threatened to use it. Every shot was in self-defense."],
         aggravating: ["The offense occurred during a declared emergency"],
-        mitigating: ["{DL} was 18", "{DL} called 911 and surrendered immediately"],
+        mitigating: ["{DL} was a teenager", "{DL} called 911 and surrendered immediately"],
         allocutions: ["\"I didn't go out there to hurt anyone. I thought {VL} was going to take the gun and kill me.\""],
         guiltyTruths: ["A friend later produced texts where {DL} hoped to 'get a looter' that night."],
         innocentTruths: ["A newly found body camera from a passing deputy showed {VL} wrenching the rifle sideways before the shots."],
@@ -504,7 +504,8 @@ extension StoryCases {
             prosecutionOpening: "A rifle, a challenge posted online, and a dark street. {D} got the confrontation {D.he} invited.",
             defenseOpening: "{VL} grabbed the rifle and threatened to use it. That's when {DL} fired. On video.",
             prosecutionClosing: "Self-defense isn't available to someone who provokes the fight.",
-            defenseClosing: "Words online aren't provocation. Grabbing a loaded rifle is deadly force."
+            defenseClosing: "Words online aren't provocation. Grabbing a loaded rifle is deadly force.",
+            when: .months([8, 9, 10])
         )
     )
 }

@@ -30,7 +30,13 @@ struct AppealDetail: View {
 
     private var county: String { CourtForms.countyShortName(game.county) }
     private var coaNumber: String { CourtForms.appealsNumber(for: appeal) }
-    private var trialRecord: CaseRecord? { game.history.first { $0.docket == appeal.docket } }
+    /// The judgment appealed from: the record tagged with this appeal, or for older saves the latest judgment on the
+    /// docket entered by the day notice was filed.
+    private var trialRecord: CaseRecord? {
+        game.history.first { $0.appealID == appeal.id }
+            ?? game.history.first { $0.docket == appeal.docket && $0.resolvedKind != "continuance" && $0.date <= appeal.filed }
+            ?? game.history.first { $0.docket == appeal.docket && $0.resolvedKind != "continuance" }
+    }
     private var person: PersonRecord? { game.people.first { $0.id == appeal.personID } }
     private var defendantName: String {
         if let person { return person.name }
@@ -211,19 +217,22 @@ struct PersonStatusCard: View {
                     if release == .distantFuture {
                         Text("Serving life imprisonment without parole.").font(.callout)
                     } else {
-                        let days = max(0, Calendar.current.dateComponents([.day], from: today, to: release).day ?? 0)
+                        let days = max(0, CourtCalendar.calendar.dateComponents([.day], from: today, to: release).day ?? 0)
                         Text("Projected release \(SentenceFormat.shortDate(release)), about \(duration(days)) from now.").font(.callout)
                         if let note = person.releaseNote {
                             Text(note).font(.caption).foregroundStyle(.secondary)
                         }
                         if person.probation != nil {
-                            Text("Probation begins on release.").font(.caption).foregroundStyle(.secondary)
+                            Text(person.probationResumesOnRelease
+                                 ? "\(person.probationKind.capitalizedFirst) probation resumes on release."
+                                 : "\(person.probationKind.capitalizedFirst) probation begins on release.")
+                                .font(.caption).foregroundStyle(.secondary)
                         }
                     }
                 }
             case .probation:
                 if let term = person.probation {
-                    let days = max(0, Calendar.current.dateComponents([.day], from: today, to: term.ends).day ?? 0)
+                    let days = max(0, CourtCalendar.calendar.dateComponents([.day], from: today, to: term.ends).day ?? 0)
                     Text("\((term.supervised ?? true) ? "Supervised" : "Unsupervised") probation in \(term.docket) for \(term.offense), ending \(SentenceFormat.shortDate(term.ends)) (\(duration(days)) left).")
                         .font(.callout)
                     Text("Suspended sentence: \(term.suspendedSentence)" + ((term.crvCount ?? 0) > 0 ? " · \(term.crvCount ?? 0) CRV so far" : ""))
@@ -239,7 +248,11 @@ struct PersonStatusCard: View {
                         .font(.caption).foregroundStyle(term.imposedInThisCourt ? .purple : .secondary)
                 }
             case .free:
-                Text("No sentence being served.").font(.callout)
+                if let prs = person.postRelease {
+                    Text("On post-release supervision in \(prs.docket) for \(prs.offense), ending \(SentenceFormat.shortDate(prs.ends)).").font(.callout)
+                } else {
+                    Text("No sentence being served.").font(.callout)
+                }
             }
             ForEach(upcoming) { item in
                 Label("Back in court \(SentenceFormat.shortDate(item.date)): \(item.entry.note ?? "continued matter")", systemImage: "calendar")

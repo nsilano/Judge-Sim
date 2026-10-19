@@ -63,8 +63,10 @@ struct OnboardingView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Your first day on the bench").font(.caption.weight(.bold)).foregroundStyle(.secondary)
                     DatePicker("First court date", selection: $startDay, displayedComponents: .date)
-                    DatePicker("Court opens at", selection: $openingTime, displayedComponents: .hourAndMinute)
-                    Text("Court sits on weekdays. You'll hold week-long criminal sessions, with a few weeks between them.")
+                    DatePicker("Court opens at", selection: $openingTime,
+                               in: CourtCalendar.opening(on: Date(), minutesAfterMidnight: 8 * 60)...CourtCalendar.opening(on: Date(), minutesAfterMidnight: 11 * 60),
+                               displayedComponents: .hourAndMinute)
+                    Text("Court sits every week. Each week opens with a Monday calendar call, then you take the week's trials and hearings in any order, and adjourn for the week when the calendar is clear. There is no score: only the record you build.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -74,8 +76,8 @@ struct OnboardingView: View {
                 PrimaryButton(title: "Take the Oath of Office", icon: "hand.raised.fill",
                               enabled: !name.trimmingCharacters(in: .whitespaces).isEmpty) {
                     Haptics.gavel()
-                    let time = Calendar.current.dateComponents([.hour, .minute], from: openingTime)
-                    let start = Calendar.current.date(bySettingHour: time.hour ?? 9, minute: time.minute ?? 30, second: 0, of: startDay) ?? startDay
+                    let time = CourtCalendar.calendar.dateComponents([.hour, .minute], from: openingTime)
+                    let start = CourtCalendar.calendar.date(bySettingHour: time.hour ?? 9, minute: time.minute ?? 30, second: 0, of: startDay) ?? startDay
                     game.startCareer(name: name.trimmingCharacters(in: .whitespaces), start: start)
                 }
 
@@ -118,10 +120,12 @@ struct ChambersView: View {
                         VersionBadge()
                     }
                     header
+                    if game.unseated { unseatedCard }
                     if !game.digest.isEmpty {
                         digestCard
                     }
                     docketCard
+                    if let survey = game.reputation.first { standingCard(survey) }
 
                     if let county = game.county {
                         NavigationLink {
@@ -238,7 +242,8 @@ struct ChambersView: View {
                      + (day.isComplete ? "" : " · \(remaining) matter\(remaining == 1 ? "" : "s") left"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                if Calendar.current.component(.hour, from: day.clock) >= 17 && !day.isComplete {
+                if CourtCalendar.calendar.component(.weekday, from: day.clock) == 6
+                    && CourtCalendar.calendar.component(.hour, from: day.clock) >= 17 && !day.isComplete {
                     Label("Friday is running late. Finish the week's calendar before you adjourn.", systemImage: "moon.fill").font(.caption).foregroundStyle(.orange)
                 }
 
@@ -268,7 +273,7 @@ struct ChambersView: View {
                             }
                             Spacer()
                             if entry.isOpen {
-                                Text(entry.status == .inProgress ? "Resume" : "~\(entry.estimatedMinutes / 60 > 0 ? "\(entry.estimatedMinutes / 60)h " : "")\(entry.estimatedMinutes % 60)m")
+                                Text(entry.status == .inProgress ? (entry.resume == nil ? "Start over" : "Resume") : "~\(entry.estimatedMinutes / 60 > 0 ? "\(entry.estimatedMinutes / 60)h " : "")\(entry.estimatedMinutes % 60)m")
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(.secondary)
                             }
@@ -298,14 +303,78 @@ struct ChambersView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
+                    Toggle(isOn: Binding(get: { game.lightWeeks }, set: { game.setLightWeeks($0) })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Light weeks").font(.subheadline.weight(.semibold))
+                            Text("Two trials and one hearing a week, for shorter sessions. Starts next week.").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                    .tint(Theme.gold)
                 } else {
-                    Text("Take the week's matters in any order. Court sits until 5 p.m.; when a day fills up, the next matter is heard the following morning. When the calendar is clear, you can adjourn for the week.")
+                    Text("Take the week's matters in any order. No new matter is called after 4:30 p.m.; when a day fills up, the next matter is heard the following morning. When the calendar is clear, you can adjourn for the week.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
         }
         .card(tint: Theme.gold)
+    }
+
+    /// The voters have spoken; the judge decides what comes next.
+    private var unseatedCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(text: "You lost the election", icon: "envelope.badge.fill")
+            Text("Your term ends at the close of the year. A former Superior Court judge can still be commissioned to hear cases on emergency assignment, or you can step down and begin a new career somewhere else.")
+                .font(.callout)
+            PrimaryButton(title: "Keep Sitting as an Emergency Judge", icon: "hammer.fill") {
+                withAnimation { game.continueAsEmergencyJudge() }
+            }
+            Button(role: .destructive) {
+                withAnimation { game.resetCareer() }
+            } label: {
+                Label("Step Down and Start a New Career", systemImage: "arrow.counterclockwise")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+        }
+        .card(tint: .orange)
+    }
+
+    /// The most recent bar survey.
+    private func standingCard(_ survey: BarSurvey) -> some View {
+        DisclosureGroup {
+            VStack(alignment: .leading, spacing: 8) {
+                surveyRow("Lawyers overall", survey.overall)
+                surveyRow("Prosecutors", survey.prosecutors)
+                surveyRow("Defense lawyers", survey.defenseBar)
+                surveyRow("Public approval", survey.publicApproval)
+                if let affirmed = survey.affirmedPercent {
+                    Text("Affirmed on appeal: \(affirmed)% of decided appeals").font(.caption).foregroundStyle(.secondary)
+                }
+                ForEach(survey.comments, id: \.self) { Text($0).font(.callout).italic() }
+                if game.reputation.count > 1 {
+                    Text("Earlier years: " + game.reputation.dropFirst().prefix(5).map { "\($0.year): \($0.overall)" }.joined(separator: " · "))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .padding(.top, 6)
+        } label: {
+            HStack {
+                SectionTitle(text: "Standing with the bar", icon: "person.3.sequence.fill")
+                Spacer()
+                Text("\(survey.year) · \(survey.overall)/100").font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
+            }
+        }
+        .card()
+    }
+
+    private func surveyRow(_ label: String, _ value: Int) -> some View {
+        HStack {
+            Text(label).font(.subheadline)
+            Spacer()
+            ProgressView(value: Double(value), total: 100).frame(width: 110).tint(value >= 60 ? Theme.good : (value >= 40 ? .orange : Theme.bad))
+            Text("\(value)").font(.subheadline.monospacedDigit()).frame(width: 30, alignment: .trailing)
+        }
     }
 
     /// Appeals decided, releases, and arrests since the last court day, with appeals first.
@@ -518,7 +587,9 @@ struct RecordsView: View {
             ledgerRow("Convictions", trials.filter { $0.outcome.contains("Guilty") || $0.outcome.contains("No contest") }.count)
             ledgerRow("Acquittals and dismissals", trials.filter { $0.outcome.hasPrefix("Not guilty") || $0.outcome.hasPrefix("Dismissed") }.count)
             ledgerRow("Guilty pleas", trials.filter { $0.outcome.contains("plea)") || $0.outcome.contains("No contest") }.count)
-            ledgerRow("Returning defendants", trials.filter(\.returningDefendant).count)
+            // A retrial of the same case isn't a defendant returning.
+            let firstHeard = Dictionary(trials.map { ($0.docket, $0.date) }, uniquingKeysWith: { min($0, $1) })
+            ledgerRow("Returning defendants", trials.filter { $0.returningDefendant && $0.date <= (firstHeard[$0.docket] ?? $0.date) }.count)
             ledgerRow("Felony sentences below the presumptive range", s.belowPresumptive)
             ledgerRow("Felony sentences within the presumptive range", s.withinPresumptive)
             ledgerRow("Felony sentences above the presumptive range", s.abovePresumptive)
@@ -549,7 +620,8 @@ struct RecordsView: View {
     @ViewBuilder
     private var peopleSection: some View {
         let sentenced = game.people.filter { person in
-            person.status != .free && (person.priors.contains { $0.fromThisCourt } || (person.probation?.imposedInThisCourt ?? false))
+            (person.status != .free || person.postRelease != nil)
+                && (person.priors.contains { $0.fromThisCourt } || (person.probation?.imposedInThisCourt ?? false))
         }
         if !sentenced.isEmpty {
             Section("Serving a sentence you imposed") {
@@ -604,6 +676,9 @@ struct RecordsView: View {
         if person.status == .probation, let term = person.probation {
             return "\(term.docket) · \(term.offense)"
         }
+        if person.status == .free, let prs = person.postRelease {
+            return "\(prs.docket) · \(prs.offense)"
+        }
         guard let prior = person.priors.last(where: \.fromThisCourt) else { return nil }
         return [prior.docket, prior.offense].compactMap { $0 }.joined(separator: " · ")
     }
@@ -616,7 +691,7 @@ struct RecordsView: View {
         case .probation:
             return person.probation.map { "Probation ends \(SentenceFormat.shortDate($0.ends))" } ?? "On probation"
         case .free:
-            return ""
+            return person.postRelease.map { "Post-release supervision ends \(SentenceFormat.shortDate($0.ends))" } ?? ""
         }
     }
 
@@ -637,7 +712,13 @@ struct RecordsView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    if let section = item.section {
+                        Text(section.uppercased()).font(.system(size: 9, weight: .bold)).tracking(0.8).foregroundStyle(Theme.gold)
+                    }
                     Text(item.headline).font(.system(.subheadline, design: .serif).weight(.semibold))
+                    if let byline = item.byline {
+                        Text(byline).font(.system(.caption2, design: .serif)).italic().foregroundStyle(.secondary)
+                    }
                     Text(item.body).font(.system(.caption, design: .serif))
                     if let docket = item.docket {
                         Text(docket).font(.caption2.monospaced()).foregroundStyle(.secondary)

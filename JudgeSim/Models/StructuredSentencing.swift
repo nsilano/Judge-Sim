@@ -156,13 +156,53 @@ enum StructuredSentencing {
     }
 
     /// Corresponding maximum sentence (G.S. 15A-1340.17): 120% of the minimum, rounded up,
-    /// plus 12 months of post-release supervision for B1–E or 9 months for F–I.
+    /// plus 12 months of post-release supervision for A–E or 9 months for F–I.
     static func maximum(forMinimum minimum: Int, cls: NCClass) -> Int {
-        let base = Int((Double(minimum) * 1.2).rounded(.up))
+        Int((Double(minimum) * 1.2).rounded(.up)) + postReleaseMonths(for: cls)
+    }
+
+    /// Months of post-release supervision (G.S. 15A-1368.2): 12 for Class B1 through E (and a Class A felony given a term
+    /// of years), 9 for Class F through I.
+    static func postReleaseMonths(for cls: NCClass) -> Int {
         switch cls {
-        case .B1, .B2, .C, .D, .E: return base + 12
-        default: return base + 9
+        case .A, .B1, .B2, .C, .D, .E: return 12
+        default: return 9
         }
+    }
+
+    /// Impaired driving punishment levels (G.S. 20-179), most serious first: A1, then 1 through 5.
+    struct DWILevel: Hashable {
+        let label: String
+        let minDays: Int
+        let maxDays: Int
+        let maxFine: Int
+        /// Days the defendant must spend in jail (special probation) if the term is suspended.
+        let jailIfSuspended: Int
+        /// For Levels 3–5, community service hours that may replace that jail time (0: no substitute).
+        let serviceInstead: Int
+        let note: String
+    }
+
+    static let dwiLevels: [DWILevel] = [
+        DWILevel(label: "Level A1", minDays: 360, maxDays: 1_080, maxFine: 10_000, jailIfSuspended: 0, serviceInstead: 0,
+                 note: "Three or more grossly aggravating factors. 12 to 36 months; suspended only with jail of at least 10% of the term and 120 days of continuous alcohol monitoring."),
+        DWILevel(label: "Level 1", minDays: 30, maxDays: 720, maxFine: 4_000, jailIfSuspended: 30, serviceInstead: 0,
+                 note: "A grossly aggravating factor involving a child or disability, or two grossly aggravating factors. 30 days to 24 months; suspended only with at least 30 days in jail."),
+        DWILevel(label: "Level 2", minDays: 7, maxDays: 360, maxFine: 2_000, jailIfSuspended: 7, serviceInstead: 0,
+                 note: "One grossly aggravating factor. 7 days to 12 months; suspended only with at least 7 days in jail."),
+        DWILevel(label: "Level 3", minDays: 3, maxDays: 180, maxFine: 1_000, jailIfSuspended: 3, serviceInstead: 72,
+                 note: "Aggravating factors outweigh mitigating. 72 hours to 6 months; suspended with 72 hours in jail or 72 hours of community service."),
+        DWILevel(label: "Level 4", minDays: 2, maxDays: 120, maxFine: 500, jailIfSuspended: 2, serviceInstead: 48,
+                 note: "Factors balance. 48 hours to 120 days; suspended with 48 hours in jail or 48 hours of community service."),
+        DWILevel(label: "Level 5", minDays: 1, maxDays: 60, maxFine: 200, jailIfSuspended: 1, serviceInstead: 24,
+                 note: "Mitigating factors outweigh aggravating. 24 hours to 60 days; suspended with 24 hours in jail or 24 hours of community service.")
+    ]
+
+    /// Days of jail required as a condition of a suspended DWI sentence at this level and term.
+    static func dwiJailIfSuspended(level: Int, term: Int) -> Int {
+        guard dwiLevels.indices.contains(level) else { return 0 }
+        // Level A1: at least 10 percent of the maximum term (G.S. 20-179(f3)).
+        return level == 0 ? max(1, Int((Double(term) * 0.1).rounded(.up))) : dwiLevels[level].jailIfSuspended
     }
 
     static func felonyLevel(points: Int) -> Int {

@@ -193,7 +193,7 @@ extension StoryCases {
                                   answer: "\"Treatment is far more effective.\"",
                                   raisedBy: .prosecution, onCross: false, grounds: "Relevance to guilt", shouldSustain: true,
                                   explanation: "Opinions about the proper punishment don't bear on whether the elements were proved; they may be presented at sentencing.",
-                                  doctrineID: "relevance", weight: 1))
+                                  doctrineID: "relevance", weight: -1))
             ],
             prosecutionOpening: "Zoo trips, playground money, and teacher grants, turned into slot machine credits.",
             defenseOpening: "No one disputes this happened. {DL} is sick and trying to make it right.",

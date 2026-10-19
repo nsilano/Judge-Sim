@@ -291,7 +291,7 @@ extension StoryCases {
                                   answer: "\"My cousin has nothing to do with this.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Relevance", shouldSustain: true,
                                   explanation: "A relative's grudge, with no showing the witness shares it, doesn't bear on the witness's own bias.",
-                                  doctrineID: "relevance", weight: 1))
+                                  doctrineID: "relevance", weight: 0))
             ],
             prosecutionOpening: "Forty seconds at a gas pump, and a message delivered quietly.",
             defenseOpening: "A brother's plea for the truth, heard through a witness's fear.",
@@ -383,7 +383,7 @@ extension StoryCases {
                                   answer: "\"No.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Assumes facts not in evidence", shouldSustain: false,
                                   explanation: "The survey is in evidence; asking whether the fence was deliberate is fair cross-examination about motive and bias.",
-                                  doctrineID: "relevance", weight: 1))
+                                  doctrineID: "relevance", weight: 0))
             ],
             prosecutionOpening: "A deadline, a shotgun, and nothing to lose.",
             defenseOpening: "An old neighbor, a real property dispute, and an angry voicemail followed by a lawyer.",
@@ -405,7 +405,7 @@ extension StoryCases {
                     SecondaryCharge(lawID: "possStolen", specification: "Possessed a generator belonging to {V}, knowing it to be stolen.", chance: 1.0, threshold: 4),
                     SecondaryCharge(lawID: "injuryRealProperty", specification: "Damaged nine storage unit locks at {FAC}.", chance: 1.0, threshold: 3),
                     SecondaryCharge(lawID: "felonyLarceny", specification: "Stole tools, electronics, and a generator valued at more than $1,000 from storage units at {FAC}.", chance: 1.0, threshold: 0)],
-        ageRange: 25...45, occupations: ["online reseller"], forcedPriorOffenses: ["Breaking or Entering"], hasVictim: true,
+        ageRange: 26...45, occupations: ["online reseller"], forcedPriorOffenses: ["Breaking or Entering@8"], hasVictim: true,
         summaries: [
             "Overnight on {DATE}, nine units at {FAC} on {STREET} were opened with bolt cutters, and tools, electronics, and a generator were taken, including {V}'s. The gate keypad log shows {D}'s personal code entered at 1:12 a.m. and again at 3:40 a.m. {DL} rents a unit there and sells used tools online; two weeks later, a listing on {DL}'s account showed a generator matching {VL}'s, with a serial number one digit off. {DL} says {D.he} came that night to pick up inventory, that {D.his} code was on a lanyard {D.he} lent to a friend, and that {D.he} bought the generator at a flea market."
         ],

@@ -225,7 +225,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "cyberstalking", specification: "Repeatedly sent electronic messages to {V} for the purpose of harassing and abusing {V.him}.", chance: 1.0, threshold: 1)
         ],
-        ageRange: 18...19, occupations: ["college freshman"], hasVictim: true,
+        ageRange: 19...19, occupations: ["college freshman"], hasVictim: true,
         summaries: [
             "{V}, 18, died by suicide in {HOOD} on {DATE}. Over the previous six weeks, {D}, {VL}'s partner of two years, sent hundreds of messages urging {V.him} to stop delaying and follow through, and was on a video call during the final hour without calling for help. Earlier in the relationship, {DL} had repeatedly urged {VL} to get treatment. The State says {DL}'s pressure was the cause, and that the failure to call for help was culpable negligence. The defense says {VL} had struggled for years, that words alone aren't a cause of death, and that {DL} was a teenager in crisis too."
         ],
@@ -277,7 +277,7 @@ extension StoryCases {
         prosecutionTheory: ["{D} pressured a vulnerable person into suicide for six weeks, stayed on the call to the end, and called no one. That is culpable negligence that caused a death."],
         defenseTheory: ["{VL} struggled long before {DL}. {DL} spent a year begging {VL} to get help, then broke under illness and a new medication. Cruel words, however wrong, are not the cause of death the law requires."],
         aggravating: ["The victim was especially vulnerable"],
-        mitigating: ["{DL} was 18 and suffering from mental illness", "{DL} had previously encouraged {VL} to seek treatment"],
+        mitigating: ["{DL} was a teenager and suffering from mental illness", "{DL} had previously encouraged {VL} to seek treatment"],
         victimImpacts: ["{VL}'s parent: \"I don't want revenge. I want every kid who reads those messages to know words can kill.\""],
         allocutions: ["\"I'll live with what I wrote every day. I thought I was helping {VL} stop hurting. I was so wrong.\""],
         guiltyTruths: ["Later-recovered messages showed {DL} telling a friend that being the grieving partner would make people pay attention."],

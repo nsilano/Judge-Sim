@@ -95,7 +95,7 @@ extension StoryCases {
                                   answer: "\"Yes.\"",
                                   raisedBy: .prosecution, onCross: false, grounds: "Improper character evidence and opinion", shouldSustain: true,
                                   explanation: "The witness can describe specific facts the witness knows, including what {BRO} said, if relevant to the brothers' fear; a bare characterization isn't helpful.",
-                                  doctrineID: "characterEvidence", weight: 1))
+                                  doctrineID: "characterEvidence", weight: -1))
             ],
             prosecutionOpening: "Shotguns bought with a stolen license. A movie alibi. A reload. Then a Rolex.",
             defenseOpening: "Behind the money was a house of horror. Two boys believed they were going to die.",
@@ -197,7 +197,7 @@ extension StoryCases {
                                   answer: "\"Yes, absolutely.\"",
                                   raisedBy: .prosecution, onCross: false, grounds: "Improper character evidence", shouldSustain: false,
                                   explanation: "A defendant may offer evidence of a pertinent character trait, such as honesty, through reputation or opinion; general goodness is borderline but commonly allowed in a bench trial with limited weight.",
-                                  doctrineID: "characterEvidence", weight: 1))
+                                  doctrineID: "characterEvidence", weight: -1))
             ],
             prosecutionOpening: "Nine percent, every quarter, for eleven years. It never existed.",
             defenseOpening: "A man in over his head who never stopped trying to make his clients whole.",
@@ -271,7 +271,7 @@ extension StoryCases {
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
         victimImpacts: ["{VL}'s father: \"He was walking home with candy. He was seventeen. He had every right to be there.\""],
         allocutions: ["\"I'm sorry for the loss of your son. I didn't know how old he was. I thought he had a gun.\""],
-        guiltyTruths: ["A neighbor later came forward to say {DL} told {D.him} weeks earlier, \"Next time one of them comes through here, I'm not waiting for the cops.\""],
+        guiltyTruths: ["A neighbor later came forward to say {DL} had told the neighbor weeks earlier, \"Next time one of them comes through here, I'm not waiting for the cops.\""],
         innocentTruths: ["A second neighbor's doorbell camera, found later, showed {VL} doubling back toward {DL} after {DL} had turned toward {D.his} truck."],
         moods: [.divided], doctrines: ["selfDefense", "imperfectSelfDefense"],
         story: StoryExtras(
@@ -395,7 +395,7 @@ extension StoryCases {
                                   answer: "\"Once, when I was thirteen.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Improper impeachment with a juvenile adjudication", shouldSustain: true,
                                   explanation: "Under Rule 609(d), juvenile adjudications generally are not admissible to impeach a witness's credibility.",
-                                  doctrineID: "priorActs", weight: 1))
+                                  doctrineID: "priorActs", weight: -1))
             ],
             prosecutionOpening: "A teacher, a fifteen-year-old, and a plan to make it look like a burglary.",
             defenseOpening: "A shameful affair, and a teenager who killed and now needs someone to blame.",
@@ -498,7 +498,7 @@ extension StoryCases {
                                   answer: "\"It is an opinion based on training and experience.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Argumentative", shouldSustain: false,
                                   explanation: "A cross-examiner may challenge the basis and reliability of an expert's opinion under Rule 702; the question is fair and not argumentative.",
-                                  doctrineID: "expertTestimony", weight: 1))
+                                  doctrineID: "expertTestimony", weight: -1))
             ],
             prosecutionOpening: "\"Down the hill.\" A girl had the courage to record her killer. He told police he was there.",
             defenseOpening: "A five-year failure, a bullet that was never fired, and a man broken in solitary.",

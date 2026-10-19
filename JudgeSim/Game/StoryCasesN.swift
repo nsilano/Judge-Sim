@@ -99,6 +99,7 @@ extension StoryCases {
             defenseOpening: "Scared neighbors, a man on a construction site camera, and a struggle over a gun.",
             prosecutionClosing: "You can't create the danger and then claim self-defense against it.",
             defenseClosing: "{DL} made a terrible judgment. Malice requires more.",
+            when: .months([12, 1, 2]),
             genders: ["V": .male]
         )
     )
@@ -126,7 +127,7 @@ extension StoryCases {
             E(.statement, 1, "911 Call", "{DL} on 911: \"I thought it was my apartment. Oh my God. I'm going to lose my job. I thought it was my apartment.\"", .statement)
         ],
         prosecutionWitnesses: [
-            WitnessSeed(name: "{DET}", role: "Texas Rangers-style state investigator",
+            WitnessSeed(name: "{DET}", role: "SBI agent",
                         direct: ["\"The doormat was right there.\""],
                         cross: ["\"The floors are identical.\""],
                         weight: 2, lay: false,
@@ -184,7 +185,7 @@ extension StoryCases {
                                   answer: "\"Yes.\"",
                                   raisedBy: .prosecution, onCross: false, grounds: "Calls for a legal conclusion", shouldSustain: true,
                                   explanation: "Whether the defendant's belief was reasonable is the ultimate question for the factfinder.",
-                                  doctrineID: "expertTestimony", weight: 1))
+                                  doctrineID: "expertTestimony", weight: -1))
             ],
             prosecutionOpening: "A red doormat, an open door, and a man eating ice cream.",
             defenseOpening: "An exhausted officer, identical hallways, and a split second in the dark.",
@@ -295,7 +296,7 @@ extension StoryCases {
         ],
         ageRange: 24...30, occupations: ["film set armorer"], hasVictim: true,
         summaries: [
-            "On {DATE}, during a rehearsal for a western being filmed on a ranch outside {HOOD}, the lead actor pointed a revolver toward the camera while practicing a draw. It fired a live round that killed {V}, the cinematographer, and wounded the director. {D}, 24, was the film's armorer, responsible for every gun and round on set. Investigators found six live rounds mixed with dummy rounds in the ammunition box and on a cart. {DL} says {D.he} checked the gun that morning, that the assistant director handed it to the actor without {DL}, and that the live rounds came from a supplier's box labeled dummies."
+            "On {DATE}, during a rehearsal for a western being filmed on a ranch outside {HOOD}, the lead actor pointed a revolver toward the camera while practicing a draw. It fired a live round that killed {V}, the cinematographer, and wounded the director. {D} was the film's armorer, responsible for every gun and round on set. Investigators found six live rounds mixed with dummy rounds in the ammunition box and on a cart. {DL} says {D.he} checked the gun that morning, that the assistant director handed it to the actor without {DL}, and that the live rounds came from a supplier's box labeled dummies."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "Live Rounds", "Six live rounds found among dummy rounds in the ammunition box and on the prop cart."),
@@ -386,8 +387,7 @@ extension StoryCases {
         primaryLaw: "murder1", lesserLaw: "invManslaughter", threshold: 6, lesserThreshold: 4,
         specification: "With premeditation and deliberation, killed {KID}, age 22 months, by leaving the child in a hot car.",
         secondary: [
-            SecondaryCharge(lawID: "felonyChildAbuse", specification: "Inflicted serious physical injury on {KID} by leaving the child in a car for seven hours in 92-degree heat.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "cyberstalking", specification: "Sent sexually explicit electronic messages to a minor during the hours the child was in the car.", chance: 1.0, threshold: 0)
+            SecondaryCharge(lawID: "felonyChildAbuse", specification: "Inflicted serious physical injury on {KID} by leaving the child in a car for seven hours in 92-degree heat.", chance: 1.0, threshold: 0)
         ],
         ageRange: 30...36, occupations: ["software developer"], hasVictim: false,
         summaries: [
@@ -471,6 +471,7 @@ extension StoryCases {
             defenseOpening: "A loving parent, a broken routine, and a memory failure that happens every summer.",
             prosecutionClosing: "Forgetting doesn't search for how to kill.",
             defenseClosing: "Shameful isn't the same as guilty of murder.",
+            when: .months([6, 7, 8]),
             genders: ["D": .male]
         )
     )

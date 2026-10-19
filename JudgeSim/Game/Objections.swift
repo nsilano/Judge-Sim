@@ -45,8 +45,8 @@ enum ObjectionEngine {
         let setting = ctx.setting
         var out: [Draft] = []
 
-        // Hearsay: something a non-witness said, offered for its truth.
-        if kind == .lay && !isDefendant {
+        // Hearsay: something a non-witness said, offered for its truth (and against the defendant, so the State asks it).
+        if kind == .lay && !isDefendant && asker == .prosecution {
             let rumor = rng.pick([
                 "\(other.capitalizedFirst) told me \(dl) had been bragging about it.",
                 "\(other.capitalizedFirst) said everybody already knew it was \(dl).",
@@ -86,8 +86,8 @@ enum ObjectionEngine {
                              doctrine: "partyAdmission", weight: 2))
         }
 
-        // Speculation about what someone else was thinking, written to the case type.
-        if !isDefendant && kind != .expert {
+        // Speculation about what someone else was thinking, written to the case type (against the defendant, so the State asks it).
+        if !isDefendant && kind != .expert && asker == .prosecution {
             let guess: String
             switch setting {
             case .road: guess = rng.pick(["\(dl) must have known they were too drunk to drive.", "\(dl) was probably texting. Why else would they drift like that?"])
@@ -105,15 +105,25 @@ enum ObjectionEngine {
         // Leading on direct.
         if asker == w.calledBy {
             let lead: String
-            switch setting {
-            case .road: lead = rng.pick(["And the car was going well over the speed limit, wasn't it?", "You smelled alcohol on the driver, didn't you?"])
-            case .paper: lead = rng.pick(["And those transfers were never approved by anyone, were they?", "You never authorized those payments, correct?"])
-            case .drugs: lead = rng.pick(["And the bag was right next to where \(dl) was sitting, wasn't it?", "The money was bundled the way dealers bundle it, correct?"])
-            case .scene: lead = rng.pick(["And it was \(dl) you saw at \(place), wasn't it?", "\(dl) swung first, didn't they?"])
+            if asker == .prosecution {
+                switch setting {
+                case .road: lead = rng.pick(["And the car was going well over the speed limit, wasn't it?", "You smelled alcohol on the driver, didn't you?"])
+                case .paper: lead = rng.pick(["And those transfers were never approved by anyone, were they?", "You never authorized those payments, correct?"])
+                case .drugs: lead = rng.pick(["And the bag was right next to where \(dl) was sitting, wasn't it?", "The money was bundled the way dealers bundle it, correct?"])
+                case .scene: lead = rng.pick(["And it was \(dl) you saw at \(place), wasn't it?", "\(dl) swung first, didn't they?"])
+                }
+            } else {
+                // The defense leading its own witness toward a defense-friendly answer.
+                switch setting {
+                case .road: lead = rng.pick(["And \(dl) seemed perfectly steady to you that night, didn't they?", "The road was dark and wet, wasn't it?"])
+                case .paper: lead = rng.pick(["And everyone in that office knew about those transfers, didn't they?", "Management signed off on that kind of payment all the time, correct?"])
+                case .drugs: lead = rng.pick(["And other people used that space all the time, didn't they?", "\(dl) never had anything to do with that bag, did they?"])
+                case .scene: lead = rng.pick(["And \(dl) was only trying to get away, right?", "\(dl) never threw a punch, did they?"])
+                }
             }
             out.append(Draft(question: lead, answer: rng.pick(["Yes, that's right.", "Yes.", "That's correct."]), grounds: "Leading", sustain: true,
                              explanation: "A leading question on direct suggests the answer the lawyer wants (Rule 611(c)). Nothing here justifies leading.",
-                             doctrine: "leading", weight: 1))
+                             doctrine: "leading", weight: asker == .prosecution ? 1 : -1))
             if kind == .lay && rng.chance(0.5) {
                 out.append(Draft(question: rng.pick(["You were at \(place) on \(day), correct?", "You've known \(dl) for a few years, right?"]),
                                  answer: "Yes.", grounds: "Leading", sustain: false,

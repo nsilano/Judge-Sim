@@ -11,7 +11,7 @@ enum StoryCases {
                                        nurseryNight, snowbank, kennelShooting, missingToddler, streetRifle,
                                        harborDisappearance, bloodTestStartup, textMessages, restraintDeath, stagedAttack]
         + batchC + batchD + batchE + batchF + batchG + batchH + batchI + batchJ + batchK + batchL
-        + batchM + batchN + batchO + batchP + batchQ
+        + batchM + batchN + batchO + batchP + batchQ + batchR + batchS + batchT + batchU + batchV
 
     // MARK: - 1. A fatal crash after a closing shift
 
@@ -253,7 +253,7 @@ enum StoryCases {
                                   answer: "\"He said, 'The trustees will slow us down. The treasurer will handle it.'\"",
                                   raisedBy: .prosecution, onCross: false, grounds: "Hearsay", shouldSustain: false,
                                   explanation: "Offered to show why the contractor accepted payment from DL Property Services and what {DL} was told, not for the truth of whether the trustees approved. It is admissible for that purpose.",
-                                  doctrineID: "hearsay", weight: 1))
+                                  doctrineID: "hearsay", weight: -1))
             ],
             prosecutionOpening: "The congregation trusted {D} with the money for a new fellowship hall. For three years, {DL} told them it was safe. Most of it went to {DL}'s mortgage, truck, and credit cards.",
             defenseOpening: "The pastor told {DL} to keep the contractor working off the books. Forty-one thousand dollars went to that building. {DL} made terrible choices with the rest, and {D.he} will tell you so. The question is what crime, and how much.",
@@ -274,7 +274,7 @@ enum StoryCases {
             SecondaryCharge(lawID: "possStolen", specification: "Possessed a laptop belonging to {V}, knowing it to be stolen, and sold it to a pawn shop.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "injuryRealProperty", specification: "Damaged the rear door of {V}'s home by prying it open.", chance: 1.0, threshold: 5)
         ],
-        ageRange: 20...36, forcedPriorOffenses: ["Misdemeanor Larceny", "Possession of Stolen Goods"], hasVictim: true,
+        ageRange: 24...36, forcedPriorOffenses: ["Misdemeanor Larceny", "Possession of Stolen Goods@6"], hasVictim: true,
         summaries: [
             "At about {TIME} on {DATE}, {V} woke to a noise in a duplex on {STREET} in {HOOD} and saw a stranger in the hallway, lit only by a nightlight. The intruder ran out the back door, which had been pried open, taking a laptop, a wallet, and a bottle of prescription pain pills. Four days later {D} sold the laptop to a pawn shop across town. {DL} says the laptop came from a man at a gas station who sold it for $80, and that {D.he} was home asleep that night."
         ],
@@ -371,7 +371,7 @@ enum StoryCases {
                 .direct("Were you in that duplex?", "\"No. I've never been on that street.\""),
                 .cross("You told the pawn clerk the laptop was your cousin's.", "\"I did. That was a lie. I didn't want to explain the gas station.\""),
                 .cross("So you lie when it helps you.", "\"I lied to a pawn clerk about where a laptop came from. I'm not lying about breaking into somebody's home.\""),
-                .cross("You've been convicted of possession of stolen goods before.", "\"Six years ago. I was nineteen. It's exactly why I should have known better than to buy that laptop.\""),
+                .cross("You've been convicted of possession of stolen goods before.", "\"Six years ago. It's exactly why I should have known better than to buy that laptop.\""),
                 .cross("You can't name the man, describe his plate, or show any video.", "\"No. I asked my lawyer to get the video. It was gone.\"")
             ],
             objections: [
@@ -825,7 +825,7 @@ enum StoryCases {
                                   answer: "\"Some driver said I punched their window. It got dismissed.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Improper character evidence", shouldSustain: false,
                                   explanation: "When self-defense is raised, the victim's prior violent acts known to the defendant, or offered to show who was the aggressor, can be admissible (Rule 404(a)(2) and 405). The dismissal goes to weight.",
-                                  doctrineID: "characterEvidence", weight: 1))
+                                  doctrineID: "characterEvidence", weight: -1))
             ],
             prosecutionOpening: "An unarmed driver, angry and foolish, at a truck window for six seconds. {D} had an open lane and a running engine, and fired twice instead. That isn't self-defense.",
             defenseOpening: "A stranger chased {DL} half a mile, boxed {D.him} in, and reached into {D.his} truck. {VL}'s DNA is on {DL}'s torn collar. {DL} fired, called 911, and waited for police.",
@@ -1060,6 +1060,7 @@ enum StoryCases {
             defenseOpening: "Nineteen years of hunting together. A gun with a hair trigger the State's own lab confirmed. {DL} called 911 within a minute and tried to stop the bleeding. This was a terrible accident.",
             prosecutionClosing: "Premeditation can form in moments. But this was planned: the cabin, the timing before Monday, the gun at chest level. That's first-degree murder.",
             defenseClosing: "The medical examiner can't tell you intent. The gunsmith and the lab say this gun could fire on its own. That's reasonable doubt about murder of any degree.",
+            when: .months([11, 12, 1]),
             genders: ["D": .male]
         )
     )
@@ -1181,7 +1182,7 @@ enum StoryCases {
                                   answer: "\"I said I found the bike. That was a lie.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Improper impeachment", shouldSustain: false,
                                   explanation: "Specific instances of untruthfulness may be inquired into on cross to attack credibility (Rule 608(b)). It's especially relevant for an accomplice testifying under a plea deal.",
-                                  doctrineID: "characterEvidence", weight: 1))
+                                  doctrineID: "characterEvidence", weight: -1))
             ],
             prosecutionOpening: "A pistol against a 67-year-old's chest, zip ties on two people face-down in their own living room. The person who planned it is telling you who held the gun: {D}.",
             defenseOpening: "The State's case rides on {ALT}, who got years off a prison term for naming somebody, and who texted that the partner was {COUSIN}. Nobody ever looked for {COUSIN}.",
@@ -1207,7 +1208,7 @@ enum StoryCases {
         prosecutionEvidence: [
             E(.document, 3, "Protective Order", "A one-year domestic violence protective order entered seven months earlier after {VL} testified {DL} had pushed {VL} into a wall; {DL} later pleaded guilty to simple assault for that incident. It barred {DL} from {VL}'s residence."),
             E(.forensic, 3, "Hand Surgeon's Records", "A 9-centimeter laceration across the left forearm with a partial tendon cut and nerve damage; surgical repair; permanent numbness in two fingers."),
-            E(.statement, 2, "911 Call", "{V}: \"{DL} cut me, {D.his} got a box cutter, my kid's here, please hurry.\""),
+            E(.statement, 2, "911 Call", "{V}: \"{DL} cut me, {D.he} has a box cutter, my kid's here, please hurry.\""),
             E(.physical, 1, "Box Cutter", "A yellow box cutter found on the kitchen floor. {DL}'s and {VL}'s fingerprints are both on it.", .search)
         ],
         defenseEvidence: [
@@ -1515,7 +1516,8 @@ enum StoryCases {
             prosecutionOpening: "Two pools of gasoline in a house with three people asleep inside. A landlord who wanted them out 'one way or another,' a bigger insurance policy, and a truck with its lights off. The State will prove {D} set that fire.",
             defenseOpening: "No furnace, a space heater on a lamp cord, and a can of gas for the mower in the same back room. That's a recipe for an accidental fire, and the State never looked at {DL}'s truck or phone.",
             prosecutionClosing: "One spill doesn't make two pools six feet apart. Motive, threat, insurance, and the truck at 3:41 make this an intentional fire, and the fire marshal says so.",
-            defenseClosing: "The State's own investigator can't rule out the can. Its case on who did it is a pickup with no plate. Arson is about proof, and this isn't enough."
+            defenseClosing: "The State's own investigator can't rule out the can. Its case on who did it is a pickup with no plate. Arson is about proof, and this isn't enough.",
+            when: .months([12, 1, 2])
         )
     )
 }

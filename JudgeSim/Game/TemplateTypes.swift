@@ -154,7 +154,7 @@ enum StoryDate {
     func incident(before session: Date, minDays: Int, using rng: inout SeededRNG) -> Date? {
         let cal = Calendar.current
         if case .yearsAgo(let years) = self {
-            return cal.date(byAdding: .day, value: -(years * 365 + rng.int(0...60)), to: session)
+            return cal.date(byAdding: .day, value: -(max(years * 365, minDays) + rng.int(0...60)), to: session)
         }
         guard let latest = cal.date(byAdding: .day, value: -minDays, to: session) else { return nil }
         let year = cal.component(.year, from: latest)

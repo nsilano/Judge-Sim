@@ -648,7 +648,7 @@ extension CaseTemplates {
             headlines: ["DWI Number Four", "The Interlock Bypass"],
             primaryLaw: "habitualDWI", lesserLaw: nil, threshold: 8, lesserThreshold: 8,
             specification: "Drove while impaired, having three or more prior impaired-driving convictions within ten years.",
-            ageRange: 35...65, forcedPriorOffenses: ["Driving While Impaired", "Driving While Impaired", "Driving While Impaired"],
+            ageRange: 35...65, forcedPriorOffenses: ["Driving While Impaired@8", "Driving While Impaired@5", "Driving While Impaired@2"],
             hasVictim: false,
             summaries: [
                 "A trooper stopped {D}'s pickup for weaving on U.S. 17 at {TIME}. {DL} blew 0.17. It's {DL}'s fourth DWI in eight years.",
@@ -741,7 +741,7 @@ extension CaseTemplates {
             prosecutionEvidence: [
                 E(.video, 4, "Gas Station Video", "{DL} leaning close to {VL} at the pump, then walking away. No audio."),
                 E(.digital, 3, "Instagram Post", "{DL} posted a screenshot of {VL}'s witness statement with the caption \"rats.\"", .search),
-                E(.document, 2, "Witness Recanted", "{VL} told the DA after the encounter that {V.him} \"didn't remember\" the original assault.")
+                E(.document, 2, "Witness Recanted", "{VL} told the DA after the encounter that {V.he} \"didn't remember\" the original assault.")
             ],
             defenseEvidence: [
                 E(.document, 2, "No Audio", "No recording of what was actually said at the gas station."),

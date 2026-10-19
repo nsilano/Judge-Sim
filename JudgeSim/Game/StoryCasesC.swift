@@ -15,7 +15,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "possSchedII", specification: "Possessed oxycodone, a Schedule II controlled substance, taken in the robbery.", chance: 1.0, threshold: 4)
         ],
-        ageRange: 26...41, occupations: ["roofer"], forcedPriorOffenses: ["Possession of Schedule II (cocaine)"], hasVictim: true,
+        ageRange: 27...41, occupations: ["roofer"], forcedPriorOffenses: ["Possession of Schedule II (cocaine)@9"], hasVictim: true,
         summaries: [
             "At about {TIME} on {DATE}, a person in a hooded sweatshirt and surgical mask walked up to the pharmacy counter at {PHARM} in {HOOD}, lifted a black pistol from a jacket pocket, and told {V}, the pharmacist on duty, to empty the oxycodone drawer. {V} handed over 340 tablets. Police arrested {D}, a roofer with a pain-pill addiction, a week later after a tip; in {DL}'s truck they found a black CO2-powered BB pistol. {DL} admits the robbery and is pleading for the lesser charge: {DL} says it was a BB gun, not a firearm, and nobody's life was ever in danger."
         ],
@@ -221,7 +221,7 @@ extension StoryCases {
         prosecutionEvidence: [
             E(.document, 3, "Vault Access Log", "Badge records show {DL} entered the vault four times that afternoon; the assistant manager entered once, at 9:15 a.m., before the shipment arrived."),
             E(.document, 3, "Cash Loan Payoff", "Twenty-two days later, {DL} paid off a $14,200 car loan at a credit union with cash in $100 bills."),
-            E(.statement, 2, "Interview", "{DL} first said {D.him} \"didn't remember\" how many times {DL} entered the vault, then said twice.", .statement)
+            E(.statement, 2, "Interview", "{DL} first said {D.he} \"didn't remember\" how many times {DL} entered the vault, then said twice.", .statement)
         ],
         defenseEvidence: [
             E(.document, 3, "Override Codes", "The vault door can be opened with a manager override code that doesn't create a badge record. The assistant manager knew the code."),

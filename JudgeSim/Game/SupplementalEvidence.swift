@@ -30,6 +30,8 @@ enum EvidenceRequest: String, Codable, CaseIterable, Identifiable {
 
     /// Requests that make sense for this kind of case.
     static func options(for c: CourtCase) -> [EvidenceRequest] {
+        // A written case's record is complete as written; generic follow-up results wouldn't fit its story.
+        guard !c.templateKey.hasPrefix("story.") else { return [] }
         let paper = c.category == .whiteCollar || c.category == .cyber
         var list: [EvidenceRequest] = paper ? [.financialRecords, .phoneRecords, .witnessFollowUp, .expertReview]
                                             : [.video, .phoneRecords, .witnessFollowUp]
@@ -46,6 +48,7 @@ enum SupplementalEvidence {
     private enum Direction { case guilt, innocence, inconclusive }
 
     static func gather(for c: inout CourtCase, requests: [EvidenceRequest], rng: inout SeededRNG) -> [String] {
+        guard !c.templateKey.hasPrefix("story."), !requests.isEmpty else { return [] }
         let dl = c.defendant.lastName
         var used = Set([c.defendant.name])
         var notes: [String] = []

@@ -73,6 +73,21 @@ struct DocketEntry: Identifiable, Codable {
     var isOpen: Bool { status == .pending || status == .inProgress }
 }
 
+extension DocketEntry {
+    /// Fields added since an entry was first saved decode as their defaults, so an older save still loads.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        matter = try c.decode(Matter.self, forKey: .matter)
+        status = try c.decodeIfPresent(Status.self, forKey: .status) ?? .pending
+        resume = try c.decodeIfPresent(CaseSnapshot.self, forKey: .resume)
+        continuances = try c.decodeIfPresent(Int.self, forKey: .continuances) ?? 0
+        requests = try c.decodeIfPresent([EvidenceRequest].self, forKey: .requests)
+        note = try c.decodeIfPresent(String.self, forKey: .note)
+        outcome = try c.decodeIfPresent(String.self, forKey: .outcome)
+    }
+}
+
 /// A day in court.
 struct CourtDay: Codable {
     enum Kind: String, Codable {
@@ -113,9 +128,18 @@ struct ScheduledMatter: Identifiable, Codable {
 }
 
 enum CourtCalendar {
-    static var calendar: Calendar { Calendar.current }
+    /// The court keeps a Gregorian calendar with a Saturday–Sunday weekend, whatever the device's region settings.
+    static let calendar: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "en_US_POSIX")
+        calendar.timeZone = .current
+        return calendar
+    }()
 
-    static func isWeekend(_ date: Date) -> Bool { calendar.isDateInWeekend(date) }
+    static func isWeekend(_ date: Date) -> Bool {
+        let weekday = calendar.component(.weekday, from: date)
+        return weekday == 1 || weekday == 7
+    }
 
     /// The same date, or the next weekday if it falls on a weekend.
     static func weekday(onOrAfter date: Date) -> Date {
@@ -222,7 +246,7 @@ enum ContinuanceMotions {
             let why = rng.pick(["was served with a subpoena but was admitted to the hospital on Saturday",
                                 "is out of state on military orders until the end of the month",
                                 "had a death in the family and is in Georgia for the funeral",
-                                "was served but called this morning; her child is in the emergency room"])
+                                "was served but called this morning from the emergency room, where their child was taken overnight"])
             let who = witness.map { "\($0.name), \($0.role.lowercased())," } ?? "a material witness"
             let lawyer = movant == .prosecution ? ada : defense
             return ContinuanceMotion(

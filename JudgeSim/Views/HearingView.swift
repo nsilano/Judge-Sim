@@ -15,6 +15,15 @@ struct HearingView: View {
 
     private var h: ViolationHearing { session.hearing }
 
+    /// Probation may run at most five years in all (G.S. 15A-1342(a)); extensions come in six-month steps up to two years.
+    private var extensionCap: Int {
+        let term = h.probation
+        let start = term.starts ?? CourtCalendar.calendar.date(byAdding: .month, value: -12, to: h.date) ?? h.date
+        let months = CourtCalendar.calendar.dateComponents([.month], from: start, to: term.ends).month ?? 0
+        let room = max(0, 60 - months)
+        return min(24, room - room % 6)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -48,7 +57,7 @@ struct HearingView: View {
             }
             .sheet(isPresented: $showCounsel) { CounselSheet(provider: session) }
             .sheet(isPresented: $showContinuance) {
-                ContinuanceSheet(today: h.date, subject: "Probation violation: \(h.personName)") { date, reason, _ in
+                ContinuanceSheet(today: h.date, subject: "Probation violation: \(h.personName)", keepsRulings: false) { date, reason, _ in
                     showContinuance = false
                     game.continueMatter(h.id, to: date, reason: reason, snapshot: nil)
                     dismiss()
@@ -176,8 +185,14 @@ struct HearingView: View {
                 ConditionToggle(title: "Add random drug testing", isOn: $session.rulings.addTesting)
                 ConditionToggle(title: "Add curfew", isOn: $session.rulings.addCurfew)
                 ConditionToggle(title: "Add 60 days of house arrest with electronic monitoring", isOn: $session.rulings.addHouseArrest)
-                Stepper(value: $session.rulings.extendMonths, in: 0...24, step: 6) {
+                Stepper(value: $session.rulings.extendMonths, in: 0...extensionCap, step: 6) {
                     Text("Extend probation: \(session.rulings.extendMonths) months").font(.subheadline)
+                }
+                if extensionCap < 24 {
+                    Text(extensionCap == 0
+                         ? "Probation can't be extended: the term already reaches the five-year limit (G.S. 15A-1342(a))."
+                         : "Probation can be extended by at most \(extensionCap) more months: the total term can't exceed five years (G.S. 15A-1342(a)).")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
             }
             .card()

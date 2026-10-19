@@ -245,7 +245,7 @@ enum DefendantProfiles {
     }
 
     /// The same person always gets the same history.
-    static func make(for defendant: Defendant, county: County, year: Int? = nil) -> DefendantProfile {
+    static func make(for defendant: Defendant, county: County, year: Int? = nil, family known: FamilyFacts = FamilyFacts()) -> DefendantProfile {
         let bytes = withUnsafeBytes(of: defendant.personID.uuid) { Array($0) }
         let seed = bytes.prefix(8).reduce(UInt64(0)) { ($0 << 8) | UInt64($1) }
         var rng = SeededRNG(seed: seed | 1)
@@ -268,6 +268,11 @@ enum DefendantProfiles {
         let age = defendant.age
         let currentYear = year ?? Calendar.current.component(.year, from: Date())
         let birthYear = currentYear - age
+        // Everything random is laid out as of the person's first appearance in this court and counted from the
+        // birth year, so a returning defendant has the same history in every case, whatever year it is now.
+        let anchorYear = min(currentYear, defendant.history.map { Calendar.current.component(.year, from: $0.date) }.min() ?? currentYear)
+        let anchorAge = anchorYear - birthYear
+        let bg = background.lowercased()
         var jobs: [Job] = []
         let unemployed = lower.contains("unemployed")
         let highSchool = lower.hasPrefix("high school")
@@ -278,8 +283,19 @@ enum DefendantProfiles {
         let has = { (keys: [String]) in keys.contains(where: lower.contains) }
 
         // Education first: it decides when a career can begin. Every year below is counted from the birth year.
-        func grad(_ years: Int) -> Int { min(birthYear + years, currentYear - 1) }
+        func grad(_ years: Int) -> Int { min(birthYear + years, currentYear) }
+        // Graduation at about eighteen, unless the background says otherwise.
         let hsYear = grad(18)
+        let diploma: String
+        if bg.contains("ged in prison") {
+            diploma = "GED, earned while incarcerated"
+        } else if bg.contains("graduated at twenty-five") {
+            diploma = "High school diploma through an adult high school program, \(grad(25))"
+        } else if bg.contains("finished school at night") {
+            diploma = "High school diploma, earned in night classes, \(grad(19))"
+        } else {
+            diploma = "High school diploma, \(hsYear)"
+        }
         let education: String
         var careerAge = 18
         if highSchool {
@@ -297,9 +313,15 @@ enum DefendantProfiles {
         } else if has(["dental hygienist"]) {
             careerAge = 20
             education = "Associate degree in dental hygiene, Hollis Community College, \(grad(20))."
+        } else if bg.contains("ged in prison") {
+            careerAge = 20
+            education = "\(diploma); associate degree, Hollis Community College, \(grad(max(20, anchorAge - rng.int(1...3))))."
+        } else if bg.contains("graduated at twenty-five") {
+            careerAge = 16
+            education = "Left high school without finishing; \(diploma.prefix(1).lowercased() + diploma.dropFirst())."
         } else if has(["nursing assistant", "aide", "caregiver"]) {
             careerAge = 19
-            education = "High school diploma, \(hsYear); nurse aide certificate, Hollis Community College, \(hsYear + 1)."
+            education = "\(diploma); nurse aide certificate, Hollis Community College, \(hsYear + 1)."
         } else if has(["software", "engineer", "account", "cpa", "founder", "ceo", "executive", "pharmaceutical", "teacher", "real estate", "sales manager"]) {
             careerAge = 22
             education = "Bachelor's degree from \(rng.pick(["East Carolina University", "UNC Wilmington", "NC State University"])), \(grad(22))."
@@ -308,22 +330,24 @@ enum DefendantProfiles {
             education = "Associate degree in criminal justice, Hollis Community College, \(grad(20)); Basic Law Enforcement Training, \(grad(21))."
         } else if has(["electric", "hvac", "welder", "mechanic", "machinist", "massage"]) {
             careerAge = 19
-            education = "High school diploma, \(hsYear); vocational certificate, Hollis Community College, \(hsYear + 1)."
+            education = "\(diploma); vocational certificate, Hollis Community College, \(hsYear + 1)."
+        } else if bg.contains("finished school at night") {
+            education = "\(diploma)."
         } else if background.contains("finish high school") {
             education = "High school diploma, Hollis County High School, \(hsYear)."
         } else if background.contains("community college") {
-            education = "High school diploma, \(hsYear); some college at Hollis Community College."
+            education = "\(diploma); some college at Hollis Community College."
         } else {
             switch rng.int(0...5) {
             case 0, 1: education = "High school diploma, Hollis County High School, \(hsYear)."
-            case 2: education = "GED, earned at Hollis Community College, \(grad(rng.int(18...24)))."
+            case 2: education = "GED, earned at Hollis Community College, \(grad(min(rng.int(18...24), max(18, anchorAge))))."
             case 3: careerAge = 16; education = "Left school in the 10th grade, \(grad(16))."
-            case 4: careerAge = 20; education = "Associate degree in applied science, Hollis Community College, \(grad(20))."
+            case 4 where anchorAge >= 20: careerAge = 20; education = "Associate degree in applied science, Hollis Community College, \(grad(20))."
             default: education = "High school diploma, \(hsYear); some college, withdrew after two semesters."
             }
         }
 
-        careerAge = min(careerAge, max(16, age - 1))
+        careerAge = min(careerAge, max(16, anchorAge - 1))
 
         // Time in prison on a prior felony, from the record: no job overlaps it.
         var custody: [(start: Int, end: Int)] = []
@@ -334,19 +358,41 @@ enum DefendantProfiles {
         let lastRelease = custody.map { $0.end }.max() ?? 0
         func clear(_ start: Int, _ end: Int) -> Bool { !custody.contains { start < $0.end && end > $0.start } }
 
-        // Work history, laid out backward from today without overlaps.
+        // Service the background mentions appears in the work history, before civilian jobs.
+        let service: [(key: String, title: String, employer: String, years: Int)] = [
+            ("Navy", "U.S. Navy (honorably discharged)", "U.S. Navy", 4),
+            ("medically discharged", "U.S. Army (medical discharge)", "U.S. Army", 1),
+            ("Afghanistan", "U.S. Army infantry (honorably discharged)", "U.S. Army", 6),
+            ("Marine Corps", "U.S. Marine Corps", "U.S. Marine Corps", 6),
+            ("Air Force", "Aircraft mechanic, U.S. Air Force", "U.S. Air Force", 4),
+            ("Coast Guard", "U.S. Coast Guard", "U.S. Coast Guard, Station Wilmington", 3),
+            ("EMT", "Emergency medical technician", "Hollis County EMS", 4),
+            ("corrections officer", "Correctional officer", "N.C. Department of Adult Correction", 3),
+            ("long-haul", "Long-haul truck driver", "Tidewater Freight Logistics", 8),
+            ("fishing boats in Alaska", "Deckhand", "Commercial fishing fleet, Alaska", 3),
+            ("textile plant", "Line supervisor", "Dunmore Mills Textiles", 10),
+            ("carnival", "Carnival ride operator", "Coastal Amusements", 5),
+            ("call center", "Customer service representative", "Charlotte bank call center", 5)
+        ]
+        // Shortened if need be so it fits between eighteen and the current job.
+        let stint = student ? nil : service.first(where: { background.contains($0.key) })
+            .map { (title: $0.title, employer: $0.employer, years: min($0.years, max(1, anchorAge - 20))) }
+
+        // Work history, laid out backward from the first appearance without overlaps.
         var timeline: [(start: Int, job: Job)] = []
         let careerStart = birthYear + careerAge
         let firstWork = birthYear + 16
-        var cursor = currentYear
+        // The current job starts after any service the background describes.
+        let afterService = stint.map { birthYear + 18 + $0.years + 1 } ?? 0
+        var cursor = anchorYear
         if student, let job = partTime {
-            let start = max(firstWork, currentYear - rng.int(0...2))
+            let start = max(firstWork, anchorYear - rng.int(0...2))
             timeline.append((start, Job(title: "Part-time \(job)", employer: employer(for: job, rng: &rng), years: "\(start)–present", current: true)))
         } else if student {
             if rng.chance(0.45) {
                 let (title, place) = rng.pick([("Part-time cashier", "Pell Avenue Quik Stop"), ("Part-time line cook", "The Brickyard Grill"),
                                                ("Weekend lifeguard", "Hollis County Parks and Recreation"), ("Part-time stocker", "Cane Creek Hardware")])
-                let start = max(firstWork, currentYear - rng.int(0...2))
+                let start = max(firstWork, anchorYear - rng.int(0...2))
                 timeline.append((start, Job(title: title, employer: place, years: "\(start)–present", current: true)))
             }
         } else if retired {
@@ -358,12 +404,12 @@ enum DefendantProfiles {
             cursor = start
         } else if !unemployed {
             let base = occupation.components(separatedBy: ",").first ?? occupation
-            let earliest = max(careerStart, lastRelease, firstWork)
-            let start = max(earliest, currentYear - rng.int(1...12))
+            let earliest = min(max(careerStart, lastRelease, firstWork, afterService), anchorYear)
+            let start = max(earliest, anchorYear - rng.int(1...12))
             timeline.append((start, Job(title: base.capitalizedFirst, employer: employer(for: base, rng: &rng),
                                         years: "\(min(start, currentYear))–present", current: true)))
             if let job = partTime {
-                let sideStart = max(start, currentYear - rng.int(1...3))
+                let sideStart = max(start, anchorYear - rng.int(1...3))
                 timeline.append((sideStart, Job(title: "Part-time \(job)", employer: employer(for: job, rng: &rng), years: "\(sideStart)–present", current: true)))
             } else if rng.chance(0.3) && !has(["owner", "founder", "ceo", "therapist", "practitioner", "sergeant", "sheriff"]) {
                 let side = rng.pick(["weekend server", "weekend security guard", "weekend delivery driver", "part-time rideshare driver"])
@@ -373,33 +419,16 @@ enum DefendantProfiles {
                 case "weekend delivery driver": "Coastal Courier Services"
                 default: "self-employed (rideshare apps)"
                 }
-                let sideStart = max(start, currentYear - rng.int(1...3))
+                let sideStart = max(start, anchorYear - rng.int(1...3))
                 timeline.append((sideStart, Job(title: side, employer: sideEmployer, years: "\(sideStart)–present", current: true)))
             }
             cursor = start - rng.int(0...1)
         } else {
-            cursor = currentYear - rng.int(0...2)
+            cursor = anchorYear - rng.int(0...2)
         }
         let unemployedSince = cursor
         if !student {
-            // Service the background mentions appears in the work history, before civilian jobs.
-            let service: [(key: String, title: String, employer: String, years: Int)] = [
-                ("Navy", "U.S. Navy (honorably discharged)", "U.S. Navy", 4),
-                ("medically discharged", "U.S. Army (medical discharge)", "U.S. Army", 1),
-                ("Afghanistan", "U.S. Army infantry (honorably discharged)", "U.S. Army", 6),
-                ("Marine Corps", "U.S. Marine Corps", "U.S. Marine Corps", 6),
-                ("Air Force", "Aircraft mechanic, U.S. Air Force", "U.S. Air Force", 4),
-                ("Coast Guard", "U.S. Coast Guard", "U.S. Coast Guard, Station Wilmington", 3),
-                ("EMT", "Emergency medical technician", "Hollis County EMS", 4),
-                ("corrections officer", "Correctional officer", "N.C. Department of Adult Correction", 3),
-                ("long-haul", "Long-haul truck driver", "Tidewater Freight Logistics", 8),
-                ("fishing boats in Alaska", "Deckhand", "Commercial fishing fleet, Alaska", 3),
-                ("textile plant", "Line supervisor", "Dunmore Mills Textiles", 10),
-                ("carnival", "Carnival ride operator", "Coastal Amusements", 5),
-                ("call center", "Customer service representative", "Charlotte bank call center", 5)
-            ]
-            if let stint = service.first(where: { background.contains($0.key) }),
-               cursor - stint.years >= birthYear + 18, clear(cursor - stint.years, cursor) {
+            if let stint, cursor - stint.years >= birthYear + 18, clear(cursor - stint.years, cursor) {
                 timeline.append((cursor - stint.years, Job(title: stint.title, employer: stint.employer,
                                                            years: "\(cursor - stint.years)–\(cursor)", current: false)))
                 cursor -= stint.years
@@ -438,20 +467,25 @@ enum DefendantProfiles {
         }
         jobs = timeline.sorted { $0.start > $1.start }.map { $0.job }
 
-        // Family fits the person's age.
+        // Family fits the person's age, the background, and whatever the case itself says about spouse and children.
+        var facts = known
+        facts.merge(FamilyFacts.from(background: background))
         let family: String
-        if student || age < 20 {
+        if (student || age < 20) && facts.minChildren == 0 && facts.status == nil {
             family = rng.pick(["Single, no children.", "Single, no children.", "In a relationship, no children."])
         } else {
-            let maxChildren = min(3, max(0, (age - 18) / 4))
-            let children = maxChildren == 0 ? 0 : rng.int(0...maxChildren)
+            let maxChildren = max(facts.minChildren, min(3, max(0, (age - 18) / 4)))
+            let drawn = maxChildren == 0 ? 0 : rng.int(0...maxChildren)
+            let children = facts.exactChildren ?? max(facts.minChildren, drawn)
             var statuses = ["Single", "In a long-term relationship"]
             if age >= 21 { statuses += ["Married", "Married"] }
             if age >= 25 { statuses += ["Divorced", "Separated"] }
             if age >= 55 { statuses.append("Widowed") }
-            let status = rng.pick(statuses)
-            let support = children > 0 && ["Divorced", "Separated", "Single"].contains(status) && rng.chance(0.5)
+            let status = facts.status ?? rng.pick(statuses)
+            let support = facts.paysSupport
+                || (children > 0 && ["Divorced", "Separated", "Single"].contains(status) && rng.chance(0.5))
             family = status + (children == 0 ? ", no children." : ", \(children) child\(children == 1 ? "" : "ren")" + (support ? ", pays child support." : "."))
+                + (facts.note.map { " " + $0 } ?? "")
         }
 
         // Where the defendant lives agrees with the background and the person's age.
@@ -1021,5 +1055,134 @@ extension Array where Element: Hashable {
     func uniqued() -> [Element] {
         var seen = Set<Element>()
         return filter { seen.insert($0).inserted }
+    }
+}
+
+extension DefendantProfiles {
+    /// A returning defendant's life as the court last recorded it, carried forward: a job ends when the person
+    /// goes to prison, and the facts of the new case can add to the family but never erase it.
+    static func continued(_ stored: DefendantProfile, person: PersonRecord, family known: FamilyFacts, on date: Date) -> DefendantProfile {
+        var profile = stored
+        let cal = CourtCalendar.calendar
+        let year = cal.component(.year, from: date)
+        // The most recent commitment to prison or jail in this court.
+        let committed = person.appearances.last { appearance in
+            let text = appearance.outcome.lowercased()
+            return text.contains("active") || text.contains("imprisonment") || text.contains("revoked") || text.contains("crv")
+        }
+        if let committed {
+            let goneYear = cal.component(.year, from: committed.date)
+            var lost = false
+            for i in profile.jobs.indices where profile.jobs[i].current {
+                let start = Int(profile.jobs[i].years.prefix(4)) ?? goneYear
+                if start <= goneYear {
+                    profile.jobs[i].current = false
+                    profile.jobs[i].years = "\(start)–\(goneYear) (lost the job when incarcerated)"
+                    lost = true
+                }
+            }
+            if lost && person.status != .incarcerated {
+                let release = max(goneYear, year - 1)
+                profile.jobs.insert(Job(title: "Unemployed", employer: "since release from custody", years: "\(release)–present", current: true), at: 0)
+            }
+        }
+        // New facts about family add to what was known.
+        if known.minChildren > 0, profile.family.contains("no children") {
+            let n = max(1, known.minChildren)
+            profile.family = profile.family.replacingOccurrences(of: ", no children.", with: ", \(n) child\(n == 1 ? "" : "ren").")
+        }
+        if let status = known.status, !profile.family.hasPrefix(status) {
+            let rest = profile.family.firstIndex(of: ",").map { String(profile.family[$0...]) } ?? "."
+            profile.family = status + rest
+        }
+        if let note = known.note, !profile.family.contains(note) { profile.family += " " + note }
+        return profile
+    }
+}
+
+/// What is known about a defendant's spouse and children from the background and the written facts of the case,
+/// so the profile never says "no children" about someone the case calls a parent.
+struct FamilyFacts {
+    var minChildren = 0
+    var exactChildren: Int?
+    var status: String?
+    var note: String?
+    var paysSupport = false
+
+    mutating func merge(_ other: FamilyFacts) {
+        minChildren = max(minChildren, other.minChildren)
+        if exactChildren == nil { exactChildren = other.exactChildren }
+        if let exact = exactChildren, exact < minChildren { exactChildren = minChildren }
+        if status == nil { status = other.status }
+        if note == nil { note = other.note }
+        paysSupport = paysSupport || other.paysSupport
+    }
+
+    /// Family facts stated in a background line.
+    static func from(background: String) -> FamilyFacts {
+        var f = FamilyFacts()
+        let b = background.lowercased()
+        func has(_ words: String...) -> Bool { words.contains { b.contains($0) } }
+        if has("has five children") { f.exactChildren = 5 }
+        if has("raised two children", "estranged from both children") { f.exactChildren = 2 }
+        if has("grandchildren", "grandchild", "became a grandparent") { f.minChildren = max(f.minChildren, 2) }
+        if has("custody of a child", "custody fight", "became a parent", "child support", "a child plays on",
+               "had a child removed", "day a child was born", "lost children", "disabled adult child",
+               "teenage child", "adopted a former foster child") {
+            f.minChildren = max(f.minChildren, 1)
+        }
+        if has("child support") { f.paysSupport = true }
+        if has("widowed", "widow or widower") { f.status = "Widowed" }
+        if has("married to a high school sweetheart") { f.status = "Married" }
+        if has("going through a divorce") { f.status = "Separated, divorce pending" }
+        if has("after a divorce", "custody fight") { f.status = "Divorced" }
+        if has("recently got engaged") { f.status = "Engaged" }
+        if has("foster parent to two teenagers") { f.note = "Foster parent to two teenagers." }
+        if has("raising a niece and nephew") { f.note = "Raising a niece and nephew." }
+        return f
+    }
+
+    /// Family facts the written case states about the defendant. `text` is the unfilled template text, so the
+    /// defendant's own relationships can be told apart from everyone else's; `voice` is what the defendant says.
+    static func from(caseText text: String, defendantVoice voice: String, victimDied: Bool) -> FamilyFacts {
+        var f = FamilyFacts()
+        let mine = #"(\{D\.[Hh]is\}|\{DL?\}'s)"#
+        let kids = "(child|children|kids|son|sons|daughter|daughters|baby|toddler|infant|stepson|stepdaughter|stepchildren|grandchildren|grandson|granddaughter|boys|girls)"
+        func found(_ pattern: String, in source: String) -> Bool {
+            source.range(of: pattern, options: .regularExpression) != nil
+        }
+        if found(mine + #" (?:[A-Za-z0-9-]+ ){0,2}"# + kids + #"\b"#, in: text)
+            || found(#"\b[Mm]y (?:[a-z0-9-]+ ){0,2}"# + kids + #"\b"#, in: voice) {
+            f.minChildren = 1
+        }
+        for (word, n) in [("two", 2), ("three", 3), ("four", 4), ("five", 5)]
+        where found(mine + " " + word + #" (children|kids|sons|daughters|boys|girls)\b"#, in: text) {
+            f.minChildren = max(f.minChildren, n)
+        }
+        if found(#"\{DL?\}, the other parent of"#, in: text) { f.minChildren = max(f.minChildren, 1) }
+        // "{DL}, a married father of two"
+        for (word, n) in [("a", 1), ("one", 1), ("two", 2), ("three", 3), ("four", 4), ("five", 5)]
+        where found(#"\{DL?\}, an? (married |single |divorced )?(father|mother|parent) of "# + word + #"\b"#, in: text) {
+            f.minChildren = max(f.minChildren, n)
+            if found(#"\{DL?\}, an? married (father|mother|parent)"#, in: text) { f.status = "Married" }
+        }
+        let spouseIsVictim = found(mine + #" (wife|husband|spouse),? \{V"#, in: text)
+            || found(#"\{VL?\},? "# + mine + #" (wife|husband|spouse)\b"#, in: text)
+            || (found(#"\{V\}"#, in: text) && found("the couple's (home|house|apartment)", in: text))
+        if spouseIsVictim, f.status == nil || f.status == "Married" {
+            f.status = victimDied ? "Widowed" : "Married"
+            f.note = victimDied ? "The late spouse is the victim in this case." : "The spouse is the alleged victim in this case."
+        } else if found(mine + #" (wife|husband|spouse)\b"#, in: text) || found(#"\b[Mm]y (wife|husband)\b"#, in: voice) {
+            f.status = "Married"
+        } else if found(mine + #" late (wife|husband|spouse)\b"#, in: text) || found(#"\b[Mm]y late (wife|husband)\b"#, in: voice) {
+            f.status = "Widowed"
+        } else if found(mine + #" (fiancé|fiancée|fiance|fiancee)\b"#, in: text) {
+            f.status = "Engaged"
+        } else if found(mine + #" (ex-wife|ex-husband|ex-spouse|ex)\b"#, in: text) || found(#"\b[Mm]y (ex-wife|ex-husband|ex)\b"#, in: voice) {
+            f.status = "Divorced"
+        } else if found(mine + #" (girlfriend|boyfriend|partner)\b"#, in: text) {
+            f.status = "In a long-term relationship"
+        }
+        return f
     }
 }
