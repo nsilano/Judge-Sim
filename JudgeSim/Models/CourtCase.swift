@@ -313,14 +313,9 @@ struct CourtCase: Identifiable, Codable, Hashable {
 
     var caption: String { "State of North Carolina v. \(defendant.name)" }
 
-    /// The allocution, adjusted so a defendant who pleaded guilty doesn't protest innocence or cite an appeal.
+    /// What the defendant says before sentence: the written statement, or one built from this case's facts.
     func allocution(afterPlea: Bool) -> String {
-        guard afterPlea else { return allocution }
-        let lower = allocution.lowercased()
-        if lower.contains("didn't do it") || lower.contains("pending appeal") || lower.contains("innocent") {
-            return "\(defendant.lastName): \"I pleaded guilty because I'm guilty, Your Honor. I'm not going to stand here and make excuses. I'm sorry.\""
-        }
-        return allocution
+        Allocutions.statement(self, afterPlea: afterPlea)
     }
 
     func evidence(_ id: UUID?) -> Evidence? {

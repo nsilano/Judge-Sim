@@ -122,6 +122,9 @@ struct ChambersView: View {
                     }
                     header
                     if game.unseated { unseatedCard }
+                    if !game.freshAppeals.isEmpty {
+                        appealsDecidedCard
+                    }
                     if !game.digest.isEmpty {
                         digestCard
                     }
@@ -392,6 +395,33 @@ struct ChambersView: View {
         }
     }
 
+    /// The Court of Appeals decided cases from this court since the judge last sat: upheld or changed, and why.
+    private var appealsDecidedCard: some View {
+        let decided = game.freshAppeals.compactMap { id in game.appeals.first { $0.id == id } }
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionTitle(text: "From the Court of Appeals", icon: "building.columns.fill")
+                Spacer()
+                Button("Dismiss") { withAnimation { game.clearDigest() } }
+                    .font(.caption.weight(.semibold))
+            }
+            Text("\(decided.filter { !$0.wasReversed }.count) upheld · \(decided.filter(\.wasReversed).count) changed")
+                .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            ForEach(decided) { appeal in
+                NavigationLink {
+                    AppealDetail(appeal: appeal, today: game.currentDate)
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(appeal.caption).font(.system(.subheadline, design: .serif).weight(.semibold)).foregroundStyle(.primary)
+                        AppealDecisionCard(appeal: appeal, compact: true)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .card()
+    }
+
     /// Appeals decided, releases, and arrests since the last court day, with appeals first.
     private var digestCard: some View {
         let appeals = game.digest.filter { $0.kind == .appeal || $0.kind == .exoneration }
@@ -502,6 +532,9 @@ struct RecordsView: View {
     /// The stat tapped in the bar at the top of Cases; its list replaces the ledger until tapped again.
     @State private var focus: StatFocus?
     @State private var sort: PeopleSort = .recent
+
+    /// How many recent matters the Cases tab lists before pointing to the Calendar and News tabs.
+    static let recentLimit = 10
 
     enum StatFocus: String {
         case cases, hearings, custody, probation
@@ -626,10 +659,16 @@ struct RecordsView: View {
         switch focus {
         case .cases, .hearings:
             let records = game.history.filter { $0.resolvedKind == (focus == .cases ? "trial" : "hearing") }
-            Section(focus.title) {
+            Section {
                 if records.isEmpty { Text("None yet.").foregroundStyle(.secondary) }
-                ForEach(records) { record in
+                ForEach(records.prefix(Self.recentLimit)) { record in
                     NavigationLink { CaseRecordDetail(record: record) } label: { DocketIndexRow(record: record) }
+                }
+            } header: {
+                Text(focus.title)
+            } footer: {
+                if records.count > Self.recentLimit {
+                    Text("The last \(Self.recentLimit) of \(records.count). The rest are on the Calendar tab, and the coverage is in News.")
                 }
             }
         case .custody, .probation:
@@ -684,18 +723,27 @@ struct RecordsView: View {
             ledgerRow("Affirmed on appeal", trials.filter { $0.appealStatus == "Affirmed on appeal" }.count)
             ledgerRow("Reversed or vacated on appeal", trials.filter { ($0.appealStatus ?? "").contains("New trial") || ($0.appealStatus ?? "").contains("vacated") || ($0.appealStatus ?? "").contains("reversed") }.count)
             ledgerRow("Exonerations", s.exonerations)
+            ledgerRow("Let go, then charged again", s.chargedAgainAfterRelease ?? 0)
+            ledgerRow("Stay-away order violations", s.orderViolations ?? 0)
             }
         }
-        Section("Docket history") {
+        // An overview: the most recent matters only. The full history is on the Calendar tab, the stories in News.
+        Section {
             if game.history.isEmpty {
                 Text("No cases heard yet.").foregroundStyle(.secondary)
             }
-            ForEach(game.history) { record in
+            ForEach(game.history.prefix(Self.recentLimit)) { record in
                 NavigationLink {
                     CaseRecordDetail(record: record)
                 } label: {
                     DocketIndexRow(record: record)
                 }
+            }
+        } header: {
+            Text("Recent docket")
+        } footer: {
+            if game.history.count > Self.recentLimit {
+                Text("Showing your last \(Self.recentLimit). Every earlier matter is on the Calendar tab, and the coverage is in News.")
             }
         }
     }

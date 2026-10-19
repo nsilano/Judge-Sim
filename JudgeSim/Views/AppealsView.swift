@@ -17,6 +17,9 @@ struct AppealRow: View {
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
             Text(appeal.statusText(on: today)).font(.caption)
+            if let first = appeal.grounds?.first {
+                Text("Claims: \(first)").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+            }
         }
     }
 }
@@ -52,6 +55,9 @@ struct AppealDetail: View {
         DocumentDesk {
             DeskLabel(text: "Status", icon: "building.columns.fill")
             statusCard
+            if appeal.decided != nil {
+                AppealDecisionCard(appeal: appeal)
+            }
             DeskLabel(text: "Superior Court", icon: "doc.text.fill")
             noticeDocument
             DeskLabel(text: "Court of Appeals", icon: "building.columns.fill")
@@ -90,6 +96,12 @@ struct AppealDetail: View {
             Text("Appeal by \(appeal.appellant)").font(.callout)
             Text(appeal.statusText(on: today)).font(.callout.weight(.semibold))
             Text("Issue: \(appeal.issue)").font(.caption).foregroundStyle(.secondary)
+            if let grounds = appeal.grounds, !grounds.isEmpty {
+                Text("What \(appeal.appellant) says you got wrong").font(.caption.weight(.bold)).padding(.top, 4)
+                ForEach(Array(grounds.enumerated()), id: \.offset) { index, ground in
+                    Text("\(index + 1). \(ground)").font(.caption).fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
         .card(tint: appeal.isPending ? Theme.gold : (appeal.wasReversed ? .orange : .green))
     }
@@ -105,6 +117,12 @@ struct AppealDetail: View {
                          second: ("Notice filed", SentenceFormat.shortDate(appeal.filed)))
             DocField(label: "Appellant", value: appellantLabel)
             DocField(label: "Issue to be raised on appeal", value: appeal.issue)
+            if let grounds = appeal.grounds, !grounds.isEmpty {
+                DocSection(title: "Proposed issues on appeal")
+                ForEach(Array(grounds.enumerated()), id: \.offset) { index, ground in
+                    DocNumbered(number: index + 1, text: ground)
+                }
+            }
             DocCheck(checked: true, text: "The Clerk shall transmit the record to the Court of Appeals.")
         }
     }
@@ -285,5 +303,63 @@ struct PersonStatusCard: View {
         if days >= 730 { return "\(days / 365) years" }
         if days >= 60 { return "\(days / 30) months" }
         return "\(days) day\(days == 1 ? "" : "s")"
+    }
+}
+
+/// What the Court of Appeals did with the judge's ruling: upheld or changed, what changes, and its answer on each issue.
+struct AppealDecisionCard: View {
+    let appeal: AppealTracker
+    var compact = false
+
+    var body: some View {
+        let changed = appeal.wasReversed
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: changed ? "arrow.uturn.backward.circle.fill" : "checkmark.seal.fill")
+                    .font(.title2)
+                    .foregroundStyle(changed ? Color.orange : Color.green)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(changed ? "Your ruling was changed" : "Your ruling was upheld").font(.headline)
+                    Text(appeal.result ?? "Decided").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Text(bottomLine).font(.callout).fixedSize(horizontal: false, vertical: true)
+            if let holdings = appeal.holdings, !holdings.isEmpty {
+                Text(compact ? "Why" : "The panel's answer on each issue").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                ForEach(Array((compact ? Array(holdings.prefix(2)) : holdings).enumerated()), id: \.offset) { _, holding in
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: icon(holding)).foregroundStyle(color(holding)).frame(width: 18)
+                        Text(holding).font(.caption).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                if compact && holdings.count > 2 {
+                    Text("And \(holdings.count - 2) more in the appeal file.").font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .card(tint: changed ? .orange : .green)
+    }
+
+    /// What the decision means for the case, in plain words.
+    private var bottomLine: String {
+        let result = appeal.result ?? ""
+        if result.contains("resentencing") { return "The conviction stands, but the sentence is vacated. The case comes back for a lawful sentence." }
+        if result.contains("will retry") { return "The conviction is gone. The District Attorney will try the case again, and it returns to your courtroom." }
+        if result.contains("declined to retry") { return "The conviction is gone, and the District Attorney won't try it again. The defendant goes free on this charge." }
+        if result.contains("New trial") { return "The conviction is vacated and a new trial is ordered." }
+        if result.contains("Conviction vacated") { return "The conviction is vacated." }
+        if result.contains("reinstated") { return "Your dismissal is reversed. The charges are back, and the case returns for trial." }
+        if result.contains("Probation order vacated") { return "Your probation order is vacated. Probation stands as it was before your order." }
+        if result.contains("moot") { return "The appeal ended without a decision because the judgment was already vacated." }
+        if result.contains("dismissed") { return "The appeal was dismissed. Your judgment stands." }
+        return "Your judgment stands exactly as entered."
+    }
+
+    private func icon(_ holding: String) -> String {
+        holding.hasPrefix("Error, and it mattered") ? "xmark.circle.fill" : (holding.hasPrefix("Error, but harmless") ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+    }
+
+    private func color(_ holding: String) -> Color {
+        holding.hasPrefix("Error, and it mattered") ? .red : (holding.hasPrefix("Error, but harmless") ? .orange : .green)
     }
 }

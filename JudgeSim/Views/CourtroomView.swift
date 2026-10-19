@@ -300,6 +300,14 @@ struct BriefingStage: View {
                 DefendantCard(defendant: c.defendant, county: session.county)
             }
 
+            if let victim = VictimProfiles.make(c, county: session.county) {
+                CollapsibleSection(title: "The victim", icon: "person.crop.circle.badge.exclamationmark",
+                                   summary: "\(victim.name)" + (victim.age.map { ", \($0)" } ?? "") + (victim.deceased ? " · deceased" : " · \(victim.occupation.lowercasedPhrase)"),
+                                   expanded: false) {
+                    VictimCard(victim: victim)
+                }
+            }
+
             CollapsibleSection(title: "Procedural posture", icon: "doc.plaintext",
                                summary: c.habitualIndicted ? "Jury waived · habitual felon indictment" : (c.court == .misdemeanorAppeal ? "Appeal from district court" : "Jury waived"),
                                expanded: false) {

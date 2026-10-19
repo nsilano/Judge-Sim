@@ -18,6 +18,12 @@ struct AppealTracker: Identifiable, Codable {
     var result: String?
     var opinion: String?
     var followUps: [String] = []
+    /// What the appellant says the trial court got wrong (optional for older saves).
+    var grounds: [String]? = nil
+    /// For each ground, whether the ruling really was wrong. Hidden until the decision.
+    var groundErrors: [Bool]? = nil
+    /// The panel's answer to each issue, once decided.
+    var holdings: [String]? = nil
 
     var isPending: Bool { decided == nil }
 
@@ -48,6 +54,29 @@ struct AppealTracker: Identifiable, Codable {
 }
 
 enum Appeals {
+    /// The panel's answer to each issue raised: wrong and it mattered, wrong but harmless, or no error.
+    static func holdings(for tracker: AppealTracker, reversed: Bool) -> [String] {
+        guard let grounds = tracker.grounds, !grounds.isEmpty else {
+            return [reversed ? "The panel found an error that affected the outcome; see the opinion." : "The panel found no reversible error in the record."]
+        }
+        let errors = tracker.groundErrors ?? []
+        var anyCounted = false
+        return grounds.enumerated().map { i, ground in
+            let error = errors.indices.contains(i) ? errors[i] : false
+            switch (reversed, error) {
+            case (true, true):
+                anyCounted = true
+                return "Error, and it mattered. \(ground) The panel held the ruling was wrong and could have changed the result."
+            case (false, true):
+                return "Error, but harmless. \(ground) The panel agreed this was wrong, but held that the rest of the record makes it unlikely the result would have been different."
+            case (true, false):
+                return "No error. \(ground) The panel rejected this argument\(anyCounted ? "" : "; the case turned on another issue")."
+            case (false, false):
+                return "No error. \(ground) The panel held the ruling was correct, or within the court's discretion."
+            }
+        }
+    }
+
     /// The status line an appellate decision gives the case.
     static func status(for event: PendingEvent) -> String {
         let headline = event.news.headline
@@ -104,5 +133,8 @@ extension AppealTracker {
         result = try c.decodeIfPresent(String.self, forKey: .result)
         opinion = try c.decodeIfPresent(String.self, forKey: .opinion)
         followUps = try c.decodeIfPresent([String].self, forKey: .followUps) ?? []
+        grounds = try c.decodeIfPresent([String].self, forKey: .grounds)
+        groundErrors = try c.decodeIfPresent([Bool].self, forKey: .groundErrors)
+        holdings = try c.decodeIfPresent([String].self, forKey: .holdings)
     }
 }

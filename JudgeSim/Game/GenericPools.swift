@@ -463,14 +463,6 @@ enum GenericPools {
         "Look at what's missing from this case. That's where your reasonable doubt lives."
     ]
 
-    static let genericAllocutions = [
-        "{DL} stands, voice shaking: \"I know nothing I say fixes this. I'm sorry. I'm so sorry.\"",
-        "{DL} declines to speak, on the advice of counsel, pending appeal.",
-        "{DL}: \"I've had a lot of time to think in that cell. I'm not the same person. I just want a chance to prove it.\"",
-        "{DL}: \"I still say I didn't do it. But I respect the court.\"",
-        "{DL} looks at the gallery: \"I'm sorry to my family. Your Honor, whatever you decide, I'll take it.\""
-    ]
-
     // MARK: Prior records
 
     struct PriorSeed {

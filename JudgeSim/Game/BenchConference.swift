@@ -50,9 +50,12 @@ enum BenchConference {
                 let low = cell.mitigated.low
                 let probationOK = cell.dispositions.contains(.intermediate) || cell.dispositions.contains(.community)
                 let victimLine = c.victimName.map { " \($0)'s family is in the courtroom and they've waited a long time for this." } ?? ""
+                let request = rng.pick(["The State asks for the top of the presumptive range on Count \(principal.count), \(top) months, active.",
+                                        "The State's position is \(top) months active on Count \(principal.count).",
+                                        "On Count \(principal.count), the State is asking for \(top) months, active time.",
+                                        "We're asking for \(top) months on Count \(principal.count), and we're asking that it be active."])
                 lines.append(Line(speaker: pros, side: .prosecution,
-                                  text: rng.pick(["The State asks for the top of the presumptive range on Count \(principal.count), \(top) months, active.",
-                                                  "Judge, the State's position is \(top) months active on Count \(principal.count). Anything less doesn't reflect what happened."]) + victimLine))
+                                  text: Allocutions.stateArgument(c, request: request, plea: r.pleaAccepted == true) + (rng.chance(0.4) ? victimLine : "")))
                 lines.append(Line(speaker: def, side: .defense,
                                   text: probationOK
                                     ? rng.pick(["We'd ask the court to suspend the sentence and place \(dl) on supervised probation. \(dl) has a job and a family to get back to.",
@@ -61,7 +64,8 @@ enum BenchConference {
                                                 "The chart requires active time, so we're asking for \(low) months, the bottom of the mitigated range, and credit for time served."])))
             } else if let cell = unit.misdemeanorCell {
                 lines.append(Line(speaker: pros, side: .prosecution,
-                                  text: "The State asks for \(cell.maxDays) days" + (cell.dispositions.contains(.active) ? ", active." : ", suspended, with supervised probation.")))
+                                  text: Allocutions.stateArgument(c, request: "The State asks for \(cell.maxDays) days" + (cell.dispositions.contains(.active) ? ", active." : ", suspended, with supervised probation."),
+                                                                  plea: r.pleaAccepted == true)))
                 lines.append(Line(speaker: def, side: .defense,
                                   text: "We'd ask for unsupervised probation, Judge. This is a misdemeanor and \(dl) has learned from it."))
             }

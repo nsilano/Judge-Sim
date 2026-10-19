@@ -56,8 +56,8 @@ struct TrialStage: View {
             if session.halftimeComplete && session.testimonyDecided {
                 SectionTitle(text: "Closing arguments", icon: "text.quote")
                 VStack(alignment: .leading, spacing: 12) {
-                    Statement(side: .prosecution, speaker: c.prosecutor, text: c.prosecutionClosing)
-                    Statement(side: .defense, speaker: c.defenseAttorney, text: c.defenseClosing)
+                    Statement(side: .prosecution, speaker: c.prosecutor, text: Allocutions.closing(c, side: .prosecution))
+                    Statement(side: .defense, speaker: c.defenseAttorney, text: Allocutions.closing(c, side: .defense))
                 }
                 .card()
             }

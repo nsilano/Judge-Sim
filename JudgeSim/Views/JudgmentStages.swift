@@ -386,6 +386,10 @@ struct SentencingStage: View {
 
             CustomConditionsCard(session: session)
 
+            if session.courtCase.victimName != nil {
+                StayAwayOrderCard(session: session)
+            }
+
             MoneyCard(session: session)
 
             StepHeader(number: 5, title: "Enter judgment")
@@ -628,6 +632,43 @@ struct ProbationConditionsCard: View {
     }
 }
 
+/// An order, entered with the judgment, that the defendant have no contact with the victim and stay away from their
+/// home, work, and school. Whoever it binds may still break it.
+struct StayAwayOrderCard: View {
+    @ObservedObject var session: CaseSession
+
+    var body: some View {
+        let c = session.courtCase
+        let victim = c.victimName ?? "the victim"
+        let years = session.rulings.stayAwayYears
+        let wanted = Consequences.stateWantsOrder(c)
+        CollapsibleSection(title: "Stay-away order", icon: "hand.raised.fill",
+                           summary: years > 0 ? "Protecting \(victim) for \(years) year\(years == 1 ? "" : "s")"
+                            : (wanted ? "The State asks for one" : "None entered"),
+                           expanded: wanted) {
+            if wanted {
+                Label("The State asks the court to order \(c.defendant.lastName) to stay away from \(victim).", systemImage: "exclamationmark.bubble.fill")
+                    .font(.callout)
+                    .foregroundStyle(Theme.prosecution)
+            }
+            Text("No contact with \(victim), directly or through anyone else, and stay away from \(victim)'s home, work, and school. A violation is a new crime that comes back to this court.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Picker("Length", selection: $session.rulings.stayAwayYears) {
+                Text("None").tag(0)
+                Text("1 yr").tag(1)
+                Text("2 yrs").tag(2)
+                Text("5 yrs").tag(5)
+                Text("10 yrs").tag(10)
+            }
+            .pickerStyle(.segmented)
+            if years == 0 && session.rulings.conditions.noContactVictim {
+                Text("The no-contact condition of probation protects \(victim) while probation lasts.").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
 struct CustomConditionsCard: View {
     @ObservedObject var session: CaseSession
     @State private var draft = ""
@@ -729,7 +770,9 @@ struct MoneyCard: View {
         let items = session.obligations
         let total = items.reduce(0) { $0 + $1.amount }
         CollapsibleSection(title: "Fines, costs & restitution", icon: "dollarsign.circle.fill",
-                           summary: total > 0 ? "Total \(SentenceFormat.dollars(total))" : "Nothing owed", expanded: false) {
+                           summary: total > 0 ? "Total \(SentenceFormat.dollars(total))"
+                            : ((bg?.restitution ?? 0) > 0 ? "The State requests \(SentenceFormat.dollars(bg?.restitution ?? 0)) in restitution" : "Nothing owed"),
+                           expanded: (bg?.restitution ?? 0) > 0) {
             DollarField(title: "Fine", caption: fineNote, value: $session.rulings.money.fine, limit: 10_000_000)
             DollarField(title: "Restitution",
                         caption: bg.map { $0.restitution > 0 ? "State's figure: \(SentenceFormat.dollars($0.restitution)) for \($0.restitutionBasis ?? "losses")" : "The State hasn't requested restitution" },
@@ -1233,8 +1276,24 @@ struct JudgmentStage: View {
                 Text(probation).font(.callout).card()
             }
 
+            if let order = outcome.stayAwayOrder {
+                Label("Stay-away order entered: no contact with \(order.protectedName) until \(SentenceFormat.shortDate(order.expires)).",
+                      systemImage: "hand.raised.fill")
+                    .font(.callout)
+                    .card()
+            }
+
             if let appeal = outcome.appealNotice {
-                Label(appeal, systemImage: "arrow.up.doc.fill").font(.callout).card()
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(appeal, systemImage: "arrow.up.doc.fill").font(.callout)
+                    if !outcome.appealGrounds.isEmpty {
+                        Text("Counsel says the appeal will argue:").font(.caption.weight(.bold))
+                        ForEach(Array(outcome.appealGrounds.enumerated()), id: \.offset) { index, ground in
+                            Text("\(index + 1). \(ground)").font(.caption).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .card()
             }
 
             if let ethics = outcome.ethicsResult {

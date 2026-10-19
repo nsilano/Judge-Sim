@@ -112,6 +112,13 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     /// Work, school, family, and home as the court learned them, kept so the person's life stays the same from case
     /// to case and changes only when something happens to it (optional for older saves).
     var profile: DefendantProfile? = nil
+    /// Orders this court entered forbidding contact with a victim (optional for older saves).
+    var stayAwayOrders: [StayAwayOrder]? = nil
+
+    /// Stay-away orders still in force on a date.
+    func activeOrders(on date: Date) -> [StayAwayOrder] {
+        (stayAwayOrders ?? []).filter { $0.issued <= date && $0.expires > date }
+    }
 
     func age(on date: Date) -> Int {
         CourtCalendar.calendar.component(.year, from: date) - birthYear
@@ -305,4 +312,30 @@ struct PendingEvent: Codable, Hashable {
     var appealID: UUID?
     /// A post-conviction motion that comes to the judge's calendar when this event arrives.
     var reliefMotion: ReliefMotion?
+    /// A new case against someone this court already judged, which reaches the calendar when this event arrives.
+    var reoffense: Reoffense?
+}
+
+/// An order entered with a judgment: no contact with the victim, and stay away from their home, work, and school.
+struct StayAwayOrder: Codable, Hashable, Identifiable {
+    var id = UUID()
+    var docket: String
+    var protectedName: String
+    var issued: Date
+    var expires: Date
+    /// Domestic cases are enforced like a Chapter 50B protective order; others as stalking under a court order.
+    var domestic: Bool
+    var violations: Int = 0
+}
+
+/// Something a person this court judged did afterward, on its way back to this courtroom as a new case.
+struct Reoffense: Codable, Hashable {
+    var personID: UUID
+    /// The kinds of case it could be, most fitting first.
+    var templateKeys: [String]
+    /// The same victim, when the new crime is against the person the first case was about.
+    var victimName: String?
+    var incident: Date
+    /// Shown on the docket so the judge sees the connection to the earlier decision.
+    var note: String
 }
