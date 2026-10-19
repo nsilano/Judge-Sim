@@ -74,93 +74,12 @@ struct ExhibitViewer: View {
     /// The screen, styled like the device that recorded it.
     @ViewBuilder
     private func screen(_ r: ExhibitReview, stamp: String, text: String, index: Int) -> some View {
-        let caption = Text(text).font(.callout).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
-            .animation(.easeInOut(duration: 0.2), value: index)
+        let tag = abs(evidence.id.hashValue)
         switch r.look {
-        case .bodycam:
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("SENTRY BODY 3 · X\(abs(evidence.id.hashValue) % 90_000 + 10_000)").font(.system(size: 10, weight: .bold, design: .monospaced))
-                    Spacer()
-                    Text(stamp).font(.system(size: 10, design: .monospaced))
-                }
-                .foregroundStyle(Color(red: 1, green: 0.85, blue: 0.3))
-                Spacer(minLength: 0)
-                caption
-            }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 200, alignment: .leading)
-            .background(RadialGradient(colors: [Color(white: 0.22), .black], center: .center, startRadius: 20, endRadius: 260))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-        case .dashcam:
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(r.source.uppercased()).font(.system(size: 10, weight: .bold, design: .monospaced))
-                    Spacer()
-                    Text(stamp).font(.system(size: 10, design: .monospaced))
-                }
-                Spacer(minLength: 0)
-                caption
-                HStack {
-                    Text("PATROL \(abs(evidence.id.hashValue) % 40 + 10)")
-                    Spacer()
-                    Text("\(abs(evidence.id.hashValue) % 45 + 20 + index * 3) MPH")
-                    Spacer()
-                    Text("LIGHTS ON").foregroundStyle(.red)
-                }
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .padding(6).background(Color.black.opacity(0.6))
-            }
-            .foregroundStyle(.white)
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 200, alignment: .leading)
-            .background(LinearGradient(colors: [Color(red: 0.08, green: 0.1, blue: 0.18), Color(red: 0.2, green: 0.2, blue: 0.22)], startPoint: .top, endPoint: .bottom))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-        case .phoneVideo:
-            HStack {
-                Spacer()
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Circle().fill(.red).frame(width: 8, height: 8)
-                        Text(stamp).font(.caption2.monospacedDigit()).foregroundStyle(.white)
-                        Spacer()
-                    }
-                    Spacer(minLength: 0)
-                    caption
-                }
-                .padding(12)
-                .frame(width: 210, height: 340)
-                .background(LinearGradient(colors: [Color(white: 0.3), Color(white: 0.1)], startPoint: .top, endPoint: .bottom))
-                .clipShape(RoundedRectangle(cornerRadius: 26))
-                .overlay(RoundedRectangle(cornerRadius: 26).strokeBorder(Color(white: 0.15), lineWidth: 6))
-                Spacer()
-            }
-        default:
-            // A fixed security camera: grainy, gray-green, a camera label and a burned-in time stamp.
-            ZStack {
-                Canvas { ctx, size in
-                    var y: CGFloat = 0
-                    while y < size.height {
-                        ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: .color(.white.opacity(0.04)))
-                        y += 3
-                    }
-                }
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("CAM 0\(abs(evidence.id.hashValue) % 8 + 1) · \(r.source.uppercased())").font(.system(size: 10, weight: .bold, design: .monospaced))
-                        Spacer()
-                        Label("REC", systemImage: "record.circle").font(.caption2.weight(.bold)).foregroundStyle(.red)
-                    }
-                    Spacer(minLength: 0)
-                    caption
-                    Text(stamp).font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(.yellow)
-                }
-                .foregroundStyle(.white.opacity(0.9))
-                .padding(12)
-            }
-            .frame(maxWidth: .infinity, minHeight: 200)
-            .background(Color(red: 0.16, green: 0.2, blue: 0.17))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+        case .bodycam: BodyCamScreen(stamp: stamp, text: text, unit: tag % 90_000 + 10_000)
+        case .dashcam: DashCamScreen(source: r.source, stamp: stamp, text: text, car: tag % 40 + 10, speed: tag % 45 + 20 + index * 3)
+        case .phoneVideo: PhoneVideoScreen(stamp: stamp, text: text)
+        default: SecurityCamScreen(source: r.source, stamp: stamp, text: text, camera: tag % 8 + 1)
         }
     }
 
@@ -319,5 +238,144 @@ struct ExhibitViewer: View {
             }
         }
         .card()
+    }
+}
+
+
+// MARK: - Video screens
+
+private struct ScreenCaption: View {
+    let text: String
+    var body: some View {
+        Text(text).font(.callout).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+private struct BodyCamScreen: View {
+    let stamp: String
+    let text: String
+    let unit: Int
+
+    var body: some View {
+        let amber = Color(red: 1, green: 0.85, blue: 0.3)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("SENTRY BODY 3 · X\(unit)").font(.system(size: 10, weight: .bold, design: .monospaced))
+                Spacer()
+                Text(stamp).font(.system(size: 10, design: .monospaced))
+            }
+            .foregroundStyle(amber)
+            Spacer(minLength: 0)
+            ScreenCaption(text: text)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: 200, alignment: .leading)
+        .background(RadialGradient(colors: [Color(white: 0.22), Color.black], center: .center, startRadius: 20, endRadius: 260))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+private struct DashCamScreen: View {
+    let source: String
+    let stamp: String
+    let text: String
+    let car: Int
+    let speed: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(source.uppercased()).font(.system(size: 10, weight: .bold, design: .monospaced))
+                Spacer()
+                Text(stamp).font(.system(size: 10, design: .monospaced))
+            }
+            Spacer(minLength: 0)
+            ScreenCaption(text: text)
+            readout
+        }
+        .foregroundStyle(Color.white)
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: 200, alignment: .leading)
+        .background(background)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var readout: some View {
+        HStack {
+            Text("PATROL \(car)")
+            Spacer()
+            Text("\(speed) MPH")
+            Spacer()
+            Text("LIGHTS ON").foregroundStyle(Color.red)
+        }
+        .font(.system(size: 10, weight: .bold, design: .monospaced))
+        .padding(6)
+        .background(Color.black.opacity(0.6))
+    }
+
+    private var background: LinearGradient {
+        LinearGradient(colors: [Color(red: 0.08, green: 0.1, blue: 0.18), Color(red: 0.2, green: 0.2, blue: 0.22)],
+                       startPoint: .top, endPoint: .bottom)
+    }
+}
+
+private struct PhoneVideoScreen: View {
+    let stamp: String
+    let text: String
+
+    var body: some View {
+        HStack {
+            Spacer()
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Circle().fill(Color.red).frame(width: 8, height: 8)
+                    Text(stamp).font(.caption2.monospacedDigit()).foregroundStyle(Color.white)
+                    Spacer()
+                }
+                Spacer(minLength: 0)
+                ScreenCaption(text: text)
+            }
+            .padding(12)
+            .frame(width: 210, height: 340)
+            .background(LinearGradient(colors: [Color(white: 0.3), Color(white: 0.1)], startPoint: .top, endPoint: .bottom))
+            .clipShape(RoundedRectangle(cornerRadius: 26))
+            .overlay(RoundedRectangle(cornerRadius: 26).strokeBorder(Color(white: 0.15), lineWidth: 6))
+            Spacer()
+        }
+    }
+}
+
+/// A fixed security camera: grainy, gray-green, a camera label and a burned-in time stamp.
+private struct SecurityCamScreen: View {
+    let source: String
+    let stamp: String
+    let text: String
+    let camera: Int
+
+    var body: some View {
+        ZStack {
+            Canvas { ctx, size in
+                var y: CGFloat = 0
+                while y < size.height {
+                    ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: .color(Color.white.opacity(0.04)))
+                    y += 3
+                }
+            }
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("CAM 0\(camera) · \(source.uppercased())").font(.system(size: 10, weight: .bold, design: .monospaced))
+                    Spacer()
+                    Label("REC", systemImage: "record.circle").font(.caption2.weight(.bold)).foregroundStyle(Color.red)
+                }
+                Spacer(minLength: 0)
+                ScreenCaption(text: text)
+                Text(stamp).font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(Color.yellow)
+            }
+            .foregroundStyle(Color.white.opacity(0.9))
+            .padding(12)
+        }
+        .frame(maxWidth: .infinity, minHeight: 200)
+        .background(Color(red: 0.16, green: 0.2, blue: 0.17))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }
