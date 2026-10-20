@@ -85,6 +85,7 @@ enum Exhibits {
         switch format {
         case .video:
             let handheld = mentionsAny(title, ["phone", "cell", "bystander", "neighbor", "facebook", "live"])
+                || mentionsAny(e.detail.lowercased(), ["phone video", "'s phone", "on a phone", "cell phone", "filmed"])
             let bodyCam = mentionsAny(title, ["body", "dash", "cruiser", "patrol"])
             let device = bodyCam ? "Police body-worn or in-car camera, with audio"
                 : (handheld ? "Handheld phone video, with audio" : "Fixed security camera, no audio")
@@ -138,8 +139,17 @@ enum Exhibits {
                 let before = context(before: q, in: e.detail).lowercased()
                 // The phone is the defendant's: a message is theirs unless the text says someone else sent it.
                 let otherLast = c.victimName?.components(separatedBy: " ").last?.lowercased()
+                // "{VL} to {DL}: ..." names the sender first.
+                let senderFirst: Bool? = {
+                    guard let range = before.range(of: " to ", options: .backwards) else { return nil }
+                    let head = String(before[..<range.lowerBound])
+                    let lastWord = head.split(separator: " ").last.map(String.init)?.trimmingCharacters(in: .punctuationCharacters) ?? ""
+                    if lastWord == defendantLast.lowercased() { return true }
+                    if let otherLast, lastWord == otherLast { return false }
+                    return nil
+                }()
                 let namesOther = (otherLast.map { before.contains($0) } ?? false) || before.contains("replied") || before.contains("victim")
-                let mine = before.contains(defendantLast.lowercased()) || before.contains(c.defendant.name.lowercased()) || !namesOther
+                let mine = senderFirst ?? (before.contains(defendantLast.lowercased()) || before.contains(c.defendant.name.lowercased()) || !namesOther)
                 lines.append(.init(stamp: clock(minute), speaker: mine ? c.defendant.name : otherParty, text: q, fromDefendant: mine))
                 minute += rng.int(1...45)
             }
@@ -164,7 +174,7 @@ enum Exhibits {
                     second += rng.int(4...40)
                 }
             } else if !quotes.isEmpty {
-                let speaker = call ? "Caller" : c.defendant.name
+                let speaker = call ? "Caller" : statementSpeaker(e, in: c, before: context(before: quotes[0], in: e.detail))
                 for q in quotes {
                     lines.append(.init(stamp: timecode(second), speaker: speaker, text: q))
                     second += rng.int(4...40)
@@ -173,9 +183,15 @@ enum Exhibits {
             let rest = sentences(stripQuotes(e.detail)).filter { !$0.isEmpty }
             if !rest.isEmpty { lines.append(.init(stamp: "Summary", text: rest.joined(separator: " "))) }
             if lines.isEmpty { lines = sentences(e.detail).map { .init(stamp: "", text: $0) } }
+            let defendantSpoke = labeled.contains { $0.0 == c.defendant.name || $0.0 == c.defendant.lastName }
+                || (labeled.isEmpty && !call && !quotes.isEmpty && statementSpeaker(e, in: c, before: context(before: quotes[0], in: e.detail)) == c.defendant.name)
             considerations = call ? [
                 "A 911 call made to get help with an ongoing emergency is usually not testimonial, so it can come in without the caller testifying (Davis v. Washington).",
                 "Excited utterances and present sense impressions are hearsay exceptions (Rule 803(1)–(2)); listen for whether the speaker was still under the stress of the event."
+            ] : !defendantSpoke ? [
+                "A witness's out-of-court statement is hearsay if offered for its truth; ask whether an exception applies, or whether it's offered only to explain what someone did next.",
+                "If the person who made the statement testifies, it can be used to corroborate or impeach that testimony.",
+                "Weigh who said it, when, and what reason they had to shade it."
             ] : [
                 "A defendant's custodial statement is admissible only if Miranda warnings were given and waived and the statement was voluntary.",
                 "Listen to the whole statement, not just the excerpt. Context can change what an answer means (Rule 106).",
@@ -212,14 +228,18 @@ enum Exhibits {
                 "Ask what the result actually establishes. A DNA match shows contact, not when or how; a drug weight is net of packaging only if the report says so."
             ]
         case .property:
-            let place = facts.map { "\($0.place), \($0.street), \($0.town)" } ?? "the scene"
+            let place = facts.map { f in [f.place, f.street, f.town].reduce(into: [String]()) { parts, piece in
+                if !parts.contains(where: { $0.contains(piece) }) { parts.append(piece) }
+            }.joined(separator: ", ") } ?? "the scene"
             particulars += [("Item", e.title), ("Recovered", "\(place), \(date)"), ("Collected by", collector),
                             ("Property tag", "PR-\(rng.int(100_000...999_999))")]
             for (i, sentence) in sentences(e.detail).enumerated() {
                 lines.append(.init(stamp: "Photo \(i + 1)", text: sentence))
             }
-            var custody = ["Photographed in place, then collected and sealed in an evidence bag.",
-                           "Logged into the \(facts?.agency ?? c.investigatingAgency) property room."]
+            var custody = e.side == .defense
+                ? ["Obtained by the defense and disclosed to the State before trial."]
+                : ["Photographed in place, then collected and sealed in an evidence bag.",
+                   "Logged into the \(facts?.agency ?? c.investigatingAgency) property room."]
             if let submitted = facts?.labSubmitted { custody.append("Released to the State Crime Laboratory on \(CaseDates.day(submitted)).") }
             custody.append("Brought to court sealed; seal intact.")
             for (i, step) in custody.enumerated() { lines.append(.init(stamp: "Custody \(i + 1)", text: step)) }
@@ -416,12 +436,33 @@ enum Exhibits {
 
     /// "Dispatcher: "Are you following him?"" pairs.
     private static func speakerLines(_ text: String) -> [(String, String)] {
-        let pattern = #"([A-Z][A-Za-z.' -]{1,28}):\s*["“]([^"”]+)["”]"#
+        // A label is a name at the start of the text or of a sentence: "Reed: '...'", not "told the detective: '...'".
+        let pattern = #"(?:^|[.!?]["”]?\s+)((?:[A-Z][A-Za-z.'-]+)(?: [A-Z][A-Za-z.'-]+){0,2}):\s*["“]([^"”]+)["”]"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
         let ns = text as NSString
         return regex.matches(in: text, range: NSRange(location: 0, length: ns.length)).map {
             (ns.substring(with: $0.range(at: 1)).trimmingCharacters(in: .whitespaces), ns.substring(with: $0.range(at: 2)))
         }
+    }
+
+    /// Who is speaking in a statement exhibit that doesn't label its speaker: the defendant only when the exhibit says so.
+    static func statementSpeaker(_ e: Evidence, in c: CourtCase, before: String) -> String {
+        let d = c.defendant
+        let title = e.title.lowercased()
+        let lead = before.lowercased()
+        let names = [d.name, d.lastName].map { $0.lowercased() }
+        if names.contains(where: { lead.contains($0) }) || names.contains(where: { title.contains($0) })
+            || ["confession", "admission", "interview", "defendant", "own words"].contains(where: { title.contains($0) }) {
+            return d.name
+        }
+        if let v = c.victimName, [v, v.components(separatedBy: " ").last ?? v].contains(where: { lead.contains($0.lowercased()) }) { return v }
+        for w in c.witnesses where !w.name.isEmpty && lead.contains(w.name.lowercased()) { return w.name }
+        // "Bouncer's Statement" speaks for the bouncer.
+        if let mark = e.title.range(of: "'s ") {
+            let owner = String(e.title[..<mark.lowerBound])
+            if owner.split(separator: " ").count <= 3 { return owner.capitalizedFirst }
+        }
+        return "Witness"
     }
 
     /// Minutes after midnight from "11:42 p.m." style times.

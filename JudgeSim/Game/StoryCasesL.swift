@@ -481,7 +481,8 @@ extension StoryCases {
             prosecutionOpening: "A written warning, an old key, and 1:30 in the morning.",
             defenseOpening: "A person who wanted their own TV and their mother's rings.",
             prosecutionClosing: "{DL} was told never to come in, and came in anyway, at night, and took what wasn't {D.hers}.",
-            defenseClosing: "An honest claim to your own property isn't intent to steal."
+            defenseClosing: "An honest claim to your own property isn't intent to steal.",
+            victim: VictimFacts(relationship: "A former partner of the defendant; they shared the house until six weeks earlier.")
         )
     )
 }

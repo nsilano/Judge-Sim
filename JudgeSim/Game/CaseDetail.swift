@@ -735,8 +735,12 @@ enum Investigations {
         let time = facts.setting == .paper ? nil : values["TIME"]
         let state = evidence.filter { $0.side == .prosecution }
         let forensic = state.filter { $0.kind == .forensic }
-        let statement = state.first { $0.kind == .statement && ($0.title.lowercased().contains("interview") || $0.title.lowercased().contains("confession") || $0.title.lowercased().contains("statement")) }
-            ?? state.first { $0.kind == .statement }
+        // Only the defendant's own statement makes a defendant interview; a witness's statement doesn't.
+        let statement = state.first { e in
+            guard e.kind == .statement else { return false }
+            let title = e.title.lowercased()
+            return ["interview", "confession", "admission", "defendant"].contains { title.contains($0) } || title.contains(dl.lowercased())
+        }
         let collected = state.filter { $0.kind == .physical || $0.kind == .forensic }
         let obtained = state.filter { $0.kind == .digital || $0.kind == .document || $0.kind == .video }
         let place = placePhrase(values: values, facts: facts, street: street, town: town)
@@ -904,7 +908,10 @@ enum Investigations {
 
         var interviews: [String] = []
         interviews.append(interview != nil ? "\(defendant.name) (recorded, after Miranda warnings)" : "\(defendant.name) declined to be interviewed")
-        let warrants = state.filter { $0.detail.lowercased().contains("found") || $0.detail.lowercased().contains("recovered") || $0.kind == .digital }
+        let warrants = state.filter { e in
+            let detail = e.detail.lowercased()
+            return (detail.contains("found") || detail.contains("recovered") || e.kind == .digital) && !detail.contains("consent")
+        }
             .prefix(3).map { "Warrant covering \($0.title.lowercased())" }
         let lab = forensic.map { "\($0.title): \($0.detail)" }
 
@@ -1063,6 +1070,10 @@ extension DefendantProfiles {
     /// goes to prison, and the facts of the new case can add to the family but never erase it.
     static func continued(_ stored: DefendantProfile, person: PersonRecord, family known: FamilyFacts, on date: Date) -> DefendantProfile {
         var profile = stored
+        // A note about the last case's victim belongs to that case, not to the person.
+        for old in [" The late spouse is the victim in this case.", " The spouse is the alleged victim in this case."] {
+            profile.family = profile.family.replacingOccurrences(of: old, with: "")
+        }
         let cal = CourtCalendar.calendar
         let year = cal.component(.year, from: date)
         // The most recent commitment to prison or jail in this court.
@@ -1173,9 +1184,9 @@ struct FamilyFacts {
         if spouseIsVictim, f.status == nil || f.status == "Married" {
             f.status = victimDied ? "Widowed" : "Married"
             f.note = victimDied ? "The late spouse is the victim in this case." : "The spouse is the alleged victim in this case."
-        } else if found(mine + #" (wife|husband|spouse)\b"#, in: text) || found(#"\b[Mm]y (wife|husband)\b"#, in: voice) {
+        } else if found(mine + #" (wife|husband|spouse)\b"#, in: text) || found(#"\b[Mm]y (wife|husband|spouse)\b"#, in: voice) {
             f.status = "Married"
-        } else if found(mine + #" late (wife|husband|spouse)\b"#, in: text) || found(#"\b[Mm]y late (wife|husband)\b"#, in: voice) {
+        } else if found(mine + #" late (wife|husband|spouse)\b"#, in: text) || found(#"\b[Mm]y late (wife|husband|spouse)\b"#, in: voice) {
             f.status = "Widowed"
         } else if found(mine + #" (fiancé|fiancée|fiance|fiancee)\b"#, in: text) {
             f.status = "Engaged"

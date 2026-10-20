@@ -12,7 +12,7 @@ extension StoryCases {
         headlines: ["Parent Charged in Deaths of Two Children", "Insanity Defense in {HOOD} Tragedy"],
         primaryLaw: "murder1", lesserLaw: "murder2", threshold: 3, lesserThreshold: 1,
         specification: "Killed {KID1} and {KID2}, the defendant's children, with malice, premeditation, and deliberation.",
-        ageRange: 28...38, occupations: ["elementary school teacher"], hasVictim: true,
+        ageRange: 28...38, occupations: ["elementary school teacher"], hasVictim: false,
         summaries: [
             "On the night of {DATE}, {D}, a teacher on leave four months after the family's third child was born, was alone with the children in their home in {HOOD} while {D.his} spouse worked an overnight shift at the hospital. Shortly after 2 a.m. a neighbor found {DL} in the backyard, soaked and shivering, saying \"they're safe now.\" Inside, the two older children, {KID1}, 6, and {KID2}, 4, had died of asphyxia in their beds. The baby was unharmed. In the months since the birth, {DL} had been seen by three providers and had stopped sleeping. The State says {DL} chose a night alone. The defense says {DL} was in a postpartum psychosis and believed {D.he} was rescuing the children from something worse."
         ],
@@ -209,7 +209,8 @@ extension StoryCases {
             defenseOpening: "No impact injuries. Mirror glass found eleven days later. An investigator who was friends with the homeowner. You'll see why the doubt here is not just reasonable but overwhelming.",
             prosecutionClosing: "The data, the glass, and the admission all point to the same moment: 12:24 a.m.",
             defenseClosing: "When the investigation itself can't be trusted, neither can its conclusion.",
-            when: .months([12, 1, 2])
+            when: .months([12, 1, 2]),
+            victim: VictimFacts(occupation: "Hollis County sheriff's deputy", relationship: "In a relationship with the defendant.")
         )
     )
 
@@ -308,7 +309,8 @@ extension StoryCases {
             prosecutionOpening: "A theft exposed at 3:15. {VL} asking questions. A video placing {D} in the barn at 8:31, and nine months of lying about it.",
             defenseOpening: "{DL} is a thief and a liar, and will answer for that. But no blood, no residue, no rifle, and a farmhand nobody checked. That's not proof of murder.",
             prosecutionClosing: "Only a killer needs that lie.",
-            defenseClosing: "A lie about where you were is not proof of what you did."
+            defenseClosing: "A lie about where you were is not proof of what you did.",
+            victim: VictimFacts(relationship: "Married to the defendant.")
         )
     )
 
@@ -325,7 +327,7 @@ extension StoryCases {
             SecondaryCharge(lawID: "obstruction", specification: "Obstructed justice by telling family and investigators for nineteen days that {KID} was at the beach.", chance: 1.0, threshold: 2),
             SecondaryCharge(lawID: "felonyChildAbuse", specification: "Inflicted serious physical injury on {KID} by giving {KID} a sedating dose of allergy medicine.", chance: 1.0, threshold: 3)
         ],
-        ageRange: 20...28, occupations: ["cell phone store sales associate"], forcedPriorOffenses: ["Misdemeanor Larceny"], hasVictim: true,
+        ageRange: 20...28, occupations: ["cell phone store sales associate"], forcedPriorOffenses: ["Misdemeanor Larceny"], hasVictim: false,
         summaries: [
             "{KID}, three, was last seen at day care on {DATE}. For nineteen days {D} told family that {KID} was at the beach with a coworker's relative. When {DL}'s parent pressed and called the Sheriff's Office, {D.he} admitted {KID} was missing but said {KID} had been taken from a park. Five weeks later, {KID}'s remains were found in a storage tote in a creek bed four miles from the apartment. The medical examiner could not determine a cause of death. The State says {DL} drugged and suffocated {KID}. The defense says {KID} died of an accidental overdose of allergy medicine and {DL}, terrified, hid it."
         ],

@@ -16,7 +16,7 @@ extension StoryCases {
             SecondaryCharge(lawID: "aisi", specification: "Assaulted {V} by shoving {V.him} to the sidewalk, inflicting a broken wrist.", chance: 1.0, threshold: 2),
             SecondaryCharge(lawID: "misdLarceny", specification: "Stole a purse and its contents belonging to {V}.", chance: 1.0, threshold: 1)
         ],
-        ageRange: 19...30, occupations: ["warehouse worker", "unemployed"], forcedPriorOffenses: ["Misdemeanor Larceny"], hasVictim: true,
+        ageRange: 19...30, occupations: ["warehouse worker"], forcedPriorOffenses: ["Misdemeanor Larceny"], hasVictim: true,
         summaries: [
             "At about 5:40 p.m. on {DATE}, {V}, 74, was waiting for the bus on {STREET} in {HOOD} when someone in a gray hooded sweatshirt grabbed {V.his} purse, shoved {V.him} to the sidewalk, and ran toward the apartments behind the stop. {VL} broke a wrist. Two days later {VL} picked {D} from a photo lineup, saying {V.he} was \"pretty sure.\" {DL}, who lives in those apartments and has a prior shoplifting conviction, says {D.he} was at work across town until 6:00. {VL}'s bus pass turned up in a storm drain near {DL}'s building."
         ],
@@ -90,7 +90,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Where were you at 5:40 that evening?", "\"At work, on the loading dock. I clocked out at 5:58 and caught a ride home.\""),
                 .direct("Do you own a gray hoodie?", "\"Two of them. So does everybody in my building.\""),
-                .cross("You have a shoplifting conviction.", "\"From when I was nineteen. I paid for it.\""),
+                .cross("You have a shoplifting conviction.", "\"Years ago. I paid for it.\""),
                 .cross("Who drove you home?", "\"A guy from work. I don't know his last name. He quit.\"")
             ],
             objections: [
@@ -104,7 +104,8 @@ extension StoryCases {
             defenseOpening: "One second, a frightened witness, and a time clock eleven miles away.",
             prosecutionClosing: "{VL} was sure enough to point. The bus pass was behind {DL}'s door.",
             defenseClosing: "Pretty sure isn't proof beyond a reasonable doubt.",
-            genders: ["V": .female]
+            genders: ["V": .female],
+            victim: VictimFacts(age: 74, occupation: "Retired", relationship: "Strangers before the incident.", family: "Widowed; helps raise a grandson.", harm: ["A broken wrist; months of physical therapy.", "No longer rides the bus alone."])
         )
     )
 
@@ -391,7 +392,8 @@ extension StoryCases {
             prosecutionOpening: "A week of suspicion, a warning, and a knife driven through the heart.",
             defenseOpening: "A confession, a kitchen, and ninety seconds later, a 911 call.",
             prosecutionClosing: "Words alone are never enough provocation. That's the law.",
-            defenseClosing: "This was passion, not malice. The verdict that fits is voluntary manslaughter."
+            defenseClosing: "This was passion, not malice. The verdict that fits is voluntary manslaughter.",
+            victim: VictimFacts(relationship: "Married to the defendant.")
         )
     )
 

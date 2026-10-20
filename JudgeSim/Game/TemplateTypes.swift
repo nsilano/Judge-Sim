@@ -111,6 +111,16 @@ struct CaseTemplate {
 
     /// Every sex the case requires: its own, the written story's, and what the charges themselves require
     /// (assault on a female is committed by a male on a female, G.S. 14-33(c)(2)).
+    /// Whether the victim named {V} died, by the story's word or by a homicide count that names {V}.
+    var victimDies: Bool {
+        if let died = story?.victimDied { return died }
+        let deathLaws = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV",
+                         "deathByDistribution", "patientNeglect", "concealingDeath"]
+        func namesV(_ text: String) -> Bool { text.contains("{V}") || text.contains("{VL}") }
+        if deathLaws.contains(primaryLaw) && (namesV(specification) || story == nil) { return true }
+        return secondary.contains { deathLaws.contains($0.lawID) && namesV($0.specification) }
+    }
+
     var requiredGenders: [String: Gender] {
         var result = genders.merging(story?.genders ?? [:]) { a, _ in a }
         let laws = [primaryLaw] + [lesserLaw].compactMap { $0 } + secondary.map(\.lawID)
@@ -140,6 +150,27 @@ struct StoryExtras {
     var when: StoryDate? = nil
     /// People whose sex the story fixes (its text calls them an aunt, an uncle, a daughter...), keyed "D", "V", or "ALT".
     var genders: [String: Gender] = [:]
+    /// Whether {V} died, when the charges alone don't say (a hit and run that killed, a murder of someone else).
+    var victimDied: Bool? = nil
+    /// Who {V} is, as the story tells it, for the victim's profile.
+    var victim: VictimFacts? = nil
+    /// When it happened, e.g. "4:12 p.m."; otherwise read from the timeline.
+    var time: String? = nil
+    /// Where the defendant works, as the story names it (tokens allowed), and whether the job ended over this case.
+    var employer: String? = nil
+    var employmentEnded = false
+    /// Where the defendant goes to school, as the story names it.
+    var school: String? = nil
+}
+
+/// What a written case says about its victim, so the victim's profile matches the story.
+struct VictimFacts {
+    var age: Int? = nil
+    var occupation: String? = nil
+    var relationship: String? = nil
+    var family: String? = nil
+    var harm: [String]? = nil
+    var record: String? = nil
 }
 
 enum StoryDate {

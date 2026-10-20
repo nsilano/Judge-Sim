@@ -13,6 +13,8 @@ enum Consequences {
 
     /// Cases where the victim did not survive.
     static func victimDied(_ c: CourtCase) -> Bool {
+        if c.victimName == nil { return false }
+        if let t = CaseTemplates.byKey[c.templateKey] { return t.victimDies }
         let deathLaws = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV",
                          "deathByDistribution", "patientNeglect", "concealingDeath"]
         return c.charges.contains { deathLaws.contains($0.lawID) }
@@ -22,6 +24,7 @@ enum Consequences {
     static func victimIsChild(_ c: CourtCase) -> Bool {
         if c.charges.contains(where: { ["felonyChildAbuse", "childAbuseMisd"].contains($0.lawID) }) { return true }
         guard let name = c.victimName else { return false }
+        if let age = CaseTemplates.byKey[c.templateKey]?.story?.victim?.age { return age < 16 }
         let last = name.components(separatedBy: " ").last ?? name
         return (VictimProfiles.statedAge(c.summary, name: name, last: last) ?? 99) < 16
     }
@@ -67,7 +70,10 @@ enum Consequences {
         let d = c.defendant
         let offense = c.charges.first?.law.title.lowercasedPhrase ?? "the charges"
         let monthYear = date.formatted(.dateTime.month(.wide).year())
-        let (keys, sameVictim) = escalation(for: c)
+        let (allKeys, sameVictim) = escalation(for: c)
+        // Only the kinds of case someone this age would be in: an 84-year-old isn't in a bar fight.
+        let keys = allKeys.filter { FollowUpCases.fits($0, age: d.age) }
+        guard !keys.isEmpty else { return [] }
         let victim = sameVictim ? c.victimName : nil
         var chance = 0.0
         var lead = ""

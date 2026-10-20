@@ -200,7 +200,9 @@ extension StoryCases {
             prosecutionOpening: "A threat, a search, and a login from {DL}'s home.",
             defenseOpening: "An open network, a password on a sticky note, and an investigation that stopped at one name.",
             prosecutionClosing: "Only an IT insider knew that account, and it came from {DL}'s house.",
-            defenseClosing: "A connection isn't a person. That's reasonable doubt."
+            defenseClosing: "A connection isn't a person. That's reasonable doubt.",
+            employer: "{CO}",
+            employmentEnded: true
         )
     )
 
@@ -296,7 +298,8 @@ extension StoryCases {
             defenseOpening: "A brother's plea for the truth, heard through a witness's fear.",
             prosecutionClosing: "'Nobody needs to get hurt' only means one thing to a witness.",
             defenseClosing: "Words without audio, a station {DL} uses every day, and reasonable doubt.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            victim: VictimFacts(relationship: "A State's witness in a pending case against the defendant's sibling.", family: "Single parent of a son.")
         )
     )
 
@@ -307,7 +310,7 @@ extension StoryCases {
         headlines: ["Neighbor Charged Over Voicemail: 'You'll Be Sorry'", "Property Line Feud Ends Up in Superior Court"],
         primaryLaw: "communicatingThreats", lesserLaw: nil, threshold: 4, lesserThreshold: 2,
         specification: "Willfully threatened to physically injure {V} in a voicemail, in a manner that a reasonable person would believe the threat was likely to be carried out.",
-        ageRange: 55...75, occupations: ["retired machinist"], hasVictim: true,
+        ageRange: 70...70, occupations: ["retired machinist"], hasVictim: true,
         summaries: [
             "After {V} built a fence that {D} said was two feet onto {D.his} land on {STREET} in {HOOD}, {DL} left a voicemail on {DATE}: \"Take that fence down by Friday or you'll be sorry. I've got a shotgun and I know how to use it, and I've got nothing to lose.\" {VL} called the sheriff. {DL} owns a shotgun and had shot a raccoon in {D.his} yard a month earlier. {DL} says {D.he} meant {D.he}'d sue and that the shotgun line was about raccoons. {DL} was convicted in district court and appealed."
         ],
@@ -387,7 +390,8 @@ extension StoryCases {
             prosecutionOpening: "A deadline, a shotgun, and nothing to lose.",
             defenseOpening: "An old neighbor, a real property dispute, and an angry voicemail followed by a lawyer.",
             prosecutionClosing: "A reasonable person hears that message and fears for their life.",
-            defenseClosing: "Ugly words, real grievance, no true threat."
+            defenseClosing: "Ugly words, real grievance, no true threat.",
+            victim: VictimFacts(harm: ["Not physically hurt. Had an alarm system installed and stopped walking alone at night."])
         )
     )
 

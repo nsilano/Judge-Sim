@@ -507,7 +507,8 @@ extension StoryCases {
             defenseOpening: "A toxic relationship, a dropped camera, and a terrifying moment of self-defense.",
             prosecutionClosing: "Twenty-seven wounds and a cut throat is not fear. It's rage, planned for in advance.",
             defenseClosing: "{DL}'s lies were shameful. They don't prove premeditation.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            victim: VictimFacts(relationship: "A former partner of the defendant.")
         )
     )
 }

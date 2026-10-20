@@ -186,7 +186,8 @@ extension StoryCases {
             defenseOpening: "Sixty-one years, a promise at a kitchen table, and a man who had nothing left.",
             prosecutionClosing: "Premeditation doesn't require malice in the heart. It requires a plan. He had one.",
             defenseClosing: "The law has room for mercy, and this is the case for it.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            victim: VictimFacts(occupation: "Retired; homemaker", relationship: "Married to the defendant for sixty-one years.", family: "Married to the defendant for sixty-one years; grown children.")
         )
     )
 
@@ -469,7 +470,8 @@ extension StoryCases {
             defenseOpening: "A nurse left alone by owners who wouldn't pay for help.",
             prosecutionClosing: "The paper lied, and the lie let her die.",
             defenseClosing: "Blame the company that built the failure, not the nurse who drowned in it.",
-            genders: ["D": .female, "V": .female]
+            genders: ["D": .female, "V": .female],
+            victim: VictimFacts(occupation: "Retired; nursing home resident", relationship: "A resident in the defendant's care.")
         )
     )
 }

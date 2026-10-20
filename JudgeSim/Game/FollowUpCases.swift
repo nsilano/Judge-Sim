@@ -16,6 +16,12 @@ enum FollowUpCases {
     /// Stay-away order violations: domestic first, then the rest.
     static let domesticViolations = ["story.followup.workplaceVisit", "story.followup.newNumber"]
     static let otherViolations = ["story.followup.parkingLotWatch", "story.followup.notesOnTheCar"]
+    /// Whether a follow-up written for people of a certain age fits someone this age (a little older allowed, for the time since).
+    static func fits(_ key: String, age: Int) -> Bool {
+        guard let t = all.first(where: { $0.key == key }) else { return true }
+        return (t.ageRange.lowerBound - 3...t.ageRange.upperBound + 8).contains(age)
+    }
+
     /// New arrests unrelated to the earlier case.
     static let newCharges = ["story.followup.eludingStop", "story.followup.warehouseTheft", "story.followup.carBreakIns"]
 
@@ -98,7 +104,8 @@ enum FollowUpCases {
             prosecutionOpening: "The court drew a line. {D.He} walked right over it, past three empty registers.",
             defenseOpening: "A pack of gum and a request for tools. Not a threat.",
             prosecutionClosing: "Stay away means stay away.",
-            defenseClosing: "Bad judgment isn't stalking."
+            defenseClosing: "Bad judgment isn't stalking.",
+            victim: VictimFacts(occupation: "Grocery store cashier")
         )
     )
 
@@ -701,7 +708,8 @@ enum FollowUpCases {
             prosecutionOpening: "Red for 2.4 seconds. No brakes. A nurse on {V.his} way home.",
             defenseOpening: "A terrible crash with two drivers going too fast.",
             prosecutionClosing: "Sober, {D.he} stops.",
-            defenseClosing: "Estimates aren't proof beyond a reasonable doubt."
+            defenseClosing: "Estimates aren't proof beyond a reasonable doubt.",
+            victim: VictimFacts(age: 34, occupation: "Nurse")
         )
     )
 

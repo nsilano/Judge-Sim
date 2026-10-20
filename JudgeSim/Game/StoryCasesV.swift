@@ -192,7 +192,8 @@ extension StoryCases {
             defenseOpening: "A theft, admitted. A friend's death, mourned. Not manslaughter.",
             prosecutionClosing: "He took responsibility for knowing the wires. That's what makes it his.",
             defenseClosing: "Two men chose a crime. Only one chose to cut.",
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(relationship: "The defendant's partner in the theft and a longtime friend.")
         )
     )
 

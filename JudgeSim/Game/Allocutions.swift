@@ -317,8 +317,7 @@ enum Allocutions {
                 ? rng.pick(["\(v) is never coming home. That has to mean something in this courtroom.",
                             "\(v)'s family has sat through every setting of this case. They're here today.",
                             "There's an empty chair at \(v)'s family's table, and there will be one for the rest of their lives."])
-                : rng.pick(["\(v) still won't answer the door after dark.",
-                            "\(v) missed weeks of work and is still paying medical bills.",
+                : rng.pick(victimToll(c, v) + [
                             "\(v) has been to every setting of this case, and \(v) is here today.",
                             !plea && c.witnesses.contains(where: { $0.name == v })
                                 ? "\(v) came to court and testified about the worst day of their life. The sentence should reflect that."
@@ -340,9 +339,16 @@ enum Allocutions {
         }
         switch f.category {
         case .drugs: reasons.append(rng.pick(["What \(f.last) sold ended up in this county's neighborhoods.", "The overdose numbers in this county aren't an abstraction."]))
-        case .traffic: reasons.append(rng.pick(["Everybody on that road that night was at risk.", "Other people who drink and drive need to hear what happens."]))
+        case .traffic:
+            let impaired = c.charges.contains { ["dwi", "habitualDWI", "felonyDBV", "dwlrImpaired"].contains($0.lawID) } || CaseFacts(c).impaired
+            reasons.append(rng.pick(["Everybody on that road that night was at risk.",
+                                     impaired ? "Other people who drink and drive need to hear what happens." : "Other drivers need to hear what happens when you drive like that."]))
         case .whiteCollar: reasons.append(rng.pick(["This wasn't one bad moment. It was a choice made over and over.", "The people who lost money trusted \(f.last) completely."]))
-        case .violent, .robbery: reasons.append(rng.pick(["The violence here wasn't impulsive.", "The court has to protect the public from this happening again."]))
+        case .violent, .robbery:
+            // Only a crime of intent can be called planned.
+            let intended = c.charges.contains { ["murder1", "attemptedMurder1", "awdwik", "awdwikisi", "dangerousRobbery", "kidnapping1", "kidnapping2", "conspiracyRobbery"].contains($0.lawID) }
+            reasons.append(rng.pick(intended ? ["The violence here wasn't impulsive.", "The court has to protect the public from this happening again."]
+                                             : ["The court has to protect the public from this happening again.", "Someone was badly hurt, and that has to count for something."]))
         default: break
         }
         if f.mood == .wantsConviction { reasons.append("This community is paying attention to what happens in this courtroom today.") }
@@ -365,6 +371,19 @@ enum Allocutions {
     }
 
     /// The prosecutor asking for sentence at the bench: the request, then why.
+    /// What the crime cost a living victim, in terms that fit the kind of crime.
+    private static func victimToll(_ c: CourtCase, _ v: String) -> [String] {
+        let threats = ["stalking", "stalkingCourtOrder", "cyberstalking", "communicatingThreats", "witnessIntimidation", "extortion", "privateImages"]
+        if c.charges.contains(where: { threats.contains($0.lawID) }) {
+            return ["\(v) still won't answer the door after dark.", "\(v) changed numbers, routines, and the way home from work."]
+        }
+        switch c.category {
+        case .whiteCollar, .cyber: return ["\(v) lost money that isn't coming back.", "\(v) trusted the wrong person and paid for it."]
+        case .property: return ["\(v) doesn't feel safe in that place anymore.", "\(v) is still replacing what was taken."]
+        default: return ["\(v) missed weeks of work and is still paying medical bills.", "\(v) still won't answer the door after dark."]
+        }
+    }
+
     static func stateArgument(_ c: CourtCase, request: String, plea: Bool, salt: UInt64 = 0) -> String {
         var rng = SeededRNG(seed: c.seed ^ 0xB3A7 ^ salt)
         let opener = rng.pick(["", "Judge, ", "Your Honor, ", "Briefly, Judge. ", "The State's position is simple. "])

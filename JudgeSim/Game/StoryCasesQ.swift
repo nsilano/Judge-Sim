@@ -297,7 +297,8 @@ extension StoryCases {
             prosecutionOpening: "The person paid to keep {VL} safe was paid more to bring in the drug that killed {V.him}.",
             defenseOpening: "A jail flooded with fentanyl, and a snitch who needs someone to blame.",
             prosecutionClosing: "Same drug, same mix, same pod, same officer who never checked the cell.",
-            defenseClosing: "Two sources of fentanyl and no proof which one killed {VL}."
+            defenseClosing: "Two sources of fentanyl and no proof which one killed {VL}.",
+            victim: VictimFacts(record: "Held in the county jail on a probation violation at the time of death.")
         )
     )
 

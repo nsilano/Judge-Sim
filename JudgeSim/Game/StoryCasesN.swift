@@ -191,7 +191,8 @@ extension StoryCases {
             defenseOpening: "An exhausted officer, identical hallways, and a split second in the dark.",
             prosecutionClosing: "An honest mistake doesn't excuse an unreasonable one.",
             defenseClosing: "{DL} didn't intend to kill a neighbor. {D.He} thought {D.he} was home.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            victim: VictimFacts(age: 26, occupation: "Accountant", relationship: "A neighbor in the same building; they had never met.")
         )
     )
 
@@ -280,7 +281,8 @@ extension StoryCases {
             defenseOpening: "\"Taser! Taser! Taser!\" She believed it.",
             prosecutionClosing: "The law asks what a careful officer would have done. Not this.",
             defenseClosing: "A mistake isn't culpable negligence when stress takes over.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            victim: VictimFacts(family: "Single, one child, a two-year-old son.")
         )
     )
 

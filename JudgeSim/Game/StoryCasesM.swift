@@ -405,7 +405,8 @@ extension StoryCases {
             defenseOpening: "A busy route, common zip ties, and an earring from a mall kiosk.",
             prosecutionClosing: "Coincidence doesn't explain an earring from a dead woman's ear.",
             defenseClosing: "Without DNA or a witness, the State has a truck route and a hunch.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            victim: VictimFacts(family: "Single, one child, a son.")
         )
     )
 

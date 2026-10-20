@@ -102,7 +102,8 @@ extension StoryCases {
             prosecutionOpening: "Locked doors, a phone taken, five hours, and a bridge. {D} held {V} to terrorize {V.him}.",
             defenseOpening: "{VL} invited {DL} to talk, got in willingly, and walked back to the car from a rest stop. That's not kidnapping.",
             prosecutionClosing: "Consent to talk in a parking lot isn't consent to a five-hour drive with a threat.",
-            defenseClosing: "The State has to prove restraint beyond a reasonable doubt. The rest stop shows otherwise."
+            defenseClosing: "The State has to prove restraint beyond a reasonable doubt. The rest stop shows otherwise.",
+            victim: VictimFacts(relationship: "A former partner of the defendant.")
         )
     )
 
@@ -210,7 +211,7 @@ extension StoryCases {
         headlines: ["Homeowner Shoots Officer During Late-Night Raid", "Officers Hit the Wrong House?"],
         primaryLaw: "awdwikisi", lesserLaw: "awdwisi", threshold: 2, lesserThreshold: 1,
         specification: "Assaulted {OFF} with a firearm, with intent to kill, inflicting serious injury.",
-        ageRange: 30...55, occupations: ["long-haul truck driver"], hasVictim: true,
+        ageRange: 30...55, occupations: ["long-haul truck driver"], hasVictim: false,
         summaries: [
             "At about {TIME} on {DATE}, a narcotics team executed a no-knock search warrant at a house on {STREET} in {HOOD}. The target, a suspected dealer, had moved out two months earlier; {D}, a truck driver home between runs, had moved in. Officers rammed the door. {DL}, woken in the dark, grabbed a pistol from the nightstand and fired as the first officer came down the hall, hitting {OFF} in the thigh. {DL} says {D.he} thought it was a home invasion. Officers say they announced \"Police, search warrant\" as they breached."
         ],

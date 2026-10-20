@@ -193,7 +193,8 @@ extension StoryCases {
             prosecutionOpening: "Six shots, a sleeping child, and a car with a dent that leads to {DL}.",
             defenseOpening: "A borrowed car, a passenger-side shooter, and a cousin with a grudge.",
             prosecutionClosing: "{DL} was in that car. Driving or shooting, {D.he} is guilty.",
-            defenseClosing: "The State proved whose car it was. Not who was in it."
+            defenseClosing: "The State proved whose car it was. Not who was in it.",
+            victim: VictimFacts(relationship: "No direct relationship; the victim's nephew had fought with the defendant's cousin.", family: "Two children, who were asleep in the house.")
         )
     )
 
@@ -383,7 +384,8 @@ extension StoryCases {
             prosecutionOpening: "A parent, a red card, and a teenager's broken jaw.",
             defenseOpening: "A shove, and a single reflexive punch.",
             prosecutionClosing: "{DL} went looking for a fight and found one.",
-            defenseClosing: "The only neutral witness says {VL} shoved first."
+            defenseClosing: "The only neutral witness says {VL} shoved first.",
+            victim: VictimFacts(age: 19, occupation: "Youth soccer referee and college student", relationship: "No relationship; refereed a game the defendant's child played in.")
         )
     )
 

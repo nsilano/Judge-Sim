@@ -927,7 +927,8 @@ final class GameState: ObservableObject {
                    let entered = person.appearances.last(where: { $0.docket == prior.docket }) {
                     let offense = prior.offense.lowercasedPhrase
                     let incident = CourtCalendar.calendar.date(byAdding: .day, value: -rng.int(30...70), to: date) ?? date
-                    reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: FollowUpCases.newCharges.shuffled(using: &rng), victimName: nil,
+                    let fitting = FollowUpCases.newCharges.filter { FollowUpCases.fits($0, age: person.age(on: date)) }
+                    reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: (fitting.isEmpty ? FollowUpCases.newCharges : fitting).shuffled(using: &rng), victimName: nil,
                                                     incident: incident,
                                                     note: "Back in your court: you sentenced \(person.name) for \(offense) on \(SentenceFormat.shortDate(entered.date)).",
                                                     priorOffense: prior.offense, priorDate: entered.date))
@@ -1919,9 +1920,20 @@ final class GameState: ObservableObject {
                 orders[o].violations += 1
                 stats.orderViolations = (stats.orderViolations ?? 0) + 1
                 let person = people[index], order = orders[o]
-                let what = rng.pick(["showed up at \(order.protectedName)'s workplace", "was found parked outside \(order.protectedName)'s home",
-                                     "sent \(order.protectedName) dozens of messages from a new number", "followed \(order.protectedName) from a grocery store",
-                                     "left a note on \(order.protectedName)'s car"])
+                // The case comes first, so the news describes the same violation the trial will be about.
+                let kinds = Consequences.violationTemplates(domestic: order.domestic)
+                let fitting = kinds.filter { FollowUpCases.fits($0, age: person.age(on: currentDate)) }
+                let key = rng.pick(fitting.isEmpty ? kinds : fitting)
+                let what: String
+                var incident = currentDate
+                switch key {
+                case "story.followup.workplaceVisit": what = "showed up at \(order.protectedName)'s workplace and followed \(order.protectedName) to the parking lot"
+                case "story.followup.newNumber": what = "sent \(order.protectedName) dozens of messages from a new number"
+                case "story.followup.parkingLotWatch": what = "was found parked outside \(order.protectedName)'s home night after night"
+                default:
+                    what = "left notes on \(order.protectedName)'s car and slashed a tire"
+                    incident = CourtCalendar.calendar.date(byAdding: .day, value: -20, to: currentDate) ?? currentDate
+                }
                 post(NewsItem(date: currentDate, kind: .arrest,
                               headline: "\(person.name) arrested for violating court order protecting \(order.protectedName)",
                               body: "Deputies say \(person.name) \(what), in violation of the stay-away order Judge \(lastName(judgeName)) entered in \(order.docket) on \(SentenceFormat.shortDate(order.issued)). \(person.lastName) is being held pending a first appearance.",
@@ -1932,8 +1944,8 @@ final class GameState: ObservableObject {
                                                            body: "The new charges against \(person.name), arising from the alleged violation of a stay-away order protecting \(order.protectedName), are set for trial before the judge who entered the order.",
                                                            docket: order.docket),
                                             personID: person.id,
-                                            reoffense: Reoffense(personID: person.id, templateKeys: Consequences.violationTemplates(domestic: order.domestic),
-                                                                 victimName: order.protectedName, incident: currentDate,
+                                            reoffense: Reoffense(personID: person.id, templateKeys: [key],
+                                                                 victimName: order.protectedName, incident: incident,
                                                                  note: "Charged with violating the stay-away order you entered on \(SentenceFormat.shortDate(order.issued)) in \(order.docket), protecting \(order.protectedName). It was \(person.lastName)'s violation number \(order.violations).",
                                                                  priorOffense: order.offense ?? person.priors.first { $0.docket == order.docket }?.offense, priorDate: order.issued)))
                 break
