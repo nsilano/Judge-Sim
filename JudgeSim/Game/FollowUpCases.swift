@@ -250,10 +250,10 @@ enum FollowUpCases {
         ],
         ageRange: 20...65, occupations: [], hasVictim: true,
         summaries: [
-            "This court ordered {DL} to stay away from {V} in {PRIORDATE}, after {D.his} case for {PRIOR}. Over a month ending {DATE}, {V} found four handwritten notes under {V.his} windshield wiper in the lot where {V.he} works in {HOOD}: \"I still see you,\" \"You lied in court,\" and twice just {V.his} first name. The last morning, a tire was slashed. A handwriting examiner matched the notes to {DL}'s signature on the court's order. {DL} says {D.he} never wrote them."
+            "This court ordered {DL} to stay away from {V} in {PRIORDATE}, after {D.his} case for {PRIOR}. Over a month ending {DATE}, {V} found four handwritten notes under {V.his} windshield wiper in the lot where {V.he} works in {HOOD}: \"I still see you,\" \"You did this to me,\" and twice just {V.his} first name. The last morning, a tire was slashed. A handwriting examiner matched the notes to {DL}'s signature on the court's order. {DL} says {D.he} never wrote them."
         ],
         prosecutionEvidence: [
-            E(.document, 3, "The Four Notes", "Handwritten on torn notebook paper: \"I still see you.\" \"You lied in court.\" Two with only {VL}'s first name."),
+            E(.document, 3, "The Four Notes", "Handwritten on torn notebook paper: \"I still see you.\" \"You did this to me.\" Two with only {VL}'s first name."),
             E(.forensic, 3, "Handwriting Comparison", "A State Crime Laboratory examiner finds the notes were \"highly probably\" written by the person who signed {DL}'s copy of the order."),
             E(.physical, 1, "Slashed Tire", "A single puncture in the sidewall, consistent with a knife.")
         ],
@@ -285,7 +285,7 @@ enum FollowUpCases {
         defenseTheory: ["A shared lot, an anonymous note writer, and a handwriting opinion that stops short of certainty."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"'You lied in court.' {D.He} blames me for what this court did.\""],
+        victimImpacts: ["{VL}: \"'You did this to me.' {D.He} blames me for what this court did.\""],
         allocutions: ["\"I didn't write those notes.\""],
         guiltyTruths: ["A notebook with matching torn edges was found in {DL}'s truck."],
         innocentTruths: ["A coworker of {VL}'s later admitted leaving the notes during a workplace feud."],
@@ -296,11 +296,11 @@ enum FollowUpCases {
             notDone: ["The lot's single camera was not checked before it recorded over."],
             defendantExam: [
                 .direct("Did you write these notes?", "\"No. I haven't been near that lot.\""),
-                .cross("\"You lied in court.\" Who else would write that?", "\"Anybody who was there.\"")
+                .cross("\"You did this to me.\" Who else would write that?", "\"Anybody who was there.\"")
             ],
             prosecutionOpening: "Four notes in {D.his} handwriting, on the car of the person the court protected.",
             defenseOpening: "Handwriting comparison is an opinion, not a fingerprint.",
-            prosecutionClosing: "\"You lied in court.\" Only one person had that grudge.",
+            prosecutionClosing: "\"You did this to me.\" Only one person had that grudge.",
             defenseClosing: "Highly probable isn't beyond a reasonable doubt."
         )
     )
@@ -396,7 +396,7 @@ enum FollowUpCases {
             "In {PRIORDATE}, {DL} came through this court on a charge of {PRIOR} involving {V}. On {DATE}, {V} arrived at the emergency room in {HOOD} with a fractured cheekbone and a cut above {V.his} eye that took nine stitches. {V.He} told the triage nurse {DL} hit {V.him} with a cast-iron skillet. A skillet with blood on its edge was in the sink when deputies arrived; {DL} was gone. {DL}, arrested two days later, says {V} came at {D.him} first and {D.he} swung to defend {D.himself}."
         ],
         prosecutionEvidence: [
-            E(.document, 3, "ER Records", "Fractured left zygoma, 4 cm laceration closed with 9 sutures. Patient states: \"My partner hit me with a frying pan.\""),
+            E(.document, 3, "ER Records", "Fractured left zygoma, 4 cm laceration closed with 9 sutures. Patient states: \"{DL} hit me with a frying pan.\""),
             E(.physical, 3, "The Skillet", "A 12-inch cast-iron skillet with {VL}'s blood on the rim, recovered from the kitchen sink.", .search),
             E(.statement, 2, "Flight", "{DL} left before deputies arrived and turned off {D.his} phone for two days.")
         ],
@@ -506,7 +506,7 @@ enum FollowUpCases {
             ],
             prosecutionOpening: "Someone walking away, and a bottle to the back of the head.",
             defenseOpening: "A drunk with a pool cue, and a split second.",
-            prosecutionClosing: "He was walking away.",
+            prosecutionClosing: "{VL} was walking away.",
             defenseClosing: "The law doesn't make you wait to get hit."
         )
     )
@@ -837,7 +837,7 @@ enum FollowUpCases {
         innocentTruths: ["The missing contractor was later arrested in South Carolina with {VL}'s $9,500 check endorsed to him."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
         story: StoryExtras(
-            timeline: [(-210, "First check to {DL}."), (0, "{VL}'s daughter finds the bank statements."), (45, "Bank investigation complete; charges filed.")],
+            timeline: [(-100, "First check to {DL}."), (0, "{VL}'s daughter finds the bank statements."), (45, "Bank investigation complete; charges filed.")],
             howIdentified: "{VL}'s daughter reviewed the bank statements.",
             notDone: ["The contractor {DL} named was never searched for."],
             defendantExam: [
@@ -958,7 +958,8 @@ enum FollowUpCases {
             prosecutionOpening: "New tools, an empty dock, and {D.his} online store.",
             defenseOpening: "Following instructions isn't stealing.",
             prosecutionClosing: "Damaged returns don't sell online with their serial numbers.",
-            defenseClosing: "The State never asked the supervisor."
+            defenseClosing: "The State never asked the supervisor.",
+            employer: "a building-supply warehouse in {HOOD}"
         )
     )
 

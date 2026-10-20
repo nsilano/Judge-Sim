@@ -199,9 +199,17 @@ enum Exhibits {
             ]
         case .lab:
             // The analyst who testifies is the one who signed the report.
-            let testifying = c.witnesses.first { w in
-                ["analyst", "chemist", "forensic", "scientist", "pathologist", "medical examiner", "toxicologist"].contains { w.role.lowercased().contains($0) }
+            // Of the experts on the same side, the one whose field matches the report.
+            let subject = (title + " " + e.detail).lowercased()
+            let fields: [(String, [String])] = [("dna", ["dna", "biolog"]), ("autopsy", ["patholog", "medical examiner"]), ("cause of death", ["patholog", "medical examiner"]),
+                                                ("tox", ["toxicolog", "chemist"]), ("blood alcohol", ["chemist", "toxicolog", "analyst"]), ("print", ["print", "latent"]),
+                                                ("firearm", ["firearm", "toolmark"]), ("casing", ["firearm", "toolmark"]), ("handwriting", ["document examiner"]),
+                                                ("powder", ["chemist"]), ("substance", ["chemist"]), ("pills", ["chemist"]), ("spatter", ["spatter", "blood"])]
+            let wanted = fields.filter { subject.contains($0.0) }.flatMap(\.1)
+            let experts = c.witnesses.filter { w in
+                w.calledBy == e.side && ["analyst", "chemist", "forensic", "scientist", "pathologist", "medical examiner", "toxicologist", "examiner", "biologist"].contains { w.role.lowercased().contains($0) }
             }
+            let testifying = experts.first { w in wanted.contains { w.role.lowercased().contains($0) } } ?? (wanted.isEmpty ? experts.first : nil)
             let analyst = "Forensic scientist " + (testifying?.name ?? "\(rng.pick(NameBank.firstNames)) \(rng.pick(NameBank.lastNames))")
             let method: String
             switch true {

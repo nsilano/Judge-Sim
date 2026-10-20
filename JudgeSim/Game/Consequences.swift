@@ -94,7 +94,7 @@ enum Consequences {
             note = "You sentenced \(d.lastName) to probation for \(offense) on \(SentenceFormat.shortDate(date))."
         }
         guard chance > 0, rng.chance(chance) else { return [] }
-        let incident = Calendar.current.date(byAdding: .day, value: rng.int(45...420), to: date) ?? date
+        let incident = Calendar.current.date(byAdding: .day, value: rng.int(120...420), to: date) ?? date
         let toCourt = Calendar.current.date(byAdding: .day, value: rng.int(56...100), to: incident) ?? incident
         var body = lead + ", according to the Sheriff's Office."
         if let victim {

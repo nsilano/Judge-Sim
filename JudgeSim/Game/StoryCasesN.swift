@@ -95,7 +95,7 @@ extension StoryCases {
                                   explanation: "The agent's opinion on motive isn't based on specialized knowledge and invades the factfinder's role.",
                                   doctrineID: "speculation", weight: 1))
             ],
-            prosecutionOpening: "A young man went for a run. Three neighbors decided he was a criminal and hunted him.",
+            prosecutionOpening: "A young man went for a run. A neighbor and a grown child decided he was a criminal and hunted him.",
             defenseOpening: "Scared neighbors, a man on a construction site camera, and a struggle over a gun.",
             prosecutionClosing: "You can't create the danger and then claim self-defense against it.",
             defenseClosing: "{DL} made a terrible judgment. Malice requires more.",
@@ -328,7 +328,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did you see that day?", "\"At lunch, the guns were on the cart outside the church set, unlocked. {DL} was eating with the crew.\""),
-                            .direct("What happened after the shooting?", "\"{DL} handed me a little bag and said hold this. I gave it to a deputy later. It had some drugs in it.\""),
+                            .direct("What happened after the shooting?", "\"{DL} handed me a little bag and said hold this. I gave it to a deputy later.\""),
                             .cross("You didn't see who put a live round in the gun?", "\"No.\""),
                             .cross("The box from the supplier was labeled dummy?", "\"That's what it said on it.\"")
                         ])

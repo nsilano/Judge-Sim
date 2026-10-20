@@ -145,7 +145,7 @@ extension StoryCases {
                             .cross("{DL} made actual trades in the first year?", "\"Yes, and lost 30 percent. Then the statements started showing gains.\""),
                             .cross("{DL} repaid some investors?", "\"With other investors' money.\"")
                         ]),
-            WitnessSeed(name: nil, role: "Investor (retired nurse)",
+            WitnessSeed(name: "{VIC2}", role: "Investor (retired nurse)",
                         direct: ["\"{DL} said it was safer than a bank.\""],
                         cross: ["\"I didn't read the paperwork closely.\""],
                         weight: 2, lay: true,

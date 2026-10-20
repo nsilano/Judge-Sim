@@ -335,7 +335,7 @@ extension StoryCases {
                         cross: ["\"Sergeants ask that all the time.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("What did {DL} say to you that night?", "\"Came into the report room and asked, 'Anything on your camera I need to worry about?' I said the guy was fighting, I took him down hard, it's on there.\""),
+                            .direct("What did {DL} say to you that night?", "\"Came into the report room and asked, 'Anything on your camera I need to worry about?' I said the suspect was fighting, I took them down hard, it's on there.\""),
                             .cross("Sergeants ask that after any use of force?", "\"It's a normal question. That's how I took it then.\""),
                             .cross("You've been suspended for the force you used on {VL}?", "\"I'm on administrative leave.\""),
                             .cross("You'd benefit if the blame moved to {DL}?", "\"I'm telling what happened.\"")

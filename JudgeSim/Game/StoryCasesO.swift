@@ -191,7 +191,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("What happened on Main Street?", "\"I was trying to get away from the fight. I didn't know there was a parade. I honked. People came out of nowhere. I couldn't stop it.\""),
                 .direct("Did you try to brake?", "\"I pressed everything. It wouldn't stop.\""),
-                .cross("You steered around the officer.", "\"I was trying not to hit him.\""),
+                .cross("You steered around the officer.", "\"I was trying not to hit the officer.\""),
                 .cross("And then you kept going into the band.", "\"I didn't see a band.\"")
             ],
             objections: [
@@ -224,7 +224,7 @@ extension StoryCases {
         ],
         ageRange: 34...40, occupations: ["paramedic", "pharmacy technician"], hasVictim: true,
         summaries: [
-            "On {DATE}, {D} called 911 to report that {D.his} husband, {V}, had fallen down the stairs of their home in {HOOD}. Paramedics found {VL} dead at the bottom of the steps. The medical examiner first called it an accident. A routine toxicology screen, sent out because {VL} had a heart condition, came back with tetrahydrozoline at many times a therapeutic level, the decongestant in over-the-counter eye drops. Swallowed, it slows the heart and drops blood pressure. Over the next month, {DL} wrote {D.himself} $41,000 in checks from {VL}'s account and filed a life insurance claim. {DL} first told police {VL} had been depressed, then later said {D.he} had put drops in {V.his} water for weeks to make {V.him} sick, not to kill {V.him}."
+            "On {DATE}, {D} called 911 to report that {D.his} husband, {V}, had fallen down the stairs of their home in {HOOD}. Paramedics found {VL} dead at the bottom of the steps. The medical examiner first called it an accident. A routine toxicology screen, sent out because {VL} had a heart condition, came back with tetrahydrozoline at many times a therapeutic level, the decongestant in over-the-counter eye drops. Swallowed, it slows the heart and drops blood pressure. Over the next month, {DL} wrote {D.himself} $41,000 in checks from {VL}'s account and filed a life insurance claim. {DL} first told police {VL} had been depressed, then later said {D.he} had put drops in {V.his} water over three days to make {V.him} sick, not to kill {V.him}."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Toxicology", "Tetrahydrozoline at 30 times the level from proper use, and in stomach contents."),

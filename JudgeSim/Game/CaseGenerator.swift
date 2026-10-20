@@ -434,6 +434,11 @@ enum CaseGenerator {
         // The workplace and school the story names are the ones on the profile.
         if var profile = profiledDefendant.profile, let story = t.story {
             if let place = story.employer.map({ fill($0) }) {
+                if !profile.jobs.contains(where: { $0.current && $0.title != "Unemployed" }) {
+                    // A returning defendant who has since found work there.
+                    for i in profile.jobs.indices where profile.jobs[i].current { profile.jobs[i].current = false; profile.jobs[i].years = profile.jobs[i].years.replacingOccurrences(of: "present", with: "\(currentYear)") }
+                    profile.jobs.insert(Job(title: "Employee", employer: place, years: "\(currentYear)–present", current: true), at: 0)
+                }
                 if let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" }) {
                     profile.jobs[i].employer = place
                     if story.employmentEnded {
