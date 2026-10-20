@@ -166,7 +166,10 @@ struct CourtroomView: View {
             }
             .confirmationDialog("Leave the courtroom?", isPresented: $confirmRecess, titleVisibility: .visible) {
                 Button("Continue the case to another date") { showContinuance = true }
-                Button("Leave and start this case over later today", role: .destructive) { dismiss() }
+                Button("Leave and start this case over later today", role: .destructive) {
+                    game.startOver(session.courtCase.id)
+                    dismiss()
+                }
                 Button("Stay", role: .cancel) {}
             } message: {
                 Text("A continuance keeps every ruling you've made. Leaving without one means starting this case over.")

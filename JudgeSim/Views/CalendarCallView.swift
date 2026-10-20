@@ -82,7 +82,8 @@ private struct MatterCard: View {
                 Spacer()
                 Text(matter.docket).font(.caption2.monospaced()).foregroundStyle(.secondary)
             }
-            Text("State v. \(matter.personName)").font(.system(.subheadline, design: .serif).weight(.bold))
+            // A warrant application has no case yet; it names the person whose property would be searched.
+            Text(matter.kind == .searchWarrant ? "In re: search of \(matter.personName)" : "State v. \(matter.personName)").font(.system(.subheadline, design: .serif).weight(.bold))
             Text(matter.summary).font(.callout)
             Label(matter.stateAsk, systemImage: "building.columns.fill")
                 .font(.caption)

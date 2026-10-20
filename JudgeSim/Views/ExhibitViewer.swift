@@ -74,10 +74,12 @@ struct ExhibitViewer: View {
     /// The screen, styled like the device that recorded it.
     @ViewBuilder
     private func screen(_ r: ExhibitReview, stamp: String, text: String, index: Int) -> some View {
-        let tag = abs(evidence.id.hashValue)
+        let tag = "\(evidence.id)".stableHash
+        // A speed the exhibit gives ("74 mph") is the speed on the screen.
+        let statedSpeed = (evidence.detail.range(of: #"\d{2,3}(?= ?mph)"#, options: .regularExpression)).flatMap { Int(evidence.detail[$0]) }
         switch r.look {
         case .bodycam: BodyCamScreen(stamp: stamp, text: text, unit: tag % 90_000 + 10_000)
-        case .dashcam: DashCamScreen(source: r.source, stamp: stamp, text: text, car: tag % 40 + 10, speed: tag % 45 + 20 + index * 3)
+        case .dashcam: DashCamScreen(source: r.source, stamp: stamp, text: text, car: tag % 40 + 10, speed: statedSpeed ?? (tag % 45 + 20 + index * 3))
         case .phoneVideo: PhoneVideoScreen(stamp: stamp, text: text)
         default: SecurityCamScreen(source: r.source, stamp: stamp, text: text, camera: tag % 8 + 1)
         }

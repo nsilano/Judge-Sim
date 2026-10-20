@@ -26,7 +26,7 @@ enum Reputation {
         let harsh = sentenced == 0 ? 0 : Double(stats.abovePresumptive) / Double(sentenced)
         let lenient = sentenced == 0 ? 0 : Double(stats.belowPresumptive) / Double(sentenced)
         let within = sentenced == 0 ? 0.7 : Double(stats.withinPresumptive) / Double(sentenced)
-        let decided = appeals.filter { !$0.isPending && $0.result != "Appeal dismissed" }
+        let decided = appeals.filter { !$0.isPending && $0.result != "Appeal dismissed" && !$0.isMoot }
         let reversed = decided.filter(\.wasReversed).count
         let affirm = decided.isEmpty ? 0.85 : Double(decided.count - reversed) / Double(decided.count)
         let trials = max(1, history.filter { $0.resolvedKind == "trial" }.count)

@@ -359,6 +359,15 @@ final class GameState: ObservableObject {
         currentDate = cal.startOfDay(for: day.clock)
     }
 
+    /// Leaving a matter without a continuance: whatever was saved from an earlier sitting is set aside, and the
+    /// matter is heard from the start when it's called again.
+    func startOver(_ matterID: UUID) {
+        guard var day = today, let index = day.entries.firstIndex(where: { $0.matterID == matterID }) else { return }
+        day.entries[index].resume = nil
+        today = day
+        save()
+    }
+
     /// Opens a matter on today's calendar.
     func open(_ entryID: UUID) -> DocketItem? {
         guard var day = today, let index = day.entries.firstIndex(where: { $0.id == entryID }) else { return nil }
@@ -927,6 +936,8 @@ final class GameState: ObservableObject {
                    let entered = person.appearances.last(where: { $0.docket == prior.docket }) {
                     let offense = prior.offense.lowercasedPhrase
                     let incident = CourtCalendar.calendar.date(byAdding: .day, value: -rng.int(30...70), to: date) ?? date
+                    // Someone this court sent home, on probation or after time served, charged with something new.
+                    stats.chargedAgainAfterRelease = (stats.chargedAgainAfterRelease ?? 0) + 1
                     let fitting = FollowUpCases.newCharges.filter { FollowUpCases.fits($0, age: person.age(on: date)) }
                     reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: (fitting.isEmpty ? FollowUpCases.newCharges : fitting).shuffled(using: &rng), victimName: nil,
                                                     incident: incident,

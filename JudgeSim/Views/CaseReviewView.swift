@@ -132,8 +132,11 @@ struct CaseReviewSheet: View {
 
     @ViewBuilder
     private var testimonySection: some View {
-        let witnesses = c.witnesses + (session.rulings.defendantTestifies == true ? [c.defendantTestimony].compactMap { $0 } : [])
-        if witnesses.isEmpty { empty("No witnesses testified.") }
+        // Only testimony the court has heard so far: none before trial, the defense's only once its case opens.
+        let heard = session.stage.rawValue >= CaseSession.Stage.trial.rawValue
+        let witnesses = !heard ? [] : c.witnesses.filter { $0.calledBy == .prosecution || session.defenseCaseOpen }
+            + (session.rulings.defendantTestifies == true && session.defenseCaseOpen ? [c.defendantTestimony].compactMap { $0 } : [])
+        if witnesses.isEmpty { empty(heard ? "No witnesses testified." : "Testimony begins at trial.") }
         ForEach(witnesses) { witness in
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -180,12 +183,14 @@ struct CaseReviewSheet: View {
             Statement(side: .defense, speaker: c.defenseAttorney, text: c.defenseOpening)
         }
         .card()
-        SectionTitle(text: "Closing arguments", icon: "text.quote")
-        VStack(alignment: .leading, spacing: 12) {
-            Statement(side: .prosecution, speaker: c.prosecutor, text: Allocutions.closing(c, side: .prosecution, rulings: session.rulings))
-            Statement(side: .defense, speaker: c.defenseAttorney, text: Allocutions.closing(c, side: .defense, rulings: session.rulings))
+        if session.defenseCaseOpen && session.stage.rawValue >= CaseSession.Stage.trial.rawValue {
+            SectionTitle(text: "Closing arguments", icon: "text.quote")
+            VStack(alignment: .leading, spacing: 12) {
+                Statement(side: .prosecution, speaker: c.prosecutor, text: Allocutions.closing(c, side: .prosecution, rulings: session.rulings))
+                Statement(side: .defense, speaker: c.defenseAttorney, text: Allocutions.closing(c, side: .defense, rulings: session.rulings))
+            }
+            .card()
         }
-        .card()
         if !session.aggravatingFactors.isEmpty || !session.mitigatingFactors.isEmpty {
             SectionTitle(text: "Factors offered for sentencing", icon: "list.bullet.clipboard")
             VStack(alignment: .leading, spacing: 6) {

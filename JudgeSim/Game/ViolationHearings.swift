@@ -415,7 +415,7 @@ enum ViolationHearings {
                 lines.append("Probation extended \(extend) months.")
             }
         case .quickDip:
-            lines.insert("The court finds a willful violation and orders the probationer to serve 3 days in the Hollis County jail as a quick dip, after which probation resumes.", at: 0)
+            lines.insert(sanctionLead(r) + " orders the probationer to serve 3 days in the Hollis County jail as a quick dip, after which probation resumes.", at: 0)
             risk -= 0.03
             status = .incarcerated
             release = Calendar.current.date(byAdding: .day, value: 3, to: date)
@@ -424,11 +424,11 @@ enum ViolationHearings {
             if days > 0 {
                 term.crvCount = (term.crvCount ?? 0) + 1
                 term.crvDaysServed = term.crvCreditDays + days
-                lines.insert("The court finds a willful violation and orders a \(days)-day period of confinement in response to violation (G.S. 15A-1344(d2)), credited against the suspended sentence. Probation resumes on release.", at: 0)
+                lines.insert(sanctionLead(r) + " orders a \(days)-day period of confinement in response to violation (G.S. 15A-1344(d2)), credited against the suspended sentence. Probation resumes on release.", at: 0)
                 status = .incarcerated
                 release = Calendar.current.date(byAdding: .day, value: days, to: date)
             } else {
-                lines.insert("The court finds a willful violation, but no suspended time remains to serve as confinement in response to violation. Probation continues.", at: 0)
+                lines.insert(sanctionLead(r) + " would order confinement in response to violation, but no suspended time remains to serve. Probation continues.", at: 0)
             }
             risk -= 0.02
         case .revoke:
@@ -521,6 +521,15 @@ enum ViolationHearings {
     }
 
     /// A short summary of the order for the person's record, e.g. "violation found; 45-day CRV".
+    /// How a sanction order opens: on a finding of willful violation, or, when the court found none, saying so.
+    static func sanctionLead(_ r: HearingRulings) -> String {
+        switch r.finding ?? .established {
+        case .established: return "The court finds a willful violation and"
+        case .excused: return "Although the court finds a lawful excuse for the violation, it nonetheless"
+        case .notProven: return "Although the court finds the State has not proven a violation, it nonetheless"
+        }
+    }
+
     static func appearanceSummary(_ decision: HearingDecision, finding: ViolationFinding, term: ProbationTerm) -> String {
         let found = finding == .established ? "violation found; " : (finding == .excused ? "lawful excuse shown; " : "violation not proven; ")
         switch decision {

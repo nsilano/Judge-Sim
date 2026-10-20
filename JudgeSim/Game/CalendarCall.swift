@@ -254,7 +254,7 @@ enum CalendarCalls {
         return CalendarMatter(kind: .arraignment, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
                               summary: "\(d.name) is arraigned on \(counts) count\(counts == 1 ? "" : "s"), led by \(c.charges.first?.law.title.lowercased() ?? "the indictment"), and pleads not guilty. \(jailed ? "\(d.lastName) is in custody." : "\(d.lastName) is out on bond.") Set the trial date.",
-                              stateAsk: "The State will be ready in three weeks; the lab work is back.",
+                              stateAsk: "The State will be ready in about five weeks; the lab work is back.",
                               defenseAsk: counts > 2 ? "With this many counts we need time for discovery. Ten weeks." : "We'd like five weeks to review discovery.",
                               options: ["Set the trial for two weeks from now", "Set the trial for five weeks from now", "Set the trial for ten weeks from now"],
                               pendingCase: c)
@@ -423,9 +423,9 @@ enum CalendarCalls {
                 kind: .pvAdmission, personID: person.id, personName: person.name, personAge: person.age(on: date),
                 occupation: person.occupation, docket: term.docket + " (PV)",
                 summary: "\(person.name) admits " + pvAdmissionConduct(supervised: supervised) + " while on probation in \(term.docket).",
-                stateAsk: "The State asks for a two-day quick dip.",
+                stateAsk: "The State asks for a three-day quick dip.",
                 defenseAsk: "My client admits it and is back on track. We ask the court to continue probation.",
-                options: ["Continue probation on the same terms", "Modify: add substance abuse treatment", "Order a two-day quick dip",
+                options: ["Continue probation on the same terms", "Modify: add substance abuse treatment", "Order a three-day quick dip",
                           crv > 0 ? "Order a \(crv)-day CRV" : "Order a CRV (no suspended time remains)"]))
         }
         return CalendarCall(date: date, matters: matters)
@@ -569,11 +569,11 @@ enum CalendarCalls {
                         term.conditions = (term.conditions ?? []) + ["Obtain a substance abuse assessment and complete recommended treatment."]
                         term.violationRisk = max(0.05, (term.violationRisk ?? 0.2) - 0.06)
                     case 2:
-                        // A quick dip: two days in the county jail, then back on probation (G.S. 15A-1343(a1)(3)).
+                        // A quick dip: three days in the county jail, then back on probation (G.S. 15A-1343(a1)(3)).
                         term.violationRisk = max(0.05, (term.violationRisk ?? 0.2) - 0.03)
                         person.status = .incarcerated
-                        person.releaseDate = Calendar.current.date(byAdding: .day, value: 2, to: date)
-                        person.releaseNote = "Quick dip: two days in the county jail, ordered at the calendar call. Probation resumes on release."
+                        person.releaseDate = Calendar.current.date(byAdding: .day, value: 3, to: date)
+                        person.releaseNote = "Quick dip: three days in the county jail, ordered at the calendar call. Probation resumes on release."
                     case 3:
                         // Credit for earlier CRVs: a misdemeanor CRV never exceeds the suspended time left.
                         let days = ViolationHearings.crvDays(term)

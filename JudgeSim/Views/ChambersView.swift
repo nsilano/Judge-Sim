@@ -318,7 +318,7 @@ struct ChambersView: View {
                     Toggle(isOn: Binding(get: { game.lightWeeks }, set: { game.setLightWeeks($0) })) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Light weeks").font(.subheadline.weight(.semibold))
-                            Text("Two trials and one hearing a week, for shorter sessions. Starts next week.").font(.caption).foregroundStyle(.secondary)
+                            Text("Up to two trials and one hearing a week, for shorter sessions. Starts next week.").font(.caption).foregroundStyle(.secondary)
                         }
                     }
                     .tint(Theme.gold)
