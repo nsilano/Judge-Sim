@@ -313,13 +313,15 @@ struct AppealDecisionCard: View {
 
     var body: some View {
         let changed = appeal.wasReversed
+        let moot = appeal.isMoot
+        let tint: Color = moot ? .secondary : (changed ? .orange : .green)
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Image(systemName: changed ? "arrow.uturn.backward.circle.fill" : "checkmark.seal.fill")
+                Image(systemName: moot ? "minus.circle.fill" : (changed ? "arrow.uturn.backward.circle.fill" : "checkmark.seal.fill"))
                     .font(.title2)
-                    .foregroundStyle(changed ? Color.orange : Color.green)
+                    .foregroundStyle(tint)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(changed ? "Your ruling was changed" : "Your ruling was upheld").font(.headline)
+                    Text(moot ? "The appeal ended without a ruling" : (changed ? "Your ruling was changed" : "Your ruling was upheld")).font(.headline)
                     Text(appeal.result ?? "Decided").font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -337,13 +339,13 @@ struct AppealDecisionCard: View {
                 }
             }
         }
-        .card(tint: changed ? .orange : .green)
+        .card(tint: tint)
     }
 
     /// What the decision means for the case, in plain words.
     private var bottomLine: String {
         let result = appeal.result ?? ""
-        if result.contains("resentencing") { return "The conviction stands, but the sentence is vacated. The case comes back for a lawful sentence." }
+        if result.contains("resentencing") { return "The conviction stands, but the sentence you imposed was unlawful. It is vacated, and the defendant is resentenced to a lawful term." }
         if result.contains("will retry") { return "The conviction is gone. The District Attorney will try the case again, and it returns to your courtroom." }
         if result.contains("declined to retry") { return "The conviction is gone, and the District Attorney won't try it again. The defendant goes free on this charge." }
         if result.contains("New trial") { return "The conviction is vacated and a new trial is ordered." }

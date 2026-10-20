@@ -314,8 +314,8 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var caption: String { "State of North Carolina v. \(defendant.name)" }
 
     /// What the defendant says before sentence: the written statement, or one built from this case's facts.
-    func allocution(afterPlea: Bool) -> String {
-        Allocutions.statement(self, afterPlea: afterPlea)
+    func allocution(afterPlea: Bool, pleaKind: PleaKind = .guilty) -> String {
+        Allocutions.statement(self, afterPlea: afterPlea, pleaKind: pleaKind)
     }
 
     func evidence(_ id: UUID?) -> Evidence? {

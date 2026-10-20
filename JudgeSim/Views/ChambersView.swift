@@ -402,10 +402,11 @@ struct ChambersView: View {
             HStack {
                 SectionTitle(text: "From the Court of Appeals", icon: "building.columns.fill")
                 Spacer()
-                Button("Dismiss") { withAnimation { game.clearDigest() } }
+                Button("Dismiss") { withAnimation { game.clearFreshAppeals() } }
                     .font(.caption.weight(.semibold))
             }
-            Text("\(decided.filter { !$0.wasReversed }.count) upheld · \(decided.filter(\.wasReversed).count) changed")
+            Text("\(decided.filter { !$0.wasReversed && !$0.isMoot }.count) upheld · \(decided.filter(\.wasReversed).count) changed"
+                 + (decided.contains(where: \.isMoot) ? " · \(decided.filter(\.isMoot).count) moot" : ""))
                 .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
             ForEach(decided) { appeal in
                 NavigationLink {
@@ -706,8 +707,8 @@ struct RecordsView: View {
             DisclosureGroup("Career ledger") {
             let trials = game.history.filter { $0.resolvedKind == "trial" }
             let s = game.stats
-            ledgerRow("Convictions", trials.filter { $0.outcome.contains("Guilty") || $0.outcome.contains("No contest") }.count)
-            ledgerRow("Acquittals and dismissals", trials.filter { $0.outcome.hasPrefix("Not guilty") || $0.outcome.hasPrefix("Dismissed") }.count)
+            ledgerRow("Convictions at trial", trials.filter { $0.outcome.contains("Guilty") && !$0.outcome.contains("plea)") && !$0.outcome.contains("No contest") }.count)
+            ledgerRow("Acquittals and dismissals at trial", trials.filter { $0.outcome.hasPrefix("Not guilty") || $0.outcome.hasPrefix("Dismissed") }.count)
             ledgerRow("Guilty pleas", trials.filter { $0.outcome.contains("plea)") || $0.outcome.contains("No contest") }.count)
             // A retrial of the same case isn't a defendant returning.
             let firstHeard = Dictionary(trials.map { ($0.docket, $0.date) }, uniquingKeysWith: { min($0, $1) })

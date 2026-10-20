@@ -225,7 +225,7 @@ struct SentencingStage: View {
                     Text(impact).font(.system(.callout, design: .serif)).italic()
                 }
                 Text("The defendant addresses the court").font(.caption.weight(.bold)).foregroundStyle(Theme.defense)
-                Text(c.allocution(afterPlea: session.rulings.pleaAccepted == true)).font(.system(.callout, design: .serif)).italic()
+                Text(c.allocution(afterPlea: session.rulings.pleaAccepted == true, pleaKind: session.rulings.pleaKind)).font(.system(.callout, design: .serif)).italic()
             }
 
             StepHeader(number: 2, title: "Record & factors", detail: "Prior record level and any aggravating or mitigating factors you find.")

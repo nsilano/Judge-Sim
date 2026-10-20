@@ -23,6 +23,8 @@ struct DocketEntry: Identifiable, Codable {
     var requests: [EvidenceRequest]? = nil
     var note: String?
     var outcome: String?
+    /// Moved to a later week because the trial calendar was full, not by any party's request (optional for older saves).
+    var carriedOver: Bool? = nil
 
     var matterID: UUID {
         switch matter {
@@ -85,6 +87,7 @@ extension DocketEntry {
         requests = try c.decodeIfPresent([EvidenceRequest].self, forKey: .requests)
         note = try c.decodeIfPresent(String.self, forKey: .note)
         outcome = try c.decodeIfPresent(String.self, forKey: .outcome)
+        carriedOver = try c.decodeIfPresent(Bool.self, forKey: .carriedOver)
     }
 }
 

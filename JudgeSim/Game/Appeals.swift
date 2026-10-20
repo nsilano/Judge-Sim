@@ -47,6 +47,9 @@ struct AppealTracker: Identifiable, Codable {
         }
     }
 
+    /// Dismissed because the judgment was already gone: neither upheld nor changed.
+    var isMoot: Bool { result?.contains("moot") ?? false }
+
     var wasReversed: Bool {
         guard let result else { return false }
         return result.contains("vacated") || result.contains("New trial") || result.contains("reversed") || result.contains("reinstated")

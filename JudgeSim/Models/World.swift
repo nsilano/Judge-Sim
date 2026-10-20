@@ -328,6 +328,8 @@ struct StayAwayOrder: Codable, Hashable, Identifiable {
     /// Domestic cases are enforced like a Chapter 50B protective order; others as stalking under a court order.
     var domestic: Bool
     var violations: Int = 0
+    /// The lead offense in the case that produced the order (optional for older saves).
+    var offense: String? = nil
 }
 
 /// Something a person this court judged did afterward, on its way back to this courtroom as a new case.

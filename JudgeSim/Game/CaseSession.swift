@@ -228,6 +228,10 @@ final class CaseSession: ObservableObject {
                 courtCase.proceduralNotes.removeAll { $0.hasPrefix("Count \(charge.count) (") && $0.hasSuffix("the indictment is defective.") }
             }
         }
+        // The motion to dismiss at halftime is made on the counts still standing.
+        let standing = Set(courtCase.charges.map(\.id))
+        rulings.halftime = rulings.halftime.filter { standing.contains($0.key) }
+        halftimeMotion = HalftimeMotion.make(for: courtCase)
     }
 
     func objectionBinding(_ objection: Objection) -> Binding<Bool?> {

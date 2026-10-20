@@ -136,7 +136,10 @@ enum Exhibits {
             var minute = max(0, base - rng.int(30...240))
             for q in quotes {
                 let before = context(before: q, in: e.detail).lowercased()
-                let mine = before.contains(defendantLast.lowercased()) || before.contains(c.defendant.name.lowercased())
+                // The phone is the defendant's: a message is theirs unless the text says someone else sent it.
+                let otherLast = c.victimName?.components(separatedBy: " ").last?.lowercased()
+                let namesOther = (otherLast.map { before.contains($0) } ?? false) || before.contains("replied") || before.contains("victim")
+                let mine = before.contains(defendantLast.lowercased()) || before.contains(c.defendant.name.lowercased()) || !namesOther
                 lines.append(.init(stamp: clock(minute), speaker: mine ? c.defendant.name : otherParty, text: q, fromDefendant: mine))
                 minute += rng.int(1...45)
             }
@@ -179,7 +182,11 @@ enum Exhibits {
                 "Admissions are evidence, but the State still needs other evidence that the crime happened (corpus delicti)."
             ]
         case .lab:
-            let analyst = "Forensic scientist \(rng.pick(NameBank.firstNames)) \(rng.pick(NameBank.lastNames))"
+            // The analyst who testifies is the one who signed the report.
+            let testifying = c.witnesses.first { w in
+                ["analyst", "chemist", "forensic", "scientist", "pathologist", "medical examiner", "toxicologist"].contains { w.role.lowercased().contains($0) }
+            }
+            let analyst = "Forensic scientist " + (testifying?.name ?? "\(rng.pick(NameBank.firstNames)) \(rng.pick(NameBank.lastNames))")
             let method: String
             switch true {
             case mentionsAny(title + " " + e.detail.lowercased(), ["dna", "swab", "profile"]): method = "DNA extraction, quantitation, and STR typing"
