@@ -114,6 +114,8 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     var profile: DefendantProfile? = nil
     /// Orders this court entered forbidding contact with a victim (optional for older saves).
     var stayAwayOrders: [StayAwayOrder]? = nil
+    /// When the person last walked out of custody (optional for older saves).
+    var lastReleased: Date? = nil
 
     /// Stay-away orders still in force on a date.
     func activeOrders(on date: Date) -> [StayAwayOrder] {

@@ -55,7 +55,10 @@ enum BenchConference {
     /// is proper whatever the State thinks.
     static func merges(_ c: CourtCase, _ r: Rulings, charge: Charge) -> Bool {
         guard let principal = convictedCharges(c, r).first, principal.id != charge.id else { return false }
-        return charge.lawID == principal.lesserLawID || charge.lawID == principal.lawID
+        if charge.lawID == principal.lesserLawID { return true }
+        // One death, one homicide: murder and a manslaughter or death-by-vehicle count for the same killing.
+        let homicide = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV"]
+        return homicide.contains(principal.lawID) && homicide.contains(charge.lawID) && principal.lawID != charge.lawID
     }
 
     /// Whether the State agrees to arresting judgment on this count.

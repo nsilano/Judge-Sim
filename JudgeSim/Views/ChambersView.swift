@@ -254,9 +254,9 @@ struct ChambersView: View {
                     Label("\(game.trialBacklog) trial\(game.trialBacklog == 1 ? "" : "s") waiting for a later week (up to \(game.trialCap) a week)", systemImage: "tray.full.fill")
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                if CourtCalendar.calendar.component(.weekday, from: day.clock) == 6
+                if CourtCalendar.isSameDay(day.clock, game.lastCourtDayThisWeek)
                     && CourtCalendar.calendar.component(.hour, from: day.clock) >= 17 && !day.isComplete {
-                    Label("Friday is running late. Finish the week's calendar before you adjourn.", systemImage: "moon.fill").font(.caption).foregroundStyle(.orange)
+                    Label("\(game.lastCourtDayThisWeek.formatted(.dateTime.weekday(.wide))) is running late. Finish the week's calendar before you adjourn.", systemImage: "moon.fill").font(.caption).foregroundStyle(.orange)
                 }
 
                 ForEach(day.entries) { entry in

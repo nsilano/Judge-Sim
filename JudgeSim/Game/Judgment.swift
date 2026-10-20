@@ -1423,7 +1423,8 @@ enum Judgment {
         // for prior record purposes. Convictions entered this week share a session key (G.S. 15A-1340.14(d)).
         let session = sessionKey(county: county, date: date)
         if convicted && special != .conditionalDischarge {
-            for charge in c.charges {
+            // A count on which judgment was arrested is not a conviction on the record.
+            for charge in c.charges where !r.arrestedCounts.contains(charge.id) {
                 guard let verdict = r.verdicts[charge.id], let law = convictedLaw(charge, verdict) else { continue }
                 let cls = law.ncClass ?? .misd1
                 let unitForCharge = sentencingUnits.first { $0.counts.contains(charge.count) }
@@ -1871,7 +1872,7 @@ enum Judgment {
 
         // What the defendant does next, if the judgment let a guilty person go.
         pending.append(contentsOf: Consequences.afterJudgment(c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
-                                                              judgeLast: judgeLast, date: date, rng: &rng))
+                                                              dismissed: dismissed, insanity: insanityAcquittal, judgeLast: judgeLast, date: date, rng: &rng))
 
         // Things that may surface about what really happened
         switch (convicted, truthGuilty) {
@@ -1995,7 +1996,7 @@ enum Judgment {
     /// The order protecting the victim: one the court entered for a set number of years, or, failing that, the
     /// no-contact condition of probation for as long as probation runs.
     static func stayAwayOrder(_ c: CourtCase, _ r: Rulings, convicted: Bool, date: Date, probationEnds: Date?) -> StayAwayOrder? {
-        guard convicted, let victim = c.victimName else { return nil }
+        guard convicted, let victim = c.victimName, !Consequences.victimDied(c) else { return nil }
         let expires: Date
         if r.stayAwayYears > 0 {
             expires = Calendar.current.date(byAdding: .year, value: r.stayAwayYears, to: date) ?? date

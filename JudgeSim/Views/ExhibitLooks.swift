@@ -174,7 +174,7 @@ struct BankStatementView: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("Account").font(.caption2).foregroundStyle(ExhibitPalette.faint)
-                    Text("••••\(String(format: "%04d", abs(evidence.id.hashValue) % 10_000))").font(.caption.monospacedDigit().weight(.semibold))
+                    Text("••••\(String(format: "%04d", "\(evidence.id)".stableHash % 10_000))").font(.caption.monospacedDigit().weight(.semibold))
                 }
             }
             HStack {
@@ -297,7 +297,7 @@ struct MedicalRecordView: View {
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 4) {
                 GridRow {
                     field("Patient", patient)
-                    field("MRN", "\(100_000 + abs(evidence.id.hashValue) % 899_999)")
+                    field("MRN", "\(100_000 + seed * 7919 % 899_999)")
                 }
                 GridRow {
                     field("Encounter", review.date)
@@ -305,10 +305,17 @@ struct MedicalRecordView: View {
                 }
             }
             HStack(spacing: 8) {
-                vital("BP", "\(118 + abs(evidence.id.hashValue) % 40)/\(72 + abs(evidence.id.hashValue) % 20)")
-                vital("HR", "\(78 + abs(evidence.id.hashValue) % 40)")
-                vital("SpO₂", "\(94 + abs(evidence.id.hashValue) % 6)%")
-                vital("Pain", "\(4 + abs(evidence.id.hashValue) % 6)/10")
+                if died {
+                    vital("BP", "0/0")
+                    vital("HR", "0")
+                    vital("Resp", "0")
+                    vital("Status", "Expired")
+                } else {
+                    vital("BP", "\(118 + seed % 40)/\(72 + seed % 20)")
+                    vital("HR", "\(78 + seed % 40)")
+                    vital("SpO₂", "\(94 + seed % 6)%")
+                    vital("Pain", "\(4 + seed % 6)/10")
+                }
             }
             Text("CLINICAL NOTES").font(.system(size: 10, weight: .bold)).foregroundStyle(ExhibitPalette.medical)
             ForEach(review.lines) { line in
@@ -320,6 +327,10 @@ struct MedicalRecordView: View {
     }
 
     private var patient: String { courtCase.victimName ?? courtCase.defendant.name }
+    /// The record of a victim who did not survive.
+    private var died: Bool { courtCase.victimName != nil && Consequences.victimDied(courtCase) }
+    /// Numbers that stay the same every time the exhibit is opened.
+    private var seed: Int { "\(evidence.id)".stableHash }
 
     private func field(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
@@ -640,7 +651,7 @@ struct EmailView: View {
 
     private func sender(_ name: String) -> String {
         let handle = name.lowercased().replacingOccurrences(of: " ", with: ".")
-        return "\(name) <\(handle)@\(["gmail.com", "outlook.com", "yahoo.com"][abs(name.hashValue) % 3])>"
+        return "\(name) <\(handle)@\(["gmail.com", "outlook.com", "yahoo.com"][name.stableHash % 3])>"
     }
 
     private func header(_ label: String, _ value: String) -> some View {
@@ -673,9 +684,9 @@ struct SocialPostView: View {
                         }
                         Text(line.text).font(.body).fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 22) {
-                            Label("\(3 + abs(line.text.hashValue) % 40)", systemImage: "bubble.right")
-                            Label("\(abs(line.text.hashValue) % 25)", systemImage: "arrow.2.squarepath")
-                            Label("\(10 + abs(line.text.hashValue) % 300)", systemImage: "heart")
+                            Label("\(3 + line.text.stableHash % 40)", systemImage: "bubble.right")
+                            Label("\(line.text.stableHash % 25)", systemImage: "arrow.2.squarepath")
+                            Label("\(10 + line.text.stableHash % 300)", systemImage: "heart")
                         }
                         .font(.caption).foregroundStyle(ExhibitPalette.faint)
                     }
@@ -711,7 +722,7 @@ struct DispatchRecordView: View {
                     ExhibitSticker(label: evidence.exhibit)
                 }
                 Text(jail ? "INMATE CALL RECORDING · ALL CALLS ARE RECORDED AND MAY BE MONITORED"
-                          : "CAD INCIDENT \(abs(evidence.id.hashValue) % 900_000 + 100_000) · CALL RECORDING TRANSCRIPT")
+                          : "CAD INCIDENT \("\(evidence.id)".stableHash % 900_000 + 100_000) · CALL RECORDING TRANSCRIPT")
                     .font(.system(size: 10, design: .monospaced))
                 Text("RECEIVED \(review.date.uppercased())").font(.system(size: 10, design: .monospaced))
             }
@@ -772,4 +783,9 @@ struct InterviewTranscriptView: View {
         if speaker == courtCase.defendant.name || speaker.contains(courtCase.defendant.lastName) { return "A:" }
         return "Q:"
     }
+}
+
+extension String {
+    /// A small hash that is the same on every launch, for numbers drawn on exhibits.
+    var stableHash: Int { unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0xFFFFF } }
 }

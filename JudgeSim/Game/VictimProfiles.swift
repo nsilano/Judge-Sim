@@ -94,7 +94,7 @@ enum VictimProfiles {
                              inTheFile: inTheFile)
     }
 
-    private static func statedAge(_ text: String, name: String, last: String) -> Int? {
+    static func statedAge(_ text: String, name: String, last: String) -> Int? {
         for key in [name, last] {
             let pattern = NSRegularExpression.escapedPattern(for: key) + ", (\\d{1,3})\\b"
             guard let regex = try? NSRegularExpression(pattern: pattern),

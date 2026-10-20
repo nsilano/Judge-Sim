@@ -355,14 +355,19 @@ enum Allocutions {
     ]
 
     /// A closing argument: the written one for a written case, otherwise one built from the evidence and witnesses.
-    static func closing(_ c: CourtCase, side: Side) -> String {
+    static func closing(_ c: CourtCase, side: Side, rulings: Rulings? = nil) -> String {
+        // Evidence the court kept out, and counts it already dismissed, aren't argued.
+        let excluded = rulings?.excludedEvidence(in: c) ?? []
+        let gone = Set(c.motions.compactMap { m in m.kind == .dismissIndictment && rulings?.motions[m.id] == true ? m.targetChargeID : nil })
+        let counts = c.charges.filter { !gone.contains($0.id) && rulings?.halftime[$0.id] != .dismiss }
         let stored = side == .prosecution ? c.prosecutionClosing : c.defenseClosing
-        guard stored.isEmpty || stockClosings.contains(where: stored.contains) else { return stored }
+        let citesExcluded = c.evidence.contains { excluded.contains($0.id) && stored.contains($0.exhibit) }
+        guard stored.isEmpty || stockClosings.contains(where: stored.contains) || citesExcluded || counts.count < c.charges.count else { return stored }
         var rng = SeededRNG(seed: c.seed ^ (side == .prosecution ? 0xC105E : 0xDEF0C))
         let dl = c.defendant.lastName
-        let charge = (c.charges.first?.law.title ?? "the charges").lowercased()
-        let ours = c.evidence.filter { $0.side == side }.sorted { $0.weight > $1.weight }
-        let theirs = c.evidence.filter { $0.side != side }.sorted { $0.weight > $1.weight }
+        let charge = (counts.first ?? c.charges.first)?.law.title.lowercasedPhrase ?? "the charges"
+        let ours = c.evidence.filter { $0.side == side && !excluded.contains($0.id) }.sorted { $0.weight > $1.weight }
+        let theirs = c.evidence.filter { $0.side != side && !excluded.contains($0.id) }.sorted { $0.weight > $1.weight }
         let witness = c.witnesses.filter { $0.calledBy == side && $0.isDefendant != true }.max { $0.weight < $1.weight }
         var parts: [String] = []
 

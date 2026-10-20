@@ -470,6 +470,12 @@ final class CaseSession: ObservableObject {
 
     var priorRecord: PriorRecord { Judgment.priorRecord(courtCase, rulings) }
 
+    /// How testimony names the evidence the court kept out: its exhibit number and its title.
+    var suppressedTerms: [String] {
+        let excluded = rulings.excludedEvidence(in: courtCase)
+        return courtCase.evidence.filter { excluded.contains($0.id) }.flatMap { [$0.exhibit, $0.title] }.filter { $0.count >= 4 }
+    }
+
     func isSuppressed(_ evidence: Evidence) -> Bool {
         rulings.excludedEvidence(in: courtCase).contains(evidence.id)
     }
