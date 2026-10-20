@@ -117,7 +117,6 @@ extension StoryCases {
             SecondaryCharge(lawID: "identityTheft", specification: "Used {V}'s identifying information to open a second store credit account.", chance: 1.0, threshold: 3),
             SecondaryCharge(lawID: "identityTheft", specification: "Used {V}'s identifying information to open a third credit card account.", chance: 1.0, threshold: 3),
             SecondaryCharge(lawID: "cardFraud", specification: "Used credit cards issued in {V}'s name to buy $23,000 in electronics.", chance: 1.0, threshold: 2),
-            SecondaryCharge(lawID: "possStolen", specification: "Possessed laptops and gaming consoles bought with stolen credit, knowing they were obtained by fraud.", chance: 1.0, threshold: 2),
             SecondaryCharge(lawID: "misdLarceny", specification: "Stole mail addressed to {V} from the cluster mailbox.", chance: 1.0, threshold: 1)
         ],
         ageRange: 24...40, occupations: ["online reseller"], hasVictim: true,
@@ -304,10 +303,9 @@ extension StoryCases {
     static let lastPill = CaseTemplate(
         key: "story.lastPill", category: .drugs,
         headlines: ["Friend Charged in Fentanyl Death", "Death by Distribution Case Tests Causation"],
-        primaryLaw: "deathByDistribution", lesserLaw: "deliverSchedII", threshold: 5, lesserThreshold: 3,
-        specification: "Delivered a pill containing fentanyl to {V}, whose ingestion of it caused {V.his} death.",
+        primaryLaw: "deathByDistribution", lesserLaw: "saleSchedII", threshold: 5, lesserThreshold: 3,
+        specification: "Sold a pill containing fentanyl to {V}, whose ingestion of it caused {V.his} death.",
         secondary: [
-            SecondaryCharge(lawID: "deliverSchedII", specification: "Delivered a counterfeit oxycodone pill containing fentanyl to {V}.", chance: 1.0, threshold: 3),
             SecondaryCharge(lawID: "saleSchedII", specification: "Sold two pills containing fentanyl to {V} for $40.", chance: 1.0, threshold: 4)
         ],
         ageRange: 21...30, occupations: ["restaurant server"], hasVictim: true,
@@ -359,7 +357,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} sold {V} fentanyl pills. Without the fentanyl, {VL} would be alive. That is death by distribution."],
         defenseTheory: ["{DL} was an addict sharing pills at cost with a friend, believing they were oxycodone. And {VL}'s own sedative and alcohol were part of what killed {V.him}."],
-        aggravating: ["The pills contained fentanyl"],
+        aggravating: [],
         mitigating: ["{DL} has an opioid use disorder and was not selling for profit", "No prior criminal record"],
         victimImpacts: ["{VL}'s parent: \"Two kids who worked together, laughed together. One is gone and one is going to prison. Find whoever is making these pills.\""],
         allocutions: ["\"{VL} was my best friend at work. I'd take those pills back in a heartbeat. I'm in treatment now.\""],

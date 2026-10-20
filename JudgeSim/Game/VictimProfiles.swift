@@ -39,8 +39,8 @@ enum VictimProfiles {
 
         // An age the written facts give ("Name, 58"), or a fitting one.
         let age = statedAge(summary, name: name, last: last) ?? {
+            if c.charges.contains(where: { ["felonyChildAbuse", "childAbuseMisd"].contains($0.lawID) }) { return rng.int(3...15) }
             switch c.category {
-            case .family: return rng.int(4...80)
             case .whiteCollar: return rng.int(44...86)
             default: return rng.int(19...74)
             }
@@ -94,7 +94,7 @@ enum VictimProfiles {
                              inTheFile: inTheFile)
     }
 
-    private static func statedAge(_ text: String, name: String, last: String) -> Int? {
+    static func statedAge(_ text: String, name: String, last: String) -> Int? {
         for key in [name, last] {
             let pattern = NSRegularExpression.escapedPattern(for: key) + ", (\\d{1,3})\\b"
             guard let regex = try? NSRegularExpression(pattern: pattern),
@@ -116,7 +116,11 @@ enum VictimProfiles {
             ("cousin", "Related to the defendant."), ("brother", "Related to the defendant."), ("sister", "Related to the defendant."),
             ("son", "Related to the defendant."), ("daughter", "Related to the defendant."), ("friend", "Knew the defendant socially.")
         ]
-        for (word, line) in pairs where lower.contains(word) { return line }
+        // Whole words only: "son" isn't in "person", nor "ex-" in "next".
+        for (word, line) in pairs {
+            let pattern = word.hasSuffix("-") ? "\\b" + NSRegularExpression.escapedPattern(for: word) : "\\b" + NSRegularExpression.escapedPattern(for: word) + "s?\\b"
+            if lower.range(of: pattern, options: .regularExpression) != nil { return line }
+        }
         switch c.category {
         case .family: return "Family or household member of the defendant."
         case .robbery, .property: return rng.pick(["No known relationship; the investigation found no prior contact.", "Strangers before the incident."])

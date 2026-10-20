@@ -370,7 +370,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} made a false report designed to bring armed police to a house in the dark, expecting a violent confrontation. That's the danger swatting creates, and it killed {V}."],
         defenseTheory: ["{DL}'s call was criminal, but the death was caused by an officer's unreasonable shot. The officer's decision breaks the chain of causation for manslaughter."],
-        aggravating: ["The defendant knowingly created a great risk of death to more than one person"],
+        aggravating: [],
         mitigating: ["The defendant has expressed remorse"],
         victimImpacts: ["{VL}'s mother: \"He was coming out to see what was happening. He was a father of two. He was killed over a dollar fifty.\""],
         allocutions: ["\"I've done this so many times. I never pictured a real person. I'm sorry.\""],

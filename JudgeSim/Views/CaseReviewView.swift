@@ -143,7 +143,7 @@ struct CaseReviewSheet: View {
                         Text("\(witness.role) · called by the \(witness.calledBy.rawValue)").font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                ExaminationTranscript(witness: witness)
+                ExaminationTranscript(witness: witness, suppressed: session.suppressedTerms)
                 ForEach(session.witnessTranscript(for: witness)) { entry in
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Court: \(entry.question)").font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
@@ -182,8 +182,8 @@ struct CaseReviewSheet: View {
         .card()
         SectionTitle(text: "Closing arguments", icon: "text.quote")
         VStack(alignment: .leading, spacing: 12) {
-            Statement(side: .prosecution, speaker: c.prosecutor, text: Allocutions.closing(c, side: .prosecution))
-            Statement(side: .defense, speaker: c.defenseAttorney, text: Allocutions.closing(c, side: .defense))
+            Statement(side: .prosecution, speaker: c.prosecutor, text: Allocutions.closing(c, side: .prosecution, rulings: session.rulings))
+            Statement(side: .defense, speaker: c.defenseAttorney, text: Allocutions.closing(c, side: .defense, rulings: session.rulings))
         }
         .card()
         if !session.aggravatingFactors.isEmpty || !session.mitigatingFactors.isEmpty {

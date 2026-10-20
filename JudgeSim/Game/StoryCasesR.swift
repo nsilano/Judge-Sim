@@ -311,8 +311,7 @@ extension StoryCases {
         specification: "Unlawfully and unintentionally killed {KID}, age 11, by culpable negligence in operating a motel with a known carbon monoxide hazard.",
         secondary: [
             SecondaryCharge(lawID: "invManslaughter", specification: "Unlawfully killed {V}, a guest in Room 225, by culpable negligence.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "invManslaughter", specification: "Unlawfully killed {VIC2}, a guest in Room 225, by culpable negligence.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "awdwisi", specification: "Through culpable negligence, seriously injured the boy's mother, who survived with brain damage.", chance: 1.0, threshold: 0)
+            SecondaryCharge(lawID: "invManslaughter", specification: "Unlawfully killed {VIC2}, a guest in Room 225, by culpable negligence.", chance: 1.0, threshold: 0)
         ],
         ageRange: 40...55, occupations: ["motel management company president"], hasVictim: true,
         summaries: [
@@ -394,7 +393,7 @@ extension StoryCases {
             defenseOpening: "A hidden leak, a contractor's assurance, and a medical examiner who took six weeks.",
             prosecutionClosing: "Skipping a permit on a gas line is gambling with other people's lives.",
             defenseClosing: "Negligence isn't a crime unless it's culpable, and {DL} didn't know.",
-            when: .months([4]),
+            when: .months([6]),
             genders: ["V": .male]
         )
     )
@@ -409,8 +408,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "falsePretenses100k", specification: "Obtained $1.3 million from {V} by falsely claiming to manage his money as a financial advisor.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "forgery", specification: "Forged {V}'s signature on documents transferring his house and accounts to her company.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "concealingDeath", specification: "Concealed {V}'s death by burying his body under a concrete slab and sending texts from his phone for months.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "conspiracyRobbery", specification: "Agreed with another to take {V}'s remaining money by force.", chance: 1.0, threshold: 0)
+            SecondaryCharge(lawID: "concealingDeath", specification: "Concealed {V}'s death by burying his body under a concrete slab and sending texts from his phone for months.", chance: 1.0, threshold: 0)
         ],
         ageRange: 34...40, occupations: ["self-described financial advisor"], hasVictim: true,
         summaries: [

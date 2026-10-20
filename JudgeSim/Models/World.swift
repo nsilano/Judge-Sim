@@ -114,6 +114,8 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     var profile: DefendantProfile? = nil
     /// Orders this court entered forbidding contact with a victim (optional for older saves).
     var stayAwayOrders: [StayAwayOrder]? = nil
+    /// When the person last walked out of custody (optional for older saves).
+    var lastReleased: Date? = nil
 
     /// Stay-away orders still in force on a date.
     func activeOrders(on date: Date) -> [StayAwayOrder] {
@@ -326,6 +328,8 @@ struct StayAwayOrder: Codable, Hashable, Identifiable {
     /// Domestic cases are enforced like a Chapter 50B protective order; others as stalking under a court order.
     var domestic: Bool
     var violations: Int = 0
+    /// The lead offense in the case that produced the order (optional for older saves).
+    var offense: String? = nil
 }
 
 /// Something a person this court judged did afterward, on its way back to this courtroom as a new case.

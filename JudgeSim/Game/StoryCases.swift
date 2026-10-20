@@ -223,7 +223,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} took the congregation's building fund for three years, told them every quarter that it was safe, and spent most of it on {D.his} own bills."],
         defenseTheory: ["The pastor ran that church and told {DL} to keep the contractor working off the books. {DL} made a mess of the accounts. That is not the same as stealing."],
-        aggravating: ["The offense involved a position of trust in a religious congregation", "The reports to the congregation were falsified for three years"],
+        aggravating: ["The reports to the congregation were falsified for three years"],
         mitigating: ["{DL} repaid $9,600 before the theft was discovered", "$41,000 was spent on the congregation's own building project", "No prior criminal record"],
         allocutions: ["\"I love that church. I was baptized there. I made a terrible decision when I started borrowing to cover my own house, and I lied to cover it. I'm sorry.\""],
         guiltyTruths: ["After trial, {DL}'s spouse found a notebook in the garage tracking the personal withdrawals, labeled \"to pay back someday.\""],
@@ -271,7 +271,6 @@ enum StoryCases {
         specification: "Broke and entered the occupied dwelling of {V} at night with intent to commit larceny.",
         secondary: [
             SecondaryCharge(lawID: "felonyLarceny", specification: "Stole a laptop, wallet, and prescription medication from {V} during a burglary.", chance: 1.0, threshold: 6),
-            SecondaryCharge(lawID: "possStolen", specification: "Possessed a laptop belonging to {V}, knowing it to be stolen, and sold it to a pawn shop.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "injuryRealProperty", specification: "Damaged the rear door of {V}'s home by prying it open.", chance: 1.0, threshold: 5)
         ],
         ageRange: 24...36, forcedPriorOffenses: ["Misdemeanor Larceny", "Possession of Stolen Goods@6"], hasVictim: true,
@@ -347,7 +346,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} pried open the back door of an occupied home in the middle of the night, was seen by the person living there, and four days later sold what was taken."],
         defenseTheory: ["{DL} bought a stolen laptop for eighty dollars, which was foolish and maybe a crime in itself. But the identification is weak, and nothing else puts {DL} in that house."],
-        aggravating: ["The home was occupied and the resident confronted the intruder"],
+        aggravating: ["The victim was confronted face to face and has suffered lasting fear"],
         mitigating: ["{DL} sold the laptop openly under {D.his} own name", "No prior burglary convictions"],
         victimImpacts: ["{V}: \"I sleep with a chair under my door now. I moved out of that duplex. I couldn't stand the hallway.\""],
         allocutions: ["\"I knew that laptop wasn't right when I bought it. That's on me. I wasn't in that house.\""],
@@ -466,7 +465,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} put both hands on {V}'s neck and pressed hard enough to burst blood vessels in {V.his} eyes. That's strangulation, whatever {VL} says now."],
         defenseTheory: ["{V} came at {DL} with a cast-iron skillet, screaming a death threat. {DL} grabbed {VL} to survive. Self-defense."],
-        aggravating: ["Petechiae indicate sustained pressure on the neck"],
+        aggravating: ["The offense was committed in the home the victim shared with the defendant"],
         mitigating: ["{DL} was injured in the same incident", "{V} does not wish the prosecution to continue", "{DL} has no prior assault convictions"],
         victimImpacts: ["{V}: \"I'm not a victim of {DL}. We were both a mess that night. I'm in AA now. I'd like {DL} to go too, not to prison.\""],
         allocutions: ["\"I should have walked out the door. I didn't. I'll carry that.\""],
@@ -498,7 +497,7 @@ enum StoryCases {
                                   doctrineID: "leading", weight: 1))
             ],
             prosecutionOpening: "Burst blood vessels in both eyes. A whisper to 911 from a locked bathroom. {V} doesn't want to be here, and the law understands why. The injuries tell the story.",
-            defenseOpening: "A cast-iron skillet. Scratches down {DL}'s face. A neighbor who heard {VL} scream 'I'll kill you.' And {V.him}, who now asks this court not to punish {DL}. This is self-defense.",
+            defenseOpening: "A cast-iron skillet. Scratches down {DL}'s face. A neighbor who heard {VL} scream 'I'll kill you.' And {V}, who now asks this court not to punish {DL}. This is self-defense.",
             prosecutionClosing: "Even if {VL} picked up the pan, holding someone by the neck until their eyes hemorrhage isn't reasonable force. That's strangulation.",
             defenseClosing: "The State has to disprove self-defense beyond a reasonable doubt. On this record, with a death threat and a skillet, it hasn't."
         )
@@ -622,7 +621,7 @@ enum StoryCases {
         specification: "Knowingly exploited {V}, an older adult, by using {V.his} funds for {DL}'s own benefit through deception and undue influence.",
         secondary: [
             SecondaryCharge(lawID: "exploitationElder", specification: "Knowingly exploited {V} by having a used car purchased with {V.his} funds and titled in {DL}'s name.", chance: 1.0, threshold: 3),
-            SecondaryCharge(lawID: "cardFraud", specification: "Used {V}'s debit card without consent for $9,400 in cash withdrawals over fourteen months.", chance: 1.0, threshold: 3)
+            SecondaryCharge(lawID: "cardFraud", specification: "Used {V}'s debit card without consent for $6,700 in cash withdrawals over fourteen months.", chance: 1.0, threshold: 3)
         ],
         ageRange: 29...52, occupations: ["home health aide"], hasVictim: true,
         summaries: [
@@ -684,7 +683,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} was paid to care for a 91-year-old with dementia and instead filled out checks payable to {D.him}, bought {D.him} a car with {VL}'s savings, and drained the account."],
         defenseTheory: ["{V} was lonely, and {DL} was the only person who showed up. {VL} chose to be generous, wrote it down, and said it on video. Generosity isn't a crime."],
-        aggravating: ["{V} was especially vulnerable due to age and dementia", "{DL} took advantage of a position of trust"],
+        aggravating: ["{V} was especially vulnerable due to age and dementia"],
         mitigating: ["{DL} provided genuine daily care for two years", "No prior criminal record"],
         victimImpacts: ["{V}, through the niece: \"{VL} keeps asking when {DL} is coming back. I don't know how to explain any of this to {VL}.\""],
         allocutions: ["\"I loved {VL}. I still do. I should have said no to the money. I didn't know how to say no to someone who'd given me so much more than money.\""],
@@ -1077,8 +1076,6 @@ enum StoryCases {
             SecondaryCharge(lawID: "kidnapping2", specification: "Restrained {V} by binding {V.his} wrists with zip ties to facilitate the robbery.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "kidnapping2", specification: "Restrained {V}'s spouse by binding their wrists with zip ties to facilitate the robbery.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "conspiracyRobbery", specification: "Agreed with {ALT} to rob {V} with a dangerous weapon.", chance: 1.0, threshold: 5),
-            SecondaryCharge(lawID: "larcenyFirearm", specification: "Stole three rifles from {V}'s gun safe.", chance: 1.0, threshold: 5),
-            SecondaryCharge(lawID: "larcenyFirearm", specification: "Stole a shotgun and a revolver from {V}'s gun safe.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "feloniousBE", specification: "Broke and entered the dwelling of {V} with intent to commit robbery therein.", chance: 1.0, threshold: 5)
         ],
         ageRange: 20...33, forcedPriorOffenses: ["Misdemeanor Larceny", "Breaking or Entering"], hasVictim: true,
@@ -1152,7 +1149,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} held a pistol on a retired couple in their own living room while {ALT} emptied the safe. The accomplice, the phone, and the zip ties all point to {DL}."],
         defenseTheory: ["The State's case is a co-defendant who sold stolen rifles under {ALT}'s own name and bought four years off by naming {DL}, after texting that someone else was the partner."],
-        aggravating: ["The victims were elderly and restrained in their own home", "The offense involved a firearm pointed at a victim's chest"],
+        aggravating: ["The victims were elderly and restrained in their own home"],
         mitigating: ["{DL} has no prior violent convictions"],
         victimImpacts: ["{V}: \"We sold the house. My spouse can't sleep there. Every doorbell, we both jump.\""],
         allocutions: ["\"I'm sorry for what happened to those people. I'm not the one who did it.\""],
@@ -1259,8 +1256,8 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} violated a protective order, forced the door, and opened {V}'s arm to the tendon with a box cutter in front of their child."],
         defenseTheory: ["{DL} came because {VL} said to come. {VL} picked up the box cutter, as their own child says, and {DL} was cut trying to take it away. Being somewhere you shouldn't isn't the same as attacking someone."],
-        aggravating: ["The offense was committed in the presence of a child", "The offense was committed in violation of a protective order"],
-        mitigating: ["{DL} stayed at the scene and called for help", "{DL} was also injured"],
+        aggravating: ["The offense was committed in the presence of a child"],
+        mitigating: ["{DL} stayed at the scene until deputies arrived", "{DL} was also injured"],
         victimImpacts: ["{V}: \"I can't do what I used to do for a living. I just want to be safe and for my daughter to be safe.\""],
         allocutions: ["\"I should never have gone to that door, order or no order. I would never cut {VL}. I was trying to get it away from both of us.\""],
         guiltyTruths: ["A neighbor's doorbell camera, recovered later, recorded {DL} saying \"you're going to regret this\" before forcing the door."],
@@ -1302,7 +1299,7 @@ enum StoryCases {
     static let afterTheParty = CaseTemplate(
         key: "story.afterTheParty", category: .violent,
         headlines: ["Rape Charge After Off-Campus Party", "Consent and Memory at Trial"],
-        primaryLaw: "rape2", lesserLaw: "sexualBattery", threshold: 9, lesserThreshold: 7,
+        primaryLaw: "rape2", lesserLaw: nil, threshold: 9, lesserThreshold: 7,
         specification: "Engaged in vaginal intercourse with {V}, who was physically helpless and mentally incapacitated by alcohol, when {DL} knew or should reasonably have known of that condition.",
         secondary: [
             SecondaryCharge(lawID: "sexualBattery", specification: "Engaged in sexual contact with {V} while {V.he} was mentally incapacitated and physically helpless.", chance: 1.0, threshold: 8)
@@ -1373,7 +1370,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{V} couldn't stand at the party, and {D} held {VL} up on the way out. {DL} knew {VL} was incapacitated and had sex with {V.him} anyway, then joked about it the next morning."],
         defenseTheory: ["{VL} was drunk, but awake, walking, laughing, and texting. Two people who had dated went home together. Regret and memory loss are not proof that {DL} knew {VL} couldn't consent."],
-        aggravating: ["{DL} took advantage of {VL}'s helpless condition"],
+        aggravating: [],
         mitigating: ["{DL} has no prior criminal record", "{DL} was also drinking"],
         victimImpacts: ["{V}: \"I left school for a semester. I don't go to parties. I don't trust my own memory anymore, and that's the part I can't get back.\""],
         allocutions: ["\"I thought {VL} wanted to be with me. If I was wrong, I'm sorry. I'd never knowingly hurt {VL}.\""],
@@ -1502,7 +1499,7 @@ enum StoryCases {
                 .direct("What about the text, 'one way or another'?", "\"I meant through the court. I was angry. It was a stupid way to say it.\""),
                 .direct("Why raise the insurance?", "\"My agent told me the old policy was below replacement cost. I raised all six houses that month. The paperwork shows all six.\""),
                 .direct("Where were you at 3:41 a.m.?", "\"Asleep at home, eleven miles away. My truck was in my driveway.\""),
-                .cross("Nobody can confirm you were home.", "\"My wife was asleep. No, nobody watched me sleep.\""),
+                .cross("Nobody can confirm you were home.", "\"My spouse was asleep. No, nobody watched me sleep.\""),
                 .cross("You yelled at a child on that porch.", "\"I raised my voice at the door. I'm not proud of it.\""),
                 .cross("You never fixed the furnace in six weeks.", "\"The part was backordered. I offered space heaters.\"")
             ],

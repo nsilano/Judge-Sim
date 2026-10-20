@@ -321,8 +321,10 @@ enum Testimony {
         }
         for (q, a) in rng.pick(openers, count: rng.int(1...2)) { ask(.cross, q, a) }
         if timingSlip, let time = ctx.sheet.time {
-            ask(.cross, rng.pick(["You told the court this happened around a different time than the 911 call shows. The call came in at \(time), didn't it?",
-                                  "The records put this at \(time). That's not what you just told the court, is it?"]),
+            ask(.cross, ctx.facts.origin == .call
+                    ? rng.pick(["You told the court this happened around a different time than the 911 call shows. The call came in at \(time), didn't it?",
+                                "The records put this at \(time). That's not what you just told the court, is it?"])
+                    : "The records put this at \(time). That's not what you just told the court, is it?",
                 rng.pick(["Then I'm off on the time. I'm not off on what I saw.", "...I may have the time wrong. I wasn't looking at a clock.", "If that's what the records say. It felt later to me."]))
         }
         let narrated = impeachment == nil ? w.cross : Array(w.cross.dropLast())
@@ -511,11 +513,9 @@ extension Testimony {
             let statement = ctx.state.first { $0.kind == .statement }
             d(rng.pick(["Did \(dl) give a statement?", "Did you interview \(dl)?", "Did \(dl) talk to you?"]),
               "Yes. On \(CaseDates.day(day)), after Miranda warnings, \(dl) signed a waiver and talked for about \(rng.int(2...9) * 10) minutes. It was recorded." + (statement.map { " The key part: \($0.detail)" } ?? ""))
-        } else {
-            d(rng.pick(["Did \(dl) give a statement?", "Did you try to interview \(dl)?"]),
-              rng.pick(["No. \(dl) asked for a lawyer, and the interview ended.", "I asked. \(dl) declined and asked for an attorney, which is \(dl)'s right.",
-                        "\(dl) declined through counsel."]))
         }
+        // With no statement, the State doesn't ask: a defendant's choice to stay silent or ask for a lawyer can't be used
+        // against them (Doyle v. Ohio; State v. Ward).
 
         // The arrest
         let resisted = ctx.lawIDs.contains("resisting")
@@ -542,15 +542,18 @@ extension Testimony {
         for gap in ctx.gaps { c(gap.question, gap.answer) }
         var pool: [(String, String)] = []
         if identityAtIssue && facts.setting != .paper {
-            let days = max(1, CaseDates.days(from: s.incident, to: s.arrest))
+            let days = CaseDates.days(from: s.incident, to: s.arrest)
             pool.append(rng.pick([
                 ("Between \(s.day) and the arrest, how many people did you actually interview?",
                  "\(rng.int(3...9)), not counting brief conversations at the scene. I can go through each one if the court wants."),
                 ("The tip that named \(dl) came in anonymously, correct?",
                  ctx.defense.contains { $0.title.lowercased().contains("tip") } ? "Yes. We couldn't identify the caller, which is why we looked for other corroboration." : "No. The first name we had came from a witness who gave a statement.")]))
-            pool.append(rng.pick([
-                ("You arrested \(dl) \(days) days after the incident. What new evidence came in on the last day?",
-                 "Nothing on the last day itself. It was the combination of what we'd gathered by then."),
+            var arrestQuestions: [(String, String)] = []
+            if days > 0 {
+                arrestQuestions.append(("You arrested \(dl) \(days) day\(days == 1 ? "" : "s") after the incident. What new evidence came in on the last day?",
+                                        "Nothing on the last day itself. It was the combination of what we'd gathered by then."))
+            }
+            pool.append(rng.pick(arrestQuestions + [
                 ("Did you ever put a photo of anyone besides \(dl) in front of a witness?",
                  rng.pick(["Yes, in a six-person array with fillers. That's our procedure.", "No. We didn't use a lineup in this case."])),
                 ("Was anyone else's phone, car, or home ever searched in this case?",
@@ -1077,7 +1080,7 @@ extension Testimony {
         let occupation = ctx.defendant.occupation.lowercasedPhrase
         let work: String
         if occupation.contains("unemployed") { work = "I'm between jobs right now." }
-        else if occupation.hasPrefix("retired") { work = "I'm \(occupation)." }
+        else if occupation.hasPrefix("retired") { work = "I'm \(occupation.withIndefiniteArticle)." }
         else if let job = profile?.jobs.first(where: { $0.current }) { work = "I work as \(withArticle(job.title.lowercased())) at \(job.employer)." }
         else { work = "I work as \(withArticle(occupation))." }
         d(rng.pick(["Please tell the court your name and a little about yourself.", "Tell the court about yourself.", "Who are you?"]),

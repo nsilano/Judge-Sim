@@ -11,9 +11,24 @@ enum Consequences {
             || c.charges.contains { ["dvpoViolation", "strangulation", "assaultFemale"].contains($0.lawID) }
     }
 
+    /// Cases where the victim did not survive.
+    static func victimDied(_ c: CourtCase) -> Bool {
+        let deathLaws = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV",
+                         "deathByDistribution", "patientNeglect", "concealingDeath"]
+        return c.charges.contains { deathLaws.contains($0.lawID) }
+    }
+
+    /// Cases where the victim is a child.
+    static func victimIsChild(_ c: CourtCase) -> Bool {
+        if c.charges.contains(where: { ["felonyChildAbuse", "childAbuseMisd"].contains($0.lawID) }) { return true }
+        guard let name = c.victimName else { return false }
+        let last = name.components(separatedBy: " ").last ?? name
+        return (VictimProfiles.statedAge(c.summary, name: name, last: last) ?? 99) < 16
+    }
+
     /// Cases where a stay-away order is what the State would ask for.
     static func stateWantsOrder(_ c: CourtCase) -> Bool {
-        c.victimName != nil && (isDomestic(c) || c.templateKey.lowercased().contains("stalk")
+        c.victimName != nil && !victimDied(c) && !victimIsChild(c) && (isDomestic(c) || c.templateKey.lowercased().contains("stalk")
             || c.charges.contains { ["stalking", "cyberstalking", "communicatingThreats", "dvpoViolation", "witnessIntimidation"].contains($0.lawID) })
     }
 
@@ -25,6 +40,10 @@ enum Consequences {
     /// Something worse than the case the court let go, in the same line of conduct.
     static func escalation(for c: CourtCase) -> (keys: [String], sameVictim: Bool) {
         // Written follow-up cases only: the same person, and the same victim where the conduct was aimed at one.
+        // A victim who died, or a child, is never the victim again; the follow-ups are written for adults.
+        if victimDied(c) || victimIsChild(c) {
+            return (c.category == .property ? ["story.followup.occupiedHouse"] : ["story.followup.barParkingLot", "story.followup.occupiedHouse"], false)
+        }
         if isDomestic(c) { return (["story.followup.kitchenAgain", "story.followup.hospitalNight"], true) }
         if c.templateKey.lowercased().contains("stalk") || c.charges.contains(where: { $0.lawID.hasPrefix("stalking") }) {
             return (["story.followup.hospitalNight"], true)
@@ -41,10 +60,12 @@ enum Consequences {
     }
 
     /// When the judgment lets a guilty person go, or keeps a violent one on the street, what may follow.
-    static func afterJudgment(_ c: CourtCase, convicted: Bool, active: Bool, judgeLast: String, date: Date,
-                              rng: inout SeededRNG) -> [PendingEvent] {
+    static func afterJudgment(_ c: CourtCase, convicted: Bool, active: Bool, dismissed: Bool = false, insanity: Bool = false,
+                              judgeLast: String, date: Date, rng: inout SeededRNG) -> [PendingEvent] {
+        // A person committed after an insanity verdict isn't on the street.
+        if insanity { return [] }
         let d = c.defendant
-        let offense = (c.charges.first?.law.title ?? "the charges").lowercased()
+        let offense = c.charges.first?.law.title.lowercasedPhrase ?? "the charges"
         let monthYear = date.formatted(.dateTime.month(.wide).year())
         let (keys, sameVictim) = escalation(for: c)
         let victim = sameVictim ? c.victimName : nil
@@ -53,8 +74,13 @@ enum Consequences {
         var note = ""
         if !convicted && c.truth.actuallyGuilty {
             chance = 0.4
-            lead = "\(d.name), whom Judge \(judgeLast) found not guilty of \(offense) in \(monthYear), was arrested again this week"
-            note = "You acquitted \(d.lastName) of \(offense) on \(SentenceFormat.shortDate(date))."
+            if dismissed {
+                lead = "\(d.name), whose \(offense) charge Judge \(judgeLast) dismissed for a speedy-trial violation in \(monthYear), was arrested again this week"
+                note = "You dismissed \(d.lastName)'s \(offense) charge for a speedy-trial violation on \(SentenceFormat.shortDate(date))."
+            } else {
+                lead = "\(d.name), whom Judge \(judgeLast) found not guilty of \(offense) in \(monthYear), was arrested again this week"
+                note = "You acquitted \(d.lastName) of \(offense) on \(SentenceFormat.shortDate(date))."
+            }
         } else if convicted && !active && c.truth.actuallyGuilty && c.victimName != nil
                     && [LawCategory.violent, .family, .robbery].contains(c.category) {
             chance = sameVictim ? 0.18 : 0.1

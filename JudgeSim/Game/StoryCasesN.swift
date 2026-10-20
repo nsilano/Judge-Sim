@@ -95,7 +95,7 @@ extension StoryCases {
                                   explanation: "The agent's opinion on motive isn't based on specialized knowledge and invades the factfinder's role.",
                                   doctrineID: "speculation", weight: 1))
             ],
-            prosecutionOpening: "A young man went for a run. Three men decided he was a criminal and hunted him.",
+            prosecutionOpening: "A young man went for a run. Three neighbors decided he was a criminal and hunted him.",
             defenseOpening: "Scared neighbors, a man on a construction site camera, and a struggle over a gun.",
             prosecutionClosing: "You can't create the danger and then claim self-defense against it.",
             defenseClosing: "{DL} made a terrible judgment. Malice requires more.",

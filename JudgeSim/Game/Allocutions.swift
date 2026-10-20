@@ -26,6 +26,8 @@ enum Allocutions {
         let returning: Bool
         let mood: PublicMood
         let aggravating: [String]
+        /// Stalking or violating a court order: conduct aimed at one person, not a theft or a fight.
+        let stalking: Bool
 
         init(_ c: CourtCase) {
             let d = c.defendant
@@ -34,7 +36,7 @@ enum Allocutions {
             category = c.category
             victim = c.victimName
             let ids = c.charges.map { $0.lawID.lowercased() }
-            death = ids.contains { $0.contains("murder") || $0.contains("manslaughter") || $0.contains("dbv") || $0.contains("neglect") }
+            death = Consequences.victimDied(c)
             priors = d.priors.count
             felonies = d.priors.filter { $0.ncClass.isFelony }.count
             wasOnProbation = d.probation != nil || d.priors.contains { $0.sentence.lowercased().contains("probation") }
@@ -51,6 +53,7 @@ enum Allocutions {
             returning = d.isReturning
             mood = c.mood
             aggravating = c.aggravating
+            stalking = ids.contains { $0.contains("stalking") || $0 == "dvpoviolation" }
         }
     }
 
@@ -58,11 +61,14 @@ enum Allocutions {
 
     /// Written cases keep the statement their authors wrote; every other case gets one built from its facts.
     /// The same case always says the same thing.
-    static func statement(_ c: CourtCase, afterPlea: Bool) -> String {
+    static func statement(_ c: CourtCase, afterPlea: Bool, pleaKind: PleaKind = .guilty) -> String {
         let written = c.allocution
         let lower = written.lowercased()
-        let denies = lower.contains("didn't do it") || lower.contains("pending appeal") || lower.contains("innocent")
-        if !written.isEmpty && !isStock(written) && !(afterPlea && denies) { return written }
+        let denies = ["didn't", "did not", "never", "wasn't me", "it wasn't", "not guilty", "pending appeal", "innocent", "i'm not the one"]
+            .contains { lower.contains($0) }
+        // A statement written for after a trial doesn't fit a plea.
+        let speaksOfTrial = ["trial", "jury", "testif", "verdict", "witness stand"].contains { lower.contains($0) }
+        if !written.isEmpty && !isStock(written) && !(afterPlea && (denies || speaksOfTrial)) && !(afterPlea && pleaKind != .guilty) { return written }
 
         var rng = SeededRNG(seed: c.seed ^ 0xA110C)
         let f = Facts(c)
@@ -109,10 +115,22 @@ enum Allocutions {
                 ]))
             }
             lines.append(rng.pick(["I just want to get this over with.", "That's all I've got to say.", "I'll do whatever you tell me to do."]))
+        } else if afterPlea && pleaKind != .guilty {
+            // An Alford or no-contest plea admits nothing.
+            lines.append(rng.pick([
+                "I took this plea because I couldn't take the chance of a trial. I'm not standing here saying it all happened the way they say.",
+                "My lawyer explained what could happen if I went to trial. I made the choice that was best for my family.",
+                "I'm not admitting to it, Your Honor. I'm accepting the plea so this can be over.",
+                "I know how the evidence looks. That's why I took the deal."
+            ]))
+            if let v = f.victim, !f.death {
+                lines.append(rng.pick(["I don't wish \(v) anything bad. I hope everybody can move on.", "I'll stay away from \(v). I'll do what the court says."]))
+            }
+            lines.append(rng.pick(["I'll do whatever the court orders.", "That's all I want to say.", "I just want to get back to work and take care of my family."]))
         } else {
             lines.append(admission(f, afterPlea: afterPlea, rng: &rng))
             var middle: [String] = []
-            if let v = f.victim { middle.append(victimLine(v, death: f.death, rng: &rng)) }
+            if let v = f.victim { middle.append(victimLine(v, death: f.death, afterPlea: afterPlea, rng: &rng)) }
             if f.children > 0 { middle.append(childrenLine(f, rng: &rng)) }
             if f.need != .none { middle.append(treatmentLine(f, rng: &rng)) }
             if f.jailed && f.custodyDays >= 30 { middle.append(jailLine(f, rng: &rng)) }
@@ -167,6 +185,13 @@ enum Allocutions {
 
     private static func admission(_ f: Facts, afterPlea: Bool, rng: inout SeededRNG) -> String {
         var options: [String]
+        if f.stalking {
+            options = ["The court told me to stay away, and I didn't. I don't have an excuse for that.",
+                       "I kept telling myself I just needed to talk. Nobody needed me to talk. I needed to leave it alone.",
+                       "I scared somebody who had already been through enough. I see that now."]
+            if afterPlea { options.append("I pleaded guilty because I did it, and I didn't want anyone to have to come in here and say it again.") }
+            return rng.pick(options)
+        }
         switch f.category {
         case .violent:
             options = f.death
@@ -209,12 +234,12 @@ enum Allocutions {
         return rng.pick(options)
     }
 
-    private static func victimLine(_ v: String, death: Bool, rng: inout SeededRNG) -> String {
+    private static func victimLine(_ v: String, death: Bool, afterPlea: Bool, rng: inout SeededRNG) -> String {
         let first = v.components(separatedBy: " ").first ?? v
         return death
             ? rng.pick(["To \(v)'s family: I don't expect you to ever forgive me. I wouldn't.",
                         "I think about \(first) every single day. I'm sorry. I know that word isn't enough.",
-                        "\(v)'s mother looked at me the whole trial. I couldn't look back. I'm sorry."])
+                        "\(v)'s mother has been at every hearing. I couldn't look at her. I'm sorry."])
             : rng.pick(["\(first), if you're here, I'm sorry. You didn't deserve any of it.",
                         "I wrote a letter to \(v) but my lawyer said I couldn't send it. It says I'm sorry, and I mean it.",
                         "I hope \(v) can sleep at night again. I hope that more than anything for myself.",
@@ -295,7 +320,9 @@ enum Allocutions {
                 : rng.pick(["\(v) still won't answer the door after dark.",
                             "\(v) missed weeks of work and is still paying medical bills.",
                             "\(v) has been to every setting of this case, and \(v) is here today.",
-                            "\(v) came to court and testified about the worst day of their life. The sentence should reflect that."]))
+                            !plea && c.witnesses.contains(where: { $0.name == v })
+                                ? "\(v) came to court and testified about the worst day of their life. The sentence should reflect that."
+                                : "\(v) has had to relive this every time the case was called."]))
         }
         if f.felonies >= 2 {
             reasons.append(rng.pick(["This is not \(f.last)'s first felony. It's not the second.",
@@ -355,14 +382,19 @@ enum Allocutions {
     ]
 
     /// A closing argument: the written one for a written case, otherwise one built from the evidence and witnesses.
-    static func closing(_ c: CourtCase, side: Side) -> String {
+    static func closing(_ c: CourtCase, side: Side, rulings: Rulings? = nil) -> String {
+        // Evidence the court kept out, and counts it already dismissed, aren't argued.
+        let excluded = rulings?.excludedEvidence(in: c) ?? []
+        let gone = Set(c.motions.compactMap { m in m.kind == .dismissIndictment && rulings?.motions[m.id] == true ? m.targetChargeID : nil })
+        let counts = c.charges.filter { !gone.contains($0.id) && rulings?.halftime[$0.id] != .dismiss }
         let stored = side == .prosecution ? c.prosecutionClosing : c.defenseClosing
-        guard stored.isEmpty || stockClosings.contains(where: stored.contains) else { return stored }
+        let citesExcluded = c.evidence.contains { excluded.contains($0.id) && stored.contains($0.exhibit) }
+        guard stored.isEmpty || stockClosings.contains(where: stored.contains) || citesExcluded || counts.count < c.charges.count else { return stored }
         var rng = SeededRNG(seed: c.seed ^ (side == .prosecution ? 0xC105E : 0xDEF0C))
         let dl = c.defendant.lastName
-        let charge = (c.charges.first?.law.title ?? "the charges").lowercased()
-        let ours = c.evidence.filter { $0.side == side }.sorted { $0.weight > $1.weight }
-        let theirs = c.evidence.filter { $0.side != side }.sorted { $0.weight > $1.weight }
+        let charge = (counts.first ?? c.charges.first)?.law.title.lowercasedPhrase ?? "the charges"
+        let ours = c.evidence.filter { $0.side == side && !excluded.contains($0.id) }.sorted { $0.weight > $1.weight }
+        let theirs = c.evidence.filter { $0.side != side && !excluded.contains($0.id) }.sorted { $0.weight > $1.weight }
         let witness = c.witnesses.filter { $0.calledBy == side && $0.isDefendant != true }.max { $0.weight < $1.weight }
         var parts: [String] = []
 

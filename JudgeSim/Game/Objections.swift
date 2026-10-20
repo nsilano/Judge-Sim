@@ -156,15 +156,15 @@ enum ObjectionEngine {
                              answer: rng.pick(["What does that have to do with anything?", "...Yes."]), grounds: "Relevance", sustain: true,
                              explanation: "Personal misfortunes unrelated to truthfulness or bias aren't proper impeachment (Rules 401–403, 608).",
                              doctrine: "relevance", weight: 0))
-            out.append(Draft(question: rng.pick(["You've talked to \(victim ?? "the State's investigators") about your testimony before today, haven't you?",
+            out.append(Draft(question: rng.pick(["You've talked to \(victim.flatMap { $0 == w.name ? nil : $0 } ?? "the State's investigators") about your testimony before today, haven't you?",
                                                   "Has anyone promised you anything for testifying today?"]),
                              answer: rng.pick(["We talked once, about scheduling.", "No. Nobody promised me anything."]), grounds: "Relevance", sustain: false,
                              explanation: "Bias and interest are always fair subjects on cross-examination.",
                              doctrine: "relevance", weight: 0))
         }
 
-        // Officers and investigators.
-        if kind == .investigator {
+        // Officers and investigators, questioned by the State that called them.
+        if kind == .investigator && asker == .prosecution {
             if setting == .road {
                 out.append(Draft(question: rng.pick(["Based on the damage, how fast was \(dl)'s vehicle going?", "From the scene, what speed would you estimate at impact?"]),
                                  answer: rng.pick(["At least 70, maybe 75.", "Easily twenty over the limit."]), grounds: "Lay opinion without foundation", sustain: !w.role.lowercased().contains("reconstruct"),

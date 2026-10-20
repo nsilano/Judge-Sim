@@ -23,6 +23,8 @@ struct DocketEntry: Identifiable, Codable {
     var requests: [EvidenceRequest]? = nil
     var note: String?
     var outcome: String?
+    /// Moved to a later week because the trial calendar was full, not by any party's request (optional for older saves).
+    var carriedOver: Bool? = nil
 
     var matterID: UUID {
         switch matter {
@@ -85,6 +87,7 @@ extension DocketEntry {
         requests = try c.decodeIfPresent([EvidenceRequest].self, forKey: .requests)
         note = try c.decodeIfPresent(String.self, forKey: .note)
         outcome = try c.decodeIfPresent(String.self, forKey: .outcome)
+        carriedOver = try c.decodeIfPresent(Bool.self, forKey: .carriedOver)
     }
 }
 
@@ -190,8 +193,20 @@ enum CourtCalendar {
         let i = c / 4, k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = (a + 11 * h + 22 * l) / 451
         let easterMonth = (h + l - 7 * m + 114) / 31, easterDay = (h + l - 7 * m + 114) % 31 + 1
         let goodFriday = calendar.date(byAdding: .day, value: -2, to: date(easterMonth, easterDay)) ?? date(4, 1)
+        /// Three days at Christmas, shifted as the State shifts them when the 24th, 25th, or 26th is a weekend.
+        func christmas() -> [(Date, String)] {
+            let days: [Int]
+            switch calendar.component(.weekday, from: date(12, 25)) {
+            case 1: days = [23, 26, 27]         // Sunday
+            case 2: days = [22, 25, 26]         // Monday
+            case 6: days = [24, 25, 28]         // Friday
+            case 7: days = [23, 24, 27]         // Saturday
+            default: days = [24, 25, 26]
+            }
+            return days.map { (date(12, $0), $0 == 24 ? "Christmas Eve" : ($0 == 25 ? "Christmas Day" : "Christmas")) }
+        }
         let thanksgiving = nth(4, 5, of: 11)
-        return [
+        let fixed: [(Date, String)] = [
             (observed(date(1, 1)), "New Year's Day"),
             (nth(3, 2, of: 1), "Martin Luther King Jr. Day"),
             (goodFriday, "Good Friday"),
@@ -201,10 +216,22 @@ enum CourtCalendar {
             (observed(date(11, 11)), "Veterans Day"),
             (thanksgiving, "Thanksgiving"),
             (calendar.date(byAdding: .day, value: 1, to: thanksgiving) ?? thanksgiving, "Thanksgiving"),
-            (date(12, 24), "Christmas Eve"),
-            (date(12, 25), "Christmas Day"),
-            (date(12, 26), "Christmas"),
         ]
+        return fixed + christmas()
+    }
+
+    /// Election Day: the first Tuesday after the first Monday in November.
+    static func electionDay(in year: Int) -> Date {
+        let firstMonday = calendar.date(from: DateComponents(year: year, month: 11, weekday: 2, weekdayOrdinal: 1)) ?? Date()
+        return calendar.date(byAdding: .day, value: 1, to: firstMonday) ?? firstMonday
+    }
+
+    /// The days court sits in the week that starts on this Monday.
+    static func courtDays(inWeekOf monday: Date) -> Int {
+        (0..<5).filter { offset in
+            guard let d = calendar.date(byAdding: .day, value: offset, to: monday) else { return false }
+            return isCourtDay(d)
+        }.count
     }
 
     /// The holidays that close the courthouse during the court week that starts on this Monday.

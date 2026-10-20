@@ -494,6 +494,9 @@ enum CalendarCalls {
                                                      imposedInThisCourt: true, supervised: true, conditions: [],
                                                      monthlyObligation: 60, violationRisk: rng.chance(0.5) ? 0.2 : 0.12,
                                                      crvCount: 0, treatmentNeed: TreatmentNeed.none)
+                    person.probation?.activeDays = m.isFelony ? nil : m.activeTerm
+                    person.probation?.offenseClass = cls
+                    person.probation?.starts = date
                 case 1:
                     sentence = "Prayer for judgment continued"
                 default:

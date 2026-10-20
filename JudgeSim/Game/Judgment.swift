@@ -449,11 +449,20 @@ enum Judgment {
 
     static func properStrength(_ c: CourtCase, _ r: Rulings? = nil) -> Int {
         let excluded = Set(c.motions.compactMap { $0.shouldGrant ? $0.targetEvidenceID : nil })
-        return strength(c, excluded: excluded) { !$0.shouldSustain } - testimonyWeight(c, r)
+        let silent = r?.defendantTestifies != true
+        return strength(c, excluded: excluded) { !$0.shouldSustain && !(silent && isDefendantTestimony($0, c)) } - testimonyWeight(c, r)
     }
 
     static func ruledStrength(_ c: CourtCase, _ r: Rulings) -> Int {
-        strength(c, excluded: r.excludedEvidence(in: c)) { !(r.objections[$0.id] ?? false) } - testimonyWeight(c, r)
+        let silent = r.defendantTestifies != true
+        return strength(c, excluded: r.excludedEvidence(in: c)) { !(r.objections[$0.id] ?? false) && !(silent && isDefendantTestimony($0, c)) }
+            - testimonyWeight(c, r)
+    }
+
+    /// An objection during the defendant's own testimony, which only exists if the defendant takes the stand.
+    static func isDefendantTestimony(_ o: Objection, _ c: CourtCase) -> Bool {
+        guard let testimony = c.defendantTestimony else { return false }
+        return o.witnessID == testimony.id
     }
 
     /// The defendant's own testimony helps or hurts the defense depending on how it holds up.
@@ -475,7 +484,7 @@ enum Judgment {
             s += w.weight
         }
         // Testimony the defense objected to, properly admitted, is part of the State's case.
-        for o in c.objections where o.raisedBy == .defense && !o.shouldSustain {
+        for o in c.objections where o.raisedBy == .defense && !o.shouldSustain && !isDefendantTestimony(o, c) {
             s += max(0, o.weightIfAdmitted)
         }
         return s
@@ -504,7 +513,20 @@ enum Judgment {
         guard r.habitualFound == true else { return [] }
         let felonies = c.defendant.priors.filter { $0.ncClass.isFelony && !r.priorsNotProven.contains($0.id) }
             .sorted { $0.year < $1.year }
-        return Set(felonies.prefix(3).map(\.id))
+        // One felony per session of court: convictions entered together count once (G.S. 14-7.1).
+        var seen = Set<String>()
+        let distinct = felonies.filter { seen.insert(sessionOf($0)).inserted }
+        return Set(distinct.prefix(3).map(\.id))
+    }
+
+    /// The session a prior conviction came from: its recorded session, or its year and county.
+    static func sessionOf(_ p: PriorConviction) -> String {
+        p.sessionKey ?? p.docket ?? "\(p.year)-\(p.county)-\(p.id)"
+    }
+
+    /// Prior felonies that count separately toward habitual felon status.
+    static func distinctFelonySessions(_ priors: [PriorConviction]) -> Int {
+        Set(priors.filter { $0.ncClass.isFelony }.map(sessionOf)).count
     }
 
     /// The State must give 30 days' notice before relying on the probation point (G.S. 15A-1340.16(a6)).
@@ -825,9 +847,9 @@ enum Judgment {
         }
 
         if r.habitualFound == true && convictedUnits.contains(where: { $0.offenseClass.isFelony }) {
-            let proven = provenPriors.filter { $0.ncClass.isFelony }.count
+            let proven = distinctFelonySessions(provenPriors)
             if proven < 3 {
-                add("Habitual felon status requires three prior felony convictions (G.S. 14-7.1); the record shows \(proven).", against: true, term: true)
+                add("Habitual felon status requires three prior felony convictions from separate sessions of court (G.S. 14-7.1); the record shows \(proven).", against: true, term: true)
             }
         }
 
@@ -1423,7 +1445,8 @@ enum Judgment {
         // for prior record purposes. Convictions entered this week share a session key (G.S. 15A-1340.14(d)).
         let session = sessionKey(county: county, date: date)
         if convicted && special != .conditionalDischarge {
-            for charge in c.charges {
+            // A count on which judgment was arrested is not a conviction on the record.
+            for charge in c.charges where !r.arrestedCounts.contains(charge.id) {
                 guard let verdict = r.verdicts[charge.id], let law = convictedLaw(charge, verdict) else { continue }
                 let cls = law.ncClass ?? .misd1
                 let unitForCharge = sentencingUnits.first { $0.counts.contains(charge.count) }
@@ -1674,7 +1697,7 @@ enum Judgment {
             }
             if revokedMonths > 0 { parts.append("Includes \(revokedText) activated on probation revocation" + (r.revocationConsecutive ? ", consecutive." : ", concurrent.")) }
             if postReleaseMonths > 0 { parts.append("Includes \(postReleaseMonths) months on the post-release supervision violation" + (r.revocationConsecutive ? ", consecutive." : ", concurrent.")) }
-            if parts.isEmpty { parts.append("Confinement ordered on the probation violation.") }
+            if parts.isEmpty { parts.append("Confinement in response to violation, ordered with the judgment on the probation violation.") }
             releaseBasis = parts.joined(separator: " ")
         }
 
@@ -1871,7 +1894,7 @@ enum Judgment {
 
         // What the defendant does next, if the judgment let a guilty person go.
         pending.append(contentsOf: Consequences.afterJudgment(c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
-                                                              judgeLast: judgeLast, date: date, rng: &rng))
+                                                              dismissed: dismissed, insanity: insanityAcquittal, judgeLast: judgeLast, date: date, rng: &rng))
 
         // Things that may surface about what really happened
         switch (convicted, truthGuilty) {
@@ -1995,7 +2018,7 @@ enum Judgment {
     /// The order protecting the victim: one the court entered for a set number of years, or, failing that, the
     /// no-contact condition of probation for as long as probation runs.
     static func stayAwayOrder(_ c: CourtCase, _ r: Rulings, convicted: Bool, date: Date, probationEnds: Date?) -> StayAwayOrder? {
-        guard convicted, let victim = c.victimName else { return nil }
+        guard convicted, let victim = c.victimName, !Consequences.victimDied(c), !Consequences.victimIsChild(c) else { return nil }
         let expires: Date
         if r.stayAwayYears > 0 {
             expires = Calendar.current.date(byAdding: .year, value: r.stayAwayYears, to: date) ?? date
@@ -2004,7 +2027,8 @@ enum Judgment {
         } else {
             return nil
         }
-        return StayAwayOrder(docket: c.docket, protectedName: victim, issued: date, expires: expires, domestic: Consequences.isDomestic(c))
+        return StayAwayOrder(docket: c.docket, protectedName: victim, issued: date, expires: expires, domestic: Consequences.isDomestic(c),
+                             offense: BenchConference.convictedCharges(c, r).first?.law.title ?? c.charges.first?.law.title)
     }
 
     /// The assignments of error an appellant would brief: the rulings that went against them, the ones an appellate
@@ -2028,7 +2052,7 @@ enum Judgment {
         }
         for o in c.objections {
             guard let sustained = r.objections[o.id] else { continue }
-            let question = o.question.replacingOccurrences(of: "Prosecutor: ", with: "").replacingOccurrences(of: "Defense: ", with: "")
+            let question = ["Prosecutor: ", "Defense attorney: ", "Defense: ", "Prosecution: "].reduce(o.question) { $0.replacingOccurrences(of: $1, with: "") }
             if o.raisedBy == .defense && !sustained {
                 add("You overruled the defense's objection (\(o.grounds.lowercased())) to the question \(question)", error: o.shouldSustain)
             } else if o.raisedBy == .prosecution && sustained {

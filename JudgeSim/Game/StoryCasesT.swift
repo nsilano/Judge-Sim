@@ -413,7 +413,7 @@ extension StoryCases {
                         cross: ["\"There weren't enough of us.\""],
                         weight: 3, lay: true,
                         exam: [
-                            .direct("Did you turn {VL} on those nights?", "\"I never worked that hall. I was on the other side of the building with 30 residents. Those aren't my initials, and that's not how I write.\""),
+                            .direct("Did you turn {VL} on those nights?", "\"I never worked that hall. I was pulled to the dining room and laundry those nights. Those aren't my initials, and that's not how I write.\""),
                             .cross("Could anyone have turned 42 residents every two hours alone?", "\"No. Nobody could.\"")
                         ]),
             WitnessSeed(name: nil, role: "State nurse surveyor",

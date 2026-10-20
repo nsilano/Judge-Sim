@@ -270,7 +270,7 @@ enum CaseGenerator {
             "V": victimName ?? "the complainant",
             "VL": victimName.map(lastName) ?? "the complainant",
             // A follow-up case names the earlier one in this court.
-            "PRIOR": context.priorOffense?.lowercased() ?? "an earlier charge",
+            "PRIOR": context.priorOffense?.lowercasedPhrase ?? "an earlier charge",
             "PRIORDATE": context.priorDate.map { $0.formatted(.dateTime.month(.wide).year()) } ?? "an earlier term of court"
         ]
         for key in t.extras.keys.sorted() {
@@ -549,7 +549,7 @@ enum CaseGenerator {
         let maxCustodyDays = max(0, CaseDates.days(from: investigation.facts?.arrest ?? sheet.arrest, to: context.date))
 
         // Status and procedural posture
-        let priorFelonies = defendant.priors.filter { $0.ncClass.isFelony }.count
+        let priorFelonies = Judgment.distinctFelonySessions(defendant.priors)
         let habitual = isFelonyCase && priorFelonies >= 3 && t.primaryLaw != "murder1" && rng.chance(0.65)
         var notes: [String] = []
         if isFelonyCase {
@@ -677,7 +677,9 @@ enum CaseGenerator {
 
         var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                         publicDefender: usePublicDefender, mitigating: mitigating,
-                                        isFelony: isFelonyCase, habitual: habitual, maxCustodyDays: maxCustodyDays, rng: &rng)
+                                        isFelony: isFelonyCase, habitual: habitual, maxCustodyDays: maxCustodyDays,
+                                        suppressionMotion: motions.contains { [MotionKind.suppressSearch, .suppressStatement, .suppressIdentification].contains($0.kind) },
+                                        rng: &rng)
         if let twist = chosenTwist {
             if twist.trialOnly && background.arrangementPresented == true {
                 twistText = nil
@@ -757,7 +759,8 @@ enum CaseGenerator {
 
     private static func makeBackground(_ t: CaseTemplate, defendant: Defendant, charges: [Charge], values: [String: String],
                                        mood: PublicMood, publicDefender: Bool, mitigating: [String], isFelony: Bool,
-                                       habitual: Bool, maxCustodyDays: Int, rng: inout SeededRNG) -> CaseBackground {
+                                       habitual: Bool, maxCustodyDays: Int, suppressionMotion: Bool = false,
+                                       rng: inout SeededRNG) -> CaseBackground {
         let fill = TextFiller(values: values)
         let primary = charges[0]
 
@@ -781,7 +784,9 @@ enum CaseGenerator {
         // Plea negotiations
         var pleaOffer: String?
         var pleaRejection: String?
+        var offerClass: NCClass?
         if rng.chance(0.65) {
+            offerClass = primary.lesserLaw?.ncClass ?? primary.law.ncClass
             if let lesser = primary.lesserLaw, let cls = lesser.ncClass {
                 pleaOffer = rng.pick([
                     "Plead guilty to \(lesser.title) (\(cls.shortLabel)), remaining charges dismissed, sentencing in the court's discretion.",
@@ -797,13 +802,21 @@ enum CaseGenerator {
             } else {
                 pleaOffer = "Plead guilty and receive a prayer for judgment continued on payment of costs."
             }
-            pleaRejection = rng.pick([
-                "My client maintains their innocence, Judge. They won't plead to something they didn't do.",
-                "Even the reduced charge carried a felony record, and that would end my client's career.",
-                "We think the suppression issue is strong, and my client wanted it decided.",
-                "My client has three kids at home. An active sentence wasn't something they could accept.",
-                "My client was worried about immigration consequences of any conviction."
-            ])
+            // The reason has to fit the offer, the motions, and the client.
+            var reasons = ["My client maintains their innocence, Judge. They won't plead to something they didn't do.",
+                           "My client was worried about immigration consequences of any conviction."]
+            let pjc = pleaOffer?.contains("prayer for judgment") ?? false
+            if (offerClass?.isFelony ?? false) && !defendant.priors.contains(where: { $0.ncClass.isFelony }) {
+                reasons.append("Even the reduced charge carried a felony record, and that would end my client's career.")
+            }
+            if suppressionMotion {
+                reasons.append("We think the suppression issue is strong, and my client wanted it decided.")
+            }
+            if !pjc && (offerClass?.isFelony ?? false) {
+                reasons.append("The offer still left an active sentence on the table, and my client couldn't accept that.")
+            }
+            if pjc { reasons.append("Even a prayer for judgment is a conviction on the record, and my client wanted a trial.") }
+            pleaRejection = rng.pick(reasons)
         }
 
         // Custody

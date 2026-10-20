@@ -317,7 +317,7 @@ extension StoryCases {
     static let missingToddler = CaseTemplate(
         key: "story.missingToddler", category: .family,
         headlines: ["Parent Charged After Child Missing 19 Days", "Cadaver Dog Alerts in Garage"],
-        primaryLaw: "murder1", lesserLaw: "felonyChildAbuse", threshold: 4, lesserThreshold: 2,
+        primaryLaw: "murder1", lesserLaw: "murder2", threshold: 4, lesserThreshold: 2,
         specification: "Killed {KID}, age three, the defendant's child, with malice, premeditation, and deliberation.",
         secondary: [
             SecondaryCharge(lawID: "concealingDeath", specification: "Concealed the death of {KID} by hiding {KID}'s body in a storage tote in a creek bed.", chance: 1.0, threshold: 2),

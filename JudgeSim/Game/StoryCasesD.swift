@@ -20,7 +20,7 @@ extension StoryCases {
             "At closing time on {DATE}, outside {CLUB} in {CITY}, {V}, 31, and {D} exchanged words after {VL} bumped {DL}'s friend in the line for rides. Video shows {VL} stepping toward {DL} and pointing in {D.his} face. {DL} threw a single punch. {VL} fell backward, struck the curb, and died two days later of a skull fracture and brain bleed. {DL} stayed, called 911, and held {VL}'s head still until paramedics came. The State says an unprovoked punch that kills is manslaughter. {DL} says {VL} was about to swing first."
         ],
         prosecutionEvidence: [
-            E(.video, 3, "Street Camera Video", "Sixteen seconds: {VL} steps toward {DL}, points, and says something; {DL} punches once; {VL} falls straight back and hits the curb. {VL}'s hands never rise above the waist."),
+            E(.video, 3, "Street Camera Video", "Sixteen seconds: {VL} steps toward {DL}, points, and says something; {DL} punches once; {VL} falls straight back and hits the curb. {VL}'s hands never form a fist."),
             E(.forensic, 3, "Autopsy", "Fracture at the back of the skull and brain hemorrhage from the fall; a bruise on the jaw from the punch. Blood alcohol 0.17."),
             E(.document, 1, "Training Background", "{DL} trains clients in boxing and worked as a bouncer for four years.")
         ],
@@ -36,7 +36,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("Where were you?", "\"In my car at the curb, waiting for a pickup, maybe twenty feet away with the window down.\""),
-                            .direct("What did you see?", "\"Two people face to face. The shorter one, {VL}, was pointing and talking loud. {VL}'s hands were down. Then the other one, {DL}, threw a right hand, hard, and {VL} went straight back like a board. The sound of the head on the curb, I hear it at night.\""),
+                            .direct("What did you see?", "\"Two people face to face. The shorter one, {VL}, was pointing and talking loud. {VL} never made a fist. Then the other one, {DL}, threw a right hand, hard, and {VL} went straight back like a board. The sound of the head on the curb, I hear it at night.\""),
                             .direct("Did {VL} raise a hand to {DL}?", "\"Not that I saw. Pointing, that's it.\""),
                             .cross("You couldn't hear what {VL} said?", "\"Music from the club was too loud.\""),
                             .cross("{VL} stepped toward {DL} right before the punch?", "\"{VL} stepped in, yeah.\""),
@@ -478,7 +478,8 @@ extension StoryCases {
             prosecutionOpening: "A school, a skull, gunshots, and 'don't come Friday.' Seven hundred students stayed home.",
             defenseOpening: "A joke about a calculus test that went horribly wrong. No weapon, no plan, no intent to threaten.",
             prosecutionClosing: "In today's world, a reasonable person reads that as a threat.",
-            defenseClosing: "Intent matters. {DL} meant a joke, and every person who knew {D.him} took it as one."
+            defenseClosing: "Intent matters. {DL} meant a joke, and every person who knew {D.him} took it as one.",
+            when: .months([9, 10, 11, 1, 2, 3, 4, 5])
         )
     )
 }

@@ -398,7 +398,7 @@ extension StoryCases {
         specification: "Unlawfully and with malice killed {V} by shooting into {V.his} car on the interstate.",
         secondary: [
             SecondaryCharge(lawID: "dischargingOccupied", specification: "Discharged a handgun into a moving vehicle occupied by {V} and a passenger.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "awdwikisi", specification: "Assaulted the passenger, {ALT}, with a deadly weapon with intent to kill, a bullet grazing her arm.", chance: 1.0, threshold: 0),
+            SecondaryCharge(lawID: "awdwik", specification: "Assaulted the passenger, {ALT}, with a deadly weapon with intent to kill; a bullet grazed the passenger's arm.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "recklessDriving", specification: "Drove at more than 95 mph, weaving through traffic in pursuit of {V}'s car.", chance: 1.0, threshold: 0)
         ],
         ageRange: 29...44, occupations: ["HVAC technician", "landscaper", "insurance adjuster"], hasVictim: true,

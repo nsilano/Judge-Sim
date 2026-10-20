@@ -62,7 +62,7 @@ extension StoryCases {
                         ])
         ],
         prosecutionTheory: ["One man, one pad, one note, four banks. {D} admits the last; the handwriting and the method prove the rest."],
-        defenseTheory: ["{DL} did the last robbery out of desperation and admits it. The first three were copycats of a method the news reported in detail, and {DL} has an alibi for the first."],
+        defenseTheory: ["{DL} did the last robbery out of desperation and admits it. {DL} copied the first three robberies from the news coverage, which reported the method in detail, and {DL} has an alibi for the first."],
         aggravating: ["The offense involved multiple victims"],
         mitigating: ["The defendant has expressed remorse", "The defendant accepted responsibility"],
         victimImpacts: ["{VL}: \"I can't stand at a window with my back to the door anymore. I quit.\""],
@@ -105,11 +105,10 @@ extension StoryCases {
         key: "story.sovereignStop", category: .publicOrder,
         headlines: ["Driver Claiming 'Sovereign' Status Drags Deputy at Traffic Stop", "Self-Styled 'Traveler' Rejects Court's Authority, Then Goes to Trial"],
         primaryLaw: "assaultLEO", lesserLaw: "simpleAssault", threshold: 10, lesserThreshold: 8,
-        specification: "Assaulted Deputy {OFFICER}, a law enforcement officer performing official duties, by driving off while the deputy's arm was caught in the car window.",
+        specification: "Assaulted Deputy {OFFICER}, a law enforcement officer performing official duties, by driving off while the deputy's arm was caught in the car window, inflicting physical injury.",
         secondary: [
             SecondaryCharge(lawID: "resisting", specification: "Resisted, delayed, and obstructed a deputy during a lawful traffic stop by refusing to provide identification or exit the vehicle.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "dwlr", specification: "Drove a motor vehicle on a highway while license revoked.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "fleeing", specification: "Fled from a deputy in a motor vehicle at speeds over 15 mph above the limit.", chance: 1.0, threshold: 0)
+            SecondaryCharge(lawID: "dwlr", specification: "Drove a motor vehicle on a highway while license revoked.", chance: 1.0, threshold: 0)
         ],
         ageRange: 38...55, occupations: ["self-employed handyman"], hasVictim: false,
         summaries: [
@@ -122,7 +121,7 @@ extension StoryCases {
             E(.document, 2, "License Record", "DMV records showing {DL}'s license revoked for two years.")
         ],
         defenseEvidence: [
-            E(.document, 1, "Defendant's Filings", "Forty pages claiming the State has no jurisdiction over a \"living man\" traveling for private purposes."),
+            E(.document, 1, "Defendant's Filings", "Forty pages claiming the State has no jurisdiction over a \"living soul\" traveling for private purposes."),
             E(.video, 1, "The Reach", "The deputy reached into the car before {DL} rolled up the window."),
             E(.statement, 1, "No Intent", "{DL} says {D.he} didn't know the deputy's arm was caught.")
         ],
@@ -157,10 +156,10 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} decided the law didn't apply to {D.him}, refused a lawful stop, and dragged a deputy down the road. {D.His} own video proves it."],
         defenseTheory: ["{DL}'s beliefs are wrong, but beliefs aren't crimes. The deputy reached into the car first, and {DL} panicked. There was no intent to hurt anyone."],
-        aggravating: ["The offense was committed against a law enforcement officer"],
+        aggravating: [],
         mitigating: ["No prior violent record"],
         victimImpacts: ["Deputy {OFFICER}: \"I've done a thousand traffic stops. This is the one I think about.\""],
-        allocutions: ["\"I do not consent to these proceedings. I am a living man.\""],
+        allocutions: ["\"I do not consent to these proceedings. I am a living soul, not a corporate fiction.\""],
         guiltyTruths: ["A message {DL} posted the week before, recovered later, read: \"Next time one of them reaches in my car, I'm leaving with his arm.\""],
         innocentTruths: ["Frame-by-frame analysis of {DL}'s phone video later suggested the window was already rising before the deputy reached in."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "rightToCounsel"],
@@ -391,7 +390,6 @@ extension StoryCases {
         primaryLaw: "falsePretenses100k", lesserLaw: "falsePretenses", threshold: 10, lesserThreshold: 8,
         specification: "Obtained more than $100,000 in donations to a veterans' charity by falsely representing himself as a decorated combat veteran and the charity as a registered nonprofit.",
         secondary: [
-            SecondaryCharge(lawID: "embezzlement", specification: "Embezzled $61,000 in charity funds for personal use, including a bass boat and a timeshare.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "forgery", specification: "Forged a DD-214 discharge record showing a Bronze Star and Purple Heart.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "falsePretenses", specification: "Obtained $8,000 from {V}, a Gold Star mother, for a memorial bench that was never built.", chance: 1.0, threshold: 0)
         ],

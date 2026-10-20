@@ -168,7 +168,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{INFANT} was dropped off healthy and left with injuries only violent shaking causes. {D}'s story changed because the truth was worse."],
         defenseTheory: ["An older bleed, a sick baby the night before, and a short fall. The science of 'shaken baby' is not as certain as the State says, and {DL} has six spotless years."],
-        aggravating: ["The victim was an infant in {DL}'s professional care"],
+        aggravating: ["The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record or licensing complaints", "{DL} immediately called 911"],
         victimImpacts: ["{INFANT}'s parent: \"Our baby is two now and can't sit up on their own. We trusted you.\""],
         allocutions: ["\"I would never hurt a child. I've cared for dozens. I'll think about that changing table for the rest of my life.\""],
@@ -212,11 +212,10 @@ extension StoryCases {
         primaryLaw: "embezzlement", lesserLaw: nil, threshold: 3, lesserThreshold: 1,
         specification: "As an employee of {BANK}, embezzled $38,000 entrusted to {DL}.",
         secondary: [
-            SecondaryCharge(lawID: "felonyLarceny", specification: "Stole a sealed bag containing $38,000 from the vault of {BANK}.", chance: 1.0, threshold: 2)
         ],
         ageRange: 22...36, occupations: ["bank teller"], hasVictim: false,
         summaries: [
-            "On {DATE}, a cash shipment of $38,000 in sealed bags arrived at the {HOOD} branch of {BANK}. {D}, a teller, signed for it and placed it in the vault. At the end-of-day count, one bag was gone. Only {DL} and the assistant manager had vault access that afternoon, and the vault camera had been offline for nine days awaiting repair. Three weeks later, {DL} paid off a $14,000 car loan in cash. {DL} says the money came from a relative's settlement, and that the assistant manager had gambling debts."
+            "On {DATE}, a cash shipment in four sealed bags arrived at the {HOOD} branch of {BANK}. {D}, a teller, signed for it and placed it in the vault. At the end-of-day count, one bag, holding $38,000, was gone. Only {DL} and the assistant manager had vault access that afternoon, and the vault camera had been offline for nine days awaiting repair. Three weeks later, {DL} paid off a $14,000 car loan in cash. {DL} says the money came from a relative's settlement, and that the assistant manager had gambling debts."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Vault Access Log", "Badge records show {DL} entered the vault four times that afternoon; the assistant manager entered once, at 9:15 a.m., before the shipment arrived."),
@@ -268,7 +267,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} was the only one with badge access after the shipment, and three weeks later paid off a loan in hundred-dollar bills."],
         defenseTheory: ["A broken camera, a manager override code that leaves no trace, a manager with gambling debts who quit, and a real check from a grandparent. That's reasonable doubt."],
-        aggravating: ["{DL} took advantage of a position of trust"],
+        aggravating: [],
         mitigating: ["No prior criminal record"],
         allocutions: ["\"I didn't take that money. I've worked at that bank since I was nineteen.\""],
         guiltyTruths: ["The bank's armored carrier later found a torn shipment seal in a storm drain behind {DL}'s apartment."],
@@ -403,12 +402,11 @@ extension StoryCases {
     static let rentalCarPills = CaseTemplate(
         key: "story.rentalCarPills", category: .drugs,
         headlines: ["Fentanyl Pills Found in Rental Car on I-40", "Driver Says Passenger's Bag"],
-        primaryLaw: "traffickingOpioid", lesserLaw: "possSchedII", threshold: 2, lesserThreshold: 1,
+        primaryLaw: "traffickingOpioid28", lesserLaw: "possSchedII", threshold: 2, lesserThreshold: 1,
         specification: "Trafficked in opioids by possessing 28 grams or more of fentanyl pills.",
         secondary: [
-            SecondaryCharge(lawID: "traffickingOpioid", specification: "Trafficked in opioids by transporting 28 grams or more of fentanyl pills on I-40.", chance: 1.0, threshold: 2),
-            SecondaryCharge(lawID: "pwisd", specification: "Possessed fentanyl pills with intent to sell or deliver.", chance: 1.0, threshold: 1),
-            SecondaryCharge(lawID: "maintainingDwelling", specification: "Kept and maintained a rental vehicle for keeping and transporting controlled substances.", chance: 1.0, threshold: 1)
+            SecondaryCharge(lawID: "traffickingOpioid28", specification: "Trafficked in opioids by transporting 28 grams or more of fentanyl pills on I-40.", chance: 1.0, threshold: 2),
+            SecondaryCharge(lawID: "pwisd", specification: "Possessed fentanyl pills with intent to sell or deliver.", chance: 1.0, threshold: 1)
         ],
         ageRange: 22...35, occupations: ["warehouse supervisor"], hasVictim: false,
         summaries: [

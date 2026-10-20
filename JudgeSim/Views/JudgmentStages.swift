@@ -85,7 +85,7 @@ struct RecordReview: View {
             ForEach(witnesses) { witness in
                 CollapsibleSection(title: witness.name, icon: witness.isDefendant == true ? "person.fill.questionmark" : "person.fill",
                                    summary: witness.role, expanded: false) {
-                    ExaminationTranscript(witness: witness)
+                    ExaminationTranscript(witness: witness, suppressed: session.suppressedTerms)
                     ForEach(c.objections(for: witness)) { objection in
                         let sustained = session.rulings.objections[objection.id] == true
                         VStack(alignment: .leading, spacing: 2) {
@@ -225,7 +225,7 @@ struct SentencingStage: View {
                     Text(impact).font(.system(.callout, design: .serif)).italic()
                 }
                 Text("The defendant addresses the court").font(.caption.weight(.bold)).foregroundStyle(Theme.defense)
-                Text(c.allocution(afterPlea: session.rulings.pleaAccepted == true)).font(.system(.callout, design: .serif)).italic()
+                Text(c.allocution(afterPlea: session.rulings.pleaAccepted == true, pleaKind: session.rulings.pleaKind)).font(.system(.callout, design: .serif)).italic()
             }
 
             StepHeader(number: 2, title: "Record & factors", detail: "Prior record level and any aggravating or mitigating factors you find.")
@@ -353,7 +353,9 @@ struct SentencingStage: View {
                         }
                         Divider()
                         Text("Arrest judgment on a count").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-                        ForEach(convictedCharges) { charge in
+                        // The lead count carries the judgment; only the others can be arrested.
+                        let lead = BenchConference.convictedCharges(c, session.rulings).first?.id
+                        ForEach(convictedCharges.filter { $0.id != lead }) { charge in
                             let arrested = session.rulings.arrestedCounts.contains(charge.id)
                             let consents = BenchConference.stateConsents(c, session.rulings, charge: charge)
                             let merges = BenchConference.merges(c, session.rulings, charge: charge)
@@ -389,7 +391,7 @@ struct SentencingStage: View {
 
             CustomConditionsCard(session: session)
 
-            if session.courtCase.victimName != nil {
+            if session.courtCase.victimName != nil && !Consequences.victimDied(session.courtCase) && !Consequences.victimIsChild(session.courtCase) {
                 StayAwayOrderCard(session: session)
             }
 

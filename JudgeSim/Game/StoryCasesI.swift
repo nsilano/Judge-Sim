@@ -108,11 +108,10 @@ extension StoryCases {
     static let deletedServer = CaseTemplate(
         key: "story.deletedServer", category: .cyber,
         headlines: ["Fired IT Manager Accused of Wiping Company Servers", "Logistics Firm Loses Three Years of Records"],
-        primaryLaw: "accessingComputers", lesserLaw: nil, threshold: 6, lesserThreshold: 4,
-        specification: "Willfully and without authorization accessed the computer network of {CO} to destroy data, causing damage over $1,000.",
+        primaryLaw: "damagingComputers", lesserLaw: nil, threshold: 6, lesserThreshold: 4,
+        specification: "Willfully and without authorization destroyed data on the computer network of {CO}, causing damage over $1,000.",
         secondary: [
-            SecondaryCharge(lawID: "accessingComputers", specification: "Accessed {CO}'s backup server without authorization to delete backup volumes.", chance: 1.0, threshold: 6),
-            SecondaryCharge(lawID: "injuryPersonalProperty", specification: "Damaged {CO}'s data and records worth more than $186,000.", chance: 1.0, threshold: 5)
+            SecondaryCharge(lawID: "damagingComputers", specification: "Willfully and without authorization deleted the backup volumes on {CO}'s backup server.", chance: 1.0, threshold: 6)
         ],
         ageRange: 30...50, occupations: ["IT systems administrator"], hasVictim: false,
         summaries: [
@@ -210,14 +209,14 @@ extension StoryCases {
     static let witnessThreat = CaseTemplate(
         key: "story.witnessThreat", category: .violent,
         headlines: ["Witness Says Defendant's Brother Threatened Her at Gas Station", "Intimidation Charge Filed Days Before Shooting Trial"],
-        primaryLaw: "witnessIntimidation", lesserLaw: "communicatingThreats", threshold: 6, lesserThreshold: 4,
+        primaryLaw: "witnessIntimidation", lesserLaw: nil, threshold: 6, lesserThreshold: 4,
         specification: "By threats, attempted to intimidate {V}, a State's witness in a pending felony case, from testifying.",
         secondary: [
             SecondaryCharge(lawID: "communicatingThreats", specification: "Threatened {V} with harm in a manner a reasonable person would believe.", chance: 1.0, threshold: 5)
         ],
         ageRange: 22...40, occupations: ["barber", "delivery driver"], forcedPriorOffenses: ["Possession of Schedule II (cocaine)"], hasVictim: true,
         summaries: [
-            "{V} is the State's eyewitness in a pending shooting case against {D}'s younger sibling. On {DATE}, at a gas station on {STREET} in {HOOD}, {DL} walked up to {VL}'s pump and, according to {VL}, said: \"You know you don't have to go to court. Nobody needs to get hurt over this.\" {VL} reported it that night and asked to be moved. {DL} says {D.he} only asked {VL} to \"tell the truth\" and that {D.he} doesn't know what {VL} saw. The station's camera has video but no audio."
+            "{V} is the State's eyewitness in a pending shooting case against {D}'s younger sibling. On {DATE}, at a gas station on {STREET} in {HOOD}, {DL} walked up to {VL}'s pump and, according to {VL}, said: \"You know you don't have to go to court. Nobody needs to get hurt over this.\" {VL} called 911 minutes later and asked to be moved. {DL} says {D.he} only asked {VL} to \"tell the truth\" and that {D.he} doesn't know what {VL} saw. The station's camera has video but no audio."
         ],
         prosecutionEvidence: [
             E(.video, 2, "Gas Station Video", "{DL} walks from {D.his} car to {VL}'s pump, stands close for 40 seconds, and leaves. {VL} gets back in {V.his} car without finishing pumping."),
@@ -266,7 +265,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} sought out the witness against {D.his} sibling and delivered a quiet threat designed to keep {VL} off the stand."],
         defenseTheory: ["A chance meeting at a station {DL} uses four times a week, and a plea to tell the truth. Fear is understandable, but it isn't proof of a threat."],
-        aggravating: ["The offense was committed to hinder the administration of justice"],
+        aggravating: [],
         mitigating: ["The defendant has been gainfully employed"],
         victimImpacts: ["{V}: \"I moved my son out of the county. He had to change schools. I still testified.\""],
         allocutions: ["\"I love my brother. I never threatened anybody.\""],
@@ -402,7 +401,6 @@ extension StoryCases {
         secondary: [SecondaryCharge(lawID: "feloniousBE", specification: "Broke and entered a second storage unit at {FAC} with intent to commit larceny.", chance: 1.0, threshold: 5),
                     SecondaryCharge(lawID: "feloniousBE", specification: "Broke and entered a third storage unit at {FAC} with intent to commit larceny.", chance: 1.0, threshold: 5),
                     SecondaryCharge(lawID: "feloniousBE", specification: "Broke and entered a fourth storage unit at {FAC} with intent to commit larceny.", chance: 1.0, threshold: 5),
-                    SecondaryCharge(lawID: "possStolen", specification: "Possessed a generator belonging to {V}, knowing it to be stolen.", chance: 1.0, threshold: 4),
                     SecondaryCharge(lawID: "injuryRealProperty", specification: "Damaged nine storage unit locks at {FAC}.", chance: 1.0, threshold: 3),
                     SecondaryCharge(lawID: "felonyLarceny", specification: "Stole tools, electronics, and a generator valued at more than $1,000 from storage units at {FAC}.", chance: 1.0, threshold: 0)],
         ageRange: 26...45, occupations: ["online reseller"], forcedPriorOffenses: ["Breaking or Entering@8"], hasVictim: true,

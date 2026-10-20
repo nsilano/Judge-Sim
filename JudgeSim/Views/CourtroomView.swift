@@ -711,6 +711,12 @@ struct PleaColloquySheet: View {
         let answer: String
     }
 
+    /// A defendant who won't say "guilty" can't enter a plain guilty plea (G.S. 15A-1022(c)).
+    private var hesitant: Bool {
+        var rng = SeededRNG(seed: c.seed ^ 0x1022)
+        return !c.truth.actuallyGuilty && rng.chance(0.5)
+    }
+
     private var exchanges: [Exchange] {
         let dl = c.defendant.lastName
         var rng = SeededRNG(seed: c.seed ^ 0x1022)
@@ -773,15 +779,19 @@ struct PleaColloquySheet: View {
                     } else {
                         Text("Form of the plea").font(.headline)
                         ForEach(PleaKind.allCases, id: \.self) { option in
+                            let barred = hesitant && option == .guilty
                             ChoiceRow(title: option.label,
-                                      subtitle: option.detail + (option == .noContest
+                                      subtitle: barred ? "Not available: the defendant would not admit guilt."
+                                        : option.detail + (option == .noContest
                                         ? (c.background?.stateConsentsNoContest == true ? " The State consents." : " The State does not consent.")
                                         : ""),
                                       selected: kind == option) {
-                                kind = option
+                                if !barred { kind = option }
                             }
+                            .opacity(barred ? 0.5 : 1)
                         }
-                        PrimaryButton(title: "Accept the Plea", icon: "checkmark.seal.fill", enabled: true, hint: nil) {
+                        PrimaryButton(title: "Accept the Plea", icon: "checkmark.seal.fill", enabled: !(hesitant && kind == .guilty),
+                                      hint: hesitant && kind == .guilty ? "Choose an Alford or no-contest plea, or reject it." : nil) {
                             onAccept(kind)
                         }
                         Button(role: .destructive) {

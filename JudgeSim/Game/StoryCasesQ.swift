@@ -166,7 +166,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} took money raised by children and parents, forged signatures, and faked bank statements for three years."],
         defenseTheory: ["{DL} doesn't contest the facts. {D.He} is an addict who is in treatment and repaying. The court should focus on restitution."],
-        aggravating: ["The defendant took advantage of a position of trust"],
+        aggravating: [],
         mitigating: ["No prior criminal record", "The defendant made substantial or full restitution to the victim", "The defendant has expressed remorse"],
         victimImpacts: ["A teacher: \"My students sold wrapping paper for a year to go to the aquarium. I had to tell them it wasn't happening.\""],
         allocutions: ["\"I'm ashamed. I'll repay every dollar. I'm sorry to the kids.\""],
@@ -212,12 +212,12 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "bribery", specification: "As a detention officer, accepted $2,000 per delivery to bring contraband into the detention center.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "deliverSchedII", specification: "Delivered fentanyl-laced paper strips to an inmate in Pod C on a separate occasion.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "pwisd", specification: "Possessed with intent to deliver 14 grams of fentanyl found in {D.his} car in the staff lot.", chance: 1.0, threshold: 0),
+            SecondaryCharge(lawID: "pwisd", specification: "Possessed with intent to deliver 12 grams of fentanyl found in {D.his} car in the staff lot.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "obstruction", specification: "Falsified cell-check logs to show rounds that were never made the night of {V}'s overdose.", chance: 1.0, threshold: 0)
         ],
         ageRange: 25...34, occupations: ["detention officer"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V}, 31, was found unresponsive in a cell at the Hollis County Detention Center, where {V.he} was being held on a probation violation. {V.He} died of fentanyl toxicity. Two other inmates in the same pod overdosed that week and survived. Investigators traced the drugs to letters soaked in fentanyl and to small balloons. Jail phone calls in code and a cash app account led to {D}, a detention officer in Pod C. A search of {DL}'s car in the staff lot found 14 grams of fentanyl. An inmate who was the go-between says {DL} was paid $2,000 a trip by an outside dealer. The logs show {DL} made cell checks every 30 minutes the night {VL} died; video shows {D.he} never left the officer's desk."
+            "On {DATE}, {V}, 31, was found unresponsive in a cell at the Hollis County Detention Center, where {V.he} was being held on a probation violation. {V.He} died of fentanyl toxicity. Two other inmates in the same pod overdosed that week and survived. Investigators traced the drugs to letters soaked in fentanyl and to small balloons. Jail phone calls in code and a cash app account led to {D}, a detention officer in Pod C. A search of {DL}'s car in the staff lot found 12 grams of fentanyl. An inmate who was the go-between says {DL} was paid $2,000 a trip by an outside dealer. The logs show {DL} made cell checks every 30 minutes the night {VL} died; video shows {D.he} never left the officer's desk."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Cash App Payments", "Eleven payments of $2,000 from an account linked to a known dealer to {DL}'s account.", .search),
@@ -283,7 +283,7 @@ extension StoryCases {
             notDone: ["The mail room staff were never investigated."],
             defendantExam: [
                 .direct("Did you bring drugs into the jail?", "\"I brought in cigarettes and phones. I didn't know there was fentanyl in what they handed me.\""),
-                .direct("What about the 14 grams in your car?", "\"I'd been handed a package to bring in. I didn't open it.\""),
+                .direct("What about the 12 grams in your car?", "\"I'd been handed a package to bring in. I didn't open it.\""),
                 .cross("$2,000 a trip for cigarettes?", "\"That's what they paid.\""),
                 .cross("You logged cell checks you never made.", "\"Everybody did.\"")
             ],
@@ -342,7 +342,7 @@ extension StoryCases {
                         cross: ["\"{DL} was bitten too.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("What warnings did {DL} have?", "\"Thirty-one complaints, a bitten delivery driver, a neighbor pinned to the wall, a vet's letter, and a dog trainer who quit after one session.\""),
+                            .direct("What warnings did {DL} have?", "\"Thirty-one complaints, a bitten delivery driver, a neighbor pinned to the wall, a vet's letter, and a dog trainer who quit after two sessions.\""),
                             .direct("What did {DL} do after the attack?", "\"Put the dogs back in the apartment. Never called 911. A neighbor did.\""),
                             .cross("{DL} had bite wounds on {D.his} hands?", "\"Minor ones.\""),
                             .cross("{DL} says {D.he} threw {D.himself} on top of {VL}?", "\"That's what {D.he} says. The neighbor didn't see that.\"")

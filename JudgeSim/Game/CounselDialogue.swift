@@ -192,19 +192,53 @@ enum CounselDialogue {
             let target = c.evidence(motion.targetEvidenceID)
             let label = target.map { "\($0.title.lowercased())" } ?? "the case"
             let stateStrong = !motion.shouldGrant
+            // Each kind of motion is argued on its own terms.
+            let stateWeak: String, stateClose: String, defenseWeak: String, defenseClose: String
+            switch motion.kind {
+            case .suppressSearch:
+                stateWeak = "the officers acted reasonably in a fast-moving situation, and the exclusionary rule exists to deter misconduct, not good police work."
+                stateClose = "The officers did what the law requires."
+                defenseWeak = "the State's story about this search doesn't add up, and the court shouldn't accept it at face value."
+                defenseClose = "The Constitution doesn't bend because the result is inconvenient."
+            case .suppressStatement:
+                stateWeak = "the statement was voluntary. Nobody threatened \(c.defendant.lastName) or promised anything, and the court can hear that in the recording."
+                stateClose = "The warnings were given, and the waiver was knowing and voluntary."
+                defenseWeak = "the circumstances of that interview were coercive, whatever the form says."
+                defenseClose = "A statement taken that way can't come in."
+            case .suppressIdentification:
+                stateWeak = "any problem with the procedure goes to weight, not admissibility. The witness had a good look independent of the lineup."
+                stateClose = "The procedure complied with the Eyewitness Identification Reform Act."
+                defenseWeak = "the procedure was suggestive, and the court should be skeptical of an identification built on it."
+                defenseClose = "An identification that unreliable shouldn't reach the factfinder."
+            case .excludePriorActs:
+                stateWeak = "the other acts show a common plan and intent, and they're close enough in time and kind to be probative."
+                stateClose = "It's offered for a proper purpose under Rule 404(b), and its value isn't outweighed by unfair prejudice."
+                defenseWeak = "this is character evidence dressed up as something else. It invites the court to convict for who \(c.defendant.lastName) is."
+                defenseClose = "Rule 404(b) doesn't allow it, and Rule 403 would keep it out even if it did."
+            case .dismissSpeedyTrial:
+                stateWeak = "most of the delay is ordinary court congestion, and the defense never pressed for a trial date."
+                stateClose = "Under Barker v. Wingo the delay was reasonable and caused no real prejudice."
+                defenseWeak = "the delay was long and the State never explained it. The court should weigh that against the State."
+                defenseClose = "The Sixth Amendment guarantees a speedy trial, and the State didn't give one."
+            case .dismissIndictment:
+                stateWeak = "the indictment gives fair notice of the charge. Any defect is one of form, not substance."
+                stateClose = "The indictment alleges every essential element."
+                defenseWeak = "the indictment doesn't say what the statute requires, and the court can't fill the gap for the State."
+                defenseClose = "A facially defective indictment leaves the court without jurisdiction over that count."
+            }
             q.append(CounselQuestion(id: "mot.state.\(index)", side: .prosecution,
                                      question: "What's the State's best argument on the motion regarding \(label)?",
                                      answer: s.opener + (stateStrong
-                                        ? "it's straightforward. " + motion.appellateNote + " The officers did what the law requires."
+                                        ? "it's straightforward. " + motion.appellateNote + " " + stateClose
                                         : (s == .aggressive
-                                           ? "the officers acted reasonably in a fast-moving situation, and the exclusionary rule exists to deter misconduct, not good police work."
-                                           : "I'll be candid. This is the State's weakest issue. We'd ask the court to find the officers acted in good faith."))))
+                                           ? stateWeak
+                                           : "I'll be candid. This is the State's weakest issue. But " + stateWeak))))
             q.append(CounselQuestion(id: "mot.def.\(index)", side: .defense,
                                      question: "What's your strongest point on the motion regarding \(label)?",
                                      answer: d.opener + (motion.shouldGrant
-                                        ? "look at the facts the court heard: " + motion.facts + " That's the whole motion, Judge. The Constitution doesn't bend because the result is inconvenient."
+                                        ? "look at the facts the court heard: " + motion.facts + " That's the whole motion, Judge. " + defenseClose
                                         : (d == .combative
-                                           ? "the State's story about this search doesn't add up, and the court shouldn't accept it at face value."
+                                           ? defenseWeak
                                            : "I'll be honest with the court: the facts at the hearing weren't as helpful as we hoped. We preserve the issue."))))
             if let target, motion.kind != .dismissSpeedyTrial {
                 let remaining = Judgment.properStrength(c) - (motion.shouldGrant ? 0 : target.weight)
@@ -266,7 +300,8 @@ enum CounselDialogue {
             q.append(CounselQuestion(id: "tri.\(callingSide.rawValue).wit.\(witness.id)", side: callingSide,
                                      question: "Why should I credit \(witness.name)?",
                                      answer: callingStyle.opener + credit))
-            let attack = witness.cross.last.map { "remember what came out on cross: \($0)" }
+            let crossAnswer = witness.exchanges?.last(where: { $0.phase == .cross })?.answer ?? witness.cross.last
+            let attack = crossAnswer.map { "remember what came out on cross: \($0)" }
                 ?? "\(witness.name) testified past what a \(role) could actually know."
             q.append(CounselQuestion(id: "tri.\(otherSide.rawValue).wit.\(witness.id)", side: otherSide,
                                      question: "What's wrong with \(witness.name)'s testimony?",

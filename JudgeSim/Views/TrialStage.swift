@@ -56,8 +56,8 @@ struct TrialStage: View {
             if session.halftimeComplete && session.testimonyDecided {
                 SectionTitle(text: "Closing arguments", icon: "text.quote")
                 VStack(alignment: .leading, spacing: 12) {
-                    Statement(side: .prosecution, speaker: c.prosecutor, text: Allocutions.closing(c, side: .prosecution))
-                    Statement(side: .defense, speaker: c.defenseAttorney, text: Allocutions.closing(c, side: .defense))
+                    Statement(side: .prosecution, speaker: c.prosecutor, text: Allocutions.closing(c, side: .prosecution, rulings: session.rulings))
+                    Statement(side: .defense, speaker: c.defenseAttorney, text: Allocutions.closing(c, side: .defense, rulings: session.rulings))
                 }
                 .card()
             }
@@ -199,7 +199,7 @@ struct WitnessCard: View {
                 }
             }
 
-            ExaminationTranscript(witness: witness)
+            ExaminationTranscript(witness: witness, suppressed: session.suppressedTerms)
             ForEach(objections) { objection in
                 ObjectionView(objection: objection, selection: session.objectionBinding(objection))
             }
@@ -392,12 +392,23 @@ struct RightToTestifyCard: View {
 struct ExaminationTranscript: View {
     let witness: Witness
     var struckAnswers: Set<String> = []
+    /// Exhibits the court suppressed; questions about them aren't asked.
+    var suppressed: [String] = []
 
     private var exchanges: [TestimonyExchange] {
-        if let exchanges = witness.exchanges, !exchanges.isEmpty { return exchanges }
-        let opposing: Side = witness.calledBy == .prosecution ? .defense : .prosecution
-        return witness.direct.map { TestimonyExchange(phase: .direct, examiner: witness.calledBy, question: "", answer: $0) }
-            + witness.cross.map { TestimonyExchange(phase: .cross, examiner: opposing, question: "", answer: $0) }
+        let all: [TestimonyExchange]
+        if let exchanges = witness.exchanges, !exchanges.isEmpty {
+            all = exchanges
+        } else {
+            let opposing: Side = witness.calledBy == .prosecution ? .defense : .prosecution
+            all = witness.direct.map { TestimonyExchange(phase: .direct, examiner: witness.calledBy, question: "", answer: $0) }
+                + witness.cross.map { TestimonyExchange(phase: .cross, examiner: opposing, question: "", answer: $0) }
+        }
+        guard !suppressed.isEmpty else { return all }
+        // Whole phrases only: suppressing "State's Exhibit 1" leaves Exhibit 12 alone.
+        let patterns = suppressed.map { "(?i)\\b" + NSRegularExpression.escapedPattern(for: $0) + "(?![0-9A-Za-z])" }
+        func mentions(_ text: String) -> Bool { patterns.contains { text.range(of: $0, options: .regularExpression) != nil } }
+        return all.filter { e in !mentions(e.question) && !mentions(e.answer) }
     }
 
     var body: some View {
