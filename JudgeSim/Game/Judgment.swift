@@ -1697,7 +1697,7 @@ enum Judgment {
             }
             if revokedMonths > 0 { parts.append("Includes \(revokedText) activated on probation revocation" + (r.revocationConsecutive ? ", consecutive." : ", concurrent.")) }
             if postReleaseMonths > 0 { parts.append("Includes \(postReleaseMonths) months on the post-release supervision violation" + (r.revocationConsecutive ? ", consecutive." : ", concurrent.")) }
-            if parts.isEmpty { parts.append("Confinement ordered on the probation violation.") }
+            if parts.isEmpty { parts.append("Confinement in response to violation, ordered with the judgment on the probation violation.") }
             releaseBasis = parts.joined(separator: " ")
         }
 
@@ -2018,7 +2018,7 @@ enum Judgment {
     /// The order protecting the victim: one the court entered for a set number of years, or, failing that, the
     /// no-contact condition of probation for as long as probation runs.
     static func stayAwayOrder(_ c: CourtCase, _ r: Rulings, convicted: Bool, date: Date, probationEnds: Date?) -> StayAwayOrder? {
-        guard convicted, let victim = c.victimName, !Consequences.victimDied(c) else { return nil }
+        guard convicted, let victim = c.victimName, !Consequences.victimDied(c), !Consequences.victimIsChild(c) else { return nil }
         let expires: Date
         if r.stayAwayYears > 0 {
             expires = Calendar.current.date(byAdding: .year, value: r.stayAwayYears, to: date) ?? date

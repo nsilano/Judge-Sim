@@ -172,7 +172,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D}, drunk and told to leave, swung at an officer making a lawful arrest and broke the officer's nose."],
         defenseTheory: ["{DL} was grabbed by the throat from behind without warning and reacted by reflex. A person who doesn't know who grabbed {D.him} hasn't knowingly assaulted an officer."],
-        aggravating: ["The offense was committed against a law enforcement officer"],
+        aggravating: [],
         mitigating: ["The defendant has been gainfully employed", "No prior criminal record"],
         victimImpacts: ["Officer {OFFICER}: \"I've done this nine years. That was the first time I thought I was going to lose a fight.\""],
         allocutions: ["\"I never would have swung at a cop on purpose. I didn't know who had me.\""],

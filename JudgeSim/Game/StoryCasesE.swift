@@ -117,7 +117,6 @@ extension StoryCases {
             SecondaryCharge(lawID: "identityTheft", specification: "Used {V}'s identifying information to open a second store credit account.", chance: 1.0, threshold: 3),
             SecondaryCharge(lawID: "identityTheft", specification: "Used {V}'s identifying information to open a third credit card account.", chance: 1.0, threshold: 3),
             SecondaryCharge(lawID: "cardFraud", specification: "Used credit cards issued in {V}'s name to buy $23,000 in electronics.", chance: 1.0, threshold: 2),
-            SecondaryCharge(lawID: "possStolen", specification: "Possessed laptops and gaming consoles bought with stolen credit, knowing they were obtained by fraud.", chance: 1.0, threshold: 2),
             SecondaryCharge(lawID: "misdLarceny", specification: "Stole mail addressed to {V} from the cluster mailbox.", chance: 1.0, threshold: 1)
         ],
         ageRange: 24...40, occupations: ["online reseller"], hasVictim: true,

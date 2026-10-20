@@ -17,7 +17,7 @@ extension StoryCases {
             // Felony death by vehicle isn't a lesser included offense of second-degree murder; the State charges it separately.
             SecondaryCharge(lawID: "felonyDBV", specification: "Unintentionally caused the death of {V} while driving while impaired on Interstate 95.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "habitualDWI", specification: "Drove while impaired after three prior impaired driving convictions within ten years.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "dwlr", specification: "Drove while license revoked for impaired driving.", chance: 1.0, threshold: 0)
+            SecondaryCharge(lawID: "dwlrImpaired", specification: "Drove while license revoked for impaired driving.", chance: 1.0, threshold: 0)
         ],
         ageRange: 33...52, occupations: ["restaurant cook", "warehouse supervisor", "roofing contractor"], forcedPriorOffenses: ["Driving While Impaired@3", "Driving While Impaired@6", "Driving While Impaired@8"], hasVictim: true,
         summaries: [

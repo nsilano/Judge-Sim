@@ -223,7 +223,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} took the congregation's building fund for three years, told them every quarter that it was safe, and spent most of it on {D.his} own bills."],
         defenseTheory: ["The pastor ran that church and told {DL} to keep the contractor working off the books. {DL} made a mess of the accounts. That is not the same as stealing."],
-        aggravating: ["The offense involved a position of trust in a religious congregation", "The reports to the congregation were falsified for three years"],
+        aggravating: ["The reports to the congregation were falsified for three years"],
         mitigating: ["{DL} repaid $9,600 before the theft was discovered", "$41,000 was spent on the congregation's own building project", "No prior criminal record"],
         allocutions: ["\"I love that church. I was baptized there. I made a terrible decision when I started borrowing to cover my own house, and I lied to cover it. I'm sorry.\""],
         guiltyTruths: ["After trial, {DL}'s spouse found a notebook in the garage tracking the personal withdrawals, labeled \"to pay back someday.\""],
@@ -271,7 +271,6 @@ enum StoryCases {
         specification: "Broke and entered the occupied dwelling of {V} at night with intent to commit larceny.",
         secondary: [
             SecondaryCharge(lawID: "felonyLarceny", specification: "Stole a laptop, wallet, and prescription medication from {V} during a burglary.", chance: 1.0, threshold: 6),
-            SecondaryCharge(lawID: "possStolen", specification: "Possessed a laptop belonging to {V}, knowing it to be stolen, and sold it to a pawn shop.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "injuryRealProperty", specification: "Damaged the rear door of {V}'s home by prying it open.", chance: 1.0, threshold: 5)
         ],
         ageRange: 24...36, forcedPriorOffenses: ["Misdemeanor Larceny", "Possession of Stolen Goods@6"], hasVictim: true,
@@ -622,7 +621,7 @@ enum StoryCases {
         specification: "Knowingly exploited {V}, an older adult, by using {V.his} funds for {DL}'s own benefit through deception and undue influence.",
         secondary: [
             SecondaryCharge(lawID: "exploitationElder", specification: "Knowingly exploited {V} by having a used car purchased with {V.his} funds and titled in {DL}'s name.", chance: 1.0, threshold: 3),
-            SecondaryCharge(lawID: "cardFraud", specification: "Used {V}'s debit card without consent for $9,400 in cash withdrawals over fourteen months.", chance: 1.0, threshold: 3)
+            SecondaryCharge(lawID: "cardFraud", specification: "Used {V}'s debit card without consent for $6,700 in cash withdrawals over fourteen months.", chance: 1.0, threshold: 3)
         ],
         ageRange: 29...52, occupations: ["home health aide"], hasVictim: true,
         summaries: [
@@ -684,7 +683,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} was paid to care for a 91-year-old with dementia and instead filled out checks payable to {D.him}, bought {D.him} a car with {VL}'s savings, and drained the account."],
         defenseTheory: ["{V} was lonely, and {DL} was the only person who showed up. {VL} chose to be generous, wrote it down, and said it on video. Generosity isn't a crime."],
-        aggravating: ["{V} was especially vulnerable due to age and dementia", "{DL} took advantage of a position of trust"],
+        aggravating: ["{V} was especially vulnerable due to age and dementia"],
         mitigating: ["{DL} provided genuine daily care for two years", "No prior criminal record"],
         victimImpacts: ["{V}, through the niece: \"{VL} keeps asking when {DL} is coming back. I don't know how to explain any of this to {VL}.\""],
         allocutions: ["\"I loved {VL}. I still do. I should have said no to the money. I didn't know how to say no to someone who'd given me so much more than money.\""],
@@ -1077,8 +1076,6 @@ enum StoryCases {
             SecondaryCharge(lawID: "kidnapping2", specification: "Restrained {V} by binding {V.his} wrists with zip ties to facilitate the robbery.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "kidnapping2", specification: "Restrained {V}'s spouse by binding their wrists with zip ties to facilitate the robbery.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "conspiracyRobbery", specification: "Agreed with {ALT} to rob {V} with a dangerous weapon.", chance: 1.0, threshold: 5),
-            SecondaryCharge(lawID: "larcenyFirearm", specification: "Stole three rifles from {V}'s gun safe.", chance: 1.0, threshold: 5),
-            SecondaryCharge(lawID: "larcenyFirearm", specification: "Stole a shotgun and a revolver from {V}'s gun safe.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "feloniousBE", specification: "Broke and entered the dwelling of {V} with intent to commit robbery therein.", chance: 1.0, threshold: 5)
         ],
         ageRange: 20...33, forcedPriorOffenses: ["Misdemeanor Larceny", "Breaking or Entering"], hasVictim: true,
@@ -1152,7 +1149,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} held a pistol on a retired couple in their own living room while {ALT} emptied the safe. The accomplice, the phone, and the zip ties all point to {DL}."],
         defenseTheory: ["The State's case is a co-defendant who sold stolen rifles under {ALT}'s own name and bought four years off by naming {DL}, after texting that someone else was the partner."],
-        aggravating: ["The victims were elderly and restrained in their own home", "The offense involved a firearm pointed at a victim's chest"],
+        aggravating: ["The victims were elderly and restrained in their own home"],
         mitigating: ["{DL} has no prior violent convictions"],
         victimImpacts: ["{V}: \"We sold the house. My spouse can't sleep there. Every doorbell, we both jump.\""],
         allocutions: ["\"I'm sorry for what happened to those people. I'm not the one who did it.\""],
@@ -1373,7 +1370,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{V} couldn't stand at the party, and {D} held {VL} up on the way out. {DL} knew {VL} was incapacitated and had sex with {V.him} anyway, then joked about it the next morning."],
         defenseTheory: ["{VL} was drunk, but awake, walking, laughing, and texting. Two people who had dated went home together. Regret and memory loss are not proof that {DL} knew {VL} couldn't consent."],
-        aggravating: ["{DL} took advantage of {VL}'s helpless condition"],
+        aggravating: [],
         mitigating: ["{DL} has no prior criminal record", "{DL} was also drinking"],
         victimImpacts: ["{V}: \"I left school for a semester. I don't go to parties. I don't trust my own memory anymore, and that's the part I can't get back.\""],
         allocutions: ["\"I thought {VL} wanted to be with me. If I was wrong, I'm sorry. I'd never knowingly hurt {VL}.\""],

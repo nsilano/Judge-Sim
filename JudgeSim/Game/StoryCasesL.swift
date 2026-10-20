@@ -13,7 +13,6 @@ extension StoryCases {
         primaryLaw: "saleSchedII", lesserLaw: "possSchedII", threshold: 5, lesserThreshold: 3,
         specification: "Sold 3.4 grams of cocaine, a Schedule II controlled substance, to a confidential informant.",
         secondary: [
-            SecondaryCharge(lawID: "deliverSchedII", specification: "Delivered 3.4 grams of cocaine to a confidential informant.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "possSchedII", specification: "Possessed cocaine, a Schedule II controlled substance.", chance: 1.0, threshold: 4),
             SecondaryCharge(lawID: "pwisd", specification: "Possessed cocaine with intent to sell or deliver.", chance: 1.0, threshold: 5)
         ],

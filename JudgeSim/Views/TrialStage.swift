@@ -405,7 +405,10 @@ struct ExaminationTranscript: View {
                 + witness.cross.map { TestimonyExchange(phase: .cross, examiner: opposing, question: "", answer: $0) }
         }
         guard !suppressed.isEmpty else { return all }
-        return all.filter { e in !suppressed.contains { e.question.localizedCaseInsensitiveContains($0) || e.answer.localizedCaseInsensitiveContains($0) } }
+        // Whole phrases only: suppressing "State's Exhibit 1" leaves Exhibit 12 alone.
+        let patterns = suppressed.map { "(?i)\\b" + NSRegularExpression.escapedPattern(for: $0) + "(?![0-9A-Za-z])" }
+        func mentions(_ text: String) -> Bool { patterns.contains { text.range(of: $0, options: .regularExpression) != nil } }
+        return all.filter { e in !mentions(e.question) && !mentions(e.answer) }
     }
 
     var body: some View {

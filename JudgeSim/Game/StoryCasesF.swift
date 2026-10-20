@@ -256,7 +256,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} took $1,500 'for keeping things moving,' on camera, from a developer whose jobs {D.he} kept passing."],
         defenseTheory: ["{CONTRACTOR} owed {DL} $6,000 and is trading {D.him} for leniency on {CONTRACTOR}'s own fraud. 'Keeping things moving' was the developer's script, not {DL}'s words."],
-        aggravating: ["{DL} abused public office", "The offense endangered public safety"],
+        aggravating: ["The offense endangered public safety"],
         mitigating: ["Nineteen years of public service", "No prior criminal record"],
         allocutions: ["\"That money was mine. I lent it when {CONTRACTOR} was going under. I never sold an inspection.\""],
         guiltyTruths: ["A ledger in {DL}'s truck later listed the developer's address with monthly checkmarks."],
@@ -300,7 +300,7 @@ extension StoryCases {
         primaryLaw: "habitualDWI", lesserLaw: "dwi", threshold: 2, lesserThreshold: 1,
         specification: "Drove a vehicle while impaired, having three prior DWI convictions within ten years.",
         secondary: [
-            SecondaryCharge(lawID: "dwlr", specification: "Drove while {D.his} license was revoked for a prior impaired driving conviction.", chance: 1.0, threshold: 1)
+            SecondaryCharge(lawID: "dwlrImpaired", specification: "Drove while {D.his} license was revoked for a prior impaired driving conviction.", chance: 1.0, threshold: 1)
         ],
         ageRange: 35...58, occupations: ["welder"], forcedPriorOffenses: ["Driving While Impaired@8", "Driving While Impaired@5", "Driving While Impaired@2"], hasVictim: false,
         summaries: [

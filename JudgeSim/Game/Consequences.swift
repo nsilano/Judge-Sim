@@ -28,7 +28,7 @@ enum Consequences {
 
     /// Cases where a stay-away order is what the State would ask for.
     static func stateWantsOrder(_ c: CourtCase) -> Bool {
-        c.victimName != nil && !victimDied(c) && (isDomestic(c) || c.templateKey.lowercased().contains("stalk")
+        c.victimName != nil && !victimDied(c) && !victimIsChild(c) && (isDomestic(c) || c.templateKey.lowercased().contains("stalk")
             || c.charges.contains { ["stalking", "cyberstalking", "communicatingThreats", "dvpoViolation", "witnessIntimidation"].contains($0.lawID) })
     }
 

@@ -203,7 +203,7 @@ enum CourtCalendar {
             case 7: days = [23, 24, 27]         // Saturday
             default: days = [24, 25, 26]
             }
-            return days.map { (date(12, $0), $0 < 25 ? "Christmas Eve" : ($0 == 25 ? "Christmas Day" : "Christmas")) }
+            return days.map { (date(12, $0), $0 == 24 ? "Christmas Eve" : ($0 == 25 ? "Christmas Day" : "Christmas")) }
         }
         let thanksgiving = nth(4, 5, of: 11)
         let fixed: [(Date, String)] = [

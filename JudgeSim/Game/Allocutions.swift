@@ -64,7 +64,8 @@ enum Allocutions {
     static func statement(_ c: CourtCase, afterPlea: Bool, pleaKind: PleaKind = .guilty) -> String {
         let written = c.allocution
         let lower = written.lowercased()
-        let denies = lower.contains("didn't do it") || lower.contains("pending appeal") || lower.contains("innocent")
+        let denies = ["didn't", "did not", "never", "wasn't me", "it wasn't", "not guilty", "pending appeal", "innocent", "i'm not the one"]
+            .contains { lower.contains($0) }
         // A statement written for after a trial doesn't fit a plea.
         let speaksOfTrial = ["trial", "jury", "testif", "verdict", "witness stand"].contains { lower.contains($0) }
         if !written.isEmpty && !isStock(written) && !(afterPlea && (denies || speaksOfTrial)) && !(afterPlea && pleaKind != .guilty) { return written }

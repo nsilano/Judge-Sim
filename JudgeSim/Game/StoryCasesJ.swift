@@ -14,7 +14,6 @@ extension StoryCases {
         specification: "Stole catalytic converters valued at more than $1,000 from vehicles belonging to {CHURCH}.",
         secondary: [
             SecondaryCharge(lawID: "felonyLarceny", specification: "Stole catalytic converters from three other vehicles found in the hatchback.", chance: 1.0, threshold: 4),
-            SecondaryCharge(lawID: "possStolen", specification: "Possessed six catalytic converters, knowing or having reason to believe they were stolen.", chance: 1.0, threshold: 3),
             SecondaryCharge(lawID: "injuryPersonalProperty", specification: "Damaged three passenger vans belonging to {CHURCH} by cutting out their exhaust components.", chance: 1.0, threshold: 4)
         ],
         ageRange: 20...35, occupations: ["unemployed", "construction laborer"], forcedPriorOffenses: ["Possession of Stolen Goods"], hasVictim: false,

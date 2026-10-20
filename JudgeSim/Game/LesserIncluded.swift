@@ -24,6 +24,7 @@ enum LesserIncluded {
         "felonyLarceny": ["misdLarceny"],
         "traffickingCocaine": ["pwisd", "possSchedII"],
         "traffickingOpioid": ["pwisd", "possSchedII"],
+        "traffickingOpioid28": ["traffickingOpioid", "pwisd", "possSchedII"],
         "saleSchedII": ["deliverSchedII", "pwisd", "possSchedII"],
         "deliverSchedII": ["possSchedII"],
         "pwisd": ["possSchedII"],

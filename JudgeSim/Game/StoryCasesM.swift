@@ -273,7 +273,7 @@ extension StoryCases {
         defenseTheory: ["A warrantless genealogy search, evidence from a flooded basement with a broken chain of custody, and a match with no other proof. Forty years is too long for certainty."],
         aggravating: ["The offense involved multiple victims", "The defendant abused a position of public trust"],
         mitigating: ["The defendant has a long record of public service"],
-        victimImpacts: ["{VL}'s daughter, now 52: \"I was fourteen and asleep down the hall. I've waited my whole adult life to say their names in this room.\""],
+        victimImpacts: ["{VL}'s daughter, now 53: \"I was fourteen and asleep down the hall. I've waited my whole adult life to say their names in this room.\""],
         allocutions: ["\"I served this county for thirty years. I don't know how my DNA got there.\""],
         guiltyTruths: ["A box of victims' jewelry from several of those old break-ins was found in {DL}'s attic after the trial."],
         innocentTruths: ["The genealogist later found an error in one branch of the tree; a cousin of {DL}'s, now dead, also fit the profile."],

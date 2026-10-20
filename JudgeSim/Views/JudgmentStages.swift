@@ -391,7 +391,7 @@ struct SentencingStage: View {
 
             CustomConditionsCard(session: session)
 
-            if session.courtCase.victimName != nil && !Consequences.victimDied(session.courtCase) {
+            if session.courtCase.victimName != nil && !Consequences.victimDied(session.courtCase) && !Consequences.victimIsChild(session.courtCase) {
                 StayAwayOrderCard(session: session)
             }
 

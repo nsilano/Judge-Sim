@@ -166,7 +166,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} took money raised by children and parents, forged signatures, and faked bank statements for three years."],
         defenseTheory: ["{DL} doesn't contest the facts. {D.He} is an addict who is in treatment and repaying. The court should focus on restitution."],
-        aggravating: ["The defendant took advantage of a position of trust"],
+        aggravating: [],
         mitigating: ["No prior criminal record", "The defendant made substantial or full restitution to the victim", "The defendant has expressed remorse"],
         victimImpacts: ["A teacher: \"My students sold wrapping paper for a year to go to the aquarium. I had to tell them it wasn't happening.\""],
         allocutions: ["\"I'm ashamed. I'll repay every dollar. I'm sorry to the kids.\""],
@@ -342,7 +342,7 @@ extension StoryCases {
                         cross: ["\"{DL} was bitten too.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("What warnings did {DL} have?", "\"Thirty-one complaints, a bitten delivery driver, a neighbor pinned to the wall, a vet's letter, and a dog trainer who quit after one session.\""),
+                            .direct("What warnings did {DL} have?", "\"Thirty-one complaints, a bitten delivery driver, a neighbor pinned to the wall, a vet's letter, and a dog trainer who quit after two sessions.\""),
                             .direct("What did {DL} do after the attack?", "\"Put the dogs back in the apartment. Never called 911. A neighbor did.\""),
                             .cross("{DL} had bite wounds on {D.his} hands?", "\"Minor ones.\""),
                             .cross("{DL} says {D.he} threw {D.himself} on top of {VL}?", "\"That's what {D.he} says. The neighbor didn't see that.\"")

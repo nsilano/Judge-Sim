@@ -16,10 +16,25 @@ enum BenchConference {
         c.charges
             .filter { r.verdicts[$0.id]?.isConviction == true }
             .sorted { lhs, rhs in
-                let a = r.verdicts[lhs.id].flatMap { Judgment.convictedLaw(lhs, $0)?.ncClass?.severity } ?? 99
-                let b = r.verdicts[rhs.id].flatMap { Judgment.convictedLaw(rhs, $0)?.ncClass?.severity } ?? 99
+                let a = severity(lhs, r), b = severity(rhs, r)
                 return a == b ? lhs.count < rhs.count : a < b
             }
+    }
+
+    /// How serious the count of conviction is. Impaired driving has no class of its own and is sentenced under
+    /// G.S. 20-179; it ranks with the Class 1 misdemeanors.
+    private static func severity(_ charge: Charge, _ r: Rulings) -> Int {
+        guard let law = r.verdicts[charge.id].flatMap({ Judgment.convictedLaw(charge, $0) }) else { return 99 }
+        if let cls = law.ncClass { return cls.severity }
+        return Judgment.isDWI(law) ? NCClass.misd1.severity : 99
+    }
+
+    /// The person a count names as its victim: the first name in its specification that appears among the case's
+    /// people, so counts about different people don't merge.
+    private static func victimNamed(in charge: Charge, _ c: CourtCase) -> String? {
+        let names = ([c.victimName] + c.witnesses.map { Optional($0.name) }).compactMap { $0 }
+        return names.filter { charge.specification.contains($0) }
+            .min { (charge.specification.range(of: $0)?.lowerBound ?? charge.specification.endIndex) < (charge.specification.range(of: $1)?.lowerBound ?? charge.specification.endIndex) }
     }
 
     /// How far the State will go on arresting judgment on the other counts in this case.
@@ -58,7 +73,9 @@ enum BenchConference {
         if charge.lawID == principal.lesserLawID { return true }
         // One death, one homicide: murder and a manslaughter or death-by-vehicle count for the same killing.
         let homicide = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV"]
-        return homicide.contains(principal.lawID) && homicide.contains(charge.lawID) && principal.lawID != charge.lawID
+        guard homicide.contains(principal.lawID) && homicide.contains(charge.lawID) && principal.lawID != charge.lawID else { return false }
+        // Two deaths are two homicides.
+        return victimNamed(in: principal, c) == victimNamed(in: charge, c)
     }
 
     /// Whether the State agrees to arresting judgment on this count.
