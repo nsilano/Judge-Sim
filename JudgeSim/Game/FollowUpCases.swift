@@ -23,16 +23,15 @@ enum FollowUpCases {
 
     static let workplaceVisit = CaseTemplate(
         key: "story.followup.workplaceVisit", category: .family,
-        headlines: ["Man Under Court Order Shows Up at Ex's Job", "Stay-Away Order Broken in Grocery Store Checkout Line"],
+        headlines: ["Defendant Under Court Order Shows Up at Victim's Job", "Stay-Away Order Broken in Grocery Store Checkout Line"],
         primaryLaw: "stalkingCourtOrder", lesserLaw: "stalking", threshold: 9, lesserThreshold: 7,
         specification: "While a court order prohibiting contact was in effect, engaged in a course of conduct directed at {V}, appearing at {V.his} workplace and following {V.him} to {V.his} car, causing {V.him} to fear for {V.his} safety.",
         secondary: [
-            SecondaryCharge(lawID: "dvpoViolation", specification: "Knowingly violated the no-contact provisions of the order protecting {V}.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "communicatingThreats", specification: "Told {V}, \"You don't get to just erase me,\" in a manner that made {V} believe {D.he} would act on it.", chance: 1.0, threshold: 0)
+            SecondaryCharge(lawID: "communicatingThreats", specification: "Threatened to physically injure {V}, saying, \"You don't get to just erase me. Next time you won't walk to your car,\" in a manner that made {V} believe {D.he} would act on it.", chance: 1.0, threshold: 0)
         ],
         ageRange: 20...65, occupations: [], hasVictim: true,
         summaries: [
-            "{DL} was in this courtroom in {PRIORDATE} on a charge of {PRIOR}. The judgment ordered {D.him} to have no contact with {V} and to stay away from {V.his} home and work. On {DATE}, {DL} walked into the grocery store in {HOOD} where {V} works as a cashier and got in {V.his} line with a single pack of gum. {V} called the manager. {DL} waited in the parking lot for forty minutes and followed {V} to {V.his} car when {V.his} shift ended, saying, \"You don't get to just erase me.\" {DL} says {D.he} needed to talk about getting {D.his} belongings back and didn't think a grocery store counted."
+            "{DL} was in this courtroom in {PRIORDATE} on a charge of {PRIOR}. The judgment ordered {D.him} to have no contact with {V} and to stay away from {V.his} home and work. On {DATE}, {DL} walked into the grocery store in {HOOD} where {V} works as a cashier and got in {V.his} line with a single pack of gum. {V} called the manager. {DL} waited in the parking lot for fifty minutes and followed {V} to {V.his} car when {V.his} shift ended, saying, \"You don't get to just erase me. Next time you won't walk to your car.\" {DL} says {D.he} needed to talk about getting {D.his} belongings back and didn't think a grocery store counted."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Stay-Away Order", "The judgment from {PRIORDATE}, signed by {DL}, ordering no contact with {V} and no presence at {V.his} home or workplace."),
@@ -71,9 +70,9 @@ enum FollowUpCases {
                             .cross("And you told {D.him} how to get them?", "\"I told {D.him} to go through a lawyer and not to go near {V.him}.\"")
                         ])
         ],
-        prosecutionTheory: ["The court told {D} to stay away from {V}'s work. {D.He} went there, waited for {V.him}, and followed {V.him} to {V.his} car."],
-        defenseTheory: ["A clumsy attempt to get {D.his} belongings back, in a public store, with no threat and no touching."],
-        aggravating: ["The defendant was on notice of the court's order"],
+        prosecutionTheory: ["The court told {D} to stay away from {V}'s work. {D.He} went there, waited for {V.him}, followed {V.him} to {V.his} car, and threatened {V.him}."],
+        defenseTheory: ["A clumsy attempt to get {D.his} belongings back, in a public store, with no touching. Angry words in a parking lot aren't a true threat."],
+        aggravating: [],
         mitigating: ["No physical contact occurred"],
         victimImpacts: ["{VL}: \"I changed my schedule, my route, my phone. {D.He} still found me at work.\""],
         allocutions: ["\"I just wanted my tools. I know I went about it wrong.\""],
@@ -109,7 +108,6 @@ enum FollowUpCases {
         primaryLaw: "stalkingCourtOrder", lesserLaw: "stalking", threshold: 7, lesserThreshold: 5,
         specification: "While a court order prohibiting contact was in effect, engaged in a course of conduct directed at {V} by sending repeated electronic messages from a number {D.he} bought for the purpose, causing {V.him} substantial emotional distress.",
         secondary: [
-            SecondaryCharge(lawID: "dvpoViolation", specification: "Knowingly violated the no-contact provisions of the order protecting {V}.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "cyberstalking", specification: "Electronically communicated to {V} repeatedly for the purpose of abusing, annoying, and harassing {V.him}.", chance: 1.0, threshold: 0)
         ],
         ageRange: 20...65, occupations: [], hasVictim: true,
@@ -147,7 +145,7 @@ enum FollowUpCases {
         ],
         prosecutionTheory: ["{D} bought a phone the court couldn't see and used it to do exactly what the court forbade."],
         defenseTheory: ["Someone else had the phone. Tower records put two phones in the same place, not {D}'s thumbs on the screen."],
-        aggravating: ["The defendant was on notice of the court's order"],
+        aggravating: [],
         mitigating: [],
         victimImpacts: ["{VL}: \"Every time my phone buzzes, my heart stops. Every time.\""],
         allocutions: ["\"I needed {V.him} to hear me. I couldn't stand the silence.\""],
@@ -171,8 +169,8 @@ enum FollowUpCases {
     )
 
     static let parkingLotWatch = CaseTemplate(
-        key: "story.followup.parkingLotWatch", category: .robbery,
-        headlines: ["Parked Outside, Night After Night, Despite Court Order", "Neighbors Log 11 Nights of a Car Outside Protected Woman's Home"],
+        key: "story.followup.parkingLotWatch", category: .violent,
+        headlines: ["Parked Outside, Night After Night, Despite Court Order", "Neighbors Log 11 Nights of a Car Outside a Protected Victim's Home"],
         primaryLaw: "stalkingCourtOrder", lesserLaw: "stalking", threshold: 5, lesserThreshold: 3,
         specification: "While a court order prohibiting contact was in effect, engaged in a course of conduct directed at {V}, repeatedly parking outside {V.his} home at night and following {V.him}, causing {V.him} to fear for {V.his} safety.",
         secondary: [
@@ -213,19 +211,19 @@ enum FollowUpCases {
         ],
         prosecutionTheory: ["{D} sat outside {V}'s door eleven nights and followed {V.him} out. The court's order existed for exactly this."],
         defenseTheory: ["A cousin in the next building and a parking lot with one exit."],
-        aggravating: ["The defendant was on notice of the court's order"],
+        aggravating: [],
         mitigating: ["No physical contact occurred"],
         victimImpacts: ["{VL}: \"I sleep at my sister's now. I pay rent on an apartment I'm afraid to go home to.\""],
         allocutions: ["\"I was visiting family. I never meant to scare anybody.\""],
         guiltyTruths: ["The cousin moved out of the complex a month before the first logged night."],
-        innocentTruths: ["The cousin's lease and mail confirm {D.he} still lived there, and {D.his} parking spot faces {VL}'s building."],
+        innocentTruths: ["The cousin's lease and mail confirm the cousin still lived there, with an assigned parking spot facing {VL}'s building."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
         story: StoryExtras(
             timeline: [(-21, "First night logged."), (0, "The sedan follows {VL} out of the lot."), (2, "{DL} arrested.")],
             howIdentified: "The plate number in the neighbor's log.",
             notDone: ["No one checked whether the cousin still lived at the complex."],
             defendantExam: [
-                .direct("Why were you parked there?", "\"Waiting on my cousin. {D.He} works late.\""),
+                .direct("Why were you parked there?", "\"Waiting on my cousin, who works late.\""),
                 .cross("Engine running, facing {VL}'s door, eleven nights.", "\"That's where the space was.\"")
             ],
             prosecutionOpening: "Eleven nights in the dark across from the one person the court said to stay away from.",
@@ -236,7 +234,7 @@ enum FollowUpCases {
     )
 
     static let notesOnTheCar = CaseTemplate(
-        key: "story.followup.notesOnTheCar", category: .robbery,
+        key: "story.followup.notesOnTheCar", category: .violent,
         headlines: ["Notes on Windshield, Slashed Tire: Court Order Ignored", "\"I Still See You\": Notes Left on Victim's Car"],
         primaryLaw: "stalkingCourtOrder", lesserLaw: "stalking", threshold: 6, lesserThreshold: 4,
         specification: "While a court order prohibiting contact was in effect, engaged in a course of conduct directed at {V} by leaving written messages on {V.his} car and damaging it, causing {V.him} to fear for {V.his} safety.",
@@ -278,7 +276,7 @@ enum FollowUpCases {
         ],
         prosecutionTheory: ["{D} kept watching {V} after the court told {D.him} to stop, and left notes to make sure {V.he} knew it."],
         defenseTheory: ["A shared lot, an anonymous note writer, and a handwriting opinion that stops short of certainty."],
-        aggravating: ["The defendant was on notice of the court's order"],
+        aggravating: [],
         mitigating: [],
         victimImpacts: ["{VL}: \"'You lied in court.' {D.He} blames me for what this court did.\""],
         allocutions: ["\"I didn't write those notes.\""],
@@ -351,7 +349,7 @@ enum FollowUpCases {
         ],
         prosecutionTheory: ["The second time is the most dangerous time. The marks on {V}'s neck and {V.his} words that night tell what happened, whatever {V.he} says now."],
         defenseTheory: ["The only person who was there says {V.he} fell. The State is prosecuting a family that doesn't want this."],
-        aggravating: ["The defendant has a prior adjudication involving the same victim"],
+        aggravating: [],
         mitigating: [],
         victimImpacts: ["{VL}: \"I don't want to talk about it.\""],
         allocutions: ["\"I'm getting help this time. I mean it.\""],
@@ -421,12 +419,12 @@ enum FollowUpCases {
         ],
         prosecutionTheory: ["{D} hit {V} in the face with a skillet, ran, and hid for two days. Self-defense doesn't look like that."],
         defenseTheory: ["{V} attacked first; {D} grabbed what was in reach. Scratches don't lie."],
-        aggravating: ["The defendant has a prior adjudication involving the same victim"],
+        aggravating: [],
         mitigating: [],
         victimImpacts: ["{VL}: \"I have metal plates in my face. I still flinch when someone raises a hand.\""],
         allocutions: ["\"{V.He} was coming at me. I didn't mean for it to be that bad.\""],
         guiltyTruths: ["A neighbor's doorbell camera audio caught {DL} shouting \"Look what you made me do\" as {D.he} left."],
-        innocentTruths: ["{VL}'s blood alcohol at the hospital was 0.21, and {V.his} own statement that night began \"I went after {D.him} with the knife first.\""],
+        innocentTruths: ["{VL}'s blood alcohol at the hospital was 0.21, and {V.his} own statement that night began \"I went after {D.him} first.\""],
         moods: [.wantsConviction], doctrines: ["selfDefense", "burdenOfProof"],
         story: StoryExtras(
             timeline: [(0, "{VL} arrives at the ER."), (0, "Deputies find the skillet; {DL} is gone."), (2, "{DL} arrested at a relative's home.")],
@@ -482,7 +480,7 @@ enum FollowUpCases {
                             .cross("You didn't see the parking lot?", "\"No. I was behind the bar.\"")
                         ])
         ],
-        prosecutionTheory: ["{D} hit a man walking away with a glass bottle. That's not self-defense."],
+        prosecutionTheory: ["{D} hit someone who was walking away, with a glass bottle. That's not self-defense."],
         defenseTheory: ["An aggressive drunk with a pool cue, and a split-second reaction."],
         aggravating: [],
         mitigating: [],
@@ -499,7 +497,7 @@ enum FollowUpCases {
                 .direct("Why did you swing the bottle?", "\"{V.He} had the cue up. I thought I was about to get my head split.\""),
                 .cross("The camera doesn't show a cue.", "\"The camera's not good enough to show a lot of things.\"")
             ],
-            prosecutionOpening: "A man walking away and a bottle to the back of the head.",
+            prosecutionOpening: "Someone walking away, and a bottle to the back of the head.",
             defenseOpening: "A drunk with a pool cue, and a split second.",
             prosecutionClosing: "He was walking away.",
             defenseClosing: "The law doesn't make you wait to get hit."
@@ -557,7 +555,7 @@ enum FollowUpCases {
         ],
         prosecutionTheory: ["{D}'s palm on the window and {D.his} thumb on the pawn ticket. {D.He} went in while a family slept."],
         defenseTheory: ["Buying stolen jewelry at a gas station is foolish; it isn't burglary. A partial print doesn't put {D.him} inside."],
-        aggravating: ["The offense was committed while people were present in the dwelling"],
+        aggravating: [],
         mitigating: [],
         victimImpacts: ["{VL}: \"My son sleeps in my room now. The gun is still out there.\""],
         allocutions: ["\"I bought that jewelry. I didn't go in anybody's house.\""],
@@ -591,7 +589,7 @@ enum FollowUpCases {
         ],
         prosecutionEvidence: [
             E(.video, 3, "Store Camera", "A hooded figure behind the counter with a knife at the clerk's neck; the face is partly covered.", .search),
-            E(.statement, 3, "Photo Lineup", "{VL} picked {DL} from a six-person array run by an officer who didn't know the suspect: \"That's him. I'll never forget the eyes.\""),
+            E(.statement, 3, "Photo Lineup", "{VL} picked {DL} from a six-person array run by an officer who didn't know the suspect: \"That's the one. I'll never forget the eyes.\""),
             E(.physical, 2, "Hoodie", "A gray hoodie with a cut in the right pocket where a folding knife clip would sit.", .search)
         ],
         defenseEvidence: [
@@ -758,7 +756,7 @@ enum FollowUpCases {
         innocentTruths: ["A second supplier admitted delivering pills to {VL} later that evening."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
         story: StoryExtras(
-            timeline: [(0, "3:12 p.m.: messages exchanged."), (0, "3:24 p.m.: {DL}'s car on a neighbor's camera outside {VL}'s house."), (1, "{VL} found dead."), (9, "Search warrant executed at {DL}'s apartment.")],
+            timeline: [(0, "3:12 p.m.: messages exchanged."), (0, "3:24 p.m.: {DL}'s car on a neighbor's camera outside {VL}'s house."), (0, "That evening: {VL} found dead."), (9, "Search warrant executed at {DL}'s apartment.")],
             howIdentified: "The messages on {VL}'s phone.",
             notDone: ["The two other suppliers in {VL}'s phone were not interviewed."],
             defendantExam: [
@@ -823,7 +821,7 @@ enum FollowUpCases {
         ],
         prosecutionTheory: ["{D} found a lonely widow with a failing memory and a checkbook, and emptied it."],
         defenseTheory: ["Gifts from a grateful friend, and a contractor who skipped town."],
-        aggravating: ["The victim was very old and mentally infirm", "The defendant took advantage of a position of trust"],
+        aggravating: ["The victim was mentally infirm"],
         mitigating: [],
         victimImpacts: ["{VL}'s daughter: \"Mama's in a nursing home on Medicaid now. That was her house money.\""],
         allocutions: ["\"I loved that lady. She wanted me to have it.\""],
@@ -841,7 +839,8 @@ enum FollowUpCases {
             prosecutionOpening: "Fourteen checks, a failing memory, and a roof that was never fixed.",
             defenseOpening: "A friend who showed up when family didn't.",
             prosecutionClosing: "Gratitude doesn't fill out its own checks.",
-            defenseClosing: "Generosity isn't a crime."
+            defenseClosing: "Generosity isn't a crime.",
+            genders: ["V": .female]
         )
     )
 
@@ -867,7 +866,7 @@ enum FollowUpCases {
             E(.statement, 1, "Panic", "{DL} believed there was an outstanding warrant and says {D.he} acted out of fear.")
         ],
         prosecutionWitnesses: [
-            WitnessSeed(name: "{DET}", role: "Pursuing deputy",
+            WitnessSeed(name: nil, role: "Pursuing deputy",
                         direct: ["\"Ninety in a forty-five, through two stop signs.\""],
                         cross: ["\"The stop was for an expired tag.\""],
                         weight: 3, lay: false,

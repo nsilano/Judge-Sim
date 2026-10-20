@@ -26,6 +26,8 @@ enum Allocutions {
         let returning: Bool
         let mood: PublicMood
         let aggravating: [String]
+        /// Stalking or violating a court order: conduct aimed at one person, not a theft or a fight.
+        let stalking: Bool
 
         init(_ c: CourtCase) {
             let d = c.defendant
@@ -34,7 +36,7 @@ enum Allocutions {
             category = c.category
             victim = c.victimName
             let ids = c.charges.map { $0.lawID.lowercased() }
-            death = ids.contains { $0.contains("murder") || $0.contains("manslaughter") || $0.contains("dbv") || $0.contains("neglect") }
+            death = Consequences.victimDied(c)
             priors = d.priors.count
             felonies = d.priors.filter { $0.ncClass.isFelony }.count
             wasOnProbation = d.probation != nil || d.priors.contains { $0.sentence.lowercased().contains("probation") }
@@ -51,6 +53,7 @@ enum Allocutions {
             returning = d.isReturning
             mood = c.mood
             aggravating = c.aggravating
+            stalking = ids.contains { $0.contains("stalking") || $0 == "dvpoviolation" }
         }
     }
 
@@ -181,6 +184,13 @@ enum Allocutions {
 
     private static func admission(_ f: Facts, afterPlea: Bool, rng: inout SeededRNG) -> String {
         var options: [String]
+        if f.stalking {
+            options = ["The court told me to stay away, and I didn't. I don't have an excuse for that.",
+                       "I kept telling myself I just needed to talk. Nobody needed me to talk. I needed to leave it alone.",
+                       "I scared somebody who had already been through enough. I see that now."]
+            if afterPlea { options.append("I pleaded guilty because I did it, and I didn't want anyone to have to come in here and say it again.") }
+            return rng.pick(options)
+        }
         switch f.category {
         case .violent:
             options = f.death

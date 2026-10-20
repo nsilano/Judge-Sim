@@ -347,7 +347,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} pried open the back door of an occupied home in the middle of the night, was seen by the person living there, and four days later sold what was taken."],
         defenseTheory: ["{DL} bought a stolen laptop for eighty dollars, which was foolish and maybe a crime in itself. But the identification is weak, and nothing else puts {DL} in that house."],
-        aggravating: ["The home was occupied and the resident confronted the intruder"],
+        aggravating: ["The victim was confronted face to face and has suffered lasting fear"],
         mitigating: ["{DL} sold the laptop openly under {D.his} own name", "No prior burglary convictions"],
         victimImpacts: ["{V}: \"I sleep with a chair under my door now. I moved out of that duplex. I couldn't stand the hallway.\""],
         allocutions: ["\"I knew that laptop wasn't right when I bought it. That's on me. I wasn't in that house.\""],
@@ -466,7 +466,7 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} put both hands on {V}'s neck and pressed hard enough to burst blood vessels in {V.his} eyes. That's strangulation, whatever {VL} says now."],
         defenseTheory: ["{V} came at {DL} with a cast-iron skillet, screaming a death threat. {DL} grabbed {VL} to survive. Self-defense."],
-        aggravating: ["Petechiae indicate sustained pressure on the neck"],
+        aggravating: ["The offense was committed in the home the victim shared with the defendant"],
         mitigating: ["{DL} was injured in the same incident", "{V} does not wish the prosecution to continue", "{DL} has no prior assault convictions"],
         victimImpacts: ["{V}: \"I'm not a victim of {DL}. We were both a mess that night. I'm in AA now. I'd like {DL} to go too, not to prison.\""],
         allocutions: ["\"I should have walked out the door. I didn't. I'll carry that.\""],
@@ -498,7 +498,7 @@ enum StoryCases {
                                   doctrineID: "leading", weight: 1))
             ],
             prosecutionOpening: "Burst blood vessels in both eyes. A whisper to 911 from a locked bathroom. {V} doesn't want to be here, and the law understands why. The injuries tell the story.",
-            defenseOpening: "A cast-iron skillet. Scratches down {DL}'s face. A neighbor who heard {VL} scream 'I'll kill you.' And {V.him}, who now asks this court not to punish {DL}. This is self-defense.",
+            defenseOpening: "A cast-iron skillet. Scratches down {DL}'s face. A neighbor who heard {VL} scream 'I'll kill you.' And {V}, who now asks this court not to punish {DL}. This is self-defense.",
             prosecutionClosing: "Even if {VL} picked up the pan, holding someone by the neck until their eyes hemorrhage isn't reasonable force. That's strangulation.",
             defenseClosing: "The State has to disprove self-defense beyond a reasonable doubt. On this record, with a death threat and a skillet, it hasn't."
         )
@@ -1259,8 +1259,8 @@ enum StoryCases {
         ],
         prosecutionTheory: ["{D} violated a protective order, forced the door, and opened {V}'s arm to the tendon with a box cutter in front of their child."],
         defenseTheory: ["{DL} came because {VL} said to come. {VL} picked up the box cutter, as their own child says, and {DL} was cut trying to take it away. Being somewhere you shouldn't isn't the same as attacking someone."],
-        aggravating: ["The offense was committed in the presence of a child", "The offense was committed in violation of a protective order"],
-        mitigating: ["{DL} stayed at the scene and called for help", "{DL} was also injured"],
+        aggravating: ["The offense was committed in the presence of a child"],
+        mitigating: ["{DL} stayed at the scene until deputies arrived", "{DL} was also injured"],
         victimImpacts: ["{V}: \"I can't do what I used to do for a living. I just want to be safe and for my daughter to be safe.\""],
         allocutions: ["\"I should never have gone to that door, order or no order. I would never cut {VL}. I was trying to get it away from both of us.\""],
         guiltyTruths: ["A neighbor's doorbell camera, recovered later, recorded {DL} saying \"you're going to regret this\" before forcing the door."],
@@ -1302,7 +1302,7 @@ enum StoryCases {
     static let afterTheParty = CaseTemplate(
         key: "story.afterTheParty", category: .violent,
         headlines: ["Rape Charge After Off-Campus Party", "Consent and Memory at Trial"],
-        primaryLaw: "rape2", lesserLaw: "sexualBattery", threshold: 9, lesserThreshold: 7,
+        primaryLaw: "rape2", lesserLaw: nil, threshold: 9, lesserThreshold: 7,
         specification: "Engaged in vaginal intercourse with {V}, who was physically helpless and mentally incapacitated by alcohol, when {DL} knew or should reasonably have known of that condition.",
         secondary: [
             SecondaryCharge(lawID: "sexualBattery", specification: "Engaged in sexual contact with {V} while {V.he} was mentally incapacitated and physically helpless.", chance: 1.0, threshold: 8)
@@ -1502,7 +1502,7 @@ enum StoryCases {
                 .direct("What about the text, 'one way or another'?", "\"I meant through the court. I was angry. It was a stupid way to say it.\""),
                 .direct("Why raise the insurance?", "\"My agent told me the old policy was below replacement cost. I raised all six houses that month. The paperwork shows all six.\""),
                 .direct("Where were you at 3:41 a.m.?", "\"Asleep at home, eleven miles away. My truck was in my driveway.\""),
-                .cross("Nobody can confirm you were home.", "\"My wife was asleep. No, nobody watched me sleep.\""),
+                .cross("Nobody can confirm you were home.", "\"My spouse was asleep. No, nobody watched me sleep.\""),
                 .cross("You yelled at a child on that porch.", "\"I raised my voice at the door. I'm not proud of it.\""),
                 .cross("You never fixed the furnace in six weeks.", "\"The part was backordered. I offered space heaters.\"")
             ],

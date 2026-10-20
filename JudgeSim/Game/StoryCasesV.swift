@@ -48,8 +48,8 @@ extension StoryCases {
                         cross: ["\"It's a form.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("What did {DL} sign at each prior DWI?", "\"An acknowledgment that impaired driving is dangerous to human life and that a death could be charged as murder.\""),
-                            .cross("It's a preprinted form?", "\"Signed three times.\"")
+                            .direct("What do the records show about {DL}'s prior DWIs?", "\"Three certified judgments, and assessment and treatment records from each one. Every program covered how impaired driving kills people.\""),
+                            .cross("Those are standard records?", "\"Standard, and certified. Three times over.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -112,8 +112,7 @@ extension StoryCases {
         specification: "Took and carried away copper grounding wire worth $2,800 from a Tidewater Power & Light substation, intending to permanently deprive the owner of it.",
         secondary: [
             SecondaryCharge(lawID: "invManslaughter", specification: "Unlawfully caused the death of {V}, the defendant's partner, by culpable negligence in leading him into an energized substation at night.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "injuryRealProperty", specification: "Damaged substation equipment, causing a power outage to 4,000 customers and $180,000 in repairs.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "possStolen", specification: "Possessed 300 pounds of stolen copper in his truck.", chance: 1.0, threshold: 0)
+            SecondaryCharge(lawID: "injuryRealProperty", specification: "Damaged substation equipment, causing a power outage to 4,000 customers and $180,000 in repairs.", chance: 1.0, threshold: 0)
         ],
         ageRange: 26...44, occupations: ["unemployed electrician's helper", "scrap metal collector"], hasVictim: true,
         summaries: [
@@ -300,7 +299,7 @@ extension StoryCases {
         specification: "While sheriff, embezzled $214,000 in seized drug money held in trust in the Sheriff's Office evidence account.",
         secondary: [
             SecondaryCharge(lawID: "obstruction", specification: "Ordered the evidence clerk to falsify the seized property log to cover the withdrawals.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "witnessIntimidation", specification: "Threatened the evidence clerk with firing and prosecution if she spoke to state auditors.", chance: 1.0, threshold: 0),
+            SecondaryCharge(lawID: "obstruction", specification: "Threatened the evidence clerk with firing and prosecution to keep the clerk from telling state auditors about the withdrawals.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "bribery", specification: "Accepted $12,000 from a towing company in exchange for exclusive county towing referrals.", chance: 1.0, threshold: 0)
         ],
         ageRange: 52...64, occupations: ["former county sheriff"], hasVictim: false,
@@ -394,8 +393,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "dangerousRobbery", specification: "Robbed {V} at gunpoint of his wallet, phone, and $2,600 withdrawn from ATMs.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "conspiracyRobbery", specification: "Agreed with two others to lure and rob a man through a fake dating profile.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "cardFraud", specification: "Used {V}'s debit card at three ATMs without permission.", chance: 1.0, threshold: 0),
-            SecondaryCharge(lawID: "identityTheft", specification: "Created a dating profile using another woman's photos to lure victims.", chance: 1.0, threshold: 0)
+            SecondaryCharge(lawID: "cardFraud", specification: "Used {V}'s debit card at three ATMs without permission.", chance: 1.0, threshold: 0)
         ],
         ageRange: 20...26, occupations: ["nail technician", "unemployed"], hasVictim: true,
         summaries: [
@@ -467,7 +465,7 @@ extension StoryCases {
                 .cross("You were off work at 8:45, and the last message was at 8:58.", "\"I was driving home.\"")
             ],
             objections: [
-                (1, ObjectionSeed(question: "Defense: \"Your cousin is facing life, isn't he? And you just want to protect yourself?\"",
+                (1, ObjectionSeed(question: "Defense: \"Your cousin is facing years in prison, isn't that right? And you just want to protect yourself?\"",
                                   answer: "\"I'm telling the truth.\"",
                                   raisedBy: .prosecution, onCross: true, grounds: "Compound and argumentative", shouldSustain: true,
                                   explanation: "Two questions in one, the second argumentative; counsel can ask each separately.",

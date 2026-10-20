@@ -168,7 +168,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{INFANT} was dropped off healthy and left with injuries only violent shaking causes. {D}'s story changed because the truth was worse."],
         defenseTheory: ["An older bleed, a sick baby the night before, and a short fall. The science of 'shaken baby' is not as certain as the State says, and {DL} has six spotless years."],
-        aggravating: ["The victim was an infant in {DL}'s professional care"],
+        aggravating: ["The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record or licensing complaints", "{DL} immediately called 911"],
         victimImpacts: ["{INFANT}'s parent: \"Our baby is two now and can't sit up on their own. We trusted you.\""],
         allocutions: ["\"I would never hurt a child. I've cared for dozens. I'll think about that changing table for the rest of my life.\""],

@@ -210,7 +210,7 @@ extension StoryCases {
     static let witnessThreat = CaseTemplate(
         key: "story.witnessThreat", category: .violent,
         headlines: ["Witness Says Defendant's Brother Threatened Her at Gas Station", "Intimidation Charge Filed Days Before Shooting Trial"],
-        primaryLaw: "witnessIntimidation", lesserLaw: "communicatingThreats", threshold: 6, lesserThreshold: 4,
+        primaryLaw: "witnessIntimidation", lesserLaw: nil, threshold: 6, lesserThreshold: 4,
         specification: "By threats, attempted to intimidate {V}, a State's witness in a pending felony case, from testifying.",
         secondary: [
             SecondaryCharge(lawID: "communicatingThreats", specification: "Threatened {V} with harm in a manner a reasonable person would believe.", chance: 1.0, threshold: 5)

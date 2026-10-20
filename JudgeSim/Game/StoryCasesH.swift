@@ -203,7 +203,7 @@ extension StoryCases {
             prosecutionOpening: "A lawful order, a lawful arrest, and a broken nose.",
             defenseOpening: "An arm around the throat from behind, and a reflex.",
             prosecutionClosing: "{DL} knew who was arresting {D.him}. The uniform was right there.",
-            defenseClosing: "The only video shows an officer choking a man from behind. The State hasn't proven {DL} knew who it was."
+            defenseClosing: "The only video shows an officer choking someone from behind. The State hasn't proven {DL} knew who it was."
         )
     )
 

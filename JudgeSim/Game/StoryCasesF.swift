@@ -352,7 +352,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["Driver's seat, keys in, engine running, lights on, 0.14, and three prior DWIs. Under our law that is driving, and habitual DWI."],
         defenseTheory: ["{DL} did the responsible thing: tried to get a ride, failed, and slept in a parked truck in nineteen-degree cold. The truck never moved."],
-        aggravating: ["Three prior DWI convictions"],
+        aggravating: [],
         mitigating: ["The vehicle never moved", "{DL} attempted to arrange a ride", "{DL} is engaged in recovery"],
         allocutions: ["\"I relapsed, but I didn't drive. For the first time in my life, I didn't drive.\""],
         guiltyTruths: ["The truck's GPS showed it had been driven to a gas station and back at 1:30 a.m."],
@@ -473,7 +473,7 @@ extension StoryCases {
                                   explanation: "The impact on the victim is relevant to the amount and nature of the loss charged, though its weight is limited at the guilt phase.",
                                   doctrineID: "relevance", weight: 1))
             ],
-            prosecutionOpening: "{D} moved a widow's savings overseas and lied to the bank to keep it flowing.",
+            prosecutionOpening: "{D} moved a widowed retiree's savings overseas and lied to the bank to keep it flowing.",
             defenseOpening: "A desperate job seeker used by criminals who will never be caught.",
             prosecutionClosing: "Lying to the bank proves knowledge.",
             defenseClosing: "Fear isn't fraud."

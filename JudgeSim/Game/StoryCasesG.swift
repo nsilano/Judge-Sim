@@ -358,7 +358,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} chose to drive into a person standing in front of the car. Fear doesn't justify running someone over."],
         defenseTheory: ["{DL} was surrounded, the windshield and door were attacked, and someone was trying to open the door. {DL} fled in reasonable fear and called 911."],
-        aggravating: ["{VL} suffered serious, lasting injury"],
+        aggravating: [],
         mitigating: ["{DL}'s vehicle was being attacked", "{DL} stopped and called 911", "No prior criminal record"],
         victimImpacts: ["{V}: \"I walk with a cane now. I'm thirty-four.\""],
         allocutions: ["\"I've spent my life taking care of people. I'm sorry {VL} was hurt. I truly thought I was going to be dragged out of that car.\""],

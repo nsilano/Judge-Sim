@@ -677,7 +677,9 @@ enum CaseGenerator {
 
         var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                         publicDefender: usePublicDefender, mitigating: mitigating,
-                                        isFelony: isFelonyCase, habitual: habitual, maxCustodyDays: maxCustodyDays, rng: &rng)
+                                        isFelony: isFelonyCase, habitual: habitual, maxCustodyDays: maxCustodyDays,
+                                        suppressionMotion: motions.contains { [MotionKind.suppressSearch, .suppressStatement, .suppressIdentification].contains($0.kind) },
+                                        rng: &rng)
         if let twist = chosenTwist {
             if twist.trialOnly && background.arrangementPresented == true {
                 twistText = nil
@@ -757,7 +759,8 @@ enum CaseGenerator {
 
     private static func makeBackground(_ t: CaseTemplate, defendant: Defendant, charges: [Charge], values: [String: String],
                                        mood: PublicMood, publicDefender: Bool, mitigating: [String], isFelony: Bool,
-                                       habitual: Bool, maxCustodyDays: Int, rng: inout SeededRNG) -> CaseBackground {
+                                       habitual: Bool, maxCustodyDays: Int, suppressionMotion: Bool = false,
+                                       rng: inout SeededRNG) -> CaseBackground {
         let fill = TextFiller(values: values)
         let primary = charges[0]
 
@@ -806,7 +809,7 @@ enum CaseGenerator {
             if (offerClass?.isFelony ?? false) && !defendant.priors.contains(where: { $0.ncClass.isFelony }) {
                 reasons.append("Even the reduced charge carried a felony record, and that would end my client's career.")
             }
-            if motions.contains(where: { [.suppressSearch, .suppressStatement, .suppressIdentification].contains($0.kind) }) {
+            if suppressionMotion {
                 reasons.append("We think the suppression issue is strong, and my client wanted it decided.")
             }
             if !pjc && (offerClass?.isFelony ?? false) {
