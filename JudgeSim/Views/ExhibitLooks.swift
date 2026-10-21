@@ -158,48 +158,162 @@ private struct EvidenceLabel: View {
 
 // MARK: - Bank statement
 
+/// A dollar figure as a number, for running balances.
+private func dollars(_ text: String?) -> Double? {
+    guard let text else { return nil }
+    return Double(text.replacingOccurrences(of: "$", with: "").replacingOccurrences(of: ",", with: ""))
+}
+
+private func money(_ value: Double) -> String {
+    let f = NumberFormatter()
+    f.numberStyle = .decimal
+    f.minimumFractionDigits = 2
+    f.maximumFractionDigits = 2
+    return f.string(from: NSNumber(value: value)) ?? String(format: "%.2f", value)
+}
+
+/// A Bates number stamped on every page produced in discovery.
+private struct BatesStamp: View {
+    let prefix: String
+    let seed: Int
+    var body: some View {
+        Text("\(prefix)-\(String(format: "%06d", seed % 900_000 + 1_000))")
+            .font(.system(size: 9, weight: .semibold, design: .monospaced))
+            .foregroundStyle(ExhibitPalette.faint)
+    }
+}
+
+/// A bank statement the way banks print them: period, account summary, and a running ledger.
 struct BankStatementView: View {
     let review: ExhibitReview
     let evidence: Evidence
     let courtCase: CourtCase
 
+    private struct Row: Identifiable {
+        let id: Int
+        let date: String
+        let description: String
+        let memo: String
+        let debit: Double?
+        let credit: Double?
+        let balance: Double
+    }
+
+    private var seed: Int { "\(evidence.id)".stableHash }
+
+    private var rows: [Row] {
+        var balance = Double(1_800 + seed % 9_000) + Double(seed % 100) / 100
+        var out: [Row] = []
+        for (i, line) in review.lines.enumerated() {
+            let lower = line.text.lowercased()
+            let value = dollars(amount(in: line.text))
+            let incoming = ["deposit", "credit", "received", "transfer from", "paid to the account", "payroll", "refund"].contains { lower.contains($0) }
+            var description: String
+            if lower.contains("check") { description = "CHECK #\(1_000 + (seed / 7 + i * 3) % 900)" }
+            else if lower.contains("atm") { description = "ATM WITHDRAWAL \(["#4471 MAIN ST", "#2208 HARBOR", "#0915 HWY 17"][i % 3])" }
+            else if lower.contains("wire") { description = incoming ? "INCOMING WIRE TRANSFER" : "OUTGOING WIRE TRANSFER" }
+            else if lower.contains("transfer") { description = incoming ? "ONLINE TRANSFER FROM CHK" : "ONLINE TRANSFER TO XXXXXX\(String(format: "%04d", (seed + i * 97) % 10_000))" }
+            else if lower.contains("cash") { description = incoming ? "COUNTER DEPOSIT - CASH" : "COUNTER WITHDRAWAL - CASH" }
+            else if incoming { description = "DEPOSIT" }
+            else { description = "POS PURCHASE \(["DEBIT CARD", "VISA DEBIT", "CHECKCARD"][i % 3])" }
+            if let value {
+                balance += incoming ? value : -value
+            }
+            out.append(Row(id: i, date: line.stamp, description: description, memo: line.text,
+                           debit: incoming ? nil : value, credit: incoming ? value : nil, balance: balance))
+        }
+        return out
+    }
+
     var body: some View {
+        let rows = self.rows
+        let opening = (rows.first.map { $0.balance + ($0.debit ?? 0) - ($0.credit ?? 0) }) ?? 0
+        let credits = rows.compactMap(\.credit)
+        let debits = rows.compactMap(\.debit)
         Sheet {
-            Letterhead(name: review.source, detail: review.sourceDetail, color: ExhibitPalette.bank, icon: "building.columns.fill", trailing: "Statement")
-            HStack {
+            Letterhead(name: review.source, detail: review.sourceDetail + " · Member FDIC", color: ExhibitPalette.bank, icon: "building.columns.fill", trailing: "Statement")
+            HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Account holder").font(.caption2).foregroundStyle(ExhibitPalette.faint)
-                    Text(holder).font(.caption.weight(.semibold))
+                    Text(holder.uppercased()).font(.caption.weight(.bold))
+                    Text("Personal Checking").font(.caption2).foregroundStyle(ExhibitPalette.faint)
+                    Text("Account ••••\(String(format: "%04d", seed % 10_000))").font(.caption2.monospacedDigit())
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("Account").font(.caption2).foregroundStyle(ExhibitPalette.faint)
-                    Text("••••\(String(format: "%04d", "\(evidence.id)".stableHash % 10_000))").font(.caption.monospacedDigit().weight(.semibold))
+                    Text("Statement period").font(.caption2).foregroundStyle(ExhibitPalette.faint)
+                    Text(period).font(.caption2.monospacedDigit().weight(.semibold))
+                    Text("Page 1 of 1").font(.caption2).foregroundStyle(ExhibitPalette.faint)
                 }
             }
+            summary(opening: opening, credits: credits, debits: debits, closing: rows.last?.balance ?? opening)
+            ledgerHeader
+            ForEach(rows) { row in ledgerRow(row) }
             HStack {
-                Text("DATE").frame(width: 92, alignment: .leading)
-                Text("DESCRIPTION")
+                Text("Produced in response to subpoena. Certified as a record of regularly conducted activity (Rule 803(6)).")
+                    .font(.system(size: 9)).italic().foregroundStyle(ExhibitPalette.faint)
                 Spacer()
-                Text("AMOUNT")
+                BatesStamp(prefix: "BANK", seed: seed)
             }
-            .font(.system(size: 10, weight: .bold)).foregroundStyle(.white)
-            .padding(.horizontal, 6).padding(.vertical, 4)
-            .background(ExhibitPalette.bank)
-            ForEach(Array(review.lines.enumerated()), id: \.element.id) { i, line in
-                HStack(alignment: .top) {
-                    Text(line.stamp).font(.caption2.monospacedDigit()).foregroundStyle(ExhibitPalette.faint).frame(width: 92, alignment: .leading)
-                    Text(line.text).font(.caption).fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 6)
-                    Text(amount(in: line.text) ?? "").font(.caption.monospacedDigit().weight(.semibold))
-                }
-                .padding(.horizontal, 6).padding(.vertical, 5)
-                .background(i % 2 == 0 ? ExhibitPalette.bank.opacity(0.06) : Color.clear)
-            }
-            Text("Produced in response to subpoena. Certified as a record of regularly conducted activity (Rule 803(6)).")
-                .font(.system(size: 9)).italic().foregroundStyle(ExhibitPalette.faint)
         }
         .overlay(alignment: .topTrailing) { ExhibitSticker(label: evidence.exhibit).offset(x: -6, y: -8) }
+    }
+
+    private var period: String {
+        let first = review.lines.first?.stamp ?? review.date
+        let last = review.lines.last?.stamp ?? review.date
+        return first == last ? review.date : "\(first) – \(last)"
+    }
+
+    private func summary(opening: Double, credits: [Double], debits: [Double], closing: Double) -> some View {
+        VStack(spacing: 3) {
+            summaryLine("Beginning balance", money(opening))
+            summaryLine("Deposits and other credits (\(credits.count))", "+" + money(credits.reduce(0, +)))
+            summaryLine("Withdrawals and other debits (\(debits.count))", "–" + money(debits.reduce(0, +)))
+            Divider()
+            summaryLine("Ending balance", money(closing)).fontWeight(.bold)
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 4).strokeBorder(ExhibitPalette.bank.opacity(0.4)))
+    }
+
+    private func summaryLine(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label).font(.caption2)
+            Spacer()
+            Text("$" + value.replacingOccurrences(of: "+", with: "").replacingOccurrences(of: "–", with: "")).font(.caption2.monospacedDigit())
+        }
+    }
+
+    private var ledgerHeader: some View {
+        HStack(spacing: 4) {
+            Text("DATE").frame(width: 62, alignment: .leading)
+            Text("DESCRIPTION")
+            Spacer()
+            Text("DEBITS").frame(width: 62, alignment: .trailing)
+            Text("CREDITS").frame(width: 62, alignment: .trailing)
+            Text("BALANCE").frame(width: 70, alignment: .trailing)
+        }
+        .font(.system(size: 8, weight: .bold)).foregroundStyle(.white)
+        .padding(.horizontal, 4).padding(.vertical, 4)
+        .background(ExhibitPalette.bank)
+    }
+
+    private func ledgerRow(_ row: Row) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            HStack(alignment: .top, spacing: 4) {
+                Text(row.date).frame(width: 62, alignment: .leading).foregroundStyle(ExhibitPalette.faint)
+                Text(row.description).lineLimit(2)
+                Spacer(minLength: 2)
+                Text(row.debit.map(money) ?? "").frame(width: 62, alignment: .trailing)
+                Text(row.credit.map(money) ?? "").frame(width: 62, alignment: .trailing)
+                Text(money(row.balance)).frame(width: 70, alignment: .trailing).fontWeight(.semibold)
+            }
+            .font(.system(size: 9, design: .monospaced))
+            Text(row.memo).font(.system(size: 9)).italic().foregroundStyle(ExhibitPalette.faint)
+                .fixedSize(horizontal: false, vertical: true).padding(.leading, 66)
+        }
+        .padding(.horizontal, 4).padding(.vertical, 3)
+        .background(row.id % 2 == 0 ? ExhibitPalette.bank.opacity(0.05) : Color.clear)
     }
 
     private var holder: String {
@@ -260,15 +374,29 @@ struct ReceiptView: View {
 
 // MARK: - Business letterhead
 
+/// A business or agency record: letterhead, reference block, the record itself, and the custodian's certification,
+/// with the Bates number it was produced under.
 struct LetterheadView: View {
     let review: ExhibitReview
     let evidence: Evidence
+    let courtCase: CourtCase
+
+    private var seed: Int { "\(evidence.id)".stableHash }
 
     var body: some View {
         Sheet {
             Letterhead(name: review.source, detail: review.sourceDetail, color: ExhibitPalette.business, icon: "briefcase.fill")
-            Text(evidence.title).font(.system(.title3, design: .serif).weight(.semibold))
-            Text("Date: \(review.date)").font(.caption).foregroundStyle(ExhibitPalette.faint)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(evidence.title).font(.system(.title3, design: .serif).weight(.semibold))
+                    Text("Date: \(review.date)").font(.caption).foregroundStyle(ExhibitPalette.faint)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("Ref. \(String(format: "%05d", seed % 100_000))").font(.caption2.monospacedDigit())
+                    Text("Re: \(courtCase.docket)").font(.caption2.monospacedDigit()).foregroundStyle(ExhibitPalette.faint)
+                }
+            }
             ForEach(review.lines) { line in
                 HStack(alignment: .top, spacing: 8) {
                     if line.stamp.hasPrefix("Entry") {
@@ -278,9 +406,102 @@ struct LetterheadView: View {
                 }
             }
             Divider()
-            Text("Business record · \(review.source)").font(.caption2).foregroundStyle(ExhibitPalette.faint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("CERTIFICATION OF RECORDS CUSTODIAN").font(.system(size: 9, weight: .bold)).foregroundStyle(ExhibitPalette.faint)
+                Text("I certify that this record was made at or near the time of the events it records, by a person with knowledge, and kept in the regular course of business (Rules 803(6), 902).")
+                    .font(.system(size: 9)).foregroundStyle(ExhibitPalette.faint).fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .bottom) {
+                    Text("Custodian of Records").font(.custom("SnellRoundhand", size: 16))
+                    Spacer()
+                    BatesStamp(prefix: "DISC", seed: seed)
+                }
+            }
         }
         .overlay(alignment: .topTrailing) { ExhibitSticker(label: evidence.exhibit).offset(x: -6, y: -8) }
+    }
+}
+
+// MARK: - Written statement
+
+/// A witness's statement written out by hand on the agency's voluntary statement form, signed and witnessed.
+struct WrittenStatementView: View {
+    let review: ExhibitReview
+    let evidence: Evidence
+    let courtCase: CourtCase
+
+    private var seed: Int { "\(evidence.id)".stableHash }
+
+    private var speaker: String {
+        let firstQuote = evidence.detail.firstIndex(where: { $0 == "\"" || $0 == "\u{201C}" }) ?? evidence.detail.endIndex
+        return Exhibits.statementSpeaker(evidence, in: courtCase, before: String(evidence.detail[..<firstQuote]))
+    }
+
+    private var words: [String] {
+        let quotes = Exhibits.quoted(evidence.detail)
+        return quotes.isEmpty ? Exhibits.sentences(evidence.detail) : quotes
+    }
+
+    var body: some View {
+        Sheet {
+            VStack(spacing: 2) {
+                Text(review.source.uppercased()).font(.system(size: 12, weight: .heavy)).tracking(0.5)
+                Text("VOLUNTARY STATEMENT").font(.system(size: 14, weight: .black)).tracking(2)
+            }
+            .frame(maxWidth: .infinity)
+            Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 4) {
+                GridRow { box("Name", speaker); box("Case no.", courtCase.docket) }
+                GridRow { box("Date", review.date); box("Place taken", "\(courtCase.investigatingAgency)") }
+            }
+            Text("I, \(speaker), make the following statement of my own free will:")
+                .font(.caption).foregroundStyle(ExhibitPalette.faint)
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(words.enumerated()), id: \.offset) { _, line in
+                    Text(line)
+                        .font(.custom("Noteworthy-Bold", size: 17))
+                        .foregroundStyle(Color(red: 0.10, green: 0.15, blue: 0.45))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                Canvas { ctx, size in
+                    var y: CGFloat = 30
+                    while y < size.height {
+                        ctx.stroke(Path { p in p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: size.width, y: y)) },
+                                   with: .color(ExhibitPalette.rule), lineWidth: 0.6)
+                        y += 26
+                    }
+                }
+            )
+            Text("I have read this statement consisting of 1 page. It is true and correct to the best of my knowledge.")
+                .font(.system(size: 9)).foregroundStyle(ExhibitPalette.faint)
+            HStack(alignment: .bottom) {
+                signature(speaker, "Signature of person giving statement")
+                Spacer()
+                signature(courtCase.investigation?.leadInvestigator ?? "Investigating officer", "Witnessed by")
+            }
+            HStack { Spacer(); BatesStamp(prefix: "STMT", seed: seed) }
+        }
+        .overlay(alignment: .topTrailing) { ExhibitSticker(label: evidence.exhibit).offset(x: -6, y: -8) }
+    }
+
+    private func box(_ label: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(label.uppercased()).font(.system(size: 8, weight: .bold)).foregroundStyle(ExhibitPalette.faint)
+            Text(value).font(.caption.weight(.semibold)).lineLimit(2)
+        }
+        .padding(5)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(Rectangle().strokeBorder(ExhibitPalette.rule, lineWidth: 0.6))
+    }
+
+    private func signature(_ name: String, _ caption: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(name).font(.custom("SnellRoundhand", size: 17))
+            Rectangle().fill(ExhibitPalette.ink).frame(width: 130, height: 0.6)
+            Text(caption).font(.system(size: 8)).foregroundStyle(ExhibitPalette.faint)
+        }
     }
 }
 
@@ -395,99 +616,217 @@ struct LabReportView: View {
 
 // MARK: - Carrier records and GPS
 
+/// A phone number with all but the last two digits masked, the way carriers redact non-target numbers.
+private func maskedNumber(_ seed: Int) -> String {
+    let area = ["252", "910", "919", "984"][seed % 4]
+    return "(\(area)) ***-**\(String(format: "%02d", seed % 100))"
+}
+
+/// Call detail records with cell-site location, as a carrier's subpoena compliance unit produces them.
 struct CarrierRecordsView: View {
     let review: ExhibitReview
     let evidence: Evidence
+    let courtCase: CourtCase
+
+    private var seed: Int { "\(evidence.id)".stableHash }
 
     var body: some View {
         Sheet {
             Letterhead(name: review.source, detail: "Subpoena Compliance · Legal Department", color: ExhibitPalette.carrier, icon: "antenna.radiowaves.left.and.right", trailing: "CDR")
-            Text("Call detail records with cell-site location").font(.caption).foregroundStyle(ExhibitPalette.faint)
-            HStack {
-                Text("DATE/TIME (ET)").frame(width: 100, alignment: .leading)
-                Text("EVENT")
-                Spacer()
-                Text("SECTOR")
-            }
-            .font(.system(size: 9, weight: .bold, design: .monospaced)).foregroundStyle(.white)
-            .padding(4).background(ExhibitPalette.carrier)
-            ForEach(Array(review.lines.enumerated()), id: \.element.id) { i, line in
-                HStack(alignment: .top) {
-                    Text(line.stamp).frame(width: 100, alignment: .leading)
-                    Text(line.text).fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 4)
-                    Text("\(310 + (i * 37) % 600)-\(["A", "B", "C"][i % 3])")
+            Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 2) {
+                GridRow {
+                    field("Target number", maskedNumber(seed / 3))
+                    field("Subscriber", courtCase.defendant.name.uppercased())
                 }
-                .font(.system(size: 11, design: .monospaced))
-                .padding(.vertical, 3)
+                GridRow {
+                    field("Records", "Voice, SMS, data sessions")
+                    field("Legal process", "Court order, G.S. 15A-262")
+                }
             }
-            Text("Sector locations are approximate. Tower coverage may extend several miles.").font(.system(size: 9)).italic().foregroundStyle(ExhibitPalette.faint)
+            header
+            ForEach(Array(review.lines.enumerated()), id: \.element.id) { i, line in row(i, line) }
+            Text("MO = mobile originated; MT = mobile terminated. Cell site and sector show the tower face that handled the event; coverage can extend several miles and does not show the phone's exact location.")
+                .font(.system(size: 9)).italic().foregroundStyle(ExhibitPalette.faint)
+            HStack { Spacer(); BatesStamp(prefix: "CARRIER", seed: seed) }
         }
         .overlay(alignment: .topTrailing) { ExhibitSticker(label: evidence.exhibit).offset(x: -6, y: -8) }
     }
+
+    private func field(_ label: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(label.uppercased()).font(.system(size: 8, weight: .bold)).foregroundStyle(ExhibitPalette.faint)
+            Text(value).font(.system(size: 10, design: .monospaced))
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: 4) {
+            Text("DATE/TIME").frame(width: 84, alignment: .leading)
+            Text("DIR").frame(width: 24, alignment: .leading)
+            Text("TYPE").frame(width: 34, alignment: .leading)
+            Text("OTHER PARTY")
+            Spacer()
+            Text("DUR").frame(width: 40, alignment: .trailing)
+            Text("SITE-SEC").frame(width: 58, alignment: .trailing)
+        }
+        .font(.system(size: 8, weight: .bold, design: .monospaced)).foregroundStyle(.white)
+        .padding(4).background(ExhibitPalette.carrier)
+    }
+
+    private func row(_ i: Int, _ line: ExhibitReview.Line) -> some View {
+        let lower = line.text.lowercased()
+        let h = seed &+ i &* 7_919
+        let type = lower.contains("text") || lower.contains("message") ? "SMS" : (lower.contains("data") || lower.contains("location") || lower.contains("app") ? "DATA" : "VOICE")
+        let duration = type == "VOICE" ? String(format: "%d:%02d", (h % 9), (h / 9) % 60) : "--"
+        let site = "\(1_100 + (h % 800))-\(["A", "B", "C"][h % 3])"
+        return VStack(alignment: .leading, spacing: 1) {
+            HStack(spacing: 4) {
+                Text(line.stamp).frame(width: 84, alignment: .leading).lineLimit(2)
+                Text(h % 2 == 0 ? "MO" : "MT").frame(width: 24, alignment: .leading)
+                Text(type).frame(width: 34, alignment: .leading)
+                Text(type == "DATA" ? "—" : maskedNumber(h / 5))
+                Spacer(minLength: 2)
+                Text(duration).frame(width: 40, alignment: .trailing)
+                Text(site).frame(width: 58, alignment: .trailing)
+            }
+            .font(.system(size: 9, design: .monospaced))
+            Text(line.text).font(.system(size: 9)).italic().foregroundStyle(ExhibitPalette.faint)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 3)
+        .background(i % 2 == 0 ? ExhibitPalette.carrier.opacity(0.05) : Color.clear)
+    }
 }
 
+/// A location history report: plotted points with their accuracy radius, coordinates, and how each was fixed,
+/// the way a provider's warrant return or a cell-site analyst's map presents it.
 struct GPSMapView: View {
     let review: ExhibitReview
     let evidence: Evidence
+    let courtCase: CourtCase
+
+    private var seed: Int { "\(evidence.id)".stableHash }
+
+    private struct Fix: Identifiable {
+        let id: Int
+        let stamp: String
+        let text: String
+        let x: CGFloat
+        let y: CGFloat
+        let lat: Double
+        let lon: Double
+        let accuracy: Int
+        let source: String
+    }
+
+    private var fixes: [Fix] {
+        let n = max(1, review.lines.count)
+        let baseLat = 35.05 + Double(seed % 400) / 1_000
+        let baseLon = -77.35 + Double((seed / 400) % 400) / 1_000
+        return review.lines.enumerated().map { i, line in
+            let t = n == 1 ? 0.5 : Double(i) / Double(n - 1)
+            let wobble = Double((seed / (i + 3)) % 9) / 100
+            let lower = line.text.lowercased()
+            let source = lower.contains("tower") || lower.contains("cell") ? "Cell" : (lower.contains("wi-fi") || lower.contains("wifi") ? "Wi-Fi" : "GPS")
+            let accuracy = source == "GPS" ? 6 + (seed + i * 13) % 20 : (source == "Wi-Fi" ? 25 + (seed + i) % 40 : 400 + (seed + i * 31) % 900)
+            return Fix(id: i, stamp: line.stamp, text: line.text,
+                       x: CGFloat(0.14 + 0.72 * t), y: CGFloat(0.78 - 0.55 * t + wobble - 0.04),
+                       lat: baseLat + 0.012 * t + wobble / 50, lon: baseLon + 0.018 * t - wobble / 60,
+                       accuracy: accuracy, source: source)
+        }
+    }
 
     var body: some View {
+        let fixes = self.fixes
         VStack(alignment: .leading, spacing: 10) {
-            ZStack {
-                Canvas { ctx, size in
-                    ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(red: 0.93, green: 0.94, blue: 0.90)))
-                    // Streets.
-                    for i in 0..<7 {
-                        let x = size.width * CGFloat(i) / 6
-                        ctx.stroke(Path { p in p.move(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x + 30, y: size.height)) },
-                                   with: .color(.white), lineWidth: i == 3 ? 7 : 3)
-                    }
-                    for j in 0..<5 {
-                        let y = size.height * CGFloat(j) / 4
-                        ctx.stroke(Path { p in p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: size.width, y: y - 18)) },
-                                   with: .color(.white), lineWidth: j == 2 ? 7 : 3)
-                    }
-                    ctx.fill(Path(ellipseIn: CGRect(x: size.width * 0.68, y: size.height * 0.1, width: 70, height: 46)),
-                             with: .color(Color(red: 0.78, green: 0.88, blue: 0.75)))
-                    // The track, point to point.
-                    let points = (0..<max(2, review.lines.count)).map { i -> CGPoint in
-                        let t = CGFloat(i) / CGFloat(max(1, review.lines.count - 1))
-                        return CGPoint(x: size.width * (0.12 + 0.76 * t), y: size.height * (0.75 - 0.5 * t + (i % 2 == 0 ? 0.08 : -0.05)))
-                    }
-                    var track = Path()
-                    track.addLines(points)
-                    ctx.stroke(track, with: .color(.blue.opacity(0.7)), style: StrokeStyle(lineWidth: 3, dash: [6, 4]))
-                    for (i, p) in points.enumerated() {
-                        ctx.fill(Path(ellipseIn: CGRect(x: p.x - 7, y: p.y - 7, width: 14, height: 14)), with: .color(i == points.count - 1 ? .red : .blue))
-                        ctx.draw(Text("\(i + 1)").font(.system(size: 8, weight: .bold)).foregroundColor(.white), at: p)
-                    }
-                }
-                .frame(height: 210)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                VStack {
-                    HStack {
-                        Text(review.source).font(.caption2.weight(.bold)).padding(5)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 5))
-                        Spacer()
-                        ExhibitSticker(label: evidence.exhibit)
-                    }
-                    Spacer()
-                }
-                .padding(8)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("LOCATION HISTORY REPORT").font(.system(size: 11, weight: .heavy)).tracking(1)
+                Text("\(review.source) · Produced pursuant to search warrant").font(.caption2).foregroundStyle(.secondary)
+                Text("Account: \(accountHandle) · Times shown in Eastern Time").font(.caption2.monospaced()).foregroundStyle(.secondary)
             }
+            ZStack(alignment: .topTrailing) {
+                Canvas { ctx, size in draw(ctx, size: size, fixes: fixes) }
+                    .frame(height: 230)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                ExhibitSticker(label: evidence.exhibit).padding(8)
+            }
+            legend
             VStack(alignment: .leading, spacing: 6) {
-                ForEach(Array(review.lines.enumerated()), id: \.element.id) { i, line in
-                    HStack(alignment: .top, spacing: 8) {
-                        Text("\(i + 1)").font(.caption2.weight(.bold)).foregroundStyle(.white)
-                            .frame(width: 18, height: 18).background(Circle().fill(i == review.lines.count - 1 ? Color.red : Color.blue))
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(line.stamp).font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
-                            Text(line.text).font(.callout).fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                }
+                ForEach(fixes) { fix in fixRow(fix, last: fix.id == fixes.count - 1) }
             }
             .card()
+            HStack { Spacer(); BatesStamp(prefix: "LOC", seed: seed) }
+        }
+    }
+
+    private var accountHandle: String {
+        let first = courtCase.defendant.name.lowercased().prefix(1)
+        return "\(first)••••••@\(["gmail.com", "icloud.com", "outlook.com"][seed % 3])"
+    }
+
+    private func draw(_ ctx: GraphicsContext, size: CGSize, fixes: [Fix]) {
+        ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(red: 0.94, green: 0.94, blue: 0.91)))
+        // Water and a park, then streets in a grid with one highway.
+        ctx.fill(Path(CGRect(x: size.width * 0.82, y: 0, width: size.width * 0.18, height: size.height)), with: .color(Color(red: 0.70, green: 0.82, blue: 0.93)))
+        ctx.fill(Path(roundedRect: CGRect(x: size.width * 0.18, y: size.height * 0.08, width: 80, height: 50), cornerRadius: 8),
+                 with: .color(Color(red: 0.78, green: 0.88, blue: 0.75)))
+        for i in 0..<8 {
+            let x = size.width * CGFloat(i) / 8
+            ctx.stroke(Path { p in p.move(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x + 12, y: size.height)) }, with: .color(.white), lineWidth: 3)
+        }
+        for j in 0..<6 {
+            let y = size.height * CGFloat(j) / 5
+            ctx.stroke(Path { p in p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: size.width, y: y - 10)) }, with: .color(.white), lineWidth: 3)
+        }
+        ctx.stroke(Path { p in p.move(to: CGPoint(x: 0, y: size.height * 0.55)); p.addLine(to: CGPoint(x: size.width, y: size.height * 0.35)) },
+                   with: .color(Color(red: 0.98, green: 0.84, blue: 0.45)), lineWidth: 7)
+        // A cell tower and the sector that handled the phone, when the records rest on tower data.
+        if fixes.contains(where: { $0.source == "Cell" }) {
+            let tower = CGPoint(x: size.width * 0.5, y: size.height * 0.9)
+            var wedge = Path()
+            wedge.move(to: tower)
+            wedge.addArc(center: tower, radius: size.height * 0.85, startAngle: .degrees(-120), endAngle: .degrees(-60), clockwise: false)
+            wedge.closeSubpath()
+            ctx.fill(wedge, with: .color(.purple.opacity(0.10)))
+            ctx.stroke(wedge, with: .color(.purple.opacity(0.4)), lineWidth: 1)
+            ctx.draw(Text(Image(systemName: "antenna.radiowaves.left.and.right")).font(.system(size: 14)).foregroundColor(.purple), at: tower)
+        }
+        let points = fixes.map { CGPoint(x: size.width * $0.x, y: size.height * $0.y) }
+        if points.count > 1 {
+            var track = Path()
+            track.addLines(points)
+            ctx.stroke(track, with: .color(.blue.opacity(0.6)), style: StrokeStyle(lineWidth: 2.5, dash: [5, 4]))
+        }
+        for (fix, p) in zip(fixes, points) {
+            // The accuracy radius: the phone was somewhere inside this circle.
+            let r = CGFloat(min(60, max(8, fix.accuracy / 12)))
+            ctx.fill(Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)), with: .color(.blue.opacity(0.12)))
+            ctx.stroke(Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)), with: .color(.blue.opacity(0.35)), lineWidth: 1)
+            let last = fix.id == fixes.count - 1
+            ctx.fill(Path(ellipseIn: CGRect(x: p.x - 7, y: p.y - 7, width: 14, height: 14)), with: .color(last ? .red : .blue))
+            ctx.draw(Text("\(fix.id + 1)").font(.system(size: 8, weight: .bold)).foregroundColor(.white), at: p)
+        }
+    }
+
+    private var legend: some View {
+        HStack(spacing: 12) {
+            Label("Recorded point", systemImage: "circle.fill").foregroundStyle(.blue)
+            Label("Accuracy radius", systemImage: "circle.dashed").foregroundStyle(.blue.opacity(0.6))
+            Label("Tower sector", systemImage: "antenna.radiowaves.left.and.right").foregroundStyle(.purple)
+        }
+        .font(.caption2)
+    }
+
+    private func fixRow(_ fix: Fix, last: Bool) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text("\(fix.id + 1)").font(.caption2.weight(.bold)).foregroundStyle(.white)
+                .frame(width: 18, height: 18).background(Circle().fill(last ? Color.red : Color.blue))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(fix.stamp).font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                Text(String(format: "%.5f, %.5f", fix.lat, fix.lon) + " · ±\(fix.accuracy) m · \(fix.source)")
+                    .font(.system(size: 10, design: .monospaced))
+                Text(fix.text).font(.callout).fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 }

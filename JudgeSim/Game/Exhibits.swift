@@ -35,7 +35,7 @@ struct ExhibitReview {
     /// How the exhibit looks on the screen: the paper or device it really came from.
     enum Look {
         case courtPaper, handwritten, bank, receipt, letterhead, medical, lab, autopsy, phoneRecords, gps
-        case email, social, messages, call911, jailCall, interview, transcript
+        case email, social, messages, call911, jailCall, interview, transcript, writtenStatement
         case cctv, bodycam, dashcam, phoneVideo, propertyTag, photos
     }
 
@@ -292,7 +292,11 @@ enum Exhibits {
         case .transcript:
             if titled(["911", "dispatch"]) { r.look = .call911; r.source = "Hollis County Emergency Communications" }
             else if titled(["jail"]) { r.look = .jailCall; r.source = "Hollis County Detention Center inmate phone system" }
-            else if titled(["interview", "confession", "statement", "admission"]) { r.look = .interview; r.source = c.investigatingAgency }
+            else if titled(["interview", "confession", "admission"]) || (titled(["statement"]) && has(["recorded", "video", "audio"])) {
+                r.look = .interview; r.source = c.investigatingAgency
+            }
+            // A witness's statement written out and signed on the agency's form.
+            else if titled(["statement", "account", "affidavit", "written", "letter", "declaration"]) { r.look = .writtenStatement; r.source = c.investigatingAgency }
             else { r.look = .transcript }
         case .lab:
             if has(["autopsy", "medical examiner", "cause of death"]) { r.look = .autopsy; r.source = "Office of the Chief Medical Examiner" }

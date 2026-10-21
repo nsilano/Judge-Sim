@@ -86,6 +86,10 @@ enum Consequences {
             } else {
                 lead = "\(d.name), whom Judge \(judgeLast) found not guilty of \(offense) in \(monthYear), was arrested again this week"
                 note = "You acquitted \(d.lastName) of \(offense) on \(SentenceFormat.shortDate(date))."
+                // When the State's proof fell short, the law required the verdict; the record should say so.
+                if let principal = c.charges.first, Judgment.properStrength(c) < principal.threshold {
+                    note += " The State's evidence at that trial didn't prove the charge; the acquittal was the verdict the law required."
+                }
             }
         } else if convicted && !active && c.truth.actuallyGuilty && c.victimName != nil
                     && [LawCategory.violent, .family, .robbery].contains(c.category) {

@@ -199,10 +199,9 @@ struct WitnessCard: View {
                 }
             }
 
-            ExaminationTranscript(witness: witness, suppressed: session.suppressedTerms)
-            ForEach(objections) { objection in
-                ObjectionView(objection: objection, selection: session.objectionBinding(objection))
-            }
+            // Objections come up where they happen: right after the question that drew them.
+            ExaminationTranscript(witness: witness, suppressed: session.suppressedTerms,
+                                  objections: objections, objectionBinding: { session.objectionBinding($0) })
             Button {
                 Haptics.tap()
                 askingWitness = true
@@ -394,6 +393,20 @@ struct ExaminationTranscript: View {
     var struckAnswers: Set<String> = []
     /// Exhibits the court suppressed; questions about them aren't asked.
     var suppressed: [String] = []
+    /// Objections to rule on, shown in the transcript where they arise.
+    var objections: [Objection] = []
+    var objectionBinding: ((Objection) -> Binding<Bool?>)? = nil
+
+    /// Which phase an objection arises in (direct when the questioner called the witness), and after which question.
+    private func placement(_ o: Objection, lines: [TestimonyExchange]) -> Int {
+        guard !lines.isEmpty else { return -1 }
+        return "\(o.id)".stableHash % lines.count
+    }
+
+    private func phase(of o: Objection) -> TestimonyExchange.Phase {
+        let asker: Side = o.raisedBy == .defense ? .prosecution : .defense
+        return asker == witness.calledBy ? .direct : .cross
+    }
 
     private var exchanges: [TestimonyExchange] {
         let all: [TestimonyExchange]
@@ -415,8 +428,10 @@ struct ExaminationTranscript: View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach([TestimonyExchange.Phase.direct, .cross, .redirect], id: \.self) { phase in
                 let lines = exchanges.filter { $0.phase == phase }
-                if !lines.isEmpty {
-                    PhaseBlock(phase: phase, lines: lines, expandedByDefault: phase != .redirect)
+                let here = objections.filter { self.phase(of: $0) == phase }.map { (after: placement($0, lines: lines), objection: $0) }
+                if !lines.isEmpty || !here.isEmpty {
+                    PhaseBlock(phase: phase, lines: lines, objections: here, binding: objectionBinding,
+                               expandedByDefault: phase != .redirect || !here.isEmpty)
                 }
             }
         }
@@ -432,18 +447,33 @@ struct ExaminationTranscript: View {
     private struct PhaseBlock: View {
         let phase: TestimonyExchange.Phase
         let lines: [TestimonyExchange]
+        let objections: [(after: Int, objection: Objection)]
+        let binding: ((Objection) -> Binding<Bool?>)?
         @State var expanded: Bool
 
-        init(phase: TestimonyExchange.Phase, lines: [TestimonyExchange], expandedByDefault: Bool) {
+        init(phase: TestimonyExchange.Phase, lines: [TestimonyExchange], objections: [(after: Int, objection: Objection)] = [],
+             binding: ((Objection) -> Binding<Bool?>)? = nil, expandedByDefault: Bool) {
             self.phase = phase
             self.lines = lines
+            self.objections = objections
+            self.binding = binding
             _expanded = State(initialValue: expandedByDefault)
+        }
+
+        @ViewBuilder
+        private func objectionsAfter(_ index: Int) -> some View {
+            ForEach(objections.filter { $0.after == index }.map(\.objection)) { objection in
+                if let binding {
+                    ObjectionView(objection: objection, selection: binding(objection))
+                }
+            }
         }
 
         var body: some View {
             DisclosureGroup(isExpanded: $expanded) {
                 VStack(alignment: .leading, spacing: 8) {
-                    ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                    objectionsAfter(-1)
+                    ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
                         VStack(alignment: .leading, spacing: 3) {
                             if !line.question.isEmpty {
                                 Text(line.examiner == .prosecution ? "State" : "Defense")
@@ -459,11 +489,13 @@ struct ExaminationTranscript: View {
                                 .italic(line.question.isEmpty)
                         }
                         .padding(.vertical, 2)
+                        objectionsAfter(index)
                     }
                 }
                 .padding(.top, 6)
             } label: {
-                Text("\(phase.rawValue) · \(lines.count) question\(lines.count == 1 ? "" : "s")")
+                Text("\(phase.rawValue) · \(lines.count) question\(lines.count == 1 ? "" : "s")"
+                     + (objections.isEmpty ? "" : " · \(objections.count) objection\(objections.count == 1 ? "" : "s")"))
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.secondary)
             }

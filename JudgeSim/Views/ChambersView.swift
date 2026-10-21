@@ -22,7 +22,8 @@ struct RootView: View {
 struct OnboardingView: View {
     @EnvironmentObject private var game: GameState
     @State private var name = ""
-    @State private var startDay = CourtCalendar.weekday(onOrAfter: Date())
+    // A career opens on a Monday, so the first week is a full week with its calendar call.
+    @State private var startDay = CourtCalendar.weekday(onOrAfter: CourtCalendar.monday(onOrAfter: Date()))
     @State private var openingTime = CourtCalendar.opening(on: Date(), minutesAfterMidnight: 9 * 60 + 30)
 
     var body: some View {
@@ -425,7 +426,8 @@ struct ChambersView: View {
 
     /// Appeals decided, releases, and arrests since the last court day, with appeals first.
     private var digestCard: some View {
-        let appeals = game.digest.filter { $0.kind == .appeal || $0.kind == .exoneration }
+        // Decisions shown in "From the Court of Appeals" aren't repeated here.
+        let appeals = game.digest.filter { ($0.kind == .appeal && game.freshAppeals.isEmpty) || $0.kind == .exoneration }
         let others = game.digest.filter { $0.kind != .appeal && $0.kind != .exoneration }
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
