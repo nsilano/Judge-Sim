@@ -270,7 +270,7 @@ enum CounselDialogue {
                                          answer: s.opener + stateOnExhibit(item, index: index, dl: dl)))
                 q.append(CounselQuestion(id: "tri.def.ex.\(item.exhibit)", side: .defense,
                                          question: "What's the defense's answer to \(item.exhibit), the \(title)?",
-                                         answer: d.opener + defenseOnExhibit(item, index: index, dl: dl, style: d)))
+                                         answer: d.opener + defenseOnExhibit(item, index: index, dl: dl, style: d, c: c)))
             } else {
                 q.append(CounselQuestion(id: "tri.state.def.\(item.exhibit)", side: .prosecution,
                                          question: "What's the State's response to \(item.exhibit), the \(title)?",
@@ -286,13 +286,24 @@ enum CounselDialogue {
             let otherSide: Side = callingSide == .prosecution ? .defense : .prosecution
             let callingStyle = callingSide == .prosecution ? s : d
             let otherStyle = otherSide == .prosecution ? s : d
-            let role = witness.role.lowercased()
+            // Lowercase the role but not the names in it ("Smith's sister"), with the right article.
+            let roleWithArticle = Testimony.withArticle(witness.role.contains("'s ") ? witness.role : witness.role.lowercasedPhrase)
             let keyLine = witness.direct.first.map { " The heart of it: \($0)" } ?? ""
+            let lowered = witness.role.lowercased()
+            // Informants, co-defendants, and victims have a stake; officers are the police.
+            let interested = ["informant", "co-defendant", "codefendant", "cooperating", "accomplice", "victim", "complainant", "partner", "spouse", "parent", "sibling", "friend"]
+                .contains { lowered.contains($0) } || witness.name == c.victimName
+            let official = ["officer", "deputy", "detective", "trooper", "agent", "investigator", "sergeant"].contains { lowered.contains($0) }
             let credit: String
             if witness.weight >= 2 {
-                credit = ["\(witness.name) is a \(role) with nothing to gain here, and the account didn't move on cross.\(keyLine)",
-                          "\(witness.name) told the same story to police that the court heard today.\(keyLine)",
-                          "as a \(role), \(witness.name) was in a position to know, and the details line up with the exhibits."][index % 3]
+                let first = interested
+                    ? "\(witness.name) has a stake, and the court can weigh that. But the account didn't move on cross.\(keyLine)"
+                    : "\(witness.name) is \(roleWithArticle) with nothing to gain here, and the account didn't move on cross.\(keyLine)"
+                let second = official
+                    ? "\(witness.name)'s report, written at the time, matches what the court heard today.\(keyLine)"
+                    : "\(witness.name) told the same story to police that the court heard today.\(keyLine)"
+                credit = [first, second,
+                          "as \(roleWithArticle), \(witness.name) was in a position to know, and the details line up with the exhibits."][index % 3]
             } else {
                 credit = ["\(witness.name) had some trouble on cross, I'll concede. But the core of the testimony held.",
                           "\(witness.name) isn't perfect, but the court can credit the parts that are corroborated.\(keyLine)"][index % 2]
@@ -302,7 +313,7 @@ enum CounselDialogue {
                                      answer: callingStyle.opener + credit))
             let crossAnswer = witness.exchanges?.last(where: { $0.phase == .cross })?.answer ?? witness.cross.last
             let attack = crossAnswer.map { "remember what came out on cross: \($0)" }
-                ?? "\(witness.name) testified past what a \(role) could actually know."
+                ?? "\(witness.name) testified past what \(roleWithArticle) could actually know."
             q.append(CounselQuestion(id: "tri.\(otherSide.rawValue).wit.\(witness.id)", side: otherSide,
                                      question: "What's wrong with \(witness.name)'s testimony?",
                                      answer: otherStyle.opener + attack))
@@ -341,15 +352,22 @@ enum CounselDialogue {
         return "the \(title) is a small piece, offered for completeness. \(item.detail)"
     }
 
-    private static func defenseOnExhibit(_ item: Evidence, index: Int, dl: String, style: CounselStyle) -> String {
+    private static func defenseOnExhibit(_ item: Evidence, index: Int, dl: String, style: CounselStyle, c: CourtCase) -> String {
         let title = item.title.lowercased()
+        // A defendant's own words are attacked as a confession; anyone else's, as a witness's account.
+        let ownWords = ["interview", "confession", "admission"].contains { title.contains($0) } || title.contains(dl.lowercased())
+        let identityDisputed = CaseFacts(c).identity
         let attack: String
         switch item.kind {
         case .forensic: attack = "Forensics tell you a match, not a story. They don't tell you when, or how, or why."
-        case .video: attack = "Look at the actual frames. Nobody can see a face, and the State is filling in the gaps with assumption."
+        case .video: attack = identityDisputed
+            ? "Look at the actual frames. Nobody can see a face, and the State is filling in the gaps with assumption."
+            : "Look at the actual frames. The video shows what happened, not why, and the why is what this case turns on."
         case .digital: attack = "Records show a phone or an account, not a person's hands, and not what was in anyone's mind."
         case .document: attack = "A piece of paper proves what's written on it. It doesn't prove what the State says it means."
-        case .statement: attack = "Listen to what was actually said, and the circumstances it was said in. It's not the confession the State makes it out to be."
+        case .statement: attack = ownWords
+            ? "Listen to what was actually said, and the circumstances it was said in. It's not the confession the State makes it out to be."
+            : "That's one person's account, given when emotions were running high. Weigh it against everything else."
         case .physical: attack = "The State has an object. It doesn't have anyone who saw \(dl) use it."
         }
         if item.weight >= 4 {

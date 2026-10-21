@@ -33,7 +33,7 @@ struct HalftimeMotion {
 
     var isMade: Bool { !challenged.isEmpty }
 
-    static func make(for c: CourtCase) -> HalftimeMotion {
+    static func make(for c: CourtCase, excluded: Set<UUID> = []) -> HalftimeMotion {
         var rng = SeededRNG(seed: c.seed ^ 0x1227)
         let defense = c.defenseAttorney.components(separatedBy: ",").first ?? c.defenseAttorney
         let dl = c.defendant.lastName
@@ -43,7 +43,8 @@ struct HalftimeMotion {
         var challenged = Set(c.charges.filter { strength <= $0.threshold || rng.chance(0.1) }.map(\.id))
         if challenged.isEmpty, let lead = c.charges.first, rng.chance(0.15) { challenged = [lead.id] }
         let stateWitness = c.witnesses.filter { $0.calledBy == .prosecution }
-        let stateEvidence = c.evidence.filter { $0.side == .prosecution }.sorted { $0.weight > $1.weight }
+        // The State argues from evidence the court let in.
+        let stateEvidence = c.evidence.filter { $0.side == .prosecution && !excluded.contains($0.id) }.sorted { $0.weight > $1.weight }
         var arguments: [UUID: String] = [:]
         for charge in c.charges where challenged.contains(charge.id) {
             let elements = charge.law.elements
@@ -163,7 +164,7 @@ final class CaseSession: ObservableObject {
         self.originalLesser = Dictionary(uniqueKeysWithValues: courtCase.charges.compactMap { c in c.lesserLawID.map { (c.id, $0) } })
         self.judgeName = judgeName
         self.county = county
-        self.halftimeMotion = HalftimeMotion.make(for: courtCase)
+        self.halftimeMotion = HalftimeMotion.make(for: courtCase, excluded: resume?.rulings.excludedEvidence(in: courtCase) ?? [])
         if let resume {
             rulings = resume.rulings
             for (id, lawID) in resume.rulings.lesserChoices ?? [:] {
@@ -207,6 +208,7 @@ final class CaseSession: ObservableObject {
                 set: {
                     self.rulings.motions[motion.id] = $0
                     if motion.kind == .dismissIndictment { self.applyIndictmentRulings() }
+                    else { self.halftimeMotion = HalftimeMotion.make(for: self.courtCase, excluded: self.rulings.excludedEvidence(in: self.courtCase)) }
                 })
     }
 
@@ -231,7 +233,7 @@ final class CaseSession: ObservableObject {
         // The motion to dismiss at halftime is made on the counts still standing.
         let standing = Set(courtCase.charges.map(\.id))
         rulings.halftime = rulings.halftime.filter { standing.contains($0.key) }
-        halftimeMotion = HalftimeMotion.make(for: courtCase)
+        halftimeMotion = HalftimeMotion.make(for: courtCase, excluded: rulings.excludedEvidence(in: courtCase))
     }
 
     func objectionBinding(_ objection: Objection) -> Binding<Bool?> {
@@ -357,7 +359,16 @@ final class CaseSession: ObservableObject {
 
     var pendingObjections: Int {
         let silentDefendant = rulings.defendantTestifies == true ? nil : courtCase.defendantTestimony?.id
-        return courtCase.objections.filter { rulings.objections[$0.id] == nil && $0.witnessID != silentDefendant }.count
+        return courtCase.objections.filter { rulings.objections[$0.id] == nil && $0.witnessID != silentDefendant && objectionVisible($0) }.count
+    }
+
+    /// The defense case, and its objections, come into view only after the halftime motion and the right-to-testify advice.
+    var defenseCaseOpen: Bool { halftimeComplete && testimonyDecided }
+
+    func objectionVisible(_ o: Objection) -> Bool {
+        if o.witnessID == courtCase.defendantTestimony?.id { return defenseCaseOpen }
+        let side = courtCase.witnesses.first { $0.id == o.witnessID }?.calledBy
+        return side != .defense || defenseCaseOpen
     }
 
     var ethicsPending: Bool {
@@ -397,9 +408,11 @@ final class CaseSession: ObservableObject {
         // The insanity verdict is open only when the defense gave notice of it (G.S. 15A-959).
         let insanity: [Verdict] = insanityDefenseRaised ? [.insanity] : []
         switch rulings.halftime[charge.id] {
-        case .dismiss?: return [.notGuilty]
-        case .lesserOnly?: return [.lesser, .notGuilty] + insanity
-        default: return (lesserOptions(charge).isEmpty ? [.guilty, .notGuilty] : [.guilty, .lesser, .notGuilty]) + insanity
+        // A count dismissed at halftime stays dismissed; otherwise the court can still dismiss for insufficient
+        // evidence at the close of all the evidence, or find the defendant not guilty as fact-finder.
+        case .dismiss?: return [.dismissed]
+        case .lesserOnly?: return [.lesser, .notGuilty, .dismissed] + insanity
+        default: return (lesserOptions(charge).isEmpty ? [.guilty, .notGuilty, .dismissed] : [.guilty, .lesser, .notGuilty, .dismissed]) + insanity
         }
     }
 
@@ -536,7 +549,11 @@ final class CaseSession: ObservableObject {
             "CASE: \(CounselBrief.clip(c.summary, limit * 2))",
             "YOUR TESTIMONY SO FAR:"
         ]
-        let exchanges = witness.exchanges ?? witness.direct.map { TestimonyExchange(phase: .direct, examiner: witness.calledBy, question: "", answer: $0) }
+        let exchanges = admissible(witness.exchanges ?? witness.direct.map { TestimonyExchange(phase: .direct, examiner: witness.calledBy, question: "", answer: $0) })
+        let excluded = courtCase.evidence.filter { rulings.excludedEvidence(in: courtCase).contains($0.id) }.map(\.title)
+        if !excluded.isEmpty {
+            lines.insert("The court has excluded this evidence; never mention it: \(excluded.joined(separator: "; ")).", at: 2)
+        }
         for e in exchanges.prefix(compact ? 10 : 30) {
             lines.append(e.question.isEmpty ? "- \(CounselBrief.clip(e.answer, limit))" : "Q: \(e.question) A: \(CounselBrief.clip(e.answer, limit))")
         }
@@ -549,6 +566,46 @@ final class CaseSession: ObservableObject {
         return lines.joined(separator: "\n")
     }
 
+    /// Testimony the court hasn't excluded.
+    private func admissible(_ exchanges: [TestimonyExchange]) -> [TestimonyExchange] {
+        let terms = suppressedTerms
+        guard !terms.isEmpty else { return exchanges }
+        let patterns = terms.map { "(?i)\\b" + NSRegularExpression.escapedPattern(for: $0) + "(?![0-9A-Za-z])" }
+        func mentions(_ text: String) -> Bool { patterns.contains { text.range(of: $0, options: .regularExpression) != nil } }
+        return exchanges.filter { !mentions($0.question) && !mentions($0.answer) }
+    }
+
+    /// Answers to the questions a judge usually asks from the bench, in this witness's own terms, for offline play.
+    private func benchAnswers(_ w: Witness) -> [CounselQuestion] {
+        let official = Testimony.isOfficial(w.role)
+        let lower = w.role.lowercased()
+        let expert = ["analyst", "chemist", "examiner", "pathologist", "engineer", "scientist", "physician", "doctor", "expert", "reconstruction"].contains { lower.contains($0) }
+        var rng = SeededRNG(seed: courtCase.seed ^ SeededRNG.stableHash(w.name))
+        func q(_ question: String, _ answer: String) -> CounselQuestion {
+            CounselQuestion(id: "bench.\(question.hashValue)", side: w.calledBy, question: question, answer: answer)
+        }
+        if expert {
+            return [q("How sure are you?", "Your Honor, I'm confident in the result to a reasonable degree of scientific certainty. The limits are the ones I described."),
+                    q("How long have you done this work?", "\(rng.int(6...24)) years, Your Honor, and I've testified as an expert in this court before."),
+                    q("Is there anything you left out?", "Only the technical detail in my report, Your Honor. Nothing that changes the conclusion."),
+                    q("Did anyone talk to you about your testimony?", "The prosecutor reviewed my report with me, Your Honor. Nobody told me what to say.")]
+        }
+        if official {
+            return [q("How sure are you?", "Your Honor, I'm sure of what I saw and what I wrote in my report at the time."),
+                    q("How far away were you?", rng.pick(["A few feet, Your Honor. I was right there.", "Across the room, maybe twenty feet."])),
+                    q("What was the lighting like?", rng.pick(["Streetlights and my flashlight, Your Honor.", "Daylight. No problem seeing."])),
+                    q("Did anyone talk to you about your testimony?", "I met with the prosecutor to review my report, Your Honor. That's routine."),
+                    q("What happened right before that?", "I'd just arrived and was trying to figure out who was who, Your Honor."),
+                    q("Is there anything you left out?", "Not that I can think of, Your Honor. It's all in the report.")]
+        }
+        return [q("How sure are you?", rng.pick(["Very sure, Your Honor. I'll never forget it.", "Pretty sure, Your Honor. It happened fast.", "I'm sure about what I saw. I'm less sure about the exact times."])),
+                q("How far away were you?", rng.pick(["Close. Ten, fifteen feet.", "Across the street, maybe forty feet.", "Right there. Arm's length."])),
+                q("What was the lighting like?", rng.pick(["It was light out, Your Honor.", "There was a streetlight, but it was dim.", "Inside, with the lights on."])),
+                q("Did anyone talk to you about your testimony?", rng.pick(["The prosecutor went over what I'd be asked. Nobody told me what to say.", "Just the lawyer who called me, about when to show up."])),
+                q("What happened right before that?", rng.pick(["Everything was normal, Your Honor. Then it all happened at once.", "There was some arguing first. I didn't hear all of it."])),
+                q("Is there anything you left out?", rng.pick(["No, Your Honor. That's everything I remember.", "Only that I was scared. That's why some of it's blurry."]))]
+    }
+
     /// Ask a witness a question from the bench. Returns an error message if the answer couldn't be produced.
     @MainActor
     func askWitness(_ question: String, witness: Witness) async -> String? {
@@ -556,9 +613,9 @@ final class CaseSession: ObservableObject {
         let history = witnessTranscript(for: witness).map { (question: $0.question, answer: $0.answer) }
         var answer: String
         if engine == .offline {
-            let options = (witness.exchanges ?? []).enumerated().map { index, e in
+            let options = admissible(witness.exchanges ?? []).enumerated().map { index, e in
                 CounselQuestion(id: "w\(index)", side: witness.calledBy, question: e.question.isEmpty ? e.answer : e.question, answer: e.answer)
-            }
+            } + benchAnswers(witness)
             answer = OfflineCounsel.answer(question, from: options, style: .methodical).0
         } else {
             do {
@@ -651,7 +708,7 @@ final class CaseSession: ObservableObject {
         guard !removed.isEmpty else { return }
         courtCase.witnesses.removeAll { removed.contains($0.id) }
         courtCase.objections.removeAll { removed.contains($0.witnessID) }
-        halftimeMotion = HalftimeMotion.make(for: courtCase)
+        halftimeMotion = HalftimeMotion.make(for: courtCase, excluded: rulings.excludedEvidence(in: courtCase))
     }
 
     // MARK: Plea arrangement

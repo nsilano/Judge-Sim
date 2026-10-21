@@ -112,7 +112,7 @@ extension StoryCases {
         ],
         ageRange: 38...55, occupations: ["self-employed handyman"], hasVictim: false,
         summaries: [
-            "On {DATE}, a deputy stopped {D} on {STREET} in {HOOD} for driving with a homemade license plate reading \"PRIVATE TRAVELER - NOT FOR HIRE.\" {DL}'s license had been revoked for two years. {DL} refused to give a name, read from a laminated card claiming {D.he} was \"not a person under the jurisdiction of the corporate State of North Carolina,\" and filmed the stop on {D.his} phone. When the deputy reached in to take the keys, {DL} rolled up the window on the deputy's arm and drove off, dragging the deputy twenty feet. {DL} was arrested at home later that day. {DL} has filed forty pages of handwritten motions claiming the court has no authority over {D.him}, and insists on representing {D.himself}, though standby counsel sits beside {D.him}."
+            "On {DATE}, a deputy stopped {D} on {STREET} in {HOOD} for driving with a homemade license plate reading \"PRIVATE TRAVELER - NOT FOR HIRE.\" {DL}'s license had been revoked for two years. {DL} refused to give a name, read from a laminated card claiming {D.he} was \"not a person under the jurisdiction of the corporate State of North Carolina,\" and filmed the stop on {D.his} phone. When the deputy reached in to take the keys, {DL} rolled up the window on the deputy's arm and drove off, dragging the deputy twenty feet. {DL} was arrested at home later that day. {DL} has filed forty pages of handwritten motions claiming the court has no authority over {D.him}, and has clashed with appointed counsel over every filing."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Body Camera", "The deputy's camera: the refusal, the deputy reaching for the keys, the window rising, the car pulling away."),
@@ -160,7 +160,7 @@ extension StoryCases {
         mitigating: ["No prior violent record"],
         victimImpacts: ["Deputy {OFFICER}: \"I've done a thousand traffic stops. This is the one I think about.\""],
         allocutions: ["\"I do not consent to these proceedings. I am a living soul, not a corporate fiction.\""],
-        guiltyTruths: ["A message {DL} posted the week before, recovered later, read: \"Next time one of them reaches in my car, I'm leaving with his arm.\""],
+        guiltyTruths: ["A message {DL} posted the week before, recovered later, read: \"Next time one of them reaches in my car, I'm leaving with their arm.\""],
         innocentTruths: ["Frame-by-frame analysis of {DL}'s phone video later suggested the window was already rising before the deputy reached in."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "rightToCounsel"],
         extras: ["OFFICER": ["Kyle Brantley", "Renee Coble", "Travis Odom"]],

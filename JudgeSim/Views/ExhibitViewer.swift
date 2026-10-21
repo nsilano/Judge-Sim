@@ -53,16 +53,17 @@ struct ExhibitViewer: View {
         case .call911: DispatchRecordView(review: r, evidence: evidence)
         case .jailCall: DispatchRecordView(review: r, evidence: evidence, jail: true)
         case .interview: InterviewTranscriptView(review: r, evidence: evidence, courtCase: courtCase)
+        case .writtenStatement: WrittenStatementView(review: r, evidence: evidence, courtCase: courtCase)
         case .transcript: transcript(r)
         case .handwritten: HandwrittenNoteView(review: r, evidence: evidence)
         case .bank: BankStatementView(review: r, evidence: evidence, courtCase: courtCase)
         case .receipt: ReceiptView(review: r, evidence: evidence)
-        case .letterhead: LetterheadView(review: r, evidence: evidence)
+        case .letterhead: LetterheadView(review: r, evidence: evidence, courtCase: courtCase)
         case .medical: MedicalRecordView(review: r, evidence: evidence, courtCase: courtCase)
         case .lab: LabReportView(review: r, evidence: evidence)
         case .autopsy: LabReportView(review: r, evidence: evidence, autopsy: true)
-        case .phoneRecords: CarrierRecordsView(review: r, evidence: evidence)
-        case .gps: GPSMapView(review: r, evidence: evidence)
+        case .phoneRecords: CarrierRecordsView(review: r, evidence: evidence, courtCase: courtCase)
+        case .gps: GPSMapView(review: r, evidence: evidence, courtCase: courtCase)
         case .propertyTag: EvidenceTagView(review: r, evidence: evidence)
         case .photos: PhotoLogView(review: r, evidence: evidence)
         case .courtPaper: paper(r)
@@ -74,10 +75,12 @@ struct ExhibitViewer: View {
     /// The screen, styled like the device that recorded it.
     @ViewBuilder
     private func screen(_ r: ExhibitReview, stamp: String, text: String, index: Int) -> some View {
-        let tag = abs(evidence.id.hashValue)
+        let tag = "\(evidence.id)".stableHash
+        // A speed the exhibit gives ("74 mph") is the speed on the screen.
+        let statedSpeed = (evidence.detail.range(of: #"\d{2,3}(?= ?mph)"#, options: .regularExpression)).flatMap { Int(evidence.detail[$0]) }
         switch r.look {
         case .bodycam: BodyCamScreen(stamp: stamp, text: text, unit: tag % 90_000 + 10_000)
-        case .dashcam: DashCamScreen(source: r.source, stamp: stamp, text: text, car: tag % 40 + 10, speed: tag % 45 + 20 + index * 3)
+        case .dashcam: DashCamScreen(source: r.source, stamp: stamp, text: text, car: tag % 40 + 10, speed: statedSpeed ?? (tag % 45 + 20 + index * 3))
         case .phoneVideo: PhoneVideoScreen(stamp: stamp, text: text)
         default: SecurityCamScreen(source: r.source, stamp: stamp, text: text, camera: tag % 8 + 1)
         }

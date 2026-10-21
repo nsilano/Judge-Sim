@@ -12,6 +12,7 @@ enum StoryCases {
                                        harborDisappearance, bloodTestStartup, textMessages, restraintDeath, stagedAttack]
         + batchC + batchD + batchE + batchF + batchG + batchH + batchI + batchJ + batchK + batchL
         + batchM + batchN + batchO + batchP + batchQ + batchR + batchS + batchT + batchU + batchV
+        + batchW + batchX + batchY + batchZ + batchAA
 
     // MARK: - 1. A fatal crash after a closing shift
 
@@ -148,7 +149,9 @@ enum StoryCases {
             prosecutionOpening: "Four beers, a curve marked 35, a car doing 51, and a nurse on the way home who never got there. The State will show {D} was impaired and that the impairment killed {V}.",
             defenseOpening: "Your Honor will hear two blood tests that don't agree, a toxicologist who admits the number isn't certain, and deer hair on the bumper of a car that swerved left to avoid something. {DL} has carried this every day since. But grief is not proof of impairment.",
             prosecutionClosing: "The law doesn't require a number. It requires appreciable impairment. Four beers, speed, a missed curve, and an odor of alcohol. That's impairment, and it caused {V}'s death.",
-            defenseClosing: "The State's own expert couldn't say {DL} was at 0.08. Their trooper couldn't rule out the deer. If the court has a reasonable doubt about impairment, the most it can find is a misdemeanor death by vehicle."
+            defenseClosing: "The State's own expert couldn't say {DL} was at 0.08. Their trooper couldn't rule out the deer. If the court has a reasonable doubt about impairment, the most it can find is a misdemeanor death by vehicle.",
+            victim: VictimFacts(age: 34, occupation: "Nurse"),
+            employer: "{REST}"
         )
     )
 
@@ -499,7 +502,8 @@ enum StoryCases {
             prosecutionOpening: "Burst blood vessels in both eyes. A whisper to 911 from a locked bathroom. {V} doesn't want to be here, and the law understands why. The injuries tell the story.",
             defenseOpening: "A cast-iron skillet. Scratches down {DL}'s face. A neighbor who heard {VL} scream 'I'll kill you.' And {V}, who now asks this court not to punish {DL}. This is self-defense.",
             prosecutionClosing: "Even if {VL} picked up the pan, holding someone by the neck until their eyes hemorrhage isn't reasonable force. That's strangulation.",
-            defenseClosing: "The State has to disprove self-defense beyond a reasonable doubt. On this record, with a death threat and a skillet, it hasn't."
+            defenseClosing: "The State has to disprove self-defense beyond a reasonable doubt. On this record, with a death threat and a skillet, it hasn't.",
+            victim: VictimFacts(relationship: "Shared a house with the defendant.")
         )
     )
 
@@ -720,7 +724,9 @@ enum StoryCases {
             defenseOpening: "You'll hear {VL} in {V.his} own voice, and see it in {V.his} own handwriting: this was a gift to the one person who showed up. The question is whose choice it was. It was {VL}'s.",
             prosecutionClosing: "A note and a video, both arranged by the person taking the money, don't make it a free choice. Undue influence is exactly this.",
             defenseClosing: "The State's own investigator says capacity isn't all or nothing and that kindness was real. On this record there's reasonable doubt that {DL} deceived or overpowered anyone.",
-            genders: ["D": .female, "V": .female]
+            genders: ["D": .female, "V": .female],
+            victim: VictimFacts(occupation: "Retired textile mill supervisor", relationship: "The defendant was the victim's home health aide.", family: "Widowed; a niece in Ohio."),
+            employer: "{AGENCY}"
         )
     )
 
@@ -1060,7 +1066,8 @@ enum StoryCases {
             prosecutionClosing: "Premeditation can form in moments. But this was planned: the cabin, the timing before Monday, the gun at chest level. That's first-degree murder.",
             defenseClosing: "The medical examiner can't tell you intent. The gunsmith and the lab say this gun could fire on its own. That's reasonable doubt about murder of any degree.",
             when: .months([11, 12, 1]),
-            genders: ["D": .male]
+            genders: ["D": .male],
+            victim: VictimFacts(occupation: "Business owner", relationship: "The defendant's business partner of eleven years.")
         )
     )
 
@@ -1078,7 +1085,7 @@ enum StoryCases {
             SecondaryCharge(lawID: "conspiracyRobbery", specification: "Agreed with {ALT} to rob {V} with a dangerous weapon.", chance: 1.0, threshold: 5),
             SecondaryCharge(lawID: "feloniousBE", specification: "Broke and entered the dwelling of {V} with intent to commit robbery therein.", chance: 1.0, threshold: 5)
         ],
-        ageRange: 20...33, forcedPriorOffenses: ["Misdemeanor Larceny", "Breaking or Entering"], hasVictim: true,
+        ageRange: 20...33, forcedPriorOffenses: ["Misdemeanor Larceny", "Breaking or Entering@9"], hasVictim: true,
         summaries: [
             "At about {TIME} on {DATE}, two masked people forced their way into the home of {V}, 67, and {V.his} spouse on {STREET} in {HOOD}, held them at gunpoint, zip-tied their wrists, and took a gun safe's contents, jewelry, and $3,000 in cash. Two weeks later police arrested {ALT}, who sold one of the stolen rifles. {ALT} agreed to testify in exchange for a reduced charge and named {D} as the partner who carried the handgun. {DL} says {ALT} is protecting the real accomplice."
         ],
@@ -1171,7 +1178,7 @@ enum StoryCases {
                 .direct("What about the zip ties in your car?", "\"I work landscaping on weekends. We use them on every job, for tarps and plants. Half the trucks at the yard have that same bag.\""),
                 .cross("{ALT} told you about the gun safe weeks before.", "\"{ALT} told a lot of people about a lot of things. I didn't go.\""),
                 .cross("Your phone, busy every other night, went silent for fifty minutes at 2 a.m.", "\"I was asleep. It's allowed.\""),
-                .cross("You have a felony breaking-and-entering conviction.", "\"From when I was twenty. Empty storage unit. I did my probation and I haven't been in trouble since.\""),
+                .cross("You have a felony breaking-and-entering conviction.", "\"Years ago. An empty storage unit. I did my probation and I haven't been in trouble since.\""),
                 .cross("You're six feet, slim, with a deep voice.", "\"So is {COUSIN}. Ask {ALT} who that is.\"")
             ],
             objections: [
@@ -1198,7 +1205,7 @@ enum StoryCases {
         secondary: [
             SecondaryCharge(lawID: "dvpoViolation", specification: "Knowingly violated a domestic violence protective order by going to {V}'s apartment without arrangement.", chance: 1.0, threshold: 2)
         ],
-        ageRange: 25...44, forcedPriorOffenses: ["Simple Assault"], hasVictim: true,
+        ageRange: 25...44, forcedPriorOffenses: ["Simple Assault@1"], hasVictim: true,
         summaries: [
             "{V} held a domestic violence protective order against {D}, the other parent of their eight-year-old, that barred contact except for exchanges arranged through a relative. On {DATE}, {DL} came to {VL}'s apartment on {STREET} unannounced at about {TIME} to pick up the child's medicine and school clothes. Minutes later {VL} called 911 with a deep cut across the forearm that took nineteen stitches and nerve repair. {VL} says {DL} pulled a box cutter. {DL} says {VL} grabbed the box cutter off the counter and {DL} was cut too trying to take it away."
         ],
@@ -1290,7 +1297,8 @@ enum StoryCases {
             prosecutionOpening: "A protective order. A forced door. A box cutter, and a forearm laid open to the tendon in front of an eight-year-old. {D} did this.",
             defenseOpening: "{DL} broke the order by coming over, and should answer for that. But the child who saw it says {VL} picked up the box cutter, and {DL}'s own hand was cut grabbing for it.",
             prosecutionClosing: "Even if {VL} touched the cutter first, {DL} wasn't supposed to be in that kitchen at all. The injury and the order tell you who brought the danger.",
-            defenseClosing: "Being where you shouldn't be isn't assault with a deadly weapon. The child, the palm wound, and {VL}'s own changed story leave reasonable doubt about who wielded that blade."
+            defenseClosing: "Being where you shouldn't be isn't assault with a deadly weapon. The child, the palm wound, and {VL}'s own changed story leave reasonable doubt about who wielded that blade.",
+            victim: VictimFacts(relationship: "The defendant's former partner and co-parent of their eight-year-old.", family: "Single, one child, eight years old.")
         )
     )
 
@@ -1407,7 +1415,9 @@ enum StoryCases {
             defenseOpening: "Two people who had dated, both drinking, left a party together. On video, {VL} walks down the hall laughing. The question isn't whether {VL} remembers. It's whether {DL} knew {VL} couldn't consent.",
             prosecutionClosing: "Incapacity doesn't mean unconscious. It means unable to understand or resist. The vomiting, the video, the roommate's warning, and {DL}'s own text show {D.he} knew.",
             defenseClosing: "Even the State's toxicologist says an observer might not be able to tell. The hallway video and the 2:47 message are reasonable doubt about what {DL} knew.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            victim: VictimFacts(age: 20, occupation: "Student at Hollis State University", relationship: "A fellow student; acquaintances."),
+            school: "Hollis State University"
         )
     )
 
@@ -1514,7 +1524,8 @@ enum StoryCases {
             defenseOpening: "No furnace, a space heater on a lamp cord, and a can of gas for the mower in the same back room. That's a recipe for an accidental fire, and the State never looked at {DL}'s truck or phone.",
             prosecutionClosing: "One spill doesn't make two pools six feet apart. Motive, threat, insurance, and the truck at 3:41 make this an intentional fire, and the fire marshal says so.",
             defenseClosing: "The State's own investigator can't rule out the can. Its case on who did it is a pickup with no plate. Arson is about proof, and this isn't enough.",
-            when: .months([12, 1, 2])
+            when: .months([12, 1, 2]),
+            victim: VictimFacts(relationship: "The defendant's tenant.", family: "Two children, who live with the victim.")
         )
     )
 }

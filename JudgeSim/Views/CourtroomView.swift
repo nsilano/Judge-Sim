@@ -166,7 +166,10 @@ struct CourtroomView: View {
             }
             .confirmationDialog("Leave the courtroom?", isPresented: $confirmRecess, titleVisibility: .visible) {
                 Button("Continue the case to another date") { showContinuance = true }
-                Button("Leave and start this case over later today", role: .destructive) { dismiss() }
+                Button("Leave and start this case over later today", role: .destructive) {
+                    game.startOver(session.courtCase.id)
+                    dismiss()
+                }
                 Button("Stay", role: .cancel) {}
             } message: {
                 Text("A continuance keeps every ruling you've made. Leaving without one means starting this case over.")
@@ -946,6 +949,15 @@ struct ContinuanceSheet: View {
 struct SentenceSummaryBar: View {
     @ObservedObject var session: CaseSession
 
+    static func recordLine(_ record: PriorRecord, unit: SentencingUnit?) -> String {
+        let roman = ["I", "II", "III", "IV", "V", "VI"]
+        var text = "Prior record: \(record.points) point\(record.points == 1 ? "" : "s"), felony Level \(roman[max(1, min(6, record.felonyLevel)) - 1])"
+        if let unit, unit.sentencingClass.isFelony, let cell = StructuredSentencing.felonyCell(unit.sentencingClass, level: unit.level) {
+            text += " · presumptive \(cell.presumptive.text)"
+        }
+        return text
+    }
+
     var body: some View {
         let units = session.units
         let r = session.rulings
@@ -964,6 +976,9 @@ struct SentenceSummaryBar: View {
             if units.count > 3 {
                 Text("and \(units.count - 3) more judgment\(units.count == 4 ? "" : "s")").font(.caption2).foregroundStyle(.secondary)
             }
+            // The prior record as ruled so far: changes as the court finds priors proven or not.
+            Text(SentenceSummaryBar.recordLine(session.priorRecord, unit: units.first))
+                .font(.caption2).foregroundStyle(.secondary)
             if let projection = Judgment.custodyProjection(session.courtCase, r, units: units, from: session.courtCase.sessionDate) {
                 Text("Release no earlier than \(SentenceFormat.shortDate(projection.earliest))")
                     .font(.caption2).foregroundStyle(.secondary)

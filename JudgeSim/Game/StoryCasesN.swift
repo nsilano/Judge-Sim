@@ -95,7 +95,7 @@ extension StoryCases {
                                   explanation: "The agent's opinion on motive isn't based on specialized knowledge and invades the factfinder's role.",
                                   doctrineID: "speculation", weight: 1))
             ],
-            prosecutionOpening: "A young man went for a run. Three neighbors decided he was a criminal and hunted him.",
+            prosecutionOpening: "A young man went for a run. A neighbor and a grown child decided he was a criminal and hunted him.",
             defenseOpening: "Scared neighbors, a man on a construction site camera, and a struggle over a gun.",
             prosecutionClosing: "You can't create the danger and then claim self-defense against it.",
             defenseClosing: "{DL} made a terrible judgment. Malice requires more.",
@@ -191,7 +191,8 @@ extension StoryCases {
             defenseOpening: "An exhausted officer, identical hallways, and a split second in the dark.",
             prosecutionClosing: "An honest mistake doesn't excuse an unreasonable one.",
             defenseClosing: "{DL} didn't intend to kill a neighbor. {D.He} thought {D.he} was home.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            victim: VictimFacts(age: 26, occupation: "Accountant", relationship: "A neighbor in the same building; they had never met.")
         )
     )
 
@@ -280,7 +281,8 @@ extension StoryCases {
             defenseOpening: "\"Taser! Taser! Taser!\" She believed it.",
             prosecutionClosing: "The law asks what a careful officer would have done. Not this.",
             defenseClosing: "A mistake isn't culpable negligence when stress takes over.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            victim: VictimFacts(family: "Single, one child, a two-year-old son.")
         )
     )
 
@@ -326,7 +328,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did you see that day?", "\"At lunch, the guns were on the cart outside the church set, unlocked. {DL} was eating with the crew.\""),
-                            .direct("What happened after the shooting?", "\"{DL} handed me a little bag and said hold this. I gave it to a deputy later. It had some drugs in it.\""),
+                            .direct("What happened after the shooting?", "\"{DL} handed me a little bag and said hold this. I gave it to a deputy later.\""),
                             .cross("You didn't see who put a live round in the gun?", "\"No.\""),
                             .cross("The box from the supplier was labeled dummy?", "\"That's what it said on it.\"")
                         ])

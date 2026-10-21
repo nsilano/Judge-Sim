@@ -100,7 +100,8 @@ extension StoryCases {
             prosecutionOpening: "A motive, a search, and eight mornings alone at the fridge with {V}'s thermos.",
             defenseOpening: "Two years of early arrivals, a shared computer, and an office full of people who resented {VL}.",
             prosecutionClosing: "The pieces fit only one person.",
-            defenseClosing: "The pieces fit several. That's reasonable doubt."
+            defenseClosing: "The pieces fit several. That's reasonable doubt.",
+            victim: VictimFacts(age: 51, occupation: "Dispatch supervisor at a trucking company", relationship: "The defendant's supervisor at work.")
         )
     )
 
@@ -294,7 +295,8 @@ extension StoryCases {
             prosecutionOpening: "A hidden tracker, 212 checks, and {D} wherever {V} went.",
             defenseOpening: "A tracker from the day they bought the car, places {DL} always went, and no threats.",
             prosecutionClosing: "The law requires distress, not threats.",
-            defenseClosing: "The law requires following, not grief."
+            defenseClosing: "The law requires following, not grief.",
+            victim: VictimFacts(relationship: "A former partner of the defendant.")
         )
     )
 
@@ -387,7 +389,8 @@ extension StoryCases {
             prosecutionOpening: "{V} stood still in front of a car. {D} hit the gas.",
             defenseOpening: "A cracked windshield, a door being yanked, and a nurse who fled in fear.",
             prosecutionClosing: "Fear doesn't justify driving into a person who poses no threat.",
-            defenseClosing: "{DL} reasonably feared serious harm from the crowd attacking the car."
+            defenseClosing: "{DL} reasonably feared serious harm from the crowd attacking the car.",
+            victim: VictimFacts(age: 34, occupation: "Protester; works as a teacher's aide", relationship: "Strangers before the incident.")
         )
     )
 

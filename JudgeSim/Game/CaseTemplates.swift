@@ -7,6 +7,13 @@ private typealias E = EvidenceSeed
 // {STREET}, {TIME}, {DATE}, {HOOD}, {CITY}, plus each template's extras.
 
 enum CaseTemplates {
+    /// Every template by key: written stories, follow-ups, and the rest.
+    static let byKey: [String: CaseTemplate] = {
+        var map: [String: CaseTemplate] = [:]
+        for t in StoryCases.all + FollowUpCases.all + all where map[t.key] == nil { map[t.key] = t }
+        return map
+    }()
+
     static let all: [CaseTemplate] = [
         storeRobbery, barFight, poisoning, burglary, embezzlement, trafficStopDrugs, overdose,
         drunkCrash, abusedSpouse, medicineTheft, ransomware, imageLeak, insuranceArson,

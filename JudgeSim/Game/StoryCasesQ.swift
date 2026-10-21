@@ -139,7 +139,7 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("What did you find?", "\"$212. We'd told teachers they'd get grants. We'd booked buses for the zoo trip. There was nothing.\""),
-                            .direct("Did you sign those checks?", "\"No. Not one. That isn't my signature.\""),
+                            .direct("Is the outgoing president's signature on those checks real?", "\"No. I know her signature. That isn't it.\""),
                             .cross("{DL} volunteered more hours than anyone?", "\"Yes. Which is why nobody looked.\""),
                             .cross("{DL} has paid back $9,000?", "\"After we caught it.\"")
                         ]),
@@ -221,7 +221,7 @@ extension StoryCases {
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Cash App Payments", "Eleven payments of $2,000 from an account linked to a known dealer to {DL}'s account.", .search),
-            E(.physical, 3, "Fentanyl in Car", "Fourteen grams of fentanyl in balloons in {DL}'s console, found under a warrant.", .search),
+            E(.physical, 3, "Fentanyl in Car", "Twelve grams of fentanyl in balloons in {DL}'s console, found under a warrant.", .search),
             E(.video, 2, "Pod Video", "{DL} passing a folded item to the go-between inmate during a cell check the afternoon before {VL}'s death; no cell checks that night."),
             E(.forensic, 2, "Autopsy and Toxicology", "Death from fentanyl toxicity; the drug in {VL}'s cell matched the composition of the fentanyl from {DL}'s car.")
         ],
@@ -297,7 +297,8 @@ extension StoryCases {
             prosecutionOpening: "The person paid to keep {VL} safe was paid more to bring in the drug that killed {V.him}.",
             defenseOpening: "A jail flooded with fentanyl, and a snitch who needs someone to blame.",
             prosecutionClosing: "Same drug, same mix, same pod, same officer who never checked the cell.",
-            defenseClosing: "Two sources of fentanyl and no proof which one killed {VL}."
+            defenseClosing: "Two sources of fentanyl and no proof which one killed {VL}.",
+            victim: VictimFacts(record: "Held in the county jail on a probation violation at the time of death.")
         )
     )
 
@@ -439,7 +440,7 @@ extension StoryCases {
                             .cross("Others had keys to the office?", "\"Yes. {DL} signed the disclosures.\""),
                             .cross("As-is sales mean no warranty?", "\"No warranty. They don't make lying about mileage legal.\"")
                         ]),
-            WitnessSeed(name: nil, role: "Buyer",
+            WitnessSeed(name: "{V}", role: "Buyer",
                         direct: ["\"I paid extra for low miles.\""],
                         cross: ["\"I didn't get an inspection.\""],
                         weight: 2, lay: true,

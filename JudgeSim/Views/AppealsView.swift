@@ -10,8 +10,8 @@ struct AppealRow: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(appeal.caption).font(.system(.subheadline, design: .serif).weight(.semibold))
                 Spacer()
-                Pill(text: appeal.isPending ? "Pending" : (appeal.wasReversed ? "Reversed" : "Upheld"),
-                     color: appeal.isPending ? Theme.gold : (appeal.wasReversed ? .orange : .green))
+                Pill(text: appeal.isPending ? "Pending" : (appeal.isMoot ? "Moot" : (appeal.wasReversed ? "Reversed" : "Upheld")),
+                     color: appeal.isPending ? Theme.gold : (appeal.isMoot ? .secondary : (appeal.wasReversed ? .orange : .green)))
             }
             Text("\(CourtForms.appealsNumber(for: appeal)) · from \(appeal.docket)")
                 .font(.caption.monospaced())
@@ -90,8 +90,8 @@ struct AppealDetail: View {
             HStack {
                 Text(appeal.caption).font(.system(.headline, design: .serif))
                 Spacer()
-                Pill(text: appeal.isPending ? "Pending" : (appeal.wasReversed ? "Reversed" : "Upheld"),
-                     color: appeal.isPending ? Theme.gold : (appeal.wasReversed ? .orange : .green))
+                Pill(text: appeal.isPending ? "Pending" : (appeal.isMoot ? "Moot" : (appeal.wasReversed ? "Reversed" : "Upheld")),
+                     color: appeal.isPending ? Theme.gold : (appeal.isMoot ? .secondary : (appeal.wasReversed ? .orange : .green)))
             }
             Text("Appeal by \(appeal.appellant)").font(.callout)
             Text(appeal.statusText(on: today)).font(.callout.weight(.semibold))

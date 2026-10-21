@@ -97,7 +97,8 @@ extension StoryCases {
             prosecutionOpening: "A secret {D} knew, a threat at the exit interview, and {D.his} own wallet.",
             defenseOpening: "The coworker had the secret, a bigger grudge, and the wallet's keys.",
             prosecutionClosing: "Revenge and access both point to {DL}.",
-            defenseClosing: "Both point to the coworker too. That's reasonable doubt."
+            defenseClosing: "Both point to the coworker too. That's reasonable doubt.",
+            victim: VictimFacts(occupation: "Regional bank vice president", relationship: "The defendant's former employer; the defendant was the victim's executive assistant.")
         )
     )
 
@@ -108,7 +109,7 @@ extension StoryCases {
         headlines: ["Neighbor Shot Over Fence Dispute", "Did the Castle Doctrine Apply in the Backyard?"],
         primaryLaw: "murder2", lesserLaw: "volManslaughter", threshold: 1, lesserThreshold: 1,
         specification: "Killed {V} with a shotgun, with malice.",
-        ageRange: 50...72, occupations: ["retired machinist"], hasVictim: true,
+        ageRange: 68...68, occupations: ["retired machinist"], hasVictim: true,
         summaries: [
             "For two years {D} and {D.his} neighbor {V} fought over a property line in {HOOD}: surveys, a lawsuit, a torn-down fence, a magistrate's order. At about {TIME} on {DATE}, {VL} came into {DL}'s backyard with a sledgehammer to knock down a new fence post. {DL} came out the back door with a shotgun and told {VL} to leave. {VL} walked toward the porch. {DL} fired once from the porch steps; {VL} died in the yard twelve feet away. {DL} says {VL} came at {DL} with the sledgehammer raised. The State says {VL} was turning away and the hammer was down."
         ],
@@ -476,7 +477,8 @@ extension StoryCases {
             prosecutionOpening: "{D} moved a widowed retiree's savings overseas and lied to the bank to keep it flowing.",
             defenseOpening: "A desperate job seeker used by criminals who will never be caught.",
             prosecutionClosing: "Lying to the bank proves knowledge.",
-            defenseClosing: "Fear isn't fraud."
+            defenseClosing: "Fear isn't fraud.",
+            victim: VictimFacts(age: 68, occupation: "Retired", relationship: "No relationship; the defendant moved the money the scammers took.", family: "Recently widowed.")
         )
     )
 }

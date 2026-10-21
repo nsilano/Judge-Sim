@@ -32,6 +32,22 @@ enum CaseGenerator {
 
     static func isMurder(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("murder") }
 
+    /// The hour a written case gives for what happened: its own setting, the first clock time on the day of the
+    /// incident in its timeline, or the first in its summary. Stories that use {TIME} leave it to the draw.
+    static func storyTime(_ t: CaseTemplate) -> String? {
+        guard let story = t.story else { return nil }
+        if let time = story.time { return time }
+        if t.summaries.contains(where: { $0.contains("{TIME}") }) { return nil }
+        let pattern = "\\b(1[0-2]|[1-9]):[0-5][0-9] [ap]\\.m\\."
+        func first(_ text: String) -> String? {
+            guard let range = text.range(of: pattern, options: .regularExpression) else { return nil }
+            return String(text[range])
+        }
+        for entry in story.timeline where entry.0 == 0 { if let time = first(entry.1) { return time } }
+        for summary in t.summaries { if let time = first(summary) { return time } }
+        return nil
+    }
+
     /// How strong the State's case should be, so that the evidence doesn't always point one way.
     private enum Band {
         case strong, close, weak
@@ -44,9 +60,10 @@ enum CaseGenerator {
         // A follow-up to an earlier case: one of the kinds named, fitted to the person.
         if let keys = context.forcedTemplateKeys {
             let sex = context.returning.map { NameBank.gender(of: $0.name) }
+            let age = context.returning.map { $0.age(on: context.date) }
             let named = keys.compactMap { key in (FollowUpCases.all + CaseTemplates.all).first { $0.key == key } }.filter { t in
                 sex.map { (t.requiredGenders["D"] ?? $0) == $0 } ?? true
-            }
+            }.filter { t in age.map { FollowUpCases.fits(t.key, age: $0) } ?? true }
             // Keep the same victim when the case allows that person; otherwise any of the kinds named.
             let keepsVictim = named.filter { t in
                 context.victimOverride.map { v in t.hasVictim && (t.requiredGenders["V"].map { $0 == NameBank.gender(of: v) } ?? true) } ?? true
@@ -228,12 +245,17 @@ enum CaseGenerator {
         let setting = CaseSetting.of(category: t.category, key: t.key)
         // Highway crashes and impaired driving are worked by the Highway Patrol.
         let trooperName = rng.pick(county.troopers)
-        let detective = setting == .road
+        // A written case worked by deputies gets the Sheriff's Office, not the city police or the Patrol.
+        let storyText = (t.story == nil ? [] : t.summaries + (t.prosecutionWitnesses + t.defenseWitnesses).map(\.role)).joined(separator: " ").lowercased()
+        let sheriffs = storyText.contains("deput") || storyText.contains("sheriff")
+        let sheriffDetectives = county.detectives.filter { $0.agency.contains("Sheriff") }
+        let sheriffOfficers = county.officers.filter { $0.agency.contains("Sheriff") }
+        let detective = setting == .road && !sheriffs
             ? CastMember(name: trooperName, title: rng.pick(["Trooper", "Master Trooper", "Sergeant"]), agency: "N.C. State Highway Patrol")
-            : rng.pick(county.detectives)
-        let officer = setting == .road && rng.chance(0.5)
+            : rng.pick(sheriffs && !sheriffDetectives.isEmpty ? sheriffDetectives : county.detectives)
+        let officer = setting == .road && !sheriffs && rng.chance(0.5)
             ? CastMember(name: NameBank.person(using: &rng, excluding: &used), title: "Trooper", agency: "N.C. State Highway Patrol")
-            : rng.pick(county.officers)
+            : rng.pick(sheriffs && !sheriffOfficers.isEmpty ? sheriffOfficers : county.officers)
         // The day it happened, fixed once so every report, witness, and exhibit agrees.
         // A written case's file can run long past the incident (a cold case solved years later), so the incident
         // sits far enough back that every entry in it still comes before trial.
@@ -263,7 +285,7 @@ enum CaseGenerator {
             "SHERIFF": county.sheriff,
             "JUDGE": lastName(context.judgeName),
             "STREET": rng.pick(NameBank.streets),
-            "TIME": rng.pick(NameBank.times),
+            "TIME": storyTime(t) ?? rng.pick(NameBank.times),
             "DATE": CaseDates.day(incident),
             "HOOD": rng.pick(county.towns),
             "CITY": county.seat,
@@ -403,11 +425,30 @@ enum CaseGenerator {
         var voice: [String] = t.allocutions
         for line in t.story?.defendantExam ?? [] { voice += line.answers }
         let defendantVoice = voice.joined(separator: " ")
-        let familyFacts = FamilyFacts.from(caseText: writtenText, defendantVoice: defendantVoice, victimDied: deathLaws.contains(t.primaryLaw))
+        let familyFacts = FamilyFacts.from(caseText: writtenText, defendantVoice: defendantVoice, victimDied: t.victimDies)
         if let person = context.returning, let stored = person.profile {
             profiledDefendant.profile = DefendantProfiles.continued(stored, person: person, family: familyFacts, on: context.date)
         } else {
             profiledDefendant.profile = DefendantProfiles.make(for: defendant, county: county, year: currentYear, family: familyFacts)
+        }
+        // The workplace and school the story names are the ones on the profile.
+        if var profile = profiledDefendant.profile, let story = t.story {
+            if let place = story.employer.map({ fill($0) }) {
+                if !profile.jobs.contains(where: { $0.current && $0.title != "Unemployed" }) {
+                    // A returning defendant who has since found work there.
+                    for i in profile.jobs.indices where profile.jobs[i].current { profile.jobs[i].current = false; profile.jobs[i].years = profile.jobs[i].years.replacingOccurrences(of: "present", with: "\(currentYear)") }
+                    profile.jobs.insert(Job(title: "Employee", employer: place, years: "\(currentYear)–present", current: true), at: 0)
+                }
+                if let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" }) {
+                    profile.jobs[i].employer = place
+                    if story.employmentEnded {
+                        profile.jobs[i].current = false
+                        profile.jobs[i].years = profile.jobs[i].years.replacingOccurrences(of: "present", with: "\(currentYear) (fired)")
+                    }
+                }
+            }
+            if let school = story.school.map({ fill($0) }) { profile.education = "Currently enrolled at \(school)." }
+            profiledDefendant.profile = profile
         }
         let factText = (t.summaries.map { fill($0) } + charges.map(\.specification) + evidence.map { $0.title + ". " + $0.detail }
                         + witnesses.flatMap { $0.direct + $0.cross }).joined(separator: " ")
@@ -858,8 +899,7 @@ enum CaseGenerator {
         if restitution == 0 && rng.chance(0.85) {
             let text = fill(t.specification) + " " + t.secondary.map { fill($0.specification) }.joined(separator: " ")
             let stated = firstDollarAmount(in: text)
-            let died = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV", "deathByDistribution", "patientNeglect"]
-                .contains(t.primaryLaw)
+            let died = t.victimDies
             switch t.category {
             case .property:
                 restitution = stated ?? rng.int(6...80) * 100; basis = rng.pick(["unrecovered property and repairs", "the value of what was taken and the damage to the door", "replacement costs the owner documented"])
@@ -868,11 +908,15 @@ enum CaseGenerator {
             case .whiteCollar, .cyber:
                 restitution = stated ?? rng.int(4...90) * 1_000; basis = rng.pick(["money taken", "documented losses", "the victims' losses, per the bank records"])
             case .violent, .family, .traffic:
+                let contactless = ["stalking", "stalkingCourtOrder", "cyberstalking", "communicatingThreats", "witnessIntimidation",
+                                   "dvpoViolation", "assaultPointingGun"].contains(t.primaryLaw)
                 if died {
                     restitution = rng.int(7...18) * 1_000; basis = "funeral and burial expenses"
+                } else if contactless {
+                    if rng.chance(0.5) { restitution = rng.int(3...20) * 100; basis = rng.pick(["counseling costs", "new locks and a security camera", "counseling and a changed phone number"]) }
                 } else if t.hasVictim {
                     restitution = rng.int(8...90) * 100 * (t.category == .traffic ? 4 : 1)
-                    basis = t.category == .traffic ? rng.pick(["medical bills and vehicle damage", "the other driver's medical bills"])
+                    basis = t.category == .traffic ? rng.pick(["medical bills and vehicle damage", "the victim's medical bills"])
                         : rng.pick(["medical bills", "emergency room and follow-up care", "medical bills and lost wages", "counseling and medical costs"])
                 }
             default:
@@ -930,19 +974,25 @@ enum CaseGenerator {
         }
 
         // Life circumstances
-        let plan: String? = rng.chance(0.6) ? fill(rng.pick([
-            "A job offer from a roofing company in {HOOD}, starting the Monday after sentencing.",
-            "Return to the night shift at the distribution center. The manager wrote a letter.",
-            "Enrollment in the welding program at Hollis Community College this spring.",
-            "Moving in with an aunt in {HOOD}, away from the people involved in this case."
-        ])) : nil
+        // Plans and supporters fit the person: age, work, and whether the partner is the victim.
+        let age = defendant.age
+        let job = defendant.occupation.lowercased()
+        let working = !job.contains("unemployed") && !job.hasPrefix("retired")
+        var plans = ["Moving in with family in {HOOD}, away from the people involved in this case."]
+        if age < 50 { plans += ["A job offer from a roofing company in {HOOD}, starting the Monday after sentencing.",
+                                "Enrollment in the welding program at Hollis Community College this spring."] }
+        if working { plans.append("Return to work as \(job.withIndefiniteArticle). The employer wrote a letter.") }
+        if age >= 60 { plans.append("Living quietly at home, with a daughter checking in every day.") }
+        let plan: String? = rng.chance(0.6) ? fill(rng.pick(plans)) : nil
         let indigent = publicDefender ? rng.chance(0.85) : rng.chance(0.2)
-        let support: String? = rng.chance(0.6) ? rng.pick([
-            "My client's mother, two sisters, and their pastor are in the gallery today.",
-            "A former employer drove in from Raleigh to be here.",
-            "My client's partner is here with their two children.",
-            "The client's grandmother, who raised them, is in the second row."
-        ]) : nil
+        let partnerIsVictim = t.victimDies && t.category == .family
+            || ["spouse", "wife", "husband", "partner"].contains { word in t.summaries.contains { $0.contains("{D.his} \(word), {V") } }
+        var supporters = ["My client's family and their pastor are in the gallery today.",
+                          "A former employer drove in from Raleigh to be here."]
+        if !partnerIsVictim && age < 60 { supporters.append("My client's partner is here, along with my client's children.") }
+        if age < 35 { supporters.append("The client's grandmother, who raised them, is in the second row.") }
+        if age >= 60 { supporters.append("My client's grown children are here today.") }
+        let support: String? = rng.chance(0.6) ? rng.pick(supporters) : nil
         let discovery: String? = rng.chance(0.25) ? rng.pick([
             "The State Crime Laboratory report arrived late; we turned it over nine days before trial.",
             "A supplemental police report surfaced last week and was disclosed immediately.",

@@ -194,7 +194,8 @@ extension StoryCases {
             prosecutionOpening: "One person had those images. That person threatened {V}, and they were posted from that person's building.",
             defenseOpening: "A stolen phone, an Android {DL} doesn't own, and a network shared by two hundred units.",
             prosecutionClosing: "The threat and the access point to one person.",
-            defenseClosing: "The device that posted them wasn't {DL}'s."
+            defenseClosing: "The device that posted them wasn't {DL}'s.",
+            victim: VictimFacts(relationship: "A former partner of the defendant; together two years.")
         )
     )
 
@@ -479,7 +480,8 @@ extension StoryCases {
             defenseOpening: "A joke about a calculus test that went horribly wrong. No weapon, no plan, no intent to threaten.",
             prosecutionClosing: "In today's world, a reasonable person reads that as a threat.",
             defenseClosing: "Intent matters. {DL} meant a joke, and every person who knew {D.him} took it as one.",
-            when: .months([9, 10, 11, 1, 2, 3, 4, 5])
+            when: .months([9, 10, 11, 1, 2, 3, 4, 5]),
+            school: "{SCHOOL}"
         )
     )
 }

@@ -13,6 +13,8 @@ enum Consequences {
 
     /// Cases where the victim did not survive.
     static func victimDied(_ c: CourtCase) -> Bool {
+        if c.victimName == nil { return false }
+        if let t = CaseTemplates.byKey[c.templateKey] { return t.victimDies }
         let deathLaws = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV",
                          "deathByDistribution", "patientNeglect", "concealingDeath"]
         return c.charges.contains { deathLaws.contains($0.lawID) }
@@ -22,6 +24,7 @@ enum Consequences {
     static func victimIsChild(_ c: CourtCase) -> Bool {
         if c.charges.contains(where: { ["felonyChildAbuse", "childAbuseMisd"].contains($0.lawID) }) { return true }
         guard let name = c.victimName else { return false }
+        if let age = CaseTemplates.byKey[c.templateKey]?.story?.victim?.age { return age < 16 }
         let last = name.components(separatedBy: " ").last ?? name
         return (VictimProfiles.statedAge(c.summary, name: name, last: last) ?? 99) < 16
     }
@@ -67,7 +70,10 @@ enum Consequences {
         let d = c.defendant
         let offense = c.charges.first?.law.title.lowercasedPhrase ?? "the charges"
         let monthYear = date.formatted(.dateTime.month(.wide).year())
-        let (keys, sameVictim) = escalation(for: c)
+        let (allKeys, sameVictim) = escalation(for: c)
+        // Only the kinds of case someone this age would be in: an 84-year-old isn't in a bar fight.
+        let keys = allKeys.filter { FollowUpCases.fits($0, age: d.age) }
+        guard !keys.isEmpty else { return [] }
         let victim = sameVictim ? c.victimName : nil
         var chance = 0.0
         var lead = ""
@@ -80,6 +86,10 @@ enum Consequences {
             } else {
                 lead = "\(d.name), whom Judge \(judgeLast) found not guilty of \(offense) in \(monthYear), was arrested again this week"
                 note = "You acquitted \(d.lastName) of \(offense) on \(SentenceFormat.shortDate(date))."
+                // When the State's proof fell short, the law required the verdict; the record should say so.
+                if let principal = c.charges.first, Judgment.properStrength(c) < principal.threshold {
+                    note += " The State's evidence at that trial didn't prove the charge; the acquittal was the verdict the law required."
+                }
             }
         } else if convicted && !active && c.truth.actuallyGuilty && c.victimName != nil
                     && [LawCategory.violent, .family, .robbery].contains(c.category) {
@@ -88,7 +98,7 @@ enum Consequences {
             note = "You sentenced \(d.lastName) to probation for \(offense) on \(SentenceFormat.shortDate(date))."
         }
         guard chance > 0, rng.chance(chance) else { return [] }
-        let incident = Calendar.current.date(byAdding: .day, value: rng.int(45...420), to: date) ?? date
+        let incident = Calendar.current.date(byAdding: .day, value: rng.int(120...420), to: date) ?? date
         let toCourt = Calendar.current.date(byAdding: .day, value: rng.int(56...100), to: incident) ?? incident
         var body = lead + ", according to the Sheriff's Office."
         if let victim {

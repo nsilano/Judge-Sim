@@ -25,20 +25,22 @@ enum VictimProfiles {
 
     static func make(_ c: CourtCase, county: County?) -> VictimProfile? {
         guard let name = c.victimName, !name.isEmpty else { return nil }
-        var rng = SeededRNG(seed: c.seed ^ 0x51C7)
+        // Seeded by the person, not the case, so a victim who comes back is the same person.
+        var rng = SeededRNG(seed: SeededRNG.stableHash(name) ^ 0x51C7)
+        let told = CaseTemplates.byKey[c.templateKey]?.story?.victim
         let last = name.components(separatedBy: " ").last ?? name
         let first = name.components(separatedBy: " ").first ?? name
         let summary = c.summary
         let lower = summary.lowercased()
         let ids = c.charges.map { $0.lawID.lowercased() }
-        let deceased = ids.contains { $0.contains("murder") || $0.contains("manslaughter") || $0.contains("dbv") }
-            || (lower.contains("\(first.lowercased())") && (lower.contains(" died") || lower.contains("was killed") || lower.contains("found dead")))
+        _ = ids
+        let deceased = Consequences.victimDied(c)
 
         // The case file's own words about the victim.
         let inTheFile = Exhibits.sentences(summary).filter { $0.contains(last) || $0.contains(first) }
 
         // An age the written facts give ("Name, 58"), or a fitting one.
-        let age = statedAge(summary, name: name, last: last) ?? {
+        let age = told?.age ?? statedAge(summary, name: name, last: last) ?? describedAge(inTheFile.joined(separator: " ")) ?? {
             if c.charges.contains(where: { ["felonyChildAbuse", "childAbuseMisd"].contains($0.lawID) }) { return rng.int(3...15) }
             switch c.category {
             case .whiteCollar: return rng.int(44...86)
@@ -47,7 +49,9 @@ enum VictimProfiles {
         }()
 
         let occupation: String
-        if age < 18 { occupation = age < 6 ? "Not yet in school" : "Student at a Hollis County school" }
+        if let job = told?.occupation ?? statedOccupation(summary, name: name, last: last) {
+            occupation = job.capitalizedFirst
+        } else if age < 18 { occupation = age < 6 ? "Not yet in school" : "Student at a Hollis County school" }
         else if age >= 68 { occupation = "Retired " + rng.pick(["schoolteacher", "textile mill worker", "postal carrier", "farmer", "nurse", "machinist", "church secretary"]) }
         else {
             occupation = rng.pick(["Warehouse supervisor", "Nursing assistant", "Elementary school teacher", "Line cook", "Bank teller",
@@ -61,7 +65,9 @@ enum VictimProfiles {
             : "Lives in \(town)" + (age >= 18 ? ", \(years) years at the same address." : " with family.")
 
         let family: String
-        if age < 18 {
+        if let stated = told?.family {
+            family = stated
+        } else if age < 18 {
             family = rng.pick(["Lives with a mother and two siblings.", "Raised by grandparents.", "Lives with both parents and a younger brother.",
                                "Lives with a father who works nights; a grandmother helps."])
         } else {
@@ -71,15 +77,24 @@ enum VictimProfiles {
                 + (deceased ? " " + rng.pick(["The family has attended every setting.", "A sister has spoken for the family.", "The family asked the court for privacy."]) : "")
         }
 
-        let relationship = relationshipLine(lower, c: c, first: first, rng: &rng)
-        let harm = harmLines(c, deceased: deceased, rng: &rng)
+        // Only what the file says about the victim decides the relationship, not every word in it.
+        let aboutVictim = inTheFile.joined(separator: " ").lowercased()
+        let relationship = told?.relationship ?? relationshipLine(aboutVictim.isEmpty ? lower : aboutVictim, c: c, first: first, rng: &rng)
+        // Married to the defendant means married, whatever the family line drew.
+        var familyLine = family
+        if told?.family == nil, relationship.hasPrefix("Married"), let comma = family.firstIndex(of: ",") {
+            familyLine = "Married to the defendant" + String(family[comma...])
+        }
+        var harm = harmLines(c, deceased: deceased, rng: &rng)
+        if let stated = told?.harm { harm = stated + harm.filter { $0.hasPrefix("Restitution") } }
 
-        let record: String = rng.chance(0.8)
+        // Children have no record.
+        let record: String = told?.record ?? (age < 18 || rng.chance(0.8)
             ? "No criminal record."
             : rng.pick(["One misdemeanor conviction (worthless check), more than ten years ago.",
                         "A dismissed simple assault charge from a decade ago.",
                         "A prior conviction for misdemeanor possession of marijuana.",
-                        "One prior conviction for driving while license revoked."])
+                        "One prior conviction for driving while license revoked."]))
 
         let testified: String
         if c.witnesses.contains(where: { $0.name == name }) {
@@ -89,7 +104,7 @@ enum VictimProfiles {
         }
 
         return VictimProfile(name: name, age: age, gender: NameBank.gender(of: name), deceased: deceased, occupation: occupation,
-                             residence: residence, family: family, relationship: relationship, harm: harm, record: record,
+                             residence: residence, family: familyLine, relationship: relationship, harm: harm, record: record,
                              testified: testified, position: c.background?.victimStanceDetail, impactStatement: c.victimImpact,
                              inTheFile: inTheFile)
     }
@@ -105,11 +120,41 @@ enum VictimProfiles {
         return nil
     }
 
+    /// "a 34-year-old nurse", "{V}, 81," and the like, when the summary gives an age without the name beside it.
+    static func describedAge(_ text: String) -> Int? {
+        guard let regex = try? NSRegularExpression(pattern: "\\b(\\d{1,2})-year-old\\b"),
+              let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let range = Range(match.range(at: 1), in: text) else { return nil }
+        return Int(text[range])
+    }
+
+    /// "Name, 26, an accountant" or "Name, a cashier": the work the summary gives the victim.
+    static func statedOccupation(_ text: String, name: String, last: String) -> String? {
+        for key in [name, last] {
+            let pattern = NSRegularExpression.escapedPattern(for: key) + ",(?: \\d{1,3},)? (?:a|an) ([a-z][a-z -]{2,40}?)(?:[,.]| who| at| in| for)"
+            guard let regex = try? NSRegularExpression(pattern: pattern),
+                  let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+                  let range = Range(match.range(at: 1), in: text) else { continue }
+            let job = String(text[range])
+            // Relationships and descriptions aren't jobs.
+            let notJobs = ["friend", "neighbor", "widow", "retired couple", "guest", "regular", "stranger", "former", "mother", "father", "man", "woman", "boy", "girl", "child"]
+            if notJobs.contains(where: { job.hasPrefix($0) }) { continue }
+            return job
+        }
+        return nil
+    }
+
     private static func relationshipLine(_ lower: String, c: CourtCase, first: String, rng: inout SeededRNG) -> String {
         let pairs: [(String, String)] = [
+            // Former partners first, so "ex-girlfriend" isn't read as a current one.
+            ("ex-", "A former partner of the defendant."), ("former partner", "A former partner of the defendant."),
+            ("former boyfriend", "A former partner of the defendant."), ("former girlfriend", "A former partner of the defendant."),
             ("girlfriend", "Dating relationship with the defendant."), ("boyfriend", "Dating relationship with the defendant."),
-            ("wife", "Married to the defendant."), ("husband", "Married to the defendant."),
-            ("ex-", "A former partner of the defendant."), ("neighbor", "Neighbor of the defendant."),
+            ("wife", "Married to the defendant."), ("husband", "Married to the defendant."), ("spouse", "Married to the defendant."),
+            ("business partner", "The defendant's business partner."), ("co-owned", "The defendant's business partner."),
+            ("partner", "In a relationship with the defendant."), ("resident", "A resident in the defendant's care."),
+            ("patient", "A patient in the defendant's care."), ("client", "A client of the defendant."),
+            ("neighbor", "Neighbor of the defendant."),
             ("coworker", "Worked with the defendant."), ("co-worker", "Worked with the defendant."),
             ("roommate", "Shared a home with the defendant."), ("customer", "A customer of the defendant's business."),
             ("client", "A client of the defendant."), ("landlord", "The defendant's landlord."), ("tenant", "Rented from the defendant."),
@@ -130,8 +175,16 @@ enum VictimProfiles {
 
     private static func harmLines(_ c: CourtCase, deceased: Bool, rng: inout SeededRNG) -> [String] {
         var lines: [String] = []
+        // Threats, stalking, and messages harm without touching anyone.
+        let noContact = ["stalking", "stalkingCourtOrder", "cyberstalking", "communicatingThreats", "witnessIntimidation",
+                         "extortion", "privateImages", "dvpoViolation", "massViolenceThreat"]
+        let contactless = noContact.contains(c.charges.first?.lawID ?? "")
         if deceased {
             lines.append("Died as a result of the offense.")
+        } else if contactless {
+            lines.append(rng.pick(["Not physically hurt. Has changed routines, phone numbers, and the route to work.",
+                                   "No physical injury. Started counseling and sleeps with the lights on.",
+                                   "Not touched, but says the fear hasn't let up; moved in with family for a time."]))
         } else {
             switch c.category {
             case .violent, .family:
@@ -142,8 +195,9 @@ enum VictimProfiles {
                 lines.append(rng.pick(["Has trouble sleeping and has started counseling.", "Moved in with relatives for a time afterward.",
                                        "Had the locks changed and installed cameras.", "Says the fear is worse than the injuries."]))
             case .robbery:
-                lines.append(rng.pick(["Not physically hurt, but had a gun pointed at them.", "Knocked down; scrapes and a bruised hip.",
-                                       "Quit the job where it happened.", "Now carries pepper spray and won't work night shifts."]))
+                let armed = c.charges.contains { $0.lawID == "dangerousRobbery" }
+                lines.append(rng.pick((armed ? ["Not physically hurt, but had a weapon pointed at them."] : ["Knocked down; scrapes and bruises."])
+                                      + ["Quit the job where it happened.", "Now carries pepper spray and won't go out after dark alone."]))
             case .property:
                 lines.append(rng.pick(["Lost items of sentimental value that were never recovered.", "Paid an insurance deductible and lost a week of work dealing with it.",
                                        "Says the home doesn't feel safe anymore."]))

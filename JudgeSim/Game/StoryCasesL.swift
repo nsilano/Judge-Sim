@@ -335,7 +335,7 @@ extension StoryCases {
                         cross: ["\"Sergeants ask that all the time.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("What did {DL} say to you that night?", "\"Came into the report room and asked, 'Anything on your camera I need to worry about?' I said the guy was fighting, I took him down hard, it's on there.\""),
+                            .direct("What did {DL} say to you that night?", "\"Came into the report room and asked, 'Anything on your camera I need to worry about?' I said the suspect was fighting, I took them down hard, it's on there.\""),
                             .cross("Sergeants ask that after any use of force?", "\"It's a normal question. That's how I took it then.\""),
                             .cross("You've been suspended for the force you used on {VL}?", "\"I'm on administrative leave.\""),
                             .cross("You'd benefit if the blame moved to {DL}?", "\"I'm telling what happened.\"")
@@ -481,7 +481,8 @@ extension StoryCases {
             prosecutionOpening: "A written warning, an old key, and 1:30 in the morning.",
             defenseOpening: "A person who wanted their own TV and their mother's rings.",
             prosecutionClosing: "{DL} was told never to come in, and came in anyway, at night, and took what wasn't {D.hers}.",
-            defenseClosing: "An honest claim to your own property isn't intent to steal."
+            defenseClosing: "An honest claim to your own property isn't intent to steal.",
+            victim: VictimFacts(relationship: "A former partner of the defendant; they shared the house until six weeks earlier.")
         )
     )
 }

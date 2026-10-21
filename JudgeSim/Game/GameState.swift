@@ -130,6 +130,8 @@ final class GameState: ObservableObject {
     private var reoffenseQueue: [Reoffense] = []
     /// Appeals the Court of Appeals decided since the judge last sat, newest last.
     @Published private(set) var freshAppeals: [UUID] = []
+    /// What the last calendar call decided, and where each case went, for the results screen.
+    @Published private(set) var lastCalendarResults: [String] = []
     /// Whether last week's trial calendar had a murder case, so two murder weeks don't come back to back.
     private var murderLastWeek = false
     /// The Monday of the judge's first week on the bench.
@@ -233,7 +235,7 @@ final class GameState: ObservableObject {
             let percent = Int((share * 100).rounded())
             let won = share >= 0.5
             post(NewsItem(date: electionDay, kind: .community,
-                          headline: won ? "\(judgeName) wins another eight-year term" : "\(judgeName) unseated in Superior Court race",
+                          headline: won ? "\(judgeName) wins reelection to the Superior Court bench" : "\(judgeName) unseated in Superior Court race",
                           body: won
                             ? "Voters returned Judge \(last) to the Hollis County Superior Court bench with \(percent) percent of the vote. " + (survey.affirmedPercent.map { "Supporters pointed to a record affirmed \($0) percent of the time on appeal." } ?? "")
                             : "Judge \(last) lost the Superior Court race with \(percent) percent of the vote. The challenger campaigned on the judge's sentencing record and the cases that came apart after trial.",
@@ -357,6 +359,15 @@ final class GameState: ObservableObject {
         let lastMinute = cal.date(bySettingHour: 23, minute: 59, second: 0, of: friday) ?? friday
         day.clock = min(day.clock, lastMinute)
         currentDate = cal.startOfDay(for: day.clock)
+    }
+
+    /// Leaving a matter without a continuance: whatever was saved from an earlier sitting is set aside, and the
+    /// matter is heard from the start when it's called again.
+    func startOver(_ matterID: UUID) {
+        guard var day = today, let index = day.entries.firstIndex(where: { $0.matterID == matterID }) else { return }
+        day.entries[index].resume = nil
+        today = day
+        save()
     }
 
     /// Opens a matter on today's calendar.
@@ -813,12 +824,35 @@ final class GameState: ObservableObject {
                 if e.resume != nil { return 0 }
                 return (c.background?.isJailed ?? false) ? 1 : 2
             }
+            func isStory(_ e: DocketEntry) -> Bool { if case .trial(let c) = e.matter { return c.templateKey.hasPrefix("story.") } else { return false } }
             let trials = entries.enumerated().filter { isTrial($0.element) }
-            if trials.count > weekCap {
-                let keep = Set(trials.sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }.prefix(weekCap).map(\.element.id))
+            // A written case keeps a seat every week: calendar-call cases take at most all but one of the trial slots.
+            let generatedLimit = weekCap > 1 ? weekCap - 1 : weekCap
+            var keepIDs: [UUID] = []
+            var generated = 0
+            for (_, entry) in trials.sorted(by: { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }) {
+                guard keepIDs.count < weekCap else { break }
+                if !isStory(entry) {
+                    // A trial already under way is never bumped.
+                    if generated >= generatedLimit && entry.resume == nil { continue }
+                    generated += 1
+                }
+                keepIDs.append(entry.id)
+            }
+            let keep = Set(keepIDs)
+            if keep.count < trials.count {
                 let saturday = CourtCalendar.calendar.date(byAdding: .day, value: 1, to: weekEnd) ?? weekEnd
                 let nextWeek = CourtCalendar.weekday(onOrAfter: CourtCalendar.monday(onOrAfter: saturday))
                 for (_, entry) in trials where !keep.contains(entry.id) {
+                    // Most cases that wait twice are settled: a plea at an administrative session, as most cases are.
+                    if case .trial(let c) = entry.matter, !isStory(entry), (entry.note ?? "").contains("Carried over:"), rng.chance(0.7) {
+                        history.insert(CaseRecord(docket: c.docket, caption: c.caption, headline: c.headline, category: c.category,
+                                                  date: date, defendantID: c.defendant.personID,
+                                                  outcome: "Resolved by plea at an administrative session",
+                                                  judgments: ["The defendant pleaded guilty before trial under an arrangement approved at an administrative session."],
+                                                  returningDefendant: c.defendant.isReturning, appealStatus: nil, kind: "plea"), at: 0)
+                        continue
+                    }
                     var carried = entry
                     if !(carried.note ?? "").contains("Carried over:") {
                         carried.note = (carried.note ?? "") + " Carried over: the week's trial calendar was full."
@@ -927,7 +961,10 @@ final class GameState: ObservableObject {
                    let entered = person.appearances.last(where: { $0.docket == prior.docket }) {
                     let offense = prior.offense.lowercasedPhrase
                     let incident = CourtCalendar.calendar.date(byAdding: .day, value: -rng.int(30...70), to: date) ?? date
-                    reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: FollowUpCases.newCharges.shuffled(using: &rng), victimName: nil,
+                    // Someone this court sent home, on probation or after time served, charged with something new.
+                    stats.chargedAgainAfterRelease = (stats.chargedAgainAfterRelease ?? 0) + 1
+                    let fitting = FollowUpCases.newCharges.filter { FollowUpCases.fits($0, age: person.age(on: date)) }
+                    reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: (fitting.isEmpty ? FollowUpCases.newCharges : fitting).shuffled(using: &rng), victimName: nil,
                                                     incident: incident,
                                                     note: "Back in your court: you sentenced \(person.name) for \(offense) on \(SentenceFormat.shortDate(entered.date)).",
                                                     priorOffense: prior.offense, priorDate: entered.date))
@@ -1384,6 +1421,16 @@ final class GameState: ObservableObject {
         stats.activeSentences += result.activeSentences
         stats.suspendedSentences += result.suspendedSentences
         stats.probationCompleted += result.probationCompleted
+        // Where each case went: tried this week, or set for a later date.
+        var placed: [String] = []
+        for m in call.matters where m.pendingCase != nil {
+            if let entry = today?.entries.first(where: { if case .trial(let c) = $0.matter { return c.defendant.personID == m.personID } else { return false } }), entry.isOpen {
+                placed.append("\(m.personName): on this week's trial calendar.")
+            } else if let set = scheduled.first(where: { if case .trial(let c) = $0.entry.matter { return c.defendant.personID == m.personID } else { return false } }) {
+                placed.append("\(m.personName): set for trial the week of \(SentenceFormat.shortDate(set.date)).")
+            }
+        }
+        lastCalendarResults = result.lines + (placed.isEmpty ? [] : ["Where the cases went:"] + placed)
         history.insert(CaseRecord(docket: "Calendar call", caption: "Administrative calendar call",
                                   headline: "\(call.matters.count) matters", category: .procedure, date: currentDate,
                                   defendantID: UUID(), outcome: "\(call.matters.count) matters handled", judgments: result.lines,
@@ -1919,9 +1966,20 @@ final class GameState: ObservableObject {
                 orders[o].violations += 1
                 stats.orderViolations = (stats.orderViolations ?? 0) + 1
                 let person = people[index], order = orders[o]
-                let what = rng.pick(["showed up at \(order.protectedName)'s workplace", "was found parked outside \(order.protectedName)'s home",
-                                     "sent \(order.protectedName) dozens of messages from a new number", "followed \(order.protectedName) from a grocery store",
-                                     "left a note on \(order.protectedName)'s car"])
+                // The case comes first, so the news describes the same violation the trial will be about.
+                let kinds = Consequences.violationTemplates(domestic: order.domestic)
+                let fitting = kinds.filter { FollowUpCases.fits($0, age: person.age(on: currentDate)) }
+                let key = rng.pick(fitting.isEmpty ? kinds : fitting)
+                let what: String
+                var incident = currentDate
+                switch key {
+                case "story.followup.workplaceVisit": what = "showed up at \(order.protectedName)'s workplace and followed \(order.protectedName) to the parking lot"
+                case "story.followup.newNumber": what = "sent \(order.protectedName) dozens of messages from a new number"
+                case "story.followup.parkingLotWatch": what = "was found parked outside \(order.protectedName)'s home night after night"
+                default:
+                    what = "left notes on \(order.protectedName)'s car and slashed a tire"
+                    incident = CourtCalendar.calendar.date(byAdding: .day, value: -20, to: currentDate) ?? currentDate
+                }
                 post(NewsItem(date: currentDate, kind: .arrest,
                               headline: "\(person.name) arrested for violating court order protecting \(order.protectedName)",
                               body: "Deputies say \(person.name) \(what), in violation of the stay-away order Judge \(lastName(judgeName)) entered in \(order.docket) on \(SentenceFormat.shortDate(order.issued)). \(person.lastName) is being held pending a first appearance.",
@@ -1932,8 +1990,8 @@ final class GameState: ObservableObject {
                                                            body: "The new charges against \(person.name), arising from the alleged violation of a stay-away order protecting \(order.protectedName), are set for trial before the judge who entered the order.",
                                                            docket: order.docket),
                                             personID: person.id,
-                                            reoffense: Reoffense(personID: person.id, templateKeys: Consequences.violationTemplates(domestic: order.domestic),
-                                                                 victimName: order.protectedName, incident: currentDate,
+                                            reoffense: Reoffense(personID: person.id, templateKeys: [key],
+                                                                 victimName: order.protectedName, incident: incident,
                                                                  note: "Charged with violating the stay-away order you entered on \(SentenceFormat.shortDate(order.issued)) in \(order.docket), protecting \(order.protectedName). It was \(person.lastName)'s violation number \(order.violations).",
                                                                  priorOffense: order.offense ?? person.priors.first { $0.docket == order.docket }?.offense, priorDate: order.issued)))
                 break

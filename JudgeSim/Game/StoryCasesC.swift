@@ -102,7 +102,8 @@ extension StoryCases {
             prosecutionOpening: "{V} looked down the barrel of what anyone would believe was a handgun. {D} made sure of that by removing the orange tip.",
             defenseOpening: "{DL} robbed the pharmacy and confessed. The only question is whether a BB gun that was never fired makes it armed robbery. It doesn't.",
             prosecutionClosing: "Under our law, a robbery with an instrument that appears to be a firearm and that can cause serious injury is armed robbery.",
-            defenseClosing: "Common law robbery fully punishes what {DL} did. Armed robbery requires a real danger to life that wasn't there."
+            defenseClosing: "Common law robbery fully punishes what {DL} did. Armed robbery requires a real danger to life that wasn't there.",
+            victim: VictimFacts(occupation: "Pharmacist")
         )
     )
 
@@ -113,7 +114,7 @@ extension StoryCases {
         headlines: ["Babysitter Charged After Infant's Brain Injury", "Shaken Baby or Accidental Fall?"],
         primaryLaw: "felonyChildAbuse", lesserLaw: "childAbuseMisd", threshold: 2, lesserThreshold: 1,
         specification: "Intentionally inflicted serious physical injury on {INFANT}, a seven-month-old, by violent shaking.",
-        ageRange: 19...32, occupations: ["in-home child care provider"], hasVictim: true,
+        ageRange: 26...40, occupations: ["in-home child care provider"], hasVictim: false,
         summaries: [
             "{D} ran a small licensed day care from {D.his} home in {HOOD}. On {DATE}, {DL} called 911 at about {TIME} to say seven-month-old {INFANT} had gone limp after falling from a changing table. At the hospital, doctors found bleeding beneath the skull, bleeding in both retinas, and brain swelling, and diagnosed abusive head trauma. {INFANT} survived with lasting developmental delays. {DL} says the baby rolled off the table while {D.he} reached for a diaper, and that the parents had noticed {INFANT} was fussy and vomiting the night before."
         ],
@@ -298,7 +299,8 @@ extension StoryCases {
             prosecutionOpening: "Four trips into the vault, no one else, and a car loan paid off in hundreds three weeks later.",
             defenseOpening: "No camera, a code that leaves no trace, and a manager drowning in gambling debt. {DL} was the convenient answer.",
             prosecutionClosing: "Access, opportunity, and cash.",
-            defenseClosing: "Opportunity without proof is suspicion."
+            defenseClosing: "Opportunity without proof is suspicion.",
+            employer: "{BANK}"
         )
     )
 
@@ -393,7 +395,8 @@ extension StoryCases {
             prosecutionOpening: "A blinking light, a body on the windshield, and a drive home. {D} had every reason to know.",
             defenseOpening: "A bang in the dark and rain on a road known for deer. {DL} made a terrible mistake, not a knowing choice.",
             prosecutionClosing: "Reason to know is enough. A shattered windshield is reason to know.",
-            defenseClosing: "Reason to know a person was hit isn't proven when a reasonable driver could believe it was a deer."
+            defenseClosing: "Reason to know a person was hit isn't proven when a reasonable driver could believe it was a deer.",
+            victimDied: true
         )
     )
 
