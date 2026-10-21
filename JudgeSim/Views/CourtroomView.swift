@@ -77,8 +77,8 @@ struct CourtroomView: View {
                             ProbationStage(session: session)
                         case .judgment:
                             if let outcome = session.outcome {
-                                JudgmentStage(courtCase: session.courtCase, outcome: outcome) {
-                                    game.complete(session.courtCase, outcome: outcome)
+                                JudgmentStage(courtCase: session.courtCase, outcome: outcome) { referrals in
+                                    game.complete(session.courtCase, outcome: outcome, perjuryReferrals: referrals)
                                     dismiss()
                                 }
                             }

@@ -1652,8 +1652,15 @@ final class GameState: ObservableObject {
         return entry.isOpen
     }
 
-    func complete(_ courtCase: CourtCase, outcome: CaseOutcome) {
+    func complete(_ courtCase: CourtCase, outcome: CaseOutcome, perjuryReferrals: [Witness] = []) {
         guard stillOpen(courtCase.id) else { return }
+        // Testimony the judge sent to the district attorney: the DA's decision, and what comes of it, arrive later.
+        if !perjuryReferrals.isEmpty, let judgeName {
+            for witness in perjuryReferrals {
+                pending += Perjury.events(for: witness, in: courtCase, convicted: outcome.convicted,
+                                          judgeLast: lastName(judgeName), date: currentDate)
+            }
+        }
         for i in arrestOrders.indices where arrestOrders[i].docket == courtCase.docket {
             arrestOrders[i].served = true
             arrestOrders[i].resolved = true

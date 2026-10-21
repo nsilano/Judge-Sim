@@ -1216,7 +1216,12 @@ struct ProbationStage: View {
 struct JudgmentStage: View {
     let courtCase: CourtCase
     let outcome: CaseOutcome
-    let onFinish: () -> Void
+    /// Called with the witnesses the judge sends to the district attorney for perjury.
+    let onFinish: ([Witness]) -> Void
+    @State private var referred: Set<UUID> = []
+
+    /// Everyone who testified, other than the defendant.
+    private var witnesses: [Witness] { courtCase.witnesses.filter { $0.isDefendant != true } }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -1323,7 +1328,11 @@ struct JudgmentStage: View {
             SectionTitle(text: "Tomorrow's paper", icon: "newspaper.fill")
             NewsCard(item: outcome.news)
 
-            PrimaryButton(title: "Return to Chambers", icon: "house.fill", action: onFinish)
+            if !witnesses.isEmpty { perjurySection }
+
+            PrimaryButton(title: "Return to Chambers", icon: "house.fill") {
+                onFinish(witnesses.filter { referred.contains($0.id) })
+            }
         }
     }
 }
@@ -1432,5 +1441,52 @@ struct JudgmentSummaryCard: View {
             }
         }
         .card(tint: Theme.gold)
+    }
+}
+
+extension JudgmentStage {
+    /// Sending testimony the judge believes was a lie to the district attorney.
+    var perjurySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionTitle(text: "Refer for perjury", icon: "exclamationmark.bubble.fill")
+            Text("If you believe a witness lied to you under oath, you can send the transcript to the district attorney. Perjury needs a knowing lie about something that mattered, proved by more than one person's word against another's. A witness who was mistaken, or asleep, hasn't lied. The DA decides whether to charge, and another judge hears the case.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            ForEach(witnesses) { witness in
+                let on = referred.contains(witness.id)
+                Button {
+                    Haptics.tap()
+                    if on { referred.remove(witness.id) } else { referred.insert(witness.id) }
+                } label: {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: on ? "checkmark.square.fill" : "square")
+                            .foregroundStyle(on ? Theme.bad : Theme.secondaryText)
+                            .font(.title3)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(witness.name).font(.subheadline.weight(.semibold))
+                            Text("\(witness.role) · called by \(witness.calledBy == .prosecution ? "the State" : "the defense")")
+                                .font(.caption).foregroundStyle(.secondary)
+                            if let line = Perjury.answers(witness).first {
+                                Text("\u{201C}\(CounselBrief.clip(line, 140))\u{201D}")
+                                    .font(.system(.caption, design: .serif)).italic()
+                                    .foregroundStyle(Theme.quoteText)
+                                    .multilineTextAlignment(.leading)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(on ? Theme.objectionFill : Theme.raised.opacity(0.6)))
+                }
+                .buttonStyle(.plain)
+            }
+            if !referred.isEmpty {
+                Label("\(referred.count) witness\(referred.count == 1 ? "" : "es") will be referred to the district attorney when you return to chambers.",
+                      systemImage: "paperplane.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.bad)
+            }
+        }
+        .card()
     }
 }
