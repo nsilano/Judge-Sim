@@ -490,8 +490,8 @@ extension Testimony {
         let items = Array(ctx.stateInOrder.filter { $0.kind != .statement }.prefix(rng.int(2...4)))
         for (index, item) in items.enumerated() {
             let q = index == 0
-                ? rng.pick(["Let's turn to \(item.exhibit). What is it?", "Tell the court about \(item.exhibit), the \(lower(item.title)).", "What's \(item.exhibit)?"])
-                : rng.pick(["What about \(item.exhibit)?", "And \(item.exhibit), the \(lower(item.title))?", "Tell the court how you got the \(lower(item.title)).", "What did the \(lower(item.title)) show?"])
+                ? rng.pick(["Let's turn to \(item.exhibit). What is it?", "Tell the court about \(item.exhibit), \(item.phrase).", "What's \(item.exhibit)?"])
+                : rng.pick(["What about \(item.exhibit)?", "And \(item.exhibit), \(item.phrase)?", "Tell the court how you got \(item.phrase).", "What did \(item.phrase) show?"])
             let how = howObtained(item, ctx: ctx, rng: &rng)
             let why = rng.chance(0.55) ? " " + rng.pick(significance) : ""
             d(q, "\(item.detail) \(how)\(why)")
@@ -535,7 +535,7 @@ extension Testimony {
         if let sent = s.labSubmitted {
             let forensic = ctx.state.filter { $0.kind == .forensic }
             d(rng.pick(["Did anything go to the State Crime Laboratory?", "Were items submitted for testing?"]),
-              "Yes. On \(CaseDates.day(sent)) I submitted \(forensic.map { lower($0.title) }.joined(separator: " and ")). " + (s.labReturned.map { "The results came back on \(CaseDates.day($0))." } ?? ""))
+              "Yes. On \(CaseDates.day(sent)) I submitted \(forensic.map { $0.phrase }.joined(separator: " and ")). " + (s.labReturned.map { "The results came back on \(CaseDates.day($0))." } ?? ""))
         }
 
         // Cross: the gaps in this file, then the weak points of this kind of case
@@ -585,7 +585,7 @@ extension Testimony {
         }
         pool.append(("You wrote your final report after the arrest, didn't you?", "The supplemental report, yes. The initial report was written as things happened."))
         if let def = ctx.defense.first {
-            pool.append(("Did your investigation ever account for the \(lower(def.title))?",
+            pool.append(("Did your investigation ever account for \(def.phrase)?",
                          rng.pick(["I learned about it from the defense. It didn't change my view of the evidence.", "I'm aware of it. I don't think it outweighs what we found.", "No. That came in later."])))
         }
         for (q, a) in rng.pick(pool, count: rng.int(2...3)) { c(q, a) }
@@ -596,7 +596,7 @@ extension Testimony {
             ("Did you have any reason to cut corners in this case?", "No. It got the same work I'd give any case.")
         ]
         if let top = ctx.strongest {
-            redirect.append(("Would any of the steps counsel mentioned change what the \(lower(top.title)) shows?", "No. The \(lower(top.title)) is what it is."))
+            redirect.append(("Would any of the steps counsel mentioned change what \(top.phrase) shows?", "No. \(top.phrase.capitalizedFirst) is what it is."))
         }
         if identityAtIssue {
             redirect.append(("Why did the investigation focus on \(dl)?", "Because of what the evidence showed. " + ctx.report.howIdentified))
@@ -688,7 +688,7 @@ extension Testimony {
                 rng.pick(["A few people. They gave a description, but no names that night.", "People were talking over each other. I wrote down what I could and got contact information."]))
             if !collected.isEmpty && rng.chance(0.6) {
                 d(rng.pick(["Was anything collected while you were there?", "Did you see any physical evidence?"]),
-                  "The technicians collected \(collected.map { lower($0.title) }.prefix(2).joined(separator: " and ")). I stood by and kept the scene log.")
+                  "The technicians collected \(collected.map { $0.phrase }.prefix(2).joined(separator: " and ")). I stood by and kept the scene log.")
             }
             crossPool += [("You didn't see any crime being committed, did you?", "No. It was over when I got there."),
                           ("You arrived after the people involved had time to talk to each other?", "Some of them, yes."),
@@ -830,10 +830,10 @@ extension Testimony {
         }
 
         for (index, item) in items.prefix(2).enumerated() {
-            let title = lower(item.title)
+            let title = item.phrase
             let sent = s.labSubmitted.map { CaseDates.day($0) } ?? "the date on the request"
-            d(index == 0 ? rng.pick(["How did the \(title) come to you?", "Tell the court how \(item.exhibit) reached the laboratory.", "What did you receive in this case?"])
-                         : rng.pick(["Did you also examine the \(title)?", "What about \(item.exhibit)?"]),
+            d(index == 0 ? rng.pick(["How did \(title) come to you?", "Tell the court how \(item.exhibit) reached the laboratory.", "What did you receive in this case?"])
+                         : rng.pick(["Did you also examine \(title)?", "What about \(item.exhibit)?"]),
               "\(s.agency) submitted it on \(sent), " + rng.pick(["in a sealed bag with the officer's initials across the seal.", "heat-sealed and labeled with the case number.", "with a request for analysis and a chain-of-custody form."])
                 + " " + rng.pick(["The seal was intact when I opened it, and I documented that.", "I checked the seal and the labels against the request before opening it.", "Nothing about the packaging suggested tampering."]))
             d(rng.pick(["What did you do with it?", "How did you analyze it?", "Walk the court through your method."]), method(discipline, alcohol: alcohol, postmortem: postmortem, rng: &rng))
@@ -849,7 +849,7 @@ extension Testimony {
         var pool = crossPool(discipline, alcohol: alcohol, postmortem: postmortem, ctx: ctx, rng: &rng)
         pool.append(("Has your lab ever had to correct a result?", "Every lab has corrected errors. That's why there's a review process, and this result was reviewed."))
         pool.append(("Were there items from this case the agency never sent you?", rng.chance(0.5) ? "Yes. Some items weren't submitted for testing." : "Not that I'm aware of."))
-        pool.append(("You don't know what happened to the \(lower(items[0].title)) before it got to your lab?", "I know what the chain-of-custody form says. Before that, I'd defer to the officers."))
+        pool.append(("You don't know what happened to \(items[0].phrase) before it got to your lab?", "I know what the chain-of-custody form says. Before that, I'd defer to the officers."))
         for (q, a) in rng.pick(pool, count: rng.int(3...4)) { c(q, a) }
         ex.append(.init(phase: .redirect, examiner: .prosecution,
                         question: rng.pick(["Does anything you were asked on cross change your results?", "Was your result confirmed?"]),
@@ -1151,7 +1151,7 @@ extension Testimony {
             d(rng.pick(["What were you thinking at that point?", "What happened next?", "Why?", "What do you want the court to understand about that?"]), line)
         }
         if let top = ctx.strongest {
-            d(rng.pick(["The State showed the court \(top.exhibit), the \(lower(top.title)). What do you say about that?", "Let's talk about the \(lower(top.title)).", "How do you explain the \(lower(top.title))?"]),
+            d(rng.pick(["The State showed the court \(top.exhibit), \(top.phrase). What do you say about that?", "Let's talk about \(top.phrase).", "How do you explain \(top.phrase)?"]),
               holds ? rng.pick(["I'm not going to pretend it isn't there. But it doesn't mean what they say it means.", "I can explain it, and I did explain it, to anyone who would listen.", "It looks bad on paper. Here's what it doesn't show: the rest of that day."])
                     : rng.pick(["I don't know how to explain that.", "I've thought about that a lot. I can't explain it.", "I don't know. I just know I didn't do this."]))
         }
