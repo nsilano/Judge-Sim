@@ -10,6 +10,8 @@ struct RootView: View {
             TabView {
                 ChambersView()
                     .tabItem { Label("Chambers", systemImage: "building.columns.fill") }
+                CourtCalendarView()
+                    .tabItem { Label("Calendar", systemImage: "calendar") }
                 RecordsView()
                     .tabItem { Label("Records", systemImage: "archivebox.fill") }
                 LawLibraryView()

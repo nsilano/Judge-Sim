@@ -2256,3 +2256,315 @@ final class GameState: ObservableObject {
         }
     }
 }
+
+// MARK: - Court calendar planner
+
+/// One matter on the court calendar, with where it is projected to fall.
+struct PlannedMatter: Identifiable {
+    enum Kind { case calendarCall, trial, hearing }
+    enum Source {
+        /// On this week's calendar.
+        case today(entryID: UUID, matterID: UUID)
+        /// Set for a later week.
+        case scheduled(UUID)
+        /// Not yet on the calendar, but every court week has one.
+        case expected
+    }
+
+    let id: String
+    let kind: Kind
+    let source: Source
+    let title: String
+    let subtitle: String
+    let minutes: Int
+    var notes: [String]
+    var courtCase: CourtCase?
+    var done = false
+    var outcome: String?
+    /// Past the week's trial limit: unless something else moves, it waits for the next week.
+    var carriesOver = false
+    var start: Date?
+    var day: Date?
+
+    var canContinue: Bool {
+        guard kind != .calendarCall, !done else { return false }
+        if case .expected = source { return false }
+        return true
+    }
+}
+
+/// Something else on the calendar: a holiday, an appeal, a release, an election.
+struct CalendarEvent: Identifiable {
+    enum Kind { case holiday, appeal, release, probation, election, year }
+    let id = UUID()
+    let date: Date
+    let kind: Kind
+    let title: String
+    let detail: String
+
+    var icon: String {
+        switch kind {
+        case .holiday: return "flag.fill"
+        case .appeal: return "building.columns"
+        case .release: return "door.left.hand.open"
+        case .probation: return "checkmark.seal"
+        case .election: return "checkmark.rectangle.stack.fill"
+        case .year: return "chart.bar.doc.horizontal"
+        }
+    }
+}
+
+/// A court week as it stands now: what is set, where it falls, and how full each day is.
+struct WeekPlan: Identifiable {
+    var id: Date { monday }
+    let monday: Date
+    let courtDays: [Date]
+    let holidays: [(Date, String)]
+    let isCurrent: Bool
+    /// The most trials the week takes.
+    let cap: Int
+    var matters: [PlannedMatter]
+    /// Trial seats the docket will fill with new cases when the week opens.
+    var openSeats: Int
+    var minutesByDay: [Date: Int]
+    /// Courtroom minutes in a day, from opening to the last call at 4:30.
+    let dayCapacity: Int
+
+    var trialsSet: Int { matters.filter { $0.kind == .trial && !$0.carriesOver }.count }
+    var carryingOver: Int { matters.filter(\.carriesOver).count }
+    var plannedMinutes: Int { minutesByDay.values.reduce(0, +) }
+    var capacity: Int { dayCapacity * max(1, courtDays.count) }
+
+    func matters(on day: Date) -> [PlannedMatter] {
+        matters.filter { $0.day.map { CourtCalendar.isSameDay($0, day) } ?? false }
+    }
+
+    func load(on day: Date) -> Double {
+        Double(minutesByDay[CourtCalendar.calendar.startOfDay(for: day)] ?? 0) / Double(max(1, dayCapacity))
+    }
+}
+
+extension GameState {
+
+    /// Courtroom minutes from opening to the last call at 4:30.
+    var courtMinutesPerDay: Int { max(60, 16 * 60 + 30 - openingMinutes) }
+
+    /// This week and the weeks after it, as the calendar stands now.
+    func weekPlans(count: Int = 12) -> [WeekPlan] {
+        guard let day = today else { return [] }
+        let cal = CourtCalendar.calendar
+        let first = CourtCalendar.monday(onOrBefore: day.date)
+        return (0..<count).compactMap { offset in
+            guard let monday = cal.date(byAdding: .day, value: 7 * offset, to: first) else { return nil }
+            return offset == 0 ? currentWeekPlan(day, monday: monday) : laterWeekPlan(monday: monday)
+        }
+    }
+
+    private func courtDays(of monday: Date) -> [Date] {
+        (0..<5).compactMap { CourtCalendar.calendar.date(byAdding: .day, value: $0, to: monday) }.filter(CourtCalendar.isCourtDay)
+    }
+
+    private func planned(_ entry: DocketEntry, source: PlannedMatter.Source) -> PlannedMatter {
+        var notes: [String] = []
+        var courtCase: CourtCase?
+        let kind: PlannedMatter.Kind
+        switch entry.matter {
+        case .trial(let c):
+            kind = .trial
+            courtCase = c
+            if let bg = c.background, bg.isJailed { notes.append("Defendant held in jail \(bg.custodyDays) days awaiting trial") }
+            if Self.isMurder(c) { notes.append("Murder trial") }
+            if c.background?.arrangementPresented == true { notes.append("A plea arrangement is expected; a shorter hearing") }
+            if c.continuanceMotion != nil { notes.append("A party will move to continue when it is called") }
+            if c.defendant.isReturning { notes.append("You've seen this defendant before") }
+            if let victim = c.victimName { notes.append("Victim: \(victim)") }
+        case .hearing(let h):
+            kind = .hearing
+            notes.append("\(h.personName), on probation for \(h.probation.offense.lowercasedPhrase)")
+        case .calendar(let call):
+            kind = .calendarCall
+            let pleas = call.matters.filter { $0.kind == .quickPlea }.count
+            notes.append("\(call.matters.count) short matters" + (pleas > 0 ? ", \(pleas) with a plea" : ""))
+        }
+        if entry.continuances > 0 { notes.append("Continued \(entry.continuances == 1 ? "once" : "\(entry.continuances) times")") }
+        if entry.carriedOver == true { notes.append("Carried over from a full week") }
+        if let requests = entry.requests, !requests.isEmpty {
+            notes.append("Follow-up evidence ordered: \(requests.count) request\(requests.count == 1 ? "" : "s")")
+        }
+        if entry.resume != nil { notes.append("Picks up where it left off") }
+        let id: String
+        switch source {
+        case .today(let entryID, _): id = entryID.uuidString
+        case .scheduled(let sid): id = sid.uuidString
+        case .expected: id = UUID().uuidString
+        }
+        return PlannedMatter(id: id, kind: kind, source: source, title: entry.title, subtitle: entry.subtitle,
+                             minutes: entry.estimatedMinutes, notes: notes, courtCase: courtCase,
+                             done: !entry.isOpen, outcome: entry.isOpen ? nil : entry.outcome)
+    }
+
+    /// Places matters on the week's court days the way the courtroom clock runs: no new matter after 4:30,
+    /// and the last day runs late rather than spilling into the weekend.
+    private func project(_ matters: inout [PlannedMatter], from start: Date, days: [Date]) -> [Date: Int] {
+        let cal = CourtCalendar.calendar
+        var byDay: [Date: Int] = [:]
+        guard let last = days.last else { return byDay }
+        var clock = start
+        if !CourtCalendar.isCourtDay(clock) {
+            clock = CourtCalendar.opening(on: CourtCalendar.weekday(onOrAfter: clock), minutesAfterMidnight: openingMinutes)
+        }
+        for index in matters.indices where !matters[index].done && !matters[index].carriesOver {
+            let day = cal.startOfDay(for: clock)
+            matters[index].day = day
+            matters[index].start = clock
+            byDay[day, default: 0] += matters[index].minutes
+            let started = clock
+            clock = cal.date(byAdding: .minute, value: matters[index].minutes, to: clock) ?? clock
+            let lastCall = cal.date(bySettingHour: 16, minute: 30, second: 0, of: started) ?? started
+            if clock >= lastCall || !cal.isDate(clock, inSameDayAs: started) {
+                let next = CourtCalendar.nextWeekday(after: started)
+                if next <= last { clock = CourtCalendar.opening(on: next, minutesAfterMidnight: openingMinutes) }
+            }
+        }
+        return byDay
+    }
+
+    private func currentWeekPlan(_ day: CourtDay, monday: Date) -> WeekPlan {
+        var matters = day.entries.map { planned($0, source: .today(entryID: $0.id, matterID: $0.matterID)) }
+        let days = courtDays(of: monday)
+        var minutes = project(&matters, from: day.clock, days: days)
+        // The time already spent today counts toward today.
+        let cal = CourtCalendar.calendar
+        let clockDay = cal.startOfDay(for: day.clock)
+        let opening = CourtCalendar.opening(on: clockDay, minutesAfterMidnight: openingMinutes)
+        minutes[clockDay, default: 0] += max(0, (cal.dateComponents([.minute], from: opening, to: day.clock).minute ?? 0))
+        let cap = trialCap(forWeekOf: monday)
+        let trials = matters.filter { $0.kind == .trial }.count
+        return WeekPlan(monday: monday, courtDays: days, holidays: CourtCalendar.holidays(inWeekOf: monday), isCurrent: true,
+                        cap: cap, matters: matters, openSeats: max(0, cap - trials), minutesByDay: minutes,
+                        dayCapacity: courtMinutesPerDay)
+    }
+
+    private func laterWeekPlan(monday: Date) -> WeekPlan {
+        let cal = CourtCalendar.calendar
+        let nextMonday = CourtCalendar.monday(onOrBefore: nextCourtDate)
+        let friday = cal.date(byAdding: .day, value: 4, to: monday) ?? monday
+        // Anything set before the next court week opens is heard that week.
+        let set = scheduled.filter { item in
+            let week = max(CourtCalendar.monday(onOrBefore: item.date), nextMonday)
+            return cal.isDate(week, inSameDayAs: monday) || (week <= friday && week >= monday)
+        }
+        let days = courtDays(of: monday)
+        let cap = trialCap(forWeekOf: monday)
+        var matters: [PlannedMatter] = []
+        if !days.isEmpty {
+            let expectedMatters = lightWeeks ? 4 : 6
+            matters.append(PlannedMatter(id: "call-\(monday.timeIntervalSince1970)", kind: .calendarCall, source: .expected,
+                                         title: "Administrative calendar call", subtitle: "Pleas, bond hearings, motions and arraignments",
+                                         minutes: 20 * expectedMatters,
+                                         notes: ["Matters are set when the week opens; usually \(expectedMatters - 2)–\(expectedMatters)"]))
+        }
+        // Trials in the order the week takes them: a jailed defendant first, then the oldest setting.
+        let trials = set.filter { if case .trial = $0.entry.matter { return true } else { return false } }
+            .enumerated()
+            .sorted { lhs, rhs in
+                func rank(_ s: ScheduledMatter) -> Int {
+                    if s.entry.resume != nil { return 0 }
+                    if case .trial(let c) = s.entry.matter, c.background?.isJailed == true { return 1 }
+                    return 2
+                }
+                return (rank(lhs.element), lhs.element.date, lhs.offset) < (rank(rhs.element), rhs.element.date, rhs.offset)
+            }
+            .map(\.element)
+        // A week the courthouse is closed takes no trials at all.
+        let seats = days.isEmpty ? 0 : cap
+        for (index, item) in trials.enumerated() {
+            var m = planned(item.entry, source: .scheduled(item.id))
+            if index >= seats {
+                m.carriesOver = true
+                m.notes.insert(seats == 0 ? "Past this week's limit: the courthouse is closed all week, so it waits for the next week unless you move it"
+                                          : "Past this week's limit of \(cap) trial\(cap == 1 ? "" : "s"); it waits for the next week unless you move it", at: 0)
+            }
+            matters.append(m)
+        }
+        for item in set {
+            if case .hearing = item.entry.matter { matters.append(planned(item.entry, source: .scheduled(item.id))) }
+        }
+        let opening = days.first.map { CourtCalendar.opening(on: $0, minutesAfterMidnight: openingMinutes) } ?? monday
+        let minutes = project(&matters, from: opening, days: days)
+        return WeekPlan(monday: monday, courtDays: days, holidays: CourtCalendar.holidays(inWeekOf: monday), isCurrent: false,
+                        cap: cap, matters: matters, openSeats: days.isEmpty ? 0 : max(0, cap - trials.count), minutesByDay: minutes,
+                        dayCapacity: courtMinutesPerDay)
+    }
+
+    /// Everything else on the calendar between two dates.
+    func calendarEvents(from start: Date, to end: Date) -> [CalendarEvent] {
+        let cal = CourtCalendar.calendar
+        func inRange(_ d: Date) -> Bool { d >= cal.startOfDay(for: start) && d <= end }
+        var events: [CalendarEvent] = []
+        let years = Set([cal.component(.year, from: start), cal.component(.year, from: end)])
+        for year in years.sorted() {
+            for (date, name) in CourtCalendar.holidays(in: year) where inRange(date) {
+                events.append(CalendarEvent(date: date, kind: .holiday, title: name, detail: "State court holiday. The courthouse is closed."))
+            }
+            let election = CourtCalendar.electionDay(in: year)
+            if inRange(election), !unseated, !emergencyJudge,
+               Reputation.isElectionYear(year, careerStartYear: cal.component(.year, from: careerStart)) {
+                events.append(CalendarEvent(date: election, kind: .election, title: "Election Day",
+                                            detail: "Your seat on the Superior Court bench is on the ballot."))
+            }
+            if let newYear = cal.date(from: DateComponents(year: year, month: 1, day: 1)), inRange(newYear) {
+                events.append(CalendarEvent(date: newYear, kind: .year, title: "Year in review",
+                                            detail: "The bar survey of your court and the year in review come out."))
+            }
+        }
+        for appeal in appeals where appeal.isPending {
+            if inRange(appeal.briefsDue) {
+                events.append(CalendarEvent(date: appeal.briefsDue, kind: .appeal, title: "Briefs due: \(appeal.caption)",
+                                            detail: "\(appeal.docket) · Appeal by \(appeal.appellant)"))
+            }
+            if let argument = appeal.argument, inRange(argument) {
+                events.append(CalendarEvent(date: argument, kind: .appeal, title: "Oral argument: \(appeal.caption)",
+                                            detail: "\(appeal.docket) · Court of Appeals, Raleigh"))
+            }
+            if inRange(appeal.decisionDue) {
+                events.append(CalendarEvent(date: appeal.decisionDue, kind: .appeal, title: "Decision expected: \(appeal.caption)",
+                                            detail: "\(appeal.docket) · \(appeal.issue)"))
+            }
+        }
+        for person in people {
+            if person.status == .incarcerated, let release = person.releaseDate, inRange(release) {
+                events.append(CalendarEvent(date: release, kind: .release, title: "\(person.name) due for release",
+                                            detail: person.releaseNote ?? "Projected release from custody."))
+            }
+            if person.status == .probation, let term = person.probation, inRange(term.ends) {
+                events.append(CalendarEvent(date: term.ends, kind: .probation, title: "\(person.name)'s probation ends",
+                                            detail: "\(term.docket) · \(term.offense)"))
+            }
+        }
+        return events.sorted { $0.date < $1.date }
+    }
+
+    /// Moves a matter to a later week because the calendar is too full. The court's own reset costs neither side anything.
+    func resetForCongestion(_ matter: PlannedMatter, to date: Date) {
+        let target = max(CourtCalendar.weekday(onOrAfter: date), nextCourtDate)
+        let note = "Reset by the court to \(SentenceFormat.shortDate(target)): the calendar was too full."
+        switch matter.source {
+        case .scheduled(let id):
+            guard let index = scheduled.firstIndex(where: { $0.id == id }) else { return }
+            scheduled[index].date = target
+            scheduled[index].entry.carriedOver = true
+            scheduled[index].entry.note = ((scheduled[index].entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces)
+            scheduled.sort { $0.date < $1.date }
+            save()
+        case .today(_, let matterID):
+            continueMatter(matterID, to: target, reason: "The court's calendar was too full.", snapshot: nil)
+            if let index = scheduled.lastIndex(where: { $0.entry.matterID == matterID }) {
+                scheduled[index].entry.carriedOver = true
+                save()
+            }
+        case .expected:
+            break
+        }
+    }
+}
