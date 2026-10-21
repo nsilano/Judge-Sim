@@ -45,6 +45,8 @@ struct ExhibitReview {
     var source: String = ""
     var sourceDetail: String = ""
     var date: String = ""
+    /// The day the paper was printed, for receipts.
+    var documentDate: Date?
     /// Labeled particulars at the top: source, date, custodian, and so on.
     var particulars: [(label: String, value: String)]
     var lines: [Line]
@@ -336,6 +338,11 @@ enum Exhibits {
         r.sourceDetail = "\(rng.int(100...4_800)) \(rng.pick(["Main Street", "Market Street", "Commerce Drive", "Harbor Road", "Highway 17", "Front Street"])), \(town), N.C."
 
         // Ledgers and logs read with real dates, counting up to the day it happened.
+        if r.look == .receipt {
+            // The receipt is printed as the register printed it; what it means is in the exhibit's details.
+            r.documentDate = c.investigation?.facts?.incident
+            r.particulars.append(("What it shows", e.detail))
+        }
         if [ExhibitReview.Look.bank, .phoneRecords, .receipt, .gps].contains(r.look), let incident = c.investigation?.facts?.incident {
             let count = r.lines.count
             var day = CourtCalendar.calendar.date(byAdding: .day, value: -max(1, count * rng.int(1...4)), to: incident) ?? incident

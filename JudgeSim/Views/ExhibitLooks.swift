@@ -329,33 +329,62 @@ struct ReceiptView: View {
     let review: ExhibitReview
     let evidence: Evidence
 
+    private var receipt: Receipt { Receipt.make(evidence, source: review.source, date: review.documentDate) }
+
+    private func row(_ left: String, _ right: String, bold: Bool = false) -> some View {
+        HStack(alignment: .top) {
+            Text(left).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 6)
+            Text(right)
+        }
+        .font(.system(size: 11, weight: bold ? .bold : .regular, design: .monospaced))
+    }
+
     var body: some View {
+        let r = receipt
         HStack {
             Spacer()
-            VStack(alignment: .center, spacing: 6) {
-                Text(review.source.uppercased()).font(.system(.callout, design: .monospaced).weight(.bold))
-                Text(review.sourceDetail).font(.system(size: 10, design: .monospaced)).multilineTextAlignment(.center)
+            VStack(alignment: .center, spacing: 5) {
+                Text(r.store.uppercased()).font(.system(.callout, design: .monospaced).weight(.bold)).multilineTextAlignment(.center)
+                Text(review.sourceDetail.uppercased()).font(.system(size: 10, design: .monospaced)).multilineTextAlignment(.center)
+                Text(r.phone).font(.system(size: 10, design: .monospaced))
                 dashed
-                ForEach(review.lines) { line in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(line.stamp).font(.system(size: 10, design: .monospaced)).foregroundStyle(ExhibitPalette.faint)
-                        HStack(alignment: .top) {
-                            Text(line.text.uppercased()).font(.system(size: 11, design: .monospaced)).fixedSize(horizontal: false, vertical: true)
-                            Spacer(minLength: 4)
-                            Text(amount(in: line.text) ?? "").font(.system(size: 11, weight: .bold, design: .monospaced))
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(spacing: 2) {
+                    row(r.date.formatted(.dateTime.month(.twoDigits).day(.twoDigits).year()), r.time)
+                    row("STORE \(r.storeNumber)  REG \(r.register)", "TRN \(r.transaction)")
+                    row(r.cashier.uppercased(), r.pump.map { "PUMP \($0)" } ?? "")
                 }
                 dashed
-                Text("THANK YOU · NO REFUNDS WITHOUT RECEIPT").font(.system(size: 9, design: .monospaced))
+                VStack(spacing: 3) {
+                    ForEach(r.items, id: \.self) { item in
+                        VStack(alignment: .leading, spacing: 1) {
+                            row(item.name, Receipt.money(item.price))
+                            if let detail = item.detail {
+                                Text("  " + detail).font(.system(size: 10, design: .monospaced)).frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                    }
+                }
+                dashed
+                VStack(spacing: 2) {
+                    row("SUBTOTAL", Receipt.money(r.subtotal))
+                    if r.tax > 0 { row("TAX", Receipt.money(r.tax)) }
+                    row(r.kind == .pawn ? "LOAN AMOUNT" : "TOTAL", Receipt.money(r.total), bold: true)
+                    row(r.tender, r.kind == .pawn ? "" : Receipt.money(r.cash ?? r.total))
+                    if let change = r.change { row("CHANGE", Receipt.money(change)) }
+                    if r.tender.contains("*") { row("AUTH \(String(r.transaction * 7 % 1_000_000))", "APPROVED") }
+                }
+                dashed
+                Text(r.kind == .pawn ? "90-DAY LOAN · 25% FINANCE CHG · ID ON FILE" : (r.kind == .laundromat ? "THANK YOU · ATTENDANT ON DUTY 7A-9P" : "THANK YOU FOR SHOPPING WITH US"))
+                    .font(.system(size: 9, design: .monospaced)).multilineTextAlignment(.center)
                 // A barcode.
                 HStack(spacing: 1) {
                     ForEach(0..<38, id: \.self) { i in
-                        Rectangle().fill(ExhibitPalette.ink).frame(width: [1, 2, 1, 3, 1, 2][i % 6], height: 28)
+                        Rectangle().fill(ExhibitPalette.ink).frame(width: [1, 2, 1, 3, 1, 2][(i + r.transaction) % 6], height: 28)
                     }
                 }
-                Text(evidence.exhibit.uppercased()).font(.system(size: 9, design: .monospaced))
+                Text(String(r.transaction) + String(r.storeNumber)).font(.system(size: 9, design: .monospaced))
+                Text(evidence.exhibit.uppercased()).font(.system(size: 9, design: .monospaced)).foregroundStyle(ExhibitPalette.faint)
             }
             .foregroundStyle(ExhibitPalette.ink)
             .padding(14)
@@ -368,7 +397,7 @@ struct ReceiptView: View {
     }
 
     private var dashed: some View {
-        Text(String(repeating: "-", count: 34)).font(.system(size: 10, design: .monospaced)).lineLimit(1)
+        Text(String(repeating: "-", count: 34)).font(.system(size: 10, design: .monospaced)).foregroundStyle(ExhibitPalette.faint)
     }
 }
 
