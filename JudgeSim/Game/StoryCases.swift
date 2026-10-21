@@ -218,7 +218,7 @@ enum StoryCases {
                             .direct("How were you paid?", "\"At first by church check, signed by {DL} and a trustee. Then the money stopped. In the fall of 2022 the pastor called me in and said the treasurer would get me advances so we didn't lose the crew.\""),
                             .direct("Who paid those advances?", "\"Checks from DL Property Services. I asked {DL} what that was and {D.he} said it was how they were moving the money so it didn't hold up the dedication. I didn't care whose name was on it, honestly. It cleared.\""),
                             .direct("Read the note in your ledger.", "\"'Pastor says advance OK, treasurer handles.' I wrote that the day he told me.\""),
-                            .cross("You were paid about $41,000 that way?", "\"About that.\""),
+                            .cross("You were paid about $41,000 that way?", "\"Forty-one, give or take. I never added it up until the detective did.\""),
                             .cross("You never saw a trustee vote approving it?", "\"No. That's church business.\""),
                             .cross("Did you know {DL} was also paying a mortgage from the same account?", "\"No. Nobody told me that.\""),
                             .cross("You still want to be paid for the rest of the job, don't you?", "\"I'm owed about sixty thousand. Sure I want paying. It's got nothing to do with what I'm telling you.\"")
@@ -247,7 +247,7 @@ enum StoryCases {
                 .direct("Why did you open DL Property Services?", "\"Pastor said the trustees would never approve advances before the dedication, and Carver was about to walk. He said, keep it separate, keep it moving, we'll square it after. So I opened an account I could write from.\""),
                 .direct("Did you use the money for yourself?", "\"Yes. I did. Not at first. My hours got cut in 2021 and we were going to lose the house. I told myself it was a loan like the contractor's. I paid some back. Not enough.\""),
                 .direct("Did the pastor know about that part?", "\"I told him I was behind on the house. He said the Lord would make a way and the church takes care of its own. I took that as permission. I know now that's not what it was.\""),
-                .cross("You read false balances to the congregation for three years.", "\"Yes.\""),
+                .cross("You read false balances to the congregation for three years.", "\"For three years. Every January, from the pulpit steps.\""),
                 .cross("If the pastor approved it, why lie to everyone else?", "\"Because I was ashamed, and because he said wait until after the dedication. Then it was too big to explain.\""),
                 .cross("Nothing in writing from the pastor mentions your mortgage, does it?", "\"No. Just what he said to me in his office.\"")
             ],
@@ -302,7 +302,7 @@ enum StoryCases {
                             .direct("What did you see of the person?", "\"Dark hoodie, hood down. Short hair. I saw the side of their face when they turned, and then they ran out the back. I screamed, honestly. I didn't chase them.\""),
                             .direct("What was missing?", "\"My laptop, my wallet off the counter, and my pain pills from a knee surgery. The back door was open. The frame was splintered by the lock.\""),
                             .direct("Tell the court about the lineup.", "\"The officer showed me photos one at a time and said the person might not be there. When I got to the fourth one, my stomach dropped. I said I thought that was them. I said seventy, seventy-five percent.\""),
-                            .cross("You saw this person for about three or four seconds?", "\"About that.\""),
+                            .cross("You saw this person for about three or four seconds?", "\"Three, maybe four. Long enough to see a face.\""),
                             .cross("In the light of a nightlight, from the other end of a hallway?", "\"About twenty feet. Yes.\""),
                             .cross("You told the 911 dispatcher you 'couldn't really see their face.'", "\"I was hysterical. I saw the side of it.\""),
                             .cross("Before the lineup, the detective told you they'd found your laptop at a pawn shop?", "\"He said they had a lead from the laptop. He didn't say who.\"")
@@ -386,7 +386,9 @@ enum StoryCases {
             prosecutionOpening: "Somebody pried open {V}'s back door at three in the morning and was standing in the hallway when {V.he} came out of the bedroom. Four days later {D} sold the laptop that was taken. {V} picked {DL} out of a lineup.",
             defenseOpening: "{DL} bought a laptop that was too cheap to be honest, then walked it into a pawn shop with a license and a thumbprint. That's what an innocent fool does. The rest of the State's case is a nightlight and three seconds.",
             prosecutionClosing: "The laptop, the lineup, the shoe size, the phone tower, and a story about a man in a red truck nobody can find. Put together, it's {DL}.",
-            defenseClosing: "Seventy percent from a nightlight. A shoe size half the men in the county wear. A tower that covers {DL}'s own bed. And video that would have settled this, never collected. That's reasonable doubt."
+            defenseClosing: "Seventy percent from a nightlight. A shoe size half the men in the county wear. A tower that covers {DL}'s own bed. And video that would have settled this, never collected. That's reasonable doubt.",
+            alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Phone and Gas Station Records", detail: "{DL}'s phone stayed on the home Wi-Fi from 11:40 p.m. until 6:15 the next morning. The Kwik Fuel's camera, two days later, shows {DL} handing cash to a man at the tailgate of a red pickup and walking away with a laptop.", kind: .digital),
+                                   breaks: AlibiCheck.Finding(title: "Phone Location Records", detail: "Records obtained by warrant show {DL}'s phone dropping off the home Wi-Fi after 1 a.m., connecting to the tower that serves the duplex's block for about forty minutes around the break-in, and returning home before four.", kind: .digital))
         )
     )
 
@@ -546,8 +548,8 @@ enum StoryCases {
                             .direct("Why do you believe this was for sale and not personal use?", "\"Thirty-one individually packaged bags of about three-quarters of a gram each, cash in small bills, a scale, and texts that read like orders. A user buys a bag. A seller has thirty-one.\""),
                             .direct("What do the texts mean, in your experience?", "\"'Need 2 of the usual' and 'bring 40' are typical ways of ordering two bags at twenty dollars each. '5 mins' and 'at the door' sound like delivery.\""),
                             .cross("The controlled buy: who did your source buy from?", "\"The source couldn't identify the seller by name. Said it was 'one of the people who lives there.'\""),
-                            .cross("That closet is in a shared hallway used by all three tenants?", "\"Yes.\""),
-                            .cross("Neither print on the shoebox matched my client?", "\"Correct.\""),
+                            .cross("That closet is in a shared hallway used by all three tenants?", "\"All three of them use it. There's a vacuum and somebody's bike in there too.\""),
+                            .cross("Neither print on the shoebox matched my client?", "\"Neither one. One was the landlord's, one we never identified.\""),
                             .cross("You never compared them to {ALT}?", "\"No. By then {ALT} had moved and we'd charged {DL}. That was a mistake.\""),
                             .cross("The texts could just as easily be about picking up food, or splitting a bill?", "\"They could be about something else. In my experience, they aren't.\"")
                         ]),
@@ -560,7 +562,7 @@ enum StoryCases {
                             .direct("What were the results?", "\"Every sample tested was cocaine hydrochloride. The total net weight of all thirty-one bags, without packaging, was 22.4 grams.\""),
                             .cross("You didn't test all thirty-one bags?", "\"No, a representative sample, which the court can rely on under our accredited method. Every one I tested was cocaine.\""),
                             .cross("You have no information about who owned the box?", "\"None. I test what's in it.\""),
-                            .cross("Twenty-two grams is under the 28-gram trafficking threshold?", "\"It is.\"")
+                            .cross("Twenty-two grams is under the 28-gram trafficking threshold?", "\"Six grams under it, yes.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -572,7 +574,7 @@ enum StoryCases {
                             .direct("How do you know the apartment?", "\"I dated {ALT} for about a year and stayed there most weekends until we broke up, about a month before the raid.\""),
                             .direct("Did you see {ALT} use the hall closet?", "\"All the time. {ALT} kept a sneaker box on the top shelf and told me not to touch it. One time I went to get a towel and {ALT} grabbed my arm and said, 'Not that shelf.'\""),
                             .direct("Did you ever see {DL} use that box?", "\"No. {DL} worked early mornings and was usually asleep when we came in.\""),
-                            .cross("You never actually looked inside the box?", "\"No.\""),
+                            .cross("You never actually looked inside the box?", "\"I didn't open it. I knew what it was.\""),
                             .cross("You and {ALT} broke up badly?", "\"Badly enough. That doesn't change what I saw.\""),
                             .cross("What size shoe does {ALT} wear?", "\"I don't know. Big. Eleven, twelve.\"")
                         ])
@@ -763,7 +765,7 @@ enum StoryCases {
                             .direct("What happened at the truck?", "\"I walked up and banged on the door frame and said 'You almost hit me, learn to drive.' I was loud. I was cussing. I wasn't trying to hurt anybody. I didn't have anything in my hands but my phone.\""),
                             .direct("Then what?", "\"I saw the gun come up and I turned. I felt the first one in my shoulder and the second one knocked the air out of me. I don't remember much after that until the ambulance.\""),
                             .direct("What has your recovery been like?", "\"Two surgeries. I lost my spleen and part of my colon. I couldn't go back to work at the plant for five months.\""),
-                            .cross("You followed a stranger a half mile into a parking lot because you were angry?", "\"Yes.\""),
+                            .cross("You followed a stranger a half mile into a parking lot because you were angry?", "\"I was mad. I wanted the plate number. That's all I was thinking.\""),
                             .cross("You reached your arm inside the window, didn't you?", "\"My hand might have gone in when I was banging. I don't remember grabbing anybody.\""),
                             .cross("Your DNA is on my client's torn collar. How did it get there?", "\"I don't know. Maybe I touched it. I'm telling you I didn't try to drag anybody out of a truck.\""),
                             .cross("This isn't the first time you've confronted a driver, is it?", "\"That other thing was dismissed.\"")
@@ -985,7 +987,7 @@ enum StoryCases {
                             .direct("Does that fit what you found?", "\"Not well. The medical examiner puts the muzzle three to five feet from {VL}, level with the chest. Someone clearing a jam usually points the barrel down or away. For it to hit {VL} that way, the gun had to be up and pointed across the porch.\""),
                             .direct("What did you learn about the business?", "\"{VL} had met with a lawyer three weeks earlier about forcing {DL} out, and suspected skimming. There was a meeting set for the Monday after the trip. And four days after the death, {DL} called the insurance company about the half-million-dollar policy.\""),
                             .cross("The lab found the gun's trigger was light and could fire if jarred while partly closed?", "\"That's what the report says.\""),
-                            .cross("You've cleared a jammed pump shotgun yourself?", "\"Many times.\""),
+                            .cross("You've cleared a jammed pump shotgun yourself?", "\"More times than I can count. Every qualification, and once in a duck blind.\""),
                             .cross("In a hurry, cold, wearing gloves, a person might hold it up at chest level to see the jam?", "\"Some people might. It's not how I was taught.\""),
                             .cross("You have no evidence {DL} knew about the lawyer meeting?", "\"Nothing direct. The meeting was on the shared office calendar.\""),
                             .cross("Calling about a policy is something every surviving partner does eventually, isn't it?", "\"Eventually. Four days is quick.\"")
@@ -1123,7 +1125,7 @@ enum StoryCases {
                             .direct("Whose idea was the robbery?", "\"Mine, honestly. I'd done some yard work for them and saw the gun safe. I told {DL} about it and {D.he} said 'say less.'\""),
                             .direct("What did each of you do?", "\"{DL} had the pistol and did the talking. I went through the bedrooms and the safe. {DL} zip-tied them. We split the cash, fifteen hundred each, and I took the guns to sell.\""),
                             .direct("Why are you testifying?", "\"Because I got caught, and because I'm done. I'm not going to lie for anybody.\""),
-                            .cross("Your deal takes you from more than five years to twenty months?", "\"Yes.\""),
+                            .cross("Your deal takes you from more than five years to twenty months?", "\"Twenty months. My lawyer explained it to me twice.\""),
                             .cross("Two days after the robbery you texted your cousin 'me and {COUSIN} hit a lick.' Who is {COUSIN}?", "\"A friend. I was trying to keep {DL}'s name out of my phone.\""),
                             .cross("{COUSIN} is about six feet with a deep voice, isn't that right?", "\"I guess so. A lot of people are.\""),
                             .cross("You'd say whatever got you the best deal, wouldn't you?", "\"The deal says I have to tell the truth. That's what I'm doing.\"")
@@ -1136,7 +1138,7 @@ enum StoryCases {
                             .direct("How did you identify {ALT}?", "\"One of the stolen rifles turned up in a pawn database, sold by {ALT} under {ALT.his} own name. We arrested {ALT} the next day.\""),
                             .direct("How did {DL} come into it?", "\"{ALT} named {DL} after agreeing to cooperate. I then got {DL}'s phone records by warrant and searched {D.his} car.\""),
                             .direct("What did the phone records show?", "\"{DL}'s phone was on the tower nearest the home from 1:40 to 2:30 a.m., then no activity for 50 minutes, which is unusual for that phone. Normally it's busy all night.\""),
-                            .cross("That tower also covers the apartment where {DL} says {D.he} slept?", "\"It does.\""),
+                            .cross("That tower also covers the apartment where {DL} says {D.he} slept?", "\"It covers a mile and a half in every direction. That apartment's inside it.\""),
                             .cross("You never got a warrant for {COUSIN}'s phone?", "\"No. We had a cooperating witness naming {DL}.\""),
                             .cross("Zip ties of that brand are sold at every hardware store in the county?", "\"They're common.\"")
                         ])
@@ -1149,7 +1151,7 @@ enum StoryCases {
                         exam: [
                             .direct("Where was {DL} that night?", "\"At my apartment. We got takeout around nine, watched a show, and went to bed around midnight. {DL} was there when I got up for work at six.\""),
                             .direct("Why would {DL}'s phone go quiet?", "\"Because {DL} was asleep. {DL} games on that phone half the night when {D.he} can't sleep. That night {DL} slept.\""),
-                            .cross("You were asleep from midnight to six?", "\"Yes.\""),
+                            .cross("You were asleep from midnight to six?", "\"Out cold. I work a five a.m. shift.\""),
                             .cross("So you can't say whether {DL} left between 1:30 and 3?", "\"I'd have felt the bed. I'm a light sleeper.\""),
                             .cross("You love {DL} and don't want {D.him} to go to prison?", "\"Yes. That doesn't make me a liar.\"")
                         ])
@@ -1191,7 +1193,9 @@ enum StoryCases {
             prosecutionOpening: "A pistol against a 67-year-old's chest, zip ties on two people face-down in their own living room. The person who planned it is telling you who held the gun: {D}.",
             defenseOpening: "The State's case rides on {ALT}, who got years off a prison term for naming somebody, and who texted that the partner was {COUSIN}. Nobody ever looked for {COUSIN}.",
             prosecutionClosing: "Accomplice testimony is scrutinized, and here it's corroborated: the phone near the house, the silence during the robbery, the zip ties in the trunk.",
-            defenseClosing: "The court should view a bargained-for accomplice with great caution. Strip away {ALT}, and the State has a cell tower that covers {DL}'s bed and zip ties from a hardware store."
+            defenseClosing: "The court should view a bargained-for accomplice with great caution. Strip away {ALT}, and the State has a cell tower that covers {DL}'s bed and zip ties from a hardware store.",
+            alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Apartment Entrance Camera", detail: "The camera over the only entrance to the girlfriend's building shows {DL} going in with a takeout bag at 9:06 p.m. and not coming out again until 6:20 the next morning.", kind: .video),
+                                   breaks: AlibiCheck.Finding(title: "Apartment Entrance Camera", detail: "The camera over the girlfriend's building entrance shows {DL} walking out at 12:58 a.m. in a dark hooded jacket and coming back in at 3:41 a.m., carrying a duffel bag.", kind: .video))
         )
     )
 
@@ -1372,7 +1376,7 @@ enum StoryCases {
                             .direct("What did you see when they came in?", "\"I was on the couch. They came in laughing. {VL} said hi, asked my name, said our apartment was nicer than theirs. {VL} was clearly drunk, but talking, making jokes.\""),
                             .direct("Did {VL} seem to know where {V.he} was?", "\"{VL} seemed to. {VL} asked for water and asked which room was {DL}'s.\""),
                             .cross("You went to your room and put on headphones right away?", "\"After a few minutes.\""),
-                            .cross("You didn't see anything after that?", "\"No.\""),
+                            .cross("You didn't see anything after that?", "\"Nothing. My door was shut and my music was loud.\""),
                             .cross("Someone who can't remember the night can still ask for water and make jokes, can't they?", "\"I guess so. I'm not a doctor.\"")
                         ])
         ],

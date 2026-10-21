@@ -33,7 +33,7 @@ struct CourtroomView: View {
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
-                ScrollView {
+                FixedWidthScroll {
                     VStack(spacing: 16) {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
@@ -77,8 +77,8 @@ struct CourtroomView: View {
                             ProbationStage(session: session)
                         case .judgment:
                             if let outcome = session.outcome {
-                                JudgmentStage(courtCase: session.courtCase, outcome: outcome) {
-                                    game.complete(session.courtCase, outcome: outcome)
+                                JudgmentStage(courtCase: session.courtCase, outcome: outcome) { referrals in
+                                    game.complete(session.courtCase, outcome: outcome, perjuryReferrals: referrals)
                                     dismiss()
                                 }
                             }
@@ -753,7 +753,7 @@ struct PleaColloquySheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            FixedWidthScroll {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Before accepting a plea, the judge must address the defendant personally in open court (G.S. 15A-1022).")
                         .font(.caption)

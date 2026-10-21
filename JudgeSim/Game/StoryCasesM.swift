@@ -64,7 +64,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did the badges work on that unit?", "\"When you're running two halls alone at 3 a.m. and the cabinet's across the unit, you hand your badge to whoever's going. Everybody did it. It's against policy and we all did it.\""),
                             .direct("What kind of nurse is {DL}?", "\"One of the best I've worked with. Families asked for {D.him} by name.\""),
-                            .cross("Did you ever pull insulin with {DL}'s badge?", "\"No.\""),
+                            .cross("Did you ever pull insulin with {DL}'s badge?", "\"Never. I had my own badge and I used it.\""),
                             .cross("Do you know anyone who did?", "\"I can't name anyone.\"")
                         ])
         ],
@@ -154,7 +154,7 @@ extension StoryCases {
                             .direct("What did the burner phones show?", "\"Burner phones called each woman before she vanished. Those phones connected to towers by {DL}'s office in the day and {DL}'s house at night. When {DL}'s credit cards put {D.him} in Atlanta for a conference, the phones went quiet.\""),
                             .direct("What else did you find?", "\"A dark green pickup registered to {DL} at the time, and years of searches for news about these killings and for the victims' photos.\""),
                             .cross("Those towers serve thousands of people?", "\"They do. Not thousands who went quiet on the same days {DL} traveled.\""),
-                            .cross("You never recovered the burner phones?", "\"No.\""),
+                            .cross("You never recovered the burner phones?", "\"They were never found. Probably in a river somewhere.\""),
                             .cross("Thousands of people searched for news about a famous case?", "\"Not in the middle of the night for nine years.\"")
                         ])
         ],
@@ -245,7 +245,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did you identify {DL}?", "\"The crime scene profile matched distant cousins on a public site. I built their family trees back to a shared set of great-great-grandparents, then forward again. Of the descendants, one man was the right age, lived nearby, and was there at the time.\""),
                             .direct("Is a genealogy match proof of identity?", "\"No. It's a lead. The confirmation comes from a direct DNA comparison.\""),
-                            .cross("At the time, the site's terms didn't permit law enforcement uploads?", "\"That's correct.\""),
+                            .cross("At the time, the site's terms didn't permit law enforcement uploads?", "\"The terms changed later. At the time, they didn't allow it.\""),
                             .cross("You didn't have a warrant?", "\"We didn't believe one was required for a public database.\"")
                         ]),
             WitnessSeed(name: nil, role: "SBI forensic scientist",
@@ -265,7 +265,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What kind of deputy was {DL}?", "\"Steady. Calm on bad calls. I trusted {D.him} with my life for twelve years.\""),
-                            .cross("You weren't with {DL} on nights off?", "\"No.\""),
+                            .cross("You weren't with {DL} on nights off?", "\"We were partners on the clock. Off it, we went our separate ways.\""),
                             .cross("Did {DL} ever talk about the break-ins that year?", "\"Everybody did. {DL} wanted to be on the task force and wasn't picked.\"")
                         ])
         ],
@@ -365,8 +365,8 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Do drivers pick up hitchhikers?", "\"It's against company rules and plenty of us do it anyway. People need rides. I've had a dozen in my cab over the years. Things get left behind.\""),
-                            .cross("You weren't with {DL} on either night?", "\"No.\""),
-                            .cross("Do you zip-tie your passengers?", "\"No.\"")
+                            .cross("You weren't with {DL} on either night?", "\"Not either night. I was on the road myself.\""),
+                            .cross("Do you zip-tie your passengers?", "\"Never had a reason to.\"")
                         ])
         ],
         prosecutionTheory: ["Of three hundred trucks at the first stop, only {D}'s was at the second. {D.His} cab held the victim's earring and the zip ties that bound both women."],
@@ -457,8 +457,8 @@ extension StoryCases {
                         exam: [
                             .direct("What did you find on the sheath?", "\"A single-source male profile on the button snap. It matches {DL} at every location. The chance of a random match is about one in five octillion.\""),
                             .cross("Touch DNA can be transferred without the person touching the object?", "\"Secondary transfer is possible.\""),
-                            .cross("You found no victim blood in {DL}'s car or homes?", "\"None.\""),
-                            .cross("You found three other male profiles in the house you haven't identified?", "\"Yes.\"")
+                            .cross("You found no victim blood in {DL}'s car or homes?", "\"Not a trace of {V.his}. We swabbed everything.\""),
+                            .cross("You found three other male profiles in the house you haven't identified?", "\"Three unknowns. They're still unknown.\"")
                         ])
         ],
         defenseWitnesses: [

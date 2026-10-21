@@ -576,34 +576,101 @@ final class CaseSession: ObservableObject {
     }
 
     /// Answers to the questions a judge usually asks from the bench, in this witness's own terms, for offline play.
+    /// Each witness's answers lean on what that witness already said, so no two cases sound alike.
     private func benchAnswers(_ w: Witness) -> [CounselQuestion] {
         let official = Testimony.isOfficial(w.role)
         let lower = w.role.lowercased()
-        let expert = ["analyst", "chemist", "examiner", "pathologist", "engineer", "scientist", "physician", "doctor", "expert", "reconstruction"].contains { lower.contains($0) }
+        let expert = ["analyst", "chemist", "examiner", "pathologist", "engineer", "scientist", "physician", "doctor", "expert", "reconstruction",
+                      "psychiatrist", "psychologist", "toxicologist", "veterinarian", "nurse"].contains { lower.contains($0) }
+        let saw = Testimony.sawEvents(w)
         var rng = SeededRNG(seed: courtCase.seed ^ SeededRNG.stableHash(w.name))
         func q(_ question: String, _ answer: String) -> CounselQuestion {
             CounselQuestion(id: "bench.\(question.hashValue)", side: w.calledBy, question: question, answer: answer)
         }
+        // The heart of this witness's testimony, in the witness's own words: the longest answer on direct, first sentence.
+        let direct = (w.exchanges?.filter { $0.phase == .direct }.map(\.answer) ?? w.direct)
+            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: "\" ")) }
+        let core = direct.max { $0.count < $1.count }.flatMap { text -> String? in
+            let first = text.components(separatedBy: ". ").first ?? text
+            return first.isEmpty ? nil : (first.hasSuffix(".") || first.hasSuffix("?") || first.hasSuffix("!") ? first : first + ".")
+        }
+        let mine = core.map { "What I told the court stands: \($0)" }
         if expert {
-            return [q("How sure are you?", "Your Honor, I'm confident in the result to a reasonable degree of scientific certainty. The limits are the ones I described."),
-                    q("How long have you done this work?", "\(rng.int(6...24)) years, Your Honor, and I've testified as an expert in this court before."),
-                    q("Is there anything you left out?", "Only the technical detail in my report, Your Honor. Nothing that changes the conclusion."),
-                    q("Did anyone talk to you about your testimony?", "The prosecutor reviewed my report with me, Your Honor. Nobody told me what to say.")]
+            let years = rng.int(6...26)
+            return [q("How sure are you?", rng.pick([
+                        "Your Honor, as sure as the method allows. " + (core ?? "The limits are the ones I described."),
+                        "Confident, Your Honor, within the limits I gave on cross. I wouldn't sign a report I wasn't sure of.",
+                        "To a reasonable degree of scientific certainty. " + (mine ?? "I'd testify the same way tomorrow."),
+                        "Sure of the result, Your Honor. Less sure of anything the result can't tell us, and I said so."])),
+                    q("How long have you done this work?", rng.pick([
+                        "\(years) years, Your Honor.", "Going on \(years) years. Before that, graduate school.",
+                        "\(years) years in this field, Your Honor, and I've been qualified in this court before.",
+                        "About \(years) years. Long enough to have been wrong once and learned from it."])),
+                    q("Is there anything you left out?", rng.pick([
+                        "Only the technical detail in my report, Your Honor. Nothing that changes the conclusion.",
+                        "The bench notes are in the file, Your Honor. They say the same thing in more words.",
+                        "No, Your Honor. " + (mine ?? "The report covers it."),
+                        "Nothing material. If the court wants the raw data, I brought it."])),
+                    q("Did anyone talk to you about your testimony?", rng.pick([
+                        "The prosecutor reviewed my report with me, Your Honor. Nobody told me what to say.",
+                        "We met for twenty minutes last week to go over scheduling and the report. That's all.",
+                        "Both sides had my report, Your Honor. Only the State asked to meet.",
+                        "No one told me what to conclude, Your Honor. I'd have walked out if they had."]))]
         }
         if official {
-            return [q("How sure are you?", "Your Honor, I'm sure of what I saw and what I wrote in my report at the time."),
-                    q("How far away were you?", rng.pick(["A few feet, Your Honor. I was right there.", "Across the room, maybe twenty feet."])),
-                    q("What was the lighting like?", rng.pick(["Streetlights and my flashlight, Your Honor.", "Daylight. No problem seeing."])),
-                    q("Did anyone talk to you about your testimony?", "I met with the prosecutor to review my report, Your Honor. That's routine."),
-                    q("What happened right before that?", "I'd just arrived and was trying to figure out who was who, Your Honor."),
-                    q("Is there anything you left out?", "Not that I can think of, Your Honor. It's all in the report.")]
+            var out = [q("How sure are you?", rng.pick([
+                            "Your Honor, I'm sure of what I saw and of what I wrote down that night.",
+                            "Sure, Your Honor. " + (core ?? "It's in my report, written the same day."),
+                            "As sure as I can be. I wrote my report before I knew who'd be charged.",
+                            "I'm confident, Your Honor. If I wasn't sure of something, I'd have said so on the stand."])),
+                       q("Did anyone talk to you about your testimony?", rng.pick([
+                            "I met with the prosecutor to review my report, Your Honor. That's routine.",
+                            "The ADA went over the timeline with me last week. Nobody told me what to say.",
+                            "Just a phone call about the date, Your Honor, and a copy of my own report.",
+                            "We prepped for about half an hour. Mostly the ADA wanted to know what I'd remember without notes."])),
+                       q("Is there anything you left out?", rng.pick([
+                            "Not that I can think of, Your Honor. It's all in the report.",
+                            "No, Your Honor. " + (mine ?? "My report has the rest."),
+                            "Some routine steps, Your Honor, like securing the scene. Nothing that changes anything.",
+                            "Only paperwork, Your Honor. The property sheet and the supplemental."]))]
+            if saw {
+                out.append(q("How far away were you?", rng.pick(["A few feet, Your Honor. I was right there.", "Across the room, maybe twenty feet.",
+                                                                  "From my patrol car, about fifty yards, then I closed the distance.", "Close enough to touch, by the end of it."])))
+                out.append(q("What was the lighting like?", rng.pick(["Streetlights and my flashlight, Your Honor.", "Daylight. No problem seeing.",
+                                                                       "My headlights and the takedown lights.", "Indoor lighting, all of it on."])))
+            }
+            return out
         }
-        return [q("How sure are you?", rng.pick(["Very sure, Your Honor. I'll never forget it.", "Pretty sure, Your Honor. It happened fast.", "I'm sure about what I saw. I'm less sure about the exact times."])),
-                q("How far away were you?", rng.pick(["Close. Ten, fifteen feet.", "Across the street, maybe forty feet.", "Right there. Arm's length."])),
-                q("What was the lighting like?", rng.pick(["It was light out, Your Honor.", "There was a streetlight, but it was dim.", "Inside, with the lights on."])),
-                q("Did anyone talk to you about your testimony?", rng.pick(["The prosecutor went over what I'd be asked. Nobody told me what to say.", "Just the lawyer who called me, about when to show up."])),
-                q("What happened right before that?", rng.pick(["Everything was normal, Your Honor. Then it all happened at once.", "There was some arguing first. I didn't hear all of it."])),
-                q("Is there anything you left out?", rng.pick(["No, Your Honor. That's everything I remember.", "Only that I was scared. That's why some of it's blurry."]))]
+        var out = [q("How sure are you?", rng.pick([
+                        "Very sure, Your Honor. I'll never forget it.",
+                        "Pretty sure, Your Honor. It happened fast.",
+                        "I'm sure about what I saw. I'm less sure about the exact times.",
+                        "Sure, Your Honor. " + (core ?? "I've gone over it a thousand times."),
+                        "As sure as I am of anything. I've thought about it every day since.",
+                        "Sure of the big things. The little things, I've tried not to fill in."])),
+                   q("Did anyone talk to you about your testimony?", rng.pick([
+                        "The prosecutor went over what I'd be asked. Nobody told me what to say.",
+                        "Just the lawyer who called me, about when to show up.",
+                        "A victim advocate called to tell me what the courtroom would be like. That's it.",
+                        "My family asked about it. I told them I couldn't talk about it.",
+                        "Nobody, Your Honor. I got a subpoena in the mail."])),
+                   q("Is there anything you left out?", rng.pick([
+                        "No, Your Honor. That's everything I remember.",
+                        "Only that I was scared. That's why some of it's blurry.",
+                        "No, Your Honor. " + (mine ?? "I told it the way it happened."),
+                        "Nothing I can think of, Your Honor. I didn't want to leave anything out.",
+                        "Just how it felt, Your Honor. You can't really put that into answers."]))]
+        if saw {
+            out.append(q("How far away were you?", rng.pick(["Close. Ten, fifteen feet.", "Across the street, maybe forty feet.", "Right there. Arm's length.",
+                                                              "From my porch to the road. Maybe thirty yards.", "Same room, Your Honor. Not far at all."])))
+            out.append(q("What was the lighting like?", rng.pick(["It was light out, Your Honor.", "There was a streetlight, but it was dim.",
+                                                                   "Inside, with the lights on.", "Just the porch light and headlights.", "Late afternoon. Sun was low."])))
+            out.append(q("What happened right before that?", rng.pick(["Everything was normal, Your Honor. Then it all happened at once.",
+                                                                        "There was some arguing first. I didn't hear all of it.",
+                                                                        "I'd just gotten there. I hadn't even put my keys down.",
+                                                                        "Nothing I noticed. That's what still bothers me."])))
+        }
+        return out
     }
 
     /// Ask a witness a question from the bench. Returns an error message if the answer couldn't be produced.
@@ -702,7 +769,7 @@ final class CaseSession: ObservableObject {
             }.map(\.id)
             courtCase.evidence[index].weight = 0
             courtCase.evidence[index].detail += note
-        case .video, .phoneRecords, .financialRecords, .expertReview:
+        case .video, .phoneRecords, .financialRecords, .expertReview, .alibi:
             break
         }
         guard !removed.isEmpty else { return }

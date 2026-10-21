@@ -161,9 +161,25 @@ struct StoryExtras {
     var employmentEnded = false
     /// Where the defendant goes to school, as the story names it.
     var school: String? = nil
+    /// What checking the alibi turns up: records that back it up when the defendant didn't do it, and break it when
+    /// the defendant did. Only for cases where a defense witness puts the defendant somewhere else.
+    var alibiCheck: AlibiCheck? = nil
 }
 
 /// What a written case says about its victim, so the victim's profile matches the story.
+/// The records that test an alibi, written for the case.
+struct AlibiCheck {
+    struct Finding {
+        let title: String
+        let detail: String
+        let kind: EvidenceKind
+    }
+    /// What the records show when the defendant was where the witness says.
+    let holds: Finding
+    /// What they show when the defendant wasn't.
+    let breaks: Finding
+}
+
 struct VictimFacts {
     var age: Int? = nil
     var occupation: String? = nil

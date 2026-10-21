@@ -52,7 +52,7 @@ extension StoryCases {
                             .direct("How did it work?", "\"{DL} texted what {D.he} needed. We found them, took them at night, drove them in the back gate. {D.He} paid cash, fifteen hundred.\""),
                             .direct("Did {DL} know they were stolen?", "\"{D.He} told us to come after midnight and keep the gate quiet. {D.He} knew.\""),
                             .cross("You're testifying to get probation?", "\"The DA said they'd consider it.\""),
-                            .cross("You stole trucks before you ever met {DL}?", "\"Yes.\"")
+                            .cross("You stole trucks before you ever met {DL}?", "\"Since I was nineteen. {DL} just paid better.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -62,8 +62,8 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What kind of business did {DL} run?", "\"Honest. Fair prices. Fixed my car after a wreck and charged less than the estimate.\""),
-                            .cross("Did you ever go in the back lot?", "\"No.\""),
-                            .cross("Did you know {DL} had a prior conviction for possessing stolen goods?", "\"No.\"")
+                            .cross("Did you ever go in the back lot?", "\"Never had a reason to go back there.\""),
+                            .cross("Did you know {DL} had a prior conviction for possessing stolen goods?", "\"I had no idea. {D.He} never said and I never asked.\"")
                         ])
         ],
         prosecutionTheory: ["{D} ran a chop shop: {D.he} ordered trucks by model, paid thieves cash, ground off the VINs, and sold the parts."],
@@ -150,7 +150,7 @@ extension StoryCases {
                         exam: [
                             .direct("How were the statements altered?", "\"{DL} took a real statement from the first year, covered the numbers, typed new ones, and photocopied it. We found the master copies on {D.his} home printer.\""),
                             .direct("Where did the money go?", "\"About a third to online casinos. The rest to trips, a hot tub, and the family credit card.\""),
-                            .cross("{DL} admitted taking the money the first time you asked?", "\"Yes.\"")
+                            .cross("{DL} admitted taking the money the first time you asked?", "\"The first time I asked. {D.He} didn't try to deny it.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -161,7 +161,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you diagnose?", "\"Severe gambling disorder. Online slots. Chasing losses, borrowing, hiding it. {DL} has been in treatment and attending meetings since.\""),
                             .cross("Did the gambling make {DL} forge signatures?", "\"It made {D.him} desperate. The choices were {D.his}.\""),
-                            .cross("Treatment started the week {D.he} was caught?", "\"Yes.\"")
+                            .cross("Treatment started the week {D.he} was caught?", "\"That same week. Getting caught is usually what starts it.\"")
                         ])
         ],
         prosecutionTheory: ["{D} took money raised by children and parents, forged signatures, and faked bank statements for three years."],
@@ -186,7 +186,7 @@ extension StoryCases {
                 .direct("Why did you take the money?", "\"I was losing at online slots and I kept thinking I'd win it back and put it back. Every month it got worse.\""),
                 .direct("Have you repaid any?", "\"$9,000. I'm selling my car for more.\""),
                 .cross("You also bought a hot tub and took two beach trips.", "\"Yes. I'm not proud of that.\""),
-                .cross("And you forged the president's signature 22 times.", "\"Yes.\"")
+                .cross("And you forged the president's signature 22 times.", "\"Twenty-two times. I got good at it.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Defense: \"Should someone with this disorder go to prison?\"",
@@ -238,7 +238,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did the drugs get into Pod C?", "\"{DL} brought them in. My people on the outside paid {D.him} two thousand a trip. {D.He}'d hand it to me during rounds and I'd sell it.\""),
                             .direct("Did you sell to {VL}?", "\"Yes. The night before. {V.He} paid in commissary.\""),
-                            .cross("You've got eight prior convictions and you're getting a reduced sentence?", "\"Yes.\""),
+                            .cross("You've got eight prior convictions and you're getting a reduced sentence?", "\"Eight. And yes, my sentence goes down for this.\""),
                             .cross("Fentanyl was coming in through the mail too?", "\"Some. The good stuff came from {DL}.\"")
                         ]),
             WitnessSeed(name: nil, role: "SBI agent",
@@ -249,7 +249,7 @@ extension StoryCases {
                             .direct("How did you tie {DL} to the death?", "\"The fentanyl in {VL}'s cell had the same cutting agents and ratios as what we found in {DL}'s car. The letters had a different mix. And the money trail goes straight to {DL}.\""),
                             .direct("What about the cell checks?", "\"The log shows checks every 30 minutes. The video shows {DL} at the desk all night. {VL} was dead for hours before anyone found {V.him}.\""),
                             .cross("Fentanyl was also coming through the mail room?", "\"Yes. Different composition.\""),
-                            .cross("The pod was understaffed?", "\"Yes.\"")
+                            .cross("The pod was understaffed?", "\"Badly. Two officers for a pod that needs five.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -259,8 +259,8 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What were conditions like?", "\"Half staff. Sixteen-hour shifts. You can't do every round. Everybody fudges logs sometimes because you can't physically do it.\""),
-                            .cross("Did you ever take money to bring anything in?", "\"No.\""),
-                            .cross("Does understaffing explain fentanyl in {DL}'s car?", "\"No.\"")
+                            .cross("Did you ever take money to bring anything in?", "\"Never. I'd lose my pension over a pack of cigarettes.\""),
+                            .cross("Does understaffing explain fentanyl in {DL}'s car?", "\"Short staffing doesn't put drugs in somebody's trunk.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was paid to smuggle fentanyl into the jail. {D.He} sold death to people in {D.his} custody, then sat at the desk while {V} died."],
@@ -285,7 +285,7 @@ extension StoryCases {
                 .direct("Did you bring drugs into the jail?", "\"I brought in cigarettes and phones. I didn't know there was fentanyl in what they handed me.\""),
                 .direct("What about the 12 grams in your car?", "\"I'd been handed a package to bring in. I didn't open it.\""),
                 .cross("$2,000 a trip for cigarettes?", "\"That's what they paid.\""),
-                .cross("You logged cell checks you never made.", "\"Everybody did.\"")
+                .cross("You logged cell checks you never made.", "\"Every shift did it. That doesn't make it right.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Prosecutor: \"Did other inmates tell you {DL} was the source?\"",
@@ -357,7 +357,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did the dogs behave with you?", "\"Responsive to commands. Big, protective, but manageable with proper handling.\""),
                             .cross("How many sessions did you have?", "\"Two.\""),
-                            .cross("Did you recommend muzzles in public?", "\"I did.\""),
+                            .cross("Did you recommend muzzles in public?", "\"In writing, twice. It's in my notes.\""),
                             .cross("Did {DL} use them?", "\"Not that I saw.\"")
                         ])
         ],

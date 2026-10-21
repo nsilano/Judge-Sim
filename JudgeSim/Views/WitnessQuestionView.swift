@@ -19,7 +19,7 @@ struct WitnessQuestionSheet: View {
         NavigationStack {
             VStack(spacing: 0) {
                 ScrollViewReader { proxy in
-                    ScrollView {
+                    FixedWidthScroll {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack(spacing: 10) {
                                 Image(systemName: "person.wave.2.fill").foregroundStyle(Theme.color(for: witness.calledBy))

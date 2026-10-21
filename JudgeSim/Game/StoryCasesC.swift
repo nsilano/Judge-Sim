@@ -40,7 +40,7 @@ extension StoryCases {
                             .direct("How has this affected you?", "\"I transferred to a store across the county. I still can't stand at a counter with my back to the door.\""),
                             .cross("You had no way of knowing it was a BB gun?", "\"No. And I don't think that matters to how scared I was.\""),
                             .cross("The person never threatened to shoot, never touched you?", "\"No words like that. The gun did the talking.\""),
-                            .cross("When you said 'take whatever you want,' the person took only the oxycodone and left?", "\"Yes.\"")
+                            .cross("When you said 'take whatever you want,' the person took only the oxycodone and left?", "\"Just the oxycodone. Walked right past the cash drawer.\"")
                         ]),
             WitnessSeed(name: nil, role: "Firearms examiner, State Crime Laboratory",
                         direct: ["\"At four feet this BB pistol can blind someone or break skin.\""],
@@ -89,7 +89,7 @@ extension StoryCases {
                 .direct("Why did you rob the pharmacy?", "\"I'd been out of pills for three days. I couldn't stand up straight. I told myself nobody would get hurt if I didn't have a real gun.\""),
                 .direct("Why remove the orange tip?", "\"So it would look real. I'm not going to lie about that.\""),
                 .direct("Did you ever intend to fire it?", "\"No. It wasn't even pointed at a person in my mind. I know how that sounds.\""),
-                .cross("You pointed it at {V}'s chest.", "\"Yes.\""),
+                .cross("You pointed it at {V}'s chest.", "\"At the middle of {V.his} chest. I won't pretend otherwise.\""),
                 .cross("You have a prior drug conviction.", "\"Possession, nine years ago. Before the injury.\"")
             ],
             objections: [
@@ -249,7 +249,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did your investigation find?", "\"{DL}'s badge in the vault four times after the shipment arrived, nobody else's after 9:15, and a $14,200 cash loan payoff twenty-two days later.\""),
                             .direct("What did {DL} say about the cash?", "\"That it was from a grandparent's settlement. The check was deposited, but {DL} withdrew it in cash and kept it at home for weeks before paying off the loan. That's unusual.\""),
-                            .cross("The grandparent's $15,000 check is real and cleared?", "\"It is.\""),
+                            .cross("The grandparent's $15,000 check is real and cleared?", "\"It's real, and it cleared.\""),
                             .cross("You never examined the override code logs?", "\"The system doesn't log override codes by user.\""),
                             .cross("You never interviewed the assistant manager about the gambling debts?", "\"We interviewed the assistant manager once. Not about debts.\"")
                         ])
@@ -346,7 +346,7 @@ extension StoryCases {
                             .direct("What happened when {DL} came in?", "\"Silver sedan, windshield smashed on the passenger side, a dent in the hood. {DL} asked how fast I could do it and if I needed to file with insurance.\""),
                             .direct("Why did you call the police?", "\"I'd seen the news about the cyclist. There were threads of dark fabric in the glass. Deer don't wear jackets.\""),
                             .cross("{DL} told you it was a deer?", "\"Yes. Right away.\""),
-                            .cross("{DL} gave you {D.his} real name and phone number?", "\"Yes.\"")
+                            .cross("{DL} gave you {D.his} real name and phone number?", "\"Real name, real number.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -435,9 +435,9 @@ extension StoryCases {
                             .direct("What did you notice?", "\"A one-way rental, two phones on the console, the driver's hands shaking, the passenger staring straight ahead. Their stories about the trip didn't match.\""),
                             .direct("What did you find?", "\"After the dog alerted, a black duffel behind the passenger seat with eleven bags of blue pills, about a hundred each.\""),
                             .direct("What did each say?", "\"{DL} said, 'I don't know anything about that bag.' {ALT} said, 'That's {DL}'s, I'm just riding.'\""),
-                            .cross("The duffel was directly behind the passenger seat, within the passenger's reach?", "\"Yes.\""),
+                            .cross("The duffel was directly behind the passenger seat, within the passenger's reach?", "\"Right behind the seat. An arm's length from the passenger, if that.\""),
                             .cross("{ALT}'s prints are on the pill bags and {DL}'s aren't?", "\"That's what the lab reported.\""),
-                            .cross("{ALT} was released and never came back to court?", "\"Correct.\"")
+                            .cross("{ALT} was released and never came back to court?", "\"Released, and that's the last anyone saw of {ALT}.\"")
                         ]),
             WitnessSeed(name: nil, role: "Forensic chemist, State Crime Laboratory",
                         direct: ["\"They're fentanyl, 121 grams.\""],
@@ -445,7 +445,7 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What were the pills?", "\"Counterfeit oxycodone tablets containing fentanyl. Total weight 121 grams. Each pill is a potentially lethal dose for someone without tolerance.\""),
-                            .cross("You can't say who owned them?", "\"No.\""),
+                            .cross("You can't say who owned them?", "\"Ownership isn't something chemistry can tell you.\""),
                             .cross("The receipt in the bag came from a store that's a mile from many apartments?", "\"I wouldn't know.\"")
                         ])
         ],
@@ -457,7 +457,7 @@ extension StoryCases {
                         exam: [
                             .direct("How long has {DL} worked for you?", "\"Five years. Promoted to shift supervisor last spring. Never missed a shift, never failed a drug test, and we test randomly.\""),
                             .direct("Did {DL} take time off that week?", "\"Requested a Friday off two weeks earlier for a family trip.\""),
-                            .cross("You don't know who {DL} spends time with outside work?", "\"No.\"")
+                            .cross("You don't know who {DL} spends time with outside work?", "\"I see {D.him} eight hours a day. What {D.he} does after that is {D.his} business.\"")
                         ])
         ],
         prosecutionTheory: ["{D} rented the car, drove it, and lied about the trip. The pills were within reach of both people in the SUV, and the State only has to prove knowing possession."],

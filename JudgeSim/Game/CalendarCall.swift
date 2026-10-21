@@ -107,6 +107,75 @@ enum CalendarCalls {
     private static let pleaLaws = ["felonyLarceny", "possSchedII", "breakingVehicle", "larcenyMerchant", "feloniousBE",
                                    "uttering", "pwisd", "commonLawRobbery", "possStolen", "strangulation", "awdwisi", "burglary2"]
 
+    /// Where the parties stand on a plea. The State doesn't hand out probation: with a record, a victim, or a chart
+    /// that calls for prison, it fights for time, and the defense fights back.
+    struct PleaPositions {
+        var stateAsk: String
+        var defenseAsk: String
+        var options: [String]
+    }
+
+    static func pleaPositions(_ law: Law, priors: [PriorConviction], rangeText: String, notes: [String], name: String,
+                              rng: inout SeededRNG) -> PleaPositions {
+        let cls = law.ncClass ?? .misd1
+        let last = name.components(separatedBy: " ").last ?? name
+        let felonies = priors.filter { $0.ncClass.isFelony }.count
+        let sameKind = priors.filter { $0.offense.lowercased().contains(law.title.lowercased().components(separatedBy: " ").last ?? "~") }.count
+        let violent = [LawCategory.violent, .robbery].contains(law.category) || ["strangulation", "awdwisi", "commonLawRobbery", "burglary2"].contains(law.id)
+        let chartActive = notes.contains { $0.contains("calls for an active sentence") }
+        // How hard the State pushes: 0 joint probation, 1 split sentence, 2 active time.
+        var push = 0.0
+        if cls.isFelony { push += 0.25 }
+        push += 0.2 * Double(min(3, felonies)) + 0.1 * Double(min(3, priors.count))
+        if violent { push += 0.3 }
+        if sameKind > 0 { push += 0.25 }
+        if chartActive { push += 0.5 }
+        let roll = Double.random(in: 0..<1, using: &rng)
+        let stance = chartActive || roll < push - 0.35 ? 2 : (roll < push ? 1 : 0)
+        let jailDays = cls.isFelony ? rng.pick([30, 45, 60, 90]) : rng.pick([10, 14, 30])
+
+        var reasons: [String] = []
+        if felonies >= 2 { reasons.append("\(last) has \(felonies) prior felonies. Probation has been tried.") }
+        else if !priors.isEmpty { reasons.append(rng.pick(["This isn't \(last)'s first time in front of a judge.", "\(last) has been given breaks before."])) }
+        if sameKind > 0 { reasons.append("It's the same kind of offense \(last) was convicted of before.") }
+        if violent { reasons.append(rng.pick(["Somebody got hurt here.", "The victim wants \(last) to serve time, and the State agrees."])) }
+        if chartActive { reasons.append("The sentencing chart calls for an active sentence at this record level.") }
+        if reasons.isEmpty { reasons.append(rng.pick(["A plea doesn't erase what happened.", "The State made its offer already. This is it."])) }
+        let why = reasons.prefix(2).joined(separator: " ")
+
+        let stateAsk: String
+        let defenseAsk: String
+        switch stance {
+        case 2:
+            stateAsk = "The State will take the plea, but not a probation deal. We ask for \(rangeText) active. " + why
+            defenseAsk = rng.pick(["Judge, \(last) took responsibility and saved the State a trial. Suspend the sentence; put \(last) on supervised probation with treatment.",
+                                   "Prison won't fix this. \(last) has a job lined up and family support. We ask for a suspended sentence.",
+                                   "We'd ask the court to consider a split sentence at most. \(last) has already sat in jail on this."])
+        case 1:
+            stateAsk = "The State asks for \(rangeText) suspended, with \(jailDays) days in the county jail up front as special probation, then 18 months supervised. " + why
+            defenseAsk = rng.pick(["Straight probation is enough, Judge. Jail time costs \(last) the job that pays the restitution.",
+                                   "My client has been clean since the arrest. Jail now undoes that. We ask for regular probation.",
+                                   "Give \(last) a chance at probation without the jail time. If it doesn't work, the court will see us again."])
+        default:
+            stateAsk = "The State and defense jointly recommend \(rangeText), suspended, 12 months of supervised probation, and costs. " + rng.pick(["\(last) has no real record and took responsibility early.", "The victim was consulted and agrees.", "It's a fair resolution for a first offense of this kind."])
+            defenseAsk = rng.pick(["My client has a job and wants to keep it.", "My client has been sober since the arrest.", "This is about one bad night, Judge."])
+        }
+        let options = [
+            "Accept the plea; suspended sentence and probation" + (stance == 0 ? " (joint recommendation)" : " (defense's ask)"),
+            "Accept the plea; continue prayer for judgment on costs",
+            "Accept the plea; impose \(rangeText) active" + (stance == 2 ? " (State's ask)" : ""),
+            "Reject the plea; set the case for trial",
+            "Accept the plea; split sentence: \(jailDays) days in jail, then probation" + (stance == 1 ? " (State's ask)" : "")
+        ]
+        return PleaPositions(stateAsk: stateAsk, defenseAsk: defenseAsk, options: options)
+    }
+
+    /// The days in jail a split sentence's option names.
+    static func splitDays(_ option: String) -> Int {
+        guard let range = option.range(of: #"\d+(?= days in jail)"#, options: .regularExpression) else { return 30 }
+        return Int(option[range]) ?? 30
+    }
+
     /// The sentence a plea would carry for this offense and record: the term for an active sentence, the range as
     /// the parties describe it, and anything the court should know about what the chart allows.
     static func pleaTerms(_ law: Law, priors: [PriorConviction]) -> (active: Int, rangeText: String, notes: [String]) {
@@ -157,11 +226,12 @@ enum CalendarCalls {
             bound.activeTerm = terms.active
             bound.lawNote = terms.notes.isEmpty ? nil : terms.notes.joined(separator: " ")
             bound.summary = "\(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation.lowercasedPhrase.withIndefiniteArticle), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
-            bound.stateAsk = "The State and defense jointly recommend \(terms.rangeText), suspended, 12 months of supervised probation, and costs."
-            bound.options = ["Accept the plea; follow the joint recommendation",
-                             "Accept the plea; continue prayer for judgment on costs",
-                             "Accept the plea; impose \(terms.rangeText) active",
-                             "Reject the plea; set the case for trial in two weeks"]
+            var rng = SeededRNG(seed: c.seed ^ 0x9EA)
+            let positions = pleaPositions(law, priors: c.defendant.priors, rangeText: terms.rangeText, notes: terms.notes,
+                                          name: c.defendant.name, rng: &rng)
+            bound.stateAsk = positions.stateAsk
+            bound.defenseAsk = positions.defenseAsk
+            bound.options = positions.options
         } else {
             bound.summary = m.summary.replacingOccurrences(of: oldName, with: c.defendant.name)
             if let law {
@@ -175,6 +245,59 @@ enum CalendarCalls {
         return bound
     }
 
+    /// What the State asks for at a first appearance, scaled to the most serious charge, the felony record and
+    /// missed court dates. A murder charge draws a request to hold without bond; a Class I gets an unsecured bond.
+    static func bondScale(_ cls: NCClass?, violent: Bool, felonies: Int, ftas: Int,
+                          rng: inout SeededRNG) -> (unsecured: Int, secured: Int, stateAsk: String) {
+        let base = bondBase(cls)
+        let factor = (1.0 + 0.25 * Double(min(felonies, 6)) + 0.5 * Double(min(ftas, 3))) * (violent ? 1.25 : 1.0)
+        let jitter = Double.random(in: 0.85...1.2, using: &rng)
+        let secured = roundBond(Double(base) * factor * jitter)
+        let unsecured = roundBond(Double(min(base, 15_000)) / 2)
+        let severity = cls?.severity ?? NCClass.H.severity
+        let why = ftas > 0 ? "The defendant has missed court \(ftas == 1 ? "before" : "\(ftas) times")."
+            : felonies >= 2 ? "The defendant has \(felonies) prior felony convictions."
+            : violent ? "The charge is one of violence."
+            : "The State has no objection to release, but the charge calls for security."
+        let ask: String
+        if cls == .A {
+            ask = "The State asks that the defendant be held without bond. In the alternative, a $\(secured.formatted()) secured bond with electronic house arrest and no contact with the victim's family."
+        } else if severity <= NCClass.E.severity && (violent || felonies > 0 || ftas > 0) {
+            ask = "The State asks for a $\(secured.formatted()) secured bond with electronic house arrest. \(why)"
+        } else if severity <= NCClass.G.severity || felonies >= 2 || ftas > 0 {
+            ask = "The State asks for a $\(secured.formatted()) secured bond. \(why)"
+        } else if rng.chance(0.5) {
+            ask = "The State asks for a $\(secured.formatted()) secured bond."
+        } else {
+            ask = "The State would agree to an unsecured bond of $\(unsecured.formatted()) with the standard conditions."
+        }
+        return (unsecured, secured, ask)
+    }
+
+    /// The usual secured bond for a charge of this class, before record and missed court dates.
+    static func bondBase(_ cls: NCClass?) -> Int {
+        switch cls {
+        case .A: return 1_000_000
+        case .B1, .B2: return 500_000
+        case .C: return 250_000
+        case .D: return 150_000
+        case .E: return 75_000
+        case .F: return 50_000
+        case .G: return 30_000
+        case .H: return 15_000
+        case .I: return 7_500
+        case .misdA1: return 5_000
+        case .misd1: return 2_500
+        default: return 1_000
+        }
+    }
+
+    /// Bonds come in round amounts.
+    static func roundBond(_ x: Double) -> Int {
+        let step = x >= 100_000 ? 25_000.0 : x >= 20_000 ? 5_000.0 : x >= 5_000 ? 1_000.0 : 500.0
+        return max(500, Int((x / step).rounded()) * Int(step))
+    }
+
     /// A newly charged defendant's first appearance in superior court: setting conditions of release.
     static func bondMatter(for c: CourtCase, rng: inout SeededRNG) -> CalendarMatter {
         let d = c.defendant
@@ -185,9 +308,10 @@ enum CalendarCalls {
         let local = rng.chance(0.75)
         let flight = min(0.6, 0.06 + 0.12 * Double(ftas) + (local ? 0 : 0.12) + (employed ? 0 : 0.06) + 0.02 * Double(d.priors.count))
         let danger = min(0.5, 0.04 + (violent ? 0.08 : 0) + 0.05 * Double(felonies))
-        let base = violent ? 50_000 : 15_000
-        let moderate = base / 2 + 2_500 * felonies
-        let high = base * 2 + 10_000 * felonies
+        let worst = c.charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
+        let scale = bondScale(worst, violent: violent, felonies: felonies, ftas: ftas, rng: &rng)
+        let moderate = scale.unsecured
+        let high = scale.secured
         let canPost = employed ? rng.pick([1_000, 2_500, 5_000, 10_000, 25_000]) : rng.pick([0, 500, 1_000, 2_500])
         let law = c.charges.first?.law
         var record = d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s") (\(felonies) felon\(felonies == 1 ? "y" : "ies"))"
@@ -197,9 +321,7 @@ enum CalendarCalls {
         return CalendarMatter(kind: .firstAppearance, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
                               summary: "\(d.name), \(d.age), arrested this week and charged with \(law?.title.lowercased() ?? "a felony"), is before the court on conditions of release (G.S. 15A-534). \(record). \(d.lastName) \(ties.joined(separator: " and ")). The magistrate set no bond pending this hearing.",
-                              stateAsk: violent || felonies >= 2
-                                ? "The State asks for a $\(high.formatted()) secured bond with electronic monitoring. The defendant is a danger to the community."
-                                : "The State asks for a $\(moderate.formatted()) secured bond.",
+                              stateAsk: scale.stateAsk,
                               defenseAsk: canPost == 0
                                 ? "My client has no money. Any secured bond is a detention order. We ask for a written promise to appear."
                                 : "My client can post about $\(canPost.formatted()). We ask for an unsecured bond so \(d.lastName) can keep working and help with the defense.",
@@ -208,14 +330,17 @@ enum CalendarCalls {
                                         "Secured bond of an amount you set",
                                         "Secured bond of an amount you set, with electronic house arrest"],
                               pendingCase: c, bond: BondFacts(moderate: moderate, high: high, canPost: canPost, flightRisk: flight, danger: danger),
-                              amountOptions: [2, 3], amountRange: 500...500_000, suggestedAmount: moderate)
+                              amountOptions: [2, 3], amountRange: 500...max(500_000, high * 2), suggestedAmount: high)
     }
 
     /// A jailed defendant asks to have the bond lowered (G.S. 15A-538). The judge sets the new amount.
     static func bondReductionMatter(for c: CourtCase, rng: inout SeededRNG) -> CalendarMatter {
         let d = c.defendant
         let held = c.background.map { max($0.custodyDays, 1) } ?? rng.int(40...210)
-        let current = rng.pick([25_000, 40_000, 50_000, 75_000, 100_000])
+        let worstClass = c.charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
+        let priorFelonies = d.priors.filter { $0.ncClass.isFelony }.count
+        let current = bondScale(worstClass, violent: c.category == .violent || c.category == .robbery,
+                                felonies: priorFelonies, ftas: 0, rng: &rng).secured
         // The file shows the bond the defendant is actually held on.
         var jailed = c
         if var bg = jailed.background {
@@ -322,17 +447,15 @@ enum CalendarCalls {
             }
             // The same sentencing math as a plea bound to a real case.
             let (active, rangeText, notes) = pleaTerms(law, priors: priors)
+            let positions = pleaPositions(law, priors: priors, rangeText: rangeText, notes: notes, name: name, rng: &rng)
             let occupation = rng.pick(NameBank.occupations)
             matters.append(CalendarMatter(
                 kind: .quickPlea, personID: UUID(), personName: name, personAge: age, occupation: occupation,
                 docket: docket(cls.isFelony),
                 summary: "\(name), \(age), \(occupation.lowercasedPhrase.withIndefiniteArticle), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")").",
-                stateAsk: "The State and defense jointly recommend \(rangeText), suspended, 12 months of supervised probation, and costs.",
-                defenseAsk: rng.pick(["My client has a job and wants to keep it.", "My client has been sober since the arrest.", "This is about one bad night, Judge."]),
-                options: ["Accept the plea; follow the joint recommendation",
-                          "Accept the plea; continue prayer for judgment on costs",
-                          "Accept the plea; impose \(rangeText) active",
-                          "Reject the plea; set the case for trial"],
+                stateAsk: positions.stateAsk,
+                defenseAsk: positions.defenseAsk,
+                options: positions.options,
                 lawID: law.id, priors: priors, activeTerm: active, isFelony: cls.isFelony,
                 lawNote: notes.isEmpty ? nil : notes.joined(separator: " ")))
         }
@@ -348,10 +471,25 @@ enum CalendarCalls {
             case .failureToAppear:
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
-                    summary: "\(name) was called three times in the hallway and did not appear for trial on \(law.title).",
-                    stateAsk: "The State asks for an order for arrest and forfeiture of the \(rng.pick(["$5,000", "$10,000", "$20,000"])) bond.",
-                    defenseAsk: rng.pick(["I spoke with my client last week. They knew the date. I can't explain it.",
-                                          "My client's mother called my office this morning. There may have been a hospital visit. I'd ask for a day to find out."]),
+                    summary: rng.pick([
+                        "\(name) was called three times in the hallway and did not appear for trial on \(law.title).",
+                        "\(name), set for trial on \(law.title), did not answer when the case was called. The bondsman is in the courtroom.",
+                        "\(name) did not appear for trial on \(law.title). It is \(rng.pick(["the second", "the third", "the first"])) missed court date in this case.",
+                        "The clerk called \(name) on \(law.title) twice. Defense counsel is present; the defendant is not."]),
+                    stateAsk: rng.pick([
+                        "The State asks for an order for arrest and forfeiture of the \(rng.pick(["$5,000", "$10,000", "$20,000"])) bond.",
+                        "The State asks for an order for arrest with no bond. The witnesses are here for the second time, and the State is ready.",
+                        "The State asks for an order for arrest and that any new bond be doubled. This defendant has missed court before.",
+                        "The State's witnesses drove in from out of county. We ask for an order for arrest and forfeiture."]),
+                    defenseAsk: rng.pick([
+                        "I spoke with my client last week. They knew the date. I can't explain it.",
+                        "My client texted me this morning that the car broke down on Highway 17. I've asked for a photo of the tow receipt.",
+                        "My client works second shift and may have confused the date. I'd ask for the afternoon to reach them.",
+                        "I haven't been able to reach my client in a month. The phone is disconnected. I have nothing to offer the court.",
+                        "My client's child was sent home sick from day care, and there was no one else to pick her up. I'd ask for a new date.",
+                        "My client is in custody in another county on an unrelated matter. I just learned it from the jail roster.",
+                        "My client's mother called my office this morning. There may have been a hospital visit. I'd ask for a day to find out.",
+                        "Judge, my client told me last week they couldn't afford to miss another day of work. I warned them. I'll leave it to the court."]),
                     options: ["Issue an order for arrest and forfeit the bond", "Hold the matter open until the afternoon session",
                               "Continue the case three weeks and send a new notice"]))
             case .continuance:
@@ -359,9 +497,16 @@ enum CalendarCalls {
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
                     summary: "The defense moves to continue the trial of \(name) on \(law.title). It would be the \(rng.pick(["third", "fourth", "second"])) continuance.",
                     stateAsk: rng.pick(["The State objects. The victim has taken off work three times for this case.",
-                                        "The State doesn't object, Judge."]),
+                                        "The State doesn't object, Judge.",
+                                        "The State objects strongly. Our key witness is moving out of state next month.",
+                                        "The State objects. This case is over a year old, and the defense has had the discovery for months.",
+                                        "The State takes no position, but asks that this be the last continuance."]),
                     defenseAsk: rng.pick(["We just received the lab report Friday. I can't effectively cross-examine the analyst without our own expert.",
-                                          "I was appointed two weeks ago. Prior counsel withdrew. I haven't met my client in person yet."]),
+                                          "I was appointed two weeks ago. Prior counsel withdrew. I haven't met my client in person yet.",
+                                          "A defense witness is deployed with the National Guard until next month.",
+                                          "The State turned over body camera video last week, nearly four hours of it. I need time to review it.",
+                                          "I'm in a murder trial in another county that's running long.",
+                                          "My client was just admitted to an inpatient treatment program and can't leave for 28 days."]),
                     options: ["Grant the continuance; reset for trial in four weeks", "Deny; the case is tried this week"]))
             case .bondModification:
                 matters.append(CalendarMatter(
@@ -499,6 +644,28 @@ enum CalendarCalls {
                     person.probation?.starts = date
                 case 1:
                     sentence = "Prayer for judgment continued"
+                case 4:
+                    // Special probation (G.S. 15A-1351): jail first, then supervised probation on the suspended term.
+                    let days = splitDays(m.options.indices.contains(4) ? m.options[4] : "")
+                    sentence = "\(termText) suspended; special probation with \(days) days active, then 18 months supervised probation"
+                    person.probation = ProbationTerm(docket: m.docket, offense: law.title, isFelony: m.isFelony,
+                                                     suspendedSentence: termText,
+                                                     activeMonths: m.isFelony ? m.activeTerm : max(1, m.activeTerm / 30),
+                                                     ends: Calendar.current.date(byAdding: .month, value: 18, to: date) ?? date,
+                                                     imposedInThisCourt: true, supervised: true, conditions: ["Special probation: \(days) days in the county jail."],
+                                                     monthlyObligation: 60, violationRisk: rng.chance(0.5) ? 0.18 : 0.1,
+                                                     crvCount: 0, treatmentNeed: TreatmentNeed.none)
+                    person.probation?.activeDays = m.isFelony ? nil : m.activeTerm
+                    person.probation?.offenseClass = cls
+                    person.probation?.starts = date
+                    let out = Calendar.current.date(byAdding: .day, value: max(0, days - credit), to: date) ?? date
+                    if out > date {
+                        person.status = .incarcerated
+                        person.releaseDate = out
+                        person.releaseNote = "Special probation: \(days) days in the county jail, ordered on a plea at the calendar call. Probation follows release."
+                    } else {
+                        person.status = .probation
+                    }
                 default:
                     sentence = "\(termText) active" + (credit > 0 ? ", with credit for \(credit) days served" : "")
                     let full = Calendar.current.date(byAdding: m.isFelony ? .month : .day, value: m.activeTerm, to: date) ?? date
@@ -522,7 +689,7 @@ enum CalendarCalls {
                         if person.status == .incarcerated { person.pendingPostRelease = prs } else { person.postRelease = prs }
                     }
                 }
-                if choice == 0 { suspendedSentences += 1 } else if choice != 1 { activeSentences += 1 }
+                if choice == 0 || choice == 4 { suspendedSentences += 1 } else if choice != 1 { activeSentences += 1 }
                 person.priors.append(PriorConviction(offense: law.title, ncClass: cls, year: year, county: county.name,
                                                      sentence: sentence, fromThisCourt: true, docket: m.docket,
                                                      sessionKey: Judgment.sessionKey(county: county, date: date)))

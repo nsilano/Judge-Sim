@@ -102,7 +102,7 @@ struct LawDetailView: View {
     let law: Law
 
     var body: some View {
-        ScrollView {
+        FixedWidthScroll {
             VStack(alignment: .leading, spacing: 16) {
                 header
 
@@ -233,7 +233,7 @@ struct PunishmentChartView: View {
     private let misdemeanorClasses: [NCClass] = [.misdA1, .misd1, .misd2, .misd3]
 
     var body: some View {
-        ScrollView {
+        FixedWidthScroll {
             VStack(alignment: .leading, spacing: 16) {
                 Text("North Carolina Structured Sentencing, for offenses committed on or after October 1, 2013. Find the offense class and the defendant's prior record level.")
                     .font(.callout)

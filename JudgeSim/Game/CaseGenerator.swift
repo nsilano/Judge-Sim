@@ -11,12 +11,14 @@ enum CaseGenerator {
         let recentTemplateKeys: [String]
         /// Scenario signatures already heard in this career, so no exact scenario repeats.
         var usedSignatures: Set<String> = []
-        let returning: PersonRecord?
+        var returning: PersonRecord?
         /// Backgrounds already given to people in this career, so each new defendant gets a fresh one.
         var usedBackgrounds: Set<String> = []
-        /// Whether this case may be a written story. One story a week keeps the generated cases, with their
-        /// motions and twists, in the mix.
+        /// A trial slot (true) or a calendar-call matter (false). Both are written stories; a trial slot takes an
+        /// unheard one first.
         var storySlot = true
+        /// A short calendar-call matter that never comes to trial before this judge, so no written story is spent on it.
+        var generic = false
         /// Only cases of these kinds, e.g. a drug case for a search warrant the judge signed.
         var categories: Set<LawCategory>? = nil
         /// False when the week already has a murder trial, or had one last week.
@@ -80,22 +82,37 @@ enum CaseGenerator {
         }
         var unheardStories = StoryCases.all.filter { useCounts[$0.key] == nil }
         if !context.allowMurder { unheardStories.removeAll(where: isMurder) }
-        if context.returning == nil, context.storySlot {
-            // Every trial is a written case. Once all of them have been heard, the ones heard least come back with new people.
-            var candidates = unheardStories
-            if candidates.isEmpty {
-                var all = StoryCases.all
-                if !context.allowMurder { all.removeAll(where: isMurder) }
-                let fewest = all.map { useCounts[$0.key] ?? 0 }.min() ?? 0
-                candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
-                let notRecent = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
-                if !notRecent.isEmpty { candidates = notRecent }
+        // Every case that can come to trial here is a written one, calendar-call matters included.
+        // Unheard stories come first; once all have been heard, the ones heard least come back with new people.
+        if !context.generic {
+            var all = StoryCases.all
+            if !context.allowMurder { all.removeAll(where: isMurder) }
+            if let wanted = context.categories {
+                let narrowed = all.filter { wanted.contains($0.category) }
+                if !narrowed.isEmpty { all = narrowed }
             }
+            var storyContext = context
+            if let person = context.returning {
+                // A returning defendant only in a story that can be about them; otherwise the story brings its own.
+                let hasFelony = person.priors.contains { $0.ncClass.isFelony }
+                let age = person.age(on: context.date)
+                let sex = NameBank.gender(of: person.name)
+                let fitting = all.filter { template in
+                    template.occupations.isEmpty && (template.requiredGenders["D"] ?? sex) == sex
+                        && (!template.requiresFelonyPrior || hasFelony) && template.forcedPriorOffenses.isEmpty
+                        && age >= template.ageRange.lowerBound - 3 && age <= template.ageRange.upperBound + 8
+                }
+                if fitting.isEmpty { storyContext.returning = nil } else { all = fitting }
+            }
+            let fewest = all.map { useCounts[$0.key] ?? 0 }.min() ?? 0
+            var candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
+            let notRecentStories = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
+            if !notRecentStories.isEmpty { candidates = notRecentStories }
             if !candidates.isEmpty {
                 // Murder trials come up now and then, not every week: most draws go to another kind of case.
                 let others = candidates.filter { !isMurder($0) }
                 let story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : candidates)
-                return build(story, seed: seed, band: .close, context: context, rng: &rng)
+                return build(story, seed: seed, band: .close, context: storyContext, rng: &rng)
             }
         }
         // A written case is heard once per career, and only with a new defendant, whose history it describes.
@@ -716,11 +733,22 @@ enum CaseGenerator {
             objections.append(objection)
         }
 
+        let impactBase = t.victimImpacts.isEmpty ? nil : fill(rng.pick(t.victimImpacts))
         var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                         publicDefender: usePublicDefender, mitigating: mitigating,
                                         isFelony: isFelonyCase, habitual: habitual, maxCustodyDays: maxCustodyDays,
                                         suppressionMotion: motions.contains { [MotionKind.suppressSearch, .suppressStatement, .suppressIdentification].contains($0.kind) },
                                         rng: &rng)
+        // A statement asking for mercy means the family wants leniency, whatever else was drawn.
+        if t.hasVictim && VictimVoice.asksMercy(impactBase) && background.victimStance != .wantsLeniency {
+            background.victimStance = .wantsLeniency
+            background.victimStanceDetail = VictimVoice.position(stance: .wantsLeniency, victim: fill("{VL}"), defendant: fill("{DL}"),
+                                                                 category: t.category, died: t.victimDies,
+                                                                 child: (t.story?.victim?.age).map { $0 < 16 } ?? false,
+                                                                 restitutionBasis: background.restitutionBasis, rng: &rng)
+        }
+        let victimImpact = impactBase.map { VictimVoice.impact($0, stance: background.victimStance, defendant: fill("{DL}"),
+                                                                died: t.victimDies, rng: &rng) }
         if let twist = chosenTwist {
             if twist.trialOnly && background.arrangementPresented == true {
                 twistText = nil
@@ -764,7 +792,7 @@ enum CaseGenerator {
             objections: objections,
             aggravating: aggravating,
             mitigating: mitigating,
-            victimImpact: t.victimImpacts.isEmpty ? nil : fill(rng.pick(t.victimImpacts)),
+            victimImpact: victimImpact,
             // Cases without a written statement get one built from their facts when the defendant speaks (Allocutions).
             allocution: t.allocutions.isEmpty ? "" : fill(rng.pick(t.allocutions)),
             twist: twistText,
@@ -863,7 +891,10 @@ enum CaseGenerator {
         // Custody
         let inCustody = rng.chance(0.45) && maxCustodyDays > 0
         let custodyDays = inCustody ? min(rng.int(21...420), maxCustodyDays) : 0
-        let bond = rng.pick(["$2,500", "$10,000", "$25,000", "$50,000", "$100,000"])
+        // The bond fits the charge: the same draw as before, scaled to the most serious count's class.
+        let bondFactor = rng.pick([0.5, 0.75, 1.0, 1.5, 2.0])
+        let worstClass = charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
+        let bond = "$" + CalendarCalls.roundBond(Double(CalendarCalls.bondBase(worstClass)) * bondFactor).formatted()
         let bondStatus = inCustody
             ? "Held in the Hollis County jail on a \(bond) secured bond for \(custodyDays) days."
             : rng.pick(["Released on a \(bond) secured bond. Has made every court date.",
@@ -936,20 +967,13 @@ enum CaseGenerator {
             default:
                 stance = rng.pick([.wantsMaximum, .wantsAccountability, .wantsLeniency])
             }
-            switch stance {
-            case .wantsMaximum:
-                stanceDetail = fill("I've spoken with {VL}'s family several times. They want the maximum, and they've asked to be notified of every hearing.")
-            case .wantsAccountability:
-                stanceDetail = fill("{VL}'s family wants accountability, Judge. They aren't asking for a specific number. Mostly they want this taken seriously.")
-            case .wantsLeniency:
-                stanceDetail = fill("This is unusual, but {VL}'s family has told me they don't want {DL} to go to prison. They want help for {DL}, not punishment.")
-            case .none:
-                stanceDetail = "There's no identified victim in this case."
-            }
+            let child = (t.story?.victim?.age).map { $0 < 16 } ?? false
+            stanceDetail = VictimVoice.position(stance: stance, victim: fill("{VL}"), defendant: fill("{DL}"), category: t.category,
+                                                died: t.victimDies, child: child, restitutionBasis: basis, rng: &rng)
         } else if t.story != nil && !t.victimImpacts.isEmpty {
             // No single named victim, but people were hurt, and their statements are in the file.
             stance = .wantsAccountability
-            stanceDetail = "There isn't one named victim in this case, Judge, but people were hurt by it. The statements from those affected are in the sentencing file, and they want it taken seriously."
+            stanceDetail = VictimVoice.groupPosition(rng: &rng)
         } else {
             stance = .none
             stanceDetail = "There's no individual victim in this case, Judge."

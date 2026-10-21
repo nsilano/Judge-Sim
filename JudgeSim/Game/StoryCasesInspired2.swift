@@ -41,7 +41,7 @@ extension StoryCases {
                             .direct("What did {DL} tell you in early November?", "\"That {DL} had 'lost' a spouse and this would be the first holiday season without them. I thought {DL} meant a death, years ago. Three weeks later {VL} disappeared.\""),
                             .direct("Why did you record your calls?", "\"When I saw {VL}'s face on the news, I called the detective. They asked me to keep talking to {DL} and record it.\""),
                             .direct("What did {DL} say on those calls?", "\"That {DL} was in Denver for work, that {D.he} missed me, that we'd go to Portugal in the spring. I could hear the vigil in the background.\""),
-                            .cross("{DL} never said anything about hurting {VL}?", "\"No. Never.\""),
+                            .cross("{DL} never said anything about hurting {VL}?", "\"Not a word. {D.He} talked about {VL} like {D.he} hung the moon.\""),
                             .cross("{DL} never said {D.he} wanted a new life without the baby?", "\"Not in those words.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Lead detective",
@@ -52,9 +52,9 @@ extension StoryCases {
                             .direct("What did {DL} tell you on day one?", "\"That {DL} left at 7:30 a.m. to try a new kayak on {LAKE}, forty miles away, and came home around 2 to find the house empty and the dog in the yard with the leash on.\""),
                             .direct("Why does the cove matter?", "\"Of every body of water in three counties, {VL} came to the surface a mile from the ramp {DL} told us about on day one. {DL} named that ramp and bought a boat and anchor kit six days before.\""),
                             .direct("What about the airport?", "\"The week the remains surfaced, {DL} had a nine-day-old passport, nine thousand in cash, and a one-way ticket.\""),
-                            .cross("No blood, no cause of death, no crime scene?", "\"Correct.\""),
+                            .cross("No blood, no cause of death, no crime scene?", "\"None of the three. We built it from the disappearance and what came after.\""),
                             .cross("Two neighbors saw a pregnant person with a dog at 10:15, after {DL} was at the bait shop?", "\"They told us that. We couldn't confirm it was {VL}.\""),
-                            .cross("You never identified the burglars two doors down?", "\"No.\"")
+                            .cross("You never identified the burglars two doors down?", "\"We never did. Those cases are still open.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -173,7 +173,7 @@ extension StoryCases {
                             .direct("What do investors expect from a founder?", "\"Vision. Optimism. Every founder pitches what the product will be, not what it is. Experienced investors discount that.\""),
                             .direct("Did you invest?", "\"Our fund did, two million. We did our own diligence and accepted the risk.\""),
                             .cross("You didn't know the hospital letter was written by {DL}?", "\"No. That's not optimism; that's something else.\""),
-                            .cross("Or that demos were recordings?", "\"No.\"")
+                            .cross("Or that demos were recordings?", "\"Nobody told me that. I'd have walked out of the room.\"")
                         ])
         ],
         prosecutionTheory: ["{D} sold investors a study that didn't exist, a hospital endorsement {D.he} wrote, and recorded demos called live. That's fraud, not optimism."],
@@ -258,7 +258,7 @@ extension StoryCases {
                             .direct("What did the phones show?", "\"Six weeks of escalating messages from {DL} pressing {VL} to follow through. Then a 52-minute video call that ended at 9:41 p.m. The time of death was shortly after.\""),
                             .direct("Did {DL} call 911 or {VL}'s family?", "\"No. {DL} called no one that night.\""),
                             .direct("What did {DL} say to you?", "\"That {DL} thought {VL} was going to do it anyway and {DL} wanted {VL} to stop suffering.\""),
-                            .cross("{DL} was thirty miles away, never physically present?", "\"Correct.\""),
+                            .cross("{DL} was thirty miles away, never physically present?", "\"Thirty miles off. Everything happened through a phone.\""),
                             .cross("For a year before, {DL} sent hotline numbers and offered rides to appointments?", "\"The messages show that.\"")
                         ])
         ],
@@ -294,7 +294,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("For a year you begged {VL} to get help. What changed?", "\"I was falling apart too. New medicine, no sleep. I started believing {VL} would never stop hurting and that I was being selfish to keep {V.him} here for me.\""),
                 .direct("Why didn't you call anyone that night?", "\"I froze. I told myself it was what {VL} wanted. I've replayed that hour a thousand times.\""),
-                .cross("'Don't back out again.' Your words, on the last day.", "\"Yes.\""),
+                .cross("'Don't back out again.' Your words, on the last day.", "\"My words. I've read them a hundred times since.\""),
                 .cross("You could have called 911 at any point in 52 minutes.", "\"I could have. I didn't.\"")
             ],
             objections: [
@@ -349,7 +349,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What does your training say?", "\"Once a person is handcuffed, get them on their side, check breathing, and stop applying weight. We teach that every year, and {DL} has taught it.\""),
-                            .direct("Was the restraint after handcuffing consistent with that?", "\"No.\""),
+                            .direct("Was the restraint after handcuffing consistent with that?", "\"Not even close. Once the cuffs are on, the threat is over.\""),
                             .cross("{VL} kicked and bit an officer before the cuffs went on?", "\"Yes, in the first minute.\""),
                             .cross("In a chaotic extraction, officers may not realize the moment resistance ends?", "\"It can be hard. That's why we train to check.\"")
                         ])
@@ -460,7 +460,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you see that night?", "\"{DL} came into the back office bleeding from the lip, shaking. {DL} wanted to drop out of the race.\""),
                             .direct("What about the $1,800?", "\"The two of them were going to knock doors full-time the last two weeks. That's a stipend, about right.\""),
-                            .cross("You weren't outside when it happened?", "\"No.\""),
+                            .cross("You weren't outside when it happened?", "\"I was inside working the phones.\""),
                             .cross("Other full-time volunteers were paid $100 a week?", "\"Part-time ones were.\"")
                         ])
         ],

@@ -912,7 +912,7 @@ enum Investigations {
             let detail = e.detail.lowercased()
             return (detail.contains("found") || detail.contains("recovered") || e.kind == .digital) && !detail.contains("consent")
         }
-            .prefix(3).map { "Warrant covering \($0.title.lowercased())" }
+            .prefix(3).map { "Warrant covering \($0.phrase)" }
         let lab = forensic.map { "\($0.title): \($0.detail)" }
 
         let scene: String

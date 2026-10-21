@@ -2053,7 +2053,7 @@ enum Judgment {
         var lesser: [(text: String, error: Bool)] = []
         func add(_ text: String, error: Bool) { if error { strong.append((text, true)) } else { lesser.append((text, false)) } }
         for m in c.motions where r.motions[m.id] == false {
-            let target = c.evidence(m.targetEvidenceID).map { " (\($0.exhibit), \($0.title.lowercased()))" } ?? ""
+            let target = c.evidence(m.targetEvidenceID).map { " (\($0.exhibit), \($0.phrase))" } ?? ""
             add("You denied the \(m.kind.title.lowercased())\(target).", error: m.shouldGrant)
         }
         for o in c.objections {

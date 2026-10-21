@@ -177,7 +177,7 @@ enum ObjectionEngine {
                                  doctrine: "chainOfCustody", weight: 1))
             }
             if let item = exhibit, asker == .prosecution {
-                out.append(Draft(question: "Who had \(item.title.lowercased()) between when it was collected and when it came to court?",
+                out.append(Draft(question: "Who had \(item.phrase) between when it was collected and when it came to court?",
                                  answer: rng.pick(["It went into the evidence locker that night. I don't have the log with me, but it stayed there.",
                                                    "I sealed it, initialed it, and logged it. It went to the lab and came back sealed."]),
                                  grounds: "Chain of custody", sustain: rng.chance(0.35),
@@ -207,7 +207,7 @@ enum ObjectionEngine {
             }
             if let lab, asker == .prosecution {
                 let finding = lab.detail.trimmingCharacters(in: CharacterSet(charactersIn: ". "))
-                out.append(Draft(question: "Can you tell the court what the lab report on the \(lab.title.lowercased()) concluded?",
+                out.append(Draft(question: "Can you tell the court what the lab report on \(lab.phrase) concluded?",
                                  answer: rng.pick(["I didn't do that analysis myself; a colleague did. But the report says: \(finding).",
                                                    "The analyst who ran it isn't here today. Reading from the report: \(finding)."]),
                                  grounds: "Confrontation Clause", sustain: rng.chance(0.6),
@@ -253,7 +253,7 @@ enum ObjectionEngine {
 
         // Assumes facts not in evidence, built from an exhibit the other side hasn't proven.
         if asker != w.calledBy, let item = exhibit {
-            out.append(Draft(question: "After you saw \(item.title.lowercased()), you changed your story, didn't you?",
+            out.append(Draft(question: "After you saw \(item.phrase), you changed your story, didn't you?",
                              answer: "I never changed anything.", grounds: "Assumes facts not in evidence", sustain: rng.chance(0.7),
                              explanation: "The question assumes the witness saw the exhibit and changed an account, which no evidence shows.",
                              doctrine: "relevance", weight: 0))

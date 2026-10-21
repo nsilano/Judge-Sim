@@ -51,7 +51,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did {DL} become a suspect?", "\"An officer who patrols the complex said the description fit a resident with a shoplifting record. That was {DL}.\""),
                             .direct("What did you find?", "\"The bus pass in the storm drain behind {DL}'s building the next morning. A gray hooded sweatshirt in {DL}'s closet, which {D.he} let us search.\""),
-                            .cross("Gray hooded sweatshirts are common?", "\"Very.\""),
+                            .cross("Gray hooded sweatshirts are common?", "\"Half the county owns one. I own two.\""),
                             .cross("The storm drain is also forty yards from three other buildings?", "\"It sits between them, yes.\""),
                             .cross("When did you get the time clock records?", "\"After the defense subpoenaed them. Six weeks later.\""),
                             .cross("Does the scar by the eyebrow match {DL}?", "\"{DL} has no scar there.\"")
@@ -155,7 +155,7 @@ extension StoryCases {
                             .direct("What did you see?", "\"The cop told {DL} to go. {DL} kept saying {D.he} wanted {D.his} friend. Then the cop went to grab {D.him} and {DL} turned and swung.\""),
                             .direct("Did you hear the officer say 'under arrest'?", "\"I think so. It was loud.\""),
                             .cross("You were in the fight that brought police there?", "\"I broke it up.\""),
-                            .cross("You weren't charged with anything?", "\"No.\""),
+                            .cross("You weren't charged with anything?", "\"Nobody charged me. I was doing my job.\""),
                             .cross("You 'think' you heard 'under arrest'?", "\"I'm not a hundred percent.\"")
                         ])
         ],
@@ -342,7 +342,7 @@ extension StoryCases {
                             .direct("What did {DL} tell you?", "\"That {VL} confessed the affair and said {V.he} was leaving, and that {DL} snapped and grabbed the knife.\""),
                             .direct("What did the phone show?", "\"A text to a friend six days earlier: 'If it's true I don't know what I'll do.' And searches for divorce lawyers.\""),
                             .cross("The searches were for divorce lawyers, not weapons?", "\"Divorce lawyers.\""),
-                            .cross("{DL} called 911 within ninety seconds and did CPR?", "\"Yes.\""),
+                            .cross("{DL} called 911 within ninety seconds and did CPR?", "\"Inside of two minutes. {D.He} was doing compressions when the first unit arrived.\""),
                             .cross("Is there any evidence {DL} took the knife out before the argument?", "\"No. The block was on the counter where they were standing.\"")
                         ])
         ],
@@ -355,7 +355,7 @@ extension StoryCases {
                             .direct("What did you understand the text to mean?", "\"That {DL} would fall apart. {DL} cried on the phone with me for an hour that night. {D.He} talked about counseling.\""),
                             .direct("Had you ever seen {DL} violent?", "\"Never. Twenty years.\""),
                             .cross("'I don't know what I'll do' could mean a lot of things?", "\"I know what I thought it meant.\""),
-                            .cross("Did you ask {D.him}?", "\"No.\"")
+                            .cross("Did you ask {D.him}?", "\"I didn't want to know the answer.\"")
                         ])
         ],
         prosecutionTheory: ["{D} suspected for a week, warned what might happen, and drove a knife five inches into {VL}'s chest. That's malice."],
@@ -439,7 +439,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What condition were the dogs in?", "\"Eleven had severe skin infections that had gone untreated for weeks or months. Three were in such pain from infection and untreated tumors that euthanasia was the humane choice.\""),
-                            .cross("Rescues take in dogs that are already sick?", "\"They do.\""),
+                            .cross("Rescues take in dogs that are already sick?", "\"All the time. We see heartworm and mange from rescues every week.\""),
                             .cross("Could some of those conditions have predated {DL}?", "\"Some. Not the weeks of neglect on top of them.\"")
                         ])
         ],
@@ -452,7 +452,7 @@ extension StoryCases {
                             .direct("How do you know {DL}?", "\"I adopted two dogs from {D.him} and volunteered for three years. {DL} took the old ones, the sick ones, the ones the county was going to put down.\""),
                             .direct("What changed?", "\"Volunteers burned out. {DL} couldn't say no to a dog. By last year it was mostly {D.him} alone.\""),
                             .cross("You stopped volunteering because of the conditions?", "\"Partly. It got out of hand.\""),
-                            .cross("Did you tell {DL} it was too many dogs?", "\"Many times.\"")
+                            .cross("Did you tell {DL} it was too many dogs?", "\"Every time I came over. {D.He} said they were family.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was warned eight months earlier and let 43 dogs live in filth with untreated infections. Good intentions don't excuse suffering."],

@@ -89,7 +89,7 @@ extension StoryCases {
                 .direct("Why did you drive so far?", "\"We started driving and talking and I didn't want it to end. I kept thinking if we got to the mountains, {VL} would remember.\""),
                 .direct("Did you take {VL}'s phone?", "\"It was ringing and {VL}'s friend kept calling. I took it and put it in my door so we could talk. I should have given it back.\""),
                 .direct("What did you mean on the bridge?", "\"I said it would be easy to just disappear. I meant me. I was in a bad place. I'm getting help now.\""),
-                .cross("You pulled out before the door was closed.", "\"I don't remember that.\""),
+                .cross("You pulled out before the door was closed.", "\"I don't remember it that way. I remember the door shutting.\""),
                 .cross("{VL} asked to go home and you kept driving.", "\"{VL} said it more than once. I kept saying just a little longer.\"")
             ],
             objections: [
@@ -246,7 +246,7 @@ extension StoryCases {
                             .direct("Why a no-knock warrant?", "\"The target was believed to keep firearms and had a history of fleeing. A magistrate approved no-knock entry.\""),
                             .direct("Was the team announced?", "\"Every member yelled 'Police, search warrant' as we breached.\""),
                             .cross("You didn't check whether the target still lived there?", "\"Our information was nine weeks old. We should have checked.\""),
-                            .cross("You found no drugs and no evidence of any crime in the house?", "\"None.\"")
+                            .cross("You found no drugs and no evidence of any crime in the house?", "\"Nothing at all.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -342,7 +342,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you find?", "\"The texts, the empty bag matching the bag in {DL}'s apron, and three more pills, all fentanyl.\""),
                             .direct("What did {DL} say?", "\"That {DL} sold {VL} two pills at cost and thought they were real oxycodone.\""),
-                            .cross("{DL} had a documented opioid addiction?", "\"Yes.\""),
+                            .cross("{DL} had a documented opioid addiction?", "\"Years of it. It's in {D.his} medical records.\""),
                             .cross("No evidence {DL} sold to anyone but {VL}?", "\"None we found.\"")
                         ])
         ],
@@ -431,7 +431,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("How do you know it's {DL}?", "\"The players' card in {DL}'s name, and the face on our camera, which matches the ID scanned when the card was issued.\""),
-                            .cross("You can't say anything about {DL}'s memory?", "\"No.\"")
+                            .cross("You can't say anything about {DL}'s memory?", "\"My cameras record where people stand, not what they remember.\"")
                         ])
         ],
         defenseWitnesses: [

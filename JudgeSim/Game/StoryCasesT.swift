@@ -173,7 +173,7 @@ extension StoryCases {
                 .direct("Why did you do it?", "\"Because I promised her. She was scared all the time, and she didn't know where she was or who I was. That wasn't her life anymore.\""),
                 .direct("Did you mean to kill yourself too?", "\"I meant to. My hands wouldn't do it.\""),
                 .cross("She wasn't in pain. She had months.", "\"You didn't hear her screaming at three in the morning.\""),
-                .cross("You planned it for a month.", "\"I did.\"")
+                .cross("You planned it for a month.", "\"A month. Every detail.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Defense: \"Should your father go to prison?\"",
@@ -433,7 +433,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What happened when {DL} asked for staff?", "\"Corporate said no every time. Budget. We were told to make it work.\""),
-                            .cross("Did corporate tell {DL} to fake the charts?", "\"No.\"")
+                            .cross("Did corporate tell {DL} to fake the charts?", "\"Nobody at corporate said that. They said fix the numbers.\"")
                         ])
         ],
         prosecutionTheory: ["{D} knew {V} was not being turned and filled in her chart to say she was. The falsified records hid the neglect until it killed her."],
@@ -456,7 +456,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why did you fill in those entries?", "\"Because I believed the girls were doing the turns and just not charting. I was catching up the paperwork. I was wrong about what was happening.\""),
                 .direct("Did you ask for help?", "\"Eleven times, in writing.\""),
-                .cross("You signed other people's initials.", "\"Yes. I shouldn't have.\""),
+                .cross("You signed other people's initials.", "\"I signed them. I knew better.\""),
                 .cross("You never looked at her wounds.", "\"I didn't have time to look at anybody.\"")
             ],
             objections: [

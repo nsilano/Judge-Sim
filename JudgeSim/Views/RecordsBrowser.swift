@@ -207,7 +207,7 @@ struct PersonTimeline: View {
                 Spacer()
                 if let limit, all.count > limit {
                     NavigationLink("All \(all.count)") {
-                        ScrollView { PersonTimeline(person: person, limit: nil).padding() }
+                        FixedWidthScroll { PersonTimeline(person: person, limit: nil).padding() }
                             .benchBackground()
                             .navigationTitle("Timeline")
                             .navigationBarTitleDisplayMode(.inline)

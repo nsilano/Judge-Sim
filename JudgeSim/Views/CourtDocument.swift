@@ -460,7 +460,7 @@ struct DocumentDesk<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        ScrollView {
+        FixedWidthScroll {
             LazyVStack(alignment: .leading, spacing: 18) {
                 content()
             }

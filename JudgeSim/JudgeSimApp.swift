@@ -12,6 +12,7 @@ struct JudgeSimApp: App {
                 .environmentObject(game)
                 .tint(Theme.gold)
                 .preferredColorScheme(.dark)
+                .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         }
     }
 }

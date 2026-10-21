@@ -38,7 +38,7 @@ extension StoryCases {
                         exam: [
                             .direct("What happened to {VL}?", "\"Ethylene glycol poisoning. It's metabolized into crystals that destroy the kidneys. {VL}'s kidneys failed. {VL} will need dialysis or a transplant.\""),
                             .direct("Was it one dose or many?", "\"The pattern of illness over three weeks, with good days and bad days, fits repeated small doses rather than one large one.\""),
-                            .cross("You can't say who put it there?", "\"No.\""),
+                            .cross("You can't say who put it there?", "\"Who put it there is your question, not mine. I can tell you it was there.\""),
                             .cross("Or exactly which days?", "\"Not exactly.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
@@ -49,7 +49,7 @@ extension StoryCases {
                             .direct("What did the camera show?", "\"{DL} opening the fridge alone at 6:12 a.m. on eight mornings. {DL}'s back is to the camera; we can't see hands.\""),
                             .direct("What about the search?", "\"'Antifreeze taste coffee,' on the dispatch computer during {DL}'s shift, six weeks before.\""),
                             .direct("What did {DL} say?", "\"That {DL} came early every day and kept lunch in the fridge. When I showed {DL} the search, {D.he} said someone else must have done it.\""),
-                            .cross("Two other dispatchers were on that shift and used that computer?", "\"Yes.\""),
+                            .cross("Two other dispatchers were on that shift and used that computer?", "\"Two others, and the computer didn't require a separate login.\""),
                             .cross("The employee fired a week before {VL} got sick still had building access for a week?", "\"Their badge worked until it was deactivated, yes.\""),
                             .cross("You never searched {DL}'s home or car for antifreeze?", "\"We did. We found a jug in the garage. Most garages have one.\"")
                         ])
@@ -63,7 +63,7 @@ extension StoryCases {
                             .direct("What were {DL}'s habits?", "\"First one in, every day, for as long as I've worked there. Makes the coffee for everybody, puts lunch in the fridge.\""),
                             .direct("How did people feel about {VL}?", "\"Most of us couldn't stand {VL}. Yelling, write-ups for nothing. When {DL}'s termination paperwork went up, people were angry for {D.him}.\""),
                             .cross("{DL} complained about {VL} constantly?", "\"Everybody did. {DL} more than most.\""),
-                            .cross("Did you ever see anyone else near {VL}'s thermos?", "\"No.\"")
+                            .cross("Did you ever see anyone else near {VL}'s thermos?", "\"Nobody. It sat where it always sat.\"")
                         ])
         ],
         prosecutionTheory: ["{D}, about to be fired by {V}, searched how to hide antifreeze in coffee and was alone at the fridge with {V.his} thermos on eight mornings."],
@@ -247,7 +247,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did the account records show?", "\"{DL}'s account opened the tracker's location 212 times in six weeks after {VL} moved out, compared to four times in the prior six months.\""),
                             .direct("When?", "\"Mostly between 10 p.m. and 2 a.m.\""),
-                            .cross("The tracker was registered when the car was bought?", "\"Yes.\""),
+                            .cross("The tracker was registered when the car was bought?", "\"When the car was bought, in {D.his} name.\""),
                             .cross("Someone could check a tracker out of habit or worry?", "\"212 times is a lot of habit.\"")
                         ])
         ],
@@ -258,8 +258,8 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What was {DL}'s state after the breakup?", "\"Acute grief, insomnia, rumination. {DL} told me {D.he} checked the tracker at night to know {VL} was safe, and was ashamed of it.\""),
-                            .cross("Checking an ex's location 212 times is unhealthy?", "\"Very.\""),
-                            .cross("{DL} never told you {D.he} removed it?", "\"No.\"")
+                            .cross("Checking an ex's location 212 times is unhealthy?", "\"It's a sign of obsession. I'd use that word.\""),
+                            .cross("{DL} never told you {D.he} removed it?", "\"It never came up in session.\"")
                         ])
         ],
         prosecutionTheory: ["{D} kept a hidden tracker on {V}'s car, checked it 212 times, and kept appearing wherever {V.he} went."],
@@ -333,7 +333,7 @@ extension StoryCases {
                             .direct("Why were you in the road?", "\"The march had a permit for the sidewalk. People spilled into the street. I was standing there holding a banner when the car started pushing forward.\""),
                             .direct("What happened?", "\"It crept toward me, I put my hand on the hood to say stop, and then the engine roared and I was on the ground.\""),
                             .cross("You didn't see who hit the windshield or kicked the door?", "\"I was in front. I heard banging.\""),
-                            .cross("The march's permit was for the sidewalk, not the street?", "\"Yes.\""),
+                            .cross("The march's permit was for the sidewalk, not the street?", "\"The permit said sidewalk. We spilled into the street when it got crowded.\""),
                             .cross("When the car crept forward, people moved and you stayed?", "\"I didn't think anyone would drive through a person.\"")
                         ]),
             WitnessSeed(name: "{OFF}", role: "Officer on scene",
@@ -342,9 +342,9 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What did {DL} say?", "\"That {DL} wasn't going to sit there and get dragged out. {DL} was shaking badly.\""),
-                            .cross("You saw a cracked windshield and dented door?", "\"Yes.\""),
+                            .cross("You saw a cracked windshield and dented door?", "\"Cracked windshield, dented door. That's what I wrote down.\""),
                             .cross("Officers had been told not to clear the street?", "\"We were ordered to monitor, not disperse.\""),
-                            .cross("{DL} called 911 and waited for you?", "\"Yes.\"")
+                            .cross("{DL} called 911 and waited for you?", "\"Called it in and was standing by the car when I pulled up.\"")
                         ])
         ],
         defenseWitnesses: [

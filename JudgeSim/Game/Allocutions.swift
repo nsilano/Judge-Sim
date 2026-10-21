@@ -423,14 +423,14 @@ enum Allocutions {
                                    "May it please the court. Let's start with what isn't disputed.",
                                    "Your Honor, the defense wants you to look at this case one piece at a time. Look at it all together."]))
             if let first = ours.first {
-                parts.append(rng.pick(["Start with \(first.exhibit), the \(first.title.lowercased()).",
-                                       "\(first.exhibit), the \(first.title.lowercased()), is where this case begins and ends.",
-                                       "The \(first.title.lowercased()) alone puts \(dl) right in the middle of this."]))
+                parts.append(rng.pick(["Start with \(first.exhibit), \(first.phrase).",
+                                       "\(first.exhibit), \(first.phrase), is where this case begins and ends.",
+                                       "\(first.phrase.capitalizedFirst) alone puts \(dl) right in the middle of this."]))
             }
             if ours.count > 1 {
                 let second = ours[1]
-                parts.append(rng.pick(["Add the \(second.title.lowercased()).", "Then there's the \(second.title.lowercased()), which nobody has explained away.",
-                                       "And the \(second.title.lowercased()) fits with all of it."]))
+                parts.append(rng.pick(["Add \(second.phrase).", "Then there's \(second.phrase), which nobody has explained away.",
+                                       "And \(second.phrase) fits with all of it."]))
             }
             if let witness {
                 parts.append(rng.pick(["You heard from \(witness.name). Nothing on cross changed what \(witness.name) told you.",
@@ -438,9 +438,9 @@ enum Allocutions {
                                        "Think about \(witness.name)'s testimony, and how well it matches everything else."]))
             }
             if let counter = theirs.first {
-                parts.append(rng.pick(["The defense points to the \(counter.title.lowercased()). It doesn't explain the rest.",
-                                       "Yes, there's the \(counter.title.lowercased()). Weigh it against everything else and it doesn't move the needle.",
-                                       "The defense will lean on the \(counter.title.lowercased()). Ask what it actually proves."]))
+                parts.append(rng.pick(["The defense points to \(counter.phrase). It doesn't explain the rest.",
+                                       "Yes, there's \(counter.phrase). Weigh it against everything else and it doesn't move the needle.",
+                                       "The defense will lean on \(counter.phrase). Ask what it actually proves."]))
             }
             if let v = c.victimName {
                 parts.append(rng.pick(["\(v) deserves a verdict that matches the evidence.", "This case is about what happened to \(v)."]))
@@ -454,13 +454,13 @@ enum Allocutions {
                                    "May it please the court. The burden is the State's, and it never shifts.",
                                    "Your Honor, I'm going to ask you to do the hard thing and hold the State to its burden."]))
             if let first = theirs.first {
-                parts.append(rng.pick(["The State's case rests on the \(first.title.lowercased()). Take that away and what's left?",
+                parts.append(rng.pick(["The State's case rests on \(first.phrase). Take that away and what's left?",
                                        "Look closely at \(first.exhibit). It shows less than the State claims.",
-                                       "The \(first.title.lowercased()) is the best the State has, and it doesn't get them there."]))
+                                       "\(first.phrase.capitalizedFirst) is the best the State has, and it doesn't get them there."]))
             }
             if let mine = ours.first {
-                parts.append(rng.pick(["Then there's the \(mine.title.lowercased()), which the State never really answered.",
-                                       "The State has no good explanation for the \(mine.title.lowercased()).",
+                parts.append(rng.pick(["Then there's \(mine.phrase), which the State never really answered.",
+                                       "The State has no good explanation for \(mine.phrase).",
                                        "Remember \(mine.exhibit). It points somewhere else."]))
             }
             if let witness {

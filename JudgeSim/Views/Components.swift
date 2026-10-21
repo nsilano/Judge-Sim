@@ -449,3 +449,17 @@ struct CourtActionBar: View {
         .buttonStyle(.plain)
     }
 }
+
+/// A vertical scroll view whose content is held to the screen's width, so a page never pans side to side.
+struct FixedWidthScroll<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        ScrollView(.vertical) {
+            content()
+                .frame(maxWidth: .infinity)
+                .containerRelativeFrame(.horizontal)
+        }
+        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+    }
+}

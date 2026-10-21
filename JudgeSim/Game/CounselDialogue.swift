@@ -100,7 +100,7 @@ enum CounselDialogue {
         let strongest = c.evidence.filter { $0.side == .prosecution }.max { $0.weight < $1.weight }
         q.append(CounselQuestion(id: "pre.state.theory", side: .prosecution,
                                  question: "Walk me through the State's case.",
-                                 answer: c.prosecutionOpening + (strongest.map { " The centerpiece is \($0.exhibit), the \($0.title.lowercased())." } ?? "")))
+                                 answer: c.prosecutionOpening + (strongest.map { " The centerpiece is \($0.exhibit), \($0.phrase)." } ?? "")))
         if bg.arrangementPresented == true, let terms = bg.arrangementTerms {
             q.append(CounselQuestion(id: "pre.state.deal", side: .prosecution,
                                      question: "Why is the State agreeing to this plea arrangement?",
@@ -190,7 +190,7 @@ enum CounselDialogue {
         var q: [CounselQuestion] = []
         for (index, motion) in c.motions.enumerated() {
             let target = c.evidence(motion.targetEvidenceID)
-            let label = target.map { "\($0.title.lowercased())" } ?? "the case"
+            let label = target.map { $0.phrase } ?? "the case"
             let stateStrong = !motion.shouldGrant
             // Each kind of motion is argued on its own terms.
             let stateWeak: String, stateClose: String, defenseWeak: String, defenseClose: String
@@ -244,7 +244,7 @@ enum CounselDialogue {
                 let remaining = Judgment.properStrength(c) - (motion.shouldGrant ? 0 : target.weight)
                 let primary = c.charges.first?.threshold ?? 8
                 q.append(CounselQuestion(id: "mot.state.impact.\(index)", side: .prosecution,
-                                         question: "If I suppress \(target.title.lowercased()), can the State still proceed?",
+                                         question: "If I suppress \(target.phrase), can the State still proceed?",
                                          answer: s.opener + (target.weight >= 4 || remaining < primary
                                             ? "candidly, it would hurt badly. It's central to the case."
                                             : "yes. It's significant, but the case doesn't rise or fall on it.")))
@@ -263,22 +263,22 @@ enum CounselDialogue {
         let excluded = r.excludedEvidence(in: c)
 
         for (index, item) in c.evidence.enumerated() where !excluded.contains(item.id) {
-            let title = item.title.lowercased()
+            let title = item.phrase
             if item.side == .prosecution {
                 q.append(CounselQuestion(id: "tri.state.ex.\(item.exhibit)", side: .prosecution,
-                                         question: "Tell me more about \(item.exhibit), the \(title).",
+                                         question: "Tell me more about \(item.exhibit), \(title).",
                                          answer: s.opener + stateOnExhibit(item, index: index, dl: dl)))
                 q.append(CounselQuestion(id: "tri.def.ex.\(item.exhibit)", side: .defense,
-                                         question: "What's the defense's answer to \(item.exhibit), the \(title)?",
+                                         question: "What's the defense's answer to \(item.exhibit), \(title)?",
                                          answer: d.opener + defenseOnExhibit(item, index: index, dl: dl, style: d, c: c)))
             } else {
                 q.append(CounselQuestion(id: "tri.state.def.\(item.exhibit)", side: .prosecution,
-                                         question: "What's the State's response to \(item.exhibit), the \(title)?",
+                                         question: "What's the State's response to \(item.exhibit), \(title)?",
                                          answer: s.opener + (item.weight >= 3
-                                            ? "the \(title) is a fair point, and the State has to account for it. But it doesn't explain away the rest of our evidence."
-                                            : ["the \(title) doesn't contradict anything the State proved. It's beside the point.",
-                                               "look at what the \(title) actually says. It's consistent with the State's case, not against it.",
-                                               "nobody disputes the \(title). It just doesn't answer the question this court has to decide."][index % 3])))
+                                            ? "\(title) is a fair point, and the State has to account for it. But it doesn't explain away the rest of our evidence."
+                                            : ["\(title) doesn't contradict anything the State proved. It's beside the point.",
+                                               "look at what \(title) actually says. It's consistent with the State's case, not against it.",
+                                               "nobody disputes \(title). It just doesn't answer the question this court has to decide."][index % 3])))
             }
         }
         for (index, witness) in c.witnesses.enumerated() {
@@ -333,6 +333,7 @@ enum CounselDialogue {
 
     private static func stateOnExhibit(_ item: Evidence, index: Int, dl: String) -> String {
         let title = item.title.lowercased()
+        let phrase = item.phrase
         let foundation: String
         switch item.kind {
         case .forensic: foundation = "The analyst followed the lab's accredited procedures, and the chain of custody is documented from collection to report."
@@ -343,17 +344,18 @@ enum CounselDialogue {
         case .physical: foundation = "It was photographed in place, collected, logged, and sealed."
         }
         if item.weight >= 4 {
-            return "the \(title) goes straight to identity and intent. \(item.detail) \(foundation)"
+            return "\(phrase) goes straight to identity and intent. \(item.detail) \(foundation)"
         } else if item.weight >= 2 {
-            return ["the \(title) is corroboration. \(item.detail) On its own it wouldn't carry the case, but it fits with everything else.",
-                    "the \(title) matters because of what it lines up with. \(foundation)",
+            return ["\(phrase) is corroboration. \(item.detail) On its own it wouldn't carry the case, but it fits with everything else.",
+                    "\(phrase) matters because of what it lines up with. \(foundation)",
                     "\(item.detail) That's the piece the court should hold up against \(dl)'s version."][index % 3]
         }
-        return "the \(title) is a small piece, offered for completeness. \(item.detail)"
+        return "\(phrase) is a small piece, offered for completeness. \(item.detail)"
     }
 
     private static func defenseOnExhibit(_ item: Evidence, index: Int, dl: String, style: CounselStyle, c: CourtCase) -> String {
         let title = item.title.lowercased()
+        let phrase = item.phrase
         // A defendant's own words are attacked as a confession; anyone else's, as a witness's account.
         let ownWords = ["interview", "confession", "admission"].contains { title.contains($0) } || title.contains(dl.lowercased())
         let identityDisputed = CaseFacts(c).identity
@@ -372,12 +374,12 @@ enum CounselDialogue {
         }
         if item.weight >= 4 {
             return style == .combative
-                ? "the \(title) proves less than the State says. \(attack)"
-                : "the \(title) is a hard piece of evidence, and I won't pretend otherwise. \(attack)"
+                ? "\(phrase) proves less than the State says. \(attack)"
+                : "\(phrase) is a hard piece of evidence, and I won't pretend otherwise. \(attack)"
         }
-        return ["the \(title) is thin. \(attack)",
-                "even taking the \(title) at face value, it puts \(dl) near the facts, not inside the crime. \(attack)",
-                "the State is asking the \(title) to do more work than it can. \(attack)"][index % 3]
+        return ["\(phrase) is thin. \(attack)",
+                "even taking \(phrase) at face value, it puts \(dl) near the facts, not inside the crime. \(attack)",
+                "the State is asking \(phrase) to do more work than it can. \(attack)"][index % 3]
     }
 
     // MARK: Sentencing

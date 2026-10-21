@@ -40,7 +40,7 @@ extension StoryCases {
                         exam: [
                             .direct("What happened when you saw {VL} run past?", "\"{DL} yelled for me to grab the shotgun. {D.He} said, 'Let's get him.' I drove. We cut {V.him} off twice. {V.He} kept running around us.\""),
                             .direct("Did {VL} ever threaten you?", "\"No. {V.He} was running away the whole time until the end.\""),
-                            .cross("You fired the shots, and you pleaded guilty in exchange for this testimony?", "\"Yes.\""),
+                            .cross("You fired the shots, and you pleaded guilty in exchange for this testimony?", "\"I fired. I pleaded. And I'm telling the truth about who told me to.\""),
                             .cross("{VL} grabbed the shotgun?", "\"After I pointed it at {V.him}, yeah. {V.He} grabbed the barrel.\"")
                         ]),
             WitnessSeed(name: nil, role: "SBI agent",
@@ -61,8 +61,8 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What was the neighborhood like that winter?", "\"Scared. Cars broken into. We had a group text. Somebody had seen a person at the construction site at night a few times.\""),
-                            .cross("Did anyone ever see {VL} steal anything?", "\"No.\""),
-                            .cross("Was anyone in the group text told to grab guns and chase people?", "\"No.\"")
+                            .cross("Did anyone ever see {VL} steal anything?", "\"Nobody ever saw that. It was a rumor in the group chat.\""),
+                            .cross("Was anyone in the group text told to grab guns and chase people?", "\"Nobody said to grab guns. Somebody said to go look.\"")
                         ])
         ],
         prosecutionTheory: ["{D} saw a young man jogging, armed {D.himself}, and hunted {V.him} down. There was no crime to arrest {V.him} for. {DL} started the confrontation that killed {V.him}."],
@@ -329,7 +329,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you see that day?", "\"At lunch, the guns were on the cart outside the church set, unlocked. {DL} was eating with the crew.\""),
                             .direct("What happened after the shooting?", "\"{DL} handed me a little bag and said hold this. I gave it to a deputy later.\""),
-                            .cross("You didn't see who put a live round in the gun?", "\"No.\""),
+                            .cross("You didn't see who put a live round in the gun?", "\"I wasn't there when it was loaded.\""),
                             .cross("The box from the supplier was labeled dummy?", "\"That's what it said on it.\"")
                         ])
         ],
@@ -341,7 +341,7 @@ extension StoryCases {
                         exam: [
                             .direct("What about this production concerns you?", "\"Half-time armorer, crew walking off over safety, rehearsals moving without the armorer present. That's a production that put schedule over safety.\""),
                             .cross("The armorer is still responsible for keeping live rounds off set?", "\"The armorer is the last line. Not the only line.\""),
-                            .cross("Would you have left the guns on a cart at lunch?", "\"No.\"")
+                            .cross("Would you have left the guns on a cart at lunch?", "\"Not in thirty years. A gun never leaves my sight on a set.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was responsible for every round on set, let live ammunition mix with dummies, left guns unsecured, and didn't check the gun before it went to the actor."],
