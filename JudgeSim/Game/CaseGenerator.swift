@@ -11,11 +11,11 @@ enum CaseGenerator {
         let recentTemplateKeys: [String]
         /// Scenario signatures already heard in this career, so no exact scenario repeats.
         var usedSignatures: Set<String> = []
-        let returning: PersonRecord?
+        var returning: PersonRecord?
         /// Backgrounds already given to people in this career, so each new defendant gets a fresh one.
         var usedBackgrounds: Set<String> = []
-        /// Whether this case may be a written story. One story a week keeps the generated cases, with their
-        /// motions and twists, in the mix.
+        /// A trial slot (true) or a calendar-call matter (false). Both are written stories; a trial slot takes an
+        /// unheard one first.
         var storySlot = true
         /// Only cases of these kinds, e.g. a drug case for a search warrant the judge signed.
         var categories: Set<LawCategory>? = nil
@@ -80,23 +80,36 @@ enum CaseGenerator {
         }
         var unheardStories = StoryCases.all.filter { useCounts[$0.key] == nil }
         if !context.allowMurder { unheardStories.removeAll(where: isMurder) }
-        if context.returning == nil, context.storySlot {
-            // Every trial is a written case. Once all of them have been heard, the ones heard least come back with new people.
-            var candidates = unheardStories
-            if candidates.isEmpty {
-                var all = StoryCases.all
-                if !context.allowMurder { all.removeAll(where: isMurder) }
-                let fewest = all.map { useCounts[$0.key] ?? 0 }.min() ?? 0
-                candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
-                let notRecent = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
-                if !notRecent.isEmpty { candidates = notRecent }
+        // Every case is a written one, calendar-call matters included, since any of them can be set for trial.
+        // Unheard stories come first; once all have been heard, the ones heard least come back with new people.
+        var all = StoryCases.all
+        if !context.allowMurder { all.removeAll(where: isMurder) }
+        if let wanted = context.categories {
+            let narrowed = all.filter { wanted.contains($0.category) }
+            if !narrowed.isEmpty { all = narrowed }
+        }
+        var storyContext = context
+        if let person = context.returning {
+            // A returning defendant only in a story that can be about them; otherwise the story brings its own.
+            let hasFelony = person.priors.contains { $0.ncClass.isFelony }
+            let age = person.age(on: context.date)
+            let sex = NameBank.gender(of: person.name)
+            let fitting = all.filter { template in
+                template.occupations.isEmpty && (template.requiredGenders["D"] ?? sex) == sex
+                    && (!template.requiresFelonyPrior || hasFelony) && template.forcedPriorOffenses.isEmpty
+                    && age >= template.ageRange.lowerBound - 3 && age <= template.ageRange.upperBound + 8
             }
-            if !candidates.isEmpty {
-                // Murder trials come up now and then, not every week: most draws go to another kind of case.
-                let others = candidates.filter { !isMurder($0) }
-                let story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : candidates)
-                return build(story, seed: seed, band: .close, context: context, rng: &rng)
-            }
+            if fitting.isEmpty { storyContext.returning = nil } else { all = fitting }
+        }
+        let fewest = all.map { useCounts[$0.key] ?? 0 }.min() ?? 0
+        var candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
+        let notRecent = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
+        if !notRecent.isEmpty { candidates = notRecent }
+        if !candidates.isEmpty {
+            // Murder trials come up now and then, not every week: most draws go to another kind of case.
+            let others = candidates.filter { !isMurder($0) }
+            let story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : candidates)
+            return build(story, seed: seed, band: .close, context: storyContext, rng: &rng)
         }
         // A written case is heard once per career, and only with a new defendant, whose history it describes.
         if context.returning == nil && context.storySlot { pool += unheardStories }
