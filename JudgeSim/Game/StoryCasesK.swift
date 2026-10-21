@@ -479,7 +479,9 @@ extension StoryCases {
             defenseOpening: "Fourteen cars, a work badge, and a frightened 'I think.'",
             prosecutionClosing: "Every detail fits {DL}, and {D.he} has the lights and the badge.",
             defenseClosing: "Fits isn't proven. The State checked one car out of fourteen.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Garage Opener Log and Phone Records", detail: "The garage door's app logged no openings between 6:10 p.m. and 7:05 the next morning, and {DL}'s phone stayed on the home Wi-Fi all night.", kind: .digital),
+                                   breaks: AlibiCheck.Finding(title: "Garage Opener Log and Phone Records", detail: "The garage door's app logged an opening at 10:41 p.m. and another at 11:38 p.m. {DL}'s phone connected to a tower on Route 17 at 11:03 p.m.", kind: .digital))
         )
     )
 }

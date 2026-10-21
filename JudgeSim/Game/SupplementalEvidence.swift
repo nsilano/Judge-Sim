@@ -2,7 +2,7 @@ import Foundation
 
 /// Follow-up work a judge can ask for when continuing a case.
 enum EvidenceRequest: String, Codable, CaseIterable, Identifiable {
-    case video, phoneRecords, labTesting, witnessFollowUp, financialRecords, expertReview
+    case video, phoneRecords, labTesting, witnessFollowUp, financialRecords, expertReview, alibi
 
     var id: String { rawValue }
 
@@ -14,6 +14,7 @@ enum EvidenceRequest: String, Codable, CaseIterable, Identifiable {
         case .witnessFollowUp: return "Track down witnesses and tips that weren't followed up"
         case .financialRecords: return "Subpoena bank and business records"
         case .expertReview: return "Independent expert review of the forensic work"
+        case .alibi: return "Check the alibi: phone location, cameras, and app records for where the defense says the defendant was"
         }
     }
 
@@ -25,13 +26,17 @@ enum EvidenceRequest: String, Codable, CaseIterable, Identifiable {
         case .witnessFollowUp: return "person.fill.questionmark"
         case .financialRecords: return "banknote.fill"
         case .expertReview: return "magnifyingglass"
+        case .alibi: return "location.magnifyingglass"
         }
     }
 
     /// Requests that make sense for this kind of case.
     static func options(for c: CourtCase) -> [EvidenceRequest] {
         // A written case's record is complete as written; generic follow-up results wouldn't fit its story.
-        guard !c.templateKey.hasPrefix("story.") else { return [] }
+        // The one exception is an alibi, which the case itself says how to check.
+        if c.templateKey.hasPrefix("story.") {
+            return CaseTemplates.byKey[c.templateKey]?.story?.alibiCheck == nil ? [] : [.alibi]
+        }
         let paper = c.category == .whiteCollar || c.category == .cyber
         var list: [EvidenceRequest] = paper ? [.financialRecords, .phoneRecords, .witnessFollowUp, .expertReview]
                                             : [.video, .phoneRecords, .witnessFollowUp]
@@ -48,7 +53,8 @@ enum SupplementalEvidence {
     private enum Direction { case guilt, innocence, inconclusive }
 
     static func gather(for c: inout CourtCase, requests: [EvidenceRequest], rng: inout SeededRNG) -> [String] {
-        guard !c.templateKey.hasPrefix("story."), !requests.isEmpty else { return [] }
+        guard !requests.isEmpty else { return [] }
+        if c.templateKey.hasPrefix("story.") { return checkAlibi(&c, requests: requests) }
         let dl = c.defendant.lastName
         var used = Set([c.defendant.name])
         var notes: [String] = []
@@ -72,6 +78,26 @@ enum SupplementalEvidence {
         return notes
     }
 
+    /// A written case's alibi, checked: the records back it up when the defendant wasn't there, and break it when
+    /// the defendant was.
+    private static func checkAlibi(_ c: inout CourtCase, requests: [EvidenceRequest]) -> [String] {
+        guard requests.contains(.alibi), let check = CaseTemplates.byKey[c.templateKey]?.story?.alibiCheck else { return [] }
+        let holds = !c.truth.actuallyGuilty
+        let finding = holds ? check.holds : check.breaks
+        let side: Side = holds ? .defense : .prosecution
+        let number = c.evidence.filter { $0.side == side }.count + 1
+        let label = side == .prosecution ? "State's Exhibit \(number)" : "Defendant's Exhibit \(number)"
+        let detail = finding.detail.replacingOccurrences(of: "{DL}", with: c.defendant.lastName)
+        c.evidence.append(Evidence(exhibit: label, title: finding.title, detail: detail, side: side, kind: finding.kind, weight: 3,
+                                   supplemental: "New: the alibi was checked during the continuance"))
+        if var report = c.investigation {
+            report.timeline.append(.init(when: "During the continuance",
+                                         what: "Follow-up ordered by the court: records checked for where the defense says \(c.defendant.lastName) was."))
+            c.investigation = report
+        }
+        return ["\(label): \(finding.title)"]
+    }
+
     private struct Item {
         let side: Side
         let kind: EvidenceKind
@@ -83,6 +109,8 @@ enum SupplementalEvidence {
     private static func make(_ request: EvidenceRequest, direction: Direction, dl: String, alt: String, rng: inout SeededRNG) -> Item {
         let business = rng.pick(["a pharmacy", "a gas station", "a laundromat", "a pawn shop", "an auto parts store", "a church"])
         switch (request, direction) {
+        case (.alibi, _):
+            return make(.phoneRecords, direction: direction, dl: dl, alt: alt, rng: &rng)
         case (.video, .guilt):
             return Item(side: .prosecution, kind: .video, weight: 3, title: "Recovered Camera Footage",
                         detail: "Video from \(business) a block away, located during the continuance, shows a person matching \(dl)'s height, build, and clothing heading toward the scene minutes before, and away from it minutes after.")

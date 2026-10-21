@@ -386,7 +386,9 @@ enum StoryCases {
             prosecutionOpening: "Somebody pried open {V}'s back door at three in the morning and was standing in the hallway when {V.he} came out of the bedroom. Four days later {D} sold the laptop that was taken. {V} picked {DL} out of a lineup.",
             defenseOpening: "{DL} bought a laptop that was too cheap to be honest, then walked it into a pawn shop with a license and a thumbprint. That's what an innocent fool does. The rest of the State's case is a nightlight and three seconds.",
             prosecutionClosing: "The laptop, the lineup, the shoe size, the phone tower, and a story about a man in a red truck nobody can find. Put together, it's {DL}.",
-            defenseClosing: "Seventy percent from a nightlight. A shoe size half the men in the county wear. A tower that covers {DL}'s own bed. And video that would have settled this, never collected. That's reasonable doubt."
+            defenseClosing: "Seventy percent from a nightlight. A shoe size half the men in the county wear. A tower that covers {DL}'s own bed. And video that would have settled this, never collected. That's reasonable doubt.",
+            alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Phone and Gas Station Records", detail: "{DL}'s phone stayed on the home Wi-Fi from 11:40 p.m. until 6:15 the next morning. The Kwik Fuel's camera, two days later, shows {DL} handing cash to a man at the tailgate of a red pickup and walking away with a laptop.", kind: .digital),
+                                   breaks: AlibiCheck.Finding(title: "Phone Location Records", detail: "Records obtained by warrant show {DL}'s phone dropping off the home Wi-Fi after 1 a.m., connecting to the tower that serves the duplex's block for about forty minutes around the break-in, and returning home before four.", kind: .digital))
         )
     )
 
@@ -1191,7 +1193,9 @@ enum StoryCases {
             prosecutionOpening: "A pistol against a 67-year-old's chest, zip ties on two people face-down in their own living room. The person who planned it is telling you who held the gun: {D}.",
             defenseOpening: "The State's case rides on {ALT}, who got years off a prison term for naming somebody, and who texted that the partner was {COUSIN}. Nobody ever looked for {COUSIN}.",
             prosecutionClosing: "Accomplice testimony is scrutinized, and here it's corroborated: the phone near the house, the silence during the robbery, the zip ties in the trunk.",
-            defenseClosing: "The court should view a bargained-for accomplice with great caution. Strip away {ALT}, and the State has a cell tower that covers {DL}'s bed and zip ties from a hardware store."
+            defenseClosing: "The court should view a bargained-for accomplice with great caution. Strip away {ALT}, and the State has a cell tower that covers {DL}'s bed and zip ties from a hardware store.",
+            alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Apartment Entrance Camera", detail: "The camera over the only entrance to the girlfriend's building shows {DL} going in with a takeout bag at 9:06 p.m. and not coming out again until 6:20 the next morning.", kind: .video),
+                                   breaks: AlibiCheck.Finding(title: "Apartment Entrance Camera", detail: "The camera over the girlfriend's building entrance shows {DL} walking out at 12:58 a.m. in a dark hooded jacket and coming back in at 3:41 a.m., carrying a duffel bag.", kind: .video))
         )
     )
 
@@ -1372,7 +1376,7 @@ enum StoryCases {
                             .direct("What did you see when they came in?", "\"I was on the couch. They came in laughing. {VL} said hi, asked my name, said our apartment was nicer than theirs. {VL} was clearly drunk, but talking, making jokes.\""),
                             .direct("Did {VL} seem to know where {V.he} was?", "\"{VL} seemed to. {VL} asked for water and asked which room was {DL}'s.\""),
                             .cross("You went to your room and put on headphones right away?", "\"After a few minutes.\""),
-                            .cross("You didn't see anything after that?", "\"I went to my room and put my headphones on.\""),
+                            .cross("You didn't see anything after that?", "\"Nothing. My door was shut and my music was loud.\""),
                             .cross("Someone who can't remember the night can still ask for water and make jokes, can't they?", "\"I guess so. I'm not a doctor.\"")
                         ])
         ],

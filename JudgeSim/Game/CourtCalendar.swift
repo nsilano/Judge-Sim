@@ -391,6 +391,9 @@ enum ContinuanceMotions {
                 request: request,
                 ifDenied: "The trial goes forward; the defense cross-examines on the new report without its own expert.",
                 suggestedDays: weeks * 7)
+        case .alibi:
+            // Only written cases check an alibi, and they bring no motions of their own.
+            return nil
         }
     }
 }

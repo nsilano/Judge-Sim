@@ -290,7 +290,9 @@ extension StoryCases {
             prosecutionOpening: "{DL}'s bike, {DL}'s jacket, and {DL}'s own words: 130 or bust.",
             defenseOpening: "A sale, a deposit, and a buyer no one looked for.",
             prosecutionClosing: "The convenient stranger is a story.",
-            defenseClosing: "The State proved who owned the bike on paper. Not who rode it."
+            defenseClosing: "The State proved who owned the bike on paper. Not who rode it.",
+            alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Phone and Doorbell Records", detail: "{DL}'s phone was on the apartment's Wi-Fi from 8:40 to 11:15 p.m. A neighbor's doorbell camera from two weeks earlier shows a thin man counting out cash, putting on a helmet, and riding the black motorcycle away from the building.", kind: .digital),
+                                   breaks: AlibiCheck.Finding(title: "Phone Location Records", detail: "{DL}'s phone left the apartment's Wi-Fi at 8:55 p.m. and connected to a tower along I-40 beside the exit where the trooper clocked the bike at 9:27 p.m. The streaming account shows only the roommate's TV watching the game.", kind: .digital))
         )
     )
 

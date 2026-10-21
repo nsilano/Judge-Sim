@@ -769,7 +769,7 @@ final class CaseSession: ObservableObject {
             }.map(\.id)
             courtCase.evidence[index].weight = 0
             courtCase.evidence[index].detail += note
-        case .video, .phoneRecords, .financialRecords, .expertReview:
+        case .video, .phoneRecords, .financialRecords, .expertReview, .alibi:
             break
         }
         guard !removed.isEmpty else { return }

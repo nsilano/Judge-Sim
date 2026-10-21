@@ -643,7 +643,9 @@ enum FollowUpCases {
             prosecutionOpening: "Six inches from a knife, {V} memorized the eyes.",
             defenseOpening: "A covered face and a common sweatshirt.",
             prosecutionClosing: "{V.He} didn't hesitate in the lineup.",
-            defenseClosing: "Certainty isn't accuracy."
+            defenseClosing: "Certainty isn't accuracy.",
+            alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Phone and Streaming Records", detail: "{DL}'s phone stayed on the apartment's Wi-Fi through the whole evening and streamed the second half of the game, start to finish, during the time of the robbery.", kind: .digital),
+                                   breaks: AlibiCheck.Finding(title: "Phone Location Records", detail: "{DL}'s phone left the apartment's Wi-Fi at halftime, connected to the tower beside the gas station at the time of the robbery, and was back home twenty minutes later.", kind: .digital))
         )
     )
 
