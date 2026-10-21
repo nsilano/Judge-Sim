@@ -233,7 +233,7 @@ final class GameState: ObservableObject {
             let percent = Int((share * 100).rounded())
             let won = share >= 0.5
             post(NewsItem(date: electionDay, kind: .community,
-                          headline: won ? "\(judgeName) wins another eight-year term" : "\(judgeName) unseated in Superior Court race",
+                          headline: won ? "\(judgeName) wins reelection to the Superior Court bench" : "\(judgeName) unseated in Superior Court race",
                           body: won
                             ? "Voters returned Judge \(last) to the Hollis County Superior Court bench with \(percent) percent of the vote. " + (survey.affirmedPercent.map { "Supporters pointed to a record affirmed \($0) percent of the time on appeal." } ?? "")
                             : "Judge \(last) lost the Superior Court race with \(percent) percent of the vote. The challenger campaigned on the judge's sentencing record and the cases that came apart after trial.",
@@ -822,12 +822,35 @@ final class GameState: ObservableObject {
                 if e.resume != nil { return 0 }
                 return (c.background?.isJailed ?? false) ? 1 : 2
             }
+            func isStory(_ e: DocketEntry) -> Bool { if case .trial(let c) = e.matter { return c.templateKey.hasPrefix("story.") } else { return false } }
             let trials = entries.enumerated().filter { isTrial($0.element) }
-            if trials.count > weekCap {
-                let keep = Set(trials.sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }.prefix(weekCap).map(\.element.id))
+            // A written case keeps a seat every week: calendar-call cases take at most all but one of the trial slots.
+            let generatedLimit = weekCap > 1 ? weekCap - 1 : weekCap
+            var keepIDs: [UUID] = []
+            var generated = 0
+            for (_, entry) in trials.sorted(by: { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }) {
+                guard keepIDs.count < weekCap else { break }
+                if !isStory(entry) {
+                    // A trial already under way is never bumped.
+                    if generated >= generatedLimit && entry.resume == nil { continue }
+                    generated += 1
+                }
+                keepIDs.append(entry.id)
+            }
+            let keep = Set(keepIDs)
+            if keep.count < trials.count {
                 let saturday = CourtCalendar.calendar.date(byAdding: .day, value: 1, to: weekEnd) ?? weekEnd
                 let nextWeek = CourtCalendar.weekday(onOrAfter: CourtCalendar.monday(onOrAfter: saturday))
                 for (_, entry) in trials where !keep.contains(entry.id) {
+                    // Most cases that wait twice are settled: a plea at an administrative session, as most cases are.
+                    if case .trial(let c) = entry.matter, !isStory(entry), (entry.note ?? "").contains("Carried over:"), rng.chance(0.7) {
+                        history.insert(CaseRecord(docket: c.docket, caption: c.caption, headline: c.headline, category: c.category,
+                                                  date: date, defendantID: c.defendant.personID,
+                                                  outcome: "Resolved by plea at an administrative session",
+                                                  judgments: ["The defendant pleaded guilty before trial under an arrangement approved at an administrative session."],
+                                                  returningDefendant: c.defendant.isReturning, appealStatus: nil, kind: "plea"), at: 0)
+                        continue
+                    }
                     var carried = entry
                     if !(carried.note ?? "").contains("Carried over:") {
                         carried.note = (carried.note ?? "") + " Carried over: the week's trial calendar was full."

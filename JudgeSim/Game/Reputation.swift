@@ -63,16 +63,19 @@ enum Reputation {
 
     /// Superior court judges in North Carolina serve eight-year terms and stand for election in November.
     static func isElectionYear(_ year: Int, careerStartYear: Int) -> Bool {
-        // Superior court races are on the even-year general election ballot, every eight years.
-        let first = careerStartYear + 8 + (careerStartYear % 2 == 0 ? 0 : 1)
-        return year >= first && (year - first) % 8 == 0
+        // Superior court races are on the even-year general election ballot. The game compresses an eight-year term
+        // so every career sees a race: the first comes in the second even year on the bench, then every two years.
+        let first = careerStartYear + 2 + (careerStartYear % 2 == 0 ? 0 : 1)
+        return year >= first && (year - first) % 2 == 0
     }
 
     /// The share of the vote the judge wins, given the latest survey.
     static func voteShare(_ survey: BarSurvey, rng: inout SeededRNG) -> Double {
         let incumbency = 0.04
-        let share = 0.50 + incumbency + 0.30 * (Double(survey.publicApproval) / 100 - 0.55)
-            + 0.10 * (Double(survey.overall) / 100 - 0.55) + Double(rng.int(-40...40)) / 1_000
+        // The public's mood matters, but so does being right: the bar's rating and the record on appeal carry weight.
+        let affirmed = Double(survey.affirmedPercent ?? 85) / 100
+        let share = 0.50 + incumbency + 0.18 * (Double(survey.publicApproval) / 100 - 0.55)
+            + 0.18 * (Double(survey.overall) / 100 - 0.55) + 0.15 * (affirmed - 0.8) + Double(rng.int(-40...40)) / 1_000
         return min(0.78, max(0.28, share))
     }
 }
