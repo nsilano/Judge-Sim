@@ -217,11 +217,11 @@ final class GameState: ObservableObject {
             // new ADA appears under Courthouse names and starts trying cases.
             if item.headline == "New assistant district attorney sworn in",
                let name = item.body.components(separatedBy: ", a graduate").first, !name.isEmpty,
-               var roster = county, !roster.assistantDAs.contains(name) {
+               var roster = self.county, !roster.assistantDAs.contains(name) {
                 roster.assistantDAs.append(name)
                 // The office stays about the same size: the longest-serving ADA moves on.
                 if roster.assistantDAs.count > 6 { roster.assistantDAs.removeFirst() }
-                county = roster
+                self.county = roster
             }
             post(item)
         }
