@@ -716,11 +716,22 @@ enum CaseGenerator {
             objections.append(objection)
         }
 
+        let impactBase = t.victimImpacts.isEmpty ? nil : fill(rng.pick(t.victimImpacts))
         var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                         publicDefender: usePublicDefender, mitigating: mitigating,
                                         isFelony: isFelonyCase, habitual: habitual, maxCustodyDays: maxCustodyDays,
                                         suppressionMotion: motions.contains { [MotionKind.suppressSearch, .suppressStatement, .suppressIdentification].contains($0.kind) },
                                         rng: &rng)
+        // A statement asking for mercy means the family wants leniency, whatever else was drawn.
+        if t.hasVictim && VictimVoice.asksMercy(impactBase) && background.victimStance != .wantsLeniency {
+            background.victimStance = .wantsLeniency
+            background.victimStanceDetail = VictimVoice.position(stance: .wantsLeniency, victim: fill("{VL}"), defendant: fill("{DL}"),
+                                                                 category: t.category, died: t.victimDies,
+                                                                 child: (t.story?.victim?.age).map { $0 < 16 } ?? false,
+                                                                 restitutionBasis: background.restitutionBasis, rng: &rng)
+        }
+        let victimImpact = impactBase.map { VictimVoice.impact($0, stance: background.victimStance, defendant: fill("{DL}"),
+                                                                died: t.victimDies, rng: &rng) }
         if let twist = chosenTwist {
             if twist.trialOnly && background.arrangementPresented == true {
                 twistText = nil
@@ -764,7 +775,7 @@ enum CaseGenerator {
             objections: objections,
             aggravating: aggravating,
             mitigating: mitigating,
-            victimImpact: t.victimImpacts.isEmpty ? nil : fill(rng.pick(t.victimImpacts)),
+            victimImpact: victimImpact,
             // Cases without a written statement get one built from their facts when the defendant speaks (Allocutions).
             allocution: t.allocutions.isEmpty ? "" : fill(rng.pick(t.allocutions)),
             twist: twistText,
@@ -939,20 +950,13 @@ enum CaseGenerator {
             default:
                 stance = rng.pick([.wantsMaximum, .wantsAccountability, .wantsLeniency])
             }
-            switch stance {
-            case .wantsMaximum:
-                stanceDetail = fill("I've spoken with {VL}'s family several times. They want the maximum, and they've asked to be notified of every hearing.")
-            case .wantsAccountability:
-                stanceDetail = fill("{VL}'s family wants accountability, Judge. They aren't asking for a specific number. Mostly they want this taken seriously.")
-            case .wantsLeniency:
-                stanceDetail = fill("This is unusual, but {VL}'s family has told me they don't want {DL} to go to prison. They want help for {DL}, not punishment.")
-            case .none:
-                stanceDetail = "There's no identified victim in this case."
-            }
+            let child = (t.story?.victim?.age).map { $0 < 16 } ?? false
+            stanceDetail = VictimVoice.position(stance: stance, victim: fill("{VL}"), defendant: fill("{DL}"), category: t.category,
+                                                died: t.victimDies, child: child, restitutionBasis: basis, rng: &rng)
         } else if t.story != nil && !t.victimImpacts.isEmpty {
             // No single named victim, but people were hurt, and their statements are in the file.
             stance = .wantsAccountability
-            stanceDetail = "There isn't one named victim in this case, Judge, but people were hurt by it. The statements from those affected are in the sentencing file, and they want it taken seriously."
+            stanceDetail = VictimVoice.groupPosition(rng: &rng)
         } else {
             stance = .none
             stanceDetail = "There's no individual victim in this case, Judge."
