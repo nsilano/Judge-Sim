@@ -91,6 +91,7 @@ private struct SaveData: Codable {
     var murderLastWeek: Bool?
     var reoffenseQueue: [Reoffense]?
     var freshAppeals: [UUID]?
+    var arrestOrders: [ArrestOrder]?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -130,6 +131,8 @@ final class GameState: ObservableObject {
     private var reoffenseQueue: [Reoffense] = []
     /// Appeals the Court of Appeals decided since the judge last sat, newest last.
     @Published private(set) var freshAppeals: [UUID] = []
+    /// Orders for arrest this court issued for failures to appear, newest first.
+    @Published private(set) var arrestOrders: [ArrestOrder] = []
     /// What the last calendar call decided, and where each case went, for the results screen.
     @Published private(set) var lastCalendarResults: [String] = []
     /// Whether last week's trial calendar had a murder case, so two murder weeks don't come back to back.
@@ -380,6 +383,15 @@ final class GameState: ObservableObject {
         day.entries[index].resume = nil
         today = day
         save()
+    }
+
+    /// Records an order for arrest the court signed, so its status can be followed until the case is heard.
+    private func issueArrestOrder(for c: CourtCase, issued: Date, servedOn: Date) {
+        let bond = c.background.map { _ in "a doubled secured bond" } ?? "a secured bond"
+        arrestOrders.insert(ArrestOrder(personID: c.defendant.personID, personName: c.defendant.name, docket: c.docket,
+                                        offense: c.charges.first?.law.title ?? "the charges", issued: issued,
+                                        servedOn: max(servedOn, issued), bond: bond), at: 0)
+        if arrestOrders.count > 60 { arrestOrders.removeLast(arrestOrders.count - 60) }
     }
 
     /// Opens a matter on today's calendar.
@@ -858,6 +870,7 @@ final class GameState: ObservableObject {
                 for (_, entry) in trials where !keep.contains(entry.id) {
                     // Most cases that wait twice are settled: a plea at an administrative session, as most cases are.
                     if case .trial(let c) = entry.matter, !isStory(entry), (entry.note ?? "").contains("Carried over:"), rng.chance(0.7) {
+                        for i in arrestOrders.indices where arrestOrders[i].docket == c.docket { arrestOrders[i].resolved = true; arrestOrders[i].served = true }
                         history.insert(CaseRecord(docket: c.docket, caption: c.caption, headline: c.headline, category: c.category,
                                                   date: date, defendantID: c.defendant.personID,
                                                   outcome: "Resolved by plea at an administrative session",
@@ -1160,6 +1173,7 @@ final class GameState: ObservableObject {
                     // Jail credit runs from the arrest, not from the missed court date.
                     held.sessionDate = arrested
                     setFor(held, weeks: weeksOut, note: "Arrested on the order for arrest issued at the calendar call on \(heard).")
+                    issueArrestOrder(for: c, issued: call.date, servedOn: arrested)
                 case 1:
                     if rng.chance(0.6) {
                         thisWeek(c, note: "Appeared at the afternoon session after missing the morning call; tried this week.")
@@ -1175,6 +1189,7 @@ final class GameState: ObservableObject {
                         // Jail credit runs from the arrest, not from the missed court date.
                         held.sessionDate = CourtCalendar.calendar.date(byAdding: .day, value: 7 * weeksOut - rng.int(3...10), to: call.date) ?? call.date
                         setFor(held, weeks: weeksOut, note: "Never appeared on \(heard); arrested on an order for arrest issued after the calendar call.")
+                        issueArrestOrder(for: c, issued: call.date, servedOn: held.sessionDate)
                     }
                 default:
                     setFor(c, weeks: 3, note: "Continued at the calendar call on \(heard) after a failure to appear; new notice sent.", continuances: 1)
@@ -1602,6 +1617,10 @@ final class GameState: ObservableObject {
 
     func complete(_ courtCase: CourtCase, outcome: CaseOutcome) {
         guard stillOpen(courtCase.id) else { return }
+        for i in arrestOrders.indices where arrestOrders[i].docket == courtCase.docket {
+            arrestOrders[i].served = true
+            arrestOrders[i].resolved = true
+        }
         let d = courtCase.defendant
         let judgmentText = outcome.judgments.map { ([$0.title] + $0.lines).joined(separator: " · ") }
             + [outcome.habitualNote, outcome.probationHearing].compactMap { $0 }
@@ -1759,6 +1778,7 @@ final class GameState: ObservableObject {
         reliefQueue = []
         murderLastWeek = false
         reoffenseQueue = []
+        arrestOrders = []
         freshAppeals = []
         careerStart = Date()
         docketSequence = 0
@@ -1780,6 +1800,16 @@ final class GameState: ObservableObject {
     private func advanceWorld(to date: Date) {
         var rng = SeededRNG(seed: seedBase ^ UInt64(abs(Int(date.timeIntervalSince1970)) / 86_400))
         currentDate = date
+
+        // Orders for arrest served since the last court day.
+        for i in arrestOrders.indices where !arrestOrders[i].served && arrestOrders[i].servedOn <= date {
+            arrestOrders[i].served = true
+            let order = arrestOrders[i]
+            post(NewsItem(date: order.servedOn, kind: .arrest,
+                          headline: "\(order.personName) arrested on order for failing to appear",
+                          body: "Deputies served an order for arrest on \(order.personName), who missed a trial date in Hollis County Superior Court on a charge of \(order.offense.lowercasedPhrase). \(order.personName.components(separatedBy: " ").last ?? order.personName) is held on \(order.bond) until trial.",
+                          docket: order.docket, prominence: 1))
+        }
 
         // Scheduled events
         let due = pending.filter { $0.due <= currentDate }.sorted { $0.due < $1.due }
@@ -2107,7 +2137,7 @@ final class GameState: ObservableObject {
                             weekNumber: weekNumber, lightWeeks: lightWeeks, yearStartStats: yearStartStats,
                             reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated,
                             reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
-                            freshAppeals: freshAppeals)
+                            freshAppeals: freshAppeals, arrestOrders: arrestOrders)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -2169,6 +2199,7 @@ final class GameState: ObservableObject {
         reliefQueue = data.reliefQueue ?? []
         murderLastWeek = data.murderLastWeek ?? false
         reoffenseQueue = data.reoffenseQueue ?? []
+        arrestOrders = data.arrestOrders ?? []
         freshAppeals = data.freshAppeals ?? []
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
         backfillAppeals()

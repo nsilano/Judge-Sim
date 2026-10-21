@@ -863,7 +863,10 @@ enum CaseGenerator {
         // Custody
         let inCustody = rng.chance(0.45) && maxCustodyDays > 0
         let custodyDays = inCustody ? min(rng.int(21...420), maxCustodyDays) : 0
-        let bond = rng.pick(["$2,500", "$10,000", "$25,000", "$50,000", "$100,000"])
+        // The bond fits the charge: the same draw as before, scaled to the most serious count's class.
+        let bondFactor = rng.pick([0.5, 0.75, 1.0, 1.5, 2.0])
+        let worstClass = charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
+        let bond = "$" + CalendarCalls.roundBond(Double(CalendarCalls.bondBase(worstClass)) * bondFactor).formatted()
         let bondStatus = inCustody
             ? "Held in the Hollis County jail on a \(bond) secured bond for \(custodyDays) days."
             : rng.pick(["Released on a \(bond) secured bond. Has made every court date.",

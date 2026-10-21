@@ -130,6 +130,7 @@ struct ChambersView: View {
                         digestCard
                     }
                     docketCard
+                    if !game.arrestOrders.isEmpty { arrestOrdersCard }
                     if let survey = game.reputation.first { standingCard(survey) }
 
                     if let county = game.county {
@@ -397,6 +398,32 @@ struct ChambersView: View {
     }
 
     /// The Court of Appeals decided cases from this court since the judge last sat: upheld or changed, and why.
+    /// Orders for arrest the court signed for failures to appear, and where each stands.
+    private var arrestOrdersCard: some View {
+        let open = game.arrestOrders.filter { !$0.resolved }
+        let shown = (open.isEmpty ? Array(game.arrestOrders.prefix(3)) : Array(open.prefix(8)))
+        return CollapsibleSection(title: "Orders for arrest", icon: "person.badge.shield.checkmark.fill",
+                                  summary: "\(open.filter { $0.servedOn > game.currentDate && !$0.served }.count) outstanding · \(open.filter { $0.served || $0.servedOn <= game.currentDate }.count) in custody",
+                                  expanded: false) {
+            ForEach(shown) { order in
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text(order.personName).font(.subheadline.weight(.semibold))
+                        Spacer()
+                        let outstanding = !order.served && order.servedOn > game.currentDate
+                        Pill(text: order.resolved ? "Resolved" : (outstanding ? "Outstanding" : "In custody"),
+                             color: order.resolved ? .secondary : (outstanding ? .orange : Theme.gold))
+                    }
+                    Text("\(order.docket) · \(order.offense) · issued \(SentenceFormat.shortDate(order.issued))")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Text(order.status(on: game.currentDate)).font(.caption)
+                }
+                .padding(.vertical, 2)
+            }
+        }
+        .card()
+    }
+
     private var appealsDecidedCard: some View {
         let decided = game.freshAppeals.compactMap { id in game.appeals.first { $0.id == id } }
         return VStack(alignment: .leading, spacing: 10) {

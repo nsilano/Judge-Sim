@@ -45,6 +45,7 @@ struct CalendarCallView: View {
                 }
                 .padding()
             }
+            .scrollDismissesKeyboard(.immediately)
             }
             }
             .background(Theme.background)
@@ -249,6 +250,7 @@ struct WarrantApplicationView: View {
 private struct BondAmountPicker: View {
     @Binding var amount: Int
     let range: ClosedRange<Int>
+    @FocusState private var typing: Bool
 
     private var presets: [Int] {
         [500, 1_000, 2_500, 5_000, 10_000, 15_000, 25_000, 50_000, 75_000, 100_000, 250_000].filter { range.contains($0) }
@@ -266,11 +268,17 @@ private struct BondAmountPicker: View {
                     .font(.title3.monospacedDigit().weight(.bold))
                     .multilineTextAlignment(.trailing)
                     .frame(maxWidth: 140)
+                    .focused($typing)
+                if typing {
+                    Button("Done") { typing = false }
+                        .font(.subheadline.weight(.bold))
+                        .tint(Theme.gold)
+                }
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
                     ForEach(presets, id: \.self) { value in
-                        Button("$\(value.formatted())") { amount = value }
+                        Button("$\(value.formatted())") { amount = value; typing = false }
                             .buttonStyle(.bordered)
                             .tint(amount == value ? Theme.gold : .secondary)
                             .font(.caption.weight(.semibold))

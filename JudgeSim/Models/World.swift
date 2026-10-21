@@ -346,3 +346,27 @@ struct Reoffense: Codable, Hashable {
     var priorOffense: String? = nil
     var priorDate: Date? = nil
 }
+
+/// An order for arrest the court issued when a defendant failed to appear (G.S. 15A-305), tracked until it is served
+/// and the case is heard.
+struct ArrestOrder: Codable, Hashable, Identifiable {
+    var id = UUID()
+    var personID: UUID
+    var personName: String
+    var docket: String
+    var offense: String
+    var issued: Date
+    /// The day deputies will pick the person up.
+    var servedOn: Date
+    /// Bond set on the order.
+    var bond: String
+    var served = false
+    /// The case was later heard or resolved.
+    var resolved = false
+
+    func status(on date: Date) -> String {
+        if resolved { return "Served \(SentenceFormat.shortDate(servedOn)); case resolved" }
+        if served || servedOn <= date { return "Served \(SentenceFormat.shortDate(servedOn)); in custody on \(bond), awaiting trial" }
+        return "Outstanding since \(SentenceFormat.shortDate(issued)); not yet served"
+    }
+}
