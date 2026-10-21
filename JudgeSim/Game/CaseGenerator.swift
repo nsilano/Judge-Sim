@@ -103,8 +103,8 @@ enum CaseGenerator {
         }
         let fewest = all.map { useCounts[$0.key] ?? 0 }.min() ?? 0
         var candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
-        let notRecent = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
-        if !notRecent.isEmpty { candidates = notRecent }
+        let notRecentStories = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
+        if !notRecentStories.isEmpty { candidates = notRecentStories }
         if !candidates.isEmpty {
             // Murder trials come up now and then, not every week: most draws go to another kind of case.
             let others = candidates.filter { !isMurder($0) }
