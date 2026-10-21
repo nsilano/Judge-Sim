@@ -162,7 +162,13 @@ struct VerdictCard: View {
                     LawLink(lawID: lesser.id)
                 }
             }
-            option(.notGuilty, allowed == [.notGuilty] ? "Dismissed (acquittal)" : "Not Guilty", "")
+            if allowed.contains(.notGuilty) {
+                option(.notGuilty, "Not Guilty", "As fact-finder, you aren't convinced beyond a reasonable doubt")
+            }
+            if allowed.contains(.dismissed) {
+                option(.dismissed, allowed == [.dismissed] ? "Dismissed at the close of the State's evidence" : "Dismiss",
+                       "The evidence is insufficient as a matter of law (G.S. 15A-1227)")
+            }
             if allowed.contains(.insanity) {
                 option(.insanity, "Not Guilty by Reason of Insanity", "G.S. 15A-1237 · the defendant is committed for treatment")
             }

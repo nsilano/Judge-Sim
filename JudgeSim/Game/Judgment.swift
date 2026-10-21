@@ -2,6 +2,9 @@ import Foundation
 
 enum Verdict: String, Codable, Hashable {
     case guilty, lesser, notGuilty
+    /// Dismissed for insufficient evidence (G.S. 15A-1227): the State's proof fails as a matter of law, whatever the
+    /// judge would find as fact-finder. Like a not-guilty verdict, it ends the case and bars a retrial.
+    case dismissed
     /// Not guilty by reason of insanity (G.S. 15A-1237); the defendant is committed for evaluation and treatment.
     case insanity
 
@@ -495,7 +498,7 @@ enum Judgment {
         switch verdict {
         case .guilty: return s >= charge.threshold - 1
         case .lesser: return s >= charge.lesserThreshold - 1
-        case .notGuilty, .insanity: return true
+        case .notGuilty, .dismissed, .insanity: return true
         }
     }
 
@@ -505,7 +508,7 @@ enum Judgment {
         switch verdict {
         case .guilty: return charge.law
         case .lesser: return charge.lesserLaw
-        case .notGuilty, .insanity: return nil
+        case .notGuilty, .dismissed, .insanity: return nil
         }
     }
 
@@ -1274,6 +1277,7 @@ enum Judgment {
                 case .guilty: label = "Guilty"
                 case .lesser: label = "Guilty of \(charge.lesserLaw?.title ?? "lesser offense")"
                 case .notGuilty: label = "Not Guilty"
+                case .dismissed: label = "Dismissed (insufficient evidence)"
                 case .insanity: label = "Not Guilty by Reason of Insanity"
                 }
                 if r.arrestedCounts.contains(charge.id) && verdict.isConviction {
@@ -1975,7 +1979,9 @@ enum Judgment {
             news.headline = "\(d.name) found not guilty by reason of insanity"
             news.body = "Judge \(judgeLast) found \(d.name) not guilty by reason of insanity in \(c.caption) and ordered \(d.lastName) committed to Central Regional Hospital in Butner. Under state law, \(d.lastName) can be released only after a court hearing. " + reactions.prefix(2).joined(separator: " ")
         } else {
-            appearance = "Not guilty on all counts"
+            let verdicts = c.charges.compactMap { r.verdicts[$0.id] }
+            appearance = !verdicts.isEmpty && verdicts.allSatisfy({ $0 == .dismissed }) ? "All counts dismissed for insufficient evidence"
+                : (verdicts.contains(.dismissed) ? "Not guilty or dismissed on all counts" : "Not guilty on all counts")
         }
 
         if dismissed && c.motions.contains(where: { $0.kind == .dismissSpeedyTrial && !$0.shouldGrant }) && rng.chance(0.35) {

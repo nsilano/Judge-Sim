@@ -130,6 +130,8 @@ final class GameState: ObservableObject {
     private var reoffenseQueue: [Reoffense] = []
     /// Appeals the Court of Appeals decided since the judge last sat, newest last.
     @Published private(set) var freshAppeals: [UUID] = []
+    /// What the last calendar call decided, and where each case went, for the results screen.
+    @Published private(set) var lastCalendarResults: [String] = []
     /// Whether last week's trial calendar had a murder case, so two murder weeks don't come back to back.
     private var murderLastWeek = false
     /// The Monday of the judge's first week on the bench.
@@ -1419,6 +1421,16 @@ final class GameState: ObservableObject {
         stats.activeSentences += result.activeSentences
         stats.suspendedSentences += result.suspendedSentences
         stats.probationCompleted += result.probationCompleted
+        // Where each case went: tried this week, or set for a later date.
+        var placed: [String] = []
+        for m in call.matters where m.pendingCase != nil {
+            if let entry = today?.entries.first(where: { if case .trial(let c) = $0.matter { return c.defendant.personID == m.personID } else { return false } }), entry.isOpen {
+                placed.append("\(m.personName): on this week's trial calendar.")
+            } else if let set = scheduled.first(where: { if case .trial(let c) = $0.entry.matter { return c.defendant.personID == m.personID } else { return false } }) {
+                placed.append("\(m.personName): set for trial the week of \(SentenceFormat.shortDate(set.date)).")
+            }
+        }
+        lastCalendarResults = result.lines + (placed.isEmpty ? [] : ["Where the cases went:"] + placed)
         history.insert(CaseRecord(docket: "Calendar call", caption: "Administrative calendar call",
                                   headline: "\(call.matters.count) matters", category: .procedure, date: currentDate,
                                   defendantID: UUID(), outcome: "\(call.matters.count) matters handled", judgments: result.lines,

@@ -708,7 +708,7 @@ struct RecordsView: View {
             let trials = game.history.filter { $0.resolvedKind == "trial" }
             let s = game.stats
             ledgerRow("Convictions at trial", trials.filter { $0.outcome.contains("Guilty") && !$0.outcome.contains("plea)") && !$0.outcome.contains("No contest") }.count)
-            ledgerRow("Acquittals and dismissals at trial", trials.filter { $0.outcome.hasPrefix("Not guilty") || $0.outcome.hasPrefix("Dismissed") }.count)
+            ledgerRow("Acquittals and dismissals at trial", trials.filter { $0.outcome.hasPrefix("Not guilty") || $0.outcome.hasPrefix("Dismissed") || $0.outcome.hasPrefix("All counts dismissed") }.count)
             ledgerRow("Guilty pleas", trials.filter { $0.outcome.contains("plea)") || $0.outcome.contains("No contest") }.count)
             // A retrial of the same case isn't a defendant returning.
             let firstHeard = Dictionary(trials.map { ($0.docket, $0.date) }, uniquingKeysWith: { min($0, $1) })

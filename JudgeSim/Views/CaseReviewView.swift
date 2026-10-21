@@ -231,6 +231,7 @@ struct CaseReviewSheet: View {
         case .guilty: return "Verdict: guilty."
         case .lesser: return "Verdict: guilty of \(charge.lesserLaw?.title ?? "the lesser offense")."
         case .notGuilty: return "Verdict: not guilty."
+        case .dismissed: return "Dismissed for insufficient evidence."
         case .insanity: return "Verdict: not guilty by reason of insanity."
         }
     }

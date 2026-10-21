@@ -408,9 +408,11 @@ final class CaseSession: ObservableObject {
         // The insanity verdict is open only when the defense gave notice of it (G.S. 15A-959).
         let insanity: [Verdict] = insanityDefenseRaised ? [.insanity] : []
         switch rulings.halftime[charge.id] {
-        case .dismiss?: return [.notGuilty]
-        case .lesserOnly?: return [.lesser, .notGuilty] + insanity
-        default: return (lesserOptions(charge).isEmpty ? [.guilty, .notGuilty] : [.guilty, .lesser, .notGuilty]) + insanity
+        // A count dismissed at halftime stays dismissed; otherwise the court can still dismiss for insufficient
+        // evidence at the close of all the evidence, or find the defendant not guilty as fact-finder.
+        case .dismiss?: return [.dismissed]
+        case .lesserOnly?: return [.lesser, .notGuilty, .dismissed] + insanity
+        default: return (lesserOptions(charge).isEmpty ? [.guilty, .notGuilty, .dismissed] : [.guilty, .lesser, .notGuilty, .dismissed]) + insanity
         }
     }
 

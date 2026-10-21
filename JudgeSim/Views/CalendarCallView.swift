@@ -9,9 +9,14 @@ struct CalendarCallView: View {
     @State private var amounts: [UUID: Int] = [:]
     @State private var showLibrary = false
     @State private var confirmLeave = false
+    @State private var showResults = false
 
     var body: some View {
         NavigationStack {
+            Group {
+            if showResults {
+                CalendarResults(lines: game.lastCalendarResults) { dismiss() }
+            } else {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     VStack(alignment: .leading, spacing: 6) {
@@ -35,17 +40,19 @@ struct CalendarCallView: View {
                                   hint: "Rule on every matter on the calendar.") {
                         Haptics.gavel()
                         game.completeCalendar(call, choices: choices, amounts: amounts)
-                        dismiss()
+                        withAnimation { showResults = true }
                     }
                 }
                 .padding()
             }
+            }
+            }
             .background(Theme.background)
-            .navigationTitle("Calendar Call")
+            .navigationTitle(showResults ? "Calendar Call Results" : "Calendar Call")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button { confirmLeave = true } label: {
+                    Button { if showResults { dismiss() } else { confirmLeave = true } } label: {
                         Label("Leave", systemImage: "chevron.left").labelStyle(.titleAndIcon)
                     }
                 }
@@ -276,5 +283,33 @@ private struct BondAmountPicker: View {
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 10).fill(Theme.raised))
+    }
+}
+
+/// What the calendar call decided, matter by matter, and where each case goes next.
+struct CalendarResults: View {
+    let lines: [String]
+    let onDone: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("The calendar call is closed.", systemImage: "checkmark.seal.fill")
+                    .font(.headline)
+                    .foregroundStyle(Theme.gold)
+                ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                    if line.hasSuffix(":") {
+                        Text(line).font(.caption.weight(.bold)).foregroundStyle(.secondary).padding(.top, 6)
+                    } else {
+                        Text(line).font(.callout).fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(10)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.raised))
+                    }
+                }
+                PrimaryButton(title: "Back to Chambers", icon: "arrow.uturn.backward", enabled: true, hint: nil) { onDone() }
+            }
+            .padding()
+        }
     }
 }
