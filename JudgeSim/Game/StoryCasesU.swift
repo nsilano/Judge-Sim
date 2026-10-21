@@ -82,7 +82,7 @@ extension StoryCases {
                 .direct("Did you rob Coastal Trust?", "\"Yes. I'd seen the stories about the guy with the note. I thought it would work for me.\""),
                 .direct("And the other three?", "\"No. I was at the pharmacy for the first one.\""),
                 .cross("Same pad, same handwriting, same 'Thank you.'", "\"I copied what I read in the paper.\""),
-                .cross("The newspaper never printed the 'Thank you.'", "\"Then I don't know.\"")
+                .cross("The newspaper never printed the 'Thank you.'", "\"Then I don't know what you're asking me.\"")
             ],
             objections: [
                 (1, ObjectionSeed(question: "Prosecutor: \"In your opinion, is the defendant the Polite Bandit?\"",
@@ -266,7 +266,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("What did you see?", "\"Brown moving low through the brush, and I heard it step like a deer. I was sure.\""),
                 .direct("Why did it take eleven minutes to call?", "\"I ran to it. I tried to help. I tried CPR. I couldn't think.\""),
-                .cross("You fired after legal light, on posted land, next to a trail.", "\"Yes.\""),
+                .cross("You fired after legal light, on posted land, next to a trail.", "\"After light, on posted land, next to a trail. All three.\""),
                 .cross("You never saw antlers. You never saw a deer.", "\"I believed it was.\"")
             ],
             objections: [

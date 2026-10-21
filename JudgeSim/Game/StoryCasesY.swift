@@ -231,8 +231,8 @@ extension StoryCases {
             notDone: ["The second racing car's driver was never identified."],
             defendantExam: [
                 .direct("Were you racing?", "\"Yes. I lied before. We were racing.\""),
-                .cross("104 in a 35, past a crowd.", "\"Yes.\""),
-                .cross("You posted about it that afternoon.", "\"I did.\"")
+                .cross("104 in a 35, past a crowd.", "\"A hundred and four, and people on both sidewalks.\""),
+                .cross("You posted about it that afternoon.", "\"That afternoon. I shouldn't have.\"")
             ],
             prosecutionOpening: "A post, a countdown, and 104 miles an hour.",
             defenseOpening: "A tragedy with two causes, one of them in {VL}'s car.",
@@ -355,7 +355,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Who used the home computer that month?", "\"Our nephew, mostly. He was furious about his cousin being benched.\""),
-                            .cross("Did you see the messages being written?", "\"No.\"")
+                            .cross("Did you see the messages being written?", "\"I saw them after they were sent. Not before.\"")
                         ])
         ],
         prosecutionTheory: ["The accounts trace to {D}'s home, the messages share {D.his} misspelling, and {D.his} child was the one benched."],

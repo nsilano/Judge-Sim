@@ -54,7 +54,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Who handled the client files?", "\"Everyone, but she stayed late in the file room a lot.\""),
-                            .cross("You never saw her open any accounts?", "\"No.\"")
+                            .cross("You never saw her open any accounts?", "\"Not once. I just answered phones and sorted mail.\"")
                         ])
         ],
         prosecutionTheory: ["{D} prepared these clients' returns, used their numbers to open cards, and had the cards sent to {D.his} own box."],
@@ -148,7 +148,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Where did the car money come from?", "\"A jackpot, and savings.\""),
                 .cross("$6,000 in cash six days after the robbery.", "\"I had it saved.\""),
-                .cross("You knew exactly when the payroll was carried.", "\"Everybody did.\"")
+                .cross("You knew exactly when the payroll was carried.", "\"Everybody on the floor knew. It wasn't a secret.\"")
             ],
             objections: [
                 (1, ObjectionSeed(question: "Defense: \"You wrote {DL} up twice and pushed to have {D.him} fired, didn't you?\"",
@@ -308,7 +308,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why did you grab {VL}?", "\"I slipped. I grabbed the first thing to keep from falling.\""),
                 .cross("You were shouting 'you're rigging it' while you held {V.him} against the wall.", "\"I was upset about the test.\""),
-                .cross("You threw the clipboard before you 'slipped.'", "\"Yes. I shouldn't have.\"")
+                .cross("You threw the clipboard before you 'slipped.'", "\"I threw it. That part's on me.\"")
             ],
             prosecutionOpening: "A clipboard thrown, a collar grabbed, and a state worker shoved into a wall.",
             defenseOpening: "Frustration and a wet floor.",

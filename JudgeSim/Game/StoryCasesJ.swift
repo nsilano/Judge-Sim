@@ -40,9 +40,9 @@ extension StoryCases {
                             .direct("Why did you stop {DL}?", "\"A broken taillight at 5:10 a.m. on Route 17. When I walked up, I could see converters stacked behind the seat.\""),
                             .direct("What did you notice about them?", "\"Three had bright, fresh cuts and white paint on the pipe. The saw on the seat had a warm battery.\""),
                             .direct("What did {DL} say?", "\"'Those aren't mine, I'm just driving them.'\""),
-                            .cross("You didn't see {DL} at the church?", "\"No.\""),
+                            .cross("You didn't see {DL} at the church?", "\"I didn't. I came on shift after the service let out.\""),
                             .cross("Was anyone else in the car?", "\"No. Just {DL}.\""),
-                            .cross("A battery stays warm after charging, too?", "\"It can.\"")
+                            .cross("A battery stays warm after charging, too?", "\"For a while, sure.\"")
                         ]),
             WitnessSeed(name: nil, role: "Church facilities manager",
                         direct: ["\"The vans were fine at 10 p.m.\""],
@@ -61,7 +61,7 @@ extension StoryCases {
                         exam: [
                             .direct("Do you know someone called Tank?", "\"Yeah. Big guy, hangs around the scrap yards. He pays people to haul stuff so his name isn't on anything.\""),
                             .direct("Did {DL} work for him?", "\"{DL} drove for him a couple of times when {D.he} needed money. Hauling, that's all.\""),
-                            .cross("You don't know Tank's real name?", "\"No.\""),
+                            .cross("You don't know Tank's real name?", "\"Just Tank. I never asked for more than that.\""),
                             .cross("You've been convicted of larceny yourself?", "\"Two years ago.\"")
                         ])
         ],
@@ -142,7 +142,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What made you suspect {DL} knew?", "\"Eleven engraved tools from one company, sold by one person for seven cents on the dollar, with a fake address. And the video shows {DL} reading the engraving.\""),
-                            .cross("{DL} reported the purchase, the seller's ID, and the engraving to the police database the same day?", "\"Yes.\""),
+                            .cross("{DL} reported the purchase, the seller's ID, and the engraving to the police database the same day?", "\"Same afternoon. Seller's license, the engraving, all of it.\""),
                             .cross("Did anyone at the police department check the database against the contractor's theft report?", "\"No. That should have been caught on our end.\""),
                             .cross("Pawn shops always pay a fraction of retail?", "\"Usually a quarter to a third. Seven percent is low.\"")
                         ])
@@ -228,7 +228,7 @@ extension StoryCases {
                             .direct("When did you find the check?", "\"Going through the account as executor. A twenty-two-thousand-dollar check dated the day before the death. {PARENT} had been on a ventilator for almost two weeks.\""),
                             .direct("Is that your parent's signature?", "\"It looks like someone trying to copy it.\""),
                             .cross("{DL} drove your parent to appointments for two years while you lived in Charlotte?", "\"{DL} lived ten minutes away. I came when I could.\""),
-                            .cross("You'd receive half of that $22,000 under the will if it stays in the estate?", "\"Yes. That's not why I'm here.\"")
+                            .cross("You'd receive half of that $22,000 under the will if it stays in the estate?", "\"Half, yes. I'd give it to charity to see this done right.\"")
                         ]),
             WitnessSeed(name: nil, role: "Forensic document examiner, State Bureau of Investigation",
                         direct: ["\"Probably not genuine.\""],
@@ -248,7 +248,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did you hear?", "\"About a month before the coma, sitting on the porch, {PARENT} said, 'I'm going to take care of {DL} for everything. That child gave up two years.'\""),
-                            .cross("You never saw a check signed?", "\"No.\""),
+                            .cross("You never saw a check signed?", "\"I wasn't in the room for any of that.\""),
                             .cross("'Take care of' could mean in the will?", "\"It could.\"")
                         ])
         ],
@@ -343,7 +343,7 @@ extension StoryCases {
                         exam: [
                             .direct("Were the children told to stay out of the house?", "\"Twice. {DL} said bathrooms only, stay in the yard. The bedroom door was shut.\""),
                             .direct("How is {DL} doing?", "\"{D.He} hasn't slept in the bedroom since. {D.He} sold the gun the next week.\""),
-                            .cross("Children at a birthday party don't always listen?", "\"No.\""),
+                            .cross("Children at a birthday party don't always listen?", "\"Not at that age. You tell them twice and then you watch.\""),
                             .cross("Was the bedroom door locked?", "\"Just closed.\"")
                         ])
         ],
@@ -367,7 +367,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why was the gun in the drawer?", "\"So I could reach it at night. I'd had a break-in two years before. I told myself the kids knew.\""),
                 .direct("Why wasn't it in the lockbox?", "\"I kept meaning to set it up. It needed a fingerprint program and I never sat down to do it.\""),
-                .cross("Twelve children were in your home and the gun was loaded and chambered.", "\"Yes.\""),
+                .cross("Twelve children were in your home and the gun was loaded and chambered.", "\"Loaded, chambered, in the nightstand. With twelve kids in the house.\""),
                 .cross("You'd have known your child was curious about it.", "\"I thought I'd taught my child better. I was wrong.\"")
             ],
             objections: [
@@ -426,7 +426,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did the account records show?", "\"Four of the nine were created on {GYM}'s network, three during {DL}'s scheduled hours. Two used a recovery email with {DL}'s initials and birth year.\""),
                             .direct("Did you compare the language?", "\"The same misspelling of 'definitely' in 37 messages and in {DL}'s texts to the ex.\""),
-                            .cross("The gym Wi-Fi was open to anyone?", "\"Yes.\""),
+                            .cross("The gym Wi-Fi was open to anyone?", "\"No password. Anybody in the parking lot could get on.\""),
                             .cross("Another member has the same initials and birth year?", "\"One that I know of.\""),
                             .cross("You didn't get a warrant for {DL}'s phone?", "\"It was denied as overbroad.\"")
                         ])

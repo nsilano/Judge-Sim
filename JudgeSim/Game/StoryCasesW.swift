@@ -382,7 +382,7 @@ extension StoryCases {
                         exam: [
                             .direct("Whose idea was the robbery?", "\"{DL}'s. {D.He} said that store kept cash late and the clerk wouldn't fight.\""),
                             .direct("Who had the gun?", "\"{DL}. {D.He} got rid of it in a storm drain after.\""),
-                            .cross("Your plea deal took you out of the armed robbery sentence?", "\"Yes.\""),
+                            .cross("Your plea deal took you out of the armed robbery sentence?", "\"Out of the armed robbery range entirely.\""),
                             .cross("Without the deal you'd be facing years more?", "\"Yes. I'm still telling the truth.\"")
                         ])
         ],
@@ -413,7 +413,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why were you at the store?", "\"I was walking past to my cousin's. I heard shots and felt my shoulder burn.\""),
                 .cross("Your blood is on the floor in front of the register.", "\"I don't know how.\""),
-                .cross("You told the ER it was a drive-by.", "\"I thought it was.\"")
+                .cross("You told the ER it was a drive-by.", "\"At the time I thought that's what it was.\"")
             ],
             objections: [
                 (1, ObjectionSeed(question: "Prosecutor: \"Did {DL} rob anybody else that month?\"",

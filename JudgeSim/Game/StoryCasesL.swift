@@ -39,7 +39,7 @@ extension StoryCases {
                         exam: [
                             .direct("What happened in the parking lot?", "\"{DL} got in my passenger seat. I handed {D.him} the two hundred, {D.he} handed me a bag. {D.He} said, 'Same as last time.'\""),
                             .direct("What did you do after?", "\"Drove straight back to the deputies and gave them the bag.\""),
-                            .cross("You've been paid $6,800 over two years?", "\"About that.\""),
+                            .cross("You've been paid $6,800 over two years?", "\"Sixty-eight hundred, near enough. They paid me per buy.\""),
                             .cross("You have two felony charges pending that you hope to reduce?", "\"I'm hoping. Nobody promised me anything.\""),
                             .cross("You owed {DL} $200, didn't you?", "\"Not anymore.\"")
                         ]),
@@ -62,7 +62,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did {DL} say about the informant?", "\"For weeks: 'That fool owes me two hundred.' When {D.he} finally got it, {D.he} bought lunch for the shop.\""),
-                            .cross("You don't know what happened in the car?", "\"No.\"")
+                            .cross("You don't know what happened in the car?", "\"I wasn't in the car. I only know what {D.he} told me.\"")
                         ])
         ],
         prosecutionTheory: ["A controlled buy: the informant was searched, went in clean, came out with cocaine, and the recording catches 'that's two' and 'same as last time.'"],
@@ -229,8 +229,8 @@ extension StoryCases {
                         exam: [
                             .direct("What happened?", "\"I clocked 112 on radar. When I lit up, the rider tucked down and opened it up. I paced it past 130 before I called it off for public safety.\""),
                             .direct("What did you see of the rider?", "\"Black full-face helmet, red jacket, slim build.\""),
-                            .cross("You couldn't see the rider's face?", "\"No.\""),
-                            .cross("Slim build in a red jacket describes a lot of riders?", "\"It does.\"")
+                            .cross("You couldn't see the rider's face?", "\"The visor was down. All I saw was a helmet.\""),
+                            .cross("Slim build in a red jacket describes a lot of riders?", "\"It does. That's a lot of riders on a Saturday.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"No bill of sale, no title transfer.\""],
@@ -239,8 +239,8 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} say?", "\"That {D.he} sold the bike for cash to someone named 'Chris' from a marketplace app and didn't do the title.\""),
                             .direct("Could you find the buyer?", "\"The account {DL} named was deleted. No bill of sale.\""),
-                            .cross("{DL}'s listing was marked sold sixteen days before?", "\"Yes.\""),
-                            .cross("A $6,500 cash deposit fifteen days before?", "\"Yes.\""),
+                            .cross("{DL}'s listing was marked sold sixteen days before?", "\"Sixteen days. The sale is on the listing history.\""),
+                            .cross("A $6,500 cash deposit fifteen days before?", "\"Sixty-five hundred, in cash.\""),
                             .cross("Did you ask the marketplace for the buyer's account records?", "\"We sent a request. They haven't responded.\"")
                         ])
         ],
@@ -328,7 +328,7 @@ extension StoryCases {
                             .direct("How did the deletion relate to the complaint?", "\"{VL} told the jail nurse at 11 p.m. that {V.he} was going to sue. The deletion was three hours later.\""),
                             .cross("The same session deleted 214 other videos?", "\"Yes. All routine.\""),
                             .cross("The vendor later reported a bug that showed some videos with the wrong category?", "\"There was a bulletin. We don't know if it affected this video.\""),
-                            .cross("Is there any evidence {DL} knew about the nurse conversation?", "\"Not directly.\"")
+                            .cross("Is there any evidence {DL} knew about the nurse conversation?", "\"Nothing that shows {D.he} knew, no.\"")
                         ]),
             WitnessSeed(name: nil, role: "Arresting officer",
                         direct: ["\"{DL} asked if there was anything on my camera to worry about.\""],

@@ -91,7 +91,7 @@ enum FollowUpCases {
             notDone: ["No one asked the mutual friend about the tools before charging."],
             defendantExam: [
                 .direct("Why did you go to the store?", "\"To ask about my tools. That's all. I didn't think a grocery store was {V.his} workplace in the way the order meant.\""),
-                .cross("The order says workplace. You knew {V.he} worked there.", "\"...Yes.\""),
+                .cross("The order says workplace. You knew {V.he} worked there.", "\"...I knew. Everyone knew where {V.he} worked.\""),
                 .cross("You waited in the lot for fifty minutes.", "\"I wanted to talk.\"")
             ],
             objections: [
@@ -278,7 +278,7 @@ enum FollowUpCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What's wrong with the comparison?", "\"One signature and one page of known writing. That's thin for an opinion this strong.\""),
-                            .cross("You worked from photocopies?", "\"Yes.\"")
+                            .cross("You worked from photocopies?", "\"Photocopies. The originals were in evidence.\"")
                         ])
         ],
         prosecutionTheory: ["{D} kept watching {V} after the court told {D.him} to stop, and left notes to make sure {V.he} knew it."],
@@ -351,7 +351,7 @@ enum FollowUpCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What happened that night?", "\"We argued. I slipped and hit the counter. I was upset and I said things to the deputy.\""),
-                            .cross("You've been through this before, in this courtroom.", "\"...Yes.\"")
+                            .cross("You've been through this before, in this courtroom.", "\"...Twice now. Same courtroom.\"")
                         ])
         ],
         prosecutionTheory: ["The second time is the most dangerous time. The marks on {V}'s neck and {V.his} words that night tell what happened, whatever {V.he} says now."],
@@ -557,7 +557,7 @@ enum FollowUpCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Do people sell things in your lot?", "\"All the time. I run them off when I see them.\""),
-                            .cross("Did you see {DL} buy jewelry that week?", "\"No.\"")
+                            .cross("Did you see {DL} buy jewelry that week?", "\"Nothing like that. Gas, cigarettes, a lottery ticket.\"")
                         ])
         ],
         prosecutionTheory: ["{D}'s palm on the window and {D.his} thumb on the pawn ticket. {D.He} went in while a family slept."],
@@ -685,7 +685,7 @@ enum FollowUpCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("Can anyone say what the level was at the crash?", "\"Only estimate it, based on assumptions.\""),
-                            .cross("0.13 two hours later is impaired under the law regardless?", "\"Yes.\"")
+                            .cross("0.13 two hours later is impaired under the law regardless?", "\"At 0.13, the law says impaired. I don't dispute that.\"")
                         ])
         ],
         prosecutionTheory: ["{D} came through this court once already. {D.He} drank, drove, and ran a red light into {V}."],
@@ -824,7 +824,7 @@ enum FollowUpCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did you see?", "\"{DL} brought groceries, mowed the yard, drove {V.him} to church.\""),
-                            .cross("You don't know anything about the checks?", "\"No.\"")
+                            .cross("You don't know anything about the checks?", "\"I wouldn't know a thing about {V.his} checkbook.\"")
                         ])
         ],
         prosecutionTheory: ["{D} found a lonely widow with a failing memory and a checkbook, and emptied it."],

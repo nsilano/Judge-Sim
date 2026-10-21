@@ -51,8 +51,8 @@ extension StoryCases {
                             .direct("What leads you there?", "\"Arranging the spouse's absence. Choosing a time when the children were asleep. The statement 'I knew people would say it was wrong.' Those show awareness of wrongfulness.\""),
                             .direct("Isn't insanity about whether the person believed it was right?", "\"In North Carolina it's whether the person, because of mental disease, didn't know the nature and quality of the act or didn't know it was wrong. Knowing others would condemn it is knowing it's wrong in the legal sense.\""),
                             .cross("You'd agree {DL} believed {D.he} was protecting the children?", "\"{DL} said so. A person can believe that and still know the law forbids it.\""),
-                            .cross("You interviewed {DL} once, for three hours, eight months later?", "\"Yes.\""),
-                            .cross("Postpartum psychosis can include organized planning?", "\"It can.\"")
+                            .cross("You interviewed {DL} once, for three hours, eight months later?", "\"One interview, three hours, eight months on. That's what the court ordered.\""),
+                            .cross("Postpartum psychosis can include organized planning?", "\"Psychosis doesn't rule out planning. People in it can be very organized.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -146,7 +146,7 @@ extension StoryCases {
                             .direct("Does the mirror match?", "\"The glass and housing pieces found in the ditch are from that model and fit the broken mirror on {DL}'s SUV.\""),
                             .cross("The pieces were found eleven days later, in an area searched twice?", "\"That's when they were found. Snow had melted by then.\""),
                             .cross("A mirror strike at 19 mph usually bruises the arm or hip of the person struck?", "\"Usually there's an injury where the mirror contacts.\""),
-                            .cross("There's no injury to {VL}'s hip, and the arm shows scratches, not impact bruising?", "\"That's correct.\"")
+                            .cross("There's no injury to {VL}'s hip, and the arm shows scratches, not impact bruising?", "\"No hip injury, and the arm marks are scratches. I'll grant both.\"")
                         ]),
             WitnessSeed(name: nil, role: "Firefighter-paramedic",
                         direct: ["\"{DL} kept saying 'Did I do this? I did this.'\""],
@@ -249,7 +249,7 @@ extension StoryCases {
                             .direct("What did the video show?", "\"That at 8:31 {DL} was in the barn with {VL}. We got it off {VL}'s phone nine months later. {VL}'s phone has no activity after 8:37.\""),
                             .direct("Why the money?", "\"The bank froze the accounts that afternoon. {VL} had been asking for statements. The State's theory is that {VL} was about to find out, and that a tragedy would buy {DL} sympathy and time.\""),
                             .direct("What about the steps and the drive?", "\"Twenty-five minutes of no movement while {DL} says {D.he} was on the couch, then a burst of 2,100 steps, then a drive at 85 to establish an alibi at the parent's house.\""),
-                            .cross("No blood, no residue, no rifle?", "\"Correct.\""),
+                            .cross("No blood, no residue, no rifle?", "\"Not a drop of blood, no residue, and the rifle was never found.\""),
                             .cross("A fired farmhand who threatened {VL} owned a rifle of the same caliber?", "\"We looked at the farmhand early on. Not in depth.\""),
                             .cross("Your agency didn't open the phone for nine months?", "\"It took that long to get it unlocked.\"")
                         ]),
@@ -296,7 +296,7 @@ extension StoryCases {
                 .direct("Why did you tell police you weren't at the barn?", "\"Because I knew the bank had frozen the accounts. I knew how it would look. I panicked, and then I was stuck with the lie.\""),
                 .direct("What happened at the barn?", "\"{VL} called me down to look at the mare. We talked for a few minutes. I went back to the house. {VL} was fine.\""),
                 .direct("Did you take the money?", "\"Yes. I moved deposits to cover other losses. I'm going to answer for that. It has nothing to do with this.\""),
-                .cross("You lied to police for nine months.", "\"Yes.\""),
+                .cross("You lied to police for nine months.", "\"Nine months. I was scared of what would happen to me.\""),
                 .cross("Twenty-one hundred steps in six minutes, then 85 miles an hour.", "\"I was worried about my parent. I always drive fast.\"")
             ],
             objections: [
@@ -361,7 +361,7 @@ extension StoryCases {
                         exam: [
                             .direct("What is your dog trained to find?", "\"Human remains odor. She's certified annually and has a documented accuracy rate above ninety percent in controlled tests.\""),
                             .direct("What happened at the apartment?", "\"She gave a final trained response at the storage closet and at the trunk of {DL}'s car. Nowhere else in the apartment.\""),
-                            .cross("An alert tells you odor, not a cause or a time of death?", "\"Correct.\""),
+                            .cross("An alert tells you odor, not a cause or a time of death?", "\"Odor, nothing more. The dog can't tell me how or when.\""),
                             .cross("Dogs can alert falsely, especially when the handler expects a find?", "\"It happens. We run blind tests to prevent it.\"")
                         ])
         ],
@@ -447,7 +447,7 @@ extension StoryCases {
                             .direct("What did you find?", "\"{VL} on the sidewalk with three wounds to the chest and abdomen, a friend wounded in the thigh. {DL} sitting on the curb, rifle on the ground ten feet away, hands up.\""),
                             .direct("Why does the social media post matter?", "\"'Come find out.' That's an invitation. {DL} went out armed, after curfew, looking for a confrontation.\""),
                             .direct("Was {VL} armed?", "\"No. A phone and keys.\""),
-                            .cross("{DL} called 911 and waited for you with hands up?", "\"Yes.\""),
+                            .cross("{DL} called 911 and waited for you with hands up?", "\"Hands up, waiting on the steps.\""),
                             .cross("The across-the-street video shows {VL} grabbing the barrel with both hands?", "\"It shows hands on the barrel.\""),
                             .cross("North Carolina law allows deadly force to prevent someone from taking your firearm and using it on you?", "\"If the belief is reasonable. That's for the court.\"")
                         ]),

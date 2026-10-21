@@ -48,7 +48,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you see on arrival?", "\"A wet paper towel on the floor, and wiped smears on the wall at the bottom of the stairs. Someone had been cleaning.\""),
                             .direct("What about the finances?", "\"Credit card debt in six figures, a big house, and a wife about to lose her job and her insurance.\""),
-                            .cross("You never found a weapon?", "\"No.\""),
+                            .cross("You never found a weapon?", "\"We looked everywhere we could think of. Nothing.\""),
                             .cross("The blow poke you testified was missing turned up in the garage?", "\"Yes. The defense found it in the garage a few weeks ago.\"")
                         ])
         ],
@@ -137,7 +137,7 @@ extension StoryCases {
                         exam: [
                             .direct("What happened in the hospital?", "\"I started feeling better. Then she'd bring banana pudding or a milkshake, and that night I couldn't feel my legs again. It happened twice before the doctors stopped all outside food.\""),
                             .direct("How do you feel now?", "\"I walk with a cane. I'll never feel my feet again.\""),
-                            .cross("You never saw {DL} put anything in your food?", "\"No.\""),
+                            .cross("You never saw {DL} put anything in your food?", "\"I never saw it. I was talking to the others at the table.\""),
                             .cross("You still loved her when you got sick?", "\"I did. That's the hardest part.\"")
                         ]),
             WitnessSeed(name: nil, role: "State toxicologist",
@@ -285,7 +285,7 @@ extension StoryCases {
                 .direct("Why did you confess?", "\"I hadn't slept in two days. They kept saying they knew. After a while I just wanted it to stop.\""),
                 .direct("How did you know the keys were in the freezer?", "\"I don't remember who said that first.\""),
                 .cross("You knew what each woman was wearing.", "\"They showed me pictures.\""),
-                .cross("Pictures from the crime scenes? None were shown on the recording.", "\"Then I don't know.\"")
+                .cross("Pictures from the crime scenes? None were shown on the recording.", "\"Then I can't tell you where those details came from.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Prosecutor: \"Doctor, isn't it true that most people who confess are guilty?\"",
@@ -354,7 +354,7 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("Why did the couple's toxicology take six weeks?", "\"The state lab was backlogged. We sent it routine. In hindsight it should have been expedited.\""),
-                            .cross("Two healthy people dying in the same room: should someone have checked the room?", "\"Yes.\"")
+                            .cross("Two healthy people dying in the same room: should someone have checked the room?", "\"Someone should have. I should have.\"")
                         ])
         ],
         prosecutionTheory: ["{D} cut corners on a gas conversion with no permit and a rotted vent, ignored a worker's warning, and kept renting the room where two people had just died."],
@@ -379,7 +379,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Did you know the vent was dangerous?", "\"No. The contractor told me it was done right. I'm not a gas fitter.\""),
                 .direct("Why rent the room after the couple died?", "\"Nobody told us anything about the room. We thought they died of natural causes.\""),
-                .cross("You told your worker the exhaust smell was chlorine.", "\"I thought it was.\""),
+                .cross("You told your worker the exhaust smell was chlorine.", "\"That's honestly what I believed it was.\""),
                 .cross("You chose to skip the permit.", "\"The contractor said it wasn't needed.\"")
             ],
             objections: [
@@ -432,7 +432,7 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("What did {DL} ask you to do?", "\"Take the blame. She said she'd pay me and get me a good lawyer. She told me where he was buried so my story would match.\""),
-                            .cross("You've been convicted of felonies, and you were paid by police?", "\"Yes.\""),
+                            .cross("You've been convicted of felonies, and you were paid by police?", "\"Three felonies, and they paid me. I'm not hiding either one.\""),
                             .cross("You got leniency on your own charges?", "\"They said they'd consider it.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Lead investigator",

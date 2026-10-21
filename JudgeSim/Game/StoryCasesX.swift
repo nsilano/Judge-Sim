@@ -44,7 +44,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("Who did you deal with?", "\"Only {DL}. {D.He} said {D.he} managed the lot for an owner up north who wanted a quick cash sale.\""),
-                            .cross("Did {DL} ever mention someone named Ray?", "\"Never.\"")
+                            .cross("Did {DL} ever mention someone named Ray?", "\"Not once. I never heard that name until court.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -389,7 +389,7 @@ extension StoryCases {
             notDone: ["No psychological evaluation was ordered before charging."],
             defendantExam: [
                 .direct("Why didn't you call anyone?", "\"I kept thinking tomorrow. Then it was months.\""),
-                .cross("You signed your mother's name on the form.", "\"Yes.\""),
+                .cross("You signed your mother's name on the form.", "\"My mother's name. She couldn't hold a pen by then.\""),
                 .cross("You taped the vents.", "\"Because of the smell. I didn't want the neighbors to know.\"")
             ],
             objections: [

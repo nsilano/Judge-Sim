@@ -42,7 +42,7 @@ extension StoryCases {
                             .direct("How fast was the pickup going?", "\"Seventy miles per hour five seconds before impact. The posted limit is forty. The brakes were applied half a second before impact. Nothing before that.\""),
                             .direct("Could a sober driver at the limit have stopped?", "\"Yes. The people on the shoulder were visible in headlights from about 350 feet. At forty a sober driver stops in about 200.\""),
                             .cross("The stalled car's hazard lights weren't on?", "\"Correct. There were three people with phone flashlights standing beside it, though.\""),
-                            .cross("There are no streetlights on that stretch?", "\"None.\"")
+                            .cross("There are no streetlights on that stretch?", "\"Not a single one for two miles.\"")
                         ]),
             WitnessSeed(name: nil, role: "Passenger in the truck",
                         direct: ["\"{DL} said 'watch this.'\""],
@@ -143,7 +143,7 @@ extension StoryCases {
                         exam: [
                             .direct("What happened when the SUV reached you?", "\"I stepped in front and pounded on the hood and yelled stop. The driver looked right at me. Eye contact. Then the wheel turned and the SUV went around me and sped up.\""),
                             .direct("Did the driver appear panicked?", "\"No. Calm. Focused.\""),
-                            .cross("You couldn't see the driver's feet?", "\"No.\""),
+                            .cross("You couldn't see the driver's feet?", "\"From where I stood, I couldn't see below the dash.\""),
                             .cross("Could a stuck accelerator have caused the speed?", "\"It doesn't explain steering around me. Or around the band.\"")
                         ]),
             WitnessSeed(name: nil, role: "State Bureau of Investigation vehicle analyst",
@@ -165,7 +165,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you hear?", "\"Honking. Long blasts. I thought maybe it was part of the parade at first, then I thought somebody was trying to warn us.\""),
                             .cross("Did the SUV slow down?", "\"No. It went faster.\""),
-                            .cross("Did it stop when it hit people?", "\"No.\"")
+                            .cross("Did it stop when it hit people?", "\"It kept going. That's what I can't get past.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was angry and fleeing the assault {D.he} had just committed. {D.He} chose to drive through a parade rather than stop, steering around an officer and through children for a block and a half."],
@@ -245,7 +245,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you find?", "\"Tetrahydrozoline at about 30 times what you'd see from someone using eye drops properly. It was also in the stomach contents. It was swallowed, and in large amounts.\""),
                             .direct("What does it do when swallowed?", "\"It slows the heart sharply, drops blood pressure, and can cause unconsciousness and death. In someone with heart disease it's especially dangerous.\""),
-                            .cross("{VL}'s heart disease made {V.him} more vulnerable?", "\"Yes.\""),
+                            .cross("{VL}'s heart disease made {V.him} more vulnerable?", "\"It did. A weaker heart doesn't handle that kind of stress.\""),
                             .cross("Could {V.he} have swallowed it {V.himself}?", "\"In theory. There's no reason anyone would swallow several bottles.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Lead detective",
@@ -266,7 +266,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What was the marriage like?", "\"{VL} made {DL} account for every receipt. Called {D.him} stupid in front of people. {DL} cried in my car more than once.\""),
-                            .cross("Did you ever see {VL} hurt {DL} physically?", "\"No.\""),
+                            .cross("Did you ever see {VL} hurt {DL} physically?", "\"Never saw a hand raised. I saw plenty of yelling.\""),
                             .cross("Did {DL} ever tell you {D.he} wanted {VL} dead?", "\"{D.He} said once {D.he} wished {V.he} would just go away. People say that.\"")
                         ])
         ],
@@ -354,7 +354,7 @@ extension StoryCases {
                             .direct("How did you identify {DL}?", "\"The calling service account traced to an email {DL} used for gaming and for a forum where {D.he} advertised swatting for hire.\""),
                             .direct("What did {DL} write after the shooting?", "\"'I didn't get anyone killed because I didn't discharge a weapon and I'm not a cop.'\""),
                             .cross("Another gamer gave {DL} the address?", "\"Yes, as a dare. It was an old address; that gamer hadn't lived there in years.\""),
-                            .cross("{DL} never met {VL}?", "\"Never.\"")
+                            .cross("{DL} never met {VL}?", "\"Never met, never spoke. Not one call between them.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -364,7 +364,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("Was the shooting consistent with good practice?", "\"No. A single officer fired from 40 yards at a man on his own porch while others saw no weapon. That's an independent, unreasonable decision.\""),
-                            .cross("Would the officers have been at that house without the call?", "\"No.\""),
+                            .cross("Would the officers have been at that house without the call?", "\"They had no reason to be there without that call.\""),
                             .cross("Is it foreseeable that a report of a man with a gun and gasoline will bring armed police?", "\"Yes. That's the point of a swatting call.\"")
                         ])
         ],
@@ -388,9 +388,9 @@ extension StoryCases {
             notDone: ["The 911 center never tried to call the residence before officers arrived."],
             defendantExam: [
                 .direct("Why did you make the call?", "\"Someone gave me an address and dared me. I'd done it before. Usually the cops show up, nobody's home, and it's on a livestream.\""),
-                .direct("Did you want anyone hurt?", "\"No. Never.\""),
+                .direct("Did you want anyone hurt?", "\"God, no. I wanted everyone to go home.\""),
                 .cross("You told them a man had a gun and gasoline. What did you expect the police to do?", "\"Show up.\""),
-                .cross("With guns drawn.", "\"Yes.\"")
+                .cross("With guns drawn.", "\"Rifles up, at a house with kids in it.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Defense: \"Should the officer have been charged?\"",
@@ -466,7 +466,7 @@ extension StoryCases {
                             .direct("What did you find?", "\"A relationship where {VL} used {DL} sexually and degraded {D.him}, and {DL} kept coming back. That's a recognized pattern.\""),
                             .cross("Your conclusions come from {DL}'s own account?", "\"Mostly, and from the messages.\""),
                             .cross("Did you know {DL} lied to police twice about being there?", "\"I was told that.\""),
-                            .cross("Does the profile include renting a car and bringing a gun?", "\"No.\"")
+                            .cross("Does the profile include renting a car and bringing a gun?", "\"That's planning. It isn't part of any profile I know.\"")
                         ])
         ],
         prosecutionTheory: ["{D} couldn't let {V} go. {D.He} stole a gun, rented a car, brought gas cans so {D.he} wouldn't be seen, and killed {VL} in {V.his} shower. Then {D.he} lied, and lied again."],

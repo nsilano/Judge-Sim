@@ -44,7 +44,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did {VL} say when you called?", "\"{VL} was sobbing. {V.He} said the therapist touched {V.his} breast and kept going up {V.his} leg, and {V.he} didn't know what to do.\""),
-                            .cross("You weren't there?", "\"No.\""),
+                            .cross("You weren't there?", "\"I was two hours away. I just got the text.\""),
                             .cross("{VL} told you about the phone call with {V.his} mother too?", "\"Not then. Later.\"")
                         ])
         ],
@@ -56,8 +56,8 @@ extension StoryCases {
                         exam: [
                             .direct("What is pectoral and adductor work?", "\"Pectoral work goes along the upper chest just under the collarbone, sometimes near the breast tissue. Adductor work is the inner thigh, high up. Done right, with draping, it's standard. It can still feel invasive if a client isn't expecting it.\""),
                             .direct("Should a therapist explain before starting?", "\"Best practice is to check in. Not everyone does.\""),
-                            .cross("Is touching the breast itself ever part of pectoral work?", "\"No. Never.\""),
-                            .cross("Is moving the drape below the chest standard?", "\"No.\"")
+                            .cross("Is touching the breast itself ever part of pectoral work?", "\"Never. Not in any curriculum I've taught.\""),
+                            .cross("Is moving the drape below the chest standard?", "\"That's not standard. You'd stop and ask first.\"")
                         ])
         ],
         prosecutionTheory: ["{D} moved the drape and touched {VL}'s breast and inner thigh for no therapeutic reason. {VL}'s immediate flight and text show what happened."],
@@ -133,7 +133,7 @@ extension StoryCases {
                         exam: [
                             .direct("What happened that night?", "\"Pop-pop-pop, six of them. I ran to the kids' room. There was a hole in the wall eight inches above my daughter's pillow.\""),
                             .direct("Do you know {DL}?", "\"I know {DL}'s cousin. My nephew and the cousin got into it the week before.\""),
-                            .cross("You didn't see who was in the car?", "\"No.\"")
+                            .cross("You didn't see who was in the car?", "\"I only saw headlights and the back of it.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"The car and the casing tie this to {DL}.\""],
@@ -142,7 +142,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did you find the car?", "\"The dent was distinctive. A patrol officer spotted it three days later with {DL} driving.\""),
                             .direct("What was in the car?", "\"A 9mm casing under the passenger seat. The State Crime Lab matched it to the six from the house.\""),
-                            .cross("The video shows shots from the passenger side?", "\"Yes.\""),
+                            .cross("The video shows shots from the passenger side?", "\"From the passenger window. You can see the flash.\""),
                             .cross("So if {DL} was in the car, {D.he} was driving, not shooting?", "\"If {D.he} was driving, yes.\""),
                             .cross("You never asked who else drove that car?", "\"{DL} wouldn't say.\""),
                             .cross("Did you interview the cousin?", "\"The cousin declined to talk.\"")
@@ -155,7 +155,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Who used {DL}'s car?", "\"{DL} let half the family use it. The cousin had it all the time.\""),
-                            .cross("Do you know who had it that night?", "\"No.\""),
+                            .cross("Do you know who had it that night?", "\"I couldn't tell you.\""),
                             .cross("Did {DL} ever lend it overnight?", "\"Sometimes for days.\"")
                         ])
         ],
@@ -231,7 +231,7 @@ extension StoryCases {
                             .direct("What wounds did {VL} have?", "\"Three: one to the chest that went into the lung, one to the abdomen, and one to the lower back. The chest wound was fatal.\""),
                             .direct("What does the back wound suggest?", "\"That {VL} was turned away, at least partly, when it was inflicted.\""),
                             .cross("You can't tell the order of the wounds?", "\"Not with certainty.\""),
-                            .cross("In a struggle, people twist and turn?", "\"They do.\"")
+                            .cross("In a struggle, people twist and turn?", "\"They twist, they grab, they fall. It's never like the diagrams.\"")
                         ]),
             WitnessSeed(name: nil, role: "Bartender at {BAR}",
                         direct: ["\"'Keep talking and see what happens.'\""],
@@ -240,8 +240,8 @@ extension StoryCases {
                         exam: [
                             .direct("What happened inside?", "\"They argued over a bet on a pool game. {DL} said, 'Keep talking and see what happens,' and walked out. {VL} followed.\""),
                             .cross("{VL} was the louder one?", "\"{VL} was drunk and loud. I'd cut {VL} off twenty minutes earlier.\""),
-                            .cross("{VL} followed {DL} outside, yelling?", "\"Yes.\""),
-                            .cross("Did you see anything in the parking lot?", "\"No.\"")
+                            .cross("{VL} followed {DL} outside, yelling?", "\"Yelling the whole way to the door.\""),
+                            .cross("Did you see anything in the parking lot?", "\"I was behind the bar. No windows back there.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -430,8 +430,8 @@ extension StoryCases {
                             .direct("How did you identify {DL}?", "\"Of fourteen dark sedans with plates starting 7KR, one had a registered owner with a security job. That was {DL}.\""),
                             .direct("What did the search find?", "\"A blue-and-amber dash light bar and a gold badge that says 'Special Officer.'\""),
                             .cross("Did you look at the other thirteen cars?", "\"Not in person.\""),
-                            .cross("The badge says 'Special Officer,' not police?", "\"Correct.\""),
-                            .cross("Did you get {DL}'s phone location?", "\"No.\"")
+                            .cross("The badge says 'Special Officer,' not police?", "\"'Special Officer.' It's the kind you can order online.\""),
+                            .cross("Did you get {DL}'s phone location?", "\"We didn't request it. I should have.\"")
                         ])
         ],
         defenseWitnesses: [

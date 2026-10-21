@@ -39,7 +39,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("Who bought the shotguns?", "\"That man there. {DL}. He showed a license with a different name, but I remember him because he asked twice which load would 'do the most damage.'\""),
-                            .cross("The ID said a different name?", "\"Yes.\""),
+                            .cross("The ID said a different name?", "\"Different name, same face. I didn't catch it then.\""),
                             .cross("You sell dozens of guns a week. How can you remember one face?", "\"Because of that question.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Homicide detective",
@@ -61,7 +61,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {BRO} tell you as a child?", "\"When we were about thirteen, he said his father was touching him and he didn't know how to make it stop. I told him to tell his mother. He said she knew.\""),
                             .cross("You never told an adult?", "\"No. I was thirteen.\""),
-                            .cross("You first mentioned this after the brothers were charged?", "\"Yes.\"")
+                            .cross("You first mentioned this after the brothers were charged?", "\"After the arrests. I didn't think it mattered until then.\"")
                         ])
         ],
         prosecutionTheory: ["{D} and {BRO} planned to kill their wealthy parents for the inheritance. They bought guns with a fake ID, built an alibi, reloaded to finish the job, and spent the money within months."],
@@ -189,7 +189,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Did you set out to steal?", "\"No. I lost money in the first year and couldn't face telling anyone. I kept thinking I'd make it back.\""),
                 .direct("Why the statements?", "\"So people wouldn't panic and pull out all at once.\""),
-                .cross("So people wouldn't find out.", "\"Yes.\""),
+                .cross("So people wouldn't find out.", "\"So the congregation wouldn't know. That was the reason.\""),
                 .cross("You took $4 million for yourself while you were 'making it back.'", "\"I paid my salary.\"")
             ],
             objections: [
@@ -239,7 +239,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did {VL} tell you?", "\"That a creepy man was watching {V.him} from a car, then following {V.him}. I told {V.him} to run. Then I heard {V.him} say, 'Why are you following me?' and a man say, 'What are you doing around here?' Then the phone went dead.\""),
-                            .cross("You couldn't see who threw the first punch?", "\"No.\""),
+                            .cross("You couldn't see who threw the first punch?", "\"I was on the phone with {V.him}. I heard it, I didn't see it.\""),
                             .cross("{VL} said {V.he} wasn't going to run anymore?", "\"{V.He} said {V.he} was almost home.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Lead investigator",
@@ -260,7 +260,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did you see?", "\"Two people on the grass. The one on top, in dark clothes, was throwing punches down. The one on the bottom was yelling help.\""),
-                            .cross("It was dark and raining?", "\"Yes.\""),
+                            .cross("It was dark and raining?", "\"Dark, and coming down hard.\""),
                             .cross("You couldn't see faces?", "\"No. Just the clothes.\""),
                             .cross("Whose voice was yelling for help?", "\"I don't know.\"")
                         ])
@@ -340,7 +340,7 @@ extension StoryCases {
                             .direct("Whose idea was it to kill {VL}?", "\"Hers. She said if he was gone we could be together and she'd lose the condo and the dog in a divorce. She said it a lot of times until I said I'd do it.\""),
                             .direct("What did she tell you about that night?", "\"That she'd be at a board meeting. Leave the door unlocked. Put the dog in the basement so he wouldn't see it. Make it look like a robbery.\""),
                             .cross("You're getting out of prison in your thirties for this testimony?", "\"That's the deal.\""),
-                            .cross("You pulled the trigger?", "\"Yes.\"")
+                            .cross("You pulled the trigger?", "\"My finger on the trigger. I live with that.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Lead detective",
                         direct: ["\"She told the student to lie.\""],
@@ -350,7 +350,7 @@ extension StoryCases {
                             .direct("What do the recordings show?", "\"{DL} telling a student to lie to us, and saying if one person talked, they would all go to prison for the rest of their lives, including her.\""),
                             .direct("Why does 'including her' matter?", "\"Because she'd have no reason to go to prison if she wasn't involved.\""),
                             .cross("There's no physical evidence tying {DL} to the shooting?", "\"She wasn't there. That was the plan.\""),
-                            .cross("She was at a public meeting with thirty witnesses?", "\"Yes.\"")
+                            .cross("She was at a public meeting with thirty witnesses?", "\"In a room full of people. It's on the meeting video.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -361,7 +361,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did {DL} act after {VL}'s death?", "\"Crying. Couldn't eat. She seemed devastated.\""),
                             .cross("She gave press interviews and talked about makeup and her hair?", "\"She did a couple of interviews.\""),
-                            .cross("She went back to work three days later?", "\"Yes.\"")
+                            .cross("She went back to work three days later?", "\"Three days later, like nothing happened.\"")
                         ])
         ],
         prosecutionTheory: ["{D} seduced a fifteen-year-old and talked him into killing her husband so she could keep the condo, the dog, and the insurance without a divorce."],
@@ -463,7 +463,7 @@ extension StoryCases {
                         exam: [
                             .direct("What was {DL}'s condition?", "\"Psychotic. Thirteen months in isolation. {D.He} was eating paper and smearing feces. A person in that state will say whatever stops the voices or ends the conversation.\""),
                             .cross("Did some confessions include non-public details?", "\"A few, but many details were in the media or in discovery {DL} had in {D.his} cell.\""),
-                            .cross("{DL} confessed to {D.his} spouse, the person {D.he} trusted most?", "\"Yes.\"")
+                            .cross("{DL} confessed to {D.his} spouse, the person {D.he} trusted most?", "\"To the one person {D.he} trusted. That's what makes it believable.\"")
                         ])
         ],
         prosecutionTheory: ["{D} told police {D.he} was on that bridge, dressed as the man in the video, at that time. A round cycled through {D.his} pistol was left between the girls. And {D.he} confessed again and again."],

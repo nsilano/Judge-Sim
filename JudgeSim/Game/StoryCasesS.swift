@@ -49,7 +49,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What happened on the day of the killings?", "\"I told him I'd found a missing fee, almost $800,000, and I wanted to know where it went. He said he'd explain. That night his wife and son were dead.\""),
-                            .cross("You'd have reported him either way?", "\"Yes.\""),
+                            .cross("You'd have reported him either way?", "\"Either way. The numbers didn't add up.\""),
                             .cross("Stealing money doesn't make someone a killer?", "\"No. But he was about to lose everything.\"")
                         ])
         ],
@@ -60,7 +60,7 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What does the shooting pattern suggest?", "\"Two different weapons, two different positions, fired within moments. That suggests two shooters.\""),
-                            .cross("You reviewed photos; you never went to the scene?", "\"Correct.\""),
+                            .cross("You reviewed photos; you never went to the scene?", "\"Photos and reports. I was hired after the scene was released.\""),
                             .cross("One person can carry two guns?", "\"It's possible.\"")
                         ])
         ],
@@ -87,7 +87,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why did you lie about the kennels?", "\"I was addicted to opioids. I was paranoid. I panicked. I was down there for a few minutes and went back to the house.\""),
                 .direct("Did you kill your wife and son?", "\"No. I would never hurt them.\""),
-                .cross("You lied to police for over a year.", "\"Yes.\""),
+                .cross("You lied to police for over a year.", "\"Fourteen months. I told myself I was protecting my kids.\""),
                 .cross("You lied to your clients for a decade. Why should anyone believe you now?", "\"Because I'm telling the truth about this.\"")
             ],
             objections: [
@@ -156,8 +156,8 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What was {DL}'s state of mind?", "\"An immature, medicated teenager who came to believe, wrongly, that ending his pain was what a loving person would support.\""),
-                            .cross("She understood he would die?", "\"Yes.\""),
-                            .cross("She didn't call anyone?", "\"No.\"")
+                            .cross("She understood he would die?", "\"She understood. That's the hard part of my report.\""),
+                            .cross("She didn't call anyone?", "\"She didn't. Not one call.\"")
                         ])
         ],
         prosecutionTheory: ["{D} pressured a vulnerable young man for weeks, and when he got out of the truck, she told him to get back in. Her words were the cause, and her silence let him die."],
@@ -182,7 +182,7 @@ extension StoryCases {
                 .direct("Why did you send those messages?", "\"He'd been suffering so long. He said it was the only way to stop hurting. I thought supporting him was what he needed. I was wrong.\""),
                 .direct("Did you tell him to get back in the truck?", "\"I don't remember exactly what I said. I was panicking.\""),
                 .cross("You wrote that you told him to get back in.", "\"I wrote a lot of things I don't remember.\""),
-                .cross("You didn't call 911.", "\"No.\"")
+                .cross("You didn't call 911.", "\"I didn't. I can't explain that to you.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Defense: \"Doctor, is she a danger to anyone?\"",
@@ -327,7 +327,7 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("How did {DL} come to be at your apartment?", "\"She texted me that she needed to get away, that her husband was abusive. I drove ten hours and picked her up. She stayed three weeks. She hurt herself. She asked me to drive her back and leave her by the highway.\""),
-                            .cross("You're not being charged?", "\"No.\""),
+                            .cross("You're not being charged?", "\"Nobody's charged me. Nobody's promised me anything either.\""),
                             .cross("You didn't call anyone during three weeks of national news?", "\"She begged me not to. I should have.\"")
                         ]),
             WitnessSeed(name: nil, role: "FBI agent",
@@ -371,7 +371,7 @@ extension StoryCases {
                 .direct("Were you abducted?", "\"I wasn't kidnapped by those women. I've had to accept that. I was running from something, and I can't explain all of it.\""),
                 .direct("Why take the compensation money?", "\"At the time I told the story, I think part of me believed it.\""),
                 .cross("You planned it for weeks.", "\"I planned to leave. I didn't plan the rest.\""),
-                .cross("You described two women to a sketch artist.", "\"Yes.\"")
+                .cross("You described two women to a sketch artist.", "\"Two women. I was sure there were two.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Defense: \"Doctor, would prison make her condition worse?\"",

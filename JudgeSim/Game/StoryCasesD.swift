@@ -61,7 +61,7 @@ extension StoryCases {
                         exam: [
                             .direct("What started it?", "\"{VL} bumped me in the ride line and spilled my drink, then got in my face. {DL} stepped between us.\""),
                             .direct("What did {VL} say?", "\"'I'm about to knock you out, you and your boy.' Then {VL} stepped right into {DL}, like this close.\""),
-                            .cross("You've known {DL} since middle school?", "\"Yes.\""),
+                            .cross("You've known {DL} since middle school?", "\"Since sixth grade. We had the same homeroom.\""),
                             .cross("You'd had a few drinks too?", "\"A few. I know what I heard.\"")
                         ])
         ],
@@ -136,8 +136,8 @@ extension StoryCases {
                             .direct("How did you find out they were posted?", "\"A coworker texted me a screenshot at work. Then my boss. Then my cousin. I threw up in the bathroom.\""),
                             .direct("What did {DL} say after the breakup?", "\"That I'd regret embarrassing {DL}, that everyone would see who I really was. I thought {DL} meant gossip.\""),
                             .cross("{DL} reported an old phone stolen before the posting?", "\"That's what I've been told.\""),
-                            .cross("You never saw {DL} post anything?", "\"No.\""),
-                            .cross("The account was tagged with your employer. {DL} knew where you worked, but so did a lot of people?", "\"Sure.\"")
+                            .cross("You never saw {DL} post anything?", "\"I never saw {D.him} type a word of it, no.\""),
+                            .cross("The account was tagged with your employer. {DL} knew where you worked, but so did a lot of people?", "\"Plenty of people knew where I worked.\"")
                         ]),
             WitnessSeed(name: nil, role: "Digital forensics examiner",
                         direct: ["\"The account came from {DL}'s building network while {D.his} phone was on it.\""],
@@ -147,7 +147,7 @@ extension StoryCases {
                             .direct("What did the records show?", "\"The fake account was created and the images uploaded from the complex's public IP address, at 11:41 p.m. {DL}'s phone was connected to that network at that time.\""),
                             .direct("Could you identify the device?", "\"The platform records a browser type: an Android phone. {DL}'s current phone is an iPhone. The stolen phone was an Android.\""),
                             .cross("So the device that created the account was likely not {DL}'s current phone?", "\"Correct. It was consistent with the stolen phone, or any Android.\""),
-                            .cross("Two hundred units share that IP?", "\"Yes.\"")
+                            .cross("Two hundred units share that IP?", "\"About two hundred. It's one building on one connection.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -158,7 +158,7 @@ extension StoryCases {
                         exam: [
                             .direct("What was happening in your lot that month?", "\"Three car break-ins in two weeks. {DL}'s was one. We sent a notice to every tenant.\""),
                             .direct("Who can use the Wi-Fi?", "\"Every tenant, their guests, anyone sitting in the parking lot who knows the password, which is posted in the lobby.\""),
-                            .cross("You don't know who broke into the cars?", "\"No.\"")
+                            .cross("You don't know who broke into the cars?", "\"I wish I did. I'd have told the police myself.\"")
                         ])
         ],
         prosecutionTheory: ["Only {DL} had the images, {D.he} threatened that 'everyone will see,' and they were posted from {D.his} building."],
@@ -232,7 +232,7 @@ extension StoryCases {
                             .direct("Why did you stop the car?", "\"A broken right taillight.\""),
                             .direct("What did you see as you walked up?", "\"The front passenger, {DL}, leaned forward and down, below the window, for a second or two. Then sat back with both hands on the dash, which nobody asked for.\""),
                             .direct("Where was the pistol?", "\"On the floor, directly under {DL}'s seat, grip forward, as if pushed there from the front.\""),
-                            .cross("You never saw the gun in {DL}'s hands?", "\"No.\""),
+                            .cross("You never saw the gun in {DL}'s hands?", "\"Not in {D.his} hands. It was on the floorboard.\""),
                             .cross("The backseat passenger could reach under the front seat from behind?", "\"I tested it. Yes, with some effort.\""),
                             .cross("Leaning forward could be reaching for a phone, or for a seatbelt?", "\"Could be.\"")
                         ]),
@@ -242,8 +242,8 @@ extension StoryCases {
                         weight: 0, lay: false,
                         exam: [
                             .direct("What did you find on the pistol?", "\"No usable prints. The grip had DNA from at least three people, too complex to reliably compare to anyone.\""),
-                            .cross("So nothing forensic ties {DL} to that gun?", "\"Correct.\""),
-                            .cross("Nothing ties the other two passengers to it either?", "\"Correct.\"")
+                            .cross("So nothing forensic ties {DL} to that gun?", "\"Nothing forensic. No prints, no DNA I could attribute.\""),
+                            .cross("Nothing ties the other two passengers to it either?", "\"Them either. The gun was wiped or never touched bare-handed.\"")
                         ])
         ],
         defenseWitnesses: [

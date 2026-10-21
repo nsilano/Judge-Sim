@@ -37,7 +37,7 @@ extension StoryCases {
                         exam: [
                             .direct("Where did the fire start?", "\"On the kitchen floor in front of the fryers. The burn pattern shows a pour trail toward the dining room, and the lab found gasoline in the floor samples.\""),
                             .direct("Could it have been an accident?", "\"I ruled out the fryers, the wiring, and the gas lines. Gasoline on a kitchen floor isn't an accident.\""),
-                            .cross("You can't say who poured the gasoline?", "\"No.\""),
+                            .cross("You can't say who poured the gasoline?", "\"The fire tells me how it started. Not whose hand.\""),
                             .cross("The back door lock was broken?", "\"It was. Firefighters may have forced it. I can't say.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
@@ -60,7 +60,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did the cook say when fired?", "\"Threw the apron on the floor and said, 'I'll burn this place down. You'll see.' Everybody heard it.\""),
                             .direct("What kind of owner was {DL}?", "\"Worked harder than any of us. Paid us when {D.he} couldn't pay {D.himself}.\""),
-                            .cross("People say angry things when they're fired?", "\"Sure.\""),
+                            .cross("People say angry things when they're fired?", "\"They do. I said worse when I got let go from my last job.\""),
                             .cross("Did {DL} ever talk about the business failing?", "\"{D.He} said if things didn't turn around we'd close by summer.\"")
                         ])
         ],
@@ -136,7 +136,7 @@ extension StoryCases {
                         exam: [
                             .direct("What do the logs show?", "\"A login to the backup service account at 11:47 p.m., from an IP address the provider assigned to {DL}'s account, followed by commands deleting the shipping database and every backup volume.\""),
                             .direct("What was on {DL}'s laptop?", "\"A search for whether deleted backups can be recovered, two days before the deletion. No remote session software that would match the login.\""),
-                            .cross("An IP address identifies a connection, not a person?", "\"That's correct.\""),
+                            .cross("An IP address identifies a connection, not a person?", "\"A connection. Anyone on that router shares it.\""),
                             .cross("Was {DL}'s router password-protected?", "\"I understand it wasn't.\""),
                             .cross("You found no trace of the login on {DL}'s laptop?", "\"Not on that laptop.\"")
                         ]),
@@ -160,7 +160,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you find about {DL}'s network?", "\"An open wireless network with no password. Logs on the router show eleven unknown devices connected over the prior month, including that night.\""),
                             .direct("What about the search?", "\"{DL} was the backup administrator. Knowing whether deleted backups can be recovered is part of that job.\""),
-                            .cross("You can't identify who used the network that night?", "\"No.\""),
+                            .cross("You can't identify who used the network that night?", "\"Not from the router logs. They don't record names.\""),
                             .cross("Did any unknown device connect at 11:47?", "\"One connected at 11:40 and left at 12:05.\"")
                         ])
         ],
@@ -238,7 +238,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} say to you?", "\"{DL} walked right up to me at the pump and said, real quiet, 'You know you don't have to go to court. Nobody needs to get hurt over this.' Then {D.he} looked at my car seat in the back.\""),
                             .direct("How did you feel?", "\"Like I was going to throw up. My son was in the car. I left the nozzle hanging.\""),
-                            .cross("{DL} never touched you or showed a weapon?", "\"No.\""),
+                            .cross("{DL} never touched you or showed a weapon?", "\"Never laid a hand on me. Never showed me anything but words.\""),
                             .cross("Isn't it true {DL} said 'just tell the truth'?", "\"That's not what {D.he} said.\""),
                             .cross("You'd already told the detective you were scared to testify, before this?", "\"Of course I was scared. That's why it worked.\"")
                         ]),
@@ -343,7 +343,7 @@ extension StoryCases {
                             .direct("What did {DL} say when you visited?", "\"That {D.he} meant every word. Then {D.he} said {D.he} meant {D.he}'d take {VL} to court.\""),
                             .direct("Did {DL} have the shotgun?", "\"By the back door, loaded. {D.He} handed it over when I asked.\""),
                             .cross("{DL} said the shotgun was for raccoons getting in {D.his} chicken coop?", "\"{D.He} did say that.\""),
-                            .cross("{DL} cooperated completely?", "\"Yes.\"")
+                            .cross("{DL} cooperated completely?", "\"Handed over the keys and sat on the curb till we were done.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -442,7 +442,7 @@ extension StoryCases {
                             .direct("What was in {DL}'s unit?", "\"Bolt cutters with paint transfer that matched the color of the cut locks, and resale inventory.\""),
                             .cross("Was the gate ever propped open or broken?", "\"The manager says it sometimes sticks open.\""),
                             .cross("Lock paint transfer is a common color?", "\"The locks are the facility's standard red. It's a common red.\""),
-                            .cross("Did you find any of the stolen tools in {DL}'s unit?", "\"No.\"")
+                            .cross("Did you find any of the stolen tools in {DL}'s unit?", "\"Not a single one. We searched every box.\"")
                         ])
         ],
         defenseWitnesses: [

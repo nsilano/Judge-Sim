@@ -53,7 +53,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What gloves did the crew use?", "\"Boxes of latex gloves for the sealant. We tossed them everywhere.\""),
-                            .cross("Did anyone leave gloves inside the building?", "\"I don't remember that.\"")
+                            .cross("Did anyone leave gloves inside the building?", "\"I don't recall anybody taking gloves in.\"")
                         ])
         ],
         prosecutionTheory: ["{D}'s DNA in a glove dropped at the pried door, and {D.his} boot print on the counter."],

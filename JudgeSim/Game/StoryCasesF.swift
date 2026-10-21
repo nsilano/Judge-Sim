@@ -38,9 +38,9 @@ extension StoryCases {
                             .direct("How did the demand arrive?", "\"An encrypted message app I'd never used. The photos, the number, a wallet address, and a week. I went to the police that day. I told my spouse that night.\""),
                             .direct("Who knew about the relationship?", "\"The coworker, and {DL}, who kept my calendar and saw the hotel charges. Nobody else.\""),
                             .direct("How did {DL} react to the layoff?", "\"Bitter. {DL} said 'after everything I've covered for you.' I took that as a threat even then.\""),
-                            .cross("The coworker in the photos was laid off the same week and lost a bonus?", "\"Yes.\""),
+                            .cross("The coworker in the photos was laid off the same week and lost a bonus?", "\"Same week. I signed the layoff list myself.\""),
                             .cross("The coworker knew everything you just said {DL} knew, and more?", "\"Of course.\""),
-                            .cross("You never received a single message from {DL}'s phone or accounts?", "\"Not directly.\"")
+                            .cross("You never received a single message from {DL}'s phone or accounts?", "\"Not from {D.his} phone, not from any account we could tie to {D.him}.\"")
                         ]),
             WitnessSeed(name: nil, role: "Cyber crimes analyst",
                         direct: ["\"The wallet traces back to {DL}'s exchange account.\""],
@@ -50,7 +50,7 @@ extension StoryCases {
                             .direct("What did the blockchain show?", "\"The wallet in the demand received a single deposit seven months ago from an exchange account in {DL}'s name. Nothing since.\""),
                             .direct("Could someone else use that wallet?", "\"Only if they had the recovery phrase.\""),
                             .cross("The group messages show the coworker had the recovery phrase?", "\"Someone posted it in the group chat to the coworker, yes.\""),
-                            .cross("The message app account was created from a VPN you couldn't trace?", "\"Correct.\"")
+                            .cross("The message app account was created from a VPN you couldn't trace?", "\"Through a VPN. The trail ended in another country.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -60,7 +60,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What was the group?", "\"Five of us from work pooling small amounts into crypto. {DL} set up the wallet, but the coworker in the photos managed most of the trades and had the recovery phrase.\""),
-                            .cross("You don't know who sent the message?", "\"No.\""),
+                            .cross("You don't know who sent the message?", "\"No idea. It came from a number with no name on it.\""),
                             .cross("{DL} set up the wallet?", "\"Yes, at the beginning.\"")
                         ])
         ],
@@ -132,7 +132,7 @@ extension StoryCases {
                             .direct("What did the wound show?", "\"Pellets entered the left side of the chest and the left upper back. The center of the pattern was behind the left armpit.\""),
                             .direct("What does that mean for position?", "\"{VL}'s left side and back were toward the shooter. That's someone turned at least partly away.\""),
                             .cross("A right-handed person raising a sledgehammer over the right shoulder turns the left side toward whoever is in front?", "\"That's possible.\""),
-                            .cross("You can't tell the court where the hammer was at the moment of the shot?", "\"No.\"")
+                            .cross("You can't tell the court where the hammer was at the moment of the shot?", "\"I can tell you where the bullet went, not where the hammer was.\"")
                         ]),
             WitnessSeed(name: nil, role: "Neighbor across the street",
                         direct: ["\"{DL} said it would be the last time.\""],
@@ -141,7 +141,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you hear the week before?", "\"{DL} at the mailbox, telling me, 'Next time {VL} comes over that line, it's the last time.' I thought it was talk.\""),
                             .direct("What did you see the day of the shooting?", "\"{VL} walking into {DL}'s yard with the sledgehammer over a shoulder, calm, like going to work. I went inside. Then the shot.\""),
-                            .cross("You didn't see the shooting itself?", "\"No.\""),
+                            .cross("You didn't see the shooting itself?", "\"I heard it. I was looking at my phone when it happened.\""),
                             .cross("{VL} had swung a shovel at {DL}'s dog?", "\"I heard about it. I didn't see it.\""),
                             .cross("{VL} told you once that {DL} 'had it coming'?", "\"Something like that, last summer.\"")
                         ])
@@ -227,7 +227,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did the payments start?", "\"Two years ago {DL} failed a framing inspection and told me there were ways to 'keep things moving.' I took the hint.\""),
                             .direct("How much did you pay?", "\"Fifteen hundred a month, cash, for about a year.\""),
-                            .cross("You're charged with fraud yourself?", "\"Yes.\""),
+                            .cross("You're charged with fraud yourself?", "\"I am. My own case is still pending.\""),
                             .cross("Your deal depends on delivering someone?", "\"It depends on telling the truth.\""),
                             .cross("You borrowed $6,000 from {DL} and said you'd pay it back in chunks?", "\"That was a separate thing. I paid that back already.\""),
                             .cross("No receipt, no record of that repayment?", "\"It was cash.\"")
@@ -251,7 +251,7 @@ extension StoryCases {
                         exam: [
                             .direct("How common are missed items?", "\"With our caseloads, twenty-plus inspections a day, we all miss things. Two misses out of thirty-eight isn't unusual.\""),
                             .direct("What's {DL}'s reputation?", "\"Honest, hard, a little gruff. Builders complained {DL} was too strict.\""),
-                            .cross("Have you ever accepted cash from a builder?", "\"Never.\""),
+                            .cross("Have you ever accepted cash from a builder?", "\"Not one dollar, in twenty-two years.\""),
                             .cross("Would you say 'appreciate it' if handed an envelope 'for keeping things moving'?", "\"I'd ask what it was for.\"")
                         ])
         ],
@@ -326,7 +326,7 @@ extension StoryCases {
                             .direct("What did you find?", "\"A pickup idling in the bar's lot, headlights on. {DL} slumped behind the wheel, keys in the ignition, foot near the brake. I knocked for a full minute.\""),
                             .direct("What did you observe?", "\"Strong odor of alcohol, slurred speech, unsteady when getting out. {DL} performed poorly on field sobriety tests.\""),
                             .direct("Why is that 'driving'?", "\"Under North Carolina law, being in the driver's seat with the engine running is being in actual physical control. That's driving.\""),
-                            .cross("The truck was in park and never moved?", "\"Correct.\""),
+                            .cross("The truck was in park and never moved?", "\"In park the whole time. The engine was running, but it never moved.\""),
                             .cross("It was nineteen degrees?", "\"It was cold.\""),
                             .cross("{DL} told you right away {D.he} was there to sleep, not drive?", "\"{DL} said that.\"")
                         ]),
@@ -464,7 +464,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why did you take the job?", "\"I'd been laid off and had an eviction notice. The ad looked real, there was a contract, an onboarding call. Eight percent of every transfer.\""),
                 .direct("When did you realize?", "\"When the bank called. I knew something was wrong. I asked the handler and they told me what to say, and I said it. I was scared and I needed the money.\""),
-                .cross("You kept going for months after that.", "\"Yes.\""),
+                .cross("You kept going for months after that.", "\"For seven more months. I kept thinking the next one would be the one that paid.\""),
                 .cross("You kept $28,000.", "\"I spent most of it on rent. I'd pay it back if I could.\"")
             ],
             objections: [

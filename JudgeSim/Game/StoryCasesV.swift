@@ -86,7 +86,7 @@ extension StoryCases {
                 .direct("Do you remember the drive?", "\"No. I remember the bar. Then the hospital.\""),
                 .direct("Why were you driving?", "\"I don't know. I'd told myself I'd never do it again.\""),
                 .cross("You signed a warning three times that you could kill someone.", "\"I know.\""),
-                .cross("You borrowed a truck without an interlock.", "\"Yes.\"")
+                .cross("You borrowed a truck without an interlock.", "\"I borrowed it. It didn't have one.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Prosecutor: \"How many lives do drunk drivers take in North Carolina each year?\"",
@@ -179,7 +179,7 @@ extension StoryCases {
                 .direct("Did you tell {VL} the wire was safe?", "\"I told him the ones I thought were grounds. I thought they were dead. I'd seen them done before.\""),
                 .direct("Why did you leave the hospital?", "\"I panicked. I knew I'd be arrested.\""),
                 .cross("You don't have an electrician's license.", "\"No. I was a helper.\""),
-                .cross("You pointed and he cut.", "\"Yes.\"")
+                .cross("You pointed and he cut.", "\"I pointed. He's the one with the knife.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Prosecutor: \"How many people died during the outage?\"",
@@ -325,7 +325,7 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("What did the sheriff ask you to do?", "\"Write 'returned to owner' next to cash nobody ever claimed. When I asked who the owners were, he said, 'You can find another job, or you can find a lawyer.'\""),
-                            .cross("You were passed over for promotion last year?", "\"Yes. That's not why I'm here.\"")
+                            .cross("You were passed over for promotion last year?", "\"Passed over, yes. I'm still telling the truth about that log.\"")
                         ]),
             WitnessSeed(name: nil, role: "State Auditor's investigator",
                         direct: ["\"No court order for any of it.\""],
@@ -418,7 +418,7 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("What happened when you arrived?", "\"Two men came out from behind a van. One put a gun to my head. They zip-tied my hands and drove me around for four hours to ATMs. I thought they'd kill me in that field.\""),
-                            .cross("You never saw a woman that night?", "\"No.\"")
+                            .cross("You never saw a woman that night?", "\"I didn't see any woman.\"")
                         ]),
             WitnessSeed(name: nil, role: "Cousin (cooperating co-defendant)",
                         direct: ["\"{DL} ran the profiles.\""],
@@ -426,7 +426,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("Who came up with the plan?", "\"{DL}. {D.He} made the profiles, picked guys with nice cars, and set up where to meet. We did the rest.\""),
-                            .cross("You pleaded to a lesser charge for this testimony?", "\"Yes.\""),
+                            .cross("You pleaded to a lesser charge for this testimony?", "\"Down to a misdemeanor. That's the deal.\""),
                             .cross("You held the gun?", "\"My cousin did.\"")
                         ])
         ],
