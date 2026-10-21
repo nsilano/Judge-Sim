@@ -801,6 +801,9 @@ extension Testimony {
         func d(_ q: String, _ a: String) { ex.append(.init(phase: .direct, examiner: .prosecution, question: q, answer: a)) }
         func c(_ q: String, _ a: String) { ex.append(.init(phase: .cross, examiner: .defense, question: q, answer: a)) }
         let years = rng.int(3...21)
+        // A toxicologist tests blood for alcohol in an impaired-driving case, and for drugs everywhere else.
+        let alcohol = discipline == .toxicology && alcoholCase(items, ctx: ctx)
+        let postmortem = discipline == .toxicology && !alcohol && ctx.fatal
         let degree: String
         switch discipline {
         case .drugChemistry, .toxicology, .fireDebris, .trace: degree = rng.pick(["a bachelor's degree in chemistry", "a master's degree in forensic science", "a degree in biochemistry"])
@@ -833,9 +836,9 @@ extension Testimony {
                          : rng.pick(["Did you also examine the \(title)?", "What about \(item.exhibit)?"]),
               "\(s.agency) submitted it on \(sent), " + rng.pick(["in a sealed bag with the officer's initials across the seal.", "heat-sealed and labeled with the case number.", "with a request for analysis and a chain-of-custody form."])
                 + " " + rng.pick(["The seal was intact when I opened it, and I documented that.", "I checked the seal and the labels against the request before opening it.", "Nothing about the packaging suggested tampering."]))
-            d(rng.pick(["What did you do with it?", "How did you analyze it?", "Walk the court through your method."]), method(discipline, rng: &rng))
+            d(rng.pick(["What did you do with it?", "How did you analyze it?", "Walk the court through your method."]), method(discipline, alcohol: alcohol, postmortem: postmortem, rng: &rng))
             d(rng.pick(["What were your results?", "What did you conclude?", "What did the analysis show?"]),
-              ("\(item.detail) " + conclusionFrame(discipline, rng: &rng)).trimmingCharacters(in: .whitespaces))
+              ("\(item.detail) " + conclusionFrame(discipline, alcohol: alcohol, rng: &rng)).trimmingCharacters(in: .whitespaces))
         }
         if let back = s.labReturned {
             d(rng.pick(["When did you issue your report?", "When was your report released?"]),
@@ -843,7 +846,7 @@ extension Testimony {
         }
 
         // Cross: the limits of this discipline
-        var pool = crossPool(discipline, ctx: ctx, rng: &rng)
+        var pool = crossPool(discipline, alcohol: alcohol, postmortem: postmortem, ctx: ctx, rng: &rng)
         pool.append(("Has your lab ever had to correct a result?", "Every lab has corrected errors. That's why there's a review process, and this result was reviewed."))
         pool.append(("Were there items from this case the agency never sent you?", rng.chance(0.5) ? "Yes. Some items weren't submitted for testing." : "Not that I'm aware of."))
         pool.append(("You don't know what happened to the \(lower(items[0].title)) before it got to your lab?", "I know what the chain-of-custody form says. Before that, I'd defer to the officers."))
@@ -856,12 +859,18 @@ extension Testimony {
         return witness(name: name, role: "\(discipline.title), State Crime Laboratory", side: .prosecution, exchanges: ex)
     }
 
-    private static func method(_ discipline: Discipline, rng: inout SeededRNG) -> String {
+    private static func method(_ discipline: Discipline, alcohol: Bool, postmortem: Bool, rng: inout SeededRNG) -> String {
         switch discipline {
         case .drugChemistry:
             return rng.pick(["I weighed it, then ran a color test as a screen and confirmed with gas chromatography-mass spectrometry, which identifies the compound by its chemical fingerprint.",
                              "Net weight first, without packaging. Then I took a representative sample and confirmed its identity by GC-MS against a reference standard run the same day.",
                              "I documented the packaging, weighed the contents, and analyzed a sample with GC-MS. The instrument's controls ran clean before and after."])
+        case .toxicology where !alcohol:
+            let sample = postmortem ? rng.pick(["femoral blood and vitreous fluid collected at autopsy", "the autopsy blood, drawn from the femoral vein, and urine"])
+                                    : rng.pick(["the blood sample", "the blood and urine samples"])
+            return rng.pick(["I screened \(sample) by immunoassay and a broad drug panel, then confirmed and quantified each drug by liquid chromatography with tandem mass spectrometry, LC-MS/MS.",
+                             "I ran \(sample) on a comprehensive drug screen, then confirmed every positive with LC-MS/MS against calibrators and controls run the same day.",
+                             "Screening first, then confirmation. Each drug the screen flagged was quantified by LC-MS/MS from \(sample), with internal standards."])
         case .toxicology:
             return rng.pick(["Headspace gas chromatography, run in duplicate with calibrators and controls. The two results have to agree within a set tolerance.",
                              "I analyzed the blood for alcohol by headspace GC, in duplicate, and screened for other drugs with an immunoassay followed by confirmation.",
@@ -887,10 +896,23 @@ extension Testimony {
         }
     }
 
-    private static func conclusionFrame(_ discipline: Discipline, rng: inout SeededRNG) -> String {
+    /// Blood tested for alcohol: an impaired-driving charge, or an exhibit that says so.
+    static func alcoholCase(_ items: [Evidence], ctx: Context) -> Bool {
+        let text = items.map { ($0.title + " " + $0.detail).lowercased() }.joined(separator: " ")
+        let drugWords = ["fentanyl", "heroin", "cocaine", "methamphetamine", "oxycodone", "opioid", "overdose", "xylazine", "benzodiazepine", "drug screen"]
+        let impairedCharge = ctx.lawIDs.contains { ["felonyDBV", "misdDBV"].contains($0) || $0.lowercased().contains("dwi") }
+        // An overdose screen that also reports "no alcohol detected" is still a drug case.
+        if drugWords.contains(where: { text.contains($0) }) { return impairedCharge && text.contains("alcohol") }
+        if ["alcohol", "ethanol", "breath test"].contains(where: { text.contains($0) }) { return true }
+        return impairedCharge
+    }
+
+    private static func conclusionFrame(_ discipline: Discipline, alcohol: Bool, rng: inout SeededRNG) -> String {
         switch discipline {
         case .drugChemistry: return rng.pick(["That's a confirmed identification, not a field test.", "The identification is by GC-MS, which is the confirmatory standard.", ""])
-        case .toxicology: return rng.pick(["That result reflects the blood at the time it was drawn.", "Both runs agreed within tolerance.", ""])
+        case .toxicology:
+            return alcohol ? rng.pick(["That result reflects the blood at the time it was drawn.", "Both runs agreed within tolerance.", ""])
+                           : rng.pick(["Each drug was confirmed against its own reference standard.", "The levels are in my report; what they mean for cause of death is the medical examiner's call.", ""])
         case .dna: return rng.pick(["DNA tells you whose DNA is there. It doesn't tell you when or how it got there.", "The statistic is in my report.", ""])
         case .latentPrints: return rng.pick(["The conclusion was verified by a second examiner.", "A print can't be dated; I can only say whose it is.", ""])
         case .firearms: return rng.pick(["That's my opinion based on the agreement of individual markings.", "A second examiner verified the comparison.", ""])
@@ -898,7 +920,7 @@ extension Testimony {
         }
     }
 
-    private static func crossPool(_ discipline: Discipline, ctx: Context, rng: inout SeededRNG) -> [(String, String)] {
+    private static func crossPool(_ discipline: Discipline, alcohol: Bool, postmortem: Bool, ctx: Context, rng: inout SeededRNG) -> [(String, String)] {
         let dl = ctx.dl
         switch discipline {
         case .drugChemistry:
@@ -906,6 +928,18 @@ extension Testimony {
                     ("Your result tells the court what the substance is, not who possessed it?", "That's right. Possession isn't a chemistry question."),
                     ("You didn't test purity?", "No. North Carolina law goes by weight, not purity, so purity isn't part of the analysis."),
                     ("How long did the item sit before you tested it?", "It waited in the queue. It was sealed and stored in the vault the whole time.")]
+        case .toxicology where !alcohol:
+            let person = postmortem ? (ctx.victim.map { $0.components(separatedBy: " ").last ?? $0 } ?? "the decedent") : dl
+            var pool: [(String, String)] = [
+                ("Your report shows more than one drug in \(person)'s blood?", rng.pick(["It does. I report every drug I confirm.", "Yes, and I listed each of them with its level."])),
+                ("There's no fixed fatal level for fentanyl, is there?", "No. Tolerance varies widely. Levels in fatal and non-fatal cases overlap."),
+                ("You can't tell the court where the drugs came from or who supplied them?", "No. Chemistry tells you what's in the blood, not how it got there."),
+                ("You can't say when the drugs were taken?", rng.pick(["Not precisely. The ratio of parent drug to metabolite gives a rough idea, nothing more.", "Only broadly. I can't give the court a time."]))]
+            if postmortem {
+                pool.append(("Drug levels can change in the body after death?", "Postmortem redistribution is real. That's why we test femoral blood, which is less affected."))
+                pool.append(("Cause of death isn't your opinion to give?", "Correct. That's the medical examiner's determination. I report what's in the blood."))
+            }
+            return pool
         case .toxicology:
             var pool: [(String, String)] = [
                 ("Your number is the level when the blood was drawn, not when \(dl) was driving?", "Correct. I measured the sample I received."),
