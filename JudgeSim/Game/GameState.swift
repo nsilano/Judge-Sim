@@ -212,7 +212,19 @@ final class GameState: ObservableObject {
             harshShare: sentenced < 4 ? 0 : Double(stats.abovePresumptive) / Double(sentenced),
             lenientShare: sentenced < 4 ? 0 : Double(stats.belowPresumptive) / Double(sentenced),
             recentHeadlines: Set(news.prefix(80).map(\.headline)))
-        for item in NewsDesk.weekly(snapshot, rng: &rng) { post(item) }
+        for item in NewsDesk.weekly(snapshot, rng: &rng) {
+            // A new prosecutor joins the District Attorney's office: the courthouse roster gets the name, so the
+            // new ADA appears under Courthouse names and starts trying cases.
+            if item.headline == "New assistant district attorney sworn in",
+               let name = item.body.components(separatedBy: ", a graduate").first, !name.isEmpty,
+               var roster = county, !roster.assistantDAs.contains(name) {
+                roster.assistantDAs.append(name)
+                // The office stays about the same size: the longest-serving ADA moves on.
+                if roster.assistantDAs.count > 6 { roster.assistantDAs.removeFirst() }
+                county = roster
+            }
+            post(item)
+        }
     }
 
     /// The bar survey at New Year's, the year in review, and every eighth November an election.
@@ -2120,6 +2132,16 @@ final class GameState: ObservableObject {
         history = data.history
         people = data.people
         news = data.news
+        // Older saves announced new ADAs without adding them to the roster; add the ones the paper reported.
+        if var roster = county {
+            for item in news.reversed() where item.headline == "New assistant district attorney sworn in" {
+                if let name = item.body.components(separatedBy: ", a graduate").first, !name.isEmpty, !roster.assistantDAs.contains(name) {
+                    roster.assistantDAs.append(name)
+                    if roster.assistantDAs.count > 6 { roster.assistantDAs.removeFirst() }
+                }
+            }
+            county = roster
+        }
         pending = data.pending
         currentCase = data.currentCase
         currentHearing = data.currentHearing
