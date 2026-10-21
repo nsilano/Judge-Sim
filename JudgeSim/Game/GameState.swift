@@ -922,24 +922,53 @@ final class GameState: ObservableObject {
                 if let relief = reliefQueue.first { usedPeople.insert(relief.personID) }
                 // Pleas, continuance motions, failures to appear, and capacity motions are about real cases:
                 // what the court orders puts each one on an actual calendar.
+                var claimed = Set<UUID>()
+                var unbound: [UUID] = []
                 for index in call.matters.indices
                 where [.quickPlea, .continuance, .failureToAppear, .capacity, .bondModification].contains(call.matters[index].kind) {
-                    if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, allowMurder: false, announce: false) {
-                        if call.matters[index].kind == .bondModification {
-                            // A jailed defendant asking for a lower bond.
-                            if var bg = c.background { bg.custodyDays = max(bg.custodyDays, rng.int(30...150)); bg.onRelease = false; c.background = bg }
-                            call.matters[index] = CalendarCalls.bondReductionMatter(for: c, rng: &rng)
-                        } else {
-                            if call.matters[index].kind == .failureToAppear, var bg = c.background {
-                                // Only someone out on bond can fail to appear.
-                                bg.onRelease = true
-                                bg.bondStatus = "Out on a secured bond; did not answer the calendar call."
-                                c.background = bg
-                            }
+                    let kind = call.matters[index].kind
+                    if kind == .quickPlea {
+                        // A plea offered at the calendar call is a short matter; no written story is spent on it.
+                        if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, allowMurder: false,
+                                                announce: false, generic: true) {
                             call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
                         }
+                        continue
+                    }
+                    // Motions, missed court dates and bond reviews are about cases already set for trial in this court,
+                    // so they feed the trials you hear rather than adding new ones.
+                    let waiting = scheduled.compactMap { item -> CourtCase? in
+                        guard case .trial(let c) = item.entry.matter, item.entry.resume == nil, !claimed.contains(c.id),
+                              c.templateKey.hasPrefix("story.") else { return nil }
+                        let jailed = c.background?.isJailed ?? false
+                        switch kind {
+                        case .bondModification: return jailed ? c : nil
+                        case .failureToAppear: return jailed ? nil : c
+                        default: return c
+                        }
+                    }
+                    guard var c = waiting.isEmpty ? nil : rng.pick(waiting) else {
+                        unbound.append(call.matters[index].id)
+                        continue
+                    }
+                    claimed.insert(c.id)
+                    if kind == .bondModification {
+                        call.matters[index] = CalendarCalls.bondReductionMatter(for: c, rng: &rng)
+                    } else {
+                        if kind == .failureToAppear, var bg = c.background {
+                            // Only someone out on bond can fail to appear.
+                            bg.onRelease = true
+                            bg.bondStatus = "Out on a secured bond; did not answer the calendar call."
+                            c.background = bg
+                        }
+                        call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
                     }
                 }
+                // A motion with no case waiting for it isn't on the calendar this week.
+                call.matters.removeAll { unbound.contains($0.id) }
+                // New cases come in when the trial calendar has room for them.
+                let waitingTrials = scheduled.filter { if case .trial = $0.entry.matter { return true } else { return false } }.count
+                let roomForNew = waitingTrials < 3 * weekCap
                 // A new arrest for conditions of release, and a case to arraign and set for trial.
                 if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, allowMurder: false, announce: false) {
                     // Arrested days ago and held until this first hearing on conditions of release.
@@ -951,7 +980,7 @@ final class GameState: ObservableObject {
                     }
                     call.matters.append(CalendarCalls.bondMatter(for: c, rng: &rng))
                 }
-                if wantsArraignment, let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, allowMurder: false, announce: false) {
+                if wantsArraignment && roomForNew, let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, allowMurder: false, announce: false) {
                     call.matters.append(CalendarCalls.arraignmentMatter(for: c))
                 }
                 // Motions for appropriate relief in cases tried here come back to this judge.
@@ -960,7 +989,7 @@ final class GameState: ObservableObject {
                     call.matters.insert(CalendarCalls.reliefMatter(relief, judgeLast: lastName(judgeName)), at: 0)
                 }
                 // Most weeks an officer brings a search warrant application.
-                if wantsWarrant {
+                if wantsWarrant && roomForNew {
                     let kind = rng.pick([WarrantApplication.Kind.residenceDrugs, .storageStolen, .phoneRecords])
                     if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, categories: kind.categories, allowMurder: false, announce: false) {
                         let w = SearchWarrants.application(for: c, date: date, rng: &rng)
@@ -1146,9 +1175,14 @@ final class GameState: ObservableObject {
         for m in call.matters {
             guard let c = m.pendingCase else { continue }
             let choice = choices[m.id] ?? 0
+            // A case already set for trial is taken off its old date; the ruling sets the new one.
+            scheduled.removeAll { item in if case .trial(let t) = item.entry.matter { return t.id == c.id } else { return false } }
             switch m.kind {
             case .quickPlea where choice == 3:
-                setFor(c, weeks: 2, note: "Plea rejected at the calendar call on \(heard); set for trial.")
+                // Only written cases are tried before you; a rejected calendar-call plea goes to another session.
+                if c.templateKey.hasPrefix("story.") {
+                    setFor(c, weeks: 2, note: "Plea rejected at the calendar call on \(heard); set for trial.")
+                }
             case .continuance:
                 // The motion says which continuance it would be: the "third" means two came before.
                 let before = m.summary.contains("fourth") ? 3 : (m.summary.contains("third") ? 2 : 1)
@@ -1451,7 +1485,9 @@ final class GameState: ObservableObject {
         // Where each case went: tried this week, or set for a later date.
         var placed: [String] = []
         for m in call.matters where m.pendingCase != nil {
-            if let entry = today?.entries.first(where: { if case .trial(let c) = $0.matter { return c.defendant.personID == m.personID } else { return false } }), entry.isOpen {
+            if m.kind == .quickPlea, choices[m.id] == 3, m.pendingCase?.templateKey.hasPrefix("story.") != true {
+                placed.append("\(m.personName): plea rejected; set for trial before another judge in a later session.")
+            } else if let entry = today?.entries.first(where: { if case .trial(let c) = $0.matter { return c.defendant.personID == m.personID } else { return false } }), entry.isOpen {
                 placed.append("\(m.personName): on this week's trial calendar.")
             } else if let set = scheduled.first(where: { if case .trial(let c) = $0.entry.matter { return c.defendant.personID == m.personID } else { return false } }) {
                 placed.append("\(m.personName): set for trial the week of \(SentenceFormat.shortDate(set.date)).")
@@ -1534,7 +1570,7 @@ final class GameState: ObservableObject {
     /// A new case for the calendar.
     private func generateCase(date: Date, rng: inout SeededRNG, excluding used: inout Set<UUID>, storySlot: Bool = true,
                               categories: Set<LawCategory>? = nil, allowMurder: Bool = true, announce: Bool = true,
-                              followUp: Reoffense? = nil) -> CourtCase? {
+                              followUp: Reoffense? = nil, generic: Bool = false) -> CourtCase? {
         guard let county, let judgeName else { return nil }
         // A written case brings its own defendant; returning defendants come back through calendar matters and follow-ups.
         var returning = followUp.flatMap { person($0.personID) } ?? (storySlot && followUp == nil ? nil : pickReturningDefendant(rng: &rng, date: date))
@@ -1544,6 +1580,7 @@ final class GameState: ObservableObject {
                                             usedSignatures: Set(usedSignatures), returning: returning,
                                             usedBackgrounds: Set(people.map(\.background)), storySlot: followUp == nil && storySlot,
                                             categories: categories, allowMurder: allowMurder)
+        context.generic = generic
         if let followUp {
             context.forcedTemplateKeys = followUp.templateKeys
             context.victimOverride = followUp.victimName
