@@ -35,7 +35,7 @@ struct CaseReviewSheet: View {
                     .padding(.horizontal)
                     .padding(.vertical, 10)
                 }
-                ScrollView {
+                FixedWidthScroll {
                     VStack(alignment: .leading, spacing: 14) {
                         switch section {
                         case .file: fileSection

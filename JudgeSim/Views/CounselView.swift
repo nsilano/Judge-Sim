@@ -160,7 +160,7 @@ struct CounselSheet<Provider: CounselProvider>: View {
                 .padding([.horizontal, .top])
 
                 ScrollViewReader { proxy in
-                    ScrollView {
+                    FixedWidthScroll {
                         VStack(alignment: .leading, spacing: 14) {
                             HStack(spacing: 12) {
                                 Image(systemName: side == .prosecution ? "building.columns.fill" : "shield.fill")

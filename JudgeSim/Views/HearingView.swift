@@ -26,7 +26,7 @@ struct HearingView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            FixedWidthScroll {
                 VStack(alignment: .leading, spacing: 16) {
                     if let outcome = session.outcome {
                         outcomeView(outcome)

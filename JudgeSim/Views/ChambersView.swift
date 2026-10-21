@@ -27,7 +27,7 @@ struct OnboardingView: View {
     @State private var openingTime = CourtCalendar.opening(on: Date(), minutesAfterMidnight: 9 * 60 + 30)
 
     var body: some View {
-        ScrollView {
+        FixedWidthScroll {
             VStack(spacing: 24) {
                 HStack {
                     Spacer()
@@ -115,7 +115,7 @@ struct ChambersView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            FixedWidthScroll {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Spacer()

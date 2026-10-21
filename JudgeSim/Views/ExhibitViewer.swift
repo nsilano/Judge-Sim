@@ -13,7 +13,7 @@ struct ExhibitViewer: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            FixedWidthScroll {
                 VStack(alignment: .leading, spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("\(evidence.exhibit) · \(review.format.label)").font(.caption.weight(.bold)).foregroundStyle(.secondary)

@@ -17,7 +17,7 @@ struct CalendarCallView: View {
             if showResults {
                 CalendarResults(lines: game.lastCalendarResults) { dismiss() }
             } else {
-            ScrollView {
+            FixedWidthScroll {
                 VStack(alignment: .leading, spacing: 16) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("ADMINISTRATIVE SESSION · CALENDAR CALL")
@@ -153,7 +153,7 @@ struct PendingCaseFile: View {
 
     var body: some View {
         let c = courtCase
-        ScrollView {
+        FixedWidthScroll {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(c.docket).font(.caption.monospaced()).foregroundStyle(.secondary)
@@ -214,7 +214,7 @@ struct WarrantApplicationView: View {
 
     var body: some View {
         let w = application
-        ScrollView {
+        FixedWidthScroll {
             VStack(alignment: .leading, spacing: 12) {
                 Text("APPLICATION FOR SEARCH WARRANT").font(DocInk.serif(.headline, weight: .bold))
                 Text("G.S. 15A-244 · \(w.kind.label)").font(DocInk.serif(.caption)).foregroundStyle(DocInk.faint)
@@ -300,7 +300,7 @@ struct CalendarResults: View {
     let onDone: () -> Void
 
     var body: some View {
-        ScrollView {
+        FixedWidthScroll {
             VStack(alignment: .leading, spacing: 12) {
                 Label("The calendar call is closed.", systemImage: "checkmark.seal.fill")
                     .font(.headline)
