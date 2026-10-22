@@ -59,7 +59,41 @@ enum NameBank {
         "Elliott", "Ernesto", "Everett", "Fabian", "Felix", "Franklin", "Herman", "Horace", "Ignacio", "Jarvis",
         "Kendrick", "Lonnie", "Lucius", "Malcolm", "Marlon", "Milton", "Mitchell", "Montgomery", "Nelson", "Norman",
         "Quentin", "Ramon", "Reginald", "Roland", "Roscoe", "Russell", "Stanley", "Travis", "Virgil", "Warren",
-        "Wendell", "Wilbur", "Winston", "Ezekiel", "Moses", "Rodney"
+        "Wendell", "Wilbur", "Winston", "Ezekiel", "Moses", "Rodney",
+        "Abby", "Ada", "Adele", "Adriana", "Agnes", "Aisha", "Alberta", "Alejandra", "Alexandra", "Alexis",
+        "Alice", "Alina", "Alisha", "Allie", "Althea", "Alyssa", "Amanda", "Amber", "Amelia", "Amy",
+        "Ana", "Andrea", "Angela", "Angelica", "Angie", "Anna", "Annabelle", "Annie", "Antonia", "Arlene",
+        "Ashley", "Astrid", "Audrey", "Aurora", "Ava", "Barbara", "Becky", "Belinda", "Bella", "Bernice",
+        "Beth", "Betty", "Beverly", "Blair", "Brenda", "Briana", "Bridgette", "Brittany", "Caitlin", "Callie",
+        "Candice", "Cara", "Carlotta", "Carmela", "Carol", "Caroline", "Carrie", "Catalina", "Catherine", "Cathy",
+        "Cecile", "Charlotte", "Chelsea", "Cherise", "Chloe", "Christine", "Cindy", "Claire", "Clara", "Claudia",
+        "Cora", "Courtney", "Cynthia", "Daisy", "Damaris", "Darcy", "Deanna", "Debra", "Delia", "Della",
+        "Diane", "Dina", "Dixie", "Donna", "Dora", "Doris", "Edna", "Elisabeth", "Ella", "Ellen",
+        "Elise", "Elsa", "Emily", "Emma", "Erica", "Erika", "Esme", "Estrella", "Ethel", "Eugenia",
+        "Eunice", "Faye", "Fern", "Flora", "Florence", "Francine", "Gabriela", "Gail", "Genevieve", "Georgina",
+        "Geraldine", "Gianna", "Ginger", "Gladys", "Glenda", "Greta", "Guadalupe", "Gwendolyn", "Haley", "Hattie",
+        "Heidi", "Helen", "Hilda", "Holly", "Ida", "Imogen", "Irma", "Isabel", "Isabella", "Jackie",
+        "Jade", "Jana", "Jane", "Janet", "Janice", "Jeanne", "Jenna", "Jennifer", "Jessica", "Jo",
+        "Joan", "Joann", "Jodi", "Johanna", "Jolene", "Josefina", "Joyce", "Judy", "Julianne", "Juliet",
+        "June", "Justine", "Karen", "Karina", "Katherine", "Kathy", "Katie", "Kayla", "Kelsey", "Kim",
+        "Kristen", "Kristina", "Lacey", "Latasha", "Laura", "Lauren", "Lavonne", "Aaron", "Abraham", "Adam",
+        "Alan", "Albert", "Alex", "Alfred", "Allen", "Alton", "Amos", "Andrew", "Angelo", "Anthony",
+        "Archibald", "Arnold", "Arthur", "Asa", "Barry", "Ben", "Benjamin", "Bennett", "Bertram", "Bill",
+        "Billy", "Bobby", "Brady", "Brent", "Brett", "Brian", "Bruce", "Bryant", "Buck", "Burt",
+        "Carl", "Carlton", "Chad", "Charles", "Chris", "Christopher", "Clark", "Claude", "Clay", "Clint",
+        "Clyde", "Cole", "Colin", "Craig", "Curt", "Dallas", "Dan", "Daniel", "Darrell", "Darren",
+        "Dave", "David", "Dean", "Dennis", "Derek", "Derrick", "Dewey", "Dominick", "Don", "Donald",
+        "Doug", "Douglas", "Duane", "Dustin", "Dwayne", "Dwight", "Earnest", "Eddie", "Edward", "Edwin",
+        "Eli", "Elmer", "Emanuel", "Emilio", "Eric", "Ernest", "Ervin", "Eugene", "Evan", "Felipe",
+        "Francis", "Fred", "Frederick", "Garrett", "Gary", "Gene", "George", "Gerald", "Glen", "Glenn",
+        "Grady", "Grant", "Greg", "Gregory", "Guy", "Hal", "Hank", "Harlan", "Harris", "Harvey",
+        "Henry", "Herbert", "Homer", "Howard", "Hoyt", "Hubert", "Ira", "Irvin", "Isaac", "Jack",
+        "Jacob", "Jake", "James", "Jared", "Jason", "Jay", "Jeff", "Jeffrey", "Jeremiah", "Jeremy",
+        "Jerry", "Jesse", "Jesus", "Jim", "Jimmy", "Joe", "Joel", "John", "Johnny", "Jon",
+        "Jonah", "Jonathan", "Jorge", "Jose", "Joseph", "Joshua", "Juan", "Julian", "Justin", "Kelvin",
+        "Ken", "Kenneth", "Kent", "Kevin", "Kirk", "Kurt", "Kyle", "Lance", "Larry", "Lee",
+        "Leland", "Leo", "Leonard", "Leroy", "Lester", "Lewis", "Lloyd", "Lonzo", "Louis", "Lowell",
+        "Luke", "Luther", "Lyle", "Manuel"
     ]
 
     static let lastNames = [
@@ -110,7 +144,37 @@ enum NameBank {
         "Pegram", "Pilkington", "Poindexter", "Pridgen", "Rascoe", "Respass", "Shearin", "Speight",
         "Sumner", "Swindell", "Teachey", "Tolson", "Truitt", "Uzzell", "Waddell", "Whaley", "Winstead", "Wooten",
         "Yount", "Abiodun", "Banerjee", "Gutierrez", "Ishikawa", "Jankowski", "Laszlo", "Rosario", "Sandoval", "Ueda",
-        "Vasquez", "Watanabe"
+        "Vasquez", "Watanabe",
+        "Adcock", "Albritton", "Allred", "Alford", "Almond", "Applewhite", "Armwood", "Ashe", "Askew", "Aycock",
+        "Bailey", "Baines", "Barbee", "Barbour", "Barham", "Barnette", "Batchelor", "Baucom", "Beale", "Beddingfield",
+        "Bembry", "Benfield", "Bethea", "Biggs", "Bivens", "Blackmon", "Blanchard", "Blount", "Bobbitt", "Boney",
+        "Bost", "Boswell", "Bracey", "Bradsher", "Brannon", "Brewington", "Bridgers", "Brinson", "Broadway", "Brower",
+        "Bryson", "Buffaloe", "Bullock", "Bumgarner", "Burleson", "Byers", "Cagle", "Cahoon", "Capps", "Carlisle",
+        "Carpenter", "Cashwell", "Caudle", "Chamblee", "Chappell", "Cline", "Cobb", "Cockerham", "Collie", "Conyers",
+        "Councill", "Covington", "Crabtree", "Craddock", "Craven", "Creech", "Cribb", "Crocker", "Davenport", "Dellinger",
+        "Denning", "Dickens", "Dillard", "Dobbins", "Dobson", "Doby", "Dowdy", "Draughn", "Dunlap", "Eaker",
+        "Eatmon", "Elmore", "Ennis", "Eubanks", "Ezzell", "Faulk", "Forbes", "Fowler", "Fussell", "Gaither",
+        "Gallimore", "Garner", "Gaylord", "Gibbons", "Glover", "Goodson", "Gorham", "Gouge", "Greene", "Griffin",
+        "Grubbs", "Gwyn", "Hairston", "Hamby", "Hardee", "Hargett", "Harrelson", "Hartsell", "Hassell", "Hawley",
+        "Haywood", "Heath", "Helms", "Hendrix", "Hiatt", "Hickman", "Higgins", "Hilliard", "Hobgood", "Hocutt",
+        "Holder", "Hollingsworth", "Hoots", "Hord", "Hudgins", "Huffman", "Hunnicutt", "Hyatt", "Isley", "Jarrell",
+        "Jeffreys", "Jenkins", "Keel", "Kennedy", "Kerr", "Killian", "Kirby", "Knotts", "Lamm", "Lancaster",
+        "Lankford", "Lassister", "Leggett", "Lineberger", "Lockhart", "Lomax", "Lovett", "Lowder", "Lyerly", "Mabe",
+        "Maness", "Marley", "Mauney", "McArthur", "McCall", "McDuffie", "McGhee", "McIntyre", "McKenzie", "McLean",
+        "McPhail", "Meacham", "Midgett", "Minton", "Mize", "Moody", "Moretz", "Nance", "Newsome", "Norris",
+        "Odom", "Overton", "Pardue", "Parnell", "Patton", "Peed", "Penland", "Petty", "Pickett", "Pinnix",
+        "Poole", "Presnell", "Proctor", "Puckett", "Rabon", "Ramsey", "Ratliff", "Register", "Respess", "Ritchie",
+        "Robbins", "Rogerson", "Rountree", "Rowe", "Royster", "Saunders", "Scoggins", "Sealey", "Shaver", "Sheppard",
+        "Shook", "Sikes", "Sloan", "Snipes", "Sossamon", "Southerland", "Speller", "Stamey", "Starling", "Steed",
+        "Stokes", "Stroud", "Styron", "Sumrell", "Swain", "Talton", "Tatum", "Thornburg", "Tilghman", "Tingen",
+        "Tolar", "Trivette", "Tunstall", "Turnage", "Twiford", "Tyson", "Upton", "Varnell", "Vestal", "Vinson",
+        "Waddill", "Walden", "Ward", "Wellons", "Whichard", "Whisnant", "Whitaker", "Whitehurst", "Willoughby", "Winborne",
+        "Windley", "Wrenn", "Yeargin", "Yow", "Alvarado", "Barrera", "Becerra", "Bermudez", "Camacho", "Cervantes",
+        "Contreras", "Corona", "Covarrubias", "Davila", "Esparza", "Galvan", "Gallegos", "Godinez", "Hidalgo", "Jaramillo",
+        "Lozano", "Maldonado", "Marquez", "Meza", "Murillo", "Nieves", "Orozco", "Pena", "Quintana", "Robles",
+        "Saldana", "Santana", "Solis", "Tapia", "Urbina", "Vega", "Zavala", "Abara", "Adebayo", "Asante",
+        "Danso", "Eze", "Obi", "Okeke", "Owusu", "Diallo", "Toure", "Bui", "Dang", "Duong",
+        "Ngo", "Truong", "Cho", "Han"
     ]
 
     static let streets = [
@@ -181,7 +245,7 @@ enum NameBank {
         "Grand Theft (felony), 2 years probation"
     ]
 
-    static let femaleFirstNames: Set<String> = ["Elena", "Priya", "Rosa", "Mei", "Aaliyah", "Hannah", "Sofia", "Yasmin", "Grace", "Nadia", "Fatima", "Imani", "Leah", "Brooke", "Ingrid", "Keisha", "Molly", "Carmen", "Zara", "Tamika", "Lucia", "Erin", "Avery", "Riley", "Quinn", "Dakota", "Noor", "Allison", "Renee", "Colleen", "Valentina", "Maya", "Esperanza", "Delilah", "Shannon", "Abigail", "Amara", "Anika", "Ariel", "Beatrice", "Bethany", "Bianca", "Bridget", "Camille", "Cassandra", "Celeste", "Charlene", "Chiara", "Cleo", "Corinne", "Dalia", "Dana", "Daphne", "Denise", "Dolores", "Dorothy", "Ebony", "Eleanor", "Eloise", "Esther", "Felicia", "Fiona", "Gemma", "Gloria", "Gwen", "Harriet", "Irene", "Jacinta", "Jada", "Janelle", "Jillian", "Josephine", "Kara", "Kendra", "Kiara", "Lana", "Latoya", "Leonora", "Lorena", "Lydia", "Mabel", "Mavis", "Mira", "Monique", "Nell", "Ophelia", "Paloma", "Patrice", "Paulette", "Phoebe", "Ramona", "Rhiannon", "Ruby", "Sabrina", "Savannah", "Selena", "Simone", "Stella", "Tabitha", "Teresa", "Trina", "Vanessa", "Viola", "Wanda", "Yolanda", "Zelda", "Ayesha", "Dariela", "Farah", "Ines", "Kalani", "Leilani", "Nia", "Pilar", "Rashida", "Thandiwe", "Wren", "Adaeze", "Alana", "Alicia", "Alma", "Anita", "Annette", "Antoinette", "April", "Ayanna", "Bernadette", "Blanca", "Bonnie", "Candace", "Carla", "Carolyn", "Cecilia", "Chandra", "Charmaine", "Cheryl", "Christina", "Clarissa", "Constance", "Crystal", "Danielle", "Darlene", "Deborah", "Desiree", "Destiny", "Diana", "Dominique", "Edith", "Eileen", "Elaine", "Elisa", "Emilia", "Estelle", "Eva", "Evelyn", "Faith", "Frances", "Geneva", "Georgia", "Gina", "Hazel", "Heather", "Helena", "Hope", "Ivy", "Jasmine", "Jeanette", "Joanna", "Jocelyn", "Joy", "Juanita", "Judith", "Julia", "Kathleen", "Kimberly", "Lakisha", "Laurel", "Lena", "Lillian", "Lorraine", "Lucille", "Lynette", "Marisol", "Marlene", "Martina", "Maxine", "Melinda", "Mercedes", "Miriam", "Nadine", "Naomi", "Natasha", "Nina", "Noelle", "Octavia", "Olive", "Pamela", "Penelope", "Rachel", "Regina", "Rita", "Rochelle", "Rosalind", "Roxanne", "Shanice", "Sheila", "Sherry", "Sonia", "Sylvia", "Tanya", "Tasha", "Tiana", "Valerie", "Vera", "Veronica", "Vivian", "Whitney", "Winona", "Xiomara", "Yvette", "Zoe", "Bettina", "Shayla", "Marisa"]
+    static let femaleFirstNames: Set<String> = ["Elena", "Priya", "Rosa", "Mei", "Aaliyah", "Hannah", "Sofia", "Yasmin", "Grace", "Nadia", "Fatima", "Imani", "Leah", "Brooke", "Ingrid", "Keisha", "Molly", "Carmen", "Zara", "Tamika", "Lucia", "Erin", "Avery", "Riley", "Quinn", "Dakota", "Noor", "Allison", "Renee", "Colleen", "Valentina", "Maya", "Esperanza", "Delilah", "Shannon", "Abigail", "Amara", "Anika", "Ariel", "Beatrice", "Bethany", "Bianca", "Bridget", "Camille", "Cassandra", "Celeste", "Charlene", "Chiara", "Cleo", "Corinne", "Dalia", "Dana", "Daphne", "Denise", "Dolores", "Dorothy", "Ebony", "Eleanor", "Eloise", "Esther", "Felicia", "Fiona", "Gemma", "Gloria", "Gwen", "Harriet", "Irene", "Jacinta", "Jada", "Janelle", "Jillian", "Josephine", "Kara", "Kendra", "Kiara", "Lana", "Latoya", "Leonora", "Lorena", "Lydia", "Mabel", "Mavis", "Mira", "Monique", "Nell", "Ophelia", "Paloma", "Patrice", "Paulette", "Phoebe", "Ramona", "Rhiannon", "Ruby", "Sabrina", "Savannah", "Selena", "Simone", "Stella", "Tabitha", "Teresa", "Trina", "Vanessa", "Viola", "Wanda", "Yolanda", "Zelda", "Ayesha", "Dariela", "Farah", "Ines", "Kalani", "Leilani", "Nia", "Pilar", "Rashida", "Thandiwe", "Wren", "Adaeze", "Alana", "Alicia", "Alma", "Anita", "Annette", "Antoinette", "April", "Ayanna", "Bernadette", "Blanca", "Bonnie", "Candace", "Carla", "Carolyn", "Cecilia", "Chandra", "Charmaine", "Cheryl", "Christina", "Clarissa", "Constance", "Crystal", "Danielle", "Darlene", "Deborah", "Desiree", "Destiny", "Diana", "Dominique", "Edith", "Eileen", "Elaine", "Elisa", "Emilia", "Estelle", "Eva", "Evelyn", "Faith", "Frances", "Geneva", "Georgia", "Gina", "Hazel", "Heather", "Helena", "Hope", "Ivy", "Jasmine", "Jeanette", "Joanna", "Jocelyn", "Joy", "Juanita", "Judith", "Julia", "Kathleen", "Kimberly", "Lakisha", "Laurel", "Lena", "Lillian", "Lorraine", "Lucille", "Lynette", "Marisol", "Marlene", "Martina", "Maxine", "Melinda", "Mercedes", "Miriam", "Nadine", "Naomi", "Natasha", "Nina", "Noelle", "Octavia", "Olive", "Pamela", "Penelope", "Rachel", "Regina", "Rita", "Rochelle", "Rosalind", "Roxanne", "Shanice", "Sheila", "Sherry", "Sonia", "Sylvia", "Tanya", "Tasha", "Tiana", "Valerie", "Vera", "Veronica", "Vivian", "Whitney", "Winona", "Xiomara", "Yvette", "Zoe", "Bettina", "Shayla", "Marisa", "Abby", "Ada", "Adele", "Adriana", "Agnes", "Aisha", "Alberta", "Alejandra", "Alexandra", "Alexis", "Alice", "Alina", "Alisha", "Allie", "Althea", "Alyssa", "Amanda", "Amber", "Amelia", "Amy", "Ana", "Andrea", "Angela", "Angelica", "Angie", "Anna", "Annabelle", "Annie", "Antonia", "Arlene", "Ashley", "Astrid", "Audrey", "Aurora", "Ava", "Barbara", "Becky", "Belinda", "Bella", "Bernice", "Beth", "Betty", "Beverly", "Blair", "Brenda", "Briana", "Bridgette", "Brittany", "Caitlin", "Callie", "Candice", "Cara", "Carlotta", "Carmela", "Carol", "Caroline", "Carrie", "Catalina", "Catherine", "Cathy", "Cecile", "Charlotte", "Chelsea", "Cherise", "Chloe", "Christine", "Cindy", "Claire", "Clara", "Claudia", "Cora", "Courtney", "Cynthia", "Daisy", "Damaris", "Darcy", "Deanna", "Debra", "Delia", "Della", "Diane", "Dina", "Dixie", "Donna", "Dora", "Doris", "Edna", "Elisabeth", "Ella", "Ellen", "Elise", "Elsa", "Emily", "Emma", "Erica", "Erika", "Esme", "Estrella", "Ethel", "Eugenia", "Eunice", "Faye", "Fern", "Flora", "Florence", "Francine", "Gabriela", "Gail", "Genevieve", "Georgina", "Geraldine", "Gianna", "Ginger", "Gladys", "Glenda", "Greta", "Guadalupe", "Gwendolyn", "Haley", "Hattie", "Heidi", "Helen", "Hilda", "Holly", "Ida", "Imogen", "Irma", "Isabel", "Isabella", "Jackie", "Jade", "Jana", "Jane", "Janet", "Janice", "Jeanne", "Jenna", "Jennifer", "Jessica", "Jo", "Joan", "Joann", "Jodi", "Johanna", "Jolene", "Josefina", "Joyce", "Judy", "Julianne", "Juliet", "June", "Justine", "Karen", "Karina", "Katherine", "Kathy", "Katie", "Kayla", "Kelsey", "Kim", "Kristen", "Kristina", "Lacey", "Latasha", "Laura", "Lauren", "Lavonne"]
 
     static func gender(of fullName: String) -> Gender {
         femaleFirstNames.contains(fullName.components(separatedBy: " ").first ?? "") ? .female : .male
