@@ -10,6 +10,8 @@ struct OpenInvestigation: Identifiable, Codable {
     var offense: String
     /// The first day the case can be tried: everything in its file happens before then.
     var ready: Date
+    /// How the case reached the court, when it wasn't a story the paper followed (a warrant the judge signed).
+    var note: String? = nil
 }
 
 /// The news of an investigation in progress. Nobody is named until the arrest, and nothing reported goes beyond
@@ -69,12 +71,15 @@ enum InvestigationArc {
     }
 
     /// The arrest, with the defendant named for the first time.
-    static func arrestNews(_ c: CourtCase, on date: Date, town: String, agency: String, judge: String, county: County) -> NewsItem {
+    static func arrestNews(_ c: CourtCase, on date: Date, town: String, agency: String, judge: String, county: County,
+                           followed: Bool = true) -> NewsItem {
         let d = c.defendant
         let held = c.background?.isJailed == true
         let offense = c.charges.first?.law.title.lowercased() ?? "the charges"
-        return NewsItem(date: date, kind: .arrest, headline: "Arrest made in \(town) investigation: \(d.name) charged",
-                        body: "\(agency) investigators arrested \(d.name), \(d.age), on a charge of \(offense), in the case the paper has followed since it began in \(town). "
+        return NewsItem(date: date, kind: .arrest, headline: followed ? "Arrest made in \(town) investigation: \(d.name) charged" : "\(d.name) arrested after search in \(town)",
+                        body: (followed
+                            ? "\(agency) investigators arrested \(d.name), \(d.age), on a charge of \(offense), in the case the paper has followed since it began in \(town). "
+                            : "\(agency) investigators arrested \(d.name), \(d.age), on a charge of \(offense) after executing a search warrant in \(town). ")
                             + (held ? "\(d.lastName) is being held in the \(county.name) Detention Center." : "\(d.lastName) was released on bond.")
                             + " The case goes to \(county.name) Superior Court, where Judge \(judge) will set a trial date.",
                         docket: c.docket, prominence: 2, section: "Crime")

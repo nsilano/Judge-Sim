@@ -766,7 +766,8 @@ enum Investigations {
 
     static func make(t: CaseTemplate, facts: CaseFacts, values: [String: String], incident: Date, sessionDate: Date,
                      detective: CastMember, officer: CastMember, evidence: [Evidence], defendant: Defendant,
-                     charges: [Charge], victimName: String?, year: Int, rng: inout SeededRNG) -> (InvestigationReport, [Gap]) {
+                     charges: [Charge], victimName: String?, year: Int, arrestOn: Date? = nil,
+                     rng: inout SeededRNG) -> (InvestigationReport, [Gap]) {
         let dl = defendant.lastName
         let street = values["STREET"] ?? "Harbor Street"
         let town = values["HOOD"] ?? "Port Hollis"
@@ -885,6 +886,8 @@ enum Investigations {
             arrest = CaseDates.add(day + rng.int(1...6), to: incident)
         }
         arrest = clamp(arrest)
+        // A case that comes to court through a calendar matter was arrested when that matter says.
+        if let pinned = arrestOn { arrest = max(incident, pinned) }
 
         // The interview and arrest
         let interview: Date? = statement == nil ? nil : (facts.origin == .records ? CaseDates.add(-rng.int(5...20), to: arrest) : arrest)
