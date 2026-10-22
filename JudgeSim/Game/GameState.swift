@@ -149,6 +149,13 @@ final class GameState: ObservableObject {
     private var weekTally = CourtDay.Tally()
     /// How the prosecutors and defenders feel about the judge.
     @Published private(set) var mood = CourthouseMood()
+    /// What happened in court since the paper last went out.
+    private var happenings: [Happening] = []
+
+    private func happened(_ h: Happening) {
+        if case .scheduleChanged = h { happenings.removeAll { if case .scheduleChanged = $0 { return true } else { return false } } }
+        happenings.append(h)
+    }
     /// What the last calendar call decided, and where each case went, for the results screen.
     @Published private(set) var lastCalendarResults: [String] = []
     /// Whether last week's trial calendar had a murder case, so two murder weeks don't come back to back.
@@ -563,6 +570,7 @@ final class GameState: ObservableObject {
                 var rng = SeededRNG(seed: seedBase ^ UInt64(abs(Int(cursor.timeIntervalSince1970)) / 3_600) ^ 0x1A7E)
                 intake(on: cursor, rng: &rng)
                 reviewWaiting(on: cursor, rng: &rng)
+                publishDailyPaper(on: cursor, rng: &rng)
             }
         }
         if leaveDays > 0, let judgeName {
@@ -580,6 +588,19 @@ final class GameState: ObservableObject {
         today = buildDay(next, kind: .trial, sessionDay: 1)
         digest = news.filter { !seenBefore.contains($0.id) }
         save()
+    }
+
+    /// The morning paper: what the court did yesterday, and the life of the county.
+    private func publishDailyPaper(on date: Date, rng: inout SeededRNG) {
+        guard let county, let judgeName else { return }
+        let cal = CourtCalendar.calendar
+        let snapshot = DailyNews.Snapshot(
+            date: date, county: county, judge: lastName(judgeName), awaiting: awaiting.count,
+            jailedWaiting: awaiting.filter { $0.courtCase?.background?.isJailed == true }.count,
+            oldestWait: awaiting.map { cal.dateComponents([.day], from: $0.since, to: date).day ?? 0 }.max() ?? 0,
+            trialsHeard: trialsHeard, leaveLeft: leaveLeft, recentHeadlines: Set(news.prefix(150).map(\.headline)))
+        for item in DailyNews.items(snapshot, happenings: happenings, rng: &rng) { post(item) }
+        happenings = []
     }
 
     /// The end of a court week: the week in review, the new week's number, and the holidays ahead.
@@ -1088,6 +1109,10 @@ final class GameState: ObservableObject {
             scheduled.append(ScheduledMatter(date: day, entry: item.entry))
             scheduled.sort { $0.date < $1.date }
         }
+        if let c = item.courtCase {
+            happened(.trialDateSet(caption: c.caption, defendant: c.defendant.name, date: day,
+                                   jailed: c.background?.isJailed == true, prominent: c.mediaAttention >= 2))
+        }
         save()
     }
 
@@ -1143,6 +1168,7 @@ final class GameState: ObservableObject {
         var rng = SeededRNG(seed: c.seed ^ 0xDE1E_6A7E)
         let other = "Judge " + rng.pick(NameBank.lastNames.filter { !(judgeName ?? "").hasSuffix($0) })
         stats.delegated = (stats.delegated ?? 0) + 1
+        happened(.reassigned(caption: c.caption, defendant: c.defendant.name, toJudge: other))
         history.insert(CaseRecord(docket: c.docket, caption: c.caption, headline: c.headline, category: c.category, date: date,
                                   defendantID: c.defendant.personID, outcome: "Reassigned to \(other)",
                                   judgments: ["Reassigned to \(other) to relieve the court's calendar."],
@@ -1177,11 +1203,13 @@ final class GameState: ObservableObject {
     func setCourtDay(_ weekday: Int, sits: Bool) {
         if sits { schedule.courtDays.insert(weekday) } else { schedule.courtDays.remove(weekday) }
         reflow()
+        happened(.scheduleChanged(weeklyTrials: schedule.weeklyTrials))
         save()
     }
 
     func setWeekdayLimit(_ weekday: Int, _ limit: DayLimit) {
         schedule.limits[weekday] = DayLimit(trials: max(0, min(4, limit.trials)), hearings: max(0, min(4, limit.hearings)))
+        happened(.scheduleChanged(weeklyTrials: schedule.weeklyTrials))
         save()
     }
 
@@ -1196,6 +1224,7 @@ final class GameState: ObservableObject {
     func applyTemplate(_ template: CourtSchedule.Template) {
         schedule.limits = template.limits
         lightWeeks = template == .light
+        happened(.scheduleChanged(weeklyTrials: schedule.weeklyTrials))
         save()
     }
 
@@ -1215,6 +1244,10 @@ final class GameState: ObservableObject {
             day = cal.date(byAdding: .day, value: 1, to: day) ?? last
         }
         reflow(note: "Reset while the court is on leave")
+        let booked = stride(from: 0, through: cal.dateComponents([.day], from: cal.startOfDay(for: start), to: last).day ?? 0, by: 1)
+            .compactMap { cal.date(byAdding: .day, value: $0, to: cal.startOfDay(for: start)) }
+            .filter { CourtCalendar.isCourtDay($0) && schedule.courtDays.contains(CourtSchedule.weekday($0)) }.count
+        if booked > 0 { happened(.timeOffBooked(from: max(cal.startOfDay(for: start), todayDate), to: last, days: booked)) }
         save()
     }
 
@@ -1758,6 +1791,7 @@ final class GameState: ObservableObject {
     func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:]) {
         guard let county, let judgeName, stillOpen(call.id) else { return }
         let result = CalendarCalls.resolve(call, choices: choices, amounts: amounts, judgeName: judgeName, county: county)
+        happened(.calendarCall(matters: call.matters.count))
         for newcomer in result.newPeople {
             // A returning defendant who pleads keeps one record.
             if let index = people.firstIndex(where: { $0.id == newcomer.id }) {
@@ -1856,6 +1890,7 @@ final class GameState: ObservableObject {
 
     func completeHearing(_ hearing: ViolationHearing, outcome: HearingOutcome) {
         guard stillOpen(hearing.id) else { return }
+        happened(.hearingHeld(name: hearing.personName, revoked: outcome.status == .incarcerated))
         let appearance = PersonRecord.Appearance(docket: hearing.probation.docket + " (PV)", date: currentDate,
                                                  charges: "Probation violation", outcome: outcome.appearance)
         if let index = people.firstIndex(where: { $0.id == hearing.personID }) {
@@ -1980,6 +2015,7 @@ final class GameState: ObservableObject {
         // Testimony the judge sent to the district attorney: the DA's decision, and what comes of it, arrive later.
         if !perjuryReferrals.isEmpty, let judgeName {
             for witness in perjuryReferrals {
+                happened(.perjuryReferral(name: witness.name))
                 pending += Perjury.events(for: witness, in: courtCase, convicted: outcome.convicted,
                                           judgeLast: lastName(judgeName), date: currentDate)
             }
@@ -2020,6 +2056,11 @@ final class GameState: ObservableObject {
             var tally = day.tally ?? CourtDay.Tally()
             if outcome.convicted { tally.convictions += 1 } else { tally.withoutConviction += 1 }
             if activeImposed { tally.active += 1 }
+            let nameBefore = mood.name
+            defer {
+                happened(.verdictEntered(trialsHeard: trialsHeard, convicted: outcome.convicted))
+                if mood.name != nameBefore { happened(.reputation(mood.name)) }
+            }
             if outcome.convicted { weekTally.convictions += 1 } else { weekTally.withoutConviction += 1 }
             if activeImposed { weekTally.active += 1 }
             // The lawyers remember: acquittals and light sentences sit badly with the State, prison terms with the defense.
@@ -2910,6 +2951,7 @@ extension GameState {
         case .scheduled(let id):
             guard let index = scheduled.firstIndex(where: { $0.id == id }) else { return }
             scheduled[index].date = target
+            if matter.kind == .trial { happened(.moved(caption: matter.title, to: target)) }
             scheduled[index].entry.carriedOver = true
             scheduled[index].entry.note = ((scheduled[index].entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces)
             scheduled.sort { $0.date < $1.date }
