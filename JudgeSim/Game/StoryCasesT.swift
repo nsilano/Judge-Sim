@@ -396,7 +396,7 @@ extension StoryCases {
         ],
         ageRange: 44...58, occupations: ["director of nursing"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V}, 88, a resident of a nursing home in {HOOD}, died of sepsis from pressure wounds so deep they exposed bone. She couldn't move on her own. State inspectors found the facility had run nights with one nursing assistant for 42 residents for months. The chart showed {VL} turned every two hours, with initials from assistants; three of them testify they were never on that hall and never signed. {D}, the director of nursing, filled in the entries, the State says, to pass an inspection. {DL} says {D.he} begged the owners for staff in writing, and that the chart entries were \"catching up\" on care {D.he} believed had been given."
+            "On {DATE}, {V}, 88, a resident of a nursing home in {HOOD}, died of sepsis from pressure wounds so deep they exposed bone. She couldn't move on her own. State inspectors found the facility had run nights with one nursing assistant for 42 residents for months. The chart showed {VL} turned every two hours, with initials from assistants; one of them testifies that the assistants were never on that hall and never signed. {D}, the director of nursing, filled in the entries, the State says, to pass an inspection. {DL} says {D.he} begged the owners for staff in writing, and that the chart entries were \"catching up\" on care {D.he} believed had been given."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Falsified Chart", "140 turning entries over six weeks, with initials of assistants who weren't working; handwriting analysis matches {DL}.", .search),

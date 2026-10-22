@@ -79,7 +79,7 @@ enum CounselBrief {
         }
         if let victim = c.victimName { lines.append("Victim: \(victim).") }
         if let report = c.investigation {
-            lines.append("Investigation (\(report.agency), lead \(report.leadInvestigator)): \(report.howIdentified) Not done: \(report.notDone.joined(separator: " "))")
+            lines.append("Investigation (\(report.agency), lead \(report.leadInvestigator)): \(report.howIdentified)" + (report.notDone.isEmpty ? " Nothing obvious was left undone." : " Not done: \(report.notDone.joined(separator: " "))"))
             if !compact {
                 lines.append("Timeline: " + report.timeline.map { "\($0.when): \($0.what)" }.joined(separator: " | "))
                 if !report.lab.isEmpty { lines.append("Lab: " + report.lab.joined(separator: " ")) }

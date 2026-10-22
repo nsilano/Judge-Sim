@@ -328,7 +328,9 @@ enum CaseGenerator {
 
         // Charges. A written case is the same story every time, but how much proof it takes varies, so some
         // stories are strong for the State and some are thin, and the motion to dismiss is a real decision.
-        let shift = t.story != nil ? rng.pick([-3, -2, -1, 0, 0, 1, 2, 3]) : 0
+        // A mix: about 4 in 10 are clearly proven, 4 in 10 are hard calls, and 2 in 10 are clearly too thin to convict.
+        // (A lower threshold is a stronger case for the State; the hidden truth follows the strength.)
+        let shift = t.story != nil ? rng.pick([-4, -3, -3, -2, 0, 0, 0, 1, 3, 4]) : 0
         let primaryThreshold = max(1, t.threshold + shift)
         var charges = [Charge(count: 1, lawID: t.primaryLaw, lesserLawID: t.lesserLaw,
                               specification: fill(t.specification), threshold: primaryThreshold,
@@ -1239,7 +1241,15 @@ enum CaseGenerator {
         if let token = seed.name {
             name = fill(token)
         } else {
-            name = NameBank.person(using: &rng, excluding: &used)
+            // A role that names a woman or a man ("the victim's mother", "{DL}'s brother") gets a name to match.
+            let role = " " + fill(seed.role).lowercased() + " "
+            func says(_ words: [String]) -> Bool { words.contains { role.range(of: "\\b\($0)\\b", options: .regularExpression) != nil } }
+            let female = says(["mother", "sister", "daughter", "wife", "girlfriend", "aunt", "niece", "grandmother", "granddaughter",
+                               "stepmother", "stepdaughter", "woman", "mom", "widow", "fiancée"])
+            let male = says(["father", "brother", "son", "husband", "boyfriend", "uncle", "nephew", "grandfather", "grandson",
+                             "stepfather", "stepson", "man", "dad", "widower", "fiancé"])
+            let gender: Gender? = female && !male ? .female : (male && !female ? .male : nil)
+            name = NameBank.person(using: &rng, excluding: &used, gender: gender)
         }
         var cross = fill(seed.cross)
         var weight = seed.weight

@@ -365,7 +365,7 @@ extension StoryCases {
             notDone: ["The chief deputy's accounts were never subpoenaed."],
             defendantExam: [
                 .direct("Did you take the money?", "\"I used it for investigations. Buy money, informants, overtime for narcotics details. I didn't keep good enough records.\""),
-                .direct("Did you threaten the clerk?", "\"I told her to do her job.\""),
+                .direct("Did you threaten the clerk?", "\"I told the clerk to do the job.\""),
                 .cross("The cabin down payment was three days after a $40,000 withdrawal.", "\"Coincidence. My brother loaned me that money.\""),
                 .cross("Your brother has no record of a loan.", "\"We're family. We don't write it down.\"")
             ],

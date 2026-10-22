@@ -116,14 +116,27 @@ enum Testimony {
         for prefix in ["Yes, ", "Yes. ", "No, ", "No. ", "Yeah, ", "Sure, ", "Correct. ", "That's right. ", "That's true. ", "...", "\u{2026}"] where s.hasPrefix(prefix) {
             s = String(s.dropFirst(prefix.count))
         }
-        if let end = s.range(of: ". ") { s = String(s[..<end.lowerBound]) }
+        // The first sentence, without breaking on an initial ("an R. Smith") or a title ("Dr. Hale").
+        var searchFrom = s.startIndex
+        while let end = s.range(of: ". ", range: searchFrom..<s.endIndex) {
+            let before = s[..<end.lowerBound].split(separator: " ").last.map(String.init) ?? ""
+            if (before.count == 1 && before.uppercased() == before) || ["Mr", "Mrs", "Ms", "Dr", "St", "Jr", "Sr"].contains(before) {
+                searchFrom = end.upperBound
+                continue
+            }
+            s = String(s[..<end.lowerBound])
+            break
+        }
+        // A line that already says "you" can't be turned around without garbling it.
+        if s.lowercased().range(of: "\\byou(r|'re|'ve|'d|'ll)?\\b", options: .regularExpression) != nil { return nil }
         s = s.trimmingCharacters(in: CharacterSet(charactersIn: ".! "))
         for suffix in [", yes", ", no", ", sure", ", I guess"] where s.lowercased().hasSuffix(suffix) {
             s = String(s.dropLast(suffix.count))
         }
         let swap: [String: String] = ["i": "you", "i'm": "you're", "i've": "you've", "i'd": "you'd", "i'll": "you'll", "me": "you",
                                       "my": "your", "mine": "yours", "myself": "yourself", "we": "you", "we're": "you're",
-                                      "we've": "you've", "our": "your", "us": "you", "am": "are", "ourselves": "yourselves"]
+                                      "we've": "you've", "we'd": "you'd", "we'll": "you'll", "our": "your", "us": "you", "am": "are",
+                                      "ourselves": "yourselves"]
         var words: [String] = []
         for raw in s.replacingOccurrences(of: "\u{2019}", with: "'").split(separator: " ") {
             let token = String(raw)
@@ -136,7 +149,8 @@ enum Testimony {
             .replacingOccurrences(of: "you was", with: "you were")
             .replacingOccurrences(of: "you wasn't", with: "you weren't")
         let common = ["the", "a", "an", "it", "it's", "that", "there", "this", "they", "you", "your", "he", "she", "nobody", "none", "not", "never", "maybe", "some", "every", "all"]
-        if let first = sentence.split(separator: " ").first, common.contains(first.lowercased()) {
+        if let first = sentence.split(separator: " ").first,
+           common.contains(first.lowercased()) || common.contains(String(first.lowercased().split(separator: "'").first ?? "")) {
             sentence = sentence.prefix(1).lowercased() + sentence.dropFirst()
         }
         return rng.pick(["Isn't it true that \(sentence)?", "You'd agree that \(sentence)?", "So \(sentence)?",
@@ -647,7 +661,7 @@ extension Testimony {
 
         // Redirect
         var redirect: [(String, String)] = [
-            ("Does anything you were asked on cross change what the evidence showed?", "No. The gaps they pointed to are real, but they don't change what we found."),
+            ("Does anything you were asked on cross change what the evidence showed?", ctx.gaps.isEmpty ? "No. Everything that should have been done was done, and the evidence is what it is." : "No. The points they raised are fair, but they don't change what we found."),
             ("Did you have any reason to cut corners in this case?", "No. It got the same work I'd give any case.")
         ]
         if let top = ctx.strongest {

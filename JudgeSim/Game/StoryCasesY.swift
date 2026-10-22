@@ -213,7 +213,7 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What did you see when you arrived?", "\"The driver of the Mustang doing chest compressions on {VL}, crying.\""),
-                            .cross("Did {DL} say anything?", "\"{D.He} kept saying '{D.he} came out of nowhere, I was going too fast.'\"")
+                            .cross("Did {DL} say anything?", "\"{D.He} kept saying '{V.he} came out of nowhere, I was going too fast.'\"")
                         ])
         ],
         prosecutionTheory: ["{D} announced the race, lined up at the light, and drove 104 mph down a street lined with spectators and workplaces. That's culpable negligence."],

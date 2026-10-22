@@ -389,7 +389,7 @@ extension StoryCases {
             notDone: ["No psychological evaluation was ordered before charging."],
             defendantExam: [
                 .direct("Why didn't you call anyone?", "\"I kept thinking tomorrow. Then it was months.\""),
-                .cross("You signed your mother's name on the form.", "\"My mother's name. She couldn't hold a pen by then.\""),
+                .cross("You signed your mother's name on the form.", "\"My mother's name. She'd been gone for months by then. I kept the house going.\""),
                 .cross("You taped the vents.", "\"Because of the smell. I didn't want the neighbors to know.\"")
             ],
             objections: [

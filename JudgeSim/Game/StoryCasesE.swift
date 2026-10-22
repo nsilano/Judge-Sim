@@ -421,7 +421,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("How did you find the casino video?", "\"Before the retrial I ran {DL}'s name through the casinos' players' card systems. A card in {DL}'s name was used that night. The casino pulled video.\""),
-                            .direct("What did the jail calls show?", "\"{ALT} telling {DL}, three weeks before trial, 'Remember, it was movie night.' {D.he} said 'I know, I know.'\""),
+                            .direct("What did the jail calls show?", "\"{ALT} telling {DL}, three weeks before trial, 'Remember, it was movie night.' {D.He} said 'I know, I know.'\""),
                             .cross("They had movie nights three other weekends that month?", "\"The rental records show that.\""),
                             .cross("'Remember it was movie night' could be a reminder of an honest belief?", "\"It could be. In my experience, it wasn't.\"")
                         ]),

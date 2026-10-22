@@ -605,16 +605,14 @@ enum Investigations {
 
     private static let gapSeeds: [GapSeed] = [
         // Scenes
-        GapSeed(settings: [.scene], origins: [.call, .report], unless: ["surveillance", "footage", "camera"],
-                findings: ["Surveillance video from {NEARBY} was requested {N} days later and had already been recorded over.",
-                           "No one collected camera footage from {NEARBY}, which faces {STREET}.",
-                           "A doorbell camera across {STREET} was noted in the canvass, but the footage was never downloaded."],
-                questions: ["There was a camera at {NEARBY}. Where's that footage?",
-                            "You never got the video from {NEARBY}, did you?",
-                            "Who was responsible for collecting the camera footage near {STREET}?"],
-                answers: ["We asked for it. By the time we followed up, the system had recorded over it.",
-                          "That one slipped. The request went out late and the footage was gone.",
-                          "I noted the camera. Getting the footage didn't happen in time, and I regret that."]),
+        // What the cameras couldn't see, not cameras the police forgot: footage gets pulled.
+        GapSeed(settings: [.scene], origins: [.call, .report], unless: ["surveillance", "footage", "camera", "video"], identity: true,
+                findings: ["Video from {NEARBY} was collected the next morning; the camera faces the lot, and {STREET} is at the edge of the frame.",
+                           "A doorbell camera across {STREET} was downloaded, but the porch light washes out the far side of the street at night."],
+                questions: ["The camera at {NEARBY} doesn't actually show {STREET}, does it?",
+                            "You can't see a face on that doorbell video, can you?"],
+                answers: ["Not all of it. We got everything that system recorded, and it shows what it shows.",
+                          "Not a face, no. It shows the movement and the timing, and that matched the rest of the evidence."]),
         GapSeed(settings: [.scene], identity: true,
                 findings: ["No fingerprints were lifted from {SURFACE}.", "{SURFACE} was never processed for prints or touch DNA."],
                 questions: ["Nobody processed {SURFACE} for fingerprints?", "Did anyone swab or dust {SURFACE}?",
@@ -630,10 +628,6 @@ enum Investigations {
                 answers: ["About {M}. We prioritized the ones with a view.",
                           "We went back the next day for a few. Not all of them.",
                           "We talked to the people closest to it. I won't say it was every door."]),
-        GapSeed(settings: [.scene], origins: [.call], needs: ["phone"],
-                findings: ["A second phone found near {PLACESHORT} was booked into property and never searched."],
-                questions: ["There was a second phone. Did anyone ever search it?", "Whose phone was the second one found that night?"],
-                answers: ["We never established that. It wasn't searched.", "No. We didn't think it was relevant at the time."]),
         GapSeed(settings: [.scene, .drugs, .road], origins: [.call, .stop],
                 findings: ["{OFF}'s handwritten notes from that night were not kept; only the typed report survives.",
                            "The first officer's field notes were discarded after the typed report was written."],
@@ -734,10 +728,6 @@ enum Investigations {
                 questions: ["How much was your informant paid?", "What's your informant's own record?"],
                 answers: ["I'd have to check the file. The informant was paid per buy, which is standard.",
                           "The informant has a record. That's often how informants come to us."]),
-        GapSeed(settings: [.drugs], needs: ["phone"],
-                findings: ["{DL}'s phone was seized but never searched for messages about sales."],
-                questions: ["You had the phone. Where are the texts showing sales?", "Did anyone get a warrant for the phone?"],
-                answers: ["We seized it. A warrant wasn't sought for its contents.", "It wasn't searched. We felt the physical evidence was enough."]),
         // Records
         GapSeed(settings: [.paper], needs: ["account", "invoice", "payroll", "deposit", "transfer", "ledger", "check"],
                 findings: ["No forensic review was done of the records before {EARLY}, the first year charged.",
@@ -949,7 +939,10 @@ enum Investigations {
                 && (!seed.identity || facts.identity)
         }
         let fallback = gapSeeds.filter { $0.settings.isEmpty || $0.settings.contains(facts.setting) }
-        let chosen = rng.pick(fitting.count >= 2 ? fitting : fallback, count: rng.int(2...3))
+        // Most investigations are done properly. Some leave one point for the defense, a few leave two.
+        let roll = rng.int(1...20)
+        let count = roll <= 8 ? 0 : (roll <= 17 ? 1 : 2)
+        let chosen = count == 0 ? [] : rng.pick(fitting.count >= count ? fitting : fallback, count: count)
         let gaps = chosen.map { seed in
             Gap(finding: fill(rng.pick(seed.findings)), question: fill(rng.pick(seed.questions)), answer: fill(rng.pick(seed.answers)))
         }

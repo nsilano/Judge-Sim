@@ -266,8 +266,10 @@ struct InvestigationReportView: View {
             if !report.lab.isEmpty {
                 group("Laboratory work") { BulletList(items: report.lab).font(.callout) }
             }
-            group("Not done") {
-                BulletList(items: report.notDone, symbol: "exclamationmark.circle.fill", color: .orange).font(.callout)
+            if !report.notDone.isEmpty {
+                group("Not done") {
+                    BulletList(items: report.notDone, symbol: "exclamationmark.circle.fill", color: .orange).font(.callout)
+                }
             }
         }
     }

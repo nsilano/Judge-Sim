@@ -253,7 +253,7 @@ extension StoryCases {
                         cross: ["\"{DL} said {D.he} didn't mean to kill.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("When were the searches made?", "\"Three to five weeks before the death. 'How much tetrahydrozoline to kill a man' was on the eighteenth day before.\""),
+                            .direct("When were the searches made?", "\"Two to five weeks before the death. 'How much tetrahydrozoline to kill a man' was on the eighteenth day before.\""),
                             .direct("What did {DL} say about the checks?", "\"That {D.he} was owed it. That {VL} never let {D.him} have money.\""),
                             .cross("{DL} told you {D.he} didn't intend for {VL} to die?", "\"{D.He} said that, after first saying {VL} was suicidal.\""),
                             .cross("{DL} had a history of signing checks from that account?", "\"Some, with permission, while {VL} was alive.\"")
