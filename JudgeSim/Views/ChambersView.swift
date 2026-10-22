@@ -242,9 +242,6 @@ struct ChambersView: View {
                 HStack(alignment: .firstTextBaseline) {
                     SectionTitle(text: "Today's docket", icon: "calendar")
                     Spacer()
-                    Label(CourtCalendar.time(day.clock), systemImage: "clock.fill")
-                        .font(.subheadline.monospacedDigit().weight(.semibold))
-                        .foregroundStyle(Theme.gold)
                 }
                 Text(CourtCalendar.dayTitle(day.date)).font(.system(.title3, design: .serif).weight(.bold))
                 let remaining = day.entries.filter(\.isOpen).count
@@ -258,10 +255,6 @@ struct ChambersView: View {
                           systemImage: "tray.full.fill")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(urgent > 0 ? Theme.bad : Theme.gold)
-                }
-                if CourtCalendar.calendar.component(.hour, from: day.clock) >= 17 && !day.isComplete {
-                    Label("Court is running late. Whatever you don't reach today goes to the next day with room when you adjourn.", systemImage: "moon.fill")
-                        .font(.caption).foregroundStyle(.orange)
                 }
 
                 ForEach(day.entries) { entry in
@@ -289,8 +282,8 @@ struct ChambersView: View {
                                 }
                             }
                             Spacer()
-                            if entry.isOpen {
-                                Text(entry.status == .inProgress ? (entry.resume == nil ? "Start over (+30m)" : "Resume") : "~\(entry.estimatedMinutes / 60 > 0 ? "\(entry.estimatedMinutes / 60)h " : "")\(entry.estimatedMinutes % 60)m")
+                            if entry.isOpen && entry.status == .inProgress {
+                                Text(entry.resume == nil ? "Start over" : "Resume")
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(.secondary)
                             }

@@ -21,7 +21,7 @@ enum CalendarLoad {
         case .light: return "Light"
         case .steady: return "Steady"
         case .busy: return "Busy"
-        case .overbooked: return "Overbooked"
+        case .overbooked: return "Over limit"
         }
     }
 
@@ -41,15 +41,19 @@ extension WeekPlan {
     var load: CalendarLoad {
         if courtDays.isEmpty { return .closed }
         if carryingOver > 0 { return .overbooked }
-        return CalendarLoad(ratio: Double(plannedMinutes) / Double(max(1, capacity)))
+        // How full is counted in trials against your limits, nothing else.
+        return CalendarLoad(ratio: Double(trialsSet) / Double(max(1, cap)))
     }
 
     func sits(_ day: Date) -> Bool { courtDays.contains { CourtCalendar.isSameDay($0, day) } }
 
     func dayLoad(_ day: Date) -> CalendarLoad {
         if !sits(day) { return .closed }
-        if matters(on: day).contains(where: \.carriesOver) { return .overbooked }
-        return CalendarLoad(ratio: load(on: day))
+        let set = matters(on: day).filter { !$0.done }
+        if set.contains(where: \.carriesOver) { return .overbooked }
+        let limit = limit(on: day)
+        let used = set.filter { $0.kind == .trial }.count + set.filter { $0.kind == .hearing }.count
+        return CalendarLoad(ratio: Double(used) / Double(max(1, limit.trials + limit.hearings)))
     }
 }
 
@@ -301,10 +305,8 @@ private struct WeekSummaryCard: View {
             if plan.courtDays.isEmpty {
                 Text("The courthouse is closed all week.").font(.callout)
             } else {
-                ProgressView(value: min(1, Double(plan.plannedMinutes) / Double(max(1, plan.capacity))))
+                ProgressView(value: min(1, Double(plan.trialsSet) / Double(max(1, plan.cap))))
                     .tint(plan.load.color)
-                Text("About \(hoursText(plan.plannedMinutes)) of matters set, with \(hoursText(plan.capacity)) of courtroom time over \(plan.courtDays.count) day\(plan.courtDays.count == 1 ? "" : "s").")
-                    .font(.caption).foregroundStyle(.secondary)
                 Label("\(plan.trialsSet) of \(plan.cap) trial seats taken under your limits", systemImage: "scalemass.fill")
                     .font(.caption)
                 if plan.openSeats > 0 {
@@ -365,10 +367,11 @@ private struct DayDetailCard: View {
                     .font(.callout).foregroundStyle(.secondary)
             } else {
                 let limit = plan.limit(on: day)
-                let minutes = plan.minutesByDay[CourtCalendar.calendar.startOfDay(for: day)] ?? 0
-                Text("Your limit: \(limit.trials) trial\(limit.trials == 1 ? "" : "s") and \(limit.hearings) hearing\(limit.hearings == 1 ? "" : "s")"
-                     + (game.schedule.hasOverride(day) ? " (changed for this day)" : "")
-                     + ". About \(hoursText(minutes)) of the \(hoursText(plan.dayCapacity)) court day." + (load == .overbooked ? " Over your limit." : ""))
+                let set = matters.filter { !$0.done }
+                let trials = set.filter { $0.kind == .trial }.count, hearings = set.filter { $0.kind == .hearing }.count
+                Text("\(trials) of \(limit.trials) trial\(limit.trials == 1 ? "" : "s") and \(hearings) of \(limit.hearings) hearing\(limit.hearings == 1 ? "" : "s") set"
+                     + (game.schedule.hasOverride(day) ? " (limits changed for this day)" : "")
+                     + "." + (load == .overbooked ? " Over your limit." : ""))
                     .font(.caption).foregroundStyle(load == .overbooked ? Theme.bad : .secondary)
                 if matters.isEmpty {
                     Text("Nothing set for this day yet. Set cases from the Awaiting list.")
@@ -470,10 +473,6 @@ private struct MatterRow: View {
                 Image(systemName: icon).foregroundStyle(tint).frame(width: 22)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
-                        if let start = matter.start, !matter.carriesOver {
-                            Text("~" + CourtCalendar.time(start)).font(.caption.monospacedDigit().weight(.semibold)).foregroundStyle(Theme.gold)
-                        }
-                        Text(hoursText(matter.minutes)).font(.caption2).foregroundStyle(.secondary)
                         if case .expected = matter.source { Pill(text: "Expected", color: .secondary) }
                     }
                     Text(matter.title).font(.subheadline.weight(.semibold))
@@ -559,7 +558,7 @@ private struct UpcomingWeeks: View {
 
     private func weekLine(_ plan: WeekPlan) -> String {
         if plan.courtDays.isEmpty { return plan.daysOff.isEmpty ? "Court not sitting" : "Week off" }
-        var parts = ["\(plan.trialsSet)/\(plan.cap) trials", "~\(hoursText(plan.plannedMinutes))"]
+        var parts = ["\(plan.trialsSet)/\(plan.cap) trials"]
         if plan.carryingOver > 0 { parts.append("\(plan.carryingOver) over limit") }
         if !plan.daysOff.isEmpty { parts.append("\(plan.daysOff.count) day\(plan.daysOff.count == 1 ? "" : "s") off") }
         if !plan.holidays.isEmpty { parts.append("\(plan.courtDays.count)-day week") }
