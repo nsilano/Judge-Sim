@@ -307,7 +307,8 @@ extension StoryCases {
             prosecutionOpening: "Six weeks of pressure, fifty-two minutes on the call, and not one call for help.",
             defenseOpening: "A year of {DL} begging {VL} to get help, then two young people both drowning. Cruel words aren't the cause the law requires.",
             prosecutionClosing: "{DL} had the power to stop it with one call, and chose not to.",
-            defenseClosing: "{VL}'s illness came long before {DL}. Causation isn't proven beyond a reasonable doubt."
+            defenseClosing: "{VL}'s illness came long before {DL}. Causation isn't proven beyond a reasonable doubt.",
+            family: "Single, no children. The victim in this case was the defendant's partner."
         )
     )
 
@@ -399,7 +400,8 @@ extension StoryCases {
             prosecutionOpening: "Six minutes. 'I can't breathe,' eleven times. Two minutes after {V} stopped moving. Watch the video.",
             defenseOpening: "A violent detainee, a chaotic extraction, cocaine, and an enlarged heart. The State wants you to see six minutes and stop thinking.",
             prosecutionClosing: "{DL} ignored training {D.he} taught. That's malice in the law's sense.",
-            defenseClosing: "The medical evidence is divided. That's reasonable doubt about causation and intent."
+            defenseClosing: "The medical evidence is divided. That's reasonable doubt about causation and intent.",
+            employer: "Hollis County Detention Center"
         )
     )
 

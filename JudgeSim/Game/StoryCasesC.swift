@@ -201,7 +201,8 @@ extension StoryCases {
             prosecutionOpening: "A happy baby at 7:30. A brain bleed and blood in both eyes by 11:18. Injuries a short fall doesn't cause.",
             defenseOpening: "An older bleed on the scans, a sick baby the night before, and a short fall. The State's certainty isn't shared by the science.",
             prosecutionClosing: "The medical evidence points to violence after drop-off, while the baby was in {DL}'s hands alone.",
-            defenseClosing: "When qualified experts disagree about the cause, that's reasonable doubt."
+            defenseClosing: "When qualified experts disagree about the cause, that's reasonable doubt.",
+            residence: "Runs a licensed home day care out of a house in {HOOD}."
         )
     )
 
@@ -493,7 +494,8 @@ extension StoryCases {
             prosecutionOpening: "A rental in {D}'s name, a one-way trip, a story that didn't match, and enough fentanyl to kill a thousand people.",
             defenseOpening: "{ALT}'s bag, {ALT.his} fingerprints, {ALT.his} record, and {ALT.his} disappearance. {DL} gave a ride.",
             prosecutionClosing: "Knowing possession can be shared. {DL} controlled that car.",
-            defenseClosing: "Proximity isn't knowledge."
+            defenseClosing: "Proximity isn't knowledge.",
+            yearsAtJob: 5
         )
     )
 }

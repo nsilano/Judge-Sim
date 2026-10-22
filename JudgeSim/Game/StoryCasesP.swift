@@ -401,7 +401,9 @@ extension StoryCases {
             defenseOpening: "A shameful affair, and a teenager who killed and now needs someone to blame.",
             prosecutionClosing: "Who put the dog in the basement? Who said 'including me'?",
             defenseClosing: "Every piece of the State's case comes from a killer who earned a deal.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            employer: "Hollis County High School",
+            family: "Widowed, no children. The late spouse is the victim in this case."
         )
     )
 

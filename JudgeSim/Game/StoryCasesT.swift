@@ -187,7 +187,8 @@ extension StoryCases {
             prosecutionClosing: "Premeditation doesn't require malice in the heart. It requires a plan. He had one.",
             defenseClosing: "The law has room for mercy, and this is the case for it.",
             genders: ["D": .male, "V": .female],
-            victim: VictimFacts(occupation: "Retired; homemaker", relationship: "Married to the defendant for sixty-one years.", family: "Married to the defendant for sixty-one years; grown children.")
+            victim: VictimFacts(occupation: "Retired; homemaker", relationship: "Married to the defendant for sixty-one years.", family: "Married to the defendant for sixty-one years; grown children."),
+            family: "Widowed, 2 children, both grown. The late spouse is the victim in this case."
         )
     )
 
@@ -281,7 +282,7 @@ extension StoryCases {
             prosecutionClosing: "The flame was always there. The danger was always known.",
             defenseClosing: "A tragedy isn't always a crime.",
             when: .months([8, 9, 10]),
-            genders: ["V": .male]
+            genders: ["D": .male, "V": .male]
         )
     )
 

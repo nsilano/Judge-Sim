@@ -393,7 +393,9 @@ extension StoryCases {
             defenseOpening: "A confession, a kitchen, and ninety seconds later, a 911 call.",
             prosecutionClosing: "Words alone are never enough provocation. That's the law.",
             defenseClosing: "This was passion, not malice. The verdict that fits is voluntary manslaughter.",
-            victim: VictimFacts(relationship: "Married to the defendant.")
+            victim: VictimFacts(relationship: "Married to the defendant."),
+            family: "Widowed. The late spouse is the victim in this case.",
+            residence: "Lives in the family home on {STREET} in {HOOD}."
         )
     )
 
@@ -489,7 +491,9 @@ extension StoryCases {
             prosecutionOpening: "Forty-three dogs, two rooms of waste, and a warning ignored.",
             defenseOpening: "Nine years, two hundred adoptions, and one person who couldn't say no.",
             prosecutionClosing: "Love doesn't treat infections. {DL} let them suffer.",
-            defenseClosing: "Overwhelmed isn't cruel. The law requires more."
+            defenseClosing: "Overwhelmed isn't cruel. The law requires more.",
+            residence: "Owns a house in {HOOD}, with kennels in the backyard.",
+            yearsAtJob: 9
         )
     )
 }

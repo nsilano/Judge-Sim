@@ -237,7 +237,8 @@ extension StoryCases {
             prosecutionOpening: "Ten blue pills the day before, four on the nightstand, and a toddler who stopped breathing.",
             defenseOpening: "A parent who didn't know, and who saved {D.his} child.",
             prosecutionClosing: "The text says whose pills they were.",
-            defenseClosing: "A houseguest's pills in a houseguest's room. The State hasn't proven {DL} knew."
+            defenseClosing: "A houseguest's pills in a houseguest's room. The State hasn't proven {DL} knew.",
+            residence: "Rents an apartment on {STREET} in {HOOD}."
         )
     )
 
@@ -251,7 +252,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "disorderly", specification: "Disrupted the business of the {HOOD} driver license office by shouting and throwing a clipboard.", chance: 1.0, threshold: 0)
         ],
-        ageRange: 19...60, occupations: ["landscaper", "delivery driver", "unemployed"], hasVictim: true,
+        ageRange: 19...60, occupations: ["landscaper", "unemployed"], hasVictim: true,
         summaries: [
             "On {DATE}, {D} failed the road test at the {HOOD} driver license office for the third time. Back inside, {DL} threw the score clipboard at the counter, then reached over and grabbed examiner {V} by the collar, pushing {V.him} against the wall behind the counter and shouting that {V.he} was \"rigging it.\" A coworker pulled {DL} away. The lobby camera recorded the incident. {DL} says {D.he} grabbed {VL}'s shirt to keep from falling when {D.he} slipped, and that {D.he} never meant to hurt anyone."
         ],
@@ -313,7 +314,8 @@ extension StoryCases {
             prosecutionOpening: "A clipboard thrown, a collar grabbed, and a state worker shoved into a wall.",
             defenseOpening: "Frustration and a wet floor.",
             prosecutionClosing: "People who slip don't shout accusations while they hold on.",
-            defenseClosing: "Three seconds of a stumble, not an assault."
+            defenseClosing: "Three seconds of a stumble, not an assault.",
+            victim: VictimFacts(occupation: "Driver license examiner, N.C. Division of Motor Vehicles")
         )
     )
 

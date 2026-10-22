@@ -161,6 +161,12 @@ struct StoryExtras {
     var employmentEnded = false
     /// Where the defendant goes to school, as the story names it.
     var school: String? = nil
+    /// The defendant's family, home, background and time at the current job, when the story states them
+    /// (tokens allowed). Whatever is set here is what the profile shows, so nothing drawn at random can say otherwise.
+    var family: String? = nil
+    var residence: String? = nil
+    var background: String? = nil
+    var yearsAtJob: Int? = nil
     /// What checking the alibi turns up: records that back it up when the defendant didn't do it, and break it when
     /// the defendant did. Only for cases where a defense witness puts the defendant somewhere else.
     var alibiCheck: AlibiCheck? = nil

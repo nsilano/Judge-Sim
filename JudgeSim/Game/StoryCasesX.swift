@@ -403,7 +403,8 @@ extension StoryCases {
             defenseOpening: "A grieving, mentally ill child who could not face a mother's death.",
             prosecutionClosing: "Grief doesn't sign a dead woman's name.",
             defenseClosing: "Intent to conceal is an element. Illness isn't intent.",
-            genders: ["V": .female]
+            genders: ["V": .female],
+            residence: "Lived in {VL}'s house on {STREET} in {HOOD}."
         )
     )
 }

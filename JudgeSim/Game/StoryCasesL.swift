@@ -192,7 +192,8 @@ extension StoryCases {
             defenseOpening: "A locked door, a grandson's confession, and a grandmother asleep by nine.",
             prosecutionClosing: "{DL} was told, and {DL} did nothing.",
             defenseClosing: "Knowledge is an element. The only person who knew says {DL} didn't.",
-            genders: ["D": .female]
+            genders: ["D": .female],
+            residence: "Owns a house in {HOOD}."
         )
     )
 
@@ -389,7 +390,8 @@ extension StoryCases {
             prosecutionOpening: "A question about the camera, an answer, and a deletion three hours later.",
             defenseOpening: "A bulk clear, a known bug, and seventeen clean years.",
             prosecutionClosing: "Of 215 videos, the one that mattered was gone.",
-            defenseClosing: "A coincidence isn't a crime, and the bug is real."
+            defenseClosing: "A coincidence isn't a crime, and the bug is real.",
+            yearsAtJob: 17
         )
     )
 

@@ -568,6 +568,7 @@ final class GameState: ObservableObject {
             }
             advanceWorld(to: cursor, weekly: newWeek)
             resolveInvestigations(on: cursor)
+            creditWaitingJailTime(through: cursor)
             yearlyEvents(from: previous, to: cursor)
             if newWeek { localPages(weekOf: previous, publishing: cursor) }
             if CourtCalendar.isCourtDay(cursor) {
@@ -1474,6 +1475,29 @@ final class GameState: ObservableObject {
                 }
             }
         }
+    }
+
+    /// The day-by-day loop for matters that are waiting (for a date, or on a later day's calendar): a jailed defendant
+    /// gets that day's credit, and every file reads as of today, so nothing the judge opens is stale.
+    private func creditWaitingJailTime(through date: Date) {
+        let day = CourtCalendar.calendar.startOfDay(for: date)
+        func credit(_ entry: inout DocketEntry) {
+            switch entry.matter {
+            case .trial(var c):
+                // Jail credit for the day, then the case file moves to today: age, record, custody count.
+                creditJailTime(&c, through: day)
+                c.sessionDate = max(c.sessionDate, day)
+                refreshDefendant(&c)
+                entry.matter = .trial(c)
+            case .hearing(var h):
+                if let person = person(h.personID) { h.personAge = person.age(on: day) }
+                entry.matter = .hearing(h)
+            case .calendar:
+                break
+            }
+        }
+        for i in awaiting.indices { credit(&awaiting[i].entry) }
+        for i in scheduled.indices { credit(&scheduled[i].entry) }
     }
 
     /// A defendant held in jail earns credit for every day the case waits to be heard (G.S. 15-196.1).

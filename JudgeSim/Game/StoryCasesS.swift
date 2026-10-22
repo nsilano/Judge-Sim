@@ -101,7 +101,8 @@ extension StoryCases {
             defenseOpening: "A thief, yes. A liar, yes. A murderer? The State can't prove it.",
             prosecutionClosing: "He lied about the one place that mattered.",
             defenseClosing: "No weapon, no blood, no proof. Just a man everyone wants to hate.",
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            family: "Widowed, 1 child. The late spouse is a victim in this case, as is a second son."
         )
     )
 
@@ -195,7 +196,8 @@ extension StoryCases {
             defenseOpening: "A tragedy that began long before these texts, and a teenager who didn't understand.",
             prosecutionClosing: "She was there, by phone, and she sent him back in.",
             defenseClosing: "Cruel words aren't a weapon, and his choice was his own.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            family: "Single, no children. The victim in this case was the defendant's boyfriend."
         )
     )
 
@@ -385,7 +387,8 @@ extension StoryCases {
             prosecutionClosing: "A prepaid phone, a planned pickup, and a claim for victims' money.",
             defenseClosing: "Mental illness doesn't excuse it, but it explains it.",
             when: .thanksgiving,
-            genders: ["D": .female]
+            genders: ["D": .female],
+            family: "Married, 2 children."
         )
     )
 

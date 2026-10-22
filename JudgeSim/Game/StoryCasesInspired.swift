@@ -106,7 +106,8 @@ extension StoryCases {
             defenseOpening: "This is a case about an illness that a doctor's note nine days before called a 'darkness coming for the children.' {DL} asked for help and was told to wait five weeks.",
             prosecutionClosing: "Mental illness is real, and tragic. But knowing that others would call it wrong is knowing it's wrong.",
             defenseClosing: "The defense has shown by the greater weight of the evidence that {DL} was psychotic and could not know right from wrong. The verdict the law provides is not guilty by reason of insanity.",
-            genders: ["D": .female]
+            genders: ["D": .female],
+            family: "Married, 3 children. Two of them are the victims in this case."
         )
     )
 
@@ -410,7 +411,8 @@ extension StoryCases {
             prosecutionOpening: "Nineteen days of lies, searches about making a toddler sleep, a cadaver dog alert, and a tote in a creek.",
             defenseOpening: "No one can say how {KID} died. {DL} lied and hid, and those are crimes. Murder is not proven.",
             prosecutionClosing: "Innocent accidents get a 911 call. Not nineteen days and a creek.",
-            defenseClosing: "The cause of death is undetermined. That is reasonable doubt about murder."
+            defenseClosing: "The cause of death is undetermined. That is reasonable doubt about murder.",
+            family: "Single. The defendant's only child is the victim in this case."
         )
     )
 
