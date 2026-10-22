@@ -27,6 +27,8 @@ enum CaseGenerator {
         var forcedTemplateKeys: [String]? = nil
         var victimOverride: String? = nil
         var incidentDaysAgo: Int? = nil
+        /// The day of the arrest, when the court already knows it (a warrant executed, a first appearance).
+        var arrestOn: Date? = nil
         /// The earlier case a written follow-up refers to.
         var priorOffense: String? = nil
         var priorDate: Date? = nil
@@ -495,7 +497,7 @@ enum CaseGenerator {
         var (investigation, gaps) = Investigations.make(t: t, facts: facts, values: values, incident: incident, sessionDate: context.date,
                                                         detective: detective, officer: officer, evidence: evidence,
                                                         defendant: profiledDefendant, charges: charges, victimName: victimName,
-                                                        year: currentYear, rng: &rng)
+                                                        year: currentYear, arrestOn: context.arrestOn, rng: &rng)
         let sheet = investigation.facts ?? CaseFactSheet(setting: setting, incident: incident, time: values["TIME"],
                                                          place: values["STREET"] ?? "", street: values["STREET"] ?? "",
                                                          town: values["HOOD"] ?? county.seat, arrivalTime: nil, assigned: incident,

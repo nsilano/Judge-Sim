@@ -605,16 +605,46 @@ final class GameState: ObservableObject {
         for item in due {
             var c = item.courtCase
             c.sessionDate = date
-            if var bg = c.background, bg.isJailed {
+            if var bg = c.background, bg.bondStatus == "Not yet arrested." && bg.onRelease == true {
+                bg.bondStatus = "Arrested on \(SentenceFormat.shortDate(item.arrest)) and released on a secured bond."
+                c.background = bg
+            } else if var bg = c.background, bg.isJailed || bg.bondStatus == "Not yet arrested." {
+                bg.onRelease = false
                 bg.custodyDays = 1
                 bg.bondStatus = "Held in the \(county.name) Detention Center since the arrest on \(SentenceFormat.shortDate(item.arrest))."
                 c.background = bg
             }
             post(InvestigationArc.arrestNews(c, on: date, town: item.town, agency: c.investigation?.facts?.agency ?? c.investigatingAgency,
-                                             judge: lastName(judgeName), county: county))
-            awaitCase(c, note: "Arrested on \(SentenceFormat.shortDate(item.arrest)) after an investigation the paper followed from \(item.town).",
+                                             judge: lastName(judgeName), county: county, followed: item.note == nil))
+            awaitCase(c, note: item.note ?? "Arrested on \(SentenceFormat.shortDate(item.arrest)) after an investigation the paper followed from \(item.town).",
                       on: date, earliest: item.ready, reason: "Discovery is still being exchanged")
         }
+    }
+
+    /// A case built around an arrest the court already knows the date of: the incident comes before it, and the
+    /// file's lab work and interviews finish before the first day it could be tried.
+    private func freshCase(on date: Date, arrest: Date, incidentBefore: ClosedRange<Int>, categories: Set<LawCategory>? = nil,
+                           rng: inout SeededRNG, excluding used: inout Set<UUID>) -> CourtCase? {
+        let cal = CourtCalendar.calendar
+        let incident = cal.date(byAdding: .day, value: -rng.int(incidentBefore), to: min(arrest, date)) ?? date
+        let ready = cal.date(byAdding: .day, value: rng.int(42...56), to: max(arrest, date)) ?? date
+        let daysAgo = cal.dateComponents([.day], from: incident, to: ready).day ?? 30
+        guard var c = generateCase(date: ready, rng: &rng, excluding: &used, storySlot: false, categories: categories,
+                                   allowMurder: false, announce: false, incidentDaysAgo: daysAgo, arrestOn: arrest) else { return nil }
+        c.sessionDate = cal.startOfDay(for: date)
+        return c
+    }
+
+    /// A signed warrant is executed a day or so later; the arrest comes then, and the case lands on the waiting list.
+    private func arrestOnWarrant(_ c: CourtCase, note: String, rng: inout SeededRNG) {
+        let cal = CourtCalendar.calendar
+        guard let facts = c.investigation?.facts else {
+            awaitCase(c, note: note, on: currentDate)
+            return
+        }
+        let ready = cal.date(byAdding: .day, value: rng.int(49...63), to: facts.arrest) ?? facts.arrest
+        investigations.append(OpenInvestigation(courtCase: c, incident: cal.startOfDay(for: facts.incident), arrest: cal.startOfDay(for: facts.arrest),
+                                                town: facts.town, offense: InvestigationArc.subject(c), ready: ready, note: note))
     }
 
     /// The morning paper: what the court did yesterday, and the life of the county.
@@ -949,17 +979,26 @@ final class GameState: ObservableObject {
                 // New cases come in when the trial calendar has room for them.
                 let roomForNew = trialsInPipeline < pipelineTarget
                 // A new arrest for conditions of release, and a case to arraign and set for trial.
-                if var c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, allowMurder: false, announce: false) {
+                let held = rng.int(1...3)
+                let arrested = cal.date(byAdding: .day, value: -held, to: date) ?? date
+                if var c = freshCase(on: date, arrest: arrested, incidentBefore: 0...14, rng: &rng, excluding: &usedPeople) {
                     // Arrested days ago and held until this first hearing on conditions of release.
                     if var bg = c.background {
-                        bg.custodyDays = rng.int(1...3)
+                        bg.custodyDays = held
                         bg.onRelease = false
-                        bg.bondStatus = "Held since the arrest pending a bond hearing; in custody for \(bg.custodyDays) days."
+                        bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(arrested)) pending a bond hearing; in custody for \(held) days."
                         c.background = bg
                     }
                     call.matters.append(CalendarCalls.bondMatter(for: c, rng: &rng))
                 }
-                if wantsArraignment && roomForNew, let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, allowMurder: false, announce: false) {
+                let arrestedEarlier = cal.date(byAdding: .day, value: -rng.int(14...45), to: date) ?? date
+                if wantsArraignment && roomForNew, var c = freshCase(on: date, arrest: arrestedEarlier, incidentBefore: 0...20, rng: &rng, excluding: &usedPeople) {
+                    // Held since the arrest, if held at all: the count starts on the arrest date.
+                    if var bg = c.background, bg.isJailed {
+                        bg.custodyDays = max(1, cal.dateComponents([.day], from: arrestedEarlier, to: date).day ?? 1)
+                        bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(arrestedEarlier)); in custody for \(bg.custodyDays) days."
+                        c.background = bg
+                    }
                     call.matters.append(CalendarCalls.arraignmentMatter(for: c))
                 }
                 // Motions for appropriate relief in cases tried here come back to this judge.
@@ -970,7 +1009,17 @@ final class GameState: ObservableObject {
                 // Most weeks an officer brings a search warrant application.
                 if wantsWarrant && roomForNew {
                     let kind = rng.pick([WarrantApplication.Kind.residenceDrugs, .storageStolen, .phoneRecords])
-                    if let c = generateCase(date: date, rng: &rng, excluding: &usedPeople, storySlot: false, categories: kind.categories, allowMurder: false, announce: false) {
+                    // Nobody is arrested yet: the crime is under investigation, and the warrant, if signed, is executed in a day or three.
+                    let execution = cal.date(byAdding: .day, value: rng.int(1...3), to: date) ?? date
+                    if var c = freshCase(on: date, arrest: execution, incidentBefore: 5...30, categories: kind.categories, rng: &rng, excluding: &usedPeople) {
+                        // Not arrested yet. Whether the defendant will be held or bonded out after the arrest is kept
+                        // in onRelease until then.
+                        if var bg = c.background {
+                            bg.onRelease = bg.custodyDays == 0
+                            bg.custodyDays = 0
+                            bg.bondStatus = "Not yet arrested."
+                            c.background = bg
+                        }
                         let w = SearchWarrants.application(for: c, date: date, rng: &rng)
                         call.matters.insert(CalendarCalls.warrantMatter(w, for: c), at: min(1, call.matters.count))
                     }
@@ -1569,7 +1618,7 @@ final class GameState: ObservableObject {
 
     /// Puts the cases behind the calendar call's rulings on a real calendar: this week, a later week, or (after an
     /// order for arrest or a capacity evaluation) whenever the defendant can be brought to court.
-    private func scheduleCalendarCases(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int]) {
+    private func scheduleCalendarCases(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int], dates: [UUID: Date] = [:]) {
         var rng = SeededRNG(seed: seedBase ^ SeededRNG.stableHash(call.id.uuidString))
         let heard = SentenceFormat.shortDate(call.date)
         func later(weeks: Int) -> Date {
@@ -1583,7 +1632,7 @@ final class GameState: ObservableObject {
         func setFor(_ c: CourtCase, weeks: Int, note: String, continuances: Int = 0) {
             let ready = later(weeks: weeks)
             awaitCase(c, note: note, on: call.date, earliest: ready,
-                      reason: weeks <= 2 ? "The parties need time to prepare" : "Not ready before \(SentenceFormat.shortDate(ready))",
+                      reason: weeks <= 2 ? "The parties need time to prepare" : "Discovery is still being exchanged",
                       continuances: continuances)
         }
         /// To be tried now: today, if the day has room under the judge's limits, or the next day that does.
@@ -1678,13 +1727,18 @@ final class GameState: ObservableObject {
                 decideRelease(c, bond: bond, amount: amount, monitored: monitored, condition: condition, heard: heard, date: call.date,
                               rng: &rng, schedule: schedule)
             case .arraignment:
-                let weeks = [2, 5, 10][min(choice, 2)]
-                var setCase = c
-                if weeks == 2 && c.charges.count > 1 && rng.chance(0.6) {
-                    // Too soon for the defense to be ready.
-                    setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
+                if choice == 0, let picked = dates[m.id] {
+                    // The judge picks the day. Too soon, and the defense asks for more time.
+                    var setCase = c
+                    let days = CourtCalendar.calendar.dateComponents([.day], from: call.date, to: picked).day ?? 35
+                    if days < 21 && c.charges.count > 1 && rng.chance(0.6) {
+                        setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
+                    }
+                    awaitCase(setCase, note: "Arraigned on \(heard); pleaded not guilty.", on: call.date)
+                    if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
+                } else {
+                    setFor(c, weeks: 2, note: "Arraigned on \(heard); pleaded not guilty. Trial date to be set.")
                 }
-                setFor(setCase, weeks: weeks, note: "Arraigned on \(heard); pleaded not guilty and set for trial.")
             case .motionForRelief:
                 guard let relief = m.relief else { continue }
                 let options = m.options
@@ -1725,7 +1779,7 @@ final class GameState: ObservableObject {
                                                                                  applied: call.date, target: w.target, place: w.place,
                                                                                  items: w.items, affidavit: w.affidavit, flaw: .none),
                                                               on: c, limited: true, signedBy: rng.pick(NameBank.lastNames), byThisJudge: false)
-                        setFor(rebuilt, weeks: rng.int(6...10), note: "You denied the first warrant application on \(heard); detectives added surveillance and another judge signed a second one.")
+                        arrestOnWarrant(rebuilt, note: "You denied the first warrant application on \(heard); detectives added surveillance and another judge signed a second one.", rng: &rng)
                     } else if w.probableCause {
                         post(NewsItem(date: call.date, kind: .community, headline: "Investigation stalls after warrant denied",
                                       body: "Detectives with the \(w.agency) say an investigation in \(w.place.components(separatedBy: ",").dropFirst().first?.trimmingCharacters(in: .whitespaces) ?? "the county") has stalled after Judge \(judge) declined to sign a search warrant.",
@@ -1734,7 +1788,7 @@ final class GameState: ObservableObject {
                     continue
                 }
                 let executed = SearchWarrants.executed(w, on: c, limited: choice == 1, signedBy: judge)
-                setFor(executed, weeks: rng.int(5...9), note: "Charged after the search warrant you signed on \(heard) was executed.")
+                arrestOnWarrant(executed, note: "Arrested when the search warrant you signed on \(heard) was executed.", rng: &rng)
             case .capacity:
                 switch choice {
                 case 0:
@@ -1864,7 +1918,7 @@ final class GameState: ObservableObject {
         c.defendant.age = person.age(on: c.sessionDate)
     }
 
-    func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:]) {
+    func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], dates: [UUID: Date] = [:]) {
         guard let county, let judgeName, stillOpen(call.id) else { return }
         let result = CalendarCalls.resolve(call, choices: choices, amounts: amounts, judgeName: judgeName, county: county)
         happened(.calendarCall(matters: call.matters.count))
@@ -1909,7 +1963,7 @@ final class GameState: ObservableObject {
             }
         }
         pending.append(contentsOf: result.pending)
-        scheduleCalendarCases(call, choices: choices, amounts: amounts)
+        scheduleCalendarCases(call, choices: choices, amounts: amounts, dates: dates)
         stats.activeSentences += result.activeSentences
         stats.suspendedSentences += result.suspendedSentences
         stats.probationCompleted += result.probationCompleted
@@ -2004,7 +2058,8 @@ final class GameState: ObservableObject {
     /// A new case for the calendar.
     private func generateCase(date: Date, rng: inout SeededRNG, excluding used: inout Set<UUID>, storySlot: Bool = true,
                               categories: Set<LawCategory>? = nil, allowMurder: Bool = true, announce: Bool = true,
-                              followUp: Reoffense? = nil, generic: Bool = false, incidentDaysAgo: Int? = nil) -> CourtCase? {
+                              followUp: Reoffense? = nil, generic: Bool = false, incidentDaysAgo: Int? = nil,
+                              arrestOn: Date? = nil) -> CourtCase? {
         guard let county, let judgeName else { return nil }
         // A written case brings its own defendant; returning defendants come back through calendar matters and follow-ups.
         var returning = followUp.flatMap { person($0.personID) } ?? (storySlot && followUp == nil ? nil : pickReturningDefendant(rng: &rng, date: date))
@@ -2016,6 +2071,7 @@ final class GameState: ObservableObject {
                                             categories: categories, allowMurder: allowMurder)
         context.generic = generic
         context.incidentDaysAgo = incidentDaysAgo
+        context.arrestOn = arrestOn
         if let followUp {
             context.forcedTemplateKeys = followUp.templateKeys
             context.victimOverride = followUp.victimName

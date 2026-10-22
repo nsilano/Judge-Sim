@@ -386,7 +386,7 @@ enum CalendarCalls {
                               summary: "\(d.name) is arraigned on \(counts) count\(counts == 1 ? "" : "s"), led by \(c.charges.first?.law.title.lowercased() ?? "the indictment"), and pleads not guilty. \(jailed ? "\(d.lastName) is in custody." : "\(d.lastName) is out on bond.") Set the trial date.",
                               stateAsk: "The State will be ready in about five weeks; the lab work is back.",
                               defenseAsk: counts > 2 ? "With this many counts we need time for discovery. Ten weeks." : "We'd like five weeks to review discovery.",
-                              options: ["Set the trial for two weeks from now", "Set the trial for five weeks from now", "Set the trial for ten weeks from now"],
+                              options: ["Set the trial date now", "Put it on the waiting list; set the date later"],
                               pendingCase: c)
     }
 

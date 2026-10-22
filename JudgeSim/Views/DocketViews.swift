@@ -144,7 +144,6 @@ private struct AwaitingRow: View {
                     }
                     Label(c.background?.isJailed == true ? "In jail" : "Out on release", systemImage: c.background?.isJailed == true ? "lock.fill" : "figure.walk")
                         .font(.caption2)
-                    Label("~" + hoursText(item.entry.estimatedMinutes), systemImage: "clock").font(.caption2)
                 }
                 .foregroundStyle(Theme.quoteText)
             }
