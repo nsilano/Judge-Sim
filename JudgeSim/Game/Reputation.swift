@@ -88,3 +88,24 @@ enum Reputation {
         return min(0.78, max(0.28, share))
     }
 }
+
+extension Reputation {
+    /// An opening statement, with what the lawyer says first to a judge with this judge's name.
+    static func opening(_ text: String, side: Side, seed: UInt64) -> String {
+        guard let aside = CourthouseMood.current.aside(for: side, closing: false, seed: seed) else { return text }
+        return aside + " " + text
+    }
+
+    /// A closing argument, with what the lawyer says last to a judge with this judge's name.
+    static func closing(_ text: String, side: Side, seed: UInt64) -> String {
+        guard !text.isEmpty, let aside = CourthouseMood.current.aside(for: side, closing: true, seed: seed) else { return text }
+        return text + " " + aside
+    }
+
+    /// Adds a sentence at the end of a quoted statement, inside the quotation marks.
+    static func insideQuote(_ text: String, _ addition: String?) -> String {
+        guard let addition, !addition.isEmpty else { return text }
+        if text.hasSuffix("\"") { return String(text.dropLast()) + " " + addition + "\"" }
+        return text + " " + addition
+    }
+}

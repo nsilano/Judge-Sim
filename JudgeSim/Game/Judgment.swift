@@ -1897,8 +1897,18 @@ enum Judgment {
         }
 
         // What the defendant does next, if the judgment let a guilty person go.
-        pending.append(contentsOf: Consequences.afterJudgment(c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
-                                                              dismissed: dismissed, insanity: insanityAcquittal, judgeLast: judgeLast, date: date, rng: &rng))
+        // What follows in the world: written beats for this case, the victim a year on, the community's reaction.
+        var broughtCase = false
+        if !insanityAcquittal {
+            let aftermath = Aftermath.events(for: c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
+                                             judgeLast: judgeLast, date: date, rng: &rng)
+            pending.append(contentsOf: aftermath.events)
+            broughtCase = aftermath.broughtCase
+        }
+        if !broughtCase {
+            pending.append(contentsOf: Consequences.afterJudgment(c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
+                                                                  dismissed: dismissed, insanity: insanityAcquittal, judgeLast: judgeLast, date: date, rng: &rng))
+        }
 
         // Things that may surface about what really happened
         switch (convicted, truthGuilty) {
@@ -2385,6 +2395,7 @@ enum Judgment {
             if support.contains("grandmother") { who = "\(dl)'s grandmother" }
             else if support.contains("mother") { who = "\(dl)'s mother" }
             else if support.contains("partner") { who = "\(dl)'s partner" }
+            else if support.contains("spouse") { who = "\(dl)'s spouse" }
             else if support.contains("employer") { who = "A former employer of \(dl)'s" }
             else { who = "A relative of \(dl)'s" }
             let words: String
@@ -2393,7 +2404,7 @@ enum Judgment {
                 words = rng.pick(["\"I knew it. I knew the truth would come out.\"", "\"I'm taking my baby home.\"", "\"Thank God. Thank God.\""])
             case (true, true):
                 words = severity > 0
-                    ? rng.pick(["\"Years? For this? I don't understand.\"", "\"The kids won't know their parent when this is over.\"", "\"We'll be there every visiting day. Every one.\""])
+                    ? rng.pick(["\"Years? For this? I don't understand.\"", (c.defendant.profile?.childCount ?? 0) > 0 ? "\"The kids won't know their parent when this is over.\"" : "\"Years. I'll be old when this is over.\"", "\"We'll be there every visiting day. Every one.\""])
                     : rng.pick(["\"We'll be waiting when it's over.\"", "\"It's hard. But it could have been worse, and we know it.\""])
             case (true, false):
                 words = rng.pick(["\"Now the work starts. We'll make sure every appointment gets kept.\"", "\"We're just grateful to have \(dl) home tonight.\"",

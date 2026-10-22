@@ -14,6 +14,31 @@ extension Urgency.Level {
 // MARK: - Cases awaiting a trial date
 
 /// Every case set for trial that has no date yet, most urgent first. The judge sets each one's date.
+/// Crimes the paper is following that haven't led to an arrest. No names: nobody has been charged.
+private struct UnderInvestigation: View {
+    @EnvironmentObject private var game: GameState
+
+    var body: some View {
+        let today = game.today?.date ?? game.currentDate
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Under investigation", systemImage: "magnifyingglass")
+                .font(.subheadline.weight(.semibold))
+            Text("Follow these in the paper. When someone is arrested, the case lands on this list.")
+                .font(.caption).foregroundStyle(.secondary)
+            ForEach(game.investigations) { item in
+                let days = max(0, CourtCalendar.calendar.dateComponents([.day], from: item.incident, to: today).day ?? 0)
+                HStack {
+                    Text(item.offense.prefix(1).uppercased() + String(item.offense.dropFirst()) + " in " + item.town)
+                        .font(.callout)
+                    Spacer()
+                    Text(days == 1 ? "1 day" : "\(days) days").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .card()
+    }
+}
+
 struct AwaitingView: View {
     @EnvironmentObject private var game: GameState
     @State private var setting: AwaitingCase?
@@ -29,6 +54,7 @@ struct AwaitingView: View {
                     Text("Awaiting a trial date").font(.system(.title3, design: .serif).weight(.bold))
                     Text("New indictments, cases set for trial at the calendar call, people charged again and cases sent back by the Court of Appeals all land here. Nothing is tried until you give it a date. Cases left waiting get more urgent, and some waits do real harm.")
                         .font(.caption).foregroundStyle(.secondary)
+                    if !game.awaiting.isEmpty { DocketStats() }
                     if !game.awaiting.isEmpty {
                         Button {
                             Haptics.tap()
@@ -46,6 +72,7 @@ struct AwaitingView: View {
                     Text("Nothing is waiting. New cases come in as the days go by.")
                         .font(.callout).foregroundStyle(.secondary).card()
                 }
+                if !game.investigations.isEmpty { UnderInvestigation() }
                 ForEach(game.awaitingByUrgency) { item in
                     AwaitingRow(item: item, urgency: game.urgency(of: item), today: game.today?.date ?? game.currentDate,
                                 onSet: { setting = item }, onFile: { caseFile = item.courtCase },
@@ -125,6 +152,11 @@ private struct AwaitingRow: View {
                 Label("Ready from \(SentenceFormat.shortDate(earliest))" + (item.earliestReason.map { ": \($0.lowercased())" } ?? ""), systemImage: "hourglass")
                     .font(.caption2).foregroundStyle(.secondary)
             }
+            if let conflicts = item.conflicts, !conflicts.isEmpty {
+                let days = conflicts.keys.compactMap(CourtSchedule.date).sorted().map { $0.formatted(.dateTime.month(.abbreviated).day()) }
+                Label("Conflicts on " + days.joined(separator: ", "), systemImage: "calendar.badge.exclamationmark")
+                    .font(.caption2).foregroundStyle(.orange)
+            }
             ForEach(urgency.reasons, id: \.self) { reason in
                 Text("• " + reason).font(.caption2).foregroundStyle(urgency.level >= .urgent ? Theme.bad : Theme.quoteText)
             }
@@ -162,7 +194,11 @@ private struct SetDateSheet: View {
                         Label("Not ready before \(SentenceFormat.shortDate(earliest))" + (item.earliestReason.map { ": \($0.lowercased())" } ?? ""), systemImage: "hourglass")
                             .font(.caption).foregroundStyle(.secondary)
                     }
-                    DayPickerList(kind: .trial, earliest: item.earliest, count: 40, choice: $choice)
+                    if let conflicts = item.conflicts, !conflicts.isEmpty {
+                        Text("Some days don't work for someone the trial needs. Setting the trial on one of them costs goodwill with that side.")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
+                    DayPickerList(kind: .trial, earliest: item.earliest, count: 40, conflicts: item.conflicts ?? [:], choice: $choice)
                     Button {
                         if let choice {
                             Haptics.gavel()
@@ -364,5 +400,39 @@ private struct WeekdayRow: View {
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 10).fill(Theme.raised.opacity(sits ? 0.7 : 0.3)))
+    }
+}
+
+/// The state of the judge's docket at a glance.
+private struct DocketStats: View {
+    @EnvironmentObject private var game: GameState
+
+    var body: some View {
+        let cal = CourtCalendar.calendar
+        let today = cal.startOfDay(for: game.today?.date ?? game.currentDate)
+        let jailed = game.awaiting.filter { $0.courtCase?.background?.isJailed == true }.count
+        let oldest = game.awaiting.map { cal.dateComponents([.day], from: $0.since, to: today).day ?? 0 }.max() ?? 0
+        let urgent = game.awaiting.filter { game.urgency(of: $0).level >= .urgent }.count
+        let twoWeeks = cal.date(byAdding: .day, value: 14, to: today) ?? today
+        let setSoon = game.scheduled.filter { item in
+            guard case .trial = item.entry.matter else { return false }
+            return item.date <= twoWeeks
+        }.count
+        HStack(spacing: 0) {
+            stat("\(game.awaiting.count)", "waiting")
+            stat("\(jailed)", "in jail", jailed > 0 ? Theme.bad : nil)
+            stat("\(urgent)", "urgent", urgent > 0 ? .orange : nil)
+            stat("\(oldest)d", "oldest")
+            stat("\(setSoon)", "set, 2 wks")
+        }
+        .padding(.vertical, 6)
+    }
+
+    private func stat(_ value: String, _ label: String, _ color: Color? = nil) -> some View {
+        VStack(spacing: 2) {
+            Text(value).font(.headline.monospacedDigit()).foregroundStyle(color ?? Theme.gold)
+            Text(label).font(.caption2).foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }

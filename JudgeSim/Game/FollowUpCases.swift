@@ -10,7 +10,8 @@ enum FollowUpCases {
     static let all: [CaseTemplate] = [
         workplaceVisit, newNumber, parkingLotWatch, notesOnTheCar,
         kitchenAgain, hospitalNight, barParkingLot, occupiedHouse, gasStationKnife, secondCrash, overdoseDeath, newMark,
-        eludingStop, warehouseTheft, carBreakIns
+        eludingStop, warehouseTheft, carBreakIns,
+        harassAgain, assaultAgain, theftAgain, drugsAgain
     ]
 
     /// Stay-away order violations: domestic first, then the rest.
@@ -23,7 +24,8 @@ enum FollowUpCases {
     }
 
     /// New arrests unrelated to the earlier case.
-    static let newCharges = ["story.followup.eludingStop", "story.followup.warehouseTheft", "story.followup.carBreakIns"]
+    static let newCharges = ["story.followup.eludingStop", "story.followup.warehouseTheft", "story.followup.carBreakIns",
+                             "story.followup.theftAgain", "story.followup.drugsAgain"]
 
     // MARK: - Stay-away violations
 

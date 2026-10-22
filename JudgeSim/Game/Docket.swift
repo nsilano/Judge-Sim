@@ -111,6 +111,11 @@ struct AwaitingCase: Identifiable, Codable {
     var earliestReason: String?
     /// Costs of waiting already felt, so each lands once.
     var warnings: [String] = []
+    /// Days that don't work for someone the trial needs, by date ("2026-11-03"), with the reason.
+    var conflicts: [String: String]? = nil
+    /// When the DA's office asked for this case to be set first, and why.
+    var priorityRequested: Date? = nil
+    var priorityReason: String? = nil
 
     var courtCase: CourtCase? {
         if case .trial(let c) = entry.matter { return c }
@@ -180,5 +185,108 @@ struct Urgency {
         default: break
         }
         return Urgency(level: level, score: score, reasons: reasons)
+    }
+}
+
+/// How the lawyers in this courthouse feel about the judge, from what the judge has done. 50 is neutral.
+struct CourthouseMood: Codable, Hashable {
+    var prosecutors = 55
+    var defenders = 55
+
+    /// The mood as it stands, for the lawyers and families whose words are written as a case is called.
+    static var current = CourthouseMood()
+
+    /// The judge's name in the courthouse: lenient when the State is unhappy and the defense pleased, harsh the other way.
+    enum Name { case lenient, harsh, respected, neutral }
+    var name: Name {
+        if prosecutors <= 42 && defenders >= 58 { return .lenient }
+        if defenders <= 42 && prosecutors >= 58 { return .harsh }
+        if prosecutors >= 62 && defenders >= 62 { return .respected }
+        return .neutral
+    }
+
+    /// What a lawyer adds to an opening or closing in front of a judge with this name. Nothing when the judge is unknown.
+    func aside(for side: Side, closing: Bool, seed: UInt64) -> String? {
+        var rng = SeededRNG(seed: seed ^ (side == .prosecution ? 0x0A1 : 0x0D2) ^ (closing ? 0xC10 : 0))
+        guard rng.chance(0.7) else { return nil }
+        switch (name, side) {
+        case (.lenient, .prosecution):
+            return rng.pick(["The State knows this court holds it to every element. We will prove each one.",
+                             "Judge, I know this courtroom gives defendants the benefit of every doubt. This case leaves none to give.",
+                             "We've heard how this court weighs the State's evidence. We'd ask it to weigh this evidence the same way: all of it."])
+        case (.lenient, .defense):
+            return rng.pick(["We're asking the court to do what it has done before: hold the State to its proof.",
+                             "This court has never been afraid to say the State fell short. It has here."])
+        case (.harsh, .defense):
+            return rng.pick(["I know this court's reputation for long sentences, Judge. I'm asking only that it hold the State to its burden first.",
+                             "Defendants in this county are told what happens in this courtroom. I'm asking the court to look at the evidence before it looks at my client.",
+                             "My client was afraid to try this case in front of you, Judge. I said the evidence would decide it. I'm counting on that."])
+        case (.harsh, .prosecution):
+            return rng.pick(["The court has never treated this kind of conduct lightly. The evidence shows why it shouldn't start now.",
+                             "This court knows what accountability looks like. The State is asking for nothing less."])
+        case (.respected, .prosecution):
+            return rng.pick(["We'll be brief, Your Honor. The court knows how to read evidence.", "The State trusts the court to weigh this carefully, as it always does."])
+        case (.respected, .defense):
+            return rng.pick(["We're glad to try this case before a judge who listens.", "This court reads the record. That's all the defense asks."])
+        case (.neutral, _):
+            return nil
+        }
+    }
+
+    /// What a victim's family adds when the judge's name has reached them.
+    func familyPlea(seed: UInt64) -> String? {
+        var rng = SeededRNG(seed: seed ^ 0xFA11)
+        switch name {
+        case .lenient:
+            return rng.chance(0.75) ? rng.pick(["I've read what happens in this courtroom. Please don't let it happen in mine.",
+                                                "People told me this court goes easy. I'm asking you to prove them wrong.",
+                                                "I looked up your other cases, Judge. I'm asking you to see us."]) : nil
+        case .harsh:
+            return rng.chance(0.4) ? rng.pick(["People say you're tough, Judge. Good.", "I know you take cases like this seriously. Thank you for that."]) : nil
+        default:
+            return nil
+        }
+    }
+
+    /// What a defendant adds when the judge's name has reached the jail.
+    func defendantPlea(seed: UInt64) -> String? {
+        var rng = SeededRNG(seed: seed ^ 0xDEF5)
+        switch name {
+        case .harsh:
+            return rng.chance(0.75) ? rng.pick(["Everybody in the jail says you don't give second chances, Judge. I'm asking for one anyway.",
+                                                "I know your reputation. I'm not asking you to change it, just to look at me.",
+                                                "People told me not to bother saying anything in front of you. I'm saying it anyway."]) : nil
+        case .lenient:
+            return rng.chance(0.4) ? rng.pick(["I've heard you give people a chance, Judge. I won't waste it.",
+                                               "They say you listen. I hope that's true today."]) : nil
+        default:
+            return nil
+        }
+    }
+
+    mutating func adjust(prosecutors p: Int, defenders d: Int) {
+        prosecutors = max(5, min(95, prosecutors + p))
+        defenders = max(5, min(95, defenders + d))
+    }
+
+    /// The DA's bargaining: a frustrated office pushes harder for prison; a satisfied one bargains.
+    var prosecutorEdge: Double { Double(55 - prosecutors) / 150 }
+
+    func line(prosecutor name: String) -> String {
+        switch prosecutors {
+        case ..<35: return "\(name), in the hallway: \"We've stopped offering much in your courtroom, Judge. There's no point.\""
+        case ..<50: return "\(name): \"The office thinks you give the defense the benefit of every doubt. We're adjusting.\""
+        case ..<65: return "\(name): \"We know what to expect from you. That's all we ask.\""
+        default: return "\(name): \"Your courtroom runs the way a courtroom should. We bring you our hardest cases gladly.\""
+        }
+    }
+
+    func line(defender name: String) -> String {
+        switch defenders {
+        case ..<35: return "\(name), at the clerk's counter: \"My clients plead out rather than try a case in front of you.\""
+        case ..<50: return "\(name): \"We'll take our chances at trial, Judge, but we're not optimistic.\""
+        case ..<65: return "\(name): \"You listen. My clients can't ask for more than that.\""
+        default: return "\(name): \"Defendants trust they'll get a fair hearing in your courtroom. That's rarer than you'd think.\""
+        }
     }
 }

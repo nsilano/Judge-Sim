@@ -48,16 +48,21 @@ enum Consequences {
             return (c.category == .property ? ["story.followup.occupiedHouse"] : ["story.followup.barParkingLot", "story.followup.occupiedHouse"], false)
         }
         if isDomestic(c) { return (["story.followup.kitchenAgain", "story.followup.hospitalNight"], true) }
-        if c.templateKey.lowercased().contains("stalk") || c.charges.contains(where: { $0.lawID.hasPrefix("stalking") }) {
-            return (["story.followup.hospitalNight"], true)
+        // Harassment comes back as harassment of the same person; it can also turn violent.
+        let harassment = c.templateKey.lowercased().contains("stalk") || c.templateKey.lowercased().contains("tracker")
+            || c.templateKey.lowercased().contains("accounts")
+            || c.charges.contains(where: { ["stalking", "stalkingCourtOrder", "cyberstalking", "communicatingThreats"].contains($0.lawID) })
+        if harassment {
+            return (["story.followup.harassAgain", "story.followup.harassAgain", "story.followup.hospitalNight"].shuffled(), true)
         }
         switch c.category {
-        case .violent: return (["story.followup.barParkingLot"], false)
+        case .violent: return (["story.followup.barParkingLot", "story.followup.assaultAgain"].shuffled(), false)
         case .robbery: return (["story.followup.gasStationKnife"], false)
-        case .property: return (["story.followup.occupiedHouse", "story.followup.carBreakIns"], false)
-        case .drugs: return (["story.followup.overdoseDeath"], false)
+        case .property: return (["story.followup.occupiedHouse", "story.followup.carBreakIns", "story.followup.theftAgain"].shuffled(), false)
+        case .drugs: return (["story.followup.overdoseDeath", "story.followup.drugsAgain"].shuffled(), false)
         case .traffic: return (["story.followup.secondCrash"], false)
-        case .whiteCollar, .cyber: return (["story.followup.newMark"], false)
+        case .whiteCollar: return (["story.followup.newMark", "story.followup.theftAgain"].shuffled(), false)
+        case .cyber: return (["story.followup.newMark"], false)
         default: return (["story.followup.barParkingLot", "story.followup.occupiedHouse"], false)
         }
     }

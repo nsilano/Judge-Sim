@@ -17,6 +17,22 @@ struct DefendantProfile: Codable, Hashable {
     var family: String
     var residence: String
     var income: String
+
+    // The family line is the one record of the defendant's family. Everything the defendant, counsel, or anyone
+    // else says about it reads these, so no line can say otherwise.
+
+    /// The defendant's own children: "no children" is 0, "2 children" is 2.
+    var childCount: Int {
+        if family.contains("no children") { return 0 }
+        guard let match = family.range(of: #"\d+ child"#, options: .regularExpression) else { return 0 }
+        return Int(family[match].prefix { $0.isNumber }) ?? 0
+    }
+    /// Children the defendant is raising who aren't their own: foster children, a niece and nephew.
+    var raisesOthers: Bool { family.contains("Foster parent") || family.contains("Raising a") }
+    /// The first words of the family line: Single, Married, Divorced, Widowed, and so on.
+    var status: String { family.components(separatedBy: ",").first ?? family }
+    var married: Bool { status.hasPrefix("Married") }
+    var partnered: Bool { status.hasPrefix("In a") || status.hasPrefix("Engaged") }
 }
 
 /// One question and answer in open court. An empty question is a narrated moment.

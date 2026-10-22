@@ -661,6 +661,11 @@ enum CaseGenerator {
             let twist = rng.pick(twistPool)
             twistKey = twist.key
             chosenTwist = twist
+            // A twist about the defendant's family is part of the family record.
+            if twist.key == "caregiver", var profile = profiledDefendant.profile {
+                profile.family = "Single, 3 children. Their other parent died last year."
+                profiledDefendant.profile = profile
+            }
             twistText = fill(twist.text).replacingOccurrences(of: "{JAILTIME}", with: jailedTime)
             if let m = twist.mitigating { mitigating.append(fill(m).replacingOccurrences(of: "{JAILTIME}", with: jailedTime)) }
             if let a = twist.aggravating { aggravating.append(fill(a)) }
@@ -745,7 +750,8 @@ enum CaseGenerator {
             background.victimStanceDetail = VictimVoice.position(stance: .wantsLeniency, victim: fill("{VL}"), defendant: fill("{DL}"),
                                                                  category: t.category, died: t.victimDies,
                                                                  child: (t.story?.victim?.age).map { $0 < 16 } ?? false,
-                                                                 restitutionBasis: background.restitutionBasis, rng: &rng)
+                                                                 restitutionBasis: background.restitutionBasis,
+                                                                 cls: LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass, rng: &rng)
         }
         let victimImpact = impactBase.map { VictimVoice.impact($0, stance: background.victimStance, defendant: fill("{DL}"),
                                                                 died: t.victimDies, rng: &rng) }
@@ -782,19 +788,21 @@ enum CaseGenerator {
             prosecutor: "ADA \(prosecutor)",
             defenseAttorney: usePublicDefender ? "\(defenseLawyer), Assistant Public Defender" : "\(defenseLawyer), retained counsel",
             investigatingAgency: detective.agency,
-            prosecutionOpening: fill(t.story?.prosecutionOpening ?? rng.pick(t.prosecutionTheory)),
-            defenseOpening: fill(t.story?.defenseOpening ?? rng.pick(t.defenseTheory)),
+            // The lawyers speak to the judge they have: what the courthouse thinks of this judge colors how they open and close.
+            prosecutionOpening: Reputation.opening(fill(t.story?.prosecutionOpening ?? rng.pick(t.prosecutionTheory)), side: .prosecution, seed: seed),
+            defenseOpening: Reputation.opening(fill(t.story?.defenseOpening ?? rng.pick(t.defenseTheory)), side: .defense, seed: seed),
             // Without a written closing, one is built from the evidence when it's delivered (Allocutions.closing).
-            prosecutionClosing: t.story.map { fill($0.prosecutionClosing) } ?? "",
-            defenseClosing: t.story.map { fill($0.defenseClosing) } ?? "",
+            prosecutionClosing: t.story.map { Reputation.closing(fill($0.prosecutionClosing), side: .prosecution, seed: seed) } ?? "",
+            defenseClosing: t.story.map { Reputation.closing(fill($0.defenseClosing), side: .defense, seed: seed) } ?? "",
             evidence: evidence,
             witnesses: witnesses,
             objections: objections,
             aggravating: aggravating,
             mitigating: mitigating,
-            victimImpact: victimImpact,
+            // A family asking for mercy doesn't also ask the judge to be tough.
+            victimImpact: victimImpact.map { background.victimStance == .wantsLeniency ? $0 : Reputation.insideQuote($0, CourthouseMood.current.familyPlea(seed: seed)) },
             // Cases without a written statement get one built from their facts when the defendant speaks (Allocutions).
-            allocution: t.allocutions.isEmpty ? "" : fill(rng.pick(t.allocutions)),
+            allocution: t.allocutions.isEmpty ? "" : Reputation.insideQuote(fill(rng.pick(t.allocutions)), CourthouseMood.current.defendantPlea(seed: seed)),
             twist: twistText,
             ethics: ethics,
             mood: mood,
@@ -969,7 +977,8 @@ enum CaseGenerator {
             }
             let child = (t.story?.victim?.age).map { $0 < 16 } ?? false
             stanceDetail = VictimVoice.position(stance: stance, victim: fill("{VL}"), defendant: fill("{DL}"), category: t.category,
-                                                died: t.victimDies, child: child, restitutionBasis: basis, rng: &rng)
+                                                died: t.victimDies, child: child, restitutionBasis: basis,
+                                                cls: LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass, rng: &rng)
         } else if t.story != nil && !t.victimImpacts.isEmpty {
             // No single named victim, but people were hurt, and their statements are in the file.
             stance = .wantsAccountability
@@ -1006,16 +1015,22 @@ enum CaseGenerator {
         if age < 50 { plans += ["A job offer from a roofing company in {HOOD}, starting the Monday after sentencing.",
                                 "Enrollment in the welding program at Hollis Community College this spring."] }
         if working { plans.append("Return to work as \(job.withIndefiniteArticle). The employer wrote a letter.") }
-        if age >= 60 { plans.append("Living quietly at home, with a daughter checking in every day.") }
+        let family = defendant.profile
+        let kids = family?.childCount ?? 0
+        if age >= 60 && kids > 0 { plans.append("Living quietly at home, with a grown child checking in every day.") }
         let plan: String? = rng.chance(0.6) ? fill(rng.pick(plans)) : nil
         let indigent = publicDefender ? rng.chance(0.85) : rng.chance(0.2)
         let partnerIsVictim = t.victimDies && t.category == .family
             || ["spouse", "wife", "husband", "partner"].contains { word in t.summaries.contains { $0.contains("{D.his} \(word), {V") } }
         var supporters = ["My client's family and their pastor are in the gallery today.",
                           "A former employer drove in from Raleigh to be here."]
-        if !partnerIsVictim && age < 60 { supporters.append("My client's partner is here, along with my client's children.") }
+        // Only people the profile says exist come to court.
+        let partner = !partnerIsVictim && (family?.married == true || family?.partnered == true)
+        if partner && kids > 0 && age < 60 { supporters.append("My client's \(family?.married == true ? "spouse" : "partner") is here, along with my client's children.") }
+        else if partner { supporters.append("My client's \(family?.married == true ? "spouse" : "partner") is in the gallery today.") }
+        else if kids > 0 && age < 60 { supporters.append("My client's children are here with their grandmother.") }
         if age < 35 { supporters.append("The client's grandmother, who raised them, is in the second row.") }
-        if age >= 60 { supporters.append("My client's grown children are here today.") }
+        if age >= 60 && kids > 0 { supporters.append("My client's grown children are here today.") }
         let support: String? = rng.chance(0.6) ? rng.pick(supporters) : nil
         let discovery: String? = rng.chance(0.25) ? rng.pick([
             "The State Crime Laboratory report arrived late; we turned it over nine days before trial.",
