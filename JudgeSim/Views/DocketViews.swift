@@ -14,6 +14,31 @@ extension Urgency.Level {
 // MARK: - Cases awaiting a trial date
 
 /// Every case set for trial that has no date yet, most urgent first. The judge sets each one's date.
+/// Crimes the paper is following that haven't led to an arrest. No names: nobody has been charged.
+private struct UnderInvestigation: View {
+    @EnvironmentObject private var game: GameState
+
+    var body: some View {
+        let today = game.today?.date ?? game.currentDate
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Under investigation", systemImage: "magnifyingglass")
+                .font(.subheadline.weight(.semibold))
+            Text("Follow these in the paper. When someone is arrested, the case lands on this list.")
+                .font(.caption).foregroundStyle(.secondary)
+            ForEach(game.investigations) { item in
+                let days = max(0, CourtCalendar.calendar.dateComponents([.day], from: item.incident, to: today).day ?? 0)
+                HStack {
+                    Text(item.offense.prefix(1).uppercased() + String(item.offense.dropFirst()) + " in " + item.town)
+                        .font(.callout)
+                    Spacer()
+                    Text(days == 1 ? "1 day" : "\(days) days").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .card()
+    }
+}
+
 struct AwaitingView: View {
     @EnvironmentObject private var game: GameState
     @State private var setting: AwaitingCase?
@@ -47,6 +72,7 @@ struct AwaitingView: View {
                     Text("Nothing is waiting. New cases come in as the days go by.")
                         .font(.callout).foregroundStyle(.secondary).card()
                 }
+                if !game.investigations.isEmpty { UnderInvestigation() }
                 ForEach(game.awaitingByUrgency) { item in
                     AwaitingRow(item: item, urgency: game.urgency(of: item), today: game.today?.date ?? game.currentDate,
                                 onSet: { setting = item }, onFile: { caseFile = item.courtCase },
