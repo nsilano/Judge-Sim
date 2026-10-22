@@ -42,9 +42,7 @@ enum Allocutions {
             wasOnProbation = d.probation != nil || d.priors.contains { $0.sentence.lowercased().contains("probation") }
             custodyDays = c.background?.custodyDays ?? 0
             jailed = c.background?.isJailed ?? false
-            let family = d.profile?.family ?? ""
-            let digits = family.components(separatedBy: CharacterSet.decimalDigits.inverted).compactMap(Int.init)
-            children = family.contains("child") && !family.contains("no children") ? (digits.first ?? 1) : 0
+            children = d.profile?.childCount ?? 0
             occupation = d.occupation.lowercasedPhrase
             unemployed = d.occupation.lowercased().contains("unemployed")
             age = d.age

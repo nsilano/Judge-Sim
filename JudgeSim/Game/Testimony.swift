@@ -373,6 +373,31 @@ enum Testimony {
         return out
     }
 
+    /// The defendant's own account of their family, read from the profile so it never says otherwise.
+    static func familyAnswer(_ p: DefendantProfile, rng: inout SeededRNG) -> String {
+        let kids = p.childCount
+        let numbers = ["", "one", "two", "three", "four", "five", "six"]
+        let count = kids < numbers.count ? numbers[kids] : "\(kids)"
+        let children = kids == 1 ? "a child" : "\(count) kids"
+        var answer: String
+        if p.married { answer = "I'm married." }
+        else if p.status.hasPrefix("Engaged") { answer = "I'm engaged." }
+        else if p.partnered { answer = "I've been with my partner a long time." }
+        else if p.status.hasPrefix("Divorced") { answer = "I'm divorced." }
+        else if p.status.hasPrefix("Separated") { answer = "I'm separated." }
+        else if p.status.hasPrefix("Widowed") { answer = "I lost my spouse." }
+        else { answer = kids > 0 || p.raisesOthers ? "I'm single." : rng.pick(["It's just me right now.", "I'm on my own. My family's nearby."]) }
+        if kids > 0 {
+            answer += " I have \(children). " + (kids == 1 ? rng.pick(["Everything I do is for my child.", "My child is why I'm fighting this."])
+                                                            : rng.pick(["Everything I do is for them.", "They're why I'm fighting this."]))
+        } else if p.raisesOthers {
+            answer += p.family.contains("Foster parent") ? " I'm a foster parent to two teenagers." : " I'm raising my niece and nephew."
+        } else if p.married || p.partnered {
+            answer += " No children."
+        }
+        return answer
+    }
+
     // MARK: Shared pieces
 
     private static func lower(_ s: String) -> String { s.prefix(1).lowercased() + s.dropFirst() }
@@ -1149,10 +1174,8 @@ extension Testimony {
         else { work = "I work as \(withArticle(occupation))." }
         d(rng.pick(["Please tell the court your name and a little about yourself.", "Tell the court about yourself.", "Who are you?"]),
           "\(base.name). I'm \(ctx.defendant.age). " + work + (profile.map { " " + $0.residence.replacingOccurrences(of: "Rents", with: "I rent").replacingOccurrences(of: "Lives", with: "I live").replacingOccurrences(of: "Owns", with: "I own").replacingOccurrences(of: "Has moved", with: "I've moved") } ?? ""))
-        if let family = profile?.family, rng.chance(0.6) {
-            d(rng.pick(["Tell the court about your family.", "Who's at home with you?"]),
-              family.hasPrefix("Married") ? "I'm married." + (family.contains("child") ? " We have kids. They're why I'm fighting this." : "")
-                : family.contains("child") ? "I have kids. Everything I do is for them." : rng.pick(["It's just me right now.", "I'm on my own. My family's nearby."]))
+        if let profile, rng.chance(0.6) {
+            d(rng.pick(["Tell the court about your family.", "Who's at home with you?"]), Self.familyAnswer(profile, rng: &rng))
         }
         if let victim = victim, ctx.facts.mentions(["partner", "spouse", "ex-", "best friend", "neighbor", "coworker", "roommate", "boyfriend", "girlfriend", "husband", "wife"]) {
             d(rng.pick(["How do you know \(victim)?", "What was your relationship with \(victim)?"]),

@@ -491,7 +491,7 @@ enum CalendarCalls {
                         "My client texted me this morning that the car broke down on Highway 17. I've asked for a photo of the tow receipt.",
                         "My client works second shift and may have confused the date. I'd ask for the afternoon to reach them.",
                         "I haven't been able to reach my client in a month. The phone is disconnected. I have nothing to offer the court.",
-                        "My client's child was sent home sick from day care, and there was no one else to pick her up. I'd ask for a new date.",
+                        "My client's ride fell through this morning, and the first bus from Bayard doesn't get in until eleven. I'd ask for a new date.",
                         "My client is in custody in another county on an unrelated matter. I just learned it from the jail roster.",
                         "My client's mother called my office this morning. There may have been a hospital visit. I'd ask for a day to find out.",
                         "Judge, my client told me last week they couldn't afford to miss another day of work. I warned them. I'll leave it to the court."]),

@@ -661,6 +661,11 @@ enum CaseGenerator {
             let twist = rng.pick(twistPool)
             twistKey = twist.key
             chosenTwist = twist
+            // A twist about the defendant's family is part of the family record.
+            if twist.key == "caregiver", var profile = profiledDefendant.profile {
+                profile.family = "Single, 3 children. Their other parent died last year."
+                profiledDefendant.profile = profile
+            }
             twistText = fill(twist.text).replacingOccurrences(of: "{JAILTIME}", with: jailedTime)
             if let m = twist.mitigating { mitigating.append(fill(m).replacingOccurrences(of: "{JAILTIME}", with: jailedTime)) }
             if let a = twist.aggravating { aggravating.append(fill(a)) }
@@ -1010,16 +1015,22 @@ enum CaseGenerator {
         if age < 50 { plans += ["A job offer from a roofing company in {HOOD}, starting the Monday after sentencing.",
                                 "Enrollment in the welding program at Hollis Community College this spring."] }
         if working { plans.append("Return to work as \(job.withIndefiniteArticle). The employer wrote a letter.") }
-        if age >= 60 { plans.append("Living quietly at home, with a daughter checking in every day.") }
+        let family = defendant.profile
+        let kids = family?.childCount ?? 0
+        if age >= 60 && kids > 0 { plans.append("Living quietly at home, with a grown child checking in every day.") }
         let plan: String? = rng.chance(0.6) ? fill(rng.pick(plans)) : nil
         let indigent = publicDefender ? rng.chance(0.85) : rng.chance(0.2)
         let partnerIsVictim = t.victimDies && t.category == .family
             || ["spouse", "wife", "husband", "partner"].contains { word in t.summaries.contains { $0.contains("{D.his} \(word), {V") } }
         var supporters = ["My client's family and their pastor are in the gallery today.",
                           "A former employer drove in from Raleigh to be here."]
-        if !partnerIsVictim && age < 60 { supporters.append("My client's partner is here, along with my client's children.") }
+        // Only people the profile says exist come to court.
+        let partner = !partnerIsVictim && (family?.married == true || family?.partnered == true)
+        if partner && kids > 0 && age < 60 { supporters.append("My client's \(family?.married == true ? "spouse" : "partner") is here, along with my client's children.") }
+        else if partner { supporters.append("My client's \(family?.married == true ? "spouse" : "partner") is in the gallery today.") }
+        else if kids > 0 && age < 60 { supporters.append("My client's children are here with their grandmother.") }
         if age < 35 { supporters.append("The client's grandmother, who raised them, is in the second row.") }
-        if age >= 60 { supporters.append("My client's grown children are here today.") }
+        if age >= 60 && kids > 0 { supporters.append("My client's grown children are here today.") }
         let support: String? = rng.chance(0.6) ? rng.pick(supporters) : nil
         let discovery: String? = rng.chance(0.25) ? rng.pick([
             "The State Crime Laboratory report arrived late; we turned it over nine days before trial.",

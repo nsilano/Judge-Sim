@@ -274,7 +274,7 @@ enum ViolationHearings {
             supervised ? "\(person.lastName) has no car, and the probation office is a 40-minute bus ride each way."
                        : "\(person.lastName) has no car, and the courthouse is a 40-minute bus ride each way.",
             "\(person.lastName)'s treatment provider closed its Hollis County office in the spring.",
-            "\(person.lastName) has been working double shifts to cover rent and child support.",
+            "\(person.lastName) has been working double shifts to cover rent and court costs.",
             "\(person.lastName) was hospitalized for eight days during the reporting period."
         ])
         let explanation = willful
