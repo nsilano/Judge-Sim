@@ -60,7 +60,7 @@ extension StoryCases {
         prosecutionTheory: ["{D} counted the money, signed for it, carried it to the bank alone, and deposited a third of it in {D.his} own account."],
         defenseTheory: ["A volunteer quartermaster with sloppy records and undocumented repairs isn't a thief. The State can't trace a single dollar from the cash box to {DL}."],
         aggravating: ["The offense involved a large monetary loss"],
-        mitigating: ["The defendant has a long record of military and community service", "No prior criminal record"],
+        mitigating: ["The defendant has a long record of public and community service", "No prior criminal record"],
         victimImpacts: ["{V}: \"Those bingo nights paid for wheelchair ramps and funerals. Men I served with went without because of this.\""],
         allocutions: ["\"I gave that post twenty years. I never meant to hurt anybody.\""],
         guiltyTruths: ["{DL}'s home computer held a spreadsheet titled \"Thursday\" tracking the skimmed amount week by week."],
@@ -338,7 +338,8 @@ extension StoryCases {
             prosecutionOpening: "Fentanyl in, saline out, under one login.",
             defenseOpening: "A broken system, not a guilty nurse.",
             prosecutionClosing: "Shared logins don't explain three times the average, every month, on {DL}'s shifts.",
-            defenseClosing: "Records show a login, not a person."
+            defenseClosing: "Records show a login, not a person.",
+            employer: "Hollis Regional Medical Center"
         )
     )
 
@@ -425,7 +426,8 @@ extension StoryCases {
             prosecutionOpening: "{DL}'s blood at the register tells you who was there.",
             defenseOpening: "A stray bullet, a panicked kid, and a partner who traded a story for a deal.",
             prosecutionClosing: "Blood doesn't lie, and the ER story was a lie.",
-            defenseClosing: "Take away {ALT}'s bargained testimony and there's no gun in {DL}'s hand."
+            defenseClosing: "Take away {ALT}'s bargained testimony and there's no gun in {DL}'s hand.",
+            victim: VictimFacts(occupation: "Convenience store clerk")
         )
     )
 }

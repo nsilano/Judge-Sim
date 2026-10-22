@@ -380,7 +380,8 @@ extension StoryCases {
             prosecutionOpening: "A chambered gun, an unlocked drawer, a dozen children, and a safe still in its box.",
             defenseOpening: "A closed door, clear instructions, and a family that lost a child.",
             prosecutionClosing: "Culpable negligence is ignoring a danger anyone could see.",
-            defenseClosing: "{DL} made a terrible mistake, not a crime."
+            defenseClosing: "{DL} made a terrible mistake, not a crime.",
+            residence: "Owns a house on {STREET} in {HOOD}."
         )
     )
 

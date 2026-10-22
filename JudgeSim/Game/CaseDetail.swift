@@ -33,6 +33,16 @@ struct DefendantProfile: Codable, Hashable {
     var status: String { family.components(separatedBy: ",").first ?? family }
     var married: Bool { status.hasPrefix("Married") }
     var partnered: Bool { status.hasPrefix("In a") || status.hasPrefix("Engaged") }
+    /// The job the defendant holds now, if any: not "Unemployed", not time in custody.
+    var currentJob: Job? { jobs.first { $0.current && $0.title != "Unemployed" && $0.title != "In custody" } }
+    /// Whether an occupation is paid work someone can go back to: not a student, retiree, homemaker, or a job held before.
+    static func isWork(_ occupation: String) -> Bool {
+        let l = occupation.lowercased()
+        return !["unemployed", "student", "retired", "former", "stay-at-home", "high school", "senior", "junior", "freshman",
+                 "sophomore", "pledge", "homemaker"].contains(where: l.contains)
+    }
+    /// The family line says someone in the family is the victim in this case.
+    var familyIsVictim: Bool { family.contains("victim in this case") || family.contains("victims in this case") }
 }
 
 /// One question and answer in open court. An empty question is a narrated moment.
@@ -154,7 +164,21 @@ enum Clock {
 enum DefendantProfiles {
 
     private static let employersByKeyword: [(String, [String])] = [
+        ("detention", ["Hollis County Detention Center"]),
         ("sheriff", ["Hollis County Sheriff's Office"]),
+        ("media coordinator", ["Hollis County Schools"]),
+        ("daycare", ["Little Harbor Day Care"]),
+        ("day care", ["Little Harbor Day Care"]),
+        ("fast-food", ["Harbor Burger on Pell Avenue"]),
+        ("fast food", ["Harbor Burger on Pell Avenue"]),
+        ("grocery", ["Bayard Family Grocery", "Wexley Food Mart"]),
+        ("feed store", ["own feed store"]),
+        ("horse", ["self-employed (horse training)"]),
+        ("cell phone", ["Coastal Wireless on Marlowe Boulevard"]),
+        ("phone store", ["Coastal Wireless on Marlowe Boulevard"]),
+        ("truck", ["Tidewater Freight Logistics", "Coastal Carriers Inc."]),
+        ("school bus", ["Hollis County Schools Transportation"]),
+        ("bus driver", ["Hollis County Schools Transportation"]),
         ("restaurant owner", ["own restaurant"]),
         ("pawn", ["own shop"]),
         ("rescue", ["self-employed (dog rescue)"]),
@@ -214,7 +238,7 @@ enum DefendantProfiles {
         ("health", ["Cane Creek Home Care", "Hollis Regional Medical Center"]),
         ("dental", ["Wexley Family Dentistry"]),
         ("warehouse", ["Harborview Distribution Center", "Tidewater Freight Logistics"]),
-        ("driver", ["Tidewater Freight Logistics", "Hollis County Schools Transportation", "Coastal Courier Services"]),
+        ("driver", ["Tidewater Freight Logistics", "Coastal Courier Services"]),
         ("cook", ["The Brickyard Grill", "Pell Avenue Diner", "Harbor House Seafood"]),
         ("bartend", ["The Lantern Row Tavern", "Harbor House Seafood"]),
         ("construction", ["Kestrel Builders", "Dunmore Mills Restoration LLC"]),
@@ -225,10 +249,10 @@ enum DefendantProfiles {
         ("police", ["Port Hollis Police Department"]),
         ("sergeant", ["Port Hollis Police Department"]),
         ("teacher", ["Hollis County Schools"]),
-        ("bus", ["Hollis County Schools Transportation"]),
         ("account", ["Ashby & Greer, CPAs"]),
         ("contractor", ["self-employed"]),
-        ("farm", ["Cane Creek Poultry"]),
+        ("poultry farm", ["Cane Creek Poultry"]),
+        ("farm", ["self-employed (family farm)"]),
         ("mechanic", ["Juniper Court Auto Repair"])
     ]
 
@@ -255,7 +279,15 @@ enum DefendantProfiles {
 
     private static func employer(for title: String, rng: inout SeededRNG) -> String {
         let lower = title.lowercased()
-        for (key, list) in employersByKeyword where lower.contains(key) { return rng.pick(list) }
+        // Whole words only ("bus" is not "business"), and the specific kind of work before the general one,
+        // so a dental office manager works at a dental office, not a store.
+        func matches(_ key: String) -> Bool {
+            lower.range(of: "\\b" + NSRegularExpression.escapedPattern(for: key), options: .regularExpression) != nil
+        }
+        let general: Set<String> = ["manager", "store", "retail", "driver", "student", "college", "health", "contractor", "aide",
+                                    "trainer", "server", "it ", "account", "financial", "construction"]
+        for (key, list) in employersByKeyword where !general.contains(key) && matches(key) { return rng.pick(list) }
+        for (key, list) in employersByKeyword where general.contains(key) && matches(key) { return rng.pick(list) }
         // No employer that obviously fits: a generic one only for generic work, otherwise self-employed.
         return ["worker", "laborer", "associate", "clerk", "helper"].contains(where: lower.contains) ? rng.pick(generalEmployers) : "self-employed"
     }

@@ -95,7 +95,9 @@ extension StoryCases {
             defenseOpening: "One robbery, admitted. Three more, borrowed from the news.",
             prosecutionClosing: "Copycats don't know what the paper didn't print.",
             defenseClosing: "Probably isn't proof beyond a reasonable doubt.",
-            genders: ["D": .male]
+            genders: ["D": .male],
+            victim: VictimFacts(occupation: "Bank teller"),
+            residence: "Lives in a weekly-rate motel in {HOOD}."
         )
     )
 

@@ -488,7 +488,8 @@ extension StoryCases {
             prosecutionOpening: "Seven minutes, no exam, ninety pills, cash. {D} ran a pill mill.",
             defenseOpening: "Injured working people abandoned by every other provider. {DL} treated them.",
             prosecutionClosing: "Prescriptions without medical purpose are distribution.",
-            defenseClosing: "A provider who's lied to isn't a dealer."
+            defenseClosing: "A provider who's lied to isn't a dealer.",
+            employer: "own pain clinic"
         )
     )
 }

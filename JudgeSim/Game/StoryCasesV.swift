@@ -396,7 +396,7 @@ extension StoryCases {
             SecondaryCharge(lawID: "conspiracyRobbery", specification: "Agreed with two others to lure and rob a man through a fake dating profile.", chance: 1.0, threshold: 0),
             SecondaryCharge(lawID: "cardFraud", specification: "Used {V}'s debit card at three ATMs without permission.", chance: 1.0, threshold: 0)
         ],
-        ageRange: 20...26, occupations: ["nail technician", "unemployed"], hasVictim: true,
+        ageRange: 20...26, occupations: ["nail technician"], hasVictim: true,
         summaries: [
             "On {DATE}, {V}, 31, drove to an apartment complex in {HOOD} to meet a woman he'd been messaging on a dating app for two weeks. When he got out of his car, two men put a gun to his head, forced him into the back seat, and drove him to three ATMs over four hours, then left him zip-tied in a field off a dirt road. The profile used photos stolen from a model's Instagram. The State says {D} ran the profile, wrote the messages, and planned the meeting place. {DL}'s phone sent the last message, \"I'm outside, come up,\" and the two men are {D.his} brother and cousin. {DL} says the brother used {D.his} phone and {D.he} never knew what they planned."
         ],
@@ -476,7 +476,8 @@ extension StoryCases {
             defenseOpening: "A shared phone and a cousin who made a deal.",
             prosecutionClosing: "Planning a kidnapping is committing one.",
             defenseClosing: "Using someone's phone doesn't make them guilty.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            employer: "a nail salon in {HOOD}"
         )
     )
 }

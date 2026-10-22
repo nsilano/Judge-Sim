@@ -403,7 +403,8 @@ extension StoryCases {
             defenseOpening: "The call was wrong. The shot was worse, and the shot killed {VL}.",
             prosecutionClosing: "A swatting call works only because it brings guns. It worked.",
             defenseClosing: "An officer's unreasonable choice to fire is the cause of this death.",
-            genders: ["V": .male, "D": .male]
+            genders: ["V": .male, "D": .male],
+            residence: "Lives with family in another state."
         )
     )
 

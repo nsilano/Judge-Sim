@@ -43,8 +43,10 @@ enum Allocutions {
             custodyDays = c.background?.custodyDays ?? 0
             jailed = c.background?.isJailed ?? false
             children = d.profile?.childCount ?? 0
-            occupation = d.occupation.lowercasedPhrase
-            unemployed = d.occupation.lowercased().contains("unemployed")
+            // Work talk follows the profile: a real current job, not a student, retiree, or a job already lost.
+            let job = d.profile?.currentJob
+            occupation = job?.title.lowercased() ?? d.occupation.lowercasedPhrase
+            unemployed = !DefendantProfile.isWork(d.occupation) || (d.profile != nil && job == nil)
             age = d.age
             need = c.background?.treatmentNeed ?? .none
             supportInCourt = c.background?.supportPeople

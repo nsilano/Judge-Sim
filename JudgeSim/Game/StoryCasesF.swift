@@ -289,7 +289,8 @@ extension StoryCases {
             prosecutionOpening: "An envelope 'for keeping things moving,' on camera, and a year of cash deposits.",
             defenseOpening: "A cooperating fraudster who owed {DL} money and needed someone to trade.",
             prosecutionClosing: "The video speaks.",
-            defenseClosing: "The video shows a payment, not a bribe."
+            defenseClosing: "The video shows a payment, not a bribe.",
+            yearsAtJob: 19
         )
     )
 

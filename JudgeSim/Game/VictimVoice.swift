@@ -20,8 +20,16 @@ enum VictimVoice {
             || text.range(of: #"don't want \S+ in (prison|jail)"#, options: .regularExpression) != nil
     }
 
-    static func speaker(victim: String, died: Bool, child: Bool, rng: inout SeededRNG) -> Speaker {
-        if died {
+    static func speaker(victim: String, died: Bool, child: Bool, young: Bool = false, rng: inout SeededRNG) -> Speaker {
+        // A young victim's family is parents and siblings, never the victim's own children.
+        if died && young && !child {
+            return rng.pick([Speaker(name: "\(victim)'s mother", subject: "She", plural: false),
+                             Speaker(name: "\(victim)'s parents", subject: "They", plural: true),
+                             Speaker(name: "\(victim)'s father", subject: "He", plural: false),
+                             Speaker(name: "\(victim)'s sister", subject: "She", plural: false),
+                             Speaker(name: "\(victim)'s family", subject: "They", plural: true)])
+        }
+        if died && !child {
             return rng.pick([Speaker(name: "\(victim)'s family", subject: "They", plural: true),
                              Speaker(name: "\(victim)'s mother", subject: "She", plural: false),
                              Speaker(name: "\(victim)'s sister", subject: "She", plural: false),
@@ -41,8 +49,9 @@ enum VictimVoice {
 
     /// The State's account of the victim's position on the sentence.
     static func position(stance: VictimStance, victim: String, defendant: String, category: LawCategory,
-                         died: Bool, child: Bool, restitutionBasis: String?, cls: NCClass? = nil, rng: inout SeededRNG) -> String {
-        let s = speaker(victim: victim, died: died, child: child, rng: &rng)
+                         died: Bool, child: Bool, restitutionBasis: String?, cls: NCClass? = nil, young: Bool = false,
+                         rng: inout SeededRNG) -> String {
+        let s = speaker(victim: victim, died: died, child: child, young: young, rng: &rng)
         let who = s.name
         let subj = s.subject
         let contact = rng.pick([
@@ -171,6 +180,19 @@ enum VictimVoice {
             break
         }
         return out
+    }
+
+    /// Impact statements that demand punishment, so the closing never turns around and asks for mercy.
+    static func asksHarsh(_ impact: String?) -> Bool {
+        guard let text = impact?.lowercased() else { return false }
+        return ["make them pay", "make him pay", "make her pay", "to rot", "rot in", "never forgive", "the maximum", "lock him", "lock her",
+                "lock them", "locked up for", "throw away the key", "every day the law"].contains { text.contains($0) }
+    }
+
+    /// The State's account when one person who isn't the named victim wrote to the court.
+    static func singlePosition(rng: inout SeededRNG) -> String {
+        rng.pick(["One person this hurt wrote to the court, Judge. The statement is in the sentencing file.",
+                  "There's one statement from someone affected. It's in the file, and it's worth reading before you decide."])
     }
 
     /// The State's account when the people hurt aren't one named victim.

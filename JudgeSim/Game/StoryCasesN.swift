@@ -377,7 +377,8 @@ extension StoryCases {
             prosecutionOpening: "Every round on that set was {DL}'s responsibility. One was live.",
             defenseOpening: "A production that cut corners, a mislabeled box, and a gun handed over without the armorer.",
             prosecutionClosing: "The armorer's one job is no live rounds. That failure killed {VL}.",
-            defenseClosing: "Many failures caused this. Culpable negligence requires more than being the youngest person on set."
+            defenseClosing: "Many failures caused this. Culpable negligence requires more than being the youngest person on set.",
+            victim: VictimFacts(occupation: "Cinematographer")
         )
     )
 

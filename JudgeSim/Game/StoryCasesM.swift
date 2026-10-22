@@ -104,7 +104,8 @@ extension StoryCases {
             prosecutionOpening: "Four patients, one needle, and one nurse on every shift.",
             defenseOpening: "A hospital with shared badges, too few nurses, and a need for someone to blame.",
             prosecutionClosing: "The insulin came from a needle, the needle came from {DL}'s badge, and the records were erased by {DL}'s login.",
-            defenseClosing: "Opportunity isn't proof. Nobody saw anything, and the badges were everyone's."
+            defenseClosing: "Opportunity isn't proof. Nobody saw anything, and the badges were everyone's.",
+            employer: "Hollis Regional Medical Center"
         )
     )
 
@@ -207,7 +208,8 @@ extension StoryCases {
             prosecutionClosing: "Three women, one man's DNA, and nine years of {D.him} reading about it at night.",
             defenseClosing: "New science deserves skepticism when a life is on the line.",
             when: .yearsAgo(13),
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            family: "Married, 2 children."
         )
     )
 
@@ -508,7 +510,8 @@ extension StoryCases {
             defenseOpening: "A crime this terrible demands certainty. Touch DNA isn't certainty.",
             prosecutionClosing: "Twelve visits, one sheath, and two dark hours.",
             defenseClosing: "Three men in that house are still unknown. The State stopped looking.",
-            genders: ["D": .male]
+            genders: ["D": .male],
+            school: "East Carolina University (graduate program in criminology)"
         )
     )
 }

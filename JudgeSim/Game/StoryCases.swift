@@ -521,7 +521,7 @@ enum StoryCases {
             SecondaryCharge(lawID: "maintainingDwelling", specification: "Kept and maintained the apartment on {STREET} for keeping and selling controlled substances.", chance: 1.0, threshold: 3),
             SecondaryCharge(lawID: "possParaphernalia", specification: "Possessed a digital scale and baggies for packaging controlled substances.", chance: 1.0, threshold: 2)
         ],
-        ageRange: 21...34, hasVictim: false,
+        ageRange: 21...34, occupations: ["warehouse worker"], hasVictim: false,
         summaries: [
             "On {DATE}, narcotics detectives executed a search warrant at a three-bedroom apartment on {STREET} in {HOOD}, leased to {D} and shared with two roommates. In a shoebox on the top shelf of the hall closet they found 31 knotted baggies of cocaine totaling 22.4 grams and $1,840 in cash; a digital scale was in a kitchen drawer. {DL} was the only person home. One roommate, {ALT}, who has a prior conviction for selling cocaine, moved out two days later. {DL}, a warehouse forklift operator, says the closet was shared and the box wasn't {D.hers}."
         ],
@@ -614,7 +614,9 @@ enum StoryCases {
             prosecutionOpening: "A shoebox of cocaine packaged for sale, in {DL}'s apartment, in {D.his} size, with texts on {D.his} phone that read like orders. The State will prove {D} possessed it to sell it.",
             defenseOpening: "Three people shared that hallway closet. One had a record for selling cocaine and moved out two days later. The prints on the box aren't {DL}'s, and nobody ever checked whether they were that roommate's.",
             prosecutionClosing: "Possession can be shared. {DL} controlled that apartment, and the texts show {D.he} was dealing. The State has proven intent to sell.",
-            defenseClosing: "Constructive possession in a shared space needs more than a lease. The State had the means to find out whose prints were on that box and chose not to. That's reasonable doubt."
+            defenseClosing: "Constructive possession in a shared space needs more than a lease. The State had the means to find out whose prints were on that box and chose not to. That's reasonable doubt.",
+            employer: "Harborview Distribution Center",
+            yearsAtJob: 3
         )
     )
 
@@ -1069,7 +1071,8 @@ enum StoryCases {
             defenseClosing: "The medical examiner can't tell you intent. The gunsmith and the lab say this gun could fire on its own. That's reasonable doubt about murder of any degree.",
             when: .months([11, 12, 1]),
             genders: ["D": .male],
-            victim: VictimFacts(occupation: "Business owner", relationship: "The defendant's business partner of eleven years.")
+            victim: VictimFacts(occupation: "Business owner", relationship: "The defendant's business partner of eleven years."),
+            yearsAtJob: 11
         )
     )
 

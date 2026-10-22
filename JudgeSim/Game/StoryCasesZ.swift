@@ -15,7 +15,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "felonyLarceny", specification: "Stole oxycodone and hydrocodone tablets and $340 in cash from {PHARM}, taken pursuant to a breaking or entering.", chance: 1.0, threshold: 0)
         ],
-        ageRange: 22...40, occupations: ["roofer", "unemployed", "landscaper"], hasVictim: true,
+        ageRange: 22...40, occupations: ["roofer"], forcedPriorOffenses: ["Breaking or Entering@5"], hasVictim: true,
         summaries: [
             "At 3:20 a.m. on {DATE}, the alarm at {PHARM} in {HOOD} went off. Deputies found the back door pried open and the Schedule II safe emptied of about 900 oxycodone and hydrocodone tablets. A latex glove dropped by the door held DNA matching {D}, whose profile was in the state database from a prior conviction. A muddy shoe print on the counter matched the tread of work boots seized from {DL}'s truck. {V}, the pharmacist-owner, says the safe's code was known only to staff, but the safe had been left unlocked that night. {DL}, who had roofed the pharmacy three months earlier, says the glove must have been left during that job."
         ],
@@ -78,7 +78,9 @@ extension StoryCases {
             prosecutionOpening: "A glove with {DL}'s DNA, dropped at the door that was pried open.",
             defenseOpening: "A roofer's glove from a roofing job.",
             prosecutionClosing: "The floor is mopped every night. That glove was dropped the night of the burglary.",
-            defenseClosing: "DNA tells you whose glove it is, not when it got there."
+            defenseClosing: "DNA tells you whose glove it is, not when it got there.",
+            victim: VictimFacts(occupation: "Pharmacist and owner of the pharmacy"),
+            employer: "self-employed (roofing crew)"
         )
     )
 
@@ -319,7 +321,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "felonyLarceny", specification: "Stole two televisions, a laptop, and jewelry valued at more than $1,000 from the dwelling of {V}.", chance: 1.0, threshold: 0)
         ],
-        ageRange: 23...45, occupations: ["cleaning contractor", "house cleaner", "property maintenance worker"], hasVictim: true,
+        ageRange: 23...45, occupations: ["cleaning contractor", "house cleaner"], hasVictim: true,
         summaries: [
             "{V} owns a beach house in {HOOD} that is rented weekly in season and sits empty in winter. At 11:52 p.m. on {DATE}, {V.his} doorbell camera recorded a person in a dark jacket opening the side door with a key-shaped object and going inside. Two televisions, a laptop, and jewelry were taken. {D}, whose company cleaned the house between rentals, had a key code to the lockbox. Two days later the laptop was sold at a pawn shop under {DL}'s name. {DL} says {D.he} bought the laptop from a stranger at a flea market and never went to the house that night."
         ],
@@ -382,7 +384,8 @@ extension StoryCases {
             defenseOpening: "A shared code and a flea market purchase.",
             prosecutionClosing: "Recent possession of stolen property, plus the code, is proof of the break-in.",
             defenseClosing: "The face on the camera is never seen. Three people had that code.",
-            when: .months([1])
+            when: .months([1]),
+            employer: "own cleaning company"
         )
     )
 }

@@ -43,13 +43,23 @@ enum Aftermath {
 
     /// Everything that follows this judgment. Returns the events and whether a written beat already brought a new case,
     /// so the general reoffense roll doesn't bring a second one.
-    static func events(for c: CourtCase, convicted: Bool, active: Bool, judgeLast: String, date: Date,
+    static func events(for c: CourtCase, convicted: Bool, active: Bool, judgeLast: String, date: Date, dismissed: Bool = false,
                        rng: inout SeededRNG) -> (events: [PendingEvent], broughtCase: Bool) {
         let d = c.defendant
         let trigger = trigger(convicted: convicted, actuallyGuilty: c.truth.actuallyGuilty, active: active)
         let cal = CourtCalendar.calendar
         func later(_ days: ClosedRange<Int>) -> Date { cal.date(byAdding: .day, value: rng.int(days), to: date) ?? date }
         func fill(_ text: String) -> String {
+            var text = text
+            // A case the judge dismissed was never decided by a verdict; the beats say so.
+            if dismissed {
+                for (from, to) in [("acquitted by Judge {JUDGE}", "whose case Judge {JUDGE} dismissed"),
+                                   ("Judge {JUDGE} acquitted {DL}", "Judge {JUDGE} dismissed the case against {DL}"),
+                                   ("Judge {JUDGE} acquitted {D}", "Judge {JUDGE} dismissed the case against {D}"),
+                                   ("acquittal", "dismissal"), ("acquitted", "cleared")] {
+                    text = text.replacingOccurrences(of: from, with: to)
+                }
+            }
             var out = text.replacingOccurrences(of: "{D}", with: d.name).replacingOccurrences(of: "{DL}", with: d.lastName)
                 .replacingOccurrences(of: "{JUDGE}", with: judgeLast)
             if let v = c.victimName {
@@ -106,6 +116,22 @@ enum Aftermath {
                                                                                   "Courthouse talk turns to Judge \(judgeLast)'s ruling"]),
                                                               body: reaction(c, trigger: trigger, judgeLast: judgeLast, rng: &rng),
                                                               docket: c.docket, prominence: 1)))
+        }
+        // After a dismissal there was no verdict; every line the paper runs says so.
+        if dismissed {
+            func ruled(_ text: String) -> String {
+                var text = text
+                for (from, to) in [("Not guilty doesn't mean innocent", "A dismissal doesn't mean innocent"), ("the acquittal", "the dismissal"),
+                                   ("acquittal", "dismissal"), ("acquitted", "cleared"), ("After the verdict", "After the ruling"),
+                                   ("'s verdict", "'s ruling"), ("the verdict", "the ruling")] {
+                    text = text.replacingOccurrences(of: from, with: to)
+                }
+                return text
+            }
+            for i in out.indices {
+                out[i].news.headline = ruled(out[i].news.headline)
+                out[i].news.body = ruled(out[i].news.body)
+            }
         }
         return (out, broughtCase)
     }

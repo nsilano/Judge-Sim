@@ -98,7 +98,8 @@ extension StoryCases {
             defenseOpening: "A steep staircase, a terrible accident, and an investigation that decided the answer first.",
             prosecutionClosing: "Stairs don't swing. Someone did.",
             defenseClosing: "No weapon, no fracture, no proof. A fall is still a fall.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            family: "Widowed, no children. The late spouse is the victim in this case."
         )
     )
 
@@ -106,7 +107,7 @@ extension StoryCases {
 
     static let arsenicWidow = CaseTemplate(
         key: "story.arsenicWidow", category: .violent,
-        headlines: ["Minister Survives Arsenic Poisoning; Fiancée Charged", "Exhumation Finds Arsenic in Two Earlier Deaths"],
+        headlines: ["Minister Survives Arsenic Poisoning; Wife Charged", "Exhumation Finds Arsenic in Two Earlier Deaths"],
         primaryLaw: "murder1", lesserLaw: "murder2", threshold: 11, lesserThreshold: 9,
         specification: "With premeditation and deliberation, killed {VIC2}, the defendant's former boyfriend, by poisoning him with arsenic over several months.",
         secondary: [
@@ -198,7 +199,9 @@ extension StoryCases {
             defenseOpening: "A caring woman, a contaminated house, and no one who ever saw her do it.",
             prosecutionClosing: "Two men. Same poison. Same woman. Same payout.",
             defenseClosing: "Suspicion stacked on suspicion is still not proof.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            victim: VictimFacts(occupation: "Baptist minister"),
+            family: "Married. The spouse is the alleged victim in this case; a former partner of twelve years is the other."
         )
     )
 

@@ -391,7 +391,8 @@ extension StoryCases {
             defenseOpening: "An old neighbor, a real property dispute, and an angry voicemail followed by a lawyer.",
             prosecutionClosing: "A reasonable person hears that message and fears for their life.",
             defenseClosing: "Ugly words, real grievance, no true threat.",
-            victim: VictimFacts(harm: ["Not physically hurt. Had an alarm system installed and stopped walking alone at night."])
+            victim: VictimFacts(harm: ["Not physically hurt. Had an alarm system installed and stopped walking alone at night."]),
+            family: "Widowed."
         )
     )
 

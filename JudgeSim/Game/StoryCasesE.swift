@@ -476,7 +476,8 @@ extension StoryCases {
             prosecutionOpening: "Under oath, {D} said 'home all night.' The casino video says otherwise.",
             defenseOpening: "A false memory from a hidden addiction isn't a knowing lie.",
             prosecutionClosing: "The jail call shows the story was rehearsed.",
-            defenseClosing: "The State must prove {DL} knew it was false."
+            defenseClosing: "The State must prove {DL} knew it was false.",
+            family: "In a long-term relationship, no children."
         )
     )
 }

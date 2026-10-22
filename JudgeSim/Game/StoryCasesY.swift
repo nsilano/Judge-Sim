@@ -161,7 +161,7 @@ extension StoryCases {
             defenseOpening: "A father and a son in danger.",
             prosecutionClosing: "Defense of another allows reasonable force against the attacker, not a chair swung into a crowd.",
             defenseClosing: "{DL} believed {D.his} son was in danger, and that belief was reasonable.",
-            genders: ["V": .male]
+            genders: ["D": .male, "V": .male]
         )
     )
 

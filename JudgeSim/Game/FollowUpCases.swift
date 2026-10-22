@@ -646,6 +646,7 @@ enum FollowUpCases {
             defenseOpening: "A covered face and a common sweatshirt.",
             prosecutionClosing: "{V.He} didn't hesitate in the lineup.",
             defenseClosing: "Certainty isn't accuracy.",
+            residence: "Shares an apartment with a roommate in {HOOD}.",
             alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Phone and Streaming Records", detail: "{DL}'s phone stayed on the apartment's Wi-Fi through the whole evening and streamed the second half of the game, start to finish, during the time of the robbery.", kind: .digital),
                                    breaks: AlibiCheck.Finding(title: "Phone Location Records", detail: "{DL}'s phone left the apartment's Wi-Fi at halftime, connected to the tower beside the gas station at the time of the robbery, and was back home twenty minutes later.", kind: .digital))
         )
@@ -778,7 +779,8 @@ enum FollowUpCases {
             prosecutionOpening: "Two blue pills for forty dollars, and a twenty-two-year-old who never woke up.",
             defenseOpening: "Other sellers, the same pills, and a lot of assumptions.",
             prosecutionClosing: "The pills beside {V.him} match the pills in {D.his} apartment.",
-            defenseClosing: "Matching batches don't tell you who handed {V.him} those two."
+            defenseClosing: "Matching batches don't tell you who handed {V.him} those two.",
+            residence: "Rents an apartment on {STREET} in {HOOD}."
         )
     )
 

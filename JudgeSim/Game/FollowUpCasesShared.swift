@@ -212,7 +212,9 @@ extension FollowUpCases {
             prosecutionOpening: "A register that always balanced, and a cashier who knew why.",
             defenseOpening: "A shared login and two seconds of video. That's the State's case, and the earlier case is doing the rest.",
             prosecutionClosing: "Forty-seven to six. The login, the video, and the pattern all point one way.",
-            defenseClosing: "If the voids happened when {DL} wasn't there, the State never checked."
+            defenseClosing: "If the voids happened when {DL} wasn't there, the State never checked.",
+            employer: "{V}'s farm supply store in {HOOD}",
+            employmentEnded: true
         )
     )
 

@@ -1901,7 +1901,7 @@ enum Judgment {
         var broughtCase = false
         if !insanityAcquittal {
             let aftermath = Aftermath.events(for: c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
-                                             judgeLast: judgeLast, date: date, rng: &rng)
+                                             judgeLast: judgeLast, date: date, dismissed: dismissed, rng: &rng)
             pending.append(contentsOf: aftermath.events)
             broughtCase = aftermath.broughtCase
         }
@@ -2266,7 +2266,12 @@ enum Judgment {
         let ada = c.prosecutor
         let da = rng.chance(c.mediaAttention >= 2 ? 0.7 : 0.3) ? "District Attorney \(county.districtAttorney)" : ada
         let dl = c.defendant.lastName
-        let job = c.defendant.profile?.jobs.first(where: { $0.current })
+        // A real job the defendant still holds, and one a conviction doesn't end on its own.
+        let job = c.defendant.profile?.jobs.first { job in
+            let text = (job.title + " " + job.employer).lowercased()
+            return job.current && job.title != "Unemployed" && job.title != "In custody"
+                && !["police", "sheriff", "detention", "officer", "school", "day care", "daycare", "teacher", "nurs", "pharmac", "bank", "financial"].contains(where: text.contains)
+        }
         let topic: String
         switch c.category {
         case .violent, .robbery: topic = rng.pick(["violence in our community", "the people who were hurt", "public safety"])
@@ -2404,7 +2409,7 @@ enum Judgment {
                 words = rng.pick(["\"I knew it. I knew the truth would come out.\"", "\"I'm taking my baby home.\"", "\"Thank God. Thank God.\""])
             case (true, true):
                 words = severity > 0
-                    ? rng.pick(["\"Years? For this? I don't understand.\"", (c.defendant.profile?.childCount ?? 0) > 0 ? "\"The kids won't know their parent when this is over.\"" : "\"Years. I'll be old when this is over.\"", "\"We'll be there every visiting day. Every one.\""])
+                    ? rng.pick(["\"Years? For this? I don't understand.\"", (c.defendant.profile?.childCount ?? 0) > 0 && c.defendant.profile?.familyIsVictim != true ? "\"The kids won't know their parent when this is over.\"" : "\"Years. I'll be old when this is over.\"", "\"We'll be there every visiting day. Every one.\""])
                     : rng.pick(["\"We'll be waiting when it's over.\"", "\"It's hard. But it could have been worse, and we know it.\""])
             case (true, false):
                 words = rng.pick(["\"Now the work starts. We'll make sure every appointment gets kept.\"", "\"We're just grateful to have \(dl) home tonight.\"",

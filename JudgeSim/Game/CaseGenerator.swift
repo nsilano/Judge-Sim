@@ -248,7 +248,13 @@ enum CaseGenerator {
                                               county: rng.pick(GenericPools.otherCounties),
                                               sentence: "6–17 months active"), at: 0)
             }
-            let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(BackgroundLines.pick(age: age, occupation: occupation, used: context.usedBackgrounds, towns: county.towns, rng: &rng))
+            // A written case's defendant gets the background the story gives, or a plain one; a random life story
+            // could contradict what the case says (military service, a divorce, a layoff, a prison GED).
+            let backgroundLine = t.story.map { story in
+                story.background ?? rng.pick(["Grew up in {HOOD}.", "Has lived in {HOOD} for most of the last decade.",
+                                              "Raised in {HOOD}.", "Moved to {HOOD} as a teenager and stayed."])
+            } ?? BackgroundLines.pick(age: age, occupation: occupation, used: context.usedBackgrounds, towns: county.towns, rng: &rng)
+            let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(backgroundLine)
             defendant = Defendant(personID: UUID(), name: name, age: age, occupation: occupation.capitalizedFirst,
                                   background: background, priors: priors, probation: nil, history: [])
         }
@@ -465,6 +471,20 @@ enum CaseGenerator {
                 }
             }
             if let school = story.school.map({ fill($0) }) { profile.education = "Currently enrolled at \(school)." }
+            if let family = story.family.map({ fill($0) }) { profile.family = family }
+            if let residence = story.residence.map({ fill($0) }) { profile.residence = residence }
+            if let years = story.yearsAtJob, let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" }) {
+                let start = currentYear - years
+                profile.jobs[i].years = "\(start)–present"
+                // Earlier jobs end before this one began.
+                profile.jobs.removeAll { job in !job.current && (Int(job.years.prefix(4)) ?? 0) >= start }
+                for j in profile.jobs.indices where !profile.jobs[j].current {
+                    let parts = profile.jobs[j].years.components(separatedBy: "–")
+                    if parts.count == 2, let first = Int(parts[0]), let end = Int(parts[1].prefix(4)), end > start {
+                        profile.jobs[j].years = "\(first)–\(start)"
+                    }
+                }
+            }
             profiledDefendant.profile = profile
         }
         let factText = (t.summaries.map { fill($0) } + charges.map(\.specification) + evidence.map { $0.title + ". " + $0.detail }
@@ -631,7 +651,8 @@ enum CaseGenerator {
         let hasPriors = !defendant.priors.isEmpty
         let aboutRecord: (String) -> Bool = { text in
             let l = text.lowercased()
-            return l.contains("record") || l.hasPrefix("prior") || l.contains("first offense") || l.contains("first-time")
+            return l.contains("record") || l.hasPrefix("prior") || l.hasPrefix("no prior") || l.contains("first offense") || l.contains("first-time")
+                || l.contains("no incidents")
         }
         let aggravatingPool = t.aggravating.filter { hasPriors || !aboutRecord($0) }
         let mitigatingPool = t.mitigating.filter { !hasPriors || !aboutRecord($0) }
@@ -645,7 +666,7 @@ enum CaseGenerator {
         } else {
             mitigating.removeAll(where: aboutRecord)
         }
-        if !defendant.occupation.lowercasedPhrase.contains("unemployed") && rng.chance(0.5) {
+        if DefendantProfile.isWork(defendant.occupation) && profiledDefendant.profile?.currentJob != nil && rng.chance(0.5) {
             mitigating.append("The defendant has a positive employment history and is gainfully employed")
         }
         var mood = rng.pick(t.moods)
@@ -745,13 +766,30 @@ enum CaseGenerator {
                                         suppressionMotion: motions.contains { [MotionKind.suppressSearch, .suppressStatement, .suppressIdentification].contains($0.kind) },
                                         rng: &rng)
         // A statement asking for mercy means the family wants leniency, whatever else was drawn.
+        let victimAgeForVoice = t.story?.victim?.age ?? VictimProfiles.statedAge(t.summaries.map { fill($0) }.joined(separator: " "),
+                                                                              name: fill("{V}"), last: fill("{VL}"))
+        // The stance follows what the statement itself says: mercy when it asks for mercy, punishment when it demands it.
+        if !t.hasVictim && impactBase != nil && VictimVoice.asksMercy(impactBase) {
+            background.victimStance = .wantsLeniency
+            background.victimStanceDetail = "The one statement in the file asks the court not to send the defendant to prison."
+        }
+        if t.hasVictim && VictimVoice.asksHarsh(impactBase) && !VictimVoice.asksMercy(impactBase) && background.victimStance == .wantsLeniency {
+            background.victimStance = .wantsMaximum
+            background.victimStanceDetail = VictimVoice.position(stance: .wantsMaximum, victim: fill("{VL}"), defendant: fill("{DL}"),
+                                                                 category: t.category, died: t.victimDies,
+                                                                 child: victimAgeForVoice.map { $0 < 16 } ?? false,
+                                                                 restitutionBasis: background.restitutionBasis,
+                                                                 cls: LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass,
+                                                                 young: victimAgeForVoice.map { $0 < 30 } ?? false, rng: &rng)
+        }
         if t.hasVictim && VictimVoice.asksMercy(impactBase) && background.victimStance != .wantsLeniency {
             background.victimStance = .wantsLeniency
             background.victimStanceDetail = VictimVoice.position(stance: .wantsLeniency, victim: fill("{VL}"), defendant: fill("{DL}"),
                                                                  category: t.category, died: t.victimDies,
-                                                                 child: (t.story?.victim?.age).map { $0 < 16 } ?? false,
+                                                                 child: victimAgeForVoice.map { $0 < 16 } ?? false,
                                                                  restitutionBasis: background.restitutionBasis,
-                                                                 cls: LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass, rng: &rng)
+                                                                 cls: LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass,
+                                                                 young: victimAgeForVoice.map { $0 < 30 } ?? false, rng: &rng)
         }
         let victimImpact = impactBase.map { VictimVoice.impact($0, stance: background.victimStance, defendant: fill("{DL}"),
                                                                 died: t.victimDies, rng: &rng) }
@@ -975,14 +1013,17 @@ enum CaseGenerator {
             default:
                 stance = rng.pick([.wantsMaximum, .wantsAccountability, .wantsLeniency])
             }
-            let child = (t.story?.victim?.age).map { $0 < 16 } ?? false
+            // The victim's age, as the story gives it or as the summary states it ("{V}, 14,").
+            let victimAge = t.story?.victim?.age ?? VictimProfiles.statedAge(t.summaries.map { fill($0) }.joined(separator: " "),
+                                                                          name: fill("{V}"), last: fill("{VL}"))
+            let child = victimAge.map { $0 < 16 } ?? false
             stanceDetail = VictimVoice.position(stance: stance, victim: fill("{VL}"), defendant: fill("{DL}"), category: t.category,
                                                 died: t.victimDies, child: child, restitutionBasis: basis,
-                                                cls: LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass, rng: &rng)
+                                                cls: LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass, young: victimAge.map { $0 < 30 } ?? false, rng: &rng)
         } else if t.story != nil && !t.victimImpacts.isEmpty {
             // No single named victim, but people were hurt, and their statements are in the file.
             stance = .wantsAccountability
-            stanceDetail = VictimVoice.groupPosition(rng: &rng)
+            stanceDetail = t.victimImpacts.count == 1 ? VictimVoice.singlePosition(rng: &rng) : VictimVoice.groupPosition(rng: &rng)
         } else {
             stance = .none
             stanceDetail = "There's no individual victim in this case, Judge."
@@ -1010,11 +1051,12 @@ enum CaseGenerator {
         // Plans and supporters fit the person: age, work, and whether the partner is the victim.
         let age = defendant.age
         let job = defendant.occupation.lowercased()
-        let working = !job.contains("unemployed") && !job.hasPrefix("retired")
+        let current = defendant.profile?.currentJob
+        let working = DefendantProfile.isWork(job) && (defendant.profile == nil || current != nil)
         var plans = ["Moving in with family in {HOOD}, away from the people involved in this case."]
         if age < 50 { plans += ["A job offer from a roofing company in {HOOD}, starting the Monday after sentencing.",
                                 "Enrollment in the welding program at Hollis Community College this spring."] }
-        if working { plans.append("Return to work as \(job.withIndefiniteArticle). The employer wrote a letter.") }
+        if working { plans.append("Return to work as \((current?.title.lowercased() ?? job).withIndefiniteArticle). The employer wrote a letter.") }
         let family = defendant.profile
         let kids = family?.childCount ?? 0
         if age >= 60 && kids > 0 { plans.append("Living quietly at home, with a grown child checking in every day.") }
@@ -1022,15 +1064,16 @@ enum CaseGenerator {
         let indigent = publicDefender ? rng.chance(0.85) : rng.chance(0.2)
         let partnerIsVictim = t.victimDies && t.category == .family
             || ["spouse", "wife", "husband", "partner"].contains { word in t.summaries.contains { $0.contains("{D.his} \(word), {V") } }
+            || defendant.profile?.familyIsVictim == true
         var supporters = ["My client's family and their pastor are in the gallery today.",
                           "A former employer drove in from Raleigh to be here."]
         // Only people the profile says exist come to court.
         let partner = !partnerIsVictim && (family?.married == true || family?.partnered == true)
         if partner && kids > 0 && age < 60 { supporters.append("My client's \(family?.married == true ? "spouse" : "partner") is here, along with my client's children.") }
         else if partner { supporters.append("My client's \(family?.married == true ? "spouse" : "partner") is in the gallery today.") }
-        else if kids > 0 && age < 60 { supporters.append("My client's children are here with their grandmother.") }
+        else if kids > 0 && age < 60 && !partnerIsVictim { supporters.append("My client's children are here with their grandmother.") }
         if age < 35 { supporters.append("The client's grandmother, who raised them, is in the second row.") }
-        if age >= 60 && kids > 0 { supporters.append("My client's grown children are here today.") }
+        if age >= 60 && kids > 0 && !partnerIsVictim { supporters.append("My client's grown children are here today.") }
         let support: String? = rng.chance(0.6) ? rng.pick(supporters) : nil
         let discovery: String? = rng.chance(0.25) ? rng.pick([
             "The State Crime Laboratory report arrived late; we turned it over nine days before trial.",
