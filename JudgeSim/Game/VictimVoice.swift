@@ -41,7 +41,7 @@ enum VictimVoice {
 
     /// The State's account of the victim's position on the sentence.
     static func position(stance: VictimStance, victim: String, defendant: String, category: LawCategory,
-                         died: Bool, child: Bool, restitutionBasis: String?, rng: inout SeededRNG) -> String {
+                         died: Bool, child: Bool, restitutionBasis: String?, cls: NCClass? = nil, rng: inout SeededRNG) -> String {
         let s = speaker(victim: victim, died: died, child: child, rng: &rng)
         let who = s.name
         let subj = s.subject
@@ -54,7 +54,7 @@ enum VictimVoice {
             "I sat down with \(who) after the last hearing.",
             "\(who) \(s.v("has", "have")) been at every setting in this case."
         ])
-        let wants: [String]
+        var wants: [String]
         switch stance {
         case .wantsMaximum:
             wants = [
@@ -85,6 +85,9 @@ enum VictimVoice {
         case .none:
             return "There's no identified victim in this case."
         }
+        // Most victims who ask for something name it; the numbers come from the chart for the charge.
+        let specific = asks(stance: stance, cls: cls, s: s, defendant: defendant, restitution: restitutionBasis != nil, rng: &rng)
+        if !specific.isEmpty && rng.chance(0.7) { wants = specific }
         var reasons: [String] = []
         if died {
             reasons = ["Nothing brings \(victim) back.", "\(subj) \(s.v("has", "have")) been to the cemetery every Sunday since.",
@@ -126,6 +129,68 @@ enum VictimVoice {
         return parts.filter { !$0.isEmpty }.joined(separator: " ")
     }
 
+    private static func months(_ m: Int) -> String {
+        if m >= 24 && m % 12 == 0 { return "\(m / 12) years" }
+        return m == 1 ? "1 month" : "\(m) months"
+    }
+
+    private static func span(_ low: Int, _ high: Int) -> String {
+        low < 24 && high < 24 ? "\(low) to \(high) months" : "\(months(low)) to \(months(high))"
+    }
+
+    /// Concrete requests, with numbers, for a charge of this class. Felony numbers come from prior record level I,
+    /// the lowest row of the chart, so a request is never more than the law could give.
+    private static func asks(stance: VictimStance, cls: NCClass?, s: Speaker, defendant: String, restitution: Bool,
+                             rng: inout SeededRNG) -> [String] {
+        guard let cls else { return [] }
+        let subj = s.subject
+        let felony = cls.isFelony
+        let probation = rng.int(StructuredSentencing.probationMonths(felony: felony, disposition: .intermediate))
+        var out: [String] = []
+        switch stance {
+        case .wantsMaximum:
+            if cls == .A {
+                out = ["\(subj) \(s.v("wants", "want")) life without parole, and \(s.v("has", "have")) asked me to say the words in court.",
+                       "\(subj) \(s.v("asks", "ask")) for the only sentence \(s.v("thinks", "think")) fits: life in prison."]
+            } else if felony, let cell = StructuredSentencing.felonyCell(cls, level: 1) {
+                let top = cell.aggravated?.high ?? cell.presumptive.high
+                out = ["\(subj) \(s.v("wants", "want")) \(defendant) to serve at least \(months(top)) in prison, and no probation.",
+                       "\(subj) asked me to put a number on it, Judge: a minimum of \(months(top)), active.",
+                       "\(subj) \(s.v("is", "are")) asking for \(months(cell.presumptive.high)) at the very least, and more if the court can give it.",
+                       "\(subj) \(s.v("wants", "want")) an active sentence of \(months(top)). \(subj) \(s.v("doesn't", "don't")) want to hear the word probation."]
+            } else if let cell = StructuredSentencing.misdemeanorCell(cls, level: 1) {
+                out = ["\(subj) \(s.v("wants", "want")) \(defendant) to do at least \(cell.maxDays) days in the county jail.",
+                       "\(subj) \(s.v("is", "are")) asking for \(cell.maxDays) days active, not suspended.",
+                       "\(subj) \(s.v("wants", "want")) jail time, Judge. \(cell.maxDays) days is the number \(s.v("gave", "gave")) me."]
+            }
+        case .wantsAccountability:
+            if felony, cls != .A, let cell = StructuredSentencing.felonyCell(cls, level: 1) {
+                out = ["\(subj) \(s.v("thinks", "think")) \(span(cell.mitigated.low, cell.presumptive.low)) is about right, and \(s.v("doesn't", "don't")) need more than that.",
+                       "\(subj) would accept probation, but only with \(probation) months of supervision and a no-contact order.",
+                       "\(subj) \(s.v("asks", "ask")) for a split sentence: \(rng.int(1...3)) months in the jail first, then \(probation) months of probation.",
+                       "\(subj) \(s.v("wants", "want")) \(months(cell.presumptive.low)) in prison. Not the most the court could give, but real time."]
+            } else if !felony, let cell = StructuredSentencing.misdemeanorCell(cls, level: 1) {
+                let hours = rng.pick([50, 75, 100, 150])
+                out = ["\(subj) \(s.v("asks", "ask")) for \(cell.maxDays) days, suspended, with \(probation) months of supervised probation.",
+                       "\(subj) would be satisfied with \(hours) hours of community service and a written apology.",
+                       "\(subj) \(s.v("wants", "want")) a few days in jail, \(rng.int(2...min(10, cell.maxDays))) or so, so \(defendant) feels it, then probation.",
+                       "\(subj) \(s.v("asks", "ask")) for \(probation) months of probation with an anger-management class and a no-contact order."]
+            }
+            if restitution {
+                out.append("\(subj) \(s.v("cares", "care")) most about the money: every dollar of restitution, paid on a schedule the court enforces.")
+            }
+        case .wantsLeniency:
+            out = ["\(subj) \(s.v("suggests", "suggest")) \(probation) months of probation with treatment, and no jail.",
+                   "\(subj) \(s.v("asks", "ask")) for a suspended sentence so \(defendant) can keep working."]
+            if restitution {
+                out.append("\(subj) \(s.v("wants", "want")) \(defendant) out and working, because that's the only way the restitution gets paid.")
+            }
+        case .none:
+            break
+        }
+        return out
+    }
+
     /// The State's account when the people hurt aren't one named victim.
     static func groupPosition(rng: inout SeededRNG) -> String {
         rng.pick([
@@ -148,7 +213,7 @@ enum VictimVoice {
                      "Whatever you give \(defendant), it won't be enough. Make it as close as you can.",
                      "I don't want to see \(defendant) at the grocery store next year."]
         case .wantsAccountability:
-            lines = ["I'm not here to tell you a number. I just want someone to say this was wrong.",
+            lines = ["I told the DA what I think is fair. Mostly I just want someone to say this was wrong.",
                      "Whatever you decide, I need to know it counted.",
                      "I want \(defendant) to think about this every day, the way I do.",
                      "I'd like to hear \(defendant) say it. Just once.",

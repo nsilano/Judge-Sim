@@ -745,7 +745,8 @@ enum CaseGenerator {
             background.victimStanceDetail = VictimVoice.position(stance: .wantsLeniency, victim: fill("{VL}"), defendant: fill("{DL}"),
                                                                  category: t.category, died: t.victimDies,
                                                                  child: (t.story?.victim?.age).map { $0 < 16 } ?? false,
-                                                                 restitutionBasis: background.restitutionBasis, rng: &rng)
+                                                                 restitutionBasis: background.restitutionBasis,
+                                                                 cls: LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass, rng: &rng)
         }
         let victimImpact = impactBase.map { VictimVoice.impact($0, stance: background.victimStance, defendant: fill("{DL}"),
                                                                 died: t.victimDies, rng: &rng) }
@@ -971,7 +972,8 @@ enum CaseGenerator {
             }
             let child = (t.story?.victim?.age).map { $0 < 16 } ?? false
             stanceDetail = VictimVoice.position(stance: stance, victim: fill("{VL}"), defendant: fill("{DL}"), category: t.category,
-                                                died: t.victimDies, child: child, restitutionBasis: basis, rng: &rng)
+                                                died: t.victimDies, child: child, restitutionBasis: basis,
+                                                cls: LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass, rng: &rng)
         } else if t.story != nil && !t.victimImpacts.isEmpty {
             // No single named victim, but people were hurt, and their statements are in the file.
             stance = .wantsAccountability
