@@ -134,6 +134,7 @@ struct ChambersView: View {
                     docketCard
                     if !game.arrestOrders.isEmpty { arrestOrdersCard }
                     if let survey = game.reputation.first { standingCard(survey) }
+                    if game.history.contains(where: { $0.resolvedKind == "trial" }), let county = game.county { courthouseMoodCard(county) }
 
                     if let county = game.county {
                         NavigationLink {
@@ -323,6 +324,20 @@ struct ChambersView: View {
             }
         }
         .card(tint: Theme.gold)
+    }
+
+    /// What the lawyers who appear before the judge are saying, from what the judge has done.
+    private func courthouseMoodCard(_ county: County) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "Around the courthouse", icon: "bubble.left.and.bubble.right.fill")
+            Text(game.mood.line(prosecutor: "District Attorney \(county.districtAttorney)"))
+                .font(.system(.callout, design: .serif)).italic()
+            Text(game.mood.line(defender: "Chief Public Defender \(county.chiefPublicDefender)"))
+                .font(.system(.callout, design: .serif)).italic()
+            Text("Prosecutors remember acquittals and light sentences, and defenders remember prison terms. The DA's plea offers at your calendar calls follow the office's mood.")
+                .font(.caption2).foregroundStyle(.secondary)
+        }
+        .card()
     }
 
     /// The voters have spoken; the judge decides what comes next.

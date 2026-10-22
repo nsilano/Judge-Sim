@@ -182,3 +182,35 @@ struct Urgency {
         return Urgency(level: level, score: score, reasons: reasons)
     }
 }
+
+/// How the lawyers in this courthouse feel about the judge, from what the judge has done. 50 is neutral.
+struct CourthouseMood: Codable, Hashable {
+    var prosecutors = 55
+    var defenders = 55
+
+    mutating func adjust(prosecutors p: Int, defenders d: Int) {
+        prosecutors = max(5, min(95, prosecutors + p))
+        defenders = max(5, min(95, defenders + d))
+    }
+
+    /// The DA's bargaining: a frustrated office pushes harder for prison; a satisfied one bargains.
+    var prosecutorEdge: Double { Double(55 - prosecutors) / 150 }
+
+    func line(prosecutor name: String) -> String {
+        switch prosecutors {
+        case ..<35: return "\(name), in the hallway: \"We've stopped offering much in your courtroom, Judge. There's no point.\""
+        case ..<50: return "\(name): \"The office thinks you give the defense the benefit of every doubt. We're adjusting.\""
+        case ..<65: return "\(name): \"We know what to expect from you. That's all we ask.\""
+        default: return "\(name): \"Your courtroom runs the way a courtroom should. We bring you our hardest cases gladly.\""
+        }
+    }
+
+    func line(defender name: String) -> String {
+        switch defenders {
+        case ..<35: return "\(name), at the clerk's counter: \"My clients plead out rather than try a case in front of you.\""
+        case ..<50: return "\(name): \"We'll take our chances at trial, Judge, but we're not optimistic.\""
+        case ..<65: return "\(name): \"You listen. My clients can't ask for more than that.\""
+        default: return "\(name): \"Defendants trust they'll get a fair hearing in your courtroom. That's rarer than you'd think.\""
+        }
+    }
+}

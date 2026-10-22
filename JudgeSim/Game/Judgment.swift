@@ -1897,8 +1897,18 @@ enum Judgment {
         }
 
         // What the defendant does next, if the judgment let a guilty person go.
-        pending.append(contentsOf: Consequences.afterJudgment(c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
-                                                              dismissed: dismissed, insanity: insanityAcquittal, judgeLast: judgeLast, date: date, rng: &rng))
+        // What follows in the world: written beats for this case, the victim a year on, the community's reaction.
+        var broughtCase = false
+        if !insanityAcquittal {
+            let aftermath = Aftermath.events(for: c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
+                                             judgeLast: judgeLast, date: date, rng: &rng)
+            pending.append(contentsOf: aftermath.events)
+            broughtCase = aftermath.broughtCase
+        }
+        if !broughtCase {
+            pending.append(contentsOf: Consequences.afterJudgment(c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
+                                                                  dismissed: dismissed, insanity: insanityAcquittal, judgeLast: judgeLast, date: date, rng: &rng))
+        }
 
         // Things that may surface about what really happened
         switch (convicted, truthGuilty) {

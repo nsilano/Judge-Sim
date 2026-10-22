@@ -103,6 +103,9 @@ struct CalendarCall: Identifiable, Codable, Hashable {
 }
 
 enum CalendarCalls {
+    /// How hard the State bargains in front of this judge, from its memory of the judge's rulings (-0.3 to 0.3).
+    static var prosecutorEdge = 0.0
+
 
     private static let pleaLaws = ["felonyLarceny", "possSchedII", "breakingVehicle", "larcenyMerchant", "feloniousBE",
                                    "uttering", "pwisd", "commonLawRobbery", "possStolen", "strangulation", "awdwisi", "burglary2"]
@@ -130,6 +133,8 @@ enum CalendarCalls {
         if violent { push += 0.3 }
         if sameKind > 0 { push += 0.25 }
         if chartActive { push += 0.5 }
+        // The DA's office remembers this judge: after lenient rulings it digs in, after tough ones it bargains more freely.
+        push += prosecutorEdge
         let roll = Double.random(in: 0..<1, using: &rng)
         let stance = chartActive || roll < push - 0.35 ? 2 : (roll < push ? 1 : 0)
         let jailDays = cls.isFelony ? rng.pick([30, 45, 60, 90]) : rng.pick([10, 14, 30])

@@ -99,6 +99,7 @@ private struct SaveData: Codable {
     var schedule: CourtSchedule?
     var awaiting: [AwaitingCase]?
     var weekTally: CourtDay.Tally?
+    var mood: CourthouseMood?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -146,6 +147,8 @@ final class GameState: ObservableObject {
     @Published private(set) var awaiting: [AwaitingCase] = []
     /// How this week's trials came out, for the week in review.
     private var weekTally = CourtDay.Tally()
+    /// How the prosecutors and defenders feel about the judge.
+    @Published private(set) var mood = CourthouseMood()
     /// What the last calendar call decided, and where each case went, for the results screen.
     @Published private(set) var lastCalendarResults: [String] = []
     /// Whether last week's trial calendar had a murder case, so two murder weeks don't come back to back.
@@ -1965,6 +1968,20 @@ final class GameState: ObservableObject {
             if activeImposed { tally.active += 1 }
             if outcome.convicted { weekTally.convictions += 1 } else { weekTally.withoutConviction += 1 }
             if activeImposed { weekTally.active += 1 }
+            // The lawyers remember: acquittals and light sentences sit badly with the State, prison terms with the defense.
+            if !outcome.convicted { mood.adjust(prosecutors: outcome.dismissed ? -4 : -3, defenders: 2) }
+            else if activeImposed { mood.adjust(prosecutors: 2, defenders: -2) }
+            else { mood.adjust(prosecutors: -1, defenders: 1) }
+            switch outcome.sentencePosition {
+            case .above?: mood.adjust(prosecutors: 1, defenders: -2)
+            case .below?: mood.adjust(prosecutors: -2, defenders: 1)
+            default: break
+            }
+            // Both sides respect a judge whose rulings hold up.
+            let unsound = outcome.rulingNotes.filter { !$0.sound }.count
+            if unsound == 0 && !outcome.rulingNotes.isEmpty { mood.adjust(prosecutors: 1, defenders: 1) }
+            else if unsound >= 2 { mood.adjust(prosecutors: -1, defenders: -1) }
+            CalendarCalls.prosecutorEdge = mood.prosecutorEdge
             day.tally = tally
             today = day
         }
@@ -2095,6 +2112,8 @@ final class GameState: ObservableObject {
         schedule = CourtSchedule()
         awaiting = []
         weekTally = CourtDay.Tally()
+        mood = CourthouseMood()
+        CalendarCalls.prosecutorEdge = 0
         careerStart = Date()
         docketSequence = 0
         sessionEnds = Date()
@@ -2454,7 +2473,7 @@ final class GameState: ObservableObject {
                             reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated,
                             reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, schedule: schedule, awaiting: awaiting,
-                            weekTally: weekTally)
+                            weekTally: weekTally, mood: mood)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -2521,6 +2540,8 @@ final class GameState: ObservableObject {
         schedule = data.schedule ?? CourtSchedule()
         awaiting = data.awaiting ?? []
         weekTally = data.weekTally ?? CourtDay.Tally()
+        mood = data.mood ?? CourthouseMood()
+        CalendarCalls.prosecutorEdge = mood.prosecutorEdge
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
         backfillAppeals()
         if today == nil && judgeName != nil {
