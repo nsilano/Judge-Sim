@@ -1448,9 +1448,11 @@ struct JudgmentSummaryCard: View {
 extension JudgmentStage {
     /// Sending testimony the judge believes was a lie to the district attorney.
     var perjurySection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionTitle(text: "Refer for perjury", icon: "exclamationmark.bubble.fill")
-            Text("If you believe a witness lied to you under oath, you can send the transcript to the district attorney. Perjury needs a knowing lie about something that mattered, proved by more than one person's word against another's. A witness who was mistaken, or asleep, hasn't lied. The DA decides whether to charge, and another judge hears the case.")
+        // Optional, and out of the way: a single row until the judge opens it.
+        CollapsibleSection(title: "Refer a witness for perjury", icon: "exclamationmark.bubble.fill",
+                           summary: referred.isEmpty ? "Optional" : "\(referred.count) to refer", expanded: false) {
+          VStack(alignment: .leading, spacing: 8) {
+            Text("Only for a knowing lie about something that mattered. The DA decides whether to charge.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             ForEach(witnesses) { witness in
@@ -1468,7 +1470,7 @@ extension JudgmentStage {
                             Text("\(witness.role) · called by \(witness.calledBy == .prosecution ? "the State" : "the defense")")
                                 .font(.caption).foregroundStyle(.secondary)
                             if let line = Perjury.answers(witness).first {
-                                Text("\u{201C}\(CounselBrief.clip(line, 140))\u{201D}")
+                                Text("\u{201C}\(CounselBrief.clip(line, 80))\u{201D}")
                                     .font(.system(.caption, design: .serif)).italic()
                                     .foregroundStyle(Theme.quoteText)
                                     .multilineTextAlignment(.leading)
@@ -1476,7 +1478,7 @@ extension JudgmentStage {
                         }
                         Spacer(minLength: 0)
                     }
-                    .padding(10)
+                    .padding(8)
                     .background(RoundedRectangle(cornerRadius: 10).fill(on ? Theme.objectionFill : Theme.raised.opacity(0.6)))
                 }
                 .buttonStyle(.plain)
@@ -1487,7 +1489,7 @@ extension JudgmentStage {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Theme.bad)
             }
+          }
         }
-        .card()
     }
 }

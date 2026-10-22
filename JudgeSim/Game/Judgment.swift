@@ -2365,6 +2365,8 @@ enum Judgment {
             let family = victim.components(separatedBy: " ").last ?? victim
             let stance = c.background?.victimStance ?? .wantsAccountability
             let speaker = rng.pick(["A member of the \(family) family", "\(victim)'s sister", "A relative of \(victim)", "\(victim)'s father", "A family friend of the \(family)s"])
+            // Grief and loss only when someone died; otherwise the words fit what the victim lived through.
+            let died = Consequences.victimDied(c)
             var line: String?
             switch (convicted, active, stance) {
             case (false, _, .wantsLeniency):
@@ -2379,13 +2381,15 @@ enum Judgment {
                 line = rng.pick(["\"We asked for mercy, and the judge listened. That's what we wanted.\"", "\"This is the right outcome. Everybody gets a second chance.\""])
             case (true, true, .wantsMaximum):
                 line = severity > 0
-                    ? rng.pick(["\"Finally someone listened to us.\"", "\"It won't bring back what we lost, but the judge got it right.\""])
-                    : rng.pick(["\"It's not enough. It's never going to be enough.\"", "\"\(dl) will be out before we've stopped grieving.\""])
+                    ? rng.pick(["\"Finally someone listened to us.\"", died ? "\"It won't bring back what we lost, but the judge got it right.\"" : "\"The judge got it right. Now we can stop looking over our shoulders.\""])
+                    : rng.pick(["\"It's not enough. It's never going to be enough.\"",
+                                died ? "\"\(dl) will be out before we've stopped grieving.\"" : "\"\(dl) will be out before we feel safe again.\""])
             case (true, false, .wantsMaximum):
-                line = rng.pick(["\"Probation. I don't know what to say.\"", "\"\(dl) walks out the front door today. We go home to an empty chair.\"",
+                line = rng.pick(["\"Probation. I don't know what to say.\"",
+                                 died ? "\"\(dl) walks out the front door today. We go home to an empty chair.\"" : "\"\(dl) walks out the front door today, and we're supposed to feel safe?\"",
                                  "\"We'll be at every hearing if \(dl) slips once.\""])
             case (true, true, _):
-                line = rng.pick(["\"Nothing brings back what we lost. But today someone was held responsible.\"",
+                line = rng.pick([died ? "\"Nothing brings back what we lost. But today someone was held responsible.\"" : "\"Today someone was held responsible. That matters.\"",
                                  "\"It's something. We can start to move on.\"",
                                  severity < 0 ? "\"I thought it would be more. But at least it's over.\"" : "\"The judge took it seriously. That's all we asked.\""])
             case (true, false, _):
