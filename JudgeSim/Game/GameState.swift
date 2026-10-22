@@ -1618,7 +1618,7 @@ final class GameState: ObservableObject {
 
     /// Puts the cases behind the calendar call's rulings on a real calendar: this week, a later week, or (after an
     /// order for arrest or a capacity evaluation) whenever the defendant can be brought to court.
-    private func scheduleCalendarCases(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int]) {
+    private func scheduleCalendarCases(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int], dates: [UUID: Date] = [:]) {
         var rng = SeededRNG(seed: seedBase ^ SeededRNG.stableHash(call.id.uuidString))
         let heard = SentenceFormat.shortDate(call.date)
         func later(weeks: Int) -> Date {
@@ -1727,13 +1727,18 @@ final class GameState: ObservableObject {
                 decideRelease(c, bond: bond, amount: amount, monitored: monitored, condition: condition, heard: heard, date: call.date,
                               rng: &rng, schedule: schedule)
             case .arraignment:
-                let weeks = [2, 5, 10][min(choice, 2)]
-                var setCase = c
-                if weeks == 2 && c.charges.count > 1 && rng.chance(0.6) {
-                    // Too soon for the defense to be ready.
-                    setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
+                if choice == 0, let picked = dates[m.id] {
+                    // The judge picks the day. Too soon, and the defense asks for more time.
+                    var setCase = c
+                    let days = CourtCalendar.calendar.dateComponents([.day], from: call.date, to: picked).day ?? 35
+                    if days < 21 && c.charges.count > 1 && rng.chance(0.6) {
+                        setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
+                    }
+                    awaitCase(setCase, note: "Arraigned on \(heard); pleaded not guilty.", on: call.date)
+                    if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
+                } else {
+                    setFor(c, weeks: 2, note: "Arraigned on \(heard); pleaded not guilty. Trial date to be set.")
                 }
-                setFor(setCase, weeks: weeks, note: "Arraigned on \(heard); pleaded not guilty and set for trial.")
             case .motionForRelief:
                 guard let relief = m.relief else { continue }
                 let options = m.options
@@ -1913,7 +1918,7 @@ final class GameState: ObservableObject {
         c.defendant.age = person.age(on: c.sessionDate)
     }
 
-    func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:]) {
+    func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], dates: [UUID: Date] = [:]) {
         guard let county, let judgeName, stillOpen(call.id) else { return }
         let result = CalendarCalls.resolve(call, choices: choices, amounts: amounts, judgeName: judgeName, county: county)
         happened(.calendarCall(matters: call.matters.count))
@@ -1958,7 +1963,7 @@ final class GameState: ObservableObject {
             }
         }
         pending.append(contentsOf: result.pending)
-        scheduleCalendarCases(call, choices: choices, amounts: amounts)
+        scheduleCalendarCases(call, choices: choices, amounts: amounts, dates: dates)
         stats.activeSentences += result.activeSentences
         stats.suspendedSentences += result.suspendedSentences
         stats.probationCompleted += result.probationCompleted

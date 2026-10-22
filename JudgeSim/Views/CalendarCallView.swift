@@ -7,9 +7,13 @@ struct CalendarCallView: View {
     let call: CalendarCall
     @State private var choices: [UUID: Int] = [:]
     @State private var amounts: [UUID: Int] = [:]
+    @State private var dates: [UUID: Date] = [:]
     @State private var showLibrary = false
     @State private var confirmLeave = false
     @State private var showResults = false
+
+    /// An arraignment set for trial now needs the day picked before the calendar can close.
+    private func needsDate(_ m: CalendarMatter) -> Bool { m.kind == .arraignment && choices[m.id] == 0 }
 
     var body: some View {
         NavigationStack {
@@ -32,14 +36,15 @@ struct CalendarCallView: View {
                     ForEach(call.matters) { matter in
                         MatterCard(matter: matter, choice: Binding(get: { choices[matter.id] }, set: { choices[matter.id] = $0 }),
                                    amount: Binding(get: { amounts[matter.id] ?? matter.suggestedAmount ?? 0 },
-                                                   set: { amounts[matter.id] = $0 }))
+                                                   set: { amounts[matter.id] = $0 }),
+                                   date: Binding(get: { dates[matter.id] }, set: { dates[matter.id] = $0 }))
                     }
 
                     PrimaryButton(title: "Close the Calendar Call", icon: "hammer.fill",
-                                  enabled: call.matters.allSatisfy { choices[$0.id] != nil },
+                                  enabled: call.matters.allSatisfy { choices[$0.id] != nil && !(needsDate($0) && dates[$0.id] == nil) },
                                   hint: "Rule on every matter on the calendar.") {
                         Haptics.gavel()
-                        game.completeCalendar(call, choices: choices, amounts: amounts)
+                        game.completeCalendar(call, choices: choices, amounts: amounts, dates: dates)
                         withAnimation { showResults = true }
                     }
                 }
@@ -82,6 +87,7 @@ private struct MatterCard: View {
     let matter: CalendarMatter
     @Binding var choice: Int?
     @Binding var amount: Int
+    @Binding var date: Date?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -107,6 +113,11 @@ private struct MatterCard: View {
             }
             if let choice, matter.amountOptions?.contains(choice) == true, let range = matter.amountRange {
                 BondAmountPicker(amount: $amount, range: range)
+            }
+            if matter.kind == .arraignment && choice == 0 {
+                Text("Pick the trial day. The State says about five weeks; too soon and the defense will ask for more time.")
+                    .font(.caption).foregroundStyle(.secondary)
+                DayPickerList(kind: .trial, count: 30, choice: $date)
             }
             if let warrant = matter.warrant {
                 NavigationLink {
