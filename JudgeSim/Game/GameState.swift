@@ -351,7 +351,7 @@ final class GameState: ObservableObject {
                              body: "In a ceremony at the \(county.courthouse), \(name) took the oath of office as a Resident Superior Court Judge for \(county.name). District Attorney \(county.districtAttorney), Chief Public Defender \(county.chiefPublicDefender), Sheriff \(county.sheriff), and Clerk of Superior Court \(county.clerk) attended.")]
         }
         currentDate = nextSittingDay(onOrAfter: currentDate)
-        // The new judge inherits a few indicted cases waiting for trial dates, and one is ready to try on day one.
+        // The new judge inherits a few indicted cases waiting for trial dates.
         var intakeRNG = SeededRNG(seed: seedBase ^ 0xF125_7A11)
         var used = Set<UUID>()
         for _ in 0..<4 {
@@ -359,8 +359,9 @@ final class GameState: ObservableObject {
                 awaitCase(c, note: "Indicted before you took the bench; waiting for a trial date.", on: currentDate)
             }
         }
-        today = buildDay(currentDate, kind: .trial, sessionDay: 1)
-        if let first = awaitingByUrgency.first { setTrialDate(first.id, to: currentDate) }
+        // Day one starts with an empty docket: the new judge sets the first trials from the waiting list.
+        today = CourtDay(date: currentDate, clock: CourtCalendar.opening(on: currentDate, minutesAfterMidnight: openingMinutes),
+                         kind: .trial, entries: [], sessionDay: 1)
         save()
     }
 
