@@ -196,8 +196,13 @@ enum Testimony {
             if relation.contains(where: { role.contains($0) }) {
                 let years = rng.int(2...20)
                 if rng.chance(0.5) {
-                    ask(.direct, rng.pick(["How long have you known \(dl)?", "How well do you know \(dl)?"]),
-                        rng.pick(["About \(years) years.", "\(years) years, give or take. Well enough.", "Going on \(years) years. I'd say I know \(dl) as well as anybody."]))
+                    if rng.chance(0.5) {
+                        ask(.direct, "How long have you known \(dl)?",
+                            rng.pick(["About \(years) years.", "\(years) years, give or take.", "Going on \(years) years."]))
+                    } else {
+                        ask(.direct, "How well do you know \(dl)?",
+                            rng.pick(["Well. About \(years) years now.", "Well enough. \(years) years, give or take.", "As well as anybody, I'd say. Going on \(years) years."]))
+                    }
                 } else {
                     ask(.direct, "How do you know \(dl)?", howTheyKnow(w.role, dl: dl, years: years, rng: &rng))
                 }
@@ -257,19 +262,44 @@ enum Testimony {
             ask(.direct, q, a)
         case .lay:
             if eyewitness || isVictim {
-                ask(.direct, rng.pick(["How sure are you about what you've told the court?", "Is there any doubt in your mind about what you saw?", "How clearly could you see?"]),
-                    w.weight >= 3 ? rng.pick(["Completely sure.", "No doubt at all. I was right there.", "Clearly. I wasn't more than a few feet away."])
-                        : w.weight >= 2 ? rng.pick(["I'm sure.", "I'm sure about what I've told you.", "Clear enough."])
-                        : rng.pick(["Pretty sure. It's what I remember.", "As sure as I can be. It happened fast.", "I saw enough."]))
+                switch rng.int(0...2) {
+                case 0:
+                    ask(.direct, "How sure are you about what you've told the court?",
+                        w.weight >= 3 ? rng.pick(["Completely sure.", "Completely. I was right there."])
+                            : w.weight >= 2 ? rng.pick(["I'm sure.", "I'm sure about what I've told you."])
+                            : rng.pick(["Pretty sure. It's what I remember.", "As sure as I can be. It happened fast."]))
+                case 1:
+                    ask(.direct, "Is there any doubt in your mind about what you saw?",
+                        w.weight >= 3 ? rng.pick(["No doubt at all. I was right there.", "None."])
+                            : w.weight >= 2 ? rng.pick(["No. I know what I saw.", "Not about what I've told you."])
+                            : rng.pick(["Some, maybe. It happened fast.", "Not about the main part."]))
+                default:
+                    ask(.direct, "How clearly could you see?",
+                        w.weight >= 3 ? rng.pick(["Clearly. I wasn't more than a few feet away.", "Very clearly. Nothing was in the way."])
+                            : w.weight >= 2 ? rng.pick(["Clear enough.", "Well enough to tell you what I told you."])
+                            : rng.pick(["Not perfectly. I saw enough.", "Well enough, I think. It happened fast."]))
+                }
             } else if paper {
-                ask(.direct, rng.pick(["Is that from your own knowledge?", "How do you know that?"]),
-                    Self.handlesRecords(role)
-                        ? rng.pick(["Yes. I saw the records myself.", "I worked with those records every day.", "I was there for it. I'm not repeating what somebody told me."])
-                        : rng.pick(["I saw it myself. I was over there most days.", "I was there. I'm not repeating what somebody told me.",
-                                    "From being around them. I saw how they were with each other."]))
+                if rng.chance(0.5) {
+                    ask(.direct, "Is that from your own knowledge?",
+                        Self.handlesRecords(role)
+                            ? rng.pick(["Yes. I saw the records myself.", "Yes. I worked with those records every day."])
+                            : rng.pick(["Yes. I saw it myself. I was over there most days.", "Yes. I'm not repeating what somebody told me."]))
+                } else {
+                    ask(.direct, "How do you know that?",
+                        Self.handlesRecords(role)
+                            ? rng.pick(["I saw the records myself.", "I worked with those records every day.", "I was there for it. I'm not repeating what somebody told me."])
+                            : rng.pick(["I saw it myself. I was over there most days.", "I was there. I'm not repeating what somebody told me.",
+                                        "From being around them. I saw how they were with each other."]))
+                }
             } else if calling == .defense {
-                ask(.direct, rng.pick(["Why did you come to court today?", "Has anyone asked you to say any of this?"]),
-                    rng.pick(["Because I know what's true, and somebody should say it.", "No. I asked to be here.", "Because \(dl) asked, and because it's true."]))
+                if rng.chance(0.5) {
+                    ask(.direct, "Why did you come to court today?",
+                        rng.pick(["Because I know what's true, and somebody should say it.", "Because \(dl) asked, and because it's true."]))
+                } else {
+                    ask(.direct, "Has anyone told you what to say today?",
+                        rng.pick(["No. Nobody told me what to say. I'm here because it's true.", "No. \(dl)'s lawyer asked me to tell the truth, and that's what I'm doing."]))
+                }
             }
         }
 
@@ -316,7 +346,7 @@ enum Testimony {
             } else {
                 openers = [("You care about \(dl), don't you?", "Yes. That doesn't change what I'm telling you."),
                            ("You weren't with \(dl) every minute, were you?", "Not every minute, no."),
-                           ("You'd like to see \(dl) go home today?", "Of course I would. I'm still telling the truth.")]
+                           ("You'd like to see \(dl) go home today?", "Of course I would. That doesn't make it any less true.")]
             }
         }
         for (q, a) in rng.pick(openers, count: rng.int(1...2)) { ask(.cross, q, a) }
@@ -337,7 +367,7 @@ enum Testimony {
         // Redirect
         ask(.redirect, rng.pick(["Does anything you were asked on cross change what you told the court?",
                                  "Having heard those questions, is your testimony any different?",
-                                 "Is there anything you want to clarify after those questions?"]),
+                                 "Did any of those questions change your account?"]),
             w.weight >= 2 ? rng.pick(["No. It doesn't.", "No. What I told you is what happened.", "Nothing changes. I'd say it all again."])
                           : rng.pick(["It doesn't change what I remember. I understand why they asked.", "No. Some of it I'm less sure of, and I've said so.", "Not the important part."]))
         return out
