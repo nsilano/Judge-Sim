@@ -1982,6 +1982,7 @@ final class GameState: ObservableObject {
             if unsound == 0 && !outcome.rulingNotes.isEmpty { mood.adjust(prosecutors: 1, defenders: 1) }
             else if unsound >= 2 { mood.adjust(prosecutors: -1, defenders: -1) }
             CalendarCalls.prosecutorEdge = mood.prosecutorEdge
+            CourthouseMood.current = mood
             day.tally = tally
             today = day
         }
@@ -2114,6 +2115,7 @@ final class GameState: ObservableObject {
         weekTally = CourtDay.Tally()
         mood = CourthouseMood()
         CalendarCalls.prosecutorEdge = 0
+        CourthouseMood.current = mood
         careerStart = Date()
         docketSequence = 0
         sessionEnds = Date()
@@ -2542,6 +2544,7 @@ final class GameState: ObservableObject {
         weekTally = data.weekTally ?? CourtDay.Tally()
         mood = data.mood ?? CourthouseMood()
         CalendarCalls.prosecutorEdge = mood.prosecutorEdge
+        CourthouseMood.current = mood
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
         backfillAppeals()
         if today == nil && judgeName != nil {

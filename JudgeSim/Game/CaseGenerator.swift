@@ -782,19 +782,21 @@ enum CaseGenerator {
             prosecutor: "ADA \(prosecutor)",
             defenseAttorney: usePublicDefender ? "\(defenseLawyer), Assistant Public Defender" : "\(defenseLawyer), retained counsel",
             investigatingAgency: detective.agency,
-            prosecutionOpening: fill(t.story?.prosecutionOpening ?? rng.pick(t.prosecutionTheory)),
-            defenseOpening: fill(t.story?.defenseOpening ?? rng.pick(t.defenseTheory)),
+            // The lawyers speak to the judge they have: what the courthouse thinks of this judge colors how they open and close.
+            prosecutionOpening: Reputation.opening(fill(t.story?.prosecutionOpening ?? rng.pick(t.prosecutionTheory)), side: .prosecution, seed: seed),
+            defenseOpening: Reputation.opening(fill(t.story?.defenseOpening ?? rng.pick(t.defenseTheory)), side: .defense, seed: seed),
             // Without a written closing, one is built from the evidence when it's delivered (Allocutions.closing).
-            prosecutionClosing: t.story.map { fill($0.prosecutionClosing) } ?? "",
-            defenseClosing: t.story.map { fill($0.defenseClosing) } ?? "",
+            prosecutionClosing: t.story.map { Reputation.closing(fill($0.prosecutionClosing), side: .prosecution, seed: seed) } ?? "",
+            defenseClosing: t.story.map { Reputation.closing(fill($0.defenseClosing), side: .defense, seed: seed) } ?? "",
             evidence: evidence,
             witnesses: witnesses,
             objections: objections,
             aggravating: aggravating,
             mitigating: mitigating,
-            victimImpact: victimImpact,
+            // A family asking for mercy doesn't also ask the judge to be tough.
+            victimImpact: victimImpact.map { background.victimStance == .wantsLeniency ? $0 : Reputation.insideQuote($0, CourthouseMood.current.familyPlea(seed: seed)) },
             // Cases without a written statement get one built from their facts when the defendant speaks (Allocutions).
-            allocution: t.allocutions.isEmpty ? "" : fill(rng.pick(t.allocutions)),
+            allocution: t.allocutions.isEmpty ? "" : Reputation.insideQuote(fill(rng.pick(t.allocutions)), CourthouseMood.current.defendantPlea(seed: seed)),
             twist: twistText,
             ethics: ethics,
             mood: mood,
