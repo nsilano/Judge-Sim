@@ -42,7 +42,24 @@ enum NameBank {
         "Ulysses", "Vanessa", "Vernon", "Viola", "Wallace", "Wanda", "Xavier", "Yolanda", "Yusuf", "Zachary",
         "Zelda", "Aditya", "Ayesha", "Chidi", "Dariela", "Emre", "Farah", "Gideon", "Hamza", "Ines",
         "Jovan", "Kalani", "Leilani", "Magnus", "Nia", "Olamide", "Pilar", "Rashida", "Soren", "Thandiwe",
-        "Uriel", "Wren"
+        "Uriel", "Wren",
+        "Adaeze", "Alana", "Alicia", "Alma", "Anita", "Annette", "Antoinette", "April", "Ayanna", "Bernadette",
+        "Blanca", "Bonnie", "Candace", "Carla", "Carolyn", "Cecilia", "Chandra", "Charmaine", "Cheryl", "Christina",
+        "Clarissa", "Constance", "Crystal", "Danielle", "Darlene", "Deborah", "Desiree", "Destiny", "Diana", "Dominique",
+        "Edith", "Eileen", "Elaine", "Elisa", "Emilia", "Estelle", "Eva", "Evelyn", "Faith", "Frances",
+        "Geneva", "Georgia", "Gina", "Hazel", "Heather", "Helena", "Hope", "Ivy", "Jasmine", "Jeanette",
+        "Joanna", "Jocelyn", "Joy", "Juanita", "Judith", "Julia", "Kathleen", "Kimberly", "Lakisha", "Laurel",
+        "Lena", "Lillian", "Lorraine", "Lucille", "Lynette", "Marisol", "Marlene", "Martina", "Maxine", "Melinda",
+        "Mercedes", "Miriam", "Nadine", "Naomi", "Natasha", "Nina", "Noelle", "Octavia", "Olive", "Pamela",
+        "Penelope", "Rachel", "Regina", "Rita", "Rochelle", "Rosalind", "Roxanne", "Shanice", "Sheila", "Sherry",
+        "Sonia", "Sylvia", "Tanya", "Tasha", "Tiana", "Valerie", "Vera", "Veronica", "Vivian", "Whitney",
+        "Winona", "Xiomara", "Yvette", "Zoe", "Bettina", "Shayla", "Marisa", "Abel", "Alvin", "Anton",
+        "Archie", "Arturo", "Augustus", "Barrett", "Benedict", "Bernard", "Booker", "Boyd", "Bradley", "Byron",
+        "Calvin", "Cedric", "Clarence", "Clifford", "Cornelius", "Cyrus", "Dale", "Dexter", "Edgar", "Efrain",
+        "Elliott", "Ernesto", "Everett", "Fabian", "Felix", "Franklin", "Herman", "Horace", "Ignacio", "Jarvis",
+        "Kendrick", "Lonnie", "Lucius", "Malcolm", "Marlon", "Milton", "Mitchell", "Montgomery", "Nelson", "Norman",
+        "Quentin", "Ramon", "Reginald", "Roland", "Roscoe", "Russell", "Stanley", "Travis", "Virgil", "Warren",
+        "Wendell", "Wilbur", "Winston", "Ezekiel", "Moses", "Rodney"
     ]
 
     static let lastNames = [
@@ -70,7 +87,30 @@ enum NameBank {
         "Valdez", "Vick", "Wadsworth", "Walston", "Warrick", "Weatherspoon", "Whitley", "Wilder", "Womack", "Woodard",
         "Wyatt", "Yancey", "Yates", "Zimmerman", "Achebe", "Bergstrom", "Cavanaugh", "Dimitriou", "Eklund", "Ferreira",
         "Grabowski", "Hashemi", "Iwasaki", "Jablonski", "Kaur", "Lindgren", "Mahmoud", "Nwosu", "Oyelaran", "Papadopoulos",
-        "Rasmussen", "Sorensen", "Takahashi", "Uchenna", "Volkov", "Wojcik", "Xiong", "Zielinski"
+        "Rasmussen", "Sorensen", "Takahashi", "Uchenna", "Volkov", "Wojcik", "Xiong", "Zielinski",
+        "Ainsworth", "Ammons", "Arrington", "Atkinson", "Babcock", "Barefoot", "Batts", "Beasley", "Bledsoe", "Boykin",
+        "Brantley", "Braswell", "Caldwell", "Canady", "Carraway", "Coble", "Cogdell", "Corbett",
+        "Crumpler", "Culbreth", "Daughtry", "Deese", "Dudley", "Eason", "Edmondson", "Ellerbe", "Estrada", "Fennell",
+        "Finch", "Fulcher", "Futrell", "Gaskins", "Grady", "Grantham", "Gurganus", "Hales", "Herring", "Hinson",
+        "Holloman", "Hux", "Ipock", "Joyner", "Kearney", "Kornegay", "Langley", "Lassiter", "Lucas",
+        "Mabry", "Matthis", "McKoy", "McLamb", "McNeill", "Medlin", "Melvin", "Mobley", "Moye", "Mumford",
+        "Nobles", "Pate", "Peele", "Pender", "Perdue", "Pittman", "Purvis", "Quinlan", "Ragsdale", "Raynor",
+        "Revels", "Rouse", "Sasser", "Satterfield", "Scarborough", "Skinner", "Smallwood", "Stancil", "Sutton",
+        "Tew", "Thigpen", "Tillery", "Vann", "Varner", "Weathers", "Wiggins", "Worley", "Yarborough",
+        "Aguilar", "Cardenas", "Escobar", "Mendoza", "Pacheco", "Serrano", "Trujillo", "Villanueva", "Afolabi", "Mensah",
+        "Pham", "Hoang", "Park", "Choi", "Shah", "Desai", "Mehta", "Iyer", "Huang", "Lin",
+        "Zhou", "Khoury", "Nasser", "Rahman", "Siddiqui", "Olsen", "Donnelly", "Keane", "Kavanagh", "Thibodeaux",
+        "Boudreaux", "Fontenot", "Duplantis",
+        "Alston", "Bagwell", "Ballard", "Barnhill", "Beaman", "Blalock", "Bowden", "Britt", "Bullard", "Burroughs",
+        "Byrd", "Cannady", "Carver", "Causey", "Chadwick", "Chestnut", "Clodfelter", "Cooke", "Crisp", "Cuthbertson",
+        "Dail", "Draughon", "Edgerton", "Etheridge", "Everhart", "Faison", "Farrior", "Fogleman", "Fountain",
+        "Frye", "Gaddy", "Gainey", "Garriss", "Gatling", "Gibbs", "Gilchrist", "Goforth", "Guthrie", "Hailey",
+        "Hamlet", "Harrell", "Hedgepeth", "Hollowell", "Holt", "Hoyle", "Jarman", "Jessup", "Kinlaw", "Koonce",
+        "Lanier", "Lockamy", "Lytle", "Manning", "Massengill", "Maynard", "Mizelle", "Mozingo", "Overby",
+        "Pegram", "Pilkington", "Poindexter", "Pridgen", "Rascoe", "Respass", "Shearin", "Speight",
+        "Sumner", "Swindell", "Teachey", "Tolson", "Truitt", "Uzzell", "Waddell", "Whaley", "Winstead", "Wooten",
+        "Yount", "Abiodun", "Banerjee", "Gutierrez", "Ishikawa", "Jankowski", "Laszlo", "Rosario", "Sandoval", "Ueda",
+        "Vasquez", "Watanabe"
     ]
 
     static let streets = [
@@ -141,7 +181,7 @@ enum NameBank {
         "Grand Theft (felony), 2 years probation"
     ]
 
-    static let femaleFirstNames: Set<String> = ["Elena", "Priya", "Rosa", "Mei", "Aaliyah", "Hannah", "Sofia", "Yasmin", "Grace", "Nadia", "Fatima", "Imani", "Leah", "Brooke", "Ingrid", "Keisha", "Molly", "Carmen", "Zara", "Tamika", "Lucia", "Erin", "Avery", "Riley", "Quinn", "Dakota", "Noor", "Allison", "Renee", "Colleen", "Valentina", "Maya", "Esperanza", "Delilah", "Shannon", "Abigail", "Amara", "Anika", "Ariel", "Beatrice", "Bethany", "Bianca", "Bridget", "Camille", "Cassandra", "Celeste", "Charlene", "Chiara", "Cleo", "Corinne", "Dalia", "Dana", "Daphne", "Denise", "Dolores", "Dorothy", "Ebony", "Eleanor", "Eloise", "Esther", "Felicia", "Fiona", "Gemma", "Gloria", "Gwen", "Harriet", "Irene", "Jacinta", "Jada", "Janelle", "Jillian", "Josephine", "Kara", "Kendra", "Kiara", "Lana", "Latoya", "Leonora", "Lorena", "Lydia", "Mabel", "Mavis", "Mira", "Monique", "Nell", "Ophelia", "Paloma", "Patrice", "Paulette", "Phoebe", "Ramona", "Rhiannon", "Ruby", "Sabrina", "Savannah", "Selena", "Simone", "Stella", "Tabitha", "Teresa", "Trina", "Vanessa", "Viola", "Wanda", "Yolanda", "Zelda", "Ayesha", "Dariela", "Farah", "Ines", "Kalani", "Leilani", "Nia", "Pilar", "Rashida", "Thandiwe", "Wren"]
+    static let femaleFirstNames: Set<String> = ["Elena", "Priya", "Rosa", "Mei", "Aaliyah", "Hannah", "Sofia", "Yasmin", "Grace", "Nadia", "Fatima", "Imani", "Leah", "Brooke", "Ingrid", "Keisha", "Molly", "Carmen", "Zara", "Tamika", "Lucia", "Erin", "Avery", "Riley", "Quinn", "Dakota", "Noor", "Allison", "Renee", "Colleen", "Valentina", "Maya", "Esperanza", "Delilah", "Shannon", "Abigail", "Amara", "Anika", "Ariel", "Beatrice", "Bethany", "Bianca", "Bridget", "Camille", "Cassandra", "Celeste", "Charlene", "Chiara", "Cleo", "Corinne", "Dalia", "Dana", "Daphne", "Denise", "Dolores", "Dorothy", "Ebony", "Eleanor", "Eloise", "Esther", "Felicia", "Fiona", "Gemma", "Gloria", "Gwen", "Harriet", "Irene", "Jacinta", "Jada", "Janelle", "Jillian", "Josephine", "Kara", "Kendra", "Kiara", "Lana", "Latoya", "Leonora", "Lorena", "Lydia", "Mabel", "Mavis", "Mira", "Monique", "Nell", "Ophelia", "Paloma", "Patrice", "Paulette", "Phoebe", "Ramona", "Rhiannon", "Ruby", "Sabrina", "Savannah", "Selena", "Simone", "Stella", "Tabitha", "Teresa", "Trina", "Vanessa", "Viola", "Wanda", "Yolanda", "Zelda", "Ayesha", "Dariela", "Farah", "Ines", "Kalani", "Leilani", "Nia", "Pilar", "Rashida", "Thandiwe", "Wren", "Adaeze", "Alana", "Alicia", "Alma", "Anita", "Annette", "Antoinette", "April", "Ayanna", "Bernadette", "Blanca", "Bonnie", "Candace", "Carla", "Carolyn", "Cecilia", "Chandra", "Charmaine", "Cheryl", "Christina", "Clarissa", "Constance", "Crystal", "Danielle", "Darlene", "Deborah", "Desiree", "Destiny", "Diana", "Dominique", "Edith", "Eileen", "Elaine", "Elisa", "Emilia", "Estelle", "Eva", "Evelyn", "Faith", "Frances", "Geneva", "Georgia", "Gina", "Hazel", "Heather", "Helena", "Hope", "Ivy", "Jasmine", "Jeanette", "Joanna", "Jocelyn", "Joy", "Juanita", "Judith", "Julia", "Kathleen", "Kimberly", "Lakisha", "Laurel", "Lena", "Lillian", "Lorraine", "Lucille", "Lynette", "Marisol", "Marlene", "Martina", "Maxine", "Melinda", "Mercedes", "Miriam", "Nadine", "Naomi", "Natasha", "Nina", "Noelle", "Octavia", "Olive", "Pamela", "Penelope", "Rachel", "Regina", "Rita", "Rochelle", "Rosalind", "Roxanne", "Shanice", "Sheila", "Sherry", "Sonia", "Sylvia", "Tanya", "Tasha", "Tiana", "Valerie", "Vera", "Veronica", "Vivian", "Whitney", "Winona", "Xiomara", "Yvette", "Zoe", "Bettina", "Shayla", "Marisa"]
 
     static func gender(of fullName: String) -> Gender {
         femaleFirstNames.contains(fullName.components(separatedBy: " ").first ?? "") ? .female : .male
