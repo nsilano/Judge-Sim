@@ -219,6 +219,15 @@ struct AppealDetail: View {
 
 /// Where a person stands right now: custody, probation, court dates, and appeals.
 struct PersonStatusCard: View {
+    /// "Minimum 15 months; maximum 45 months. Less 139 days of jail credit." → one fact per line.
+    static func noteLines(_ note: String) -> [String] {
+        note.replacingOccurrences(of: "; ", with: ". ")
+            .components(separatedBy: ". ")
+            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ". ")) }
+            .filter { !$0.isEmpty }
+            .map { $0.capitalizedFirst }
+    }
+
     let person: PersonRecord
     let today: Date
     let appeals: [AppealTracker]
@@ -236,9 +245,21 @@ struct PersonStatusCard: View {
                         Text("Serving life imprisonment without parole.").font(.callout)
                     } else {
                         let days = max(0, CourtCalendar.calendar.dateComponents([.day], from: today, to: release).day ?? 0)
-                        Text("Projected release \(SentenceFormat.shortDate(release)), about \(duration(days)) from now.").font(.callout)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Projected release: \(SentenceFormat.shortDate(release))").font(.callout.weight(.semibold))
+                            Text("About \(duration(days)) from now").font(.caption).foregroundStyle(.secondary)
+                        }
                         if let note = person.releaseNote {
-                            Text(note).font(.caption).foregroundStyle(.secondary)
+                            // One fact per line instead of a paragraph.
+                            VStack(alignment: .leading, spacing: 3) {
+                                ForEach(Self.noteLines(note), id: \.self) { line in
+                                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                        Text("•")
+                                        Text(line).fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    .font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
                         }
                         if person.probation != nil {
                             Text(person.probationResumesOnRelease

@@ -2036,6 +2036,7 @@ enum Judgment {
     static func stayAwayOrder(_ c: CourtCase, _ r: Rulings, convicted: Bool, date: Date, probationEnds: Date?) -> StayAwayOrder? {
         guard convicted, let victim = c.victimName, !Consequences.victimDied(c), !Consequences.victimIsChild(c) else { return nil }
         let expires: Date
+        let fromProbation = r.stayAwayYears == 0
         if r.stayAwayYears > 0 {
             expires = Calendar.current.date(byAdding: .year, value: r.stayAwayYears, to: date) ?? date
         } else if r.conditions.noContactVictim, let ends = probationEnds {
@@ -2044,7 +2045,8 @@ enum Judgment {
             return nil
         }
         return StayAwayOrder(docket: c.docket, protectedName: victim, issued: date, expires: expires, domestic: Consequences.isDomestic(c),
-                             offense: BenchConference.convictedCharges(c, r).first?.law.title ?? c.charges.first?.law.title)
+                             offense: BenchConference.convictedCharges(c, r).first?.law.title ?? c.charges.first?.law.title,
+                             fromProbation: fromProbation ? true : nil)
     }
 
     /// The assignments of error an appellant would brief: the rulings that went against them, the ones an appellate

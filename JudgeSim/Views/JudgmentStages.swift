@@ -1293,7 +1293,8 @@ struct JudgmentStage: View {
             }
 
             if let order = outcome.stayAwayOrder {
-                Label("Stay-away order entered: no contact with \(order.protectedName) until \(SentenceFormat.shortDate(order.expires)).",
+                Label((order.fromProbation == true ? "Condition of probation: no contact with " : "Stay-away order entered: no contact with ")
+                      + "\(order.protectedName) until \(SentenceFormat.shortDate(order.expires)).",
                       systemImage: "hand.raised.fill")
                     .font(.callout)
                     .card()
