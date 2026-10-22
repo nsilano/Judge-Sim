@@ -44,8 +44,11 @@ extension WeekPlan {
         return CalendarLoad(ratio: Double(plannedMinutes) / Double(max(1, capacity)))
     }
 
+    func sits(_ day: Date) -> Bool { courtDays.contains { CourtCalendar.isSameDay($0, day) } }
+
     func dayLoad(_ day: Date) -> CalendarLoad {
-        if !CourtCalendar.isCourtDay(day) { return .closed }
+        if !sits(day) { return .closed }
+        if matters(on: day).contains(where: \.carriesOver) { return .overbooked }
         return CalendarLoad(ratio: load(on: day))
     }
 }
@@ -62,11 +65,36 @@ struct CourtCalendarView: View {
     @State private var month: Date?
     @State private var continuing: PlannedMatter?
     @State private var caseFile: CourtCase?
+    @State private var tab = 0
 
     private let cal = CourtCalendar.calendar
 
     var body: some View {
         NavigationStack {
+            VStack(spacing: 0) {
+                Picker("View", selection: $tab) {
+                    Text("Calendar").tag(0)
+                    Text(game.awaiting.isEmpty ? "Awaiting" : "Awaiting (\(game.awaiting.count))").tag(1)
+                    Text("My Schedule").tag(2)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(Theme.surface)
+                switch tab {
+                case 1: AwaitingView()
+                case 2: ScheduleView()
+                default: calendarBody
+                }
+            }
+            .background(Theme.background)
+            .navigationTitle("Court Calendar")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    private var calendarBody: some View {
+        Group {
             let plans = game.weekPlans(count: 16)
             let today = cal.startOfDay(for: game.today?.clock ?? game.currentDate)
             let day = selected ?? today
@@ -87,7 +115,7 @@ struct CourtCalendarView: View {
                             .font(.callout).foregroundStyle(.secondary).card()
                     }
                     UpcomingWeeks(plans: plans, selectedWeek: CourtCalendar.monday(onOrBefore: day)) { monday in
-                        let first = CourtCalendar.weekday(onOrAfter: monday)
+                        let first = game.nextSittingDay(onOrAfter: monday)
                         selected = first
                         month = first
                     }
@@ -97,8 +125,6 @@ struct CourtCalendarView: View {
                 .padding()
             }
             .background(Theme.background)
-            .navigationTitle("Court Calendar")
-            .navigationBarTitleDisplayMode(.inline)
             .sheet(item: $continuing) { matter in
                 ContinueSheet(matter: matter, plans: plans) { date in
                     game.resetForCongestion(matter, to: date)
@@ -200,7 +226,8 @@ private struct DayCell: View {
     let isSelected: Bool
 
     var body: some View {
-        let closed = !CourtCalendar.isCourtDay(day)
+        let off = plan?.isOff(day) ?? false
+        let closed = !CourtCalendar.isCourtDay(day) || off || (plan.map { !$0.sits(day) } ?? false)
         let load = plan?.dayLoad(day) ?? (closed ? .closed : .open)
         let matters = plan?.matters(on: day) ?? []
         let trials = matters.filter { $0.kind == .trial }.count
@@ -210,8 +237,12 @@ private struct DayCell: View {
             Text(day.formatted(.dateTime.day()))
                 .font(.subheadline.weight(isToday ? .bold : .regular).monospacedDigit())
                 .foregroundStyle(isToday ? Theme.gold : (inMonth ? Theme.text : Theme.secondaryText))
-            if closed {
+            if off {
+                Image(systemName: "beach.umbrella.fill").font(.system(size: 9)).foregroundStyle(Theme.defense)
+            } else if !CourtCalendar.isCourtDay(day) {
                 Image(systemName: "flag.fill").font(.system(size: 9)).foregroundStyle(Theme.gold)
+            } else if closed {
+                Text("—").font(.system(size: 9)).foregroundStyle(Theme.secondaryText)
             } else {
                 Capsule().fill(load.color.opacity(plan == nil || isPast ? 0.25 : 0.9)).frame(height: 4)
             }
@@ -228,7 +259,7 @@ private struct DayCell: View {
         .background(RoundedRectangle(cornerRadius: 8).fill(isSelected ? Theme.raised : Color.clear))
         .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(isToday ? Theme.gold : Color.clear, lineWidth: 1.5))
         .contentShape(Rectangle())
-        .accessibilityLabel("\(day.formatted(.dateTime.weekday(.wide).month().day())), \(closed ? "courthouse closed" : load.label)")
+        .accessibilityLabel("\(day.formatted(.dateTime.weekday(.wide).month().day())), \(off ? "day off" : (closed ? "court not sitting" : load.label))")
     }
 }
 
@@ -274,19 +305,21 @@ private struct WeekSummaryCard: View {
                     .tint(plan.load.color)
                 Text("About \(hoursText(plan.plannedMinutes)) of matters set, with \(hoursText(plan.capacity)) of courtroom time over \(plan.courtDays.count) day\(plan.courtDays.count == 1 ? "" : "s").")
                     .font(.caption).foregroundStyle(.secondary)
-                Label("\(plan.trialsSet) of \(plan.cap) trial seats taken" + (plan.isCurrent ? " this week" : ""), systemImage: "scalemass.fill")
+                Label("\(plan.trialsSet) of \(plan.cap) trial seats taken under your limits", systemImage: "scalemass.fill")
                     .font(.caption)
-                if !plan.isCurrent && plan.openSeats > 0 {
-                    Label("\(plan.openSeats) open seat\(plan.openSeats == 1 ? "" : "s") will be filled with new cases when the week opens.", systemImage: "plus.circle")
+                if plan.openSeats > 0 {
+                    Label("\(plan.openSeats) open trial seat\(plan.openSeats == 1 ? "" : "s") on the days ahead. Fill them from the cases awaiting a date.", systemImage: "plus.circle")
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                if !plan.isCurrent {
-                    Label("Probation violation hearings, usually one or two, are added when the week opens.", systemImage: "person.badge.clock")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
+                Label("New probation hearings go on the next day with hearing room as they come in.", systemImage: "person.badge.clock")
+                    .font(.caption).foregroundStyle(.secondary)
                 if plan.carryingOver > 0 {
-                    Label("\(plan.carryingOver) trial\(plan.carryingOver == 1 ? " is" : "s are") past the week's limit and will carry over. Continue one to pick its week yourself.", systemImage: "exclamationmark.triangle.fill")
+                    Label("\(plan.carryingOver) matter\(plan.carryingOver == 1 ? " is" : "s are") set past a day's limit. Continue one to another day, or raise that day's limit.", systemImage: "exclamationmark.triangle.fill")
                         .font(.caption).foregroundStyle(Theme.bad)
+                }
+                if !plan.daysOff.isEmpty {
+                    Label("Days off: " + plan.daysOff.map { $0.formatted(.dateTime.weekday(.wide)) }.joined(separator: ", "), systemImage: "beach.umbrella.fill")
+                        .font(.caption).foregroundStyle(Theme.defense)
                 }
             }
             ForEach(plan.holidays, id: \.0) { holiday in
@@ -299,6 +332,7 @@ private struct WeekSummaryCard: View {
 }
 
 private struct DayDetailCard: View {
+    @EnvironmentObject private var game: GameState
     let day: Date
     let plan: WeekPlan
     let events: [CalendarEvent]
@@ -309,35 +343,43 @@ private struct DayDetailCard: View {
     var body: some View {
         let matters = plan.matters(on: day)
         let load = plan.dayLoad(day)
+        let future = day > today
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text(CourtCalendar.dayTitle(day)).font(.system(.headline, design: .serif))
                 Spacer()
-                if CourtCalendar.isCourtDay(day) && day >= today { Pill(text: load.label, color: load.color) }
+                if plan.sits(day) && day >= today { Pill(text: load.label, color: load.color) }
             }
             if let holiday = CourtCalendar.holiday(on: day) {
-                Label("\(holiday). The courthouse is closed; matters move to the next court day.", systemImage: "flag.fill")
+                Label("\(holiday). The courthouse is closed.", systemImage: "flag.fill")
                     .font(.callout).foregroundStyle(Theme.gold)
             } else if CourtCalendar.isWeekend(day) {
                 Text("Court doesn't sit on weekends.").font(.callout).foregroundStyle(.secondary)
             } else if day < today {
                 Text("This day has passed.").font(.callout).foregroundStyle(.secondary)
-            } else if matters.isEmpty {
-                Text(plan.isCurrent ? "Nothing is projected for this day yet. Matters run in the order you take them."
-                                    : "Nothing set for this day yet. New cases and hearings are added when the week opens.")
+            } else if plan.isOff(day) {
+                Label("You're off this day. Nothing is set for it.", systemImage: "beach.umbrella.fill")
+                    .font(.callout).foregroundStyle(Theme.defense)
+            } else if !plan.sits(day) {
+                Text("You don't sit on \(day.formatted(.dateTime.weekday(.wide)))s. Change that under My Schedule.")
                     .font(.callout).foregroundStyle(.secondary)
             } else {
+                let limit = plan.limit(on: day)
                 let minutes = plan.minutesByDay[CourtCalendar.calendar.startOfDay(for: day)] ?? 0
-                Text("About \(hoursText(minutes)) of the \(hoursText(plan.dayCapacity)) court day." + (load == .overbooked ? " Expect to run late." : ""))
+                Text("Your limit: \(limit.trials) trial\(limit.trials == 1 ? "" : "s") and \(limit.hearings) hearing\(limit.hearings == 1 ? "" : "s")"
+                     + (game.schedule.hasOverride(day) ? " (changed for this day)" : "")
+                     + ". About \(hoursText(minutes)) of the \(hoursText(plan.dayCapacity)) court day." + (load == .overbooked ? " Over your limit." : ""))
                     .font(.caption).foregroundStyle(load == .overbooked ? Theme.bad : .secondary)
-                ForEach(matters) { matter in
+                if matters.isEmpty {
+                    Text("Nothing set for this day yet. Set cases from the Awaiting list.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+                ForEach(matters.filter { !$0.done }) { matter in
                     MatterRow(matter: matter, onContinue: onContinue, onCaseFile: onCaseFile)
                 }
-            }
-            if plan.isCurrent && CourtCalendar.isSameDay(day, plan.courtDays.first ?? day) {
-                let done = plan.matters.filter(\.done)
+                let done = matters.filter(\.done)
                 if !done.isEmpty {
-                    Text("Already heard this week").font(.caption.weight(.bold)).foregroundStyle(.secondary).padding(.top, 4)
+                    Text("Already heard today").font(.caption.weight(.bold)).foregroundStyle(.secondary).padding(.top, 4)
                     ForEach(done) { matter in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(matter.title).font(.subheadline.weight(.semibold))
@@ -347,12 +389,8 @@ private struct DayDetailCard: View {
                     }
                 }
             }
-            let carrying = plan.matters.filter(\.carriesOver)
-            if !carrying.isEmpty && CourtCalendar.isSameDay(day, plan.courtDays.first ?? day) {
-                Text("Waiting for a seat this week").font(.caption.weight(.bold)).foregroundStyle(Theme.bad).padding(.top, 4)
-                ForEach(carrying) { matter in
-                    MatterRow(matter: matter, onContinue: onContinue, onCaseFile: onCaseFile)
-                }
+            if future && CourtCalendar.isCourtDay(day) {
+                DayControls(day: day, limit: plan.limit(on: day), sits: plan.sits(day), off: plan.isOff(day))
             }
             if !events.isEmpty {
                 Divider()
@@ -363,7 +401,49 @@ private struct DayDetailCard: View {
     }
 }
 
+/// Changing one day: its limits, or taking it off.
+private struct DayControls: View {
+    @EnvironmentObject private var game: GameState
+    let day: Date
+    let limit: DayLimit
+    let sits: Bool
+    let off: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+            if off {
+                Button { Haptics.tap(); game.cancelTimeOff(day) } label: {
+                    Label("Come back to court this day", systemImage: "arrow.uturn.backward")
+                }
+                .buttonStyle(.bordered).tint(Theme.gold)
+            } else if sits {
+                Text("Just this day").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                Stepper("Trials: \(limit.trials)", value: Binding(get: { limit.trials }, set: { game.setDayLimit(day, DayLimit(trials: $0, hearings: limit.hearings)) }), in: 0...4)
+                    .font(.subheadline)
+                Stepper("Hearings: \(limit.hearings)", value: Binding(get: { limit.hearings }, set: { game.setDayLimit(day, DayLimit(trials: limit.trials, hearings: $0)) }), in: 0...4)
+                    .font(.subheadline)
+                HStack {
+                    if game.schedule.hasOverride(day) {
+                        Button("Use my usual limits") { Haptics.tap(); game.setDayLimit(day, nil) }
+                            .buttonStyle(.bordered).tint(.secondary)
+                    }
+                    Spacer()
+                    Button { Haptics.tap(); game.bookTimeOff(from: day, to: day) } label: {
+                        Label("Take this day off", systemImage: "beach.umbrella.fill")
+                    }
+                    .buttonStyle(.bordered).tint(Theme.defense)
+                }
+                .font(.caption.weight(.semibold))
+                Text("\(game.leaveLeft) court days of leave left this year. Anything set on a day off moves to the next day with room.")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
 private struct MatterRow: View {
+    @EnvironmentObject private var game: GameState
     let matter: PlannedMatter
     let onContinue: (PlannedMatter) -> Void
     let onCaseFile: (CourtCase) -> Void
@@ -399,7 +479,7 @@ private struct MatterRow: View {
                     Text(matter.title).font(.subheadline.weight(.semibold))
                     Text(matter.subtitle).font(.caption).foregroundStyle(.secondary)
                     ForEach(matter.notes, id: \.self) { note in
-                        Text("• " + note).font(.caption2).foregroundStyle(note.hasPrefix("Past this week") ? Theme.bad : Theme.quoteText)
+                        Text("• " + note).font(.caption2).foregroundStyle(note.hasPrefix("Over your limit") ? Theme.bad : Theme.quoteText)
                     }
                 }
             }
@@ -410,8 +490,12 @@ private struct MatterRow: View {
                             .buttonStyle(.bordered).tint(.secondary)
                     }
                     if matter.canContinue {
-                        Button { onContinue(matter) } label: { Label("Continue", systemImage: "calendar.badge.clock") }
+                        Button { onContinue(matter) } label: { Label("Move", systemImage: "calendar.badge.clock") }
                             .buttonStyle(.bordered).tint(Theme.gold)
+                    }
+                    if matter.kind == .trial, case .scheduled(let id) = matter.source {
+                        Button { Haptics.tap(); game.unschedule(id) } label: { Label("Unset", systemImage: "tray.and.arrow.up") }
+                            .buttonStyle(.bordered).tint(.secondary)
                     }
                 }
                 .font(.caption.weight(.semibold))
@@ -467,9 +551,10 @@ private struct UpcomingWeeks: View {
     }
 
     private func weekLine(_ plan: WeekPlan) -> String {
-        if plan.courtDays.isEmpty { return "Courthouse closed" }
+        if plan.courtDays.isEmpty { return plan.daysOff.isEmpty ? "Court not sitting" : "Week off" }
         var parts = ["\(plan.trialsSet)/\(plan.cap) trials", "~\(hoursText(plan.plannedMinutes))"]
-        if plan.carryingOver > 0 { parts.append("\(plan.carryingOver) waiting") }
+        if plan.carryingOver > 0 { parts.append("\(plan.carryingOver) over limit") }
+        if !plan.daysOff.isEmpty { parts.append("\(plan.daysOff.count) day\(plan.daysOff.count == 1 ? "" : "s") off") }
         if !plan.holidays.isEmpty { parts.append("\(plan.courtDays.count)-day week") }
         let hearings = plan.matters.filter { $0.kind == .hearing }.count
         if hearings > 0 { parts.append("\(hearings) hearing\(hearings == 1 ? "" : "s")") }
@@ -509,6 +594,7 @@ private struct UpcomingEvents: View {
 // MARK: - Continuing a matter
 
 private struct ContinueSheet: View {
+    @EnvironmentObject private var game: GameState
     let matter: PlannedMatter
     let plans: [WeekPlan]
     let onChoose: (Date) -> Void
@@ -521,39 +607,17 @@ private struct ContinueSheet: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(matter.title).font(.system(.title3, design: .serif).weight(.bold))
                     Text(matter.subtitle).font(.caption).foregroundStyle(.secondary)
-                    Text("The court resets this matter because the calendar is too full. Neither side asked for it, so it doesn't count against either one. Pick a week with room.")
+                    Text("The court moves this matter to another day because the calendar is too full. Neither side asked for it, so it doesn't count against either one. Pick a day with room.")
                         .font(.callout)
                     if matter.courtCase?.background?.isJailed == true {
-                        Label("The defendant is in jail. Every week of delay is another week held before trial.", systemImage: "exclamationmark.triangle.fill")
+                        Label("The defendant is in jail. Every day of delay is another day held before trial.", systemImage: "exclamationmark.triangle.fill")
                             .font(.caption).foregroundStyle(.orange)
                     }
-                    ForEach(plans.dropFirst().filter { !$0.courtDays.isEmpty }.prefix(10)) { plan in
-                        let current = plan.matters.contains { $0.id == matter.id }
-                        Button { Haptics.tap(); choice = plan.monday } label: {
-                            HStack(spacing: 10) {
-                                Image(systemName: choice == plan.monday ? "largecircle.fill.circle" : "circle")
-                                    .foregroundStyle(Theme.gold)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(CourtCalendar.weekTitle(plan.monday)).font(.subheadline.weight(.semibold))
-                                    Text("\(plan.trialsSet)/\(plan.cap) trials · ~\(hoursText(plan.plannedMinutes)) of \(hoursText(plan.capacity))"
-                                         + (plan.holidays.isEmpty ? "" : " · \(plan.courtDays.count)-day week")
-                                         + (current ? " · now set here" : ""))
-                                        .font(.caption).foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Text(plan.load.label).font(.caption.weight(.semibold)).foregroundStyle(plan.load.color)
-                            }
-                            .padding(10)
-                            .background(RoundedRectangle(cornerRadius: 10).fill(choice == plan.monday ? Theme.raised : Theme.surface))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(current)
-                        .opacity(current ? 0.5 : 1)
-                    }
+                    DayPickerList(kind: matter.kind == .hearing ? .hearing : .trial, excluding: matter.day, choice: $choice)
                     Button {
                         if let choice { Haptics.gavel(); onChoose(choice) }
                     } label: {
-                        Text(choice.map { "Continue to the " + CourtCalendar.weekTitle($0).lowercasedFirstWord } ?? "Choose a week")
+                        Text(choice.map { "Move to " + CourtCalendar.dayTitle($0) } ?? "Choose a day")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
@@ -563,9 +627,65 @@ private struct ContinueSheet: View {
                 .padding()
             }
             .background(Theme.background)
-            .navigationTitle("Continue")
+            .navigationTitle("Move to Another Day")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+        }
+    }
+}
+
+/// The next days the judge sits, each with what's set against its limits, to pick one.
+struct DayPickerList: View {
+    enum Kind { case trial, hearing }
+    @EnvironmentObject private var game: GameState
+    let kind: Kind
+    var excluding: Date? = nil
+    /// Days before this aren't offered: a case not ready yet, for one.
+    var earliest: Date? = nil
+    var count = 30
+    @Binding var choice: Date?
+
+    private var days: [Date] {
+        var out: [Date] = []
+        var day = game.nextSittingDay(onOrAfter: max(earliest ?? game.nextCourtDate, game.nextCourtDate))
+        while out.count < count {
+            out.append(day)
+            day = game.nextSittingDay(after: day)
+        }
+        return out
+    }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            ForEach(days, id: \.self) { day in
+                let limit = game.schedule.limit(on: day)
+                let set = game.counts(on: day)
+                let used = kind == .trial ? set.trials : set.hearings
+                let cap = kind == .trial ? limit.trials : limit.hearings
+                let full = used >= cap
+                let current = excluding.map { CourtCalendar.isSameDay($0, day) } ?? false
+                Button { Haptics.tap(); choice = day } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: choice == day ? "largecircle.fill.circle" : "circle").foregroundStyle(Theme.gold)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(CourtCalendar.dayTitle(day)).font(.subheadline.weight(.semibold))
+                            Text("\(set.trials)/\(limit.trials) trials · \(set.hearings)/\(limit.hearings) hearings" + (current ? " · now set here" : ""))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(full ? "Full" : "\(cap - used) open")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(full ? Theme.bad : Theme.good)
+                    }
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(choice == day ? Theme.raised : Theme.surface))
+                }
+                .buttonStyle(.plain)
+                .disabled(current)
+                .opacity(current ? 0.5 : 1)
+            }
+            Text("A full day can still take it; you'll just be over your limit and the day will run long.")
+                .font(.caption2).foregroundStyle(.secondary)
         }
     }
 }

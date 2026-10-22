@@ -69,7 +69,7 @@ struct OnboardingView: View {
                     DatePicker("Court opens at", selection: $openingTime,
                                in: CourtCalendar.opening(on: Date(), minutesAfterMidnight: 8 * 60)...CourtCalendar.opening(on: Date(), minutesAfterMidnight: 11 * 60),
                                displayedComponents: .hourAndMinute)
-                    Text("Court sits every week. Each week opens with a Monday calendar call, then you take the week's trials and hearings in any order, and adjourn for the week when the calendar is clear. There is no score: only the record you build.")
+                    Text("You set your own court calendar: the days you sit, how many trials and hearings each day takes, and when each case is tried. Each week opens with a calendar call on the first day you sit. There is no score: only the record you build.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -191,10 +191,11 @@ struct ChambersView: View {
         NavigationStack {
             Form {
                 Section {
-                    Stepper("Skip \(leaveWeeks) court week\(leaveWeeks == 1 ? "" : "s")", value: $leaveWeeks, in: 1...12)
+                    Stepper("Take \(leaveWeeks) week\(leaveWeeks == 1 ? "" : "s") off", value: $leaveWeeks, in: 1...12)
                     LabeledContent("Back on the bench", value: CourtCalendar.dayTitle(game.leaveReturnDate(weeks: leaveWeeks)))
+                    LabeledContent("Leave left this year", value: "\(game.leaveLeft) court days")
                 } footer: {
-                    Text("Time keeps moving while you're away: sentences end, people are released, probation runs its course, and appeals are decided. Matters continued into your leave are reset to your first day back. You'll get a summary when you return.")
+                    Text("Time keeps moving while you're away: sentences end, people are released, probation runs its course, and appeals are decided. Matters set during your leave move to the first days with room after it. To book single days, use the Calendar tab.")
                 }
             }
             .benchBackground()
@@ -226,7 +227,7 @@ struct ChambersView: View {
                 Text("\(game.title) · \(game.county?.name ?? "")")
                     .font(.subheadline)
                     .foregroundStyle(Theme.gold)
-                Text("Week \(game.weekNumber) · " + SentenceFormat.date(game.currentDate) + (game.scheduled.isEmpty ? "" : " · \(game.scheduled.count) matter\(game.scheduled.count == 1 ? "" : "s") set for later weeks"))
+                Text("Week \(game.weekNumber) · " + SentenceFormat.date(game.currentDate) + (game.scheduled.isEmpty ? "" : " · \(game.scheduled.count) matter\(game.scheduled.count == 1 ? "" : "s") set for later days"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -238,29 +239,28 @@ struct ChambersView: View {
         VStack(alignment: .leading, spacing: 12) {
             if let day = game.today {
                 HStack(alignment: .firstTextBaseline) {
-                    SectionTitle(text: "This week's calendar", icon: "calendar")
+                    SectionTitle(text: "Today's docket", icon: "calendar")
                     Spacer()
-                    Label(day.clock.formatted(.dateTime.weekday(.abbreviated)) + " " + CourtCalendar.time(day.clock), systemImage: "clock.fill")
+                    Label(CourtCalendar.time(day.clock), systemImage: "clock.fill")
                         .font(.subheadline.monospacedDigit().weight(.semibold))
                         .foregroundStyle(Theme.gold)
                 }
-                Text(CourtCalendar.weekTitle(day.date)).font(.system(.title3, design: .serif).weight(.bold))
+                Text(CourtCalendar.dayTitle(day.date)).font(.system(.title3, design: .serif).weight(.bold))
                 let remaining = day.entries.filter(\.isOpen).count
-                Text("Week \(game.weekNumber) on the bench · Now in court: \(day.clock.formatted(.dateTime.weekday(.wide)))"
-                     + (day.isComplete ? "" : " · \(remaining) matter\(remaining == 1 ? "" : "s") left"))
+                Text("Week \(game.weekNumber) on the bench" + (day.isComplete ? " · Docket clear" : " · \(remaining) matter\(remaining == 1 ? "" : "s") left"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                ForEach(game.holidaysThisWeek, id: \.0) { holiday in
-                    Label("\(holiday.0.formatted(.dateTime.weekday(.wide))): \(holiday.1). The courthouse is closed.", systemImage: "flag.fill")
-                        .font(.caption).foregroundStyle(Theme.gold)
+                if !game.awaiting.isEmpty {
+                    let urgent = game.awaiting.filter { game.urgency(of: $0).level >= .urgent }.count
+                    Label("\(game.awaiting.count) case\(game.awaiting.count == 1 ? " is" : "s are") waiting for you to set a trial date"
+                          + (urgent > 0 ? ", \(urgent) urgent" : "") + ". Set dates in the Calendar tab.",
+                          systemImage: "tray.full.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(urgent > 0 ? Theme.bad : Theme.gold)
                 }
-                if game.trialBacklog > 0 {
-                    Label("\(game.trialBacklog) trial\(game.trialBacklog == 1 ? "" : "s") waiting for a later week (up to \(game.trialCap) a week)", systemImage: "tray.full.fill")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                if CourtCalendar.isSameDay(day.clock, game.lastCourtDayThisWeek)
-                    && CourtCalendar.calendar.component(.hour, from: day.clock) >= 17 && !day.isComplete {
-                    Label("\(game.lastCourtDayThisWeek.formatted(.dateTime.weekday(.wide))) is running late. Finish the week's calendar before you adjourn.", systemImage: "moon.fill").font(.caption).foregroundStyle(.orange)
+                if CourtCalendar.calendar.component(.hour, from: day.clock) >= 17 && !day.isComplete {
+                    Label("Court is running late. Whatever you don't reach today goes to the next day with room when you adjourn.", systemImage: "moon.fill")
+                        .font(.caption).foregroundStyle(.orange)
                 }
 
                 ForEach(day.entries) { entry in
@@ -301,36 +301,25 @@ struct ChambersView: View {
                     .disabled(!entry.isOpen)
                 }
 
-                if day.isComplete {
-                    let next = game.nextCourtDate
-                    PrimaryButton(title: "Adjourn for the Week", icon: "moon.stars.fill") {
-                        Haptics.gavel()
-                        withAnimation { game.adjourn() }
-                    }
-                    Text("Next week's calendar opens \(CourtCalendar.dayTitle(next)). The world moves a week: sentences run, appeals come down, and new cases are filed.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Button {
-                        Haptics.tap()
-                        showLeave = true
-                    } label: {
-                        Label("Take Time Off…", systemImage: "beach.umbrella.fill")
-                            .font(.subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    Toggle(isOn: Binding(get: { game.lightWeeks }, set: { game.setLightWeeks($0) })) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Light weeks").font(.subheadline.weight(.semibold))
-                            Text("Up to two trials and one hearing a week, for shorter sessions. Starts next week.").font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    .tint(Theme.gold)
-                } else {
-                    Text("Take the week's matters in any order. No new matter is called after 4:30 p.m.; when a day fills up, the next matter is heard the following morning. When the calendar is clear, you can adjourn for the week.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                let next = game.nextCourtDate
+                let open = day.entries.filter(\.isOpen).count
+                PrimaryButton(title: "Adjourn for the Day", icon: "moon.stars.fill") {
+                    Haptics.gavel()
+                    withAnimation { game.adjourn() }
                 }
+                Text((open > 0 ? "\(open) matter\(open == 1 ? "" : "s") not reached will go to the next day with room. " : "")
+                     + "Court next sits \(CourtCalendar.dayTitle(next)). The world moves to that day: sentences run, appeals come down, and new cases are filed.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Button {
+                    Haptics.tap()
+                    showLeave = true
+                } label: {
+                    Label("Take Time Off…", systemImage: "beach.umbrella.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
             }
         }
         .card(tint: Theme.gold)

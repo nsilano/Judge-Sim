@@ -875,9 +875,9 @@ struct ContinuanceSheet: View {
         _requests = State(initialValue: Set(initialRequests))
     }
 
-    /// This week's calendar is already set, so a continued matter comes back next week at the earliest.
+    /// A continued matter comes back on a later court day, the next one at the earliest.
     static func earliest(after today: Date) -> Date {
-        CourtCalendar.monday(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 1, to: CourtCalendar.calendar.startOfDay(for: today)) ?? today)
+        CourtCalendar.nextWeekday(after: today)
     }
 
     var body: some View {
@@ -891,13 +891,13 @@ struct ContinuanceSheet: View {
                     if let cost {
                         Label(cost, systemImage: "hourglass").font(.caption).foregroundStyle(.orange)
                     }
-                    Text("It will be on the calendar for the \("w" + CourtCalendar.weekTitle(CourtCalendar.weekday(onOrAfter: date)).dropFirst()).")
+                    Text("It will be on the docket for \(CourtCalendar.dayTitle(CourtCalendar.weekday(onOrAfter: date))), or the next day you sit after it.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } footer: {
                     Text(keepsRulings
-                         ? "Every ruling you've made is kept. The case comes back on that week's calendar, right where you left it."
-                         : "The matter comes back on that week's calendar and is heard from the start.")
+                         ? "Every ruling you've made is kept. The case comes back on that day's docket, right where you left it."
+                         : "The matter comes back on that day's docket and is heard from the start.")
                 }
                 if !requestOptions.isEmpty {
                     Section {
