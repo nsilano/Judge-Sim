@@ -41,6 +41,8 @@ struct CareerStats: Codable, Hashable {
     var orderViolations: Int? = nil
     /// Cases whose wait for a trial date made the news or did harm (optional for older saves).
     var delayedCases: Int? = nil
+    /// Cases this judge handed to another judge.
+    var delegated: Int? = nil
 }
 
 /// What's on today's calendar.
@@ -171,7 +173,7 @@ final class GameState: ObservableObject {
         load()
     }
 
-    var casesHeard: Int { history.filter { $0.resolvedKind != "continuance" }.count }
+    var casesHeard: Int { history.filter { !["continuance", "reassigned"].contains($0.resolvedKind) }.count }
     var trialsHeard: Int { history.filter { $0.resolvedKind == "trial" }.count }
     var hearingsHeard: Int { history.filter { $0.resolvedKind == "hearing" }.count }
 
@@ -1079,6 +1081,56 @@ final class GameState: ObservableObject {
 
     func acceptSuggestions(_ list: [(id: UUID, date: Date)]) {
         for item in list { setTrialDate(item.id, to: item.date) }
+    }
+
+    // MARK: Handing a case to another judge
+
+    /// A waiting case goes to another judge. It's tried there; the result comes back in the paper.
+    func reassign(awaitingID: UUID) {
+        guard let index = awaiting.firstIndex(where: { $0.id == awaitingID }), let c = awaiting[index].courtCase else { return }
+        awaiting.remove(at: index)
+        handOff(c)
+    }
+
+    /// A trial already set for a date goes to another judge.
+    func reassign(scheduledID: UUID) {
+        guard let index = scheduled.firstIndex(where: { $0.id == scheduledID }), case .trial(let c) = scheduled[index].entry.matter else { return }
+        scheduled.remove(at: index)
+        handOff(c)
+    }
+
+    private func handOff(_ c: CourtCase) {
+        let date = today?.date ?? currentDate
+        var rng = SeededRNG(seed: c.seed ^ 0xDE1E_6A7E)
+        let other = "Judge " + rng.pick(NameBank.lastNames.filter { !(judgeName ?? "").hasSuffix($0) })
+        stats.delegated = (stats.delegated ?? 0) + 1
+        history.insert(CaseRecord(docket: c.docket, caption: c.caption, headline: c.headline, category: c.category, date: date,
+                                  defendantID: c.defendant.personID, outcome: "Reassigned to \(other)",
+                                  judgments: ["Reassigned to \(other) to relieve the court's calendar."],
+                                  returningDefendant: c.defendant.isReturning, appealStatus: nil, kind: "reassigned"), at: 0)
+        // The other judge hears it on the evidence; a strong case usually ends in a conviction, a weak one usually doesn't.
+        let strength = Judgment.properStrength(c)
+        let threshold = c.charges.first?.threshold ?? 5
+        let proven = strength >= threshold
+        let plea = proven && rng.chance(0.45)
+        let convicted = plea || (proven ? rng.chance(0.85) : rng.chance(0.2))
+        let offense = c.charges.first?.law.title.lowercased() ?? "the charges"
+        let when = CourtCalendar.calendar.date(byAdding: .day, value: rng.int(14...60), to: date) ?? date
+        let body: String
+        let headline: String
+        if plea {
+            headline = "\(c.defendant.name) pleads guilty before \(other)"
+            body = "\(c.defendant.name) pleaded guilty to \(offense) before \(other), who took the case when it was reassigned from Judge \(lastName(judgeName ?? ""))'s calendar."
+        } else if convicted {
+            headline = "\(other) convicts \(c.defendant.name) of \(offense)"
+            body = "In a bench trial, \(other) found \(c.defendant.name) guilty of \(offense). The case was reassigned from Judge \(lastName(judgeName ?? ""))'s calendar to ease a heavy docket."
+        } else {
+            headline = "\(c.defendant.name) acquitted before \(other)"
+            body = "\(other) found \(c.defendant.name) not guilty of \(offense), saying the State's evidence fell short. The case had been reassigned from Judge \(lastName(judgeName ?? ""))'s calendar."
+        }
+        pending.append(PendingEvent(due: when, news: NewsItem(date: when, kind: .verdict, headline: headline, body: body, docket: c.docket, prominence: 1),
+                                    personID: c.defendant.personID))
+        save()
     }
 
     // MARK: Schedule changes

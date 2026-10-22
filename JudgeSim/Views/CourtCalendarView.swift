@@ -494,8 +494,15 @@ private struct MatterRow: View {
                             .buttonStyle(.bordered).tint(Theme.gold)
                     }
                     if matter.kind == .trial, case .scheduled(let id) = matter.source {
-                        Button { Haptics.tap(); game.unschedule(id) } label: { Label("Unset", systemImage: "tray.and.arrow.up") }
-                            .buttonStyle(.bordered).tint(.secondary)
+                        Menu {
+                            Button { Haptics.tap(); game.unschedule(id) } label: { Label("Back to the waiting list", systemImage: "tray.and.arrow.up") }
+                            Button(role: .destructive) { Haptics.tap(); game.reassign(scheduledID: id) } label: {
+                                Label("Reassign to another judge", systemImage: "person.2.badge.gearshape")
+                            }
+                        } label: {
+                            Label("More", systemImage: "ellipsis.circle")
+                        }
+                        .buttonStyle(.bordered).tint(.secondary)
                     }
                 }
                 .font(.caption.weight(.semibold))

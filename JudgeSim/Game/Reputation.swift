@@ -36,7 +36,8 @@ enum Reputation {
 
         func clamp(_ x: Double) -> Int { Int(min(98, max(5, x)).rounded()) }
         // Cases left to wait too long: jailed defendants, victims at risk, files gathering dust.
-        let delays = Double(min(10, stats.delayedCases ?? 0))
+        // Handing off a case now and then is ordinary; making a habit of it, less so.
+        let delays = Double(min(10, (stats.delayedCases ?? 0) + max(0, (stats.delegated ?? 0) - 4) / 2))
         let prosecutors = clamp(62 + 40 * (harsh - lenient) + 20 * (activeShare - 0.5) + 25 * (affirm - 0.8) - 1.5 * delays)
         let defense = clamp(62 + 40 * (lenient - harsh) - 20 * (activeShare - 0.5) + 25 * (affirm - 0.8) - 120 * exonerationRate - 2.5 * delays)
         let overall = clamp(50 + 45 * (affirm - 0.6) + 25 * within - 150 * exonerationRate - 2 * delays)
@@ -53,6 +54,9 @@ enum Reputation {
             if harsh - lenient > 0.25 { comments.append("\"Sentences at the top of the range more than most.\"") }
             else if lenient - harsh > 0.25 { comments.append("\"Willing to go below the presumptive range.\"") }
             else if within > 0.7 { comments.append("\"Sentences by the chart. Predictable, in a good way.\"") }
+        }
+        if (stats.delegated ?? 0) >= 8 {
+            comments.append("\"Hands a lot of cases to other judges. The rest of the bench has noticed.\"")
         }
         if (stats.delayedCases ?? 0) >= 3 {
             comments.append("\"Cases sit too long in that courtroom. People wait in jail for a date.\"")

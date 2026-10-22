@@ -20,6 +20,7 @@ struct AwaitingView: View {
     @State private var caseFile: CourtCase?
     @State private var suggestions: [(id: UUID, date: Date)] = []
     @State private var showSuggestions = false
+    @State private var reassigning: AwaitingCase?
 
     var body: some View {
         FixedWidthScroll {
@@ -47,7 +48,8 @@ struct AwaitingView: View {
                 }
                 ForEach(game.awaitingByUrgency) { item in
                     AwaitingRow(item: item, urgency: game.urgency(of: item), today: game.today?.date ?? game.currentDate,
-                                onSet: { setting = item }, onFile: { caseFile = item.courtCase })
+                                onSet: { setting = item }, onFile: { caseFile = item.courtCase },
+                                onReassign: { reassigning = item })
                 }
             }
             .padding()
@@ -58,6 +60,18 @@ struct AwaitingView: View {
         }
         .sheet(isPresented: $showSuggestions) {
             SuggestionsSheet(suggestions: suggestions)
+        }
+        .confirmationDialog("Reassign this case to another judge?",
+                            isPresented: Binding(get: { reassigning != nil }, set: { if !$0 { reassigning = nil } }),
+                            titleVisibility: .visible, presenting: reassigning) { item in
+            Button("Reassign \(item.courtCase?.caption ?? "the case")", role: .destructive) {
+                Haptics.tap()
+                game.reassign(awaitingID: item.id)
+                reassigning = nil
+            }
+            Button("Keep it", role: .cancel) { reassigning = nil }
+        } message: { _ in
+            Text("Another judge tries it, and you'll read how it came out in the paper. You won't hear the case, and you can't take it back. An occasional handoff is ordinary; a habit of it shows up in the bar survey.")
         }
         .sheet(item: Binding(get: { caseFile.map { AwaitingFile(courtCase: $0) } }, set: { caseFile = $0?.courtCase })) { item in
             NavigationStack {
@@ -82,6 +96,7 @@ private struct AwaitingRow: View {
     let today: Date
     let onSet: () -> Void
     let onFile: () -> Void
+    let onReassign: () -> Void
 
     var body: some View {
         let cal = CourtCalendar.calendar
@@ -118,6 +133,8 @@ private struct AwaitingRow: View {
             }
             HStack(spacing: 8) {
                 Button(action: onFile) { Label("Case file", systemImage: "folder.fill") }
+                    .buttonStyle(.bordered).tint(.secondary)
+                Button(action: onReassign) { Label("Reassign", systemImage: "person.2.badge.gearshape") }
                     .buttonStyle(.bordered).tint(.secondary)
                 Spacer()
                 Button(action: onSet) { Label("Set trial date", systemImage: "calendar.badge.plus") }
