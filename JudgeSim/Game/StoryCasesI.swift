@@ -476,7 +476,7 @@ extension StoryCases {
             howIdentified: "The facility's keypad log.",
             notDone: ["The friend who borrowed the lanyard was never interviewed by police.", "The listed generator was never physically examined."],
             defendantExam: [
-                .direct("Were you at the facility that night?", "\"No. I was home. I'd lent my keycard lanyard with the code on it to a friend who needed to store a couch.\""),
+                .direct("Were you at the facility that night?", "\"Earlier, to pick up inventory, and then I went home. I'd lent my keycard lanyard with the code on it to a friend who needed to store a couch.\""),
                 .direct("Where did the generator come from?", "\"A flea market vendor I buy from every week. I have the receipt.\""),
                 .cross("You have a prior breaking or entering conviction.", "\"Eight years ago. I've built a business since then.\""),
                 .cross("The code was written on the lanyard?", "\"On a piece of tape. I'm bad with numbers.\"")

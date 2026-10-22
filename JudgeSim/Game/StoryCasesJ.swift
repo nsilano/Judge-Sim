@@ -40,7 +40,7 @@ extension StoryCases {
                             .direct("Why did you stop {DL}?", "\"A broken taillight at 5:10 a.m. on Route 17. When I walked up, I could see converters stacked behind the seat.\""),
                             .direct("What did you notice about them?", "\"Three had bright, fresh cuts and white paint on the pipe. The saw on the seat had a warm battery.\""),
                             .direct("What did {DL} say?", "\"'Those aren't mine, I'm just driving them.'\""),
-                            .cross("You didn't see {DL} at the church?", "\"I didn't. I came on shift after the service let out.\""),
+                            .cross("You didn't see {DL} at the church?", "\"I didn't. I was on patrol out on 17; I never went by the church.\""),
                             .cross("Was anyone else in the car?", "\"No. Just {DL}.\""),
                             .cross("A battery stays warm after charging, too?", "\"For a while, sure.\"")
                         ]),

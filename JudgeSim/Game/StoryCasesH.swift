@@ -249,7 +249,7 @@ extension StoryCases {
                         cross: ["\"I couldn't see {VL}'s hands.\""],
                         weight: 2, lay: true,
                         exam: [
-                            .direct("What did you see?", "\"The guy in front of me got out and walked up to the truck yelling. Then the truck door flew open and the driver came out swinging a tire iron.\""),
+                            .direct("What did you see?", "\"The driver in front of me got out and walked up to the truck yelling. Then the truck door flew open and the driver came out swinging a tire iron.\""),
                             .cross("You were behind {VL}'s car?", "\"Yes, one car back.\""),
                             .cross("Could you see {VL}'s hands at {DL}'s window?", "\"Not really. {VL}'s back was to me.\"")
                         ])

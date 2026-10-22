@@ -184,7 +184,7 @@ extension StoryCases {
         secondary: [],
         ageRange: 28...58, occupations: ["commercial fisherman", "marine mechanic", "charter boat captain"], hasVictim: true,
         summaries: [
-            "On the morning of {DATE}, at the public boat landing on the river in {HOOD}, {D} and {V} argued over who had been waiting longer for the ramp. Witnesses agree {VL} walked down the dock toward {DL}'s boat shouting. What happened next is disputed. {DL} says {VL} reached for a filleting knife on {D.his} belt and {D.he} swung a wooden paddle once to keep {VL} back. {VL} fell, struck the dock cleat, and suffered a fractured skull. Deputies found a sheathed knife on {VL}'s belt. Two witnesses say {VL}'s hands were empty and at {V.his} sides."
+            "On the morning of {DATE}, at the public boat landing on the river in {HOOD}, {D} and {V} argued over who had been waiting longer for the ramp. Witnesses agree {VL} walked down the dock toward {DL}'s boat shouting. What happened next is disputed. {DL} says {VL} reached for a filleting knife on {D.his} belt and {D.he} swung a wooden paddle once to keep {VL} back. {VL} fell, struck the dock cleat, and suffered a fractured skull. Deputies found a sheathed knife on {VL}'s belt. A witness says {VL}'s hands were empty and at {V.his} sides."
         ],
         prosecutionEvidence: [
             E(.statement, 3, "Two Eyewitnesses", "Two people at the landing say {VL}'s hands were empty and {DL} swung the paddle with both hands."),

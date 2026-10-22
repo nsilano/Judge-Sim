@@ -471,7 +471,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What do the videos show?", "\"A person grabbing a rifle barrel with two hands, while threatening to use it. Once two people fight over a loaded rifle, someone may die in seconds.\""),
-                            .direct("And the second shooting?", "\"A man charging with a tire iron at close range. That is a deadly weapon.\""),
+                            .direct("And the second shooting?", "\"Someone charging with a tire iron at close range. That is a deadly weapon.\""),
                             .cross("If {DL} had stayed home, no one would have died?", "\"That's true of most tragedies. It's a moral question, not a forensic one.\"")
                         ])
         ],

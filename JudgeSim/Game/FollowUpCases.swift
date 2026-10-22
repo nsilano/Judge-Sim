@@ -166,7 +166,7 @@ enum FollowUpCases {
             howIdentified: "The gas station camera and matching tower records.",
             notDone: ["The friend's phone was not searched."],
             defendantExam: [
-                .direct("Did you send those messages?", "\"Some of them. Not the pictures. I'd never do that.\""),
+                .direct("Did you send those messages?", "\"No. A friend set up that phone and sent them. I never touched it.\""),
                 .cross("You bought the phone.", "\"I bought it for my friend.\""),
                 .cross("Which ones did you send?", "\"The apologies.\"")
             ],
@@ -458,7 +458,7 @@ enum FollowUpCases {
         secondary: [],
         ageRange: 20...65, occupations: [], hasVictim: true,
         summaries: [
-            "Months after {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D.he} was at a bar in {HOOD} on {DATE} when an argument over a pool table spilled into the parking lot. {V}, who had never met {DL}, was struck in the head with a bottle and fell against the curb. {V.He} spent five days in the hospital with a brain bleed. Two witnesses say {DL} swung the bottle without warning; {DL} says {V} had a pool cue and was swinging it at {D.him}."
+            "Months after {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D.he} was at a bar in {HOOD} on {DATE} when an argument over a pool table spilled into the parking lot. {V}, who had never met {DL}, was struck in the head with a bottle and fell against the curb. {V.He} spent five days in the hospital with a brain bleed. A witness says {DL} swung the bottle without warning; {DL} says {V} had a pool cue and was swinging it at {D.him}."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Parking Lot Camera", "Grainy footage: two figures face off; one swings a bottle; the other drops. The pool cue is not visible.", .search),

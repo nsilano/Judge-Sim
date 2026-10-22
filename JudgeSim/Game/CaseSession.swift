@@ -558,7 +558,7 @@ final class CaseSession: ObservableObject {
             lines.append(e.question.isEmpty ? "- \(CounselBrief.clip(e.answer, limit))" : "Q: \(e.question) A: \(CounselBrief.clip(e.answer, limit))")
         }
         if Testimony.isOfficial(witness.role), let report = c.investigation {
-            lines.append("WHAT YOU KNOW OF THE INVESTIGATION: \(report.howIdentified) Steps not taken: \(report.notDone.joined(separator: " "))")
+            lines.append("WHAT YOU KNOW OF THE INVESTIGATION: \(report.howIdentified) Steps not taken: \(report.notDone.isEmpty ? "none of note" : report.notDone.joined(separator: " "))")
             if !compact {
                 lines.append("Timeline: " + report.timeline.map { "\($0.when): \($0.what)" }.joined(separator: " | "))
             }

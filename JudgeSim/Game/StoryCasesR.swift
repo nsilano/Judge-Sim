@@ -356,7 +356,7 @@ extension StoryCases {
                         cross: ["\"The room should have been checked anyway.\""],
                         weight: 1, lay: false,
                         exam: [
-                            .direct("Why did the couple's toxicology take six weeks?", "\"The state lab was backlogged. We sent it routine. In hindsight it should have been expedited.\""),
+                            .direct("Why did the couple's toxicology take seven weeks?", "\"The state lab was backlogged. We sent it routine. In hindsight it should have been expedited.\""),
                             .cross("Two healthy people dying in the same room: should someone have checked the room?", "\"Someone should have. I should have.\"")
                         ])
         ],

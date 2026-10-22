@@ -305,7 +305,7 @@ enum StoryCases {
                             .cross("You saw this person for about three or four seconds?", "\"Three, maybe four. Long enough to see a face.\""),
                             .cross("In the light of a nightlight, from the other end of a hallway?", "\"About twenty feet. Yes.\""),
                             .cross("You told the 911 dispatcher you 'couldn't really see their face.'", "\"I was hysterical. I saw the side of it.\""),
-                            .cross("Before the lineup, the detective told you they'd found your laptop at a pawn shop?", "\"He said they had a lead from the laptop. He didn't say who.\"")
+                            .cross("Before the lineup, the detective told you they'd found your laptop at a pawn shop?", "\"The detective said they had a lead from the laptop, but not who.\"")
                         ]),
             WitnessSeed(name: nil, role: "Clerk at {PAWN}",
                         direct: ["\"{DL} sold it and gave a thumbprint, like the law requires.\""],
@@ -1011,7 +1011,7 @@ enum StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("Why did {VL} come to see you?", "\"To talk about getting out of the partnership, or buying {DL} out. {VL} thought money was missing from the parts account and wanted to bring it up at the quarterly meeting.\""),
-                            .direct("What was {VL}'s state of mind?", "\"Upset. {VL} said, 'Nineteen years, and I think {DL}'s stealing from me.' {VL} was also afraid to say it out loud.\""),
+                            .direct("What was {VL}'s state of mind?", "\"Upset. {VL} said, 'Eleven years, and I think {DL}'s stealing from me.' {VL} was also afraid to say it out loud.\""),
                             .cross("{VL} told you {V.he} wasn't sure about the skimming?", "\"{VL} said 'I could be wrong, I hope I'm wrong.'\""),
                             .cross("Did {VL} ever say {V.he} was afraid of {DL}?", "\"No. Afraid of the conversation, not of {DL}.\"")
                         ])
