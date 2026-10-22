@@ -111,6 +111,11 @@ struct AwaitingCase: Identifiable, Codable {
     var earliestReason: String?
     /// Costs of waiting already felt, so each lands once.
     var warnings: [String] = []
+    /// Days that don't work for someone the trial needs, by date ("2026-11-03"), with the reason.
+    var conflicts: [String: String]? = nil
+    /// When the DA's office asked for this case to be set first, and why.
+    var priorityRequested: Date? = nil
+    var priorityReason: String? = nil
 
     var courtCase: CourtCase? {
         if case .trial(let c) = entry.matter { return c }

@@ -650,6 +650,8 @@ struct DayPickerList: View {
     /// Days before this aren't offered: a case not ready yet, for one.
     var earliest: Date? = nil
     var count = 30
+    /// Days that don't work for someone the trial needs, with the reason.
+    var conflicts: [String: String] = [:]
     @Binding var choice: Date?
 
     private var days: [Date] {
@@ -678,6 +680,10 @@ struct DayPickerList: View {
                             Text(CourtCalendar.dayTitle(day)).font(.subheadline.weight(.semibold))
                             Text("\(set.trials)/\(limit.trials) trials · \(set.hearings)/\(limit.hearings) hearings" + (current ? " · now set here" : ""))
                                 .font(.caption).foregroundStyle(.secondary)
+                            if let conflict = conflicts[CourtSchedule.key(day)] {
+                                Label("Conflict: \(conflict)", systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption2).foregroundStyle(.orange)
+                            }
                         }
                         Spacer()
                         Text(full ? "Full" : "\(cap - used) open")

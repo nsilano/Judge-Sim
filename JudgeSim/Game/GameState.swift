@@ -1016,14 +1016,37 @@ final class GameState: ObservableObject {
         let cal = CourtCalendar.calendar
         let first = earliest.map { cal.startOfDay(for: $0) }
         awaiting.removeAll { $0.courtCase?.id == c.id }
-        awaiting.append(AwaitingCase(entry: entry, since: cal.startOfDay(for: date),
-                                     earliest: first.flatMap { $0 > cal.startOfDay(for: date) ? $0 : nil }, earliestReason: reason))
+        var item = AwaitingCase(entry: entry, since: cal.startOfDay(for: date),
+                                earliest: first.flatMap { $0 > cal.startOfDay(for: date) ? $0 : nil }, earliestReason: reason)
+        // Some dates won't work for someone the trial needs.
+        var rng = SeededRNG(seed: c.seed ^ 0xC0F1_1C75)
+        if rng.chance(0.35) {
+            var reasons = ["The lead detective is testifying in federal court in Raleigh",
+                           "Defense counsel is in a murder trial in Pitt County",
+                           "The State's laboratory analyst is on leave",
+                           "A key witness is out of state for work",
+                           "Defense counsel has a long-planned family surgery"]
+            if c.victimName != nil { reasons.append("The victim has a scheduled surgery and can't travel") }
+            var conflicts: [String: String] = [:]
+            for _ in 0..<rng.int(1...3) {
+                let day = nextSittingDay(onOrAfter: cal.date(byAdding: .day, value: rng.int(7...45), to: date) ?? date)
+                conflicts[CourtSchedule.key(day)] = rng.pick(reasons)
+            }
+            item.conflicts = conflicts
+        }
+        awaiting.append(item)
     }
 
     /// How urgently a waiting case needs its date.
     func urgency(of item: AwaitingCase) -> Urgency {
         guard let c = item.courtCase else { return Urgency(level: .routine, score: 0, reasons: []) }
-        return Urgency.of(c, entry: item.entry, since: item.since, today: today?.date ?? currentDate)
+        var u = Urgency.of(c, entry: item.entry, since: item.since, today: today?.date ?? currentDate)
+        if let reason = item.priorityReason {
+            u.level = max(u.level, .soon)
+            u.score += 8
+            u.reasons.insert("The DA's office asked for a priority setting: \(reason)", at: 0)
+        }
+        return u
     }
 
     /// Waiting cases, most urgent first.
@@ -1041,6 +1064,19 @@ final class GameState: ObservableObject {
         let todayDate = today.map { cal.startOfDay(for: $0.date) } ?? cal.startOfDay(for: currentDate)
         let day = nextSittingDay(onOrAfter: max(cal.startOfDay(for: date), todayDate))
         item.entry.note = ((item.entry.note ?? "") + " Set for trial on \(SentenceFormat.shortDate(day)).").trimmingCharacters(in: .whitespaces)
+        // Setting a trial over someone's known conflict costs goodwill with that side.
+        if let conflict = item.conflicts?[CourtSchedule.key(day)] {
+            item.entry.note = (item.entry.note ?? "") + " Set over a known conflict: \(conflict.prefix(1).lowercased() + String(conflict.dropFirst()))."
+            if conflict.contains("Defense counsel") { mood.adjust(prosecutors: 0, defenders: -2) } else { mood.adjust(prosecutors: -2, defenders: 0) }
+            CourthouseMood.current = mood
+            CalendarCalls.prosecutorEdge = mood.prosecutorEdge
+        }
+        // The DA's office notices when its priority request is honored.
+        if let asked = item.priorityRequested, (cal.dateComponents([.day], from: asked, to: todayDate).day ?? 99) <= 30 {
+            mood.adjust(prosecutors: 1, defenders: 0)
+            CourthouseMood.current = mood
+            CalendarCalls.prosecutorEdge = mood.prosecutorEdge
+        }
         if var docket = today, cal.isDate(docket.date, inSameDayAs: day), case .trial(var c) = item.entry.matter {
             creditJailTime(&c, through: day)
             c.sessionDate = day
@@ -1270,6 +1306,16 @@ final class GameState: ObservableObject {
                           earliest: ready, reason: "Discovery is still being exchanged")
             }
         }
+        // Now and then the DA's office asks that a waiting case be set first.
+        if rng.chance(0.08), let index = awaiting.indices.filter({ awaiting[$0].priorityRequested == nil && awaiting[$0].courtCase != nil }).randomElement(using: &rng),
+           let c = awaiting[index].courtCase {
+            var reasons = ["a witness is about to deploy with the National Guard", "the State's key witness is moving out of state",
+                           "the investigating officer is retiring"]
+            if c.victimName != nil { reasons += ["the victim's family is asking every week", "the victim is elderly and in poor health"] }
+            if c.background?.isJailed == true { reasons.append("the defendant has been held a long time and the office wants it tried") }
+            awaiting[index].priorityRequested = date
+            awaiting[index].priorityReason = rng.pick(reasons)
+        }
         // Probation violations are short matters: each goes on the next day with room for a hearing.
         if rng.chance(lightWeeks ? 0.15 : 0.3), let hearing = makeViolationHearing(date: date, excluding: &used, rng: &rng) {
             place(DocketEntry(matter: .hearing(hearing)), from: nextSittingDay(after: date))
@@ -1324,6 +1370,14 @@ final class GameState: ObservableObject {
                     post(NewsItem(date: date, kind: .arrest, headline: "\(victim) reports new contact from \(c.defendant.name) as case waits",
                                   body: "\(victim) told deputies that \(c.defendant.name), who is free while charges are pending in Hollis County Superior Court, came to \(victim)'s home this week. The case has waited \(waited) days for a trial date before Judge \(judge).",
                                   docket: c.docket, prominence: 2))
+                }
+            }
+            if let asked = awaiting[index].priorityRequested, (cal.dateComponents([.day], from: asked, to: date).day ?? 0) >= 30 {
+                once("priorityIgnored") {
+                    mood.adjust(prosecutors: -3, defenders: 0)
+                    CourthouseMood.current = mood
+                    CalendarCalls.prosecutorEdge = mood.prosecutorEdge
+                    awaiting[index].entry.note = ((awaiting[index].entry.note ?? "") + " The DA's office has complained that its request for a priority setting was ignored.").trimmingCharacters(in: .whitespaces)
                 }
             }
             if waited >= 180 {
