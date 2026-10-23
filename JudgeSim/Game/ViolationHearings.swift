@@ -219,33 +219,74 @@ enum ViolationHearings {
         if term.starts == nil { term.starts = start }
         let elapsed = start.map { max(0, cal.dateComponents([.month], from: $0, to: date).month ?? 0) }
 
-        var candidates: [(text: String, willfulChance: Double)] = []
+        // Each violation carries its kind, so the excuse offered fits what actually went wrong.
+        typealias Kind = ViolationKind
+        var candidates: [(text: String, willfulChance: Double, kind: Kind)] = []
+        let town = rng.pick(county.towns)
         if need.substance || conditions.contains("drug") {
             let count = rng.int(2...4)
-            candidates.append(("Tested positive for \(rng.pick(["cocaine", "methamphetamine", "fentanyl", "marijuana"])) on \(count) occasions.", need.substance ? 0.45 : 0.8))
+            candidates.append(rng.pick([
+                ("Tested positive for \(rng.pick(["cocaine", "methamphetamine", "fentanyl", "marijuana"])) on \(count) occasions.", need.substance ? 0.45 : 0.8, Kind.drugs),
+                ("Failed to appear for \(count) random drug screens.", 0.65, Kind.drugs),
+                ("Submitted a diluted urine sample, then admitted using \(rng.pick(["cocaine", "methamphetamine", "pills"])) the weekend before.", 0.7, Kind.drugs)
+            ]))
+        }
+        if conditions.contains("alcohol") {
+            candidates.append(rng.pick([
+                ("The alcohol monitoring bracelet recorded drinking on \(rng.int(2...6)) days.", 0.75, Kind.alcohol),
+                ("Tampered with the alcohol monitoring bracelet; it logged a strap obstruction for \(rng.int(9...30)) hours.", 0.85, Kind.alcohol)
+            ]))
         }
         if conditions.contains("community service") {
             let recent = (elapsed ?? 12) > 3 ? "with no hours in the last three months" : "with no hours since the first weeks of probation"
-            candidates.append(("Completed \(rng.int(0...20)) of the ordered community service hours, \(recent).", 0.6))
+            candidates.append(("Completed \(rng.int(0...20)) of the ordered community service hours, \(recent).", 0.6, .service))
         }
         if monthly > 0 {
             // No more months behind than the months on probation.
             let behind = rng.int(3...8)
             let months = elapsed.map { max(1, min(behind, $0)) } ?? behind
-            candidates.append(("\(SentenceFormat.dollars(monthly * months)) in arrears on court-ordered payments.", monthly > 150 ? 0.3 : 0.55))
+            candidates.append(("\(SentenceFormat.dollars(monthly * months)) in arrears on court-ordered payments.", monthly > 150 ? 0.3 : 0.55, .money))
         }
         if conditions.contains("curfew") || conditions.contains("house arrest") {
-            candidates.append(("Curfew violations recorded on \(rng.int(3...9)) nights by electronic monitoring.", 0.7))
+            candidates.append(rng.pick([
+                ("Curfew violations recorded on \(rng.int(3...9)) nights by electronic monitoring.", 0.7, Kind.curfew),
+                ("Let the monitor's battery die \(rng.int(3...7)) times; it was dead for a total of \(rng.int(20...60)) hours.", 0.6, Kind.curfew)
+            ]))
         }
         if conditions.contains("treatment") || conditions.contains("evaluation") {
-            candidates.append(("Discharged from the treatment program for non-attendance.", need != .none ? 0.4 : 0.7))
+            candidates.append(rng.pick([
+                ("Discharged from the treatment program for non-attendance.", need != .none ? 0.4 : 0.7, Kind.treatment),
+                ("Never scheduled the court-ordered assessment.", 0.65, Kind.treatment),
+                ("Left a residential treatment program against medical advice after \(rng.int(4...19)) days.", 0.6, Kind.treatment)
+            ]))
         }
         if conditions.contains("no contact") {
-            candidates.append(("Sent text messages to the victim on two occasions in violation of the no-contact condition.", 0.85))
+            candidates.append(rng.pick([
+                ("Sent text messages to the victim on two occasions in violation of the no-contact condition.", 0.85, Kind.contact),
+                ("Was seen at the victim's workplace and spoke to the victim in the parking lot.", 0.85, Kind.contact),
+                ("Contacted the victim through a relative's social media account.", 0.8, Kind.contact)
+            ]))
+        }
+        if conditions.contains("employment") {
+            candidates.append(("Has not held a job or shown proof of a job search for \(rng.int(2...5)) months.", 0.45, .work))
+        }
+        if conditions.contains("education") || conditions.contains("ged") {
+            candidates.append(("Stopped attending GED classes after \(rng.int(2...6)) weeks.", 0.5, .school))
         }
         // Unsupervised probation has no office visits; its regular conditions are to pay and to obey the law.
-        if supervised && (candidates.isEmpty || rng.chance(0.3)) {
-            candidates.append(("Missed \(rng.int(2...4)) scheduled office visits with the probation officer.", 0.6))
+        if supervised {
+            if candidates.isEmpty || rng.chance(0.3) {
+                candidates.append(("Missed \(rng.int(2...4)) scheduled office visits with the probation officer.", 0.6, .visits))
+            }
+            if rng.chance(0.2) {
+                candidates.append(("Moved out of the approved residence without telling the officer; found living in \(town).", 0.65, .moved))
+            }
+            if rng.chance(0.15) {
+                candidates.append(("Left the state without permission: \(rng.pick(["a week in Myrtle Beach", "a trip to Atlanta", "four days in Virginia", "a cousin's wedding in Georgia"])), shown on social media.", 0.7, .travel))
+            }
+            if rng.chance(0.15) {
+                candidates.append(("Did not report police contact: cited for \(rng.pick(["driving without a license", "an open container", "trespassing at a closed park"])) and never told the officer.", 0.6, .arrest))
+            }
         }
 
         // Only a supervised probationer can abscond from supervision (G.S. 15A-1343(b)(3a)).
@@ -254,34 +295,43 @@ enum ViolationHearings {
         let newCrime = !absconded && (candidates.isEmpty || rng.chance(supervised ? 0.15 : 0.3))
         var picked = candidates.isEmpty ? [] : rng.pick(candidates, count: min(candidates.count, rng.int(1...3)))
         if absconded {
-            picked.insert(("Absconded: failed to report and whereabouts were unknown for \(rng.int(35...90)) days, until arrested on an order for arrest.", 0.9), at: 0)
+            picked.insert(("Absconded: failed to report and whereabouts were unknown for \(rng.int(35...90)) days, until arrested on an order for arrest.", 0.9, .abscond), at: 0)
         }
         let female = NameBank.gender(of: person.name) == .female
-        let newOffense = rng.pick(["misdemeanor larceny from a Dollar General in \(rng.pick(county.towns))",
+        let newOffense = rng.pick(["misdemeanor larceny from a Dollar General in \(town)",
                                    "possession of methamphetamine during a traffic stop",
                                    female
-                                    ? "simple assault, after a call to a residence in \(rng.pick(county.towns))"
-                                    : "assault on a female, after a call to a residence in \(rng.pick(county.towns))",
-                                   "driving while license revoked and resisting a public officer"])
+                                    ? "simple assault, after a call to a residence in \(town)"
+                                    : "assault on a female, after a call to a residence in \(town)",
+                                   "driving while license revoked and resisting a public officer",
+                                   "shoplifting tools from a hardware store in \(town)",
+                                   "possession of a stolen handgun found during a traffic stop",
+                                   "driving while impaired after a single-car crash",
+                                   "breaking into a storage unit in \(town)",
+                                   "possession of drug paraphernalia and a small amount of crack cocaine",
+                                   "communicating threats to a neighbor",
+                                   "using a stolen debit card at two gas stations",
+                                   "trespassing and resisting at a bar that had banned them"])
         if newCrime {
-            picked.insert(("New criminal offense: charged with \(newOffense). The charge is pending in district court; the \(supervised ? "officer" : "State") will offer the underlying facts.", 0.85), at: 0)
+            picked.insert(("New criminal offense: charged with \(newOffense). The charge is pending in district court; the \(supervised ? "officer" : "State") will offer the underlying facts.", 0.85, .newCrime), at: 0)
         }
         let willfulChance = picked.map { $0.willfulChance }.reduce(0, +) / Double(max(1, picked.count))
         let willful = rng.chance(willfulChance)
 
-        let circumstances = rng.pick([
-            "\(person.lastName) lost a job at a warehouse two months in and has been staying with different friends since.",
-            supervised ? "\(person.lastName) has no car, and the probation office is a 40-minute bus ride each way."
-                       : "\(person.lastName) has no car, and the courthouse is a 40-minute bus ride each way.",
-            "\(person.lastName)'s treatment provider closed its Hollis County office in the spring.",
-            "\(person.lastName) has been working double shifts to cover rent and court costs.",
-            "\(person.lastName) was hospitalized for eight days during the reporting period."
-        ])
+        // The reason offered fits the main violation, and only says things the record allows.
+        let dl = person.lastName
+        let kids = person.profile?.childCount ?? 0
+        let mainKind = picked.first?.kind ?? .visits
+        let circumstances = ViolationExcuses.pick(for: mainKind, name: dl, supervised: supervised, town: town, kids: kids, rng: &rng)
         let explanation = willful
-            ? rng.pick(["My client admits the violations. \(person.lastName) got off track and is asking for one more chance.",
-                        "My client doesn't contest the report, Judge, but asks the court to consider what's been going on."])
+            ? rng.pick(["My client admits the violations. \(dl) got off track and is asking for one more chance.",
+                        "My client doesn't contest the report, Judge, but asks the court to consider what's been going on.",
+                        "\(dl) knows this is on \(dl), Judge. We're asking for a sanction short of prison.",
+                        "My client admits it and has already enrolled in a program without being told to. We'd ask the court to let that work."])
             : rng.pick(["These violations weren't willful, Judge. \(circumstances)",
-                        "My client has been trying. \(circumstances) That's not the same as defiance."])
+                        "My client has been trying. \(circumstances) That's not the same as defiance.",
+                        "Judge, this is a life falling apart, not someone thumbing their nose at the court. \(circumstances)",
+                        "\(circumstances) My client is asking for help with that, not a cell."])
 
         let count = picked.count == 1 ? "one alleged violation" : "\(picked.count) alleged violations"
         let report = supervised

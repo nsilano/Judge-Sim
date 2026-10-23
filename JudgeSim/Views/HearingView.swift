@@ -24,6 +24,52 @@ struct HearingView: View {
         return min(24, room - room % 6)
     }
 
+    /// The case this probation came from, so the judge can weigh the violation against what the person did.
+    @ViewBuilder private var originalCase: some View {
+        let term = h.probation
+        let record = game.history.first { $0.docket == term.docket && $0.resolvedKind == "trial" }
+        let person = game.person(h.personID)
+        let appearance = person?.appearances.first { $0.docket == term.docket }
+        let story = game.news.first { $0.docket == term.docket && $0.kind == .verdict }
+        SectionTitle(text: "The original case", icon: "folder.fill")
+        VStack(alignment: .leading, spacing: 8) {
+            Text(term.offense).font(.subheadline.weight(.semibold))
+            Text(term.docket + (term.offenseClass.map { " · \($0.label)" } ?? "")
+                 + (appearance.map { " · judged \(SentenceFormat.shortDate($0.date))" } ?? ""))
+                .font(.caption).foregroundStyle(.secondary)
+            if let appearance {
+                Text(PersonTimeline.groupedCharges(appearance.charges)).font(.callout)
+                ForEach(PersonTimeline.outcomeLines(appearance.outcome), id: \.self) { line in
+                    Text(line).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            if let story {
+                Divider()
+                Text(story.headline).font(.caption.weight(.semibold))
+                Text(story.body).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            if record == nil && appearance == nil {
+                Text("Judged in another court. The file here has only the conviction and the sentence above.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if let record {
+                NavigationLink {
+                    CaseRecordDetail(record: record)
+                } label: {
+                    Label("Open the full case record", systemImage: "doc.text.magnifyingglass").font(.callout.weight(.semibold))
+                }
+            }
+            if let person {
+                NavigationLink {
+                    PersonDetail(person: person, today: h.date)
+                } label: {
+                    Label("Open \(person.name)'s record", systemImage: "person.text.rectangle").font(.callout.weight(.semibold))
+                }
+            }
+        }
+        .card()
+    }
+
     var body: some View {
         NavigationStack {
             FixedWidthScroll {
@@ -151,6 +197,8 @@ struct HearingView: View {
             }
         }
         .card()
+
+        originalCase
 
         SectionTitle(text: "Order", icon: "hammer.fill")
         VStack(alignment: .leading, spacing: 8) {

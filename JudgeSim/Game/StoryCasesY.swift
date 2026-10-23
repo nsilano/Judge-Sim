@@ -32,16 +32,22 @@ extension StoryCases {
                         cross: ["\"I was angry when I sent those messages.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("What was the custody arrangement?", "\"I have primary custody. {DL} has {KID} every other weekend.\""),
+                            .direct("Did you agree to {KID} leaving North Carolina?", "\"No. The order says no travel out of state without my written consent, and I never gave it.\""),
                             .direct("What happened that weekend?", "\"{DL} was supposed to bring {KID} back Sunday at six. By eight I'd called fifteen times. The phone was off.\""),
-                            .cross("You told {DL} {D.he}'d never see {KID} again?", "\"I said it after {D.he} stopped answering. I was terrified.\"")
+                            .cross("You told {DL} {D.he}'d never see {KID} again?", "\"I said it after {D.he} stopped answering. I was terrified.\""),
+                            .cross("{KID} came home unharmed?", "\"Yes, thank God.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective, missing persons",
                         direct: ["\"{DL} asked the clerk about weekly rates.\""],
                         cross: ["\"{KID} was safe and happy.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("Where were {DL} and {KID} found?", "\"At a motel in Daytona Beach, on Tuesday.\""),
                             .direct("What did you learn in Florida?", "\"{DL} had paid a week in advance and asked about monthly rates. The clerk said {D.he} told her they were moving down.\""),
-                            .cross("{KID} was healthy and unharmed?", "\"Yes. Playing in the motel pool when officers arrived.\"")
+                            .direct("What did {DL}'s bank records show?", "\"A $3,000 cash withdrawal, nearly all {D.his} savings, the Thursday before the visit.\""),
+                            .cross("{KID} was healthy and unharmed?", "\"Yes. Playing in the motel pool when officers arrived.\""),
+                            .cross("There was a note in {DL}'s car that said 'back by Wed?'", "\"Yes, with a question mark.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -51,7 +57,10 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did {DL} tell you?", "\"That {D.he} was taking {KID} to the beach for a few days and would be back by Wednesday.\""),
-                            .cross("Wednesday is three days past the end of the visit?", "\"I guess it is.\"")
+                            .direct("Did {DL} say why?", "\"{D.He} said {D.he} needed a few days away from everything.\""),
+                            .direct("Did {DL} ever say anything to you about moving?", "\"No. Just the beach.\""),
+                            .cross("Wednesday is three days past the end of the visit?", "\"I guess it is.\""),
+                            .cross("You didn't know the order barred taking {KID} out of state?", "\"No, I didn't know that.\"")
                         ])
         ],
         prosecutionTheory: ["{D} emptied {D.his} savings, turned off {D.his} phone, crossed three states, and told a clerk they were moving for good."],
@@ -116,15 +125,21 @@ extension StoryCases {
                         cross: ["\"I didn't see how it started.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("When did the trouble start?", "\"Right after the game ended, near the visitors' gate.\""),
                             .direct("What did you see at the gate?", "\"A crowd of twenty or thirty fighting. I saw a metal folding chair go up over heads twice.\""),
-                            .cross("You didn't see what happened to the player by the fence?", "\"No. I came around the concession stand after it started.\"")
+                            .direct("How long did it take to clear the lot?", "\"Officers had the lot cleared by about 10:02.\""),
+                            .cross("You didn't see what happened to the player by the fence?", "\"No. I came around the concession stand after it started.\""),
+                            .cross("So you can't say who started it?", "\"No. I didn't see how it started.\"")
                         ]),
             WitnessSeed(name: "{V}", role: "Visiting fan",
                         direct: ["\"Something hit me across the back.\""],
                         cross: ["\"I was near the fence. I wasn't touching anyone's kid.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("Why were you at the stadium?", "\"For the rivalry game. I was with the visiting fans.\""),
                             .direct("What happened?", "\"I was trying to pull my brother out of it. Something slammed into my back and I couldn't breathe.\""),
+                            .direct("What were your injuries?", "\"Two cracked ribs. They treated me and let me go home.\""),
+                            .cross("Your brother was in the fight?", "\"Yes. That's why I was trying to pull him out.\""),
                             .cross("You were near the fence where the player was?", "\"Near it. I never touched that boy.\"")
                         ])
         ],
@@ -134,8 +149,11 @@ extension StoryCases {
                         cross: ["\"I can't say who was who.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Were you playing in that game?", "\"Yes. I play for the home team.\""),
                             .direct("What happened to you?", "\"Three or four grown men had me against the fence. One hit me in the face. Then my dad was there.\""),
-                            .cross("Was {VL} one of them?", "\"I don't know. It was all fast.\"")
+                            .direct("Were you hurt?", "\"Yes. A bloody nose and a cut lip.\""),
+                            .cross("Was {VL} one of them?", "\"I don't know. It was all fast.\""),
+                            .cross("You can't say who was who in that crowd?", "\"No, I can't.\"")
                         ])
         ],
         prosecutionTheory: ["{D} joined a brawl and swung a metal chair into a crowd, breaking a man's ribs."],
@@ -194,16 +212,22 @@ extension StoryCases {
                         cross: ["\"{VL} didn't stop at the line.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What did you examine?", "\"The scene and the Mustang's event data recorder, downloaded under a warrant.\""),
                             .direct("How fast was the Mustang going?", "\"104 two seconds before impact, with the throttle wide open. The limit there is 35.\""),
-                            .cross("{VL} pulled out without stopping?", "\"A rolling stop. At 35, the Mustang would have had time to stop. At 104, it had none.\"")
+                            .direct("Where was {VL}'s car?", "\"Pulling out of a warehouse lot, about a quarter mile past the light.\""),
+                            .cross("{VL} pulled out without stopping?", "\"A rolling stop. At 35, the Mustang would have had time to stop. At 104, it had none.\""),
+                            .cross("You can't say whether {VL} looked before pulling out?", "\"No. I can't say what {V.he} saw.\"")
                         ]),
             WitnessSeed(name: nil, role: "Spectator",
                         direct: ["\"Everybody knew they were racing.\""],
                         cross: ["\"I didn't see the crash itself.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("Why were you on Industrial Boulevard that night?", "\"To watch the races. People gather there on weekends.\""),
                             .direct("What did you see at the light?", "\"Two cars revving side by side, people lined up on the curb. Somebody counted it down. They took off.\""),
-                            .cross("You didn't see the crash?", "\"I heard it. I was filming the start.\"")
+                            .direct("Did you record it?", "\"Yes. My video shows both cars launching side by side.\""),
+                            .cross("You didn't see the crash?", "\"I heard it. I was filming the start.\""),
+                            .cross("From the curb, you couldn't see who was driving either car?", "\"No. Just the cars.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -213,6 +237,8 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What did you see when you arrived?", "\"The driver of the Mustang doing chest compressions on {VL}, crying.\""),
+                            .direct("Did {DL} stay to help?", "\"Yes. {D.He} kept doing compressions until we took over.\""),
+                            .direct("Could {VL} be saved?", "\"No. {VL} died at the scene.\""),
                             .cross("Did {DL} say anything?", "\"{D.He} kept saying '{V.he} came out of nowhere, I was going too fast.'\"")
                         ])
         ],
@@ -268,9 +294,11 @@ extension StoryCases {
                         cross: ["\"The uncle had a valid tag.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("Where was {DL} when you reached the truck?", "\"Sitting in the driver's seat of {D.his} pickup.\""),
                             .direct("What did you find in the truck?", "\"A rifle in a soft case on the back seat, a box of shells in the console, and a doe in the bed.\""),
                             .direct("What did {DL} say?", "\"That it was {D.his} uncle's gun and {D.he} was just hauling it.\""),
-                            .cross("The uncle came over and said the gun was his?", "\"Yes, and he had a filled tag.\"")
+                            .cross("The uncle came over and said the gun was his?", "\"Yes, and he had a filled tag.\""),
+                            .cross("No usable prints were found on the rifle itself?", "\"That's right. None on the rifle.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -279,7 +307,10 @@ extension StoryCases {
                         cross: ["\"The shells were in the truck all season.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("What were you doing that day?", "\"Hunting. It was opening day of deer season.\""),
+                            .direct("Did you have a license for that doe?", "\"Yes. A valid big game license, and I tagged her.\""),
                             .direct("Whose rifle is it?", "\"Mine. I shot the doe, and my knees are bad, so I asked {DL} to drive it back to camp. I put the rifle in the truck myself.\""),
+                            .cross("You put a rifle in the truck of someone you knew was a convicted felon?", "\"I didn't think about it. I just needed the deer hauled.\""),
                             .cross("How did {DL}'s fingerprint get on the shells?", "\"I don't know. They've been in that truck since September.\"")
                         ])
         ],
@@ -336,7 +367,10 @@ extension StoryCases {
                         cross: ["\"I never saw who sent them.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("What is your role with the team?", "\"I'm the volunteer head coach of a 12-and-under travel team.\""),
+                            .direct("What kind of messages did you receive?", "\"Dozens over three weeks. Insults about my coaching, then my home address, then 'Coach better watch the parking lot after practice.'\""),
                             .direct("How did the messages affect you?", "\"I stopped letting my kids play in the front yard. When the parking lot message came, I had a deputy at practice.\""),
+                            .cross("You'd benched several players for missing practice?", "\"Yes, several.\""),
                             .cross("You don't know who typed them?", "\"No. I know which family was angriest about the benching.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective, cyber unit",
@@ -344,8 +378,11 @@ extension StoryCases {
                         cross: ["\"An IP address identifies a connection, not a person.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("How many messages were there?", "\"Sixty-one, from three anonymous accounts, over three weeks.\""),
                             .direct("What did the subpoena return?", "\"Two of the three accounts were created and used from the IP address assigned to {DL}'s home.\""),
-                            .cross("Anyone using that home's internet would show the same address?", "\"Yes. That's why we also compared the writing.\"")
+                            .direct("What did the writing comparison show?", "\"The messages repeat a misspelling, 'definately,' that also appears in {DL}'s team group texts.\""),
+                            .cross("Anyone using that home's internet would show the same address?", "\"Yes. That's why we also compared the writing.\""),
+                            .cross("Plenty of people misspell 'definitely' that way?", "\"Some do. It's one piece, alongside the address.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -354,8 +391,11 @@ extension StoryCases {
                         cross: ["\"I never saw what he was typing.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Who was staying at your house that month?", "\"Our family, and our seventeen-year-old nephew.\""),
                             .direct("Who used the home computer that month?", "\"Our nephew, mostly. He was furious about his cousin being benched.\""),
-                            .cross("Did you see the messages being written?", "\"I saw them after they were sent. Not before.\"")
+                            .direct("Was your home internet secured?", "\"Not really. The password was weak, and we'd shared it with neighbors.\""),
+                            .cross("Did you see the messages being written?", "\"I saw them after they were sent. Not before.\""),
+                            .cross("You never saw your nephew type a single one of them?", "\"No. I never saw what he was typing.\"")
                         ])
         ],
         prosecutionTheory: ["The accounts trace to {D}'s home, the messages share {D.his} misspelling, and {D.his} child was the one benched."],

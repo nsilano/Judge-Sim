@@ -49,8 +49,11 @@ extension StoryCases {
                         cross: ["\"I don't know who did it.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("When had you last seen the vans?", "\"I checked the lot at 10 p.m. the night before. All three were fine.\""),
                             .direct("What happened to the vans?", "\"I came in at 6:30 and the first one roared like a motorcycle when I started it. All three had the converters cut out. We couldn't drive the seniors to their appointments for two weeks.\""),
-                            .cross("The lot has no cameras?", "\"No. We've asked for donations for them.\"")
+                            .direct("What did the repairs cost?", "\"$5,850 to replace the converters and repair all three vans.\""),
+                            .cross("The lot has no cameras?", "\"No. We've asked for donations for them.\""),
+                            .cross("So you don't know who cut the converters?", "\"No. I wasn't there, and nobody saw it.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -153,8 +156,11 @@ extension StoryCases {
                         cross: ["\"Low prices can be a sign.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("What did you do on the pawn detail?", "\"I inspected pawn shops and checked their reports to the police database.\""),
                             .direct("How did {DL}'s shop do on inspections?", "\"Six years, no violations. {DL} was one of the shops we didn't worry about. Thieves avoid places that report everything.\""),
-                            .cross("Would a $340 price for $4,800 in tools concern you?", "\"It would make me look harder. Used tools sell low, but that's low.\"")
+                            .direct("Did {DL} report these tools the way the rules require?", "\"Yes. Same day, with the seller's ID and the engraving in the description. Then {D.he} held them the full period.\""),
+                            .cross("Would a $340 price for $4,800 in tools concern you?", "\"It would make me look harder. Used tools sell low, but that's low.\""),
+                            .cross("Eleven tools with one company's name on them, from one seller, would concern you too?", "\"It would. I'd want to know how one person came to have them all.\"")
                         ])
         ],
         prosecutionTheory: ["{D} paid $340 for $4,800 in tools engraved with a company name, from a seller with a fake address, and read the engraving on camera. {D.He} had reasonable grounds to know."],

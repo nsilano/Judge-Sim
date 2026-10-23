@@ -163,12 +163,29 @@ enum DailyNews {
         pool += [
             ("Commissioners debate a bigger jail", "The board heard a plan to add 120 beds. Opponents said the county should spend the money on mental health care instead. A vote is set for next month.", "Government"),
             ("Sheriff \(c.sheriff) swears in nine new deputies", "The class includes two former teachers and a retired Marine. They start on patrol next week.", "Community"),
-            ("Cow on Highway 17 slows morning traffic", "A deputy and a farmer walked the cow home after twenty minutes. No one was hurt, though the cow did not cooperate.", "Community"),
+            ("Cow on Route 17 slows morning traffic", "A deputy and a farmer walked the cow home after twenty minutes. No one was hurt, though the cow did not cooperate.", "Community"),
             ("Alligator spotted in \(town) retention pond", "Wildlife officers say to leave it alone. Neighbors have named it.", "Community"),
             ("\(town) High wins on a last-second field goal", "The kicker had never made one from that far. The crowd rushed the field; a deputy said nobody got arrested, which counts as a good night.", "Sports"),
             ("Library hosts free legal-aid clinic", "Volunteer lawyers helped 40 people with expunctions, custody papers and traffic tickets.", "Community"),
             ("\(c.policeDepartment) launches coffee-with-a-cop", "Officers will be at a different diner each week. The first one ran out of biscuits by 8.", "Community"),
         ]
+
+        // The county's own places, the same ones the cases happen at.
+        if let diner = Gazetteer.place(.restaurant, rng: &rng), let church = Gazetteer.place(.church, rng: &rng),
+           let plant = Gazetteer.place(.plant, rng: &rng), let park = Gazetteer.place(.park, rng: &rng),
+           let bar = Gazetteer.place(.bar, rng: &rng), let landing = Gazetteer.place(.boatLanding, rng: &rng),
+           let school = Gazetteer.place(.school, rng: &rng), let grocery = Gazetteer.place(.grocery, rng: &rng) {
+            pool += [
+                ("\(diner.name) marks 30 years on \(diner.street)", "The owners served the first plate at the original prices for an hour. The line went around the block in \(diner.town).", "Community"),
+                ("Fish fry at \(church.name) sells out by noon", "Volunteers fried 400 pounds of whiting. Proceeds go to the church's heating-assistance fund in \(church.town).", "Community"),
+                ("\(plant.name) adds a weekend shift", "The \(plant.town) employer says it will hire about 60 people. Applications are taken at the gate on \(plant.street).", "Business"),
+                ("Splash pad reopens at \(park.name)", "Repairs took most of the summer. Parents in \(park.town) say it was worth the wait; the kids did not comment.", "Community"),
+                ("\(bar.name) hosts a fundraiser for a sick bartender", "Regulars raised $7,400 in one night on \(bar.street) in \(bar.town). The owner matched the tips.", "Community"),
+                ("Kayak rentals return to \(landing.name)", "The rental stand is open weekends through October. Wildlife officers remind paddlers that life jackets are the law for children under 13.", "Community"),
+                ("\(school.name) robotics team heads to state", "The team built its robot in a borrowed shop class. Local businesses in \(school.town) covered the bus.", "Community"),
+                ("\(grocery.name) expands its produce section", "The store on \(grocery.street) will now carry vegetables from three \(grocery.town)-area farms.", "Business"),
+            ]
+        }
 
         // Know your court: short explainers.
         pool += [

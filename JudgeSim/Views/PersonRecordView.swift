@@ -16,6 +16,19 @@ struct PersonDetail: View {
             PersonStatusCard(person: current, today: game.currentDate, appeals: file.appeals, upcoming: file.upcoming)
                 .card(tint: statusTint(current))
             PersonTimeline(person: current)
+            // Before they were charged, the court may have known them as a victim or a witness.
+            if let known = game.residents.first(where: { $0.name == current.name }), !known.roles.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    SectionTitle(text: "Elsewhere in this court", icon: "person.2.wave.2")
+                    ForEach(known.roles, id: \.docket) { role in
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("\(SentenceFormat.shortDate(role.date)) · \(role.docket)").font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                            Text("\(role.part) in \(role.caption)").font(.callout)
+                        }
+                    }
+                }
+                .card()
+            }
             ForEach(PersonFileSection.allCases.filter { $0.isAvailable(in: file) }) { section in
                 DeskLink(title: section.title(in: file), detail: section.preview(in: file, today: game.currentDate), icon: section.icon) {
                     DocumentDesk {

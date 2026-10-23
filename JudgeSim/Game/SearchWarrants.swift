@@ -73,8 +73,8 @@ enum SearchWarrants {
         let facts = c.investigation?.facts
         let affiant = facts?.lead ?? "Detective \(rng.pick(NameBank.lastNames))"
         let agency = facts?.agency ?? c.investigatingAgency
-        let street = facts?.street ?? rng.pick(NameBank.streets)
         let town = facts?.town ?? "Port Hollis"
+        let street = facts?.street ?? Gazetteer.street(in: town, rng: &rng)
         let name = c.defendant.name
         let last = c.defendant.lastName
         let kind: WarrantApplication.Kind

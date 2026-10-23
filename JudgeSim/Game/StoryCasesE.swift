@@ -352,7 +352,10 @@ extension StoryCases {
                         cross: ["\"Sharing still spreads fentanyl.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("What is your work?", "\"I treat people with opioid addiction.\""),
                             .direct("What's typical of people who sell a few pills to friends?", "\"They're almost always addicted themselves, splitting what they buy to afford their own supply. They usually believe the pills are what the label says.\""),
+                            .direct("Does {DL}'s situation fit that pattern?", "\"Yes. A documented opioid use disorder, a few pills, and a price that matched what {D.he} paid.\""),
+                            .cross("Sharing pills at cost still spreads fentanyl, doesn't it?", "\"Yes. It does.\""),
                             .cross("It doesn't matter to {VL}'s family whether {DL} was a dealer or a user?", "\"No. It matters to the law.\"")
                         ])
         ],
@@ -430,7 +433,10 @@ extension StoryCases {
                         cross: ["\"I can't say what {DL} remembered.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("What is your job?", "\"I run the casino's surveillance room. We keep video of the gaming floor and a record of every players' card swipe.\""),
                             .direct("How do you know it's {DL}?", "\"The players' card in {DL}'s name, and the face on our camera, which matches the ID scanned when the card was issued.\""),
+                            .direct("How long was {DL} at the machine that night?", "\"From 10:12 to 11:50 p.m., by the card records, and the video matches.\""),
+                            .cross("You were only asked to pull that one night, not {DL}'s other visits?", "\"Just that one night.\""),
                             .cross("You can't say anything about {DL}'s memory?", "\"My cameras record where people stand, not what they remember.\"")
                         ])
         ],
@@ -440,8 +446,11 @@ extension StoryCases {
                         cross: ["\"Hiding is lying.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("What is your work?", "\"I counsel people in treatment for gambling disorder.\""),
                             .direct("How does gambling disorder affect memory of these trips?", "\"Patients often keep trips completely secret, even from themselves. Nights run together. Many genuinely can't say which weekend they went.\""),
-                            .cross("Hiding trips from family is lying to them?", "\"It's a form of lying, yes. It's also a symptom.\"")
+                            .direct("Is it common for patients to hide trips from their partners?", "\"Very common. Secrecy is one of the main signs of the disorder.\""),
+                            .cross("Hiding trips from family is lying to them?", "\"It's a form of lying, yes. It's also a symptom.\""),
+                            .cross("You can't tell this jury what {DL} actually remembered when {D.he} testified?", "\"No. I can't see inside anyone's memory.\"")
                         ])
         ],
         prosecutionTheory: ["{D} swore {ALT} was home with {DL} all night. {DL} was two hours away at a casino, and {ALT} had told {DL} what to say."],

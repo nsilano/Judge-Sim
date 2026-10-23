@@ -352,8 +352,11 @@ extension StoryCases {
                         cross: ["\"That doesn't excuse a threat.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("What did you do in this case?", "\"I surveyed the boundary between the two parcels and measured where the fence sits along its whole length.\""),
                             .direct("Where is the fence?", "\"Between 1.6 and 2.1 feet onto {DL}'s parcel along its whole length.\""),
-                            .cross("A property dispute doesn't justify a threat?", "\"I'm a surveyor. I can tell you where the line is.\"")
+                            .direct("How sure are you of those measurements?", "\"Very sure. Two feet is well outside any margin of error in a licensed survey.\""),
+                            .cross("A property dispute doesn't justify a threat?", "\"I'm a surveyor. I can tell you where the line is.\""),
+                            .cross("You can't tell this jury what {DL} meant by that voicemail, can you?", "\"No. A survey can't tell you that.\"")
                         ])
         ],
         prosecutionTheory: ["{D} mentioned a shotgun, said {D.he} had nothing to lose, and set a deadline. A reasonable person would believe that."],

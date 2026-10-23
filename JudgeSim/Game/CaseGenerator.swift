@@ -29,6 +29,12 @@ enum CaseGenerator {
         var incidentDaysAgo: Int? = nil
         /// The day of the arrest, when the court already knows it (a warrant executed, a first appearance).
         var arrestOn: Date? = nil
+        /// Victims and witnesses from earlier cases, who may turn up again.
+        var residents: [ResidentRef] = []
+        /// Someone the court knows from an earlier case, now charged in this one (used when the written case allows them).
+        var residentDefendant: ResidentRef? = nil
+        /// Everyone the county already knows by name (residents, owners, regulars, officers): a new face never shares a name.
+        var reservedNames: Set<String> = []
         /// The earlier case a written follow-up refers to.
         var priorOffense: String? = nil
         var priorDate: Date? = nil
@@ -220,7 +226,14 @@ enum CaseGenerator {
                                   postRelease: person.status == .incarcerated ? nil : person.postRelease,
                                   violations: person.violations)
         } else {
-            let name = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"])
+            // Now and then the person charged is someone the court already knows: a former witness, or a victim.
+            let known = context.residentDefendant.flatMap { r in
+                (t.requiredGenders["D"].map { NameBank.gender(of: r.name) == $0 } ?? true) && r.occupation == nil && !used.contains(r.name) ? r.name : nil
+            }
+            var drawn = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"])
+            for _ in 0..<8 where context.reservedNames.contains(drawn) { drawn = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"]) }
+            let name = known ?? drawn
+            if known != nil { used.insert(name); used.insert(lastName(name)) }
             let age = rng.int(t.ageRange)
             let occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
             // Written cases describe the defendant's record themselves; most say there is none. A serving officer
@@ -265,7 +278,10 @@ enum CaseGenerator {
         let sameVictim = context.victimOverride.flatMap { name in
             t.requiredGenders["V"].map { $0 == NameBank.gender(of: name) } ?? true ? name : nil
         }
-        let victimName = t.hasVictim ? (sameVictim ?? NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"])) : nil
+        let knownNames = Set(context.residents.map(\.name)).union(context.reservedNames)
+        var drawnVictim = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"])
+        for _ in 0..<8 where knownNames.contains(drawnVictim) { drawnVictim = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"]) }
+        let victimName = t.hasVictim ? (sameVictim ?? drawnVictim) : nil
         let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"])
         let setting = CaseSetting.of(category: t.category, key: t.key)
         // Highway crashes and impaired driving are worked by the Highway Patrol.
@@ -295,6 +311,16 @@ enum CaseGenerator {
         let usePublicDefender = rng.chance(0.6)
         let defenseLawyer = usePublicDefender ? rng.pick(county.assistantPDs) : rng.pick(county.privateCounsel)
 
+        // The town comes first, and the street is one of that town's.
+        // Towns going through a hard stretch (layoffs, a building boom) see more of the cases that come with it.
+        let weights = county.towns.map { Gazetteer.living.weight(town: $0, category: t.category.rawValue, on: context.date) }
+        var roll = Double(rng.int(0...999)) / 1000 * weights.reduce(0, +)
+        var hood = county.towns.last ?? county.seat
+        for (town, w) in zip(county.towns, weights) {
+            if roll < w { hood = town; break }
+            roll -= w
+        }
+        let street = Gazetteer.street(in: hood, rng: &rng)
         var values: [String: String] = [
             "D": defendant.name,
             "DL": defendant.lastName,
@@ -309,10 +335,10 @@ enum CaseGenerator {
             "ELECTEDDA": county.districtAttorney,
             "SHERIFF": county.sheriff,
             "JUDGE": lastName(context.judgeName),
-            "STREET": rng.pick(NameBank.streets),
+            "STREET": street,
             "TIME": storyTime(t) ?? rng.pick(NameBank.times),
             "DATE": CaseDates.day(incident),
-            "HOOD": rng.pick(county.towns),
+            "HOOD": hood,
             "CITY": county.seat,
             "V": victimName ?? "the complainant",
             "VL": victimName.map(lastName) ?? "the complainant",
@@ -321,8 +347,22 @@ enum CaseGenerator {
             "PRIORDATE": context.priorDate.map { $0.formatted(.dateTime.month(.wide).year()) } ?? "an earlier term of court"
         ]
         for key in t.extras.keys.sorted() {
-            if let options = t.extras[key] { values[key] = rng.pick(options) }
+            // A place that has closed in this career doesn't host new cases, when there's another choice.
+            if let options = t.extras[key] {
+                let open = options.filter { Gazetteer.living.closed[$0] == nil }
+                values[key] = rng.pick(open.isEmpty ? options : open)
+            }
         }
+        // A case set at a place on the county map happens in that place's town, on its street.
+        // Where it happened comes first (the bar, the store, the pharmacy), not a company or a church that's only mentioned.
+        let sites = ["BAR", "CLUB", "SHOP", "STORE", "STORE2", "PHARM", "LOT", "FAC", "PAWN", "REST", "GYM", "SPA", "BANK", "GROCER",
+                     "COMPLEX", "BIZ", "SCHOOL", "CHURCH", "POST", "CH"]
+        if let known = sites.filter({ t.extras[$0] != nil }).compactMap({ values[$0].flatMap(Gazetteer.place(named:)) }).first {
+            values["HOOD"] = known.town
+            values["STREET"] = known.street
+        }
+        // Real places in the case's own town for {PLACE.BAR}, {PLACE.GASSTATION} and the rest.
+        values.merge(Gazetteer.tokens(town: values["HOOD"] ?? hood, rng: &rng)) { a, _ in a }
         values.merge(NameBank.gender(of: defendant.name).tokens(for: "D")) { a, _ in a }
         values.merge(NameBank.gender(of: victimName ?? "").tokens(for: "V")) { a, _ in a }
         values.merge(NameBank.gender(of: alternate).tokens(for: "ALT")) { a, _ in a }
@@ -413,22 +453,25 @@ enum CaseGenerator {
         }
 
         // Witnesses
+        let regulars = Gazetteer.regulars(for: county)
         var witnesses: [Witness] = []
         if t.story != nil {
             // A written case calls every witness, in order, exactly as written.
             for item in t.prosecutionWitnesses {
-                witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, impeach: false))
+                witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, impeach: false, regulars: regulars, residents: context.residents, hood: values["HOOD"] ?? hood, reserved: context.reservedNames))
             }
             for item in t.defenseWitnesses {
-                witnesses.append(makeWitness(item, side: .defense, fill: fill, rng: &rng, used: &used, impeach: false))
+                witnesses.append(makeWitness(item, side: .defense, fill: fill, rng: &rng, used: &used, impeach: false, regulars: regulars, residents: context.residents, hood: values["HOOD"] ?? hood, reserved: context.reservedNames))
             }
         }
         let prosecutionWitnessCount = t.story != nil ? 0 : min(t.prosecutionWitnesses.count, rng.int(1...2))
         for item in rng.pick(t.prosecutionWitnesses, count: prosecutionWitnessCount) {
-            witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used))
+            witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, regulars: regulars,
+                                         residents: context.residents, hood: values["HOOD"] ?? hood, reserved: context.reservedNames))
         }
         if t.story == nil && !t.defenseWitnesses.isEmpty && (band != .strong || rng.chance(0.3)) {
-            witnesses.append(makeWitness(rng.pick(t.defenseWitnesses), side: .defense, fill: fill, rng: &rng, used: &used))
+            witnesses.append(makeWitness(rng.pick(t.defenseWitnesses), side: .defense, fill: fill, rng: &rng, used: &used, regulars: regulars,
+                                         residents: context.residents, hood: values["HOOD"] ?? hood, reserved: context.reservedNames))
         }
 
         // The investigation file and fact sheet come first: every generated witness reads from them.
@@ -1238,10 +1281,17 @@ enum CaseGenerator {
     }
 
     private static func makeWitness(_ seed: WitnessSeed, side: Side, fill: TextFiller,
-                                    rng: inout SeededRNG, used: inout Set<String>, impeach: Bool = true) -> Witness {
+                                    rng: inout SeededRNG, used: inout Set<String>, impeach: Bool = true,
+                                    regulars: [String: String] = [:], residents: [ResidentRef] = [], hood: String = "",
+                                    reserved: Set<String> = []) -> Witness {
         let name: String
+        var recalled: String?
         if let token = seed.name {
             name = fill(token)
+        } else if let key = Gazetteer.regularKey(forRole: fill(seed.role)), let regular = regulars[key], !used.contains(regular) {
+            // The county's medical examiner, lab analysts and ER doctor are the same people case after case.
+            name = regular
+            used.insert(regular)
         } else {
             // A role that names a woman or a man ("the victim's mother", "{DL}'s brother") gets a name to match.
             let role = " " + fill(seed.role).lowercased() + " "
@@ -1251,7 +1301,18 @@ enum CaseGenerator {
             let male = says(["father", "brother", "son", "husband", "boyfriend", "uncle", "nephew", "grandfather", "grandson",
                              "stepfather", "stepson", "man", "dad", "widower", "fiancé"])
             let gender: Gender? = female && !male ? .female : (male && !female ? .male : nil)
-            name = NameBank.person(using: &rng, excluding: &used, gender: gender)
+            // Someone the court has seen before, when the role fits them: the same bartender, a neighbor from that town.
+            if seed.lay, let known = Residents.pick(for: fill(seed.role), gender: gender, town: hood, from: residents, used: used, rng: &rng) {
+                name = known.name
+                used.insert(known.name)
+                recalled = known.lastCaption
+            } else {
+                // A new face never shares a name with someone the court already knows.
+                let known = Set(residents.map(\.name)).union(reserved)
+                var fresh = NameBank.person(using: &rng, excluding: &used, gender: gender)
+                for _ in 0..<8 where known.contains(fresh) { fresh = NameBank.person(using: &rng, excluding: &used, gender: gender) }
+                name = fresh
+            }
         }
         var cross = fill(seed.cross)
         var weight = seed.weight
@@ -1312,6 +1373,12 @@ enum CaseGenerator {
             if let extra {
                 let insertAt = exchanges.firstIndex { $0.phase == .redirect } ?? exchanges.count
                 exchanges.insert(TestimonyExchange(phase: .cross, examiner: opposing, question: "", answer: extra), at: insertAt)
+            }
+            // A witness who has been here before says so.
+            if let recalled {
+                let at = exchanges.firstIndex { $0.phase != .direct } ?? exchanges.count
+                exchanges.insert(TestimonyExchange(phase: .direct, examiner: side, question: "Have you testified in this courtroom before?",
+                                                   answer: "\"Yes. In \(recalled).\""), at: min(at, 1))
             }
             witness.exchanges = exchanges
             witness.direct = exchanges.filter { $0.phase == .direct }.map(\.answer)

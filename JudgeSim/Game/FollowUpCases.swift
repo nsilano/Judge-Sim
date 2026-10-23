@@ -57,15 +57,21 @@ enum FollowUpCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did you see?", "\"Three registers open, no lines. {D.He} walked past all of them and stood in {VL}'s line with one pack of gum.\""),
-                            .cross("You never heard {DL} threaten anyone inside the store?", "\"No. {D.He} didn't say a word inside. {D.He} just stood there looking at {V.him}.\"")
+                            .direct("How did {VL} react?", "\"{V.He} went white. {V.He} said, 'That's the person from the court case,' and asked me to call the police.\""),
+                            .direct("Where did {DL} go after that?", "\"Out to the lot. Our camera shows {D.him} out there until {VL} walked to {V.his} car at 5:02.\""),
+                            .cross("You never heard {DL} threaten anyone inside the store?", "\"No. {D.He} didn't say a word inside. {D.He} just stood there looking at {V.him}.\""),
+                            .cross("And you didn't hear what was said in the parking lot?", "\"No. I was inside.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Domestic violence investigator",
                         direct: ["\"The order was served on {D.him} in court. {D.He} signed it.\""],
                         cross: ["\"{D.He} didn't have a weapon.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("What does the order prohibit?", "\"Any contact with {VL}, and being at {V.his} home or {V.his} workplace.\""),
                             .direct("Was {DL} aware of the order?", "\"It was entered with {D.his} judgment in open court, and {D.his} signature is on the copy {D.he} received.\""),
-                            .cross("{DL} had no weapon when arrested?", "\"No weapon. Just the gum.\"")
+                            .direct("Where was {DL} arrested?", "\"Two blocks from the store, at 5:20, eighteen minutes after {D.he} followed {VL} to {V.his} car.\""),
+                            .cross("{DL} had no weapon when arrested?", "\"No weapon. Just the gum.\""),
+                            .cross("And no one saw {DL} touch {VL} or block {V.his} car?", "\"No. Nobody reported that.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -74,8 +80,11 @@ enum FollowUpCases {
                         cross: ["\"I told {D.him} to go through a lawyer.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("How do you know {DL} and {VL}?", "\"I'm friends with both of them.\""),
                             .direct("What had {DL} told you?", "\"That {D.his} tools were still in {VL}'s garage and {D.he} needed them for work.\""),
-                            .cross("And you told {D.him} how to get them?", "\"I told {D.him} to go through a lawyer and not to go near {V.him}.\"")
+                            .direct("When did {DL} ask you about the tools?", "\"Two days before the store. {D.He} texted me asking how to get them back.\""),
+                            .cross("And you told {D.him} how to get them?", "\"I told {D.him} to go through a lawyer and not to go near {V.him}.\""),
+                            .cross("So {DL} knew the right way was a lawyer, not showing up where {VL} works?", "\"I told {D.him} that. I can't say what {D.he} was thinking.\"")
                         ])
         ],
         prosecutionTheory: ["The court told {D} to stay away from {V}'s work. {D.He} went there, waited for {V.him}, followed {V.him} to {V.his} car, and threatened {V.him}."],
@@ -138,8 +147,11 @@ enum FollowUpCases {
                         cross: ["\"Tower records show location, not who's typing.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("How did you connect {DL} to the prepaid phone?", "\"The number traced to a phone sold at a gas station in {HOOD}. The store's camera shows {DL} buying it and a $25 card, paying cash.\""),
+                            .direct("What were the messages like?", "\"A hundred and forty in nine days. Apologies, then accusations, then three photos of {VL}'s porch at night.\""),
                             .direct("What did the tower records show?", "\"Every message from the prepaid phone came from a tower the defendant's own phone was using at the same minute. Home, work, the gym. For nine days.\""),
-                            .cross("Two phones in the same pocket, or two people standing together, look the same on tower records?", "\"They would. That's why we have the purchase video.\"")
+                            .cross("Two phones in the same pocket, or two people standing together, look the same on tower records?", "\"They would. That's why we have the purchase video.\""),
+                            .cross("There were no usable fingerprints on the prepaid phone?", "\"None usable. It was recovered from a trash can.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -148,7 +160,9 @@ enum FollowUpCases {
                         cross: ["\"I don't know {VL}.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Who bought the prepaid phone?", "\"{DL} did. I used it because mine was broken.\""),
                             .direct("Did you have the prepaid phone?", "\"Some of those days, yeah. Mine was broken.\""),
+                            .cross("You've never met {VL}, have you?", "\"No. I don't know {V.him}.\""),
                             .cross("Why would you text 140 times to someone you've never met?", "\"I didn't say I sent them all.\"")
                         ])
         ],
@@ -205,7 +219,10 @@ enum FollowUpCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("Why did you start writing it down?", "\"Because it was always facing {VL}'s door, with the engine running, and nobody ever got out.\""),
-                            .cross("You never saw the driver's face?", "\"Not clearly. I saw the plate every time.\"")
+                            .direct("What did you write down each time?", "\"The date, the time, and the plate. Gray sedan, same plate, engine running. Eleven nights.\""),
+                            .direct("Did anyone ever get out of the car?", "\"Not that I ever saw. It just sat there after dark.\""),
+                            .cross("You never saw the driver's face?", "\"Not clearly. I saw the plate every time.\""),
+                            .cross("And you don't know whether the driver was there to visit someone else in the complex?", "\"No. I just know which door it was facing.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -214,8 +231,11 @@ enum FollowUpCases {
                         cross: ["\"{D.He} didn't come inside every time.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Where do you live?", "\"In the next building over from {VL}'s, in the same complex.\""),
                             .direct("How often did {DL} visit?", "\"Couple times a week, maybe more.\""),
-                            .cross("On the nights the car sat outside with the engine running, did {DL} come into your apartment?", "\"Not every time.\"")
+                            .direct("Why would {DL} wait out in the car?", "\"I work late. {D.He}'d wait for me to get home.\""),
+                            .cross("On the nights the car sat outside with the engine running, did {DL} come into your apartment?", "\"Not every time.\""),
+                            .cross("So you can't say what {DL} was doing out there on the nights {D.he} didn't come in?", "\"No. I wasn't out there.\"")
                         ])
         ],
         prosecutionTheory: ["{D} sat outside {V}'s door eleven nights and followed {V.him} out. The court's order existed for exactly this."],
@@ -233,6 +253,7 @@ enum FollowUpCases {
             notDone: ["No one checked whether the cousin still lived at the complex."],
             defendantExam: [
                 .direct("Why were you parked there?", "\"Waiting on my cousin, who works late.\""),
+                .direct("Did you follow {VL} out of the lot?", "\"No. I was leaving, and there's only one way out. Any car leaving follows whoever's ahead of it.\""),
                 .cross("Engine running, facing {VL}'s door, eleven nights.", "\"That's where the space was.\"")
             ],
             prosecutionOpening: "Eleven nights in the dark across from the one person the court said to stay away from.",
@@ -269,8 +290,11 @@ enum FollowUpCases {
                         cross: ["\"It isn't a certainty.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What did you compare?", "\"The four notes against the signature on {DL}'s copy of the court's order and a page of {D.his} known writing.\""),
                             .direct("What did you conclude?", "\"The letter forms, the slant, and the way the writer crosses a 't' match the known signature and writing. I concluded it's highly probable the same person wrote them.\""),
-                            .cross("Highly probable is not certain?", "\"No. Certain would be our highest level. I didn't reach it.\"")
+                            .direct("Where does 'highly probable' fall on your scale?", "\"Second-highest. Only a certain identification is stronger.\""),
+                            .cross("Highly probable is not certain?", "\"No. Certain would be our highest level. I didn't reach it.\""),
+                            .cross("Handwriting comparison isn't a measured, quantified science, is it?", "\"It's trained comparison, not a numbers science. Examiners can be wrong.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -280,6 +304,8 @@ enum FollowUpCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What's wrong with the comparison?", "\"One signature and one page of known writing. That's thin for an opinion this strong.\""),
+                            .direct("How much known writing would you want?", "\"Several pages, ideally written in the ordinary course of life. Not one page and a signature.\""),
+                            .cross("You don't dispute that some of the letter forms look alike?", "\"Some do. Similar isn't the same as a match.\""),
                             .cross("You worked from photocopies?", "\"Photocopies. The originals were in evidence.\"")
                         ])
         ],
@@ -298,6 +324,7 @@ enum FollowUpCases {
             notDone: ["The lot's single camera was not checked before it recorded over."],
             defendantExam: [
                 .direct("Did you write these notes?", "\"No. I haven't been near that lot.\""),
+                .direct("Did you slash {VL}'s tire?", "\"No. I wasn't there, and I don't know who did.\""),
                 .cross("\"You did this to me.\" Who else would write that?", "\"Anybody who was there.\"")
             ],
             prosecutionOpening: "Four notes in {D.his} handwriting, on the car of the person the court protected.",
@@ -334,16 +361,22 @@ enum FollowUpCases {
                         cross: ["\"A hard fall can bruise a neck.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What did you find when you examined {VL}?", "\"Burst blood vessels in the left eye, a scrape along both sides of the neck, a hoarse voice, and pain when swallowing.\""),
                             .direct("What do burst blood vessels in the eye tell you?", "\"Blood couldn't leave the head. That's pressure around the neck. A fall against a counter bruises one spot; it doesn't do that.\""),
-                            .cross("A hard fall against an edge can bruise the neck?", "\"One side, in one place. Not both sides.\"")
+                            .direct("What about the hoarse voice and the pain swallowing?", "\"Those fit pressure on the throat itself. We see them often after strangulation.\""),
+                            .cross("A hard fall against an edge can bruise the neck?", "\"One side, in one place. Not both sides.\""),
+                            .cross("You weren't there, so you can't say who or what put pressure on the neck?", "\"No. I can say the injuries fit pressure around the neck, on both sides.\"")
                         ]),
             WitnessSeed(name: nil, role: "Responding deputy",
                         direct: ["\"{V.He} said {D.he} had {V.him} by the throat.\""],
                         cross: ["\"{V.He} has since said {V.he} fell.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("Why were you called to the home?", "\"A neighbor called 911 about screaming next door that suddenly stopped.\""),
                             .direct("What did {VL} tell you that night?", "\"Hoarse, crying: '{D.He} had me by the throat against the counter.' It's on my camera.\""),
-                            .cross("{VL} has told you since that {V.he} fell?", "\"{V.He} has. That's common in these cases.\"")
+                            .direct("What did you see on {VL}?", "\"Red marks across {V.his} throat, a hoarse voice, and blood in the white of one eye.\""),
+                            .cross("{VL} has told you since that {V.he} fell?", "\"{V.He} has. That's common in these cases.\""),
+                            .cross("You didn't see what happened in that kitchen yourself?", "\"No. I arrived after. I have what {VL} told me and what I saw on {V.his} neck.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -353,6 +386,9 @@ enum FollowUpCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What happened that night?", "\"We argued. I slipped and hit the counter. I was upset and I said things to the deputy.\""),
+                            .direct("Do you want this case to go forward?", "\"No. I don't want to testify against {D.him}.\""),
+                            .direct("Why did you tell the deputy something different that night?", "\"I was crying and scared and angry. I said things I shouldn't have.\""),
+                            .cross("That night, crying and hoarse, you told the deputy, '{D.He} had me by the throat against the counter'?", "\"I said that. I was upset.\""),
                             .cross("You've been through this before, in this courtroom.", "\"...Twice now. Same courtroom.\"")
                         ])
         ],
@@ -370,6 +406,7 @@ enum FollowUpCases {
             howIdentified: "{VL}'s statement on the deputy's body camera.",
             notDone: ["{VL}'s phone was not examined."],
             defendantExam: [
+                .direct("What were you arguing about?", "\"A phone bill. It got loud, but that's all it was.\""),
                 .direct("Did you put your hands on {VL}'s neck?", "\"No. {V.He} fell. We were arguing and {V.he} slipped.\""),
                 .cross("This is the second time {VL} has been the victim in a case against you.", "\"{V.He} isn't a victim. {V.He} told you that.\"")
             ],
@@ -412,8 +449,11 @@ enum FollowUpCases {
                         cross: ["\"I can't say who swung first.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What injuries did {VL} have?", "\"A fractured left cheekbone and a four-centimeter cut above the eye that took nine stitches.\""),
                             .direct("Is this a serious injury?", "\"A displaced facial fracture with risk to the eye. Yes. Serious.\""),
-                            .cross("You can't tell the court who struck first?", "\"No. I can tell you what a skillet does to a face.\"")
+                            .direct("Are the injuries consistent with a blow from a cast-iron skillet?", "\"Yes. A heavy edge, swung with real force.\""),
+                            .cross("You can't tell the court who struck first?", "\"No. I can tell you what a skillet does to a face.\""),
+                            .cross("Nothing about the injury tells you whether the swing was in self-defense?", "\"No. An injury shows how hard, not why.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -423,7 +463,9 @@ enum FollowUpCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did you note at booking?", "\"Three parallel scratches on the left forearm.\""),
-                            .cross("Booking was two days later?", "\"That's right.\"")
+                            .direct("What did the scratches look like?", "\"Thin lines, side by side, like fingernail scratches.\""),
+                            .cross("Booking was two days later?", "\"That's right.\""),
+                            .cross("So you can't say how or when {DL} got those scratches?", "\"No. I only wrote down what I saw at booking.\"")
                         ])
         ],
         prosecutionTheory: ["{D} hit {V} in the face with a skillet, ran, and hid for two days. Self-defense doesn't look like that."],
@@ -440,6 +482,7 @@ enum FollowUpCases {
             howIdentified: "{VL}'s statement to the triage nurse.",
             notDone: ["No knife or other weapon {VL} might have held was looked for."],
             defendantExam: [
+                .direct("What happened before you swung?", "\"We were arguing and {V.he} came at me. {V.He} scratched up my arm.\""),
                 .direct("Why did you swing the skillet?", "\"{V.He} was clawing at me. I grabbed the first thing I touched.\""),
                 .cross("Then you ran and turned off your phone for two days.", "\"I panicked.\"")
             ],
@@ -475,8 +518,11 @@ enum FollowUpCases {
                         cross: ["\"I'd had a few drinks.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("Where were you?", "\"Out in the lot. The argument had moved out there from the pool table.\""),
                             .direct("What did you see?", "\"{VL} said something, turned to walk off, and {DL} came up and swung the bottle at {V.his} head.\""),
-                            .cross("You'd been drinking for three hours?", "\"Yes. I saw it anyway.\"")
+                            .direct("What happened to {VL}?", "\"{V.He} dropped and hit {V.his} head on the curb. {V.He} didn't get up.\""),
+                            .cross("You'd been drinking for three hours?", "\"Yes. I saw it anyway.\""),
+                            .cross("So you can't be sure {VL} didn't have a pool cue in {V.his} hands?", "\"I didn't see one. I was watching the bottle.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -486,7 +532,9 @@ enum FollowUpCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Why did you stop serving {VL}?", "\"{V.He} was getting in people's faces at the pool table.\""),
-                            .cross("You didn't see the parking lot?", "\"No. I was behind the bar.\"")
+                            .direct("When was that?", "\"About an hour before the fight. I told {V.him} {V.he} was done for the night.\""),
+                            .cross("You didn't see the parking lot?", "\"No. I was behind the bar.\""),
+                            .cross("So you don't know who started anything out there?", "\"No. I only know how {VL} was acting inside.\"")
                         ])
         ],
         prosecutionTheory: ["{D} hit someone who was walking away, with a glass bottle. That's not self-defense."],
@@ -503,6 +551,7 @@ enum FollowUpCases {
             howIdentified: "A fingerprint on the bottle and the patron's identification.",
             notDone: ["No one asked other patrons for phone video."],
             defendantExam: [
+                .direct("How did it start?", "\"An argument over the pool table. It followed us out to the lot.\""),
                 .direct("Why did you swing the bottle?", "\"{V.He} had the cue up. I thought I was about to get my head split.\""),
                 .cross("The camera doesn't show a cue.", "\"The camera's not good enough to show a lot of things.\"")
             ],
@@ -540,16 +589,21 @@ enum FollowUpCases {
                         cross: ["\"I never saw the person.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("Who was home that night?", "\"Me and my two children. They were asleep upstairs.\""),
                             .direct("What did you hear?", "\"The window slide, footsteps across the kitchen, then the back door. My kids were asleep right above it.\""),
-                            .cross("You never saw who it was?", "\"No. Thank God.\"")
+                            .direct("What was missing?", "\"My laptop, my jewelry box, and a handgun from the closet shelf. The back window was open.\""),
+                            .cross("You never saw who it was?", "\"No. Thank God.\""),
+                            .cross("By the time you got to the kitchen, whoever it was had gone?", "\"Yes. The window was open and they were gone.\"")
                         ]),
             WitnessSeed(name: nil, role: "Latent print examiner",
                         direct: ["\"The palm print is {DL}'s.\""],
                         cross: ["\"Eight points is enough for our standard.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("Where was the print?", "\"On the outside of the kitchen window, the one that was found open.\""),
                             .direct("Whose print was on the window?", "\"I identified it to {DL}'s right palm.\""),
-                            .cross("Only eight points?", "\"Our standard is quality, not a count. It was verified by a second examiner.\"")
+                            .cross("Only eight points?", "\"Our standard is quality, not a count. It was verified by a second examiner.\""),
+                            .cross("You can't tell when that print was left?", "\"No. Prints don't carry a date.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -558,8 +612,11 @@ enum FollowUpCases {
                         cross: ["\"I never saw {DL} buy anything.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Where do you work?", "\"At the gas station on the highway. I run the register.\""),
                             .direct("Do people sell things in your lot?", "\"All the time. I run them off when I see them.\""),
-                            .cross("Did you see {DL} buy jewelry that week?", "\"Nothing like that. Gas, cigarettes, a lottery ticket.\"")
+                            .direct("Do you know {DL}?", "\"I recognize {D.him}. {D.He} comes in.\""),
+                            .cross("Did you see {DL} buy jewelry that week?", "\"Nothing like that. Gas, cigarettes, a lottery ticket.\""),
+                            .cross("So you can't say anyone sold {DL} jewelry at your station?", "\"No. I never saw it.\"")
                         ])
         ],
         prosecutionTheory: ["{D}'s palm on the window and {D.his} thumb on the pawn ticket. {D.He} went in while a family slept."],
@@ -577,6 +634,7 @@ enum FollowUpCases {
             notDone: ["The gas station's camera was not checked for the claimed sale."],
             defendantExam: [
                 .direct("Where did you get the jewelry?", "\"A guy at the gas station on the highway. Sixty dollars.\""),
+                .direct("Were you ever inside that house?", "\"No. Never. I bought the jewelry and tried to sell it. That's all I did.\""),
                 .cross("And your palm print on the window?", "\"I don't know how it got there.\"")
             ],
             prosecutionOpening: "A family asleep upstairs, and {D.his} palm on the window.",
@@ -611,8 +669,11 @@ enum FollowUpCases {
                         cross: ["\"The hood was up.\""],
                         weight: 3, lay: true,
                         exam: [
+                            .direct("What happened?", "\"Someone in a gray hoodie came around the counter, put a folding knife to my neck, and took the $340 out of the register.\""),
                             .direct("How close was the person?", "\"Close enough to smell. The knife was under my jaw. I looked at the eyes the whole time.\""),
-                            .cross("The hood was up and the lower face was covered?", "\"Yes. The eyes weren't.\"")
+                            .direct("How sure were you when you picked {DL} from the photos?", "\"Sure. I told the officer, 'That's the one. I'll never forget the eyes.'\""),
+                            .cross("The hood was up and the lower face was covered?", "\"Yes. The eyes weren't.\""),
+                            .cross("You saw only the eyes, during a robbery, with a knife at your throat?", "\"Yes. I wasn't looking anywhere else.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -621,8 +682,11 @@ enum FollowUpCases {
                         cross: ["\"I fell asleep at halftime.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("How do you know {DL}?", "\"We share an apartment.\""),
                             .direct("Where was {DL} that night?", "\"On the couch with me watching the game.\""),
-                            .cross("The whole game?", "\"...I fell asleep around halftime.\"")
+                            .direct("Did {DL} go out at any point?", "\"Not that I saw.\""),
+                            .cross("The whole game?", "\"...I fell asleep around halftime.\""),
+                            .cross("So you can't say where {DL} was after you fell asleep?", "\"No. I was asleep.\"")
                         ])
         ],
         prosecutionTheory: ["{V} looked into those eyes from six inches away, and {D.his} hoodie was in {D.his} car."],
@@ -640,6 +704,7 @@ enum FollowUpCases {
             notDone: ["{DL}'s phone location was not requested."],
             defendantExam: [
                 .direct("Where were you that night?", "\"Home. Watching the game.\""),
+                .direct("What about the hoodie in your car?", "\"It's mine. It's the same one they sell at three stores in the county.\""),
                 .cross("Your roommate fell asleep at halftime.", "\"I didn't.\"")
             ],
             prosecutionOpening: "Six inches from a knife, {V} memorized the eyes.",
@@ -679,7 +744,10 @@ enum FollowUpCases {
                         cross: ["\"The motorcycle was six over.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("How fast was the pickup going?", "\"The crash data recorder shows 58 miles an hour, with no braking in the five seconds before impact.\""),
+                            .direct("How do you know the light was red?", "\"The intersection camera. The signal for the pickup's direction had been red for 2.4 seconds when it entered.\""),
                             .direct("What caused this crash?", "\"The pickup entered on a light that had been red for 2.4 seconds, at 58, without braking. At the speed limit and sober, the driver would have stopped.\""),
+                            .cross("Your figure for the motorcycle's speed is an estimate?", "\"Yes. About 41 in a 35 zone.\""),
                             .cross("The motorcycle was speeding too?", "\"Six over. It didn't cause the pickup to run the light.\"")
                         ])
         ],
@@ -690,6 +758,9 @@ enum FollowUpCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("Can anyone say what the level was at the crash?", "\"Only estimate it, based on assumptions.\""),
+                            .direct("What assumptions?", "\"Mostly when the drinking stopped. If someone drank shortly before driving, the level at the crash could be lower than the later test suggests.\""),
+                            .direct("So the 0.16 figure isn't a measurement?", "\"No. It's a back-calculation from the 0.13 drawn two hours later.\""),
+                            .cross("You have no evidence {DL} drank shortly before driving?", "\"No. I'm only saying the estimate depends on it.\""),
                             .cross("0.13 two hours later is impaired under the law regardless?", "\"At 0.13, the law says impaired. I don't dispute that.\"")
                         ])
         ],
@@ -708,6 +779,7 @@ enum FollowUpCases {
             notDone: ["The signal controller's logs were not pulled."],
             defendantExam: [
                 .direct("Was the light red?", "\"It was yellow when I looked.\""),
+                .direct("Did you see the motorcycle?", "\"Not until it was right there. It came into the intersection fast.\""),
                 .cross("You'd been drinking.", "\"I'd had a couple.\"")
             ],
             prosecutionOpening: "Red for 2.4 seconds. No brakes. A nurse on {V.his} way home.",
@@ -746,7 +818,10 @@ enum FollowUpCases {
                         weight: 3, lay: false,
                         exam: [
                             .direct("What caused {VL}'s death?", "\"Fentanyl toxicity. The level was lethal on its own.\""),
-                            .cross("You can't say which seller the fentanyl came from?", "\"No. The lab matched the pills.\"")
+                            .direct("Was anything else in {V.his} system that could have killed {V.him}?", "\"No. Nothing else in {V.his} system could have caused death.\""),
+                            .direct("What about the pills found beside {V.him}?", "\"The lab found fentanyl in them, the same drug that was in {V.his} blood.\""),
+                            .cross("You can't say which seller the fentanyl came from?", "\"No. The lab matched the pills.\""),
+                            .cross("All you can say is that fentanyl killed {VL}?", "\"That's my finding. Fentanyl killed {V.him}.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -755,7 +830,9 @@ enum FollowUpCases {
                         cross: ["\"The law doesn't require knowing it's fentanyl.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("How common are counterfeit pills like these?", "\"Very common now. Fentanyl gets pressed into pills stamped to look like Percocet.\""),
                             .direct("Could a seller tell these were fake?", "\"Not by looking. They're pressed with the same markings.\""),
+                            .direct("So someone selling them wouldn't necessarily know?", "\"Not necessarily. Sellers get fooled the same way buyers do.\""),
                             .cross("Selling a controlled substance that kills someone is enough under the statute?", "\"That's my understanding of the statute.\"")
                         ])
         ],
@@ -774,6 +851,7 @@ enum FollowUpCases {
             notDone: ["The two other suppliers in {VL}'s phone were not interviewed."],
             defendantExam: [
                 .direct("Did you sell {VL} those pills?", "\"Two Percocets. That's what I thought they were.\""),
+                .direct("Did you know they contained fentanyl?", "\"No. If I'd known, I'd never have sold them to anybody.\""),
                 .cross("You had 61 of the same pills at home.", "\"Same batch. I didn't know.\"")
             ],
             prosecutionOpening: "Two blue pills for forty dollars, and a twenty-two-year-old who never woke up.",
@@ -811,8 +889,11 @@ enum FollowUpCases {
                         cross: ["\"{VL} signed some of them.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("How much money went to {DL}?", "\"$38,000, in fourteen checks over seven months.\""),
                             .direct("What did the checks show?", "\"Fourteen checks to {DL}. Eight are filled out entirely in a hand that isn't {VL}'s; {V.he} only signed them.\""),
-                            .cross("{VL} signed every one?", "\"{V.He} signed them. Whether {V.he} understood them is another question.\"")
+                            .direct("Was one of the checks for a roof repair?", "\"Yes. $9,500. The roof has no new shingles.\""),
+                            .cross("{VL} signed every one?", "\"{V.He} signed them. Whether {V.he} understood them is another question.\""),
+                            .cross("Nothing in the bank records tells you whether {VL} meant those checks as gifts?", "\"No. Records show where the money went, not why.\"")
                         ]),
             WitnessSeed(name: nil, role: "{VL}'s physician",
                         direct: ["\"{V.He} couldn't manage {V.his} own finances.\""],
@@ -820,7 +901,10 @@ enum FollowUpCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What was {VL}'s condition?", "\"Moderate cognitive decline. I recommended someone else handle {V.his} finances.\""),
-                            .cross("{V.He} had lucid days?", "\"Some. Not enough to manage a checkbook.\"")
+                            .direct("When did you document that?", "\"Four months before the first check to {DL}.\""),
+                            .direct("What does that kind of decline mean for handling money?", "\"Losing track of bills, forgetting what's been paid, and being easy to talk into things.\""),
+                            .cross("{V.He} had lucid days?", "\"Some. Not enough to manage a checkbook.\""),
+                            .cross("You weren't there when any of those checks were written?", "\"No. I can only speak to {V.his} condition.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -829,8 +913,11 @@ enum FollowUpCases {
                         cross: ["\"I don't know anything about the checks.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("How do you know {VL}?", "\"I live next door to {V.him}.\""),
                             .direct("What did you see?", "\"{DL} brought groceries, mowed the yard, drove {V.him} to church.\""),
-                            .cross("You don't know anything about the checks?", "\"I wouldn't know a thing about {V.his} checkbook.\"")
+                            .direct("How did {VL} seem with {DL} around?", "\"Happier. {V.He} wasn't alone so much.\""),
+                            .cross("You don't know anything about the checks?", "\"I wouldn't know a thing about {V.his} checkbook.\""),
+                            .cross("And you never saw anyone working on {VL}'s roof?", "\"No. I never saw any work on the roof.\"")
                         ])
         ],
         prosecutionTheory: ["{D} found a lonely widow with a failing memory and a checkbook, and emptied it."],
@@ -848,6 +935,7 @@ enum FollowUpCases {
             notDone: ["The contractor {DL} named was never searched for."],
             defendantExam: [
                 .direct("Did {VL} give you that money?", "\"{V.He} insisted. {V.He} said {V.his} kids never came around.\""),
+                .direct("What happened to the roof money?", "\"It went to a contractor to fix the roof, and the contractor disappeared.\""),
                 .cross("You filled out eight of those checks yourself.", "\"{V.His} hands shook. {V.He} asked me to.\"")
             ],
             prosecutionOpening: "Fourteen checks, a failing memory, and a roof that was never fixed.",
@@ -885,8 +973,11 @@ enum FollowUpCases {
                         cross: ["\"The stop was for an expired tag.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("Why did you try to stop the car?", "\"An expired tag. I turned on my lights to pull it over.\""),
                             .direct("What happened when you lit the car up?", "\"It accelerated. Two stop signs, ninety in a forty-five, until it went in the ditch.\""),
-                            .cross("All this over an expired tag?", "\"That's what the stop was for. The chase was the defendant's choice.\"")
+                            .direct("What happened after the car went in the ditch?", "\"The driver got out and ran into the woods. We caught {DL} about ten minutes later.\""),
+                            .cross("All this over an expired tag?", "\"That's what the stop was for. The chase was the defendant's choice.\""),
+                            .cross("Nobody was hurt?", "\"No. Nobody was hurt.\"")
                         ])
         ],
         defenseWitnesses: [],
@@ -905,6 +996,7 @@ enum FollowUpCases {
             notDone: [],
             defendantExam: [
                 .direct("Why did you run?", "\"I thought there was a warrant. I panicked.\""),
+                .direct("Why did you run into the woods after the crash?", "\"Same reason. I was scared and I wasn't thinking straight.\""),
                 .cross("Ninety miles an hour past houses with kids in them.", "\"I wasn't thinking.\"")
             ],
             prosecutionOpening: "An expired tag. Ninety miles an hour.",
@@ -939,8 +1031,11 @@ enum FollowUpCases {
                         cross: ["\"We do throw some things away.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("What did your inventory audit show?", "\"$6,400 in cordless drills and saws missing from shipments we'd received over three weeks.\""),
+                            .direct("What did the dock camera show?", "\"{DL} carrying boxes from the receiving dock to {D.his} trunk at 2:04 in the morning, on two nights.\""),
                             .direct("Were those damaged returns?", "\"No. New stock, received that week, still sealed.\""),
-                            .cross("You do throw away damaged returns?", "\"In the dumpster. Not into an employee's trunk.\"")
+                            .cross("You do throw away damaged returns?", "\"In the dumpster. Not into an employee's trunk.\""),
+                            .cross("You weren't there at night to hear what the night supervisor told {DL}?", "\"No. I wasn't there at night.\"")
                         ])
         ],
         defenseWitnesses: [],
@@ -958,6 +1053,7 @@ enum FollowUpCases {
             howIdentified: "Dock camera and the serial numbers in the online listings.",
             notDone: ["The night supervisor was not interviewed."],
             defendantExam: [
+                .direct("What shift did you work?", "\"Nights, at the warehouse.\""),
                 .direct("Why were you loading boxes into your car?", "\"My supervisor said they were damaged returns, to get rid of them.\""),
                 .cross("And then you sold them online.", "\"They worked fine. Seemed like a waste.\"")
             ],
@@ -996,7 +1092,10 @@ enum FollowUpCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did you find that morning?", "\"Glass all over the seat and my laptop bag gone, wallet with it.\""),
-                            .cross("You didn't see who broke in?", "\"No. I saw who used my card.\"")
+                            .direct("What was in the wallet?", "\"My debit card, for one.\""),
+                            .direct("How did you learn someone tried to use the card?", "\"My bank showed two declined attempts at a gas station at 4:41 that morning.\""),
+                            .cross("You didn't see who broke in?", "\"No. I saw who used my card.\""),
+                            .cross("Other cars in that lot were broken into that night too?", "\"Six, I heard. Mine was one of them.\"")
                         ])
         ],
         defenseWitnesses: [],
@@ -1015,6 +1114,7 @@ enum FollowUpCases {
             notDone: ["The other five break-ins were not tied to anyone."],
             defendantExam: [
                 .direct("Where did you get the wallet?", "\"On the sidewalk by the bus stop.\""),
+                .direct("Why did you try the card?", "\"I shouldn't have. It was stupid. But I didn't break into anybody's car.\""),
                 .cross("With spark-plug chips in your pocket.", "\"I don't know how those got there.\"")
             ],
             prosecutionOpening: "A broken window, a stolen card, and the tool in {D.his} pocket.",

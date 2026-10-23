@@ -336,8 +336,11 @@ extension StoryCases {
                         cross: ["\"I didn't see the first contact.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("What is your job on game days?", "\"I'm the league coordinator. Referees are supposed to call me over when a parent or coach gets out of hand.\""),
                             .direct("What did you hear?", "\"{DL} yelling, 'You want to throw my kid out? Let's go.' I started running over.\""),
-                            .cross("Did you see who touched whom first?", "\"No. I was forty yards away.\"")
+                            .direct("What did you find when you got there?", "\"{VL} was on the ground and couldn't close {V.his} mouth. I kept people back until help came.\""),
+                            .cross("Did you see who touched whom first?", "\"No. I was forty yards away.\""),
+                            .cross("So you can't say whether {VL} shoved {DL} before the punch?", "\"No, I can't. I only heard the yelling and saw the end of it.\"")
                         ])
         ],
         defenseWitnesses: [

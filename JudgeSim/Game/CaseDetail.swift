@@ -286,8 +286,10 @@ enum DefendantProfiles {
         }
         let general: Set<String> = ["manager", "store", "retail", "driver", "student", "college", "health", "contractor", "aide",
                                     "trainer", "server", "it ", "account", "financial", "construction"]
-        for (key, list) in employersByKeyword where !general.contains(key) && matches(key) { return rng.pick(list) }
-        for (key, list) in employersByKeyword where general.contains(key) && matches(key) { return rng.pick(list) }
+        // Nobody works at a business that has closed in this career.
+        func open(_ list: [String]) -> [String] { let o = list.filter { Gazetteer.living.closed[$0] == nil }; return o.isEmpty ? list : o }
+        for (key, list) in employersByKeyword where !general.contains(key) && matches(key) { return rng.pick(open(list)) }
+        for (key, list) in employersByKeyword where general.contains(key) && matches(key) { return rng.pick(open(list)) }
         // No employer that obviously fits: a generic one only for generic work, otherwise self-employed.
         return ["worker", "laborer", "associate", "clerk", "helper"].contains(where: lower.contains) ? rng.pick(generalEmployers) : "self-employed"
     }
@@ -537,8 +539,11 @@ enum DefendantProfiles {
         }
 
         // Where the defendant lives agrees with the background and the person's age.
-        let town = county.towns.first { background.contains($0) } ?? (background.contains("Port Hollis") ? "Port Hollis" : rng.pick(county.towns))
-        let street = rng.pick(NameBank.streets)
+        // Most people live near where they work, when the job is at a place on the county map.
+        let workTown = jobs.first { $0.current }.flatMap { Gazetteer.place(named: $0.employer) }?.town
+        let town = county.towns.first { background.contains($0) }
+            ?? (background.contains("Port Hollis") ? "Port Hollis" : (workTown.flatMap { rng.chance(0.7) ? $0 : nil } ?? rng.pick(county.towns)))
+        let street = Gazetteer.street(in: town, rng: &rng)
         let residence: String
         if background.contains("same apartment") {
             residence = "Rents an apartment on \(street) in \(town)."
@@ -1141,6 +1146,11 @@ extension DefendantProfiles {
                 let release = max(goneYear, year - 1)
                 profile.jobs.insert(Job(title: "Unemployed", employer: "since release from custody", years: "\(release)–present", current: true), at: 0)
             }
+        }
+        // A job at a business that has since closed is over.
+        for i in profile.jobs.indices where profile.jobs[i].current && Gazetteer.living.closed[profile.jobs[i].employer] != nil {
+            profile.jobs[i].current = false
+            profile.jobs[i].years = profile.jobs[i].years.replacingOccurrences(of: "present", with: "\(year) (the business closed)")
         }
         // New facts about family add to what was known.
         if known.minChildren > 0, profile.family.contains("no children") {

@@ -40,7 +40,10 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("What happened at your window?", "\"He slid the note across. When I looked at it, he put his hand in his jacket pocket and pushed it forward, like a gun. I gave him everything in my drawer and the dye pack.\""),
-                            .cross("You never saw a gun?", "\"I saw what he wanted me to think was a gun.\"")
+                            .direct("What did the note say?", "\"'I have a gun. Give me the money in your drawer. No dye packs. Thank you.'\""),
+                            .direct("How did you feel?", "\"Terrified. I thought if I did anything wrong he'd shoot me.\""),
+                            .cross("You never saw a gun?", "\"I saw what he wanted me to think was a gun.\""),
+                            .cross("You can't tell us anything about the first three robberies?", "\"No. I only know what happened at my window.\"")
                         ]),
             WitnessSeed(name: nil, role: "FBI forensic document examiner",
                         direct: ["\"Same pad, same writer.\""],
@@ -48,7 +51,9 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What links the notes?", "\"Indentations show all four came from the same pad. The writing matches across all four, including the 'Thank you.'\""),
-                            .cross("You said 'probably' {DL}?", "\"Probably {DL}. Definitely the same writer for all four.\"")
+                            .direct("Did you compare the notes to {DL}'s handwriting?", "\"Yes. In my opinion, {DL} probably wrote them.\""),
+                            .cross("You said 'probably' {DL}?", "\"Probably {DL}. Definitely the same writer for all four.\""),
+                            .cross("Probably means you can't rule out someone else?", "\"I can't rule it out completely, no.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -58,7 +63,9 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("When was {DL} in your pharmacy?", "\"That receipt says 10:42. I remember the back brace.\""),
-                            .cross("Does the register clock get set for daylight saving time?", "\"Not always. It's been an hour off before.\"")
+                            .direct("Why do you remember the back brace?", "\"{D.He} could hardly stand up straight. I helped {D.him} find the right size.\""),
+                            .cross("Does the register clock get set for daylight saving time?", "\"Not always. It's been an hour off before.\""),
+                            .cross("So if the clock was off, that receipt doesn't tell us when {DL} was really there?", "\"If it was off, no.\"")
                         ])
         ],
         prosecutionTheory: ["One man, one pad, one note, four banks. {D} admits the last; the handwriting and the method prove the rest."],
@@ -133,7 +140,9 @@ extension StoryCases {
                         cross: ["\"I reached into the car.\""],
                         weight: 3, lay: true,
                         exam: [
+                            .direct("Why did you stop {DL}?", "\"A homemade license plate that said 'Private Traveler - Not For Hire.' That's not a valid registration.\""),
                             .direct("What happened when you reached for the keys?", "\"{D.He} rolled the window up on my arm and put it in drive. I was running alongside the car trying to pull free until I fell.\""),
+                            .direct("Were you hurt?", "\"A torn rotator cuff and road rash. I was out of work for three months.\""),
                             .cross("You reached into {DL}'s car?", "\"To take the keys from a driver refusing a lawful order. That's what we're trained to do.\""),
                             .cross("You didn't wait for backup?", "\"Backup was four minutes out. I should have.\"")
                         ]),
@@ -143,7 +152,10 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What was the status of {DL}'s license?", "\"Revoked, with notice mailed to the address on file. It's in the certified record.\""),
-                            .cross("You can't say {DL} received the notice?", "\"The record shows it was mailed.\"")
+                            .direct("For how long?", "\"Two years, as of the day of the stop.\""),
+                            .direct("Was it ever reinstated?", "\"No. It was still revoked that day.\""),
+                            .cross("You can't say {DL} received the notice?", "\"The record shows it was mailed.\""),
+                            .cross("And your records say nothing about what happened at the stop itself?", "\"No. Only the license status.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -152,8 +164,11 @@ extension StoryCases {
                         cross: ["\"{D.He} drove off.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("How were you watching?", "\"{D.He} was filming the stop on {D.his} phone, and I was watching it live.\""),
                             .direct("How did {DL} sound on the live video?", "\"Scared. {D.He}'s had bad experiences with police.\""),
-                            .cross("You watched {D.him} drive away with the deputy's arm in the window?", "\"I saw the car move.\"")
+                            .direct("Did {DL} say anything about hurting the deputy?", "\"No. Nothing like that.\""),
+                            .cross("You watched {D.him} drive away with the deputy's arm in the window?", "\"I saw the car move.\""),
+                            .cross("And you heard {D.him} say 'you're trespassing on my property' as it moved?", "\"I heard {D.him} say that, yes.\"")
                         ])
         ],
         prosecutionTheory: ["{D} decided the law didn't apply to {D.him}, refused a lawful stop, and dragged a deputy down the road. {D.His} own video proves it."],
@@ -227,15 +242,20 @@ extension StoryCases {
                         weight: 3, lay: false,
                         exam: [
                             .direct("What did your test show?", "\"From that stand, twenty minutes past legal light, through that scope, you can see a shape. You cannot tell what it is. The first rule of hunting is you identify your target before you shoot.\""),
-                            .cross("The greenway didn't warn walkers about hunting?", "\"No. But the land was posted no hunting at all.\"")
+                            .direct("When was the shot fired?", "\"Twenty-three minutes after legal shooting time ended.\""),
+                            .direct("Was {DL} allowed to hunt from that stand?", "\"No. It's county land, posted No Hunting on the trees all around it.\""),
+                            .cross("The greenway didn't warn walkers about hunting?", "\"No. But the land was posted no hunting at all.\""),
+                            .cross("{VL} was wearing a tan jacket, close to the color of a deer?", "\"Tan, yes. That's exactly why you identify your target first.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Sheriff's investigator",
                         direct: ["\"The body had been moved.\""],
                         cross: ["\"CPR would move a body.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("Who called 911?", "\"{DL} did, at 5:44, eleven minutes after the shot.\""),
                             .direct("What did the scene show?", "\"Blood where {VL} fell, then drag marks. The leash was in the brush, away from the body. Eleven minutes passed before the call.\""),
-                            .cross("Attempting CPR would move a body?", "\"Turn it, yes. Not drag it fifteen feet.\"")
+                            .cross("Attempting CPR would move a body?", "\"Turn it, yes. Not drag it fifteen feet.\""),
+                            .cross("{DL} stayed at the scene until deputies arrived?", "\"Yes. {D.He} was there when we got there.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -244,8 +264,11 @@ extension StoryCases {
                         cross: ["\"We knew the land was posted.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("How do you know {DL}?", "\"We've hunted together for years.\""),
                             .direct("What kind of hunter is {DL}?", "\"Careful. Hunter safety instructor for the church youth group.\""),
-                            .cross("You knew that land was posted?", "\"Everybody hunts it.\"")
+                            .direct("Have you ever seen {D.him} take a careless shot?", "\"Never. {D.He}'s the one telling everybody else to wait.\""),
+                            .cross("You knew that land was posted?", "\"Everybody hunts it.\""),
+                            .cross("You weren't with {DL} that evening?", "\"No. I wasn't there.\"")
                         ])
         ],
         prosecutionTheory: ["{D} hunted where hunting was forbidden, after legal light, and fired at a shape {D.he} couldn't identify, beside a public trail. That's culpable negligence."],
@@ -323,7 +346,9 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} tell you about {D.his} training?", "\"That she did a residency in orthopedics and left hospitals to do real healing. Her coat said doctor. The wall said doctor.\""),
                             .direct("What happened after the injections?", "\"Both knees swelled up and turned red. I had a fever of 104. Three surgeries. I walk with a cane now.\""),
-                            .cross("You signed a form saying the treatment was experimental?", "\"I signed a form a doctor handed me.\"")
+                            .direct("How much did you pay?", "\"$8,400.\""),
+                            .cross("You signed a form saying the treatment was experimental?", "\"I signed a form a doctor handed me.\""),
+                            .cross("Infection is a known risk of any injection?", "\"I've heard that, yes. I didn't know what was in those vials.\"")
                         ]),
             WitnessSeed(name: nil, role: "State Medical Board investigator",
                         direct: ["\"That license belongs to someone else.\""],
@@ -331,7 +356,9 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("Whose license number is on {DL}'s certificate?", "\"A retired pediatrician in Asheville. {DL} has never been licensed to practice medicine anywhere.\""),
-                            .cross("North Carolina doesn't license naturopaths?", "\"Correct. Which means no one can practice as one with injections.\"")
+                            .direct("What about the diploma on the wall?", "\"It's from a medical school that doesn't exist.\""),
+                            .cross("North Carolina doesn't license naturopaths?", "\"Correct. Which means no one can practice as one with injections.\""),
+                            .cross("{DL} does hold a naturopathy certificate?", "\"From an online program, yes. It isn't a license to practice anything.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -340,8 +367,11 @@ extension StoryCases {
                         cross: ["\"I thought she was a doctor.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("What treatment did you get?", "\"The IV vitamin drips.\""),
                             .direct("How was your experience?", "\"Good. The vitamin drips helped my energy, and she listened more than any doctor.\""),
-                            .cross("Did you believe {DL} was a medical doctor?", "\"Yes. Wasn't she?\"")
+                            .direct("Did you have any problems from the drips?", "\"No. None.\""),
+                            .cross("Did you believe {DL} was a medical doctor?", "\"Yes. Wasn't she?\""),
+                            .cross("You never had the knee injections?", "\"No. Just the drips.\"")
                         ])
         ],
         prosecutionTheory: ["{D} pretended to be a doctor, forged credentials, and injected people with contaminated product from a website. Consent obtained by fraud isn't consent."],
@@ -416,16 +446,22 @@ extension StoryCases {
                         cross: ["\"I wanted to believe him.\""],
                         weight: 3, lay: true,
                         exam: [
+                            .direct("Tell us about your son.", "\"He was killed in Afghanistan. I wanted a place with his name on it where people could sit and remember him.\""),
                             .direct("Why did you give {DL} $8,000?", "\"He came to my house in uniform. He said he'd lost friends over there like my son. He said the bench would be in the park by Memorial Day.\""),
-                            .cross("You never asked to see a receipt?", "\"You don't ask a soldier for a receipt.\"")
+                            .direct("Was the bench ever built?", "\"No. There's no bench.\""),
+                            .cross("You never asked to see a receipt?", "\"You don't ask a soldier for a receipt.\""),
+                            .cross("You've heard the fund did help some veterans' families?", "\"I've heard that, yes. It didn't help mine.\"")
                         ]),
             WitnessSeed(name: nil, role: "Army records specialist",
                         direct: ["\"He never served a day.\""],
                         cross: ["\"Records fires have destroyed some files.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("Where did you search?", "\"The National Personnel Records Center, for any record of service in any branch.\""),
                             .direct("Did {DL} serve?", "\"No record in any branch. The DD-214 he showed uses another soldier's service number, a man who died in 2009.\""),
-                            .cross("Some records were lost in fires?", "\"From before 1973. Not from Iraq.\"")
+                            .direct("What about the Bronze Star and Purple Heart?", "\"No record of either. There's no service to award them for.\""),
+                            .cross("Some records were lost in fires?", "\"From before 1973. Not from Iraq.\""),
+                            .cross("Your records say nothing about how the charity spent its money?", "\"No. I only handle service records.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -435,7 +471,9 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did the fund do for you?", "\"Paid two months' rent when I was about to be evicted. He came himself.\""),
-                            .cross("Did you know he never served?", "\"No. That makes me sick.\"")
+                            .direct("Did {DL} talk about serving?", "\"All the time. Fallujah. I believed every word.\""),
+                            .cross("Did you know he never served?", "\"No. That makes me sick.\""),
+                            .cross("Two months' rent is a small part of $340,000, isn't it?", "\"Yes, I guess it is. It was everything to me.\"")
                         ])
         ],
         prosecutionTheory: ["{D} invented a war record to raise money from a grieving community, then spent it on himself. Lying for money is fraud."],
