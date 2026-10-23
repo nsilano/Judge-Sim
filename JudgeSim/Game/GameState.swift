@@ -1510,8 +1510,14 @@ final class GameState: ObservableObject {
         // Cases that come back because of what this court decided.
         while let index = reoffenseQueue.firstIndex(where: { !used.contains($0.personID) }) {
             let followUp = reoffenseQueue.remove(at: index)
-            guard let person = person(followUp.personID), person.status != .incarcerated else { continue }
-            if let c = generateCase(date: date, rng: &rng, excluding: &used, storySlot: false, followUp: followUp) {
+            // Everything in the queue follows an arrest that already happened, so a later stint in custody doesn't
+            // make the charge go away; the case is heard with the defendant brought over from the jail.
+            guard let person = person(followUp.personID) else { continue }
+            if var c = generateCase(date: date, rng: &rng, excluding: &used, storySlot: false, followUp: followUp) {
+                if person.status == .incarcerated, var bg = c.background {
+                    bg.onRelease = false
+                    c.background = bg
+                }
                 awaitCase(c, note: followUp.note, on: date)
             }
         }
@@ -2536,7 +2542,9 @@ final class GameState: ObservableObject {
         for event in due {
             // Nobody is arrested for something new while locked up: news of a new arrest, and the case it would bring,
             // fall away for a person in custody when the day comes.
-            if event.effect == .none, event.reoffense != nil || event.news.kind == .arrest,
+            // A court-order violation was already an arrest (saves from before it went straight to the docket), so it stays.
+            let alreadyArrested = event.reoffense?.note.hasPrefix("Charged with violating") ?? false
+            if event.effect == .none, !alreadyArrested, event.reoffense != nil || event.news.kind == .arrest,
                let personID = event.personID, person(personID)?.status == .incarcerated {
                 // The indictment that would follow an arrest that never happened goes too.
                 if event.reoffense == nil {
@@ -2735,7 +2743,13 @@ final class GameState: ObservableObject {
                 let person = people[index], order = orders[o]
                 // The case comes first, so the news describes the same violation the trial will be about.
                 let kinds = Consequences.violationTemplates(domestic: order.domestic)
-                let fitting = kinds.filter { FollowUpCases.fits($0, age: person.age(on: currentDate)) }
+                // Only a case written for this person (age, and the defendant's sex where the case fixes it), so the
+                // trial is the same violation the paper reports.
+                let sex = NameBank.gender(of: person.name)
+                let fitting = kinds.filter { key in
+                    FollowUpCases.fits(key, age: person.age(on: currentDate))
+                        && (FollowUpCases.all.first { $0.key == key }?.requiredGenders["D"].map { $0 == sex } ?? true)
+                }
                 let key = rng.pick(fitting.isEmpty ? kinds : fitting)
                 let what: String
                 var incident = currentDate
@@ -2751,16 +2765,11 @@ final class GameState: ObservableObject {
                               headline: "\(person.name) arrested for violating court order protecting \(order.protectedName)",
                               body: "Deputies say \(person.name) \(what), in violation of the \(order.label) Judge \(lastName(judgeName)) imposed in \(order.docket) on \(SentenceFormat.shortDate(order.issued)). \(person.lastName) is being held pending a first appearance.",
                               docket: order.docket, prominence: 2))
-                let toCourt = CourtCalendar.calendar.date(byAdding: .day, value: 7 * rng.int(3...6), to: currentDate) ?? currentDate
-                pending.append(PendingEvent(due: toCourt,
-                                            news: NewsItem(date: toCourt, kind: .arrest, headline: "\(person.name) to face Judge \(lastName(judgeName)) again",
-                                                           body: "The new charges against \(person.name), arising from the alleged violation of a \(order.label) protecting \(order.protectedName), are set for trial before the judge who entered the order.",
-                                                           docket: order.docket),
-                                            personID: person.id,
-                                            reoffense: Reoffense(personID: person.id, templateKeys: [key],
-                                                                 victimName: order.protectedName, incident: incident,
-                                                                 note: "Charged with violating the \(order.label) you imposed on \(SentenceFormat.shortDate(order.issued)) in \(order.docket), protecting \(order.protectedName). It was \(person.lastName)'s violation number \(order.violations).",
-                                                                 priorOffense: order.offense ?? person.priors.first { $0.docket == order.docket }?.offense, priorDate: order.issued)))
+                // The arrest already happened, so the charge goes straight onto the docket at the next intake.
+                reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: [key],
+                                                victimName: order.protectedName, incident: incident,
+                                                note: "Charged with violating the \(order.label) you imposed on \(SentenceFormat.shortDate(order.issued)) in \(order.docket), protecting \(order.protectedName). It was \(person.lastName)'s violation number \(order.violations).",
+                                                priorOffense: order.offense ?? person.priors.first { $0.docket == order.docket }?.offense, priorDate: order.issued))
                 break
             }
             people[index].stayAwayOrders = orders
