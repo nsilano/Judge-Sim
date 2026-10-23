@@ -5,7 +5,10 @@ import Foundation
 enum StoryAftermath {
     typealias Beat = Aftermath.Beat
 
-    static let beats: [String: [Beat]] = [
+    /// Every case's beats, the later batches included.
+    static let beats: [String: [Beat]] = baseBeats.merging(beatsAB) { a, _ in a }.merging(beatsAC) { a, _ in a }.merging(beatsAD) { a, _ in a }
+
+    private static let baseBeats: [String: [Beat]] = [
         "story.lastPill": [
             Beat(triggers: [.freed], chance: 0.3, days: 120...300,
                  headline: "Second overdose death traced to pills from {DL}, police say",
