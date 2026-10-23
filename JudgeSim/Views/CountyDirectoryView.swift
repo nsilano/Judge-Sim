@@ -20,6 +20,32 @@ struct CountyDirectoryView: View {
                     }
                 }
             }
+            let officers = game.officerRecords.values.sorted { $0.cases.count > $1.cases.count }
+            if !officers.isEmpty {
+                Section("Officers in your courtroom") {
+                    ForEach(officers, id: \.name) { r in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(r.name).font(.callout.weight(.semibold))
+                            Text("\(r.cases.count) case\(r.cases.count == 1 ? "" : "s"): \(r.convictions) conviction\(r.convictions == 1 ? "" : "s"), \(r.acquittals) acquittal\(r.acquittals == 1 ? "" : "s")")
+                                .font(.caption).foregroundStyle(.secondary)
+                            if !r.suppressed.isEmpty {
+                                Text("Evidence suppressed \(r.suppressed.count) time\(r.suppressed.count == 1 ? "" : "s"): " + r.suppressed.joined(separator: "; "))
+                                    .font(.caption).foregroundStyle(.orange)
+                            }
+                        }
+                    }
+                }
+            }
+            let lawyers = game.lawyerRecords.values.sorted { $0.tried > $1.tried }
+            if !lawyers.isEmpty {
+                Section("Lawyers before you") {
+                    ForEach(lawyers, id: \.name) { r in
+                        if let note = TrackRecords.counselNote(r) {
+                            Text(note).font(.caption)
+                        }
+                    }
+                }
+            }
             let familiar = game.residents.filter { $0.roles.count >= 2 }.sorted { $0.roles.count > $1.roles.count }
             if !familiar.isEmpty {
                 Section("Familiar faces") {

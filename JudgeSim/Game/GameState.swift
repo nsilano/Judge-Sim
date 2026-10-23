@@ -103,6 +103,8 @@ private struct SaveData: Codable {
     var investigations: [OpenInvestigation]?
     var placeHistory: [String: [String]]?
     var residents: [Resident]?
+    var officerRecords: [String: OfficerRecord]?
+    var lawyerRecords: [String: LawyerRecord]?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -158,6 +160,9 @@ final class GameState: ObservableObject {
     @Published private(set) var placeHistory: [String: [String]] = [:]
     /// Victims and witnesses: everyone who has come through the court other than as a defendant.
     @Published private(set) var residents: [Resident] = []
+    /// Officers' and lawyers' records before this judge, by name.
+    @Published private(set) var officerRecords: [String: OfficerRecord] = [:]
+    @Published private(set) var lawyerRecords: [String: LawyerRecord] = [:]
     /// What happened in court since the paper last went out.
     private var happenings: [Happening] = []
 
@@ -625,6 +630,56 @@ final class GameState: ObservableObject {
             let side = w.calledBy == .prosecution ? "State's witness" : "Defense witness"
             remember(w.name, part: "\(side) (\(w.role.prefix(1).lowercased() + w.role.dropFirst()))",
                      occupation: Residents.isPlaceJob(w.role) ? w.role : nil, livesHere: w.role.lowercased().contains("neighbor"))
+        }
+    }
+
+    /// What a finished trial adds to the officers' and lawyers' records, and the paper when an officer's searches keep
+    /// getting thrown out.
+    private func recordTrackRecords(_ c: CourtCase, outcome: CaseOutcome) {
+        let convicted = outcome.convicted
+        let suppressed = outcome.rulingNotes.contains { $0.title.hasPrefix("Motion to Suppress") && $0.yourRuling == "Granted" }
+        for officer in [c.investigation?.facts?.lead, c.investigation?.facts?.firstOfficer].compactMap({ $0 }) where !officer.isEmpty {
+            var r = officerRecords[officer] ?? OfficerRecord(name: officer)
+            guard !r.cases.contains(c.caption) else { continue }
+            r.cases.append(c.caption)
+            if convicted { r.convictions += 1 } else { r.acquittals += 1 }
+            // Suppression follows the lead investigator, whose search or interview it was.
+            if suppressed && officer == c.investigation?.facts?.lead {
+                r.suppressed.append(c.caption)
+                if r.suppressed.count >= 2, let judgeName {
+                    post(NewsItem(date: currentDate, kind: .community,
+                                  headline: "Judge \(lastName(judgeName)) again throws out evidence from \(officer)",
+                                  body: "For the \(r.suppressed.count == 2 ? "second" : "\(r.suppressed.count)th") time, Judge \(lastName(judgeName)) suppressed evidence gathered by \(officer), this time in \(c.caption). Defense lawyers say they will raise it in every case the officer works.",
+                                  docket: c.docket, prominence: 1, section: "Courts"))
+                }
+            }
+            officerRecords[officer] = r
+        }
+        for (name, prosecutor) in [(c.prosecutor, true), (c.defenseAttorney, false)] where !name.isEmpty {
+            var r = lawyerRecords[name] ?? LawyerRecord(name: name, prosecutor: prosecutor)
+            if convicted { r.convictions += 1 } else { r.acquittals += 1 }
+            r.lastCaption = c.caption
+            r.lastResult = convicted ? "conviction" : "acquittal"
+            lawyerRecords[name] = r
+        }
+    }
+
+    /// A new case knows its people's history: the defense crosses an officer on searches this court threw out, and
+    /// the case file notes how its lawyers have done before this judge.
+    private func applyTrackRecords(_ c: inout CourtCase, rng: inout SeededRNG) {
+        for i in c.witnesses.indices where c.witnesses[i].calledBy == .prosecution {
+            guard let r = officerRecords[c.witnesses[i].name], let last = r.suppressed.last else { continue }
+            let (q, a) = TrackRecords.suppressionCross(last, count: r.suppressed.count, rng: &rng)
+            var exchanges = c.witnesses[i].exchanges ?? []
+            let at = exchanges.firstIndex { $0.phase == .redirect } ?? exchanges.count
+            exchanges.insert(TestimonyExchange(phase: .cross, examiner: .defense, question: q, answer: a), at: at)
+            c.witnesses[i].exchanges = exchanges
+            c.witnesses[i].cross.append(a)
+            // An officer whose work keeps getting thrown out carries less weight.
+            if r.suppressed.count >= 2 { c.witnesses[i].weight = max(1, c.witnesses[i].weight - 1) }
+        }
+        for name in [c.prosecutor, c.defenseAttorney] {
+            if let note = lawyerRecords[name].flatMap(TrackRecords.counselNote) { c.proceduralNotes.append(note) }
         }
     }
 
@@ -2141,7 +2196,8 @@ final class GameState: ObservableObject {
             if best == nil || score < best!.score { best = (score, candidate) }
             if report.fatal.isEmpty && repeats * 4 <= max(4, keys.count) { break }
         }
-        guard let newCase = best?.value else { return nil }
+        guard var newCase = best?.value else { return nil }
+        applyTrackRecords(&newCase, rng: &rng)
         recentLineKeys.append(contentsOf: CaseAuditor.lineKeys(newCase))
         if recentLineKeys.count > 2_500 { recentLineKeys.removeFirst(recentLineKeys.count - 2_500) }
         used.insert(newCase.defendant.personID)
@@ -2225,6 +2281,7 @@ final class GameState: ObservableObject {
                                   appealStatus: outcome.appealNotice == nil && !outcome.pending.contains(where: { $0.news.kind == .appeal && $0.news.docket == courtCase.docket }) ? nil : "Appeal pending",
                                   kind: "trial"), at: 0)
         rememberParticipants(courtCase)
+        recordTrackRecords(courtCase, outcome: outcome)
         // The place it happened remembers it; a place that keeps coming up makes the paper.
         if let scene = courtCase.investigation?.facts?.place,
            let place = Gazetteer.places.sorted(by: { $0.name.count > $1.name.count }).first(where: { scene.contains($0.name) }) {
@@ -2411,6 +2468,8 @@ final class GameState: ObservableObject {
         investigations = []
         placeHistory = [:]
         residents = []
+        officerRecords = [:]
+        lawyerRecords = [:]
         CalendarCalls.prosecutorEdge = 0
         CourthouseMood.current = mood
         careerStart = Date()
@@ -2772,7 +2831,8 @@ final class GameState: ObservableObject {
                             reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated,
                             reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, schedule: schedule, awaiting: awaiting,
-                            weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents)
+                            weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
+                            officerRecords: officerRecords, lawyerRecords: lawyerRecords)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -2843,6 +2903,8 @@ final class GameState: ObservableObject {
         investigations = data.investigations ?? []
         placeHistory = data.placeHistory ?? [:]
         residents = data.residents ?? []
+        officerRecords = data.officerRecords ?? [:]
+        lawyerRecords = data.lawyerRecords ?? [:]
         CalendarCalls.prosecutorEdge = mood.prosecutorEdge
         CourthouseMood.current = mood
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
