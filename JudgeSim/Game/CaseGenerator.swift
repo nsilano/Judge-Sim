@@ -308,7 +308,14 @@ enum CaseGenerator {
         let defenseLawyer = usePublicDefender ? rng.pick(county.assistantPDs) : rng.pick(county.privateCounsel)
 
         // The town comes first, and the street is one of that town's.
-        let hood = rng.pick(county.towns)
+        // Towns going through a hard stretch (layoffs, a building boom) see more of the cases that come with it.
+        let weights = county.towns.map { Gazetteer.living.weight(town: $0, category: t.category.rawValue, on: context.date) }
+        var roll = Double(rng.int(0...999)) / 1000 * weights.reduce(0, +)
+        var hood = county.towns.last ?? county.seat
+        for (town, w) in zip(county.towns, weights) {
+            if roll < w { hood = town; break }
+            roll -= w
+        }
         let street = Gazetteer.street(in: hood, rng: &rng)
         var values: [String: String] = [
             "D": defendant.name,
@@ -336,7 +343,11 @@ enum CaseGenerator {
             "PRIORDATE": context.priorDate.map { $0.formatted(.dateTime.month(.wide).year()) } ?? "an earlier term of court"
         ]
         for key in t.extras.keys.sorted() {
-            if let options = t.extras[key] { values[key] = rng.pick(options) }
+            // A place that has closed in this career doesn't host new cases, when there's another choice.
+            if let options = t.extras[key] {
+                let open = options.filter { Gazetteer.living.closed[$0] == nil }
+                values[key] = rng.pick(open.isEmpty ? options : open)
+            }
         }
         // A case set at a place on the county map happens in that place's town, on its street.
         // Where it happened comes first (the bar, the store, the pharmacy), not a company or a church that's only mentioned.

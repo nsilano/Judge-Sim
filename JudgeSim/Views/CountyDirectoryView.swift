@@ -20,6 +20,16 @@ struct CountyDirectoryView: View {
                     }
                 }
             }
+            if !game.living.events.isEmpty {
+                Section("Lately in the county") {
+                    ForEach(Array(game.living.events.suffix(12).reversed().enumerated()), id: \.offset) { _, e in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(e.headline).font(.callout)
+                            Text(SentenceFormat.shortDate(e.date)).font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
             let officers = game.officerRecords.values.sorted { $0.cases.count > $1.cases.count }
             if !officers.isEmpty {
                 Section("Officers in your courtroom") {
@@ -66,12 +76,17 @@ struct CountyDirectoryView: View {
                         .font(.caption).foregroundStyle(.secondary)
                     Text("Streets: " + town.streets.joined(separator: ", ") + ". Roads: " + town.roads.joined(separator: ", ") + ".")
                         .font(.caption).foregroundStyle(.secondary)
-                    ForEach(Gazetteer.places.filter { $0.town == town.name }.sorted { $0.name < $1.name }, id: \.name) { place in
+                    ForEach((Gazetteer.places + game.living.opened).filter { $0.town == town.name }.sorted { $0.name < $1.name }, id: \.name) { place in
                         let cases = game.placeHistory[place.name] ?? []
+                        let closed = game.living.closed[place.name]
                         HStack(alignment: .firstTextBaseline) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(place.name).font(.callout)
-                                Text(place.street).font(.caption2).foregroundStyle(.secondary)
+                                Text(place.name).font(.callout).strikethrough(closed != nil).foregroundStyle(closed != nil ? .secondary : .primary)
+                                Text(place.street
+                                     + (game.living.owners[place.name].map { " · owner: \($0)" } ?? "")
+                                     + (closed.map { $0 == .distantPast ? " · closed" : " · closed \(SentenceFormat.shortDate($0))" } ?? "")
+                                     + (game.living.opened.contains(place) ? " · new" : ""))
+                                    .font(.caption2).foregroundStyle(.secondary)
                             }
                             Spacer()
                             if !cases.isEmpty {

@@ -105,6 +105,7 @@ private struct SaveData: Codable {
     var residents: [Resident]?
     var officerRecords: [String: OfficerRecord]?
     var lawyerRecords: [String: LawyerRecord]?
+    var living: LivingCounty?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -163,6 +164,8 @@ final class GameState: ObservableObject {
     /// Officers' and lawyers' records before this judge, by name.
     @Published private(set) var officerRecords: [String: OfficerRecord] = [:]
     @Published private(set) var lawyerRecords: [String: LawyerRecord] = [:]
+    /// What has happened to the county in this career: closings, openings, sales, hard times.
+    @Published private(set) var living = LivingCounty()
     /// What happened in court since the paper last went out.
     private var happenings: [Happening] = []
 
@@ -348,6 +351,9 @@ final class GameState: ObservableObject {
     func startCareer(name: String, start: Date) {
         judgeName = name
         county = County.generate(seed: seedBase)
+        // Every career's county starts a little different.
+        living = CountyLife.begin(seed: seedBase)
+        Gazetteer.living = living
         let parts = CourtCalendar.calendar.dateComponents([.hour, .minute], from: start)
         openingMinutes = Self.courtOpening((parts.hour ?? 9) * 60 + (parts.minute ?? 30))
         currentDate = CourtCalendar.weekday(onOrAfter: start)
@@ -2470,6 +2476,8 @@ final class GameState: ObservableObject {
         residents = []
         officerRecords = [:]
         lawyerRecords = [:]
+        living = LivingCounty()
+        Gazetteer.living = living
         CalendarCalls.prosecutorEdge = 0
         CourthouseMood.current = mood
         careerStart = Date()
@@ -2651,6 +2659,11 @@ final class GameState: ObservableObject {
 
         // Stay-away orders are tested a week at a time.
         if weekly { checkStayAwayOrders(rng: &rng) }
+        // The county changes week to week.
+        if weekly {
+            if let item = CountyLife.week(&living, on: date, placeHistory: placeHistory, rng: &rng) { post(item) }
+            Gazetteer.living = living
+        }
 
         // Sentences expire
         for index in people.indices {
@@ -2832,7 +2845,7 @@ final class GameState: ObservableObject {
                             reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
-                            officerRecords: officerRecords, lawyerRecords: lawyerRecords)
+                            officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -2905,6 +2918,8 @@ final class GameState: ObservableObject {
         residents = data.residents ?? []
         officerRecords = data.officerRecords ?? [:]
         lawyerRecords = data.lawyerRecords ?? [:]
+        living = data.living ?? CountyLife.begin(seed: seedBase)
+        Gazetteer.living = living
         CalendarCalls.prosecutorEdge = mood.prosecutorEdge
         CourthouseMood.current = mood
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.

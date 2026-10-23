@@ -5,13 +5,13 @@ import Foundation
 /// in the same town.
 enum Gazetteer {
 
-    enum Kind: String, CaseIterable {
+    enum Kind: String, CaseIterable, Codable {
         case bar, gasStation, restaurant, grocery, plant, warehouse, church, school, hospital, bank, motel, park,
              boatLanding, pawnShop, autoShop, store, office, apartments, nursingHome, gym, salon, dayCare,
              pharmacy, storage, club, spa, veteransPost
     }
 
-    struct Place: Hashable {
+    struct Place: Hashable, Codable {
         let name: String
         let kind: Kind
         let town: String
@@ -259,7 +259,13 @@ enum Gazetteer {
     static func town(named name: String) -> Town? { towns.first { $0.name == name } }
 
     /// The place with this exact name, if it's on the map.
-    static func place(named name: String) -> Place? { places.first { $0.name == name } }
+    static func place(named name: String) -> Place? { (places + living.opened).first { $0.name == name } }
+
+    /// This career's county: what has closed, opened and changed hands. Set by the game whenever it changes.
+    static var living = LivingCounty()
+
+    /// The places open for business right now.
+    static var livePlaces: [Place] { places.filter { living.closed[$0.name] == nil } + living.opened.filter { living.closed[$0.name] == nil } }
 
     /// A street in this town (a county-wide one if the town isn't on the map).
     static func street(in town: String, rng: inout SeededRNG) -> String {
@@ -269,7 +275,7 @@ enum Gazetteer {
 
     /// A place of this kind, in this town when there is one, otherwise anywhere in the county.
     static func place(_ kind: Kind, in town: String? = nil, rng: inout SeededRNG) -> Place? {
-        let all = places.filter { $0.kind == kind }
+        let all = livePlaces.filter { $0.kind == kind }
         let local = all.filter { $0.town == town }
         let pool = local.isEmpty ? all : local
         return pool.isEmpty ? nil : rng.pick(pool)
