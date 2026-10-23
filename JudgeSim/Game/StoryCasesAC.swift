@@ -193,10 +193,10 @@ extension StoryCases {
             prosecutionClosing: "He said himself why he took the phone. The neighbor heard the slap. The counter was in another room.",
             defenseClosing: "Taking a phone in an argument is wrong. It isn't proof he hit anyone.",
             genders: ["D": .male, "V": .female],
+            victim: VictimFacts(relationship: "The defendant's girlfriend of two years; they lived together.", harm: ["Split lower lip", "Bruised, swollen left cheek"]),
             time: "11:40 p.m.",
             family: "Single, no children. Lived with his girlfriend, the victim in this case, until that night.",
-            residence: "Lived in an apartment on {STREET} in {HOOD} with the victim.",
-            victim: VictimFacts(relationship: "The defendant's girlfriend of two years; they lived together.", harm: ["Split lower lip", "Bruised, swollen left cheek"])
+            residence: "Lived in an apartment on {STREET} in {HOOD} with the victim."
         )
     )
 
@@ -292,11 +292,11 @@ extension StoryCases {
             prosecutionClosing: "Open hands, one step, and a back door ten feet away. Self-defense requires a reasonable belief that this much force was needed.",
             defenseClosing: "The State has to prove beyond a reasonable doubt that {DL} wasn't defending {D.him}self. The video has no sound.",
             genders: ["D": .male, "V": .male],
+            victim: VictimFacts(occupation: "Roofer (unable to work on ladders since the injury)", harm: ["Fractured left cheekbone and eye socket, two titanium plates", "Numbness in the left cheek", "Double vision when looking up"]),
             time: "1:15 a.m.",
             employer: "Brandt Electrical Contractors",
             family: "Married, 1 child.",
-            yearsAtJob: 4,
-            victim: VictimFacts(occupation: "Roofer (unable to work on ladders since the injury)", harm: ["Fractured left cheekbone and eye socket, two titanium plates", "Numbness in the left cheek", "Double vision when looking up"])
+            yearsAtJob: 4
         )
     )
 
@@ -480,10 +480,10 @@ extension StoryCases {
             defenseOpening: "One thousand one hundred forty trucks, and the State picked the one an anonymous caller named.",
             prosecutionClosing: "Same model, same paint, same side, a new mirror four days later, and a dent in the right place.",
             defenseClosing: "{V} deserves an answer. A coincidence isn't one.",
+            victim: VictimFacts(occupation: "Poultry plant worker (unable to return)", harm: ["Broken left femur", "Fractured pelvis", "Three surgeries; walks with a cane"]),
             time: "11:20 p.m.",
             family: "Married, no children.",
-            residence: "Lives in a house about three miles from the crash site on Pruitt Mill Road.",
-            victim: VictimFacts(occupation: "Poultry plant worker (unable to return)", harm: ["Broken left femur", "Fractured pelvis", "Three surgeries; walks with a cane"])
+            residence: "Lives in a house about three miles from the crash site on Pruitt Mill Road."
         )
     )
 }

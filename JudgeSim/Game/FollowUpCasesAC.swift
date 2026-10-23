@@ -328,8 +328,8 @@ extension FollowUpCases {
             prosecutionClosing: "People recant for many reasons. The camera doesn't.",
             defenseClosing: "The video is partly blocked, and the only person who was there says it was an accident.",
             genders: ["D": .male, "V": .female],
-            time: "9:20 p.m.",
-            victim: VictimFacts(relationship: "Dating the defendant for four months.", harm: ["Split upper lip, three stitches", "Chipped front tooth"])
+            victim: VictimFacts(relationship: "Dating the defendant for four months.", harm: ["Split upper lip, three stitches", "Chipped front tooth"]),
+            time: "9:20 p.m."
         )
     )
 
@@ -628,8 +628,8 @@ extension FollowUpCases {
             defenseOpening: "A grab, and a reflex.",
             prosecutionClosing: "The camera shows a shove, not a stumble.",
             defenseClosing: "{DL} was pulled out of a seat. What came next happened in a second.",
-            time: "4:40 p.m.",
-            victim: VictimFacts(occupation: "Trooper, North Carolina State Highway Patrol", harm: ["Fractured left wrist, six weeks in a cast"])
+            victim: VictimFacts(occupation: "Trooper, North Carolina State Highway Patrol", harm: ["Fractured left wrist, six weeks in a cast"]),
+            time: "4:40 p.m."
         )
     )
 
@@ -708,8 +708,8 @@ extension FollowUpCases {
             defenseOpening: "A driver who thought it was a small bump and saw a wave.",
             prosecutionClosing: "Nobody thinks that's a small bump.",
             defenseClosing: "Willful leaving requires knowing. {DL} believed {V} was fine.",
-            time: "6:10 p.m.",
-            victim: VictimFacts(age: 62, harm: ["Compression fracture of the L1 vertebra", "Three months in a back brace"])
+            victim: VictimFacts(age: 62, harm: ["Compression fracture of the L1 vertebra", "Three months in a back brace"]),
+            time: "6:10 p.m."
         )
     )
 }
