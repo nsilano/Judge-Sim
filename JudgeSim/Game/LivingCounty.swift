@@ -31,6 +31,10 @@ struct LivingCounty: Codable, Hashable {
 enum CountyLife {
     /// Places nobody closes or sells: the hospital, the schools, the courthouse.
     private static let fixed: Set<Gazetteer.Kind> = [.hospital, .school]
+    /// Places the game names outright (on receipts, exhibits and in written aftermath), so they stay open.
+    private static let named: Set<String> = ["Harbor Mart", "Tidewater Freight Logistics", "Cane Creek Hardware", "The Lantern Row Tavern",
+                                             "Hollis County Courthouse"]
+    private static func canClose(_ p: Gazetteer.Place) -> Bool { !fixed.contains(p.kind) && p.kind != .church && !named.contains(p.name) }
 
     /// Businesses that can open in the county, by town.
     private static let newcomers: [(String, Gazetteer.Kind, String)] = [
@@ -49,7 +53,7 @@ enum CountyLife {
         var rng = SeededRNG(seed: seed ^ 0x11F1_C0DE)
         var c = LivingCounty()
         let start = Date.distantPast
-        let closable = Gazetteer.places.filter { !fixed.contains($0.kind) && $0.kind != .church }
+        let closable = Gazetteer.places.filter(canClose)
         for p in rng.pick(closable, count: rng.int(4...7)) { c.closed[p.name] = start }
         for (name, kind, town) in rng.pick(newcomers, count: rng.int(2...4)) {
             c.opened.append(Gazetteer.Place(name: name, kind: kind, town: town, street: Gazetteer.street(in: town, rng: &rng)))
@@ -101,7 +105,7 @@ enum CountyLife {
             return news("\(place.name) opens on \(place.street)", "\(place.name) opened this week in \(place.town). The owner, \(c.owners[place.name] ?? "a local family"), says it's been a long time coming.", town: place.town)
         case 2:
             // A business closes.
-            guard let gone = live.filter({ !fixed.contains($0.kind) && $0.kind != .church && $0.kind != .plant }).randomElement(using: &rng) else { return nil }
+            guard let gone = live.filter({ canClose($0) && $0.kind != .plant }).randomElement(using: &rng) else { return nil }
             c.closed[gone.name] = date
             return news("\(gone.name) closes its doors", "After years on \(gone.street) in \(gone.town), \(gone.name) has closed. A sign on the door thanks the customers.", town: gone.town)
         case 3:

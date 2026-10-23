@@ -670,6 +670,20 @@ final class GameState: ObservableObject {
         }
     }
 
+    /// A case that names a store's or salon's owner makes that person the owner on the county's books, so the
+    /// directory and the paper agree with what the case said.
+    private func rememberOwners(_ c: CourtCase) {
+        guard let scene = c.investigation?.facts?.place,
+              let place = Gazetteer.livePlaces.sorted(by: { $0.name.count > $1.name.count }).first(where: { scene.contains($0.name) }) else { return }
+        let owner = c.witnesses.first { w in
+            let r = w.role.lowercased()
+            return r.contains("owner") && !["homeowner", "car owner", "truck owner", "owner of the"].contains(where: r.contains)
+        }
+        guard let owner, living.owners[place.name] != owner.name else { return }
+        living.owners[place.name] = owner.name
+        Gazetteer.living = living
+    }
+
     /// A new case knows its people's history: the defense crosses an officer on searches this court threw out, and
     /// the case file notes how its lawyers have done before this judge.
     private func applyTrackRecords(_ c: inout CourtCase, rng: inout SeededRNG) {
@@ -2175,6 +2189,10 @@ final class GameState: ObservableObject {
         context.generic = generic
         context.incidentDaysAgo = incidentDaysAgo
         context.arrestOn = arrestOn
+        // Names the county already knows; new people never share them.
+        var reserved = Set(residents.map(\.name)).union(living.owners.values).union(officerRecords.keys)
+        reserved.formUnion(Gazetteer.regulars(for: county).values)
+        context.reservedNames = reserved.subtracting(people.map(\.name))
         context.residentDefendant = residentDefendant.map { ResidentRef(name: $0.name, town: $0.town, occupation: $0.occupation, lastCaption: nil) }
         context.residents = residents.filter { !$0.deceased }.map { r in
             ResidentRef(name: r.name, town: r.town, occupation: r.occupation,
@@ -2204,6 +2222,7 @@ final class GameState: ObservableObject {
         }
         guard var newCase = best?.value else { return nil }
         applyTrackRecords(&newCase, rng: &rng)
+        rememberOwners(newCase)
         recentLineKeys.append(contentsOf: CaseAuditor.lineKeys(newCase))
         if recentLineKeys.count > 2_500 { recentLineKeys.removeFirst(recentLineKeys.count - 2_500) }
         used.insert(newCase.defendant.personID)

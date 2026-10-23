@@ -33,6 +33,8 @@ enum CaseGenerator {
         var residents: [ResidentRef] = []
         /// Someone the court knows from an earlier case, now charged in this one (used when the written case allows them).
         var residentDefendant: ResidentRef? = nil
+        /// Everyone the county already knows by name (residents, owners, regulars, officers): a new face never shares a name.
+        var reservedNames: Set<String> = []
         /// The earlier case a written follow-up refers to.
         var priorOffense: String? = nil
         var priorDate: Date? = nil
@@ -228,7 +230,9 @@ enum CaseGenerator {
             let known = context.residentDefendant.flatMap { r in
                 (t.requiredGenders["D"].map { NameBank.gender(of: r.name) == $0 } ?? true) && r.occupation == nil && !used.contains(r.name) ? r.name : nil
             }
-            let name = known ?? NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"])
+            var drawn = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"])
+            for _ in 0..<8 where context.reservedNames.contains(drawn) { drawn = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"]) }
+            let name = known ?? drawn
             if known != nil { used.insert(name); used.insert(lastName(name)) }
             let age = rng.int(t.ageRange)
             let occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
@@ -274,7 +278,7 @@ enum CaseGenerator {
         let sameVictim = context.victimOverride.flatMap { name in
             t.requiredGenders["V"].map { $0 == NameBank.gender(of: name) } ?? true ? name : nil
         }
-        let knownNames = Set(context.residents.map(\.name))
+        let knownNames = Set(context.residents.map(\.name)).union(context.reservedNames)
         var drawnVictim = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"])
         for _ in 0..<8 where knownNames.contains(drawnVictim) { drawnVictim = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"]) }
         let victimName = t.hasVictim ? (sameVictim ?? drawnVictim) : nil
@@ -454,20 +458,20 @@ enum CaseGenerator {
         if t.story != nil {
             // A written case calls every witness, in order, exactly as written.
             for item in t.prosecutionWitnesses {
-                witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, impeach: false, regulars: regulars, residents: context.residents, hood: values["HOOD"] ?? hood))
+                witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, impeach: false, regulars: regulars, residents: context.residents, hood: values["HOOD"] ?? hood, reserved: context.reservedNames))
             }
             for item in t.defenseWitnesses {
-                witnesses.append(makeWitness(item, side: .defense, fill: fill, rng: &rng, used: &used, impeach: false, regulars: regulars, residents: context.residents, hood: values["HOOD"] ?? hood))
+                witnesses.append(makeWitness(item, side: .defense, fill: fill, rng: &rng, used: &used, impeach: false, regulars: regulars, residents: context.residents, hood: values["HOOD"] ?? hood, reserved: context.reservedNames))
             }
         }
         let prosecutionWitnessCount = t.story != nil ? 0 : min(t.prosecutionWitnesses.count, rng.int(1...2))
         for item in rng.pick(t.prosecutionWitnesses, count: prosecutionWitnessCount) {
             witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, regulars: regulars,
-                                         residents: context.residents, hood: values["HOOD"] ?? hood))
+                                         residents: context.residents, hood: values["HOOD"] ?? hood, reserved: context.reservedNames))
         }
         if t.story == nil && !t.defenseWitnesses.isEmpty && (band != .strong || rng.chance(0.3)) {
             witnesses.append(makeWitness(rng.pick(t.defenseWitnesses), side: .defense, fill: fill, rng: &rng, used: &used, regulars: regulars,
-                                         residents: context.residents, hood: values["HOOD"] ?? hood))
+                                         residents: context.residents, hood: values["HOOD"] ?? hood, reserved: context.reservedNames))
         }
 
         // The investigation file and fact sheet come first: every generated witness reads from them.
@@ -1278,7 +1282,8 @@ enum CaseGenerator {
 
     private static func makeWitness(_ seed: WitnessSeed, side: Side, fill: TextFiller,
                                     rng: inout SeededRNG, used: inout Set<String>, impeach: Bool = true,
-                                    regulars: [String: String] = [:], residents: [ResidentRef] = [], hood: String = "") -> Witness {
+                                    regulars: [String: String] = [:], residents: [ResidentRef] = [], hood: String = "",
+                                    reserved: Set<String> = []) -> Witness {
         let name: String
         var recalled: String?
         if let token = seed.name {
@@ -1303,7 +1308,7 @@ enum CaseGenerator {
                 recalled = known.lastCaption
             } else {
                 // A new face never shares a name with someone the court already knows.
-                let known = Set(residents.map(\.name))
+                let known = Set(residents.map(\.name)).union(reserved)
                 var fresh = NameBank.person(using: &rng, excluding: &used, gender: gender)
                 for _ in 0..<8 where known.contains(fresh) { fresh = NameBank.person(using: &rng, excluding: &used, gender: gender) }
                 name = fresh
