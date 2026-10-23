@@ -1520,16 +1520,10 @@ final class GameState: ObservableObject {
                 }
                 awaitCase(c, note: followUp.note, on: date)
                 // An arrest while on probation is also a violation: the officer files a report on the same conduct.
-                if person.status == .probation, person.probation != nil, let county,
-                   !(today?.entries ?? []).contains(where: { if case .hearing(let h) = $0.matter { return h.personID == person.id } else { return false } }),
-                   !scheduled.contains(where: { if case .hearing(let h) = $0.entry.matter { return h.personID == person.id } else { return false } }) {
+                if person.status == .probation, person.probation != nil, !hasHearingSet(for: person.id) {
                     let offense = (c.charges.first?.law.title ?? "a new offense").lowercased()
-                    if let hearing = ViolationHearings.make(person: person, county: county, date: date, seed: rng.next(),
-                                                            newCharge: (offense: offense, docket: c.docket,
-                                                                        contact: followUp.victimName != nil && followUp.note.hasPrefix("Charged with violating"))) {
-                        place(DocketEntry(matter: .hearing(hearing), note: "Violation report filed after \(person.lastName)'s arrest in \(c.docket)."),
-                              from: nextSittingDay(after: date))
-                    }
+                    fileViolationReport(person, text: "arrested and charged with \(offense). The charge is pending before this court in \(c.docket); the officer will offer the underlying facts.",
+                                        contact: false, note: "Violation report filed after \(person.lastName)'s arrest in \(c.docket).", on: date, rng: &rng)
                 }
             }
         }
@@ -2738,6 +2732,19 @@ final class GameState: ObservableObject {
         }
     }
 
+    /// Whether a violation hearing for this person is already on the calendar.
+    private func hasHearingSet(for personID: UUID) -> Bool {
+        let entries = (today?.entries ?? []) + scheduled.map(\.entry)
+        return entries.contains { if case .hearing(let h) = $0.matter { return h.personID == personID } else { return false } }
+    }
+
+    /// The probation officer reports a new arrest; the hearing goes on the next day the judge sits.
+    private func fileViolationReport(_ person: PersonRecord, text: String, contact: Bool, note: String, on date: Date, rng: inout SeededRNG) {
+        guard let county, let hearing = ViolationHearings.make(person: person, county: county, date: date, seed: rng.next(),
+                                                               newCharge: (text: text, contact: contact)) else { return }
+        place(DocketEntry(matter: .hearing(hearing), note: note), from: nextSittingDay(after: date))
+    }
+
     /// Each week, anyone free under a stay-away order this court entered may break it. A violation is news, and
     /// the new charge comes back to this courtroom.
     private func checkStayAwayOrders(rng: inout SeededRNG) {
@@ -2775,8 +2782,18 @@ final class GameState: ObservableObject {
                 }
                 post(NewsItem(date: currentDate, kind: .arrest,
                               headline: "\(person.name) arrested for violating court order protecting \(order.protectedName)",
-                              body: "Deputies say \(person.name) \(what), in violation of the \(order.label) Judge \(lastName(judgeName)) imposed in \(order.docket) on \(SentenceFormat.shortDate(order.issued)). \(person.lastName) is being held pending a first appearance.",
+                              body: "Deputies say \(person.name) \(what), in violation of the \(order.label) Judge \(lastName(judgeName)) imposed in \(order.docket) on \(SentenceFormat.shortDate(order.issued)). \(person.status == .probation && person.probation != nil ? "\(person.lastName), who is on probation, is being held for a probation violation hearing before Judge \(lastName(judgeName))." : "\(person.lastName) is being held pending a first appearance.")",
                               docket: order.docket, prominence: 2))
+                // On probation, the violation goes back to the judge who set the conditions as a violation hearing,
+                // where the judge hears the officer and the probationer and can revoke; there's no separate trial.
+                if person.status == .probation, person.probation != nil {
+                    if !hasHearingSet(for: person.id) {
+                        fileViolationReport(person, text: "arrested for violating the \(order.label) protecting \(order.protectedName) (\(order.docket)): \(person.lastName) \(what). The State proceeds on it at this hearing rather than as a separate prosecution.",
+                                            contact: true, note: "Violation report filed after \(person.lastName)'s arrest for violating the \(order.label) in \(order.docket).",
+                                            on: currentDate, rng: &rng)
+                    }
+                    break
+                }
                 // The arrest already happened, so the charge goes straight onto the docket at the next intake.
                 reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: [key],
                                                 victimName: order.protectedName, incident: incident,

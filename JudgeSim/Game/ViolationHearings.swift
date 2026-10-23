@@ -204,10 +204,10 @@ enum ViolationHearings {
         return result
     }
 
-    /// `newCharge` is a new arrest the officer is reporting (the charge and its docket in this court); the hearing is
-    /// then about that conduct first.
+    /// `newCharge` is a new arrest the officer is reporting, described after "New criminal offense: "; `contact` when
+    /// the conduct was contact with the victim. The hearing is then about that conduct first.
     static func make(person: PersonRecord, county: County, date: Date, seed: UInt64,
-                     newCharge: (offense: String, docket: String, contact: Bool)? = nil) -> ViolationHearing? {
+                     newCharge: (text: String, contact: Bool)? = nil) -> ViolationHearing? {
         guard var term = person.probation else { return nil }
         var rng = SeededRNG(seed: seed)
         var used = Set([person.name])
@@ -320,9 +320,9 @@ enum ViolationHearings {
                                    "trespassing and resisting at a bar that had banned them"])
         if let newCharge {
             if newCharge.contact && conditions.contains("no contact") {
-                picked.insert(("Contacted the victim in violation of the no-contact condition, the same conduct as the new charge.", 0.85, .contact), at: 0)
+                picked.insert(("Contacted the victim in violation of the no-contact condition; the same conduct.", 0.85, .contact), at: 0)
             }
-            picked.insert(("New criminal offense: arrested and charged with \(newCharge.offense). The charge is pending before this court in \(newCharge.docket); the \(supervised ? "officer" : "State") will offer the underlying facts.", 0.85, .newCrime), at: 0)
+            picked.insert(("New criminal offense: \(newCharge.text)", 0.85, .newCrime), at: 0)
         } else if newCrime {
             picked.insert(("New criminal offense: charged with \(newOffense). The charge is pending in district court; the \(supervised ? "officer" : "State") will offer the underlying facts.", 0.85, .newCrime), at: 0)
         }
@@ -614,6 +614,10 @@ final class HearingSession: ObservableObject {
     @Published var rulings = HearingRulings()
     @Published private(set) var outcome: HearingOutcome?
     @Published private(set) var transcript: [TranscriptEntry] = []
+    /// What the judge and the probationer have said to each other.
+    @Published private(set) var probationerTranscript: [TranscriptEntry] = []
+    /// The probationer's life as the court knows it, for answers about work and family.
+    var profile: DefendantProfile?
     private var askedIDs = Set<String>()
 
     init(hearing: ViolationHearing, judgeName: String, county: County) {
@@ -657,6 +661,68 @@ final class HearingSession: ObservableObject {
     func record(side: Side, question: String, answer: String, reveal: CounselReveal?) {
         transcript.append(TranscriptEntry(side: side, speaker: counselName(side), question: question, answer: answer, reveal: nil))
         if let preset = allQuestions(side).first(where: { $0.answer == answer }) { askedIDs.insert(preset.id) }
+    }
+
+    /// The judge speaks to the probationer directly: live through the AI engine when one is set, otherwise from the file.
+    /// Returns an error to show, or nil.
+    @MainActor
+    func askProbationer(_ question: String) async -> String? {
+        let history = probationerTranscript.map { (question: $0.question, answer: $0.answer) }
+        let engine = AISettings.shared.activeEngine
+        var answer: String
+        do {
+            switch engine {
+            case .offline:
+                answer = offlineProbationerAnswer(question)
+            case .onDevice:
+                answer = try await OnDeviceCounsel.reply(instructions: CounselBrief.probationer(hearing, profile: profile, judge: judgeName, compact: true),
+                                                         history: history, question: question).answer
+            case .claude:
+                answer = try await ClaudeClient.counselReply(system: CounselBrief.probationer(hearing, profile: profile, judge: judgeName, compact: false),
+                                                             history: history, question: question).answer
+            }
+        } catch OnDeviceCounsel.Failure.guardrail {
+            answer = "I don't know how to answer that, Judge."
+        } catch OnDeviceCounsel.Failure.tooLong {
+            answer = offlineProbationerAnswer(question)
+        } catch ClaudeError.refusal {
+            answer = "I don't know how to answer that, Judge."
+        } catch {
+            return error.localizedDescription
+        }
+        probationerTranscript.append(TranscriptEntry(side: .defense, speaker: hearing.personName, question: question, answer: answer, reveal: nil))
+        return nil
+    }
+
+    /// Answers from the file when no AI engine is set: plain words, matched loosely to what was asked.
+    private func offlineProbationerAnswer(_ question: String) -> String {
+        let q = question.lowercased()
+        let h = hearing
+        let admits = h.admits ?? true
+        func has(_ words: [String]) -> Bool { words.contains { q.contains($0) } }
+        if has(["job", "work", "employ"]) {
+            if let job = profile?.currentJob { return "I'm still at \(job.employer), Judge. If I go in, I lose it." }
+            return "I don't have a job right now. I've been trying."
+        }
+        if has(["kid", "child", "family", "wife", "husband", "mother", "mom"]) {
+            if let p = profile, p.childCount > 0 { return "I've got \(p.childCount == 1 ? "a kid" : "\(p.childCount) kids"), Judge. They need me home." }
+            return "My family's been through enough with me. I don't want to put them through more."
+        }
+        if has(["why", "explain", "what happened", "tell me"]) {
+            return admits
+                ? (h.willful ? "I messed up, Judge. I don't have a good excuse. I just wasn't thinking." : "Things got bad, Judge. I'm not making excuses, but I was trying to keep my head above water.")
+                : "That's not how it went, Judge. I know what the report says, but it wasn't like that."
+        }
+        if has(["did you", "do you admit", "true", "deny"]) {
+            return admits ? "Yes, Judge. I did it." : "No, Judge. Not the way they're saying."
+        }
+        if has(["victim", "contact", "stay away", "order"]) {
+            return admits ? "I know I wasn't supposed to go near them. I won't do it again." : "My lawyer told me not to talk about that part, Judge."
+        }
+        if has(["jail", "prison", "revoke", "chance", "promise", "again"]) {
+            return "Please, Judge. Give me one more chance. I'll do everything they tell me."
+        }
+        return admits ? "Yes, Judge. I understand." : "I understand, Judge. I just want you to hear my side."
     }
 
     func finish() {
