@@ -327,7 +327,10 @@ enum CaseGenerator {
             if let options = t.extras[key] { values[key] = rng.pick(options) }
         }
         // A case set at a place on the county map happens in that place's town, on its street.
-        if let known = t.extras.keys.sorted().compactMap({ values[$0].flatMap(Gazetteer.place(named:)) }).first {
+        // Where it happened comes first (the bar, the store, the pharmacy), not a company or a church that's only mentioned.
+        let sites = ["BAR", "CLUB", "SHOP", "STORE", "PHARM", "LOT", "FAC", "PAWN", "REST", "GYM", "SPA", "BANK", "GROCER",
+                     "SCHOOL", "CHURCH", "POST"]
+        if let known = sites.filter({ t.extras[$0] != nil }).compactMap({ values[$0].flatMap(Gazetteer.place(named:)) }).first {
             values["HOOD"] = known.town
             values["STREET"] = known.street
         }
