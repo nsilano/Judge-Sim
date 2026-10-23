@@ -1899,14 +1899,17 @@ enum Judgment {
         // What the defendant does next, if the judgment let a guilty person go.
         // What follows in the world: written beats for this case, the victim a year on, the community's reaction.
         var broughtCase = false
+        // Whether the defendant actually leaves in custody today; jail credit can satisfy an active term outright.
+        let goingIn = life || releaseOn > date
+        let timeServed = activeImposed && !goingIn
         if !insanityAcquittal {
-            let aftermath = Aftermath.events(for: c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
+            let aftermath = Aftermath.events(for: c, convicted: convicted, active: goingIn,
                                              judgeLast: judgeLast, date: date, dismissed: dismissed, rng: &rng)
             pending.append(contentsOf: aftermath.events)
             broughtCase = aftermath.broughtCase
         }
         if !broughtCase {
-            pending.append(contentsOf: Consequences.afterJudgment(c, convicted: convicted, active: custodyMonths > 0 || activeImposed,
+            pending.append(contentsOf: Consequences.afterJudgment(c, convicted: convicted, active: goingIn,
                                                                   dismissed: dismissed, insanity: insanityAcquittal, judgeLast: judgeLast, date: date, rng: &rng))
         }
 
@@ -1970,11 +1973,11 @@ enum Judgment {
                 }
             }
         }
-        let reactions = makeReactions(c, county: county, convicted: convicted, dismissed: dismissed, active: custodyMonths > 0 || activeImposed,
-                                      plea: plea ? r.pleaKind : nil, severity: severity, sentence: newsSentence, rng: &rng)
+        let reactions = makeReactions(c, county: county, convicted: convicted, dismissed: dismissed, active: goingIn, timeServed: timeServed,
+                                      years: life || custodyMonths >= 12, plea: plea ? r.pleaKind : nil, severity: severity, sentence: newsSentence, rng: &rng)
         var news = makeNews(c, county: county, judgeLast: judgeLast, date: date, convicted: convicted, dismissed: dismissed,
                             plea: plea ? r.pleaKind : nil, pleaLaw: plea ? sentencingUnits.first?.law : nil,
-                            sentence: newsSentence, active: custodyMonths > 0 || activeImposed, reactions: reactions,
+                            sentence: newsSentence, active: goingIn, timeServed: timeServed, reactions: reactions,
                             countsConvicted: verdictLines.filter { $0.verdictLabel.lowercased().contains("guilty") && !$0.verdictLabel.lowercased().contains("not guilty") }.count,
                             lead: convictedLaws(c, r).min { ($0.ncClass?.severity ?? 99) < ($1.ncClass?.severity ?? 99) })
         if !newsExtras.isEmpty { news.body += " " + newsExtras.joined(separator: " ") }
@@ -2263,7 +2266,7 @@ enum Judgment {
     // MARK: Press
 
     private static func makeReactions(_ c: CourtCase, county: County, convicted: Bool, dismissed: Bool, active: Bool,
-                                      plea: PleaKind?, severity: Int, sentence: String, rng: inout SeededRNG) -> [String] {
+                                      timeServed: Bool = false, years: Bool = true, plea: PleaKind?, severity: Int, sentence: String, rng: inout SeededRNG) -> [String] {
         let defenseName = c.defenseAttorney.components(separatedBy: ",").first ?? c.defenseAttorney
         let ada = c.prosecutor
         let da = rng.chance(c.mediaAttention >= 2 ? 0.7 : 0.3) ? "District Attorney \(county.districtAttorney)" : ada
@@ -2351,6 +2354,11 @@ enum Judgment {
                     "\"We're disappointed, but the court listened. \(dl) will do the time and come home.\"",
                     "\"It's a hard day. We'll be talking with \(dl) about next steps.\"",
                     plea != nil ? "\"My client accepted responsibility and is ready to serve the sentence.\"" : "\"We respect the court, even though we see the evidence differently.\""]))
+            case (false, _) where timeServed:
+                lines.append("\(defenseName): " + rng.pick([
+                    "\"\(dl) has already served this sentence in the county jail. It's time to go home.\"",
+                    "\"The months in jail were punishment enough, and the court recognized that.\"",
+                    "\"\(dl) walks out today with the time already done. Now comes the hard part: staying out.\""]))
             case (false, _):
                 lines.append("\(defenseName): " + rng.pick([
                     "\"My client has a chance to put this behind them, and intends to take it.\"",
@@ -2384,6 +2392,10 @@ enum Judgment {
                     ? rng.pick(["\"Finally someone listened to us.\"", died ? "\"It won't bring back what we lost, but the judge got it right.\"" : "\"The judge got it right. Now we can stop looking over our shoulders.\""])
                     : rng.pick(["\"It's not enough. It's never going to be enough.\"",
                                 died ? "\"\(dl) will be out before we've stopped grieving.\"" : "\"\(dl) will be out before we feel safe again.\""])
+            case (true, false, .wantsMaximum) where timeServed:
+                line = rng.pick(["\"A few months in the county jail, and \(dl) just walks out?\"",
+                                 died ? "\"\(dl) goes home tonight. We go home to an empty chair.\"" : "\"\(dl) goes home tonight, and we're supposed to feel safe?\"",
+                                 "\"Time served. That's what they call it. We'll be serving ours a lot longer.\""])
             case (true, false, .wantsMaximum):
                 line = rng.pick(["\"Probation. I don't know what to say.\"",
                                  died ? "\"\(dl) walks out the front door today. We go home to an empty chair.\"" : "\"\(dl) walks out the front door today, and we're supposed to feel safe?\"",
@@ -2414,9 +2426,12 @@ enum Judgment {
             case (false, _):
                 words = rng.pick(["\"I knew it. I knew the truth would come out.\"", "\"I'm taking my baby home.\"", "\"Thank God. Thank God.\""])
             case (true, true):
-                words = severity > 0
+                words = severity > 0 && years
                     ? rng.pick(["\"Years? For this? I don't understand.\"", (c.defendant.profile?.childCount ?? 0) > 0 && c.defendant.profile?.familyIsVictim != true ? "\"The kids won't know their parent when this is over.\"" : "\"Years. I'll be old when this is over.\"", "\"We'll be there every visiting day. Every one.\""])
                     : rng.pick(["\"We'll be waiting when it's over.\"", "\"It's hard. But it could have been worse, and we know it.\""])
+            case (true, false) where timeServed:
+                words = rng.pick(["\"\(dl) is coming home tonight. It's been a long few months.\"", "\"We've got the car out front. We're going home.\"",
+                                  "\"The time's done. Now we make sure \(dl) never sees the inside of that jail again.\""])
             case (true, false):
                 words = rng.pick(["\"Now the work starts. We'll make sure every appointment gets kept.\"", "\"We're just grateful to have \(dl) home tonight.\"",
                                   job.map { _ in "\"Keeping that job is everything. The judge understood.\"" } ?? "\"This is the last time. It has to be.\""])
@@ -2439,7 +2454,7 @@ enum Judgment {
 
     private static func makeNews(_ c: CourtCase, county: County, judgeLast: String, date: Date, convicted: Bool,
                                  dismissed: Bool, plea: PleaKind?, pleaLaw: Law?, sentence: String, active: Bool,
-                                 reactions: [String], countsConvicted: Int = 0, lead: Law? = nil) -> NewsItem {
+                                 timeServed: Bool = false, reactions: [String], countsConvicted: Int = 0, lead: Law? = nil) -> NewsItem {
         let d = c.defendant
         var rng = SeededRNG(seed: c.seed ^ 0x5EED_AB1E)
         // A conviction story leads with the most serious count the defendant was actually convicted of.
@@ -2447,7 +2462,8 @@ enum Judgment {
         let facts = NewsDesk.VerdictFacts(name: d.name, last: d.lastName, age: d.age, judge: judgeLast, offense: title.lowercased(),
                                           headline: c.headline, place: c.investigation?.facts?.town, countsTotal: c.charges.count,
                                           countsConvicted: countsConvicted, sentence: sentence, active: active, returning: d.isReturning,
-                                          custodyDays: c.background?.custodyDays ?? 0, victim: c.victimName, mediaAttention: c.mediaAttention)
+                                          custodyDays: c.background?.custodyDays ?? 0, victim: c.victimName, mediaAttention: c.mediaAttention,
+                                          timeServed: timeServed)
         let headline: String
         var body: String
         if dismissed {
