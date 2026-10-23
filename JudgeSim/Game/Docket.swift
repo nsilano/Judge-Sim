@@ -176,7 +176,7 @@ struct Urgency {
         }
         let note = entry.note ?? ""
         if note.contains("Court of Appeals") || note.contains("New trial ordered") { raise(.soon, "Sent back for a new trial", 12) }
-        if note.contains("Back in your court") || note.contains("stay-away order") { raise(.soon, "A defendant you've judged before, charged again", 8) }
+        if note.contains("Back in your court") || note.contains("stay-away order") || note.contains("no-contact condition") { raise(.soon, "A defendant you've judged before, charged again", 8) }
         if c.mediaAttention >= 3 { raise(.soon, "The paper is following it", 8) }
         if entry.continuances >= 2 { raise(.soon, "Already continued \(entry.continuances) times", 6) }
         switch waited {

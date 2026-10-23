@@ -330,6 +330,11 @@ struct StayAwayOrder: Codable, Hashable, Identifiable {
     var violations: Int = 0
     /// The lead offense in the case that produced the order (optional for older saves).
     var offense: String? = nil
+    /// True when this is the no-contact condition of probation, not a separate stay-away order the judge entered.
+    var fromProbation: Bool? = nil
+
+    /// What to call it: the order the judge entered, or the probation condition.
+    var label: String { fromProbation == true ? "no-contact condition of probation" : "stay-away order" }
 }
 
 /// Something a person this court judged did afterward, on its way back to this courtroom as a new case.

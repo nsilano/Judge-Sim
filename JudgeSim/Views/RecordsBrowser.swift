@@ -168,6 +168,38 @@ struct PersonTimeline: View {
         let icon: String
         let color: Color
         let text: String
+        /// Smaller lines under the main one: the verdicts, the sentence.
+        var details: [String] = []
+        /// Shown next to the date, such as the docket number.
+        var tag: String? = nil
+    }
+
+    /// "A, A, A, B" → "A (3 counts) · B".
+    static func groupedCharges(_ charges: String) -> String {
+        var order: [String] = []
+        var counts: [String: Int] = [:]
+        for charge in charges.components(separatedBy: ", ") where !charge.isEmpty {
+            if counts[charge] == nil { order.append(charge) }
+            counts[charge, default: 0] += 1
+        }
+        return order.map { counts[$0, default: 1] > 1 ? "\($0) (\(counts[$0, default: 1]) counts)" : $0 }.joined(separator: " · ")
+    }
+
+    /// "Ct. 1 Guilty; Ct. 2 Guilty. Sentence…" → ["Guilty on all 2 counts", "Sentence…"].
+    static func outcomeLines(_ outcome: String) -> [String] {
+        guard let regex = try? NSRegularExpression(pattern: #"Ct\. (\d+) ([^;.]+)"#) else { return [outcome] }
+        let range = NSRange(outcome.startIndex..., in: outcome)
+        let matches = regex.matches(in: outcome, range: range)
+        guard !matches.isEmpty, let last = matches.last, let end = Range(last.range, in: outcome)?.upperBound else { return [outcome] }
+        let labels = matches.compactMap { m in Range(m.range(at: 2), in: outcome).map { String(outcome[$0]).trimmingCharacters(in: .whitespaces) } }
+        let verdict: String
+        if Set(labels).count == 1, let only = labels.first {
+            verdict = labels.count == 1 ? only : "\(only) on all \(labels.count) counts"
+        } else {
+            verdict = labels.enumerated().map { "Ct. \($0.offset + 1): \($0.element)" }.joined(separator: " · ")
+        }
+        let rest = String(outcome[end...]).trimmingCharacters(in: CharacterSet(charactersIn: ". "))
+        return rest.isEmpty ? [verdict] : [verdict, rest.capitalizedFirst]
     }
 
     var events: [Event] {
@@ -175,11 +207,11 @@ struct PersonTimeline: View {
         for a in person.appearances {
             let pv = a.docket.hasSuffix("(PV)")
             list.append(Event(date: a.date, icon: pv ? "person.badge.clock.fill" : "hammer.fill", color: pv ? .orange : Theme.gold,
-                              text: "\(a.charges) (\(a.docket)): \(a.outcome)"))
+                              text: Self.groupedCharges(a.charges), details: Self.outcomeLines(a.outcome), tag: a.docket))
         }
         for order in person.stayAwayOrders ?? [] {
             list.append(Event(date: order.issued, icon: "hand.raised.fill", color: Theme.prosecution,
-                              text: "Stay-away order protecting \(order.protectedName) until \(SentenceFormat.shortDate(order.expires))"
+                              text: "\(order.label.capitalizedFirst) protecting \(order.protectedName) until \(SentenceFormat.shortDate(order.expires))"
                                 + (order.violations > 0 ? ". Violated \(order.violations) time\(order.violations == 1 ? "" : "s")." : ".")))
         }
         for v in person.violations ?? [] {
@@ -220,9 +252,14 @@ struct PersonTimeline: View {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: event.icon).foregroundStyle(event.color).frame(width: 20)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(event.date > game.currentDate ? "\(SentenceFormat.shortDate(event.date)) (expected)" : SentenceFormat.shortDate(event.date))
+                        Text((event.date > game.currentDate ? "\(SentenceFormat.shortDate(event.date)) (expected)" : SentenceFormat.shortDate(event.date))
+                             + (event.tag.map { " · \($0)" } ?? ""))
                             .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
-                        Text(event.text).font(.callout).fixedSize(horizontal: false, vertical: true)
+                        Text(event.text).font(.callout.weight(event.details.isEmpty ? .regular : .semibold))
+                            .fixedSize(horizontal: false, vertical: true)
+                        ForEach(event.details, id: \.self) { line in
+                            Text(line).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 }
             }

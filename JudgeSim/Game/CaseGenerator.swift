@@ -1269,9 +1269,43 @@ enum CaseGenerator {
             let opposing: Side = side == .prosecution ? .defense : .prosecution
             let versions = seed.exam.map { max($0.answers.count, $0.questions.count) }.max() ?? 1
             let version = rng.int(0...(max(1, versions) - 1))
-            var exchanges = seed.exam.filter { !$0.optional || rng.chance(0.6) }.map { line in
+            // A short examination keeps every line it has.
+            let keepAll = seed.exam.count <= 3
+            var exchanges = seed.exam.filter { keepAll || !$0.optional || rng.chance(0.6) }.map { line in
                 TestimonyExchange(phase: line.phase, examiner: line.phase == .cross ? opposing : side,
                                   question: fill(line.question(version)), answer: fill(line.answer(version)))
+            }
+            // A witness with only a question or two gets a fuller examination from what the case already says
+            // about them: who they are, their own account, and the point the other side presses on cross.
+            if exchanges.count < 4 {
+                let said = Set(exchanges.map { $0.answer })
+                // "Victim's mother" → "the victim's mother"; "Lead detective" → "the lead detective".
+                let role = witness.role
+                let lowerRole = role.prefix(1).lowercased() + role.dropFirst()
+                let who = ["victim's", "defendant's", "the ", "lead ", "first ", "responding ", "chief ", "head "].contains { lowerRole.hasPrefix($0) }
+                    ? (lowerRole.hasPrefix("the ") ? lowerRole : "the " + lowerRole)
+                    : Testimony.withArticle(role)
+                let official = Testimony.isOfficial(witness.role)
+                var direct: [TestimonyExchange] = [
+                    TestimonyExchange(phase: .direct, examiner: side, question: "Please tell the court who you are.",
+                                      answer: "\"\(name). I'm \(who).\"")
+                ]
+                for line in witness.direct where !said.contains(line) && !line.isEmpty {
+                    direct.append(TestimonyExchange(phase: .direct, examiner: side,
+                                                    question: official ? "What did your work in this case show?" : "In your own words, what happened?",
+                                                    answer: line))
+                    break
+                }
+                exchanges.insert(contentsOf: direct.prefix(max(1, 4 - exchanges.count)), at: 0)
+                if !exchanges.contains(where: { $0.phase == .cross }) {
+                    for line in seed.cross.map({ fill($0) }) where !said.contains(line) {
+                        if let question = Testimony.leadingQuestion(from: line, rng: &rng) {
+                            let at = exchanges.firstIndex { $0.phase == .redirect } ?? exchanges.count
+                            exchanges.insert(TestimonyExchange(phase: .cross, examiner: opposing, question: question, answer: line), at: at)
+                            break
+                        }
+                    }
+                }
             }
             // A generic credibility problem drawn on cross shows up as a narrated moment before redirect.
             let extra = cross.count > seed.cross.count ? cross.last : nil
