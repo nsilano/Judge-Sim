@@ -8,6 +8,7 @@ struct HearingView: View {
     @State private var showLibrary = false
     @State private var confirmLeave = false
     @State private var showContinuance = false
+    @State private var showProbationer = false
 
     init(hearing: ViolationHearing, judgeName: String, county: County) {
         _session = StateObject(wrappedValue: HearingSession(hearing: hearing, judgeName: judgeName, county: county))
@@ -102,6 +103,8 @@ struct HearingView: View {
                 }
             }
             .sheet(isPresented: $showCounsel) { CounselSheet(provider: session) }
+            .sheet(isPresented: $showProbationer) { ProbationerSheet(session: session) }
+            .onAppear { if session.profile == nil { session.profile = game.person(session.hearing.personID)?.profile } }
             .sheet(isPresented: $showContinuance) {
                 ContinuanceSheet(today: h.date, subject: "Probation violation: \(h.personName)", keepsRulings: false) { date, reason, _ in
                     showContinuance = false
@@ -141,6 +144,19 @@ struct HearingView: View {
         }
 
         CounselPrompt(available: session.unaskedCount) { showCounsel = true }
+        Button { showProbationer = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "person.wave.2.fill").font(.title3).foregroundStyle(Theme.gold)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Speak to \(h.personName)").font(.subheadline.weight(.semibold))
+                    Text("Ask what happened, in their own words").font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+            }
+            .card()
+        }
+        .buttonStyle(.plain)
 
         SectionTitle(text: "Violation report", icon: "doc.text.fill")
         VStack(alignment: .leading, spacing: 10) {
@@ -276,6 +292,85 @@ struct HearingView: View {
         PrimaryButton(title: "Return to Chambers", icon: "house.fill") {
             game.completeHearing(h, outcome: outcome)
             dismiss()
+        }
+    }
+}
+
+/// The judge speaking to the probationer directly, in a hearing.
+struct ProbationerSheet: View {
+    @ObservedObject var session: HearingSession
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var settings = AISettings.shared
+    @State private var draft = ""
+    @State private var thinking = false
+    @State private var errorText: String?
+
+    private static let starters = ["What happened?", "Do you admit the violation?", "Why should I give you another chance?", "Are you working right now?"]
+
+    private func send(_ text: String) {
+        let question = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !question.isEmpty, !thinking else { return }
+        draft = ""
+        errorText = nil
+        thinking = true
+        Task { @MainActor in
+            if let error = await session.askProbationer(question) {
+                errorText = error
+                draft = question
+            }
+            thinking = false
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                FixedWidthScroll {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("\(session.hearing.personName) stands at the defense table beside counsel.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        ForEach(session.probationerTranscript) { TranscriptBubble(entry: $0) }
+                        if thinking {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                Text("\(session.hearing.personName) is answering…").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        if let errorText {
+                            Label(errorText, systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange)
+                        }
+                        if session.probationerTranscript.isEmpty {
+                            ForEach(Self.starters, id: \.self) { q in
+                                Button(q) { send(q) }.font(.callout).buttonStyle(.bordered)
+                            }
+                        }
+                    }
+                    .padding()
+                }
+                VStack(spacing: 6) {
+                    HStack(alignment: .bottom, spacing: 8) {
+                        TextField("Say something to \(session.hearing.personName)…", text: $draft, axis: .vertical)
+                            .lineLimit(1...4)
+                            .padding(10)
+                            .background(RoundedRectangle(cornerRadius: 18).fill(Theme.surface))
+                            .submitLabel(.send)
+                            .onSubmit { send(draft) }
+                        Button { send(draft) } label: {
+                            Image(systemName: "arrow.up.circle.fill").font(.system(size: 32))
+                                .foregroundStyle(draft.isEmpty || thinking ? Color.secondary : Theme.gold)
+                        }
+                        .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || thinking)
+                    }
+                    Text(settings.activeLabel).font(.caption2).foregroundStyle(.secondary)
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(.bar)
+            }
+            .background(Theme.background)
+            .navigationTitle(session.hearing.personName)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
     }
 }

@@ -149,6 +149,14 @@ private struct MatterCard: View {
                     }
                 }
             }
+            if matter.kind != .searchWarrant, let profile = matter.pendingCase?.defendant.profile ?? game.person(matter.personID)?.profile {
+                NavigationLink {
+                    DefendantProfilePage(name: matter.personName, profile: profile)
+                } label: {
+                    Label("Who \(matter.personName) is: life, work, and education", systemImage: "person.text.rectangle")
+                        .font(.subheadline.weight(.semibold))
+                }
+            }
             if let lawID = matter.lawID {
                 LawLink(lawID: lawID)
             }
@@ -190,6 +198,10 @@ struct PendingCaseFile: View {
                         .font(.callout)
                 }
                 .card()
+                if let profile = c.defendant.profile {
+                    SectionTitle(text: "The defendant", icon: "person.text.rectangle")
+                    DefendantProfileView(profile: profile).card()
+                }
                 let state = c.evidence.filter { $0.side == .prosecution }
                 let defense = c.evidence.filter { $0.side == .defense }
                 if !state.isEmpty {
@@ -214,6 +226,21 @@ struct PendingCaseFile: View {
         }
         .background(Theme.background)
         .navigationTitle("Case File")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// The defendant's life, work, and schooling, opened from a calendar call matter.
+struct DefendantProfilePage: View {
+    let name: String
+    let profile: DefendantProfile
+
+    var body: some View {
+        FixedWidthScroll {
+            DefendantProfileView(profile: profile).card().padding()
+        }
+        .background(Theme.background)
+        .navigationTitle(name)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

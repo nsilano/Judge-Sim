@@ -198,4 +198,29 @@ enum CounselBrief {
         }
         return lines.joined(separator: "\n")
     }
+
+    // MARK: The probationer, spoken to directly
+
+    /// The person on probation, answering the judge in their own words at a violation hearing.
+    static func probationer(_ h: ViolationHearing, profile: DefendantProfile?, judge: String, compact: Bool) -> String {
+        let lawyer = h.defenseAttorney.components(separatedBy: ",").first ?? h.defenseAttorney
+        let manner = h.willful
+            ? "You know you messed up, and you're a little defensive about it, but you want to stay out of jail."
+            : "You've been struggling and you're scared of going to jail; you want the judge to understand."
+        let stance = (h.admits ?? true) ? "You admit what you did, though you may explain it." : "You deny it or play it down; you think the officer has it wrong."
+        var lines = [
+            "You are \(h.personName), \(h.personAge), on probation in \(h.probation.docket) for \(h.probation.offense.lowercased()). You are standing in Superior Court in Hollis County, North Carolina, at your probation violation hearing, and Judge \(judge) is speaking to you directly. Your lawyer, \(lawyer), is beside you.",
+            "Speak as yourself, out loud, in the first person: plain everyday words, one to three sentences. You are not a lawyer; don't use legal terms or cite laws. Call the judge \"Judge\" or \"sir\" or \"ma'am\". \(manner) \(stance)",
+            "Stick to the facts below. If the judge asks about something they don't cover, give a short, believable answer that doesn't contradict them, or say you don't remember. If a question could hurt you on a pending charge, you can say your lawyer told you not to talk about that. No stage directions. Never mention AI or a game. Set raises_factor to false.",
+            "",
+            "WHAT THE OFFICER REPORTED: " + h.violations.joined(separator: " "),
+            "WHAT'S GOING ON IN YOUR LIFE (your lawyer's words; say it your own way): \(h.circumstances)"
+        ]
+        if let p = profile {
+            let job = p.currentJob.map { "You work as \($0.title.lowercased()) at \($0.employer)." } ?? "You don't have a job right now."
+            lines.append("YOUR LIFE: \(job) Family: \(p.family). Home: \(p.residence). School: \(p.education).")
+        }
+        let text = lines.joined(separator: "\n")
+        return compact ? clip(text, 1_800) : text
+    }
 }
