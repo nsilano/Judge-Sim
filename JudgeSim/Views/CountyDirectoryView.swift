@@ -20,6 +20,20 @@ struct CountyDirectoryView: View {
                     }
                 }
             }
+            let familiar = game.residents.filter { $0.roles.count >= 2 }.sorted { $0.roles.count > $1.roles.count }
+            if !familiar.isEmpty {
+                Section("Familiar faces") {
+                    ForEach(familiar.prefix(40)) { r in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(r.name + (r.deceased ? " (deceased)" : "")).font(.callout.weight(.semibold))
+                            if let job = r.occupation { Text(job).font(.caption).foregroundStyle(.secondary) }
+                            ForEach(r.roles, id: \.docket) { role in
+                                Text("\(role.part) · \(role.caption)").font(.caption2).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
             ForEach(Gazetteer.towns, id: \.name) { town in
                 Section {
                     Text(town.character.prefix(1).uppercased() + String(town.character.dropFirst()))

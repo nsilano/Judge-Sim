@@ -102,6 +102,7 @@ private struct SaveData: Codable {
     var mood: CourthouseMood?
     var investigations: [OpenInvestigation]?
     var placeHistory: [String: [String]]?
+    var residents: [Resident]?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -155,6 +156,8 @@ final class GameState: ObservableObject {
     @Published private(set) var investigations: [OpenInvestigation] = []
     /// The dockets that came out of each place on the county map, oldest first.
     @Published private(set) var placeHistory: [String: [String]] = [:]
+    /// Victims and witnesses: everyone who has come through the court other than as a defendant.
+    @Published private(set) var residents: [Resident] = []
     /// What happened in court since the paper last went out.
     private var happenings: [Happening] = []
 
@@ -597,6 +600,32 @@ final class GameState: ObservableObject {
         today = buildDay(next, kind: .trial, sessionDay: 1)
         digest = news.filter { !seenBefore.contains($0.id) }
         save()
+    }
+
+    /// Everyone besides the defendant who took part in a trial goes into the court's memory: the victim, and each
+    /// ordinary witness, with the town and job the case gave them.
+    private func rememberParticipants(_ c: CourtCase) {
+        let town = c.investigation?.facts?.town
+        func remember(_ name: String, part: String, occupation: String? = nil, livesHere: Bool = false, died: Bool = false) {
+            guard !name.isEmpty, !people.contains(where: { $0.name == name }) else { return }
+            let role = Resident.Role(date: currentDate, docket: c.docket, caption: c.caption, part: part)
+            if let i = residents.firstIndex(where: { $0.name == name }) {
+                if !residents[i].roles.contains(where: { $0.docket == c.docket }) { residents[i].roles.append(role) }
+                if residents[i].occupation == nil { residents[i].occupation = occupation }
+                if residents[i].town == nil && livesHere { residents[i].town = town }
+                if died { residents[i].deceased = true }
+            } else {
+                residents.append(Resident(name: name, town: livesHere ? town : nil, occupation: occupation, deceased: died, roles: [role]))
+            }
+        }
+        if let victim = c.victimName, victim != "the complainant" {
+            remember(victim, part: "Victim", livesHere: true, died: Consequences.victimDied(c))
+        }
+        for w in c.witnesses where w.lay == true && w.isDefendant != true && w.name != c.victimName {
+            let side = w.calledBy == .prosecution ? "State's witness" : "Defense witness"
+            remember(w.name, part: "\(side) (\(w.role.prefix(1).lowercased() + w.role.dropFirst()))",
+                     occupation: Residents.isPlaceJob(w.role) ? w.role : nil, livesHere: w.role.lowercased().contains("neighbor"))
+        }
     }
 
     /// Investigations that end in an arrest today: the paper names the defendant and the case comes to the court.
@@ -1416,6 +1445,9 @@ final class GameState: ObservableObject {
             let murderWaiting = (awaiting.map(\.entry) + scheduled.map(\.entry)).contains { entry in
                 if case .trial(let c) = entry.matter { return Self.isMurder(c) } else { return false }
             }
+            // Now and then someone the court knows from an earlier case (a witness, a victim) is the one charged.
+            let knownPool = residents.filter { !$0.deceased && $0.occupation == nil }
+            let knownDefendant = rng.chance(0.06) && !knownPool.isEmpty ? knownPool[rng.int(0...(knownPool.count - 1))] : nil
             // About half the time the paper follows the crime from the day it happens; the case comes at the arrest.
             if rng.chance(0.5) {
                 // The case is built as of its first possible trial day, so every entry in its file falls before it.
@@ -1441,7 +1473,8 @@ final class GameState: ObservableObject {
                                   earliest: ready, reason: "Discovery is still being exchanged")
                     }
                 }
-            } else if var c = generateCase(date: date, rng: &rng, excluding: &used, storySlot: true, allowMurder: !murderWaiting) {
+            } else if var c = generateCase(date: date, rng: &rng, excluding: &used, storySlot: true, allowMurder: !murderWaiting,
+                                           residentDefendant: knownDefendant) {
                 if c.background?.arrangementPresented != true && rng.chance(0.25) {
                     c.continuanceMotion = ContinuanceMotions.make(for: c, rng: &rng)
                 }
@@ -2068,7 +2101,7 @@ final class GameState: ObservableObject {
     private func generateCase(date: Date, rng: inout SeededRNG, excluding used: inout Set<UUID>, storySlot: Bool = true,
                               categories: Set<LawCategory>? = nil, allowMurder: Bool = true, announce: Bool = true,
                               followUp: Reoffense? = nil, generic: Bool = false, incidentDaysAgo: Int? = nil,
-                              arrestOn: Date? = nil) -> CourtCase? {
+                              arrestOn: Date? = nil, residentDefendant: Resident? = nil) -> CourtCase? {
         guard let county, let judgeName else { return nil }
         // A written case brings its own defendant; returning defendants come back through calendar matters and follow-ups.
         var returning = followUp.flatMap { person($0.personID) } ?? (storySlot && followUp == nil ? nil : pickReturningDefendant(rng: &rng, date: date))
@@ -2081,6 +2114,11 @@ final class GameState: ObservableObject {
         context.generic = generic
         context.incidentDaysAgo = incidentDaysAgo
         context.arrestOn = arrestOn
+        context.residentDefendant = residentDefendant.map { ResidentRef(name: $0.name, town: $0.town, occupation: $0.occupation, lastCaption: nil) }
+        context.residents = residents.filter { !$0.deceased }.map { r in
+            ResidentRef(name: r.name, town: r.town, occupation: r.occupation,
+                        lastCaption: r.roles.last(where: { $0.part != "Victim" })?.caption)
+        }
         if let followUp {
             context.forcedTemplateKeys = followUp.templateKeys
             context.victimOverride = followUp.victimName
@@ -2186,6 +2224,7 @@ final class GameState: ObservableObject {
                                   returningDefendant: d.isReturning && !retried,
                                   appealStatus: outcome.appealNotice == nil && !outcome.pending.contains(where: { $0.news.kind == .appeal && $0.news.docket == courtCase.docket }) ? nil : "Appeal pending",
                                   kind: "trial"), at: 0)
+        rememberParticipants(courtCase)
         // The place it happened remembers it; a place that keeps coming up makes the paper.
         if let scene = courtCase.investigation?.facts?.place,
            let place = Gazetteer.places.sorted(by: { $0.name.count > $1.name.count }).first(where: { scene.contains($0.name) }) {
@@ -2371,6 +2410,7 @@ final class GameState: ObservableObject {
         mood = CourthouseMood()
         investigations = []
         placeHistory = [:]
+        residents = []
         CalendarCalls.prosecutorEdge = 0
         CourthouseMood.current = mood
         careerStart = Date()
@@ -2732,7 +2772,7 @@ final class GameState: ObservableObject {
                             reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated,
                             reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, schedule: schedule, awaiting: awaiting,
-                            weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory)
+                            weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -2802,6 +2842,7 @@ final class GameState: ObservableObject {
         mood = data.mood ?? CourthouseMood()
         investigations = data.investigations ?? []
         placeHistory = data.placeHistory ?? [:]
+        residents = data.residents ?? []
         CalendarCalls.prosecutorEdge = mood.prosecutorEdge
         CourthouseMood.current = mood
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.
