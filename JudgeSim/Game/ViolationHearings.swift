@@ -220,7 +220,7 @@ enum ViolationHearings {
         let elapsed = start.map { max(0, cal.dateComponents([.month], from: $0, to: date).month ?? 0) }
 
         // Each violation carries its kind, so the excuse offered fits what actually went wrong.
-        enum Kind { case drugs, alcohol, service, money, curfew, treatment, contact, visits, moved, travel, work, school, arrest, abscond, newCrime }
+        typealias Kind = ViolationKind
         var candidates: [(text: String, willfulChance: Double, kind: Kind)] = []
         let town = rng.pick(county.towns)
         if need.substance || conditions.contains("drug") {
@@ -321,56 +321,8 @@ enum ViolationHearings {
         // The reason offered fits the main violation, and only says things the record allows.
         let dl = person.lastName
         let kids = person.profile?.childCount ?? 0
-        let place = supervised ? "the probation office" : "the courthouse"
-        var reasons: [Kind: [String]] = [
-            .visits: ["\(dl) has no car, and \(place) is a 40-minute bus ride each way.",
-                      "\(dl) was hospitalized for eight days during the reporting period.",
-                      "\(dl)'s shift schedule changed every week, and the office would only see \(dl) on weekday mornings.",
-                      "The officer changed three times in four months. \(dl) kept getting voicemails with appointment times that had already passed.",
-                      "\(dl) was evicted and spent six weeks in a shelter that didn't allow phones after 9 p.m., so the reminder calls never came through.",
-                      "\(dl) was caring for a parent after a stroke and couldn't leave the house for long."],
-            .money: ["\(dl) lost a job at a warehouse two months in and has been staying with different friends since.",
-                     "\(dl) paid what \(dl) could; most months that was rent or the lights, not court costs.",
-                     "\(dl)'s hours were cut to part-time in the spring.",
-                     "\(dl)'s car was repossessed, and with it the delivery job that paid the fines.",
-                     "\(dl) has been working double shifts to cover rent and court costs, and still came up short."],
-            .drugs: ["\(dl) relapsed after a death in the family and asked the officer for a treatment bed before the report was filed.",
-                     "\(dl)'s treatment provider closed its Hollis County office in the spring, and the nearest one has a two-month waitlist.",
-                     "\(dl) was prescribed pain medication after a work injury and didn't know it had to be reported.",
-                     "\(dl) has been using since the age of fifteen. The first clean month in years was the month before this."],
-            .alcohol: ["\(dl) says the readings came from a long weekend at a cousin's after a funeral. \(dl) doesn't dispute drinking.",
-                       "\(dl) works construction in the heat and says the strap kept slipping. The tampering alerts started the week the job started."],
-            .service: ["The only community service site that would take \(dl) is in \(town), with no bus line.",
-                       "\(dl) started a second job and the service site is only open during working hours.",
-                       "\(dl) did hours at a church that never sent in the paperwork."],
-            .curfew: ["\(dl) works a closing shift; the store keeps staff past curfew to finish inventory.",
-                      "Several of the alerts came from the monitor losing signal in \(dl)'s mobile home.",
-                      "\(dl) took a sick relative to the emergency room one night and didn't call it in."],
-            .treatment: ["\(dl)'s treatment provider closed its Hollis County office in the spring.",
-                         "\(dl) couldn't pay the program's weekly fee after losing Medicaid coverage.",
-                         "The program met at 10 a.m. on weekdays, and \(dl)'s employer wouldn't give the time off."],
-            .contact: ["\(dl) says the victim reached out first, about money for a shared phone bill.",
-                       "\(dl) says they ran into each other by chance and \(dl) left as soon as words were exchanged."],
-            .moved: ["\(dl)'s landlord sold the house with thirty days' notice.",
-                     "\(dl) left the approved address after a fight there and was afraid to go back."],
-            .travel: ["\(dl) went to see a dying grandparent and didn't think to ask first.",
-                      "\(dl) says the officer approved the trip by phone. The officer has no record of it."],
-            .work: ["\(dl) was laid off when the plant cut its second shift.",
-                    "\(dl) has applied for dozens of jobs; the record keeps coming up on background checks."],
-            .school: ["The GED class moved to a campus \(dl) can't get to without a car.",
-                      "\(dl) has a learning disability that was never assessed, and the class moved too fast."],
-            .arrest: ["\(dl) thought a citation wasn't an arrest and didn't need reporting."],
-            .abscond: ["\(dl) panicked after missing one visit and stopped coming in, afraid of being locked up.",
-                       "\(dl) was living in a car and moving between counties after losing housing."],
-            .newCrime: ["\(dl) denies the new charge, and it hasn't been tried yet.",
-                        "The new charge came out of the worst month \(dl) has had, and \(dl) is ready to answer for it in district court."]
-        ]
-        if kids > 0 {
-            reasons[.visits, default: []].append("\(dl) had no one to watch \(kids == 1 ? "a young child" : "the children") during office hours.")
-            reasons[.money, default: []].append("\(dl) chose between the court costs and \(kids == 1 ? "a child's" : "the children's") daycare bill every month.")
-        }
         let mainKind = picked.first?.kind ?? .visits
-        let circumstances = rng.pick(reasons[mainKind] ?? reasons[.visits] ?? [""])
+        let circumstances = ViolationExcuses.pick(for: mainKind, name: dl, supervised: supervised, town: town, kids: kids, rng: &rng)
         let explanation = willful
             ? rng.pick(["My client admits the violations. \(dl) got off track and is asking for one more chance.",
                         "My client doesn't contest the report, Judge, but asks the court to consider what's been going on.",
