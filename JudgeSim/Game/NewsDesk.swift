@@ -48,6 +48,8 @@ enum NewsDesk {
         var custodyDays: Int
         var victim: String?
         var mediaAttention: Int
+        /// An active term was imposed but jail credit already satisfies it.
+        var timeServed = false
     }
 
     static func convictionHeadline(_ f: VerdictFacts, rng: inout SeededRNG) -> String {
@@ -56,7 +58,8 @@ enum NewsDesk {
                        "Guilty: \(f.last) case ends in conviction",
                        "\(f.last) found guilty after \(f.mediaAttention >= 2 ? "closely watched" : "brief") bench trial"]
         if f.active && !f.sentence.isEmpty { options.append("\(f.last) headed to prison after \(f.offense) conviction") }
-        if !f.active && !f.sentence.isEmpty { options.append("\(f.last) convicted, avoids prison") }
+        if f.timeServed { options += ["\(f.last) convicted, released with time served", "Jail credit covers \(f.last)'s sentence"] }
+        else if !f.active && !f.sentence.isEmpty { options.append("\(f.last) convicted, avoids prison") }
         if f.countsTotal > 1 && f.countsConvicted < f.countsTotal { options.append("Split verdict for \(f.last): guilty on \(f.countsConvicted) of \(f.countsTotal) counts") }
         if f.mediaAttention >= 2 { options.append("Verdict in \u{2018}\(f.headline)\u{2019} case: guilty") }
         return rng.pick(options)
@@ -97,7 +100,9 @@ enum NewsDesk {
     static func kicker(_ f: VerdictFacts, convicted: Bool, rng: inout SeededRNG) -> String {
         var options: [String] = []
         if convicted && f.active { options += ["\(f.last) was taken into custody in the courtroom.", "Deputies led \(f.last) out a side door."] }
-        if convicted && !f.active {
+        if convicted && f.timeServed {
+            options.append("With credit for \(f.custodyDays) days already spent in the Hollis County Detention Center, \(f.last) was released.")
+        } else if convicted && !f.active {
             options.append("\(f.last) left the courthouse with family.")
             if f.sentence.lowercased().contains("supervised probation") { options.append("\(f.last) is to report to a probation officer within 72 hours.") }
         }
