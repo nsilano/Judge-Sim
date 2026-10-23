@@ -538,7 +538,7 @@ enum DefendantProfiles {
 
         // Where the defendant lives agrees with the background and the person's age.
         let town = county.towns.first { background.contains($0) } ?? (background.contains("Port Hollis") ? "Port Hollis" : rng.pick(county.towns))
-        let street = rng.pick(NameBank.streets)
+        let street = Gazetteer.street(in: town, rng: &rng)
         let residence: String
         if background.contains("same apartment") {
             residence = "Rents an apartment on \(street) in \(town)."

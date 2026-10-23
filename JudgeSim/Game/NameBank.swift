@@ -177,10 +177,8 @@ enum NameBank {
         "Ngo", "Truong", "Cho", "Han"
     ]
 
-    static let streets = [
-        "Harbor Street", "Pell Avenue", "Kestrel Road", "Fifth Street", "Marlowe Boulevard", "Old Mill Lane",
-        "Juniper Court", "Canal Street", "Ridgeview Drive", "Saint Agnes Way", "Brickyard Road", "Lantern Row"
-    ]
+    /// Every street in the county, from the map.
+    static let streets = Gazetteer.allStreets
 
     static let times = [
         "11:40 p.m.", "2:15 a.m.", "6:05 p.m.", "9:30 p.m.", "3:50 a.m.", "12:20 a.m.", "7:45 p.m.", "1:10 a.m."

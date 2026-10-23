@@ -295,6 +295,9 @@ enum CaseGenerator {
         let usePublicDefender = rng.chance(0.6)
         let defenseLawyer = usePublicDefender ? rng.pick(county.assistantPDs) : rng.pick(county.privateCounsel)
 
+        // The town comes first, and the street is one of that town's.
+        let hood = rng.pick(county.towns)
+        let street = Gazetteer.street(in: hood, rng: &rng)
         var values: [String: String] = [
             "D": defendant.name,
             "DL": defendant.lastName,
@@ -309,10 +312,10 @@ enum CaseGenerator {
             "ELECTEDDA": county.districtAttorney,
             "SHERIFF": county.sheriff,
             "JUDGE": lastName(context.judgeName),
-            "STREET": rng.pick(NameBank.streets),
+            "STREET": street,
             "TIME": storyTime(t) ?? rng.pick(NameBank.times),
             "DATE": CaseDates.day(incident),
-            "HOOD": rng.pick(county.towns),
+            "HOOD": hood,
             "CITY": county.seat,
             "V": victimName ?? "the complainant",
             "VL": victimName.map(lastName) ?? "the complainant",
@@ -323,6 +326,13 @@ enum CaseGenerator {
         for key in t.extras.keys.sorted() {
             if let options = t.extras[key] { values[key] = rng.pick(options) }
         }
+        // A case set at a place on the county map happens in that place's town, on its street.
+        if let known = t.extras.keys.sorted().compactMap({ values[$0].flatMap(Gazetteer.place(named:)) }).first {
+            values["HOOD"] = known.town
+            values["STREET"] = known.street
+        }
+        // Real places in the case's own town for {PLACE.BAR}, {PLACE.GASSTATION} and the rest.
+        values.merge(Gazetteer.tokens(town: values["HOOD"] ?? hood, rng: &rng)) { a, _ in a }
         values.merge(NameBank.gender(of: defendant.name).tokens(for: "D")) { a, _ in a }
         values.merge(NameBank.gender(of: victimName ?? "").tokens(for: "V")) { a, _ in a }
         values.merge(NameBank.gender(of: alternate).tokens(for: "ALT")) { a, _ in a }
