@@ -249,8 +249,11 @@ extension StoryCases {
                         cross: ["\"I can't date a print.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("Where was the bottle?", "\"In {VL}'s kitchen. It was collected from the scene and brought to the lab for processing.\""),
+                            .direct("Was the print good enough to compare?", "\"Yes. It had clear ridge detail, enough for a full comparison.\""),
                             .direct("Whose print is on the bottle?", "\"{DL}'s right thumb. Fourteen points of comparison, verified by a second examiner.\""),
-                            .cross("You can't tell when the print was left?", "\"No. Prints can't be dated.\"")
+                            .cross("You can't tell when the print was left?", "\"No. Prints can't be dated.\""),
+                            .cross("So if {DL} touched that bottle at a party in {VL}'s apartment, the print would look exactly the same?", "\"Yes. The print tells you who touched it, not when or why.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -260,6 +263,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What raises the risk of a false confession?", "\"Length, exhaustion, and contamination: when interrogators feed details, intentionally or not, and then the suspect gives them back.\""),
+                            .direct("Were those conditions present here?", "\"The length and the exhaustion were. The confession came at hour eleven, after {DL} had asked twice to sleep.\""),
                             .cross("Can you say {DL}'s confession is false?", "\"No. I can say the conditions make it less reliable.\""),
                             .cross("The keys in the freezer: did detectives mention that before {DL} did?", "\"Not that I found on the recording.\"")
                         ])
@@ -338,16 +342,21 @@ extension StoryCases {
                         weight: 3, lay: false,
                         exam: [
                             .direct("What did you find under Room 225?", "\"A gas water heater vented through an old propane flue that wasn't sized for it, corroded through in two places. Exhaust was going straight up through the floor of 225.\""),
+                            .direct("What carbon monoxide levels did you measure in the room?", "\"Levels that cause death within hours. It was coming up from the corroded flue below.\""),
                             .direct("Would a permit have caught this?", "\"Any inspector would have failed it on sight.\""),
-                            .cross("An outside contractor installed the vent?", "\"Yes, on {DL}'s company's instructions to reuse the old flue to save money.\"")
+                            .cross("An outside contractor installed the vent?", "\"Yes, on {DL}'s company's instructions to reuse the old flue to save money.\""),
+                            .cross("And state law didn't require carbon monoxide detectors in motel rooms then?", "\"No, it didn't. The problem here was the vent, though.\"")
                         ]),
             WitnessSeed(name: nil, role: "Maintenance worker",
                         direct: ["\"I told {D.him} I smelled exhaust.\""],
                         cross: ["\"I didn't say carbon monoxide.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("What was your job at the motel?", "\"Maintenance. Rooms, plumbing, and the pool equipment room.\""),
                             .direct("What did you tell {DL}?", "\"That the pool room smelled like exhaust and gave me headaches. {D.He} said it was the chlorine.\""),
-                            .cross("You never said carbon monoxide?", "\"I didn't know what it was. I said exhaust.\"")
+                            .direct("Did you think it was chlorine?", "\"No. I know what chlorine smells like. This smelled like a car running in a garage.\""),
+                            .cross("You never said carbon monoxide?", "\"I didn't know what it was. I said exhaust.\""),
+                            .cross("And when {DL} said chlorine, you let it go?", "\"Yes. {D.He} was the boss.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -357,7 +366,9 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("Why did the couple's toxicology take seven weeks?", "\"The state lab was backlogged. We sent it routine. In hindsight it should have been expedited.\""),
-                            .cross("Two healthy people dying in the same room: should someone have checked the room?", "\"Someone should have. I should have.\"")
+                            .direct("If the results had come back in days, what would have happened?", "\"We'd have known it was carbon monoxide, and that room would have been closed.\""),
+                            .cross("Two healthy people dying in the same room: should someone have checked the room?", "\"Someone should have. I should have.\""),
+                            .cross("Nothing about the lab backlog stopped the motel from checking that room itself?", "\"No. Nothing stopped them.\"")
                         ])
         ],
         prosecutionTheory: ["{D} cut corners on a gas conversion with no permit and a rotted vent, ignored a worker's warning, and kept renting the room where two people had just died."],
@@ -435,6 +446,7 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("What did {DL} ask you to do?", "\"Take the blame. She said she'd pay me and get me a good lawyer. She told me where he was buried so my story would match.\""),
+                            .direct("Were those conversations recorded?", "\"Yes. After I went to the police, I recorded her. It's her voice saying all of it.\""),
                             .cross("You've been convicted of felonies, and you were paid by police?", "\"Three felonies, and they paid me. I'm not hiding either one.\""),
                             .cross("You got leniency on your own charges?", "\"They said they'd consider it.\"")
                         ]),
@@ -443,8 +455,11 @@ extension StoryCases {
                         cross: ["\"He owed money to dangerous people.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("Where was {VL} found?", "\"Under a freshly poured concrete slab behind a house owned by {DL}'s boyfriend. Shot twice in the chest.\""),
+                            .direct("Where did {VL}'s money go?", "\"About $1.3 million moved into {DL}'s company, and his house and accounts were signed over to her.\""),
                             .direct("Who sent the texts from {VL}'s phone?", "\"Somebody near {DL}'s house, using phrases {DL} uses in her own texts. {VL} could barely read or write.\""),
-                            .cross("{VL} owed money to people with drug records?", "\"He owed a lot of people. By then {DL} had taken most of his money.\"")
+                            .cross("{VL} owed money to people with drug records?", "\"He owed a lot of people. By then {DL} had taken most of his money.\""),
+                            .cross("And the gun was never found?", "\"No, it hasn't been found.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -453,8 +468,10 @@ extension StoryCases {
                         cross: ["\"I never saw anyone threaten him.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("How did you know {VL}?", "\"From around {HOOD}, from before he won. We'd see each other.\""),
                             .direct("Who was after {VL}?", "\"Everybody. Once you win, everybody's your cousin. A couple of guys said he owed them and they'd get it.\""),
-                            .cross("Did you ever see anyone threaten {VL}?", "\"Not myself.\"")
+                            .cross("Did you ever see anyone threaten {VL}?", "\"Not myself.\""),
+                            .cross("And by the time {VL} went missing, most of his money had already gone to {DL}'s company?", "\"That's what I heard, yes. I don't know the numbers.\"")
                         ])
         ],
         prosecutionTheory: ["{D} took {V}'s fortune, killed him when the money ran low, buried him under concrete, and pretended to be him by text. Then she tried to pay someone else to take the blame."],

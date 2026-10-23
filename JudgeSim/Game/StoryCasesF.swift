@@ -348,8 +348,11 @@ extension StoryCases {
                         cross: ["\"{DL} relapsed that night.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("How do you know {DL}?", "\"I'm {D.his} sponsor. {DL} has my number for exactly this kind of night.\""),
+                            .direct("What have you worked on with {DL} about drinking and driving?", "\"One rule. If you've been drinking, you don't drive. You call someone or you wait it out.\""),
                             .direct("What did {DL} tell you after?", "\"That {DL} relapsed, knew {D.he} couldn't drive, couldn't get a ride, and chose the truck heater over freezing. For {DL}, not driving was a victory.\""),
-                            .cross("{DL} relapsed and drank at a bar?", "\"Yes. That's a relapse. Driving would have been a crime.\"")
+                            .cross("{DL} relapsed and drank at a bar?", "\"Yes. That's a relapse. Driving would have been a crime.\""),
+                            .cross("You weren't there that night, were you?", "\"No. I only know what {DL} told me afterward.\"")
                         ])
         ],
         prosecutionTheory: ["Driver's seat, keys in, engine running, lights on, 0.14, and three prior DWIs. Under our law that is driving, and habitual DWI."],

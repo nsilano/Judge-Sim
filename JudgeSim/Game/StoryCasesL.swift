@@ -61,8 +61,11 @@ extension StoryCases {
                         cross: ["\"I don't know what happened in the car.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("How do you know {DL}?", "\"We work at the same shop. I see {D.him} just about every day.\""),
                             .direct("What did {DL} say about the informant?", "\"For weeks: 'That fool owes me two hundred.' When {D.he} finally got it, {D.he} bought lunch for the shop.\""),
-                            .cross("You don't know what happened in the car?", "\"I wasn't in the car. I only know what {D.he} told me.\"")
+                            .direct("Did {DL} say how {D.he} planned to get the money back?", "\"{D.He} said {D.he} was going to meet up and collect it in person.\""),
+                            .cross("You don't know what happened in the car?", "\"I wasn't in the car. I only know what {D.he} told me.\""),
+                            .cross("So the day {DL} had cash to spend was right after meeting the informant?", "\"I guess so. {D.He} said it was the two hundred {D.he} was owed.\"")
                         ])
         ],
         prosecutionTheory: ["A controlled buy: the informant was searched, went in clean, came out with cocaine, and the recording catches 'that's two' and 'same as last time.'"],
@@ -437,6 +440,7 @@ extension StoryCases {
                         cross: ["\"{DL} waited for us.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("What was {VL}'s condition when you arrived?", "\"Upset and shaking. {V.He} said {V.his} ex was in the house with {V.his} TV and jewelry.\""),
                             .direct("What did you find?", "\"The TV on the lawn and the jewelry box on {DL}'s front seat.\""),
                             .cross("{DL} waited in the driveway for you to arrive?", "\"Yes. {D.He} was calm and said, 'It's my stuff.'\""),
                             .cross("Was anything forced?", "\"No. {DL} used a key.\"")
@@ -449,7 +453,10 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did {DL} tell you?", "\"That {VL} wouldn't let {D.him} get {D.his} clothes, {D.his} TV, or our mom's rings. {DL} slept on my couch in borrowed shirts for six weeks.\""),
-                            .cross("Going in at 1:30 a.m. was a choice?", "\"A dumb one. To avoid a fight.\"")
+                            .direct("Did {DL} try to get {D.his} things the normal way first?", "\"Yes. {D.He} showed me the texts asking when {D.he} could come by. The answer was always 'not yet.'\""),
+                            .direct("Why do those rings matter to your family?", "\"They were our mother's. She gave them to {DL}.\""),
+                            .cross("Going in at 1:30 a.m. was a choice?", "\"A dumb one. To avoid a fight.\""),
+                            .cross("You weren't there that night, were you?", "\"No. I only know what {DL} told me afterward.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was told in writing never to enter, came in at 1:30 a.m. with an old key, and carried out {VL}'s property. That's burglary."],

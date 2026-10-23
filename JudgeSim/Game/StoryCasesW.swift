@@ -36,14 +36,18 @@ extension StoryCases {
                         exam: [
                             .direct("Who took the money to the bank?", "\"{DL} did, every Friday. Twice I offered to go along. {D.He} said it was the quartermaster's job and nobody else's.\""),
                             .direct("What did the board see?", "\"Typed deposit summaries. They looked fine. We had no reason to call the bank.\""),
-                            .cross("The post's records were in poor shape before {DL} took over?", "\"They were. That's why we elected {D.him}. {D.He} promised to fix them.\"")
+                            .cross("The post's records were in poor shape before {DL} took over?", "\"They were. That's why we elected {D.him}. {D.He} promised to fix them.\""),
+                            .cross("You never saw {DL} put post money in {D.his} own pocket?", "\"No. I never saw that.\"")
                         ]),
             WitnessSeed(name: nil, role: "Auditor, state bingo program",
                         direct: ["\"Seventy-four thousand dollars never reached the bank.\""],
                         cross: ["\"I can't say where it went.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What period did you review?", "\"Three years. 156 bingo nights.\""),
                             .direct("What did the audit find?", "\"The count sheets, signed by the defendant and a second member, total $212,000. Deposits total $138,000. Prizes are paid before the count, so they can't explain the gap.\""),
+                            .direct("What about the deposit summaries given to the board?", "\"Eleven typed summaries each show a deposit the bank has no record of.\""),
+                            .cross("No prize log was kept before {DL} became quartermaster?", "\"Not that I found. But prizes come out before the count.\""),
                             .cross("You can't say where the cash went?", "\"No. I can say it was counted and then it wasn't deposited.\"")
                         ])
         ],
@@ -53,8 +57,10 @@ extension StoryCases {
                         cross: ["\"I don't know how much.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Were you at the hall after the storm?", "\"Yes. I was there when the water came through.\""),
                             .direct("What did you see after the storm?", "\"Water coming through the hall ceiling. {DL} got a roofer out there the next week and paid him in cash out of an envelope.\""),
-                            .cross("How much was in that envelope?", "\"I don't know. I didn't count it.\"")
+                            .cross("How much was in that envelope?", "\"I don't know. I didn't count it.\""),
+                            .cross("And you don't know whose money it was?", "\"No. I just saw {DL} hand it over.\"")
                         ])
         ],
         prosecutionTheory: ["{D} counted the money, signed for it, carried it to the bank alone, and deposited a third of it in {D.his} own account."],
@@ -119,6 +125,7 @@ extension StoryCases {
                         cross: ["\"I didn't rule out wiring until I'd examined it.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What did you examine?", "\"The burned building, the floor of the back room, and every circuit in that room. I sent debris samples to the State Crime Laboratory.\""),
                             .direct("Where did the fire start?", "\"In three separate places on the floor of the back room, with unburned floor between them. Two had gasoline. That's an incendiary fire.\""),
                             .cross("The back room had old aluminum wiring?", "\"It did. I examined all of it. None of the circuits showed arcing at those points.\""),
                             .cross("Gasoline is sold at a feed store?", "\"Small cans of mixed fuel, yes. Not on the floor in three puddles.\"")
@@ -128,8 +135,11 @@ extension StoryCases {
                         cross: ["\"I didn't see anyone leaving.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("Why were you near the store?", "\"I was on patrol, passing by.\""),
                             .direct("What did you see?", "\"Orange light in the back windows at 2:15. By the time I called it in, the back half was fully involved.\""),
-                            .cross("No one around the building?", "\"No one I saw, and no car in the lot.\"")
+                            .direct("Could the building be saved?", "\"No. It burned to the ground.\""),
+                            .cross("No one around the building?", "\"No one I saw, and no car in the lot.\""),
+                            .cross("You can't tell us how the fire started?", "\"No. I only saw it burning.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -138,8 +148,10 @@ extension StoryCases {
                         cross: ["\"We didn't ask for it to be raised that particular month.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("What was your role with the store?", "\"I handled the store's loan at the bank.\""),
                             .direct("Did the bank ask {DL} to raise the coverage?", "\"Yes. Our letter asked for coverage equal to the appraisal, which was $475,000.\""),
-                            .cross("The letter was sent two years before the change?", "\"That's right. {DL} didn't act on it until this year.\"")
+                            .cross("The letter was sent two years before the change?", "\"That's right. {DL} didn't act on it until this year.\""),
+                            .cross("By the time of the fire, the loan was four months behind and the bank had sent a foreclosure notice?", "\"Yes.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was losing the store, raised the insurance, drove there in the middle of the night, and poured gasoline in three places."],
@@ -203,14 +215,17 @@ extension StoryCases {
                         exam: [
                             .direct("What did you see?", "\"{VL} came down the dock yelling. {DL} grabbed the paddle and swung it like a bat. {VL} went down and hit the cleat.\""),
                             .direct("Where were {VL}'s hands?", "\"Down at {V.his} sides. Nothing in them.\""),
-                            .cross("You were thirty yards away, loading your kayak?", "\"About that. I stopped loading when the yelling started.\"")
+                            .cross("You were thirty yards away, loading your kayak?", "\"About that. I stopped loading when the yelling started.\""),
+                            .cross("And {VL} was coming down the dock at {DL}, yelling, when the paddle swung?", "\"Yes. {V.He} was coming down the dock.\"")
                         ]),
             WitnessSeed(name: "{V}", role: "Victim",
                         direct: ["\"I never touched the knife.\""],
                         cross: ["\"I was angry. I said things.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("What were you and {DL} arguing about?", "\"Who'd been waiting longer for the ramp.\""),
                             .direct("Did you reach for your knife?", "\"No. I wear it every time I fish. I was yelling, that's all.\""),
+                            .direct("What were your injuries?", "\"A fractured skull. Four days in intensive care, and my balance still isn't right.\""),
                             .cross("You told {DL} you'd gut {D.him}?", "\"I don't remember saying that. I was angry.\""),
                             .cross("The snap on your sheath was undone.", "\"It comes undone. It's an old sheath.\"")
                         ])
@@ -221,8 +236,11 @@ extension StoryCases {
                         cross: ["\"I didn't see the swing.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("Where were you that morning?", "\"Working the landing, inside the bait shop.\""),
                             .direct("What did you hear before the fight?", "\"{VL} said, 'I'll gut you,' loud enough that I came out of the bait shop.\""),
-                            .cross("Did you see the paddle swing?", "\"No. I was walking around the building when it happened.\"")
+                            .direct("How long before the fight was that?", "\"A few minutes.\""),
+                            .cross("Did you see the paddle swing?", "\"No. I was walking around the building when it happened.\""),
+                            .cross("So you never saw where {VL}'s hands were when {D.he} swung?", "\"No, I didn't.\"")
                         ])
         ],
         prosecutionTheory: ["{VL} was loud and angry but empty-handed. {D} answered words with a two-handed swing of a six-foot paddle to the head."],
@@ -289,7 +307,9 @@ extension StoryCases {
                         weight: 3, lay: false,
                         exam: [
                             .direct("What did the dispensing records show?", "\"{DL} pulled fentanyl three times as often as the other nurses on the same patients' units, and wasted partial doses at a rate I've never seen.\""),
+                            .direct("How many doses were recorded as wasted?", "\"212 over four months. 140 of them had no witness signature.\""),
                             .direct("And the returned syringe?", "\"Logged as fentanyl. It was saline.\""),
+                            .cross("The unit ran two nurses short on most of {DL}'s shifts?", "\"Yes, it did.\""),
                             .cross("Skipping the witness signature is common when the floor is busy?", "\"It happens. Not 140 times by one nurse.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective, drug diversion unit",
@@ -297,8 +317,11 @@ extension StoryCases {
                         cross: ["\"The lockers don't have individual cameras.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("Whose locker did you search?", "\"{DL}'s locker at the hospital.\""),
                             .direct("What did you find in the locker?", "\"Two empty fentanyl vials in the pocket of a jacket.\""),
-                            .cross("Other people could open those lockers?", "\"They have combination locks. We don't know who else had the combination.\"")
+                            .direct("What happened to the returned syringe?", "\"It went to the State Crime Laboratory, which confirmed it was saline.\""),
+                            .cross("Other people could open those lockers?", "\"They have combination locks. We don't know who else had the combination.\""),
+                            .cross("The dispensing records show {DL}'s login, not who was standing at the cabinet?", "\"They show the login, yes.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -307,7 +330,10 @@ extension StoryCases {
                         cross: ["\"I never saw anyone use {DL}'s login.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Did you work on the same unit as {DL}?", "\"Yes, surgical recovery.\""),
+                            .direct("How was the unit staffed?", "\"Short. We were down two nurses on a lot of shifts.\""),
                             .direct("Did nurses share logins?", "\"During a code, someone would pull meds while the cabinet was still logged in under whoever opened it.\""),
+                            .cross("That happened during codes, not as a routine?", "\"Mostly during codes, yes.\""),
                             .cross("Did you ever see anyone use {DL}'s login?", "\"No, not that I saw.\"")
                         ])
         ],
@@ -373,7 +399,10 @@ extension StoryCases {
                         cross: ["\"I couldn't see faces under the masks.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("When did this happen?", "\"Just after eleven at night.\""),
                             .direct("What happened?", "\"Two came in masked. The taller one put a black pistol a foot from my face and said 'Register, now.' I gave them the money. When they turned, I got my gun and fired twice.\""),
+                            .direct("What did you see after they ran?", "\"Blood. Drops from my counter out across the parking lot.\""),
+                            .cross("You fired as they were running out?", "\"Yes. They'd just had a gun in my face.\""),
                             .cross("You can't say who was under either mask?", "\"No. I can say one of them was bleeding on my floor.\"")
                         ]),
             WitnessSeed(name: "{ALT}", role: "Co-defendant",
@@ -393,7 +422,10 @@ extension StoryCases {
                         cross: ["\"I didn't see a car.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Where were you that night?", "\"At home, near the store.\""),
                             .direct("What did you hear that night?", "\"Two or three pops out toward the street, a little after eleven.\""),
+                            .direct("Did you look outside?", "\"No. I just heard it.\""),
+                            .cross("You didn't see a car?", "\"No, I didn't see a car.\""),
                             .cross("Could those be the shots from inside the store?", "\"I suppose. I just heard pops.\"")
                         ])
         ],

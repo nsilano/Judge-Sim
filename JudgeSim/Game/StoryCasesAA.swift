@@ -35,7 +35,10 @@ extension StoryCases {
                         cross: ["\"Other people worked in that office.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("How long had {DL} prepared your taxes?", "\"Six years. Every spring I gave {D.him} my Social Security number and birth date for the return.\""),
                             .direct("How did you learn about the cards?", "\"My grandson pulled my credit report. Three cards I'd never heard of, and bills for things I'd never bought.\""),
+                            .direct("Did you give anyone permission to open those accounts?", "\"No. I never applied for any credit card.\""),
+                            .cross("You don't know who actually filled out those applications, do you?", "\"No, I don't.\""),
                             .cross("You dealt with more than one person at the office?", "\"There was a young woman at the front desk some years.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Financial crimes detective",
@@ -43,8 +46,11 @@ extension StoryCases {
                         cross: ["\"Two people had keys to the box.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What information was used on the applications?", "\"The clients' Social Security numbers and dates of birth, exactly as they appeared on the returns {DL} prepared.\""),
                             .direct("Where were the cards mailed?", "\"To a post office box rented in {DL}'s name. Every application used the same box.\""),
-                            .cross("The former employee had a key to that box?", "\"Yes. She was fired three months before the last application.\"")
+                            .direct("What was bought with the cards in {VL}'s name?", "\"$7,800 in purchases at two electronics stores.\""),
+                            .cross("The store video doesn't show a clear face, does it?", "\"No. A cap blocks part of it.\""),
+                            .cross("The former employee had a key to that box?", "\"Yes. She was fired two months before the last application.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -53,8 +59,11 @@ extension StoryCases {
                         cross: ["\"I never saw her apply for credit.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("What mail came to the post office box?", "\"The office's business mail. Two employees had keys to it.\""),
                             .direct("Who handled the client files?", "\"Everyone, but she stayed late in the file room a lot.\""),
-                            .cross("You never saw her open any accounts?", "\"Not once. I just answered phones and sorted mail.\"")
+                            .direct("Why did she leave the office?", "\"She was fired for missing cash.\""),
+                            .cross("You never saw her open any accounts?", "\"Not once. I just answered phones and sorted mail.\""),
+                            .cross("The box itself was rented in {DL}'s name?", "\"Yes, it was in {D.his} name.\"")
                         ])
         ],
         prosecutionTheory: ["{D} prepared these clients' returns, used their numbers to open cards, and had the cards sent to {D.his} own box."],
@@ -110,15 +119,21 @@ extension StoryCases {
                         cross: ["\"I never saw a face.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("What were you doing that morning?", "\"It was a payday Friday. I'd picked up the payroll cash at the bank and was walking it back to the plant gate.\""),
                             .direct("What happened?", "\"I heard running behind me. Two hands hit my back, I went down on my wrist, and the bag was gone.\""),
-                            .cross("You never saw the person's face?", "\"No. Just a gray hood running away.\"")
+                            .direct("Were you hurt?", "\"Yes. My wrist broke when I hit the pavement.\""),
+                            .cross("You never saw the person's face?", "\"No. Just a gray hood running away.\""),
+                            .cross("And everyone at the plant knew which Fridays you carried that bag?", "\"Yes. It was every other Friday, and people knew.\"")
                         ]),
             WitnessSeed(name: nil, role: "Plant supervisor",
                         direct: ["\"I'd know that walk anywhere.\""],
                         cross: ["\"I didn't like {DL} much.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("Did you watch the gate camera video after the robbery?", "\"Yes. I watched it two days after.\""),
                             .direct("How did you recognize the person on video?", "\"I worked next to {DL} for a year. The way {D.he} runs, the shoulders, the build. It's {D.him}.\""),
+                            .direct("Could you see a face on the video?", "\"Partly, for about a second. It was mostly the build and the way {D.he} moves.\""),
+                            .cross("The person in that clip had a hood up?", "\"Yes, the hood was up.\""),
                             .cross("You and {DL} didn't get along?", "\"I wrote {D.him} up twice. That doesn't change what I saw.\"")
                         ])
         ],
@@ -128,8 +143,11 @@ extension StoryCases {
                         cross: ["\"Players' cards don't show what they lost.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("What is a player's card?", "\"A card players put in the machine so we can track their play and their jackpots.\""),
+                            .direct("Is there a player's card in {DL}'s name?", "\"Yes, there is.\""),
                             .direct("What do your records show?", "\"A $4,500 jackpot on {DL}'s player card the month before.\""),
-                            .cross("Do the records show losses?", "\"Not reliably. Most people don't win overall.\"")
+                            .cross("Do the records show losses?", "\"Not reliably. Most people don't win overall.\""),
+                            .cross("And $4,500 is less than the $6,000 that paid off the car loan?", "\"Yes, it's less.\"")
                         ])
         ],
         prosecutionTheory: ["{D} knew the pay schedule, was recognized on the video, and paid off {D.his} car in cash six days later."],
@@ -194,7 +212,10 @@ extension StoryCases {
                         weight: 3, lay: false,
                         exam: [
                             .direct("How serious was {KID}'s condition?", "\"Pinpoint pupils, breathing four times a minute. Without the naloxone, {KID} would have died.\""),
-                            .cross("The quick 911 call likely saved {KID}?", "\"Yes. That and the paramedics.\"")
+                            .direct("What did the hospital's testing show?", "\"The urine screen was positive for fentanyl, consistent with opioid toxicity.\""),
+                            .direct("How did {KID} recover?", "\"After three doses of naloxone, {KID} spent two days in the pediatric unit and went home.\""),
+                            .cross("The quick 911 call likely saved {KID}?", "\"Yes. That and the paramedics.\""),
+                            .cross("You can't tell us how the pills came to be in that apartment?", "\"No. I can only tell you what was in {KID}'s system.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"Four pills, eighteen inches from the bed.\""],
@@ -202,8 +223,10 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("Where were the pills?", "\"On the nightstand, uncovered, eighteen inches from where {KID} napped.\""),
+                            .direct("Was anything else found?", "\"A pill bottle with no label, in a drawer.\""),
                             .direct("What did {DL}'s phone show?", "\"A text the day before: 'got 10 blues, need anything?'\""),
-                            .cross("A houseguest slept in that room the night before?", "\"So we were told.\"")
+                            .cross("A houseguest slept in that room the night before?", "\"So we were told.\""),
+                            .cross("And {DL} called 911 within a minute of finding {KID}?", "\"That's my understanding, yes.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -212,8 +235,11 @@ extension StoryCases {
                         cross: ["\"Those weren't my pills.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("How do you know {DL}?", "\"We're friends.\""),
+                            .direct("When did you stay at the apartment?", "\"The night before {KID} got sick. I slept over.\""),
                             .direct("Where did you sleep?", "\"In that bedroom. {DL} slept on the couch with {KID}.\""),
-                            .cross("Were the pills yours?", "\"No. I don't touch that stuff.\"")
+                            .cross("Were the pills yours?", "\"No. I don't touch that stuff.\""),
+                            .cross("So you can't tell this jury whose pills those were?", "\"No. All I know is they weren't mine.\"")
                         ])
         ],
         prosecutionTheory: ["{D} had ten fentanyl pills the day before and left four on a nightstand where {D.his} toddler napped."],
@@ -271,7 +297,10 @@ extension StoryCases {
                         cross: ["\"The floor was wet in places.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("Had you dealt with {DL} before that day?", "\"Yes. {D.He}'d been in for road tests before.\""),
                             .direct("What happened when {DL} came back in?", "\"{D.He} threw the clipboard, then reached across and grabbed my collar and shoved me into the wall, yelling that I was rigging the test.\""),
+                            .direct("How long did {D.he} hold you there?", "\"About three seconds, until my coworker pulled {D.his} arm away.\""),
+                            .cross("{DL} was upset about failing the test?", "\"Yes, {D.he} was upset.\""),
                             .cross("The floor was wet that day?", "\"By the door. Not at my counter.\"")
                         ]),
             WitnessSeed(name: nil, role: "Second examiner",
@@ -279,8 +308,11 @@ extension StoryCases {
                         cross: ["\"It was over in seconds.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("What did you see before you stepped in?", "\"{DL} had {VL} by the collar, pushed back against the wall behind the counter.\""),
+                            .direct("Was {DL} saying anything?", "\"Yes. {D.He} was shouting that {VL} was rigging it.\""),
                             .direct("What did you do?", "\"I grabbed {DL}'s arm and pulled until {D.he} let go.\""),
-                            .cross("How long did it last?", "\"Three, four seconds. It felt longer.\"")
+                            .cross("How long did it last?", "\"Three, four seconds. It felt longer.\""),
+                            .cross("You were watching {DL}'s hands, not {D.his} feet?", "\"Yes. I was watching the hands.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -289,8 +321,11 @@ extension StoryCases {
                         cross: ["\"I was looking at my phone at first.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Where were you?", "\"Standing in line in the lobby.\""),
+                            .direct("What was the floor like that day?", "\"It was raining, and there was a wet-floor sign near the counter.\""),
                             .direct("What did you see?", "\"{D.He} kind of lurched forward at the counter, like {D.he} slipped.\""),
-                            .cross("You were on your phone when it started?", "\"Until I heard the clipboard.\"")
+                            .cross("You were on your phone when it started?", "\"Until I heard the clipboard.\""),
+                            .cross("So the clipboard was thrown before this lurch you saw?", "\"Yes. The clipboard came first.\"")
                         ])
         ],
         prosecutionTheory: ["{D} failed a test, got angry, and grabbed and shoved a state employee doing {V.his} job."],
@@ -348,8 +383,11 @@ extension StoryCases {
                         cross: ["\"Old lines do corrode.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What did you examine?", "\"Both brake lines from {VL}'s pickup after the crash.\""),
                             .direct("What caused the brake failure?", "\"Both lines were cut cleanly two-thirds through. A cut like that holds under light braking and bursts under hard braking, like at the bottom of a hill.\""),
-                            .cross("Fourteen-year-old lines can corrode through?", "\"They can. Corrosion leaves pitting and flaking. These edges were clean.\"")
+                            .direct("How do you know it was a cut?", "\"Clean edges and no corrosion at the cut. That's the mark of a sharp tool.\""),
+                            .cross("Fourteen-year-old lines can corrode through?", "\"They can. Corrosion leaves pitting and flaking. These edges were clean.\""),
+                            .cross("You can't tell us who made the cuts?", "\"No. Only how they were made.\"")
                         ]),
             WitnessSeed(name: "{V}", role: "Business partner",
                         direct: ["\"The pedal went to the floor.\""],
@@ -357,7 +395,10 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What happened on the hill?", "\"The brakes felt fine at the top. At the bottom I pressed and the pedal went to the floor.\""),
-                            .cross("You and {DL} were in a bitter dispute?", "\"Yes. Over money. Not over killing each other.\"")
+                            .direct("What happened next?", "\"The truck went into a ditch. I walked away with bruises.\""),
+                            .direct("Does the company carry insurance on your life?", "\"Yes. A million dollars on each partner, paid to the company.\""),
+                            .cross("You and {DL} were in a bitter dispute?", "\"Yes. Over money. Not over killing each other.\""),
+                            .cross("The company mechanic told you the brakes needed looking at?", "\"Yes. I hadn't gotten to it.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -366,8 +407,11 @@ extension StoryCases {
                         cross: ["\"I never saw the lines myself.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("What do you do for the company?", "\"I keep the company's trucks running.\""),
+                            .direct("How old was {VL}'s truck?", "\"Fourteen years, and there's no record of the brake lines ever being replaced.\""),
                             .direct("What was the condition of {VL}'s truck?", "\"Old and overdue. I'd told {VL} the brakes needed looking at.\""),
-                            .cross("Did you ever look at the brake lines?", "\"No. Just the pads.\"")
+                            .cross("Did you ever look at the brake lines?", "\"No. Just the pads.\""),
+                            .cross("So you can't say whether those lines were rusted or cut?", "\"No, I can't.\"")
                         ])
         ],
         prosecutionTheory: ["{D} stood to gain a million dollars, was caught on camera at {VL}'s truck after hours, and the lines were cut, not worn."],

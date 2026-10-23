@@ -34,7 +34,10 @@ extension StoryCases {
                         cross: ["\"The roofers did work around back.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("Who knew the code to the safe?", "\"Only my staff.\""),
                             .direct("What did you find that morning?", "\"The back door frame splintered, the safe open, and every Schedule II tablet gone. About nine hundred.\""),
+                            .direct("Was anything else taken?", "\"$340 in cash.\""),
+                            .cross("The safe had been left unlocked that night?", "\"Yes, it had.\""),
                             .cross("{DL}'s crew worked near that door?", "\"Three months ago. We sweep and mop that hallway every night.\"")
                         ]),
             WitnessSeed(name: nil, role: "Forensic biologist, State Crime Laboratory",
@@ -42,8 +45,11 @@ extension StoryCases {
                         cross: ["\"DNA can't tell you when it was deposited.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What did you examine?", "\"A latex glove collected by the pried back door.\""),
                             .direct("What did you find?", "\"A single-source profile from the inside of the glove's fingers, matching {DL}.\""),
-                            .cross("You can't say when the glove was worn?", "\"No. DNA doesn't carry a date.\"")
+                            .direct("How was the profile identified?", "\"It was searched against the state DNA database, and it matched {DL}.\""),
+                            .cross("You can't say when the glove was worn?", "\"No. DNA doesn't carry a date.\""),
+                            .cross("DNA on a glove can last for months?", "\"It can, yes.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -52,8 +58,11 @@ extension StoryCases {
                         cross: ["\"I don't remember anyone leaving one inside.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Did you work on the pharmacy roof with {DL}?", "\"Yes, about three months before the break-in.\""),
+                            .direct("Did that job include work near the back door?", "\"Yes. We were around back a lot.\""),
                             .direct("What gloves did the crew use?", "\"Boxes of latex gloves for the sealant. We tossed them everywhere.\""),
-                            .cross("Did anyone leave gloves inside the building?", "\"I don't recall anybody taking gloves in.\"")
+                            .cross("Did anyone leave gloves inside the building?", "\"I don't recall anybody taking gloves in.\""),
+                            .cross("So you can't explain how {DL}'s glove ended up inside the pried door?", "\"No, I can't.\"")
                         ])
         ],
         prosecutionTheory: ["{D}'s DNA in a glove dropped at the pried door, and {D.his} boot print on the counter."],
@@ -111,15 +120,21 @@ extension StoryCases {
                         cross: ["\"A hospital stay could interrupt care.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What condition were the horses in?", "\"All three scored a 1 on the 9-point body condition scale, the lowest possible, with severe muscle wasting.\""),
+                            .direct("Did all three survive?", "\"No. One had to be euthanized.\""),
                             .direct("How long does it take a horse to reach a score of 1?", "\"From a normal 5, two to three months of inadequate feed. This didn't happen in three weeks.\""),
-                            .cross("A hospital stay could interrupt care?", "\"For three weeks. Not for three months.\"")
+                            .cross("A hospital stay could interrupt care?", "\"For three weeks. Not for three months.\""),
+                            .cross("You can't say who was supposed to be feeding them day to day?", "\"No. I can say they weren't being fed.\"")
                         ]),
             WitnessSeed(name: nil, role: "Neighbor who took the photos",
                         direct: ["\"I watched them get thinner every week.\""],
                         cross: ["\"I never saw a farmhand out there.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("How long did you photograph the horses?", "\"Six weeks.\""),
                             .direct("What did you see?", "\"Horses standing in mud, no hay, the trough dry. I took pictures every Sunday.\""),
+                            .direct("What changed over those weeks?", "\"You could see more of their ribs and hip bones every week.\""),
+                            .cross("You weren't watching that pasture every day?", "\"No. But I never saw a farmhand out there.\""),
                             .cross("You never called {DL}?", "\"I didn't have the number. I called animal control twice.\"")
                         ])
         ],
@@ -129,8 +144,11 @@ extension StoryCases {
                         cross: ["\"{D.He} was home before and after.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("Did you treat {DL} during that hospital stay?", "\"Yes, I did.\""),
                             .direct("Why was {DL} hospitalized?", "\"A serious infection after surgery. Twenty-two days, including a week in intensive care.\""),
-                            .cross("{DL} was home for the rest of the six weeks?", "\"Yes, recovering, but able to get around.\"")
+                            .direct("Could {DL} have cared for animals during those twenty-two days?", "\"No. {D.He} couldn't leave the hospital.\""),
+                            .cross("{DL} was home for the rest of the six weeks?", "\"Yes, recovering, but able to get around.\""),
+                            .cross("You know nothing about how the horses were fed, do you?", "\"No. I only know about my patient.\"")
                         ])
         ],
         prosecutionTheory: ["The horses starved over months, not just the weeks {DL} was hospitalized, and the last hay bought was nine weeks earlier."],
@@ -186,16 +204,22 @@ extension StoryCases {
                         cross: ["\"The camera is thirty feet away.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What did you review?", "\"The $85,000 demand, the claim file, and the store camera from aisle seven.\""),
                             .direct("What does the video show?", "\"The shopper tilts the bottle over the floor for about four seconds, caps it, puts it back, walks to the end of the aisle, and comes back to fall in that exact spot.\""),
-                            .cross("The camera is thirty feet away and the angle is high?", "\"Yes. You can still see the oil hit the floor.\"")
+                            .direct("Had {DL} made fall claims before?", "\"Yes. Two earlier fall claims at other stores in three years, both settled.\""),
+                            .cross("The camera is thirty feet away and the angle is high?", "\"Yes. You can still see the oil hit the floor.\""),
+                            .cross("The video can't show whether the bottle was leaking on its own?", "\"It shows the bottle held over the floor for four seconds.\"")
                         ]),
             WitnessSeed(name: nil, role: "Store manager",
                         direct: ["\"The cap was put back on.\""],
                         cross: ["\"I can't say the bottle wasn't cracked before.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Where did this happen?", "\"Aisle seven, in my store.\""),
                             .direct("What did you find in the aisle?", "\"A puddle of oil and the bottle back on the shelf with its cap on.\""),
-                            .cross("The cap was cracked?", "\"A little. I can't say when that happened.\"")
+                            .direct("What did you do with the bottle?", "\"Pulled it off the shelf and kept it.\""),
+                            .cross("The cap was cracked?", "\"A little. I can't say when that happened.\""),
+                            .cross("You didn't see how the oil got on the floor?", "\"No. I only saw it afterward.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -204,8 +228,11 @@ extension StoryCases {
                         cross: ["\"I can't say it came from this fall.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("Did you review {DL}'s MRI?", "\"Yes, I did.\""),
                             .direct("What did the MRI show?", "\"A herniated lumbar disc consistent with the pain {DL} reports.\""),
-                            .cross("Could the herniation predate this fall?", "\"It could. The MRI can't date it.\"")
+                            .direct("Is that kind of injury painful?", "\"Yes. It can be very painful.\""),
+                            .cross("Could the herniation predate this fall?", "\"It could. The MRI can't date it.\""),
+                            .cross("Nothing in the MRI tells us how the oil got on the floor?", "\"No. That's not something an MRI can show.\"")
                         ])
         ],
         prosecutionTheory: ["{D} poured the oil, waited, and fell in it, for the third time in three years."],
@@ -263,6 +290,7 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("How did you get into the car?", "\"He grabbed my arm and pushed me in. When I reached for the handle he hit the locks and drove.\""),
+                            .direct("What happened while he drove?", "\"He drove me around for hours, screaming that I'd ruined his life. He hit me once in the face.\""),
                             .direct("Where did he leave you?", "\"On a dirt road. No lights, no phone. He threw my phone out the window an hour earlier.\""),
                             .cross("Two days before, you texted that you needed to talk in person?", "\"About getting my things back. Not in a car at night.\"")
                         ]),
@@ -272,7 +300,10 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("How did you find {VL}?", "\"Walking on the shoulder of a dirt road at 1:50 in the morning, crying, eye swelling shut.\""),
-                            .cross("She didn't call anyone during the four hours?", "\"Her phone was gone. We found it later in a ditch on the route.\"")
+                            .direct("How far was that from the gas station?", "\"About twelve miles.\""),
+                            .direct("Did she have a phone with her?", "\"No.\""),
+                            .cross("She didn't call anyone during the four hours?", "\"Her phone was gone. We found it later in a ditch on the route.\""),
+                            .cross("You didn't see how {VL} got to that road?", "\"No. I found her walking.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -281,8 +312,11 @@ extension StoryCases {
                         cross: ["\"I was ringing up a customer.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Where were you that night?", "\"Behind the register at the station.\""),
                             .direct("Did you see anything at pump four?", "\"A couple talking by a car. I didn't see a fight.\""),
-                            .cross("You were ringing up customers the whole time?", "\"Mostly, yes.\"")
+                            .direct("Did you call 911?", "\"No. Nothing looked wrong to me.\""),
+                            .cross("You were ringing up customers the whole time?", "\"Mostly, yes.\""),
+                            .cross("So you can't say whether she was pulling away from him?", "\"No, I can't.\"")
                         ])
         ],
         prosecutionTheory: ["{D} forced {V} into his car, held her for four hours to terrify her, hit her, threw away her phone, and left her on a dark road."],
@@ -340,8 +374,11 @@ extension StoryCases {
                         cross: ["\"The cleaners had the code.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("How is the house used?", "\"It's rented by the week in season. In winter it sits empty.\""),
                             .direct("Was anyone supposed to be in the house that night?", "\"No. It was January. The next cleaning wasn't until March.\""),
-                            .cross("{DL}'s company had the lockbox code?", "\"Yes. The company, not one person.\"")
+                            .direct("What was taken?", "\"Two televisions, a laptop, and jewelry.\""),
+                            .cross("{DL}'s company had the lockbox code?", "\"Yes. The company, not one person.\""),
+                            .cross("Your camera never showed the person's face?", "\"No. It was turned away.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Property crimes detective",
                         direct: ["\"The lockbox opened with {DL}'s company code three minutes before.\""],
@@ -349,7 +386,10 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("How was the house entered?", "\"The lockbox was opened with the cleaning company's code at 11:49, and the key used on the side door at 11:52.\""),
-                            .cross("Three employees used the same code?", "\"Yes. Only {DL} pawned the laptop.\"")
+                            .direct("What does the doorbell video show?", "\"A person in a dark jacket opening the side door and going in. The face is turned away.\""),
+                            .direct("How did {DL} become a suspect?", "\"The stolen laptop was pawned two days later with {DL}'s driver's license and thumbprint.\""),
+                            .cross("Three employees used the same code?", "\"Yes. Only {DL} pawned the laptop.\""),
+                            .cross("Nothing on the video identifies {DL}?", "\"Not the face, no.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -358,8 +398,11 @@ extension StoryCases {
                         cross: ["\"I wasn't there that night.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("What did you do for {DL}'s company?", "\"Cleaned rental houses between guests.\""),
                             .direct("Who had the lockbox code?", "\"Me, {DL}, and another girl who quit in December.\""),
-                            .cross("Where were you that night?", "\"Home. I wasn't anywhere near the beach.\"")
+                            .direct("Did you all use the same code?", "\"Yes. One code for the company.\""),
+                            .cross("Where were you that night?", "\"Home. I wasn't anywhere near the beach.\""),
+                            .cross("So you have no idea who opened that lockbox at 11:49?", "\"No, I don't.\"")
                         ])
         ],
         prosecutionTheory: ["{D} used the company code at 11:49, walked in at 11:52, and pawned the laptop under {D.his} own name two days later."],

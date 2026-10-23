@@ -142,8 +142,10 @@ extension StoryCases {
                         cross: ["\"I can't say how fast.\""],
                         weight: 2, lay: false,
                         exam: [
+                            .direct("How many times was {VL} shot?", "\"Twice. The fatal wound was the one to the chest.\""),
                             .direct("What does the wound path show?", "\"The bullet went downward through the chest. That fits someone getting up from a seated or crouched position. It doesn't fit someone running at a shooter.\""),
-                            .cross("You can't say whether {VL} was moving toward {DL}?", "\"I can say the angle was downward.\"")
+                            .cross("You can't say whether {VL} was moving toward {DL}?", "\"I can say the angle was downward.\""),
+                            .cross("And you can't tell the jury how fast {VL} was moving?", "\"No. A wound path shows direction, not speed.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -153,6 +155,7 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("How do officers respond to a perceived intruder at close range?", "\"Training says you have one or two seconds. If you believe a stranger is coming at you in your own dark apartment, firing is consistent with that belief.\""),
+                            .direct("Does exhaustion affect how an officer reads a threat?", "\"Yes. After a fourteen-hour shift, perception and judgment both suffer.\""),
                             .cross("The belief has to be reasonable, and the apartment wasn't hers?", "\"Reasonable in the moment, yes.\""),
                             .cross("Training also says back out and call backup?", "\"When you can.\"")
                         ])
@@ -234,7 +237,9 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What killed {VL}?", "\"A single gunshot wound to the chest that went through the heart and lung.\""),
-                            .cross("The crash injuries were minor?", "\"Minor. The gunshot was fatal.\"")
+                            .direct("How quickly is a wound like that fatal?", "\"Very quickly. A wound through the heart is rapidly fatal, which fits {V.him} dying at the scene.\""),
+                            .cross("The crash injuries were minor?", "\"Minor. The gunshot was fatal.\""),
+                            .cross("You can't tell the jury what {DL} intended when {D.he} fired?", "\"No. I can tell you what the bullet did, not why it was fired.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -244,6 +249,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("How does weapon confusion happen?", "\"An officer who has drawn a pistol thousands of times in training can, under extreme stress, run that motor program while consciously intending something else. The officer genuinely believes the Taser is in hand.\""),
+                            .direct("What does shouting 'Taser' tell you?", "\"That the officer believed the Taser was in hand. People announce what they think they're doing.\""),
                             .cross("That's a failure of training and attention?", "\"It's a failure. It isn't a choice.\""),
                             .cross("Five seconds passed between the draw and the shot?", "\"About five.\"")
                         ])
@@ -424,7 +430,9 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("How did {KID} die?", "\"Hyperthermia. The car's interior would have reached about 130 degrees. Death took hours.\""),
-                            .cross("No other injuries on the child?", "\"None. No signs of abuse.\"")
+                            .direct("Is that consistent with a child left in a closed car in 92-degree heat?", "\"Yes. It's exactly what I found.\""),
+                            .cross("No other injuries on the child?", "\"None. No signs of abuse.\""),
+                            .cross("Nothing in the autopsy tells you whether {KID} was left on purpose or forgotten?", "\"No. The autopsy shows how {KID} died, not how {KID} came to be there.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -434,6 +442,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("How can a parent forget a child in a car?", "\"The habit system takes over on a familiar drive, and the plan to stop at day care drops out of awareness. It happens to devoted parents of every kind. The brain then 'remembers' the child is at day care.\""),
+                            .direct("Does a change in routine matter?", "\"It's the classic trigger. An extra stop, like breakfast, on an otherwise familiar drive can knock the day care plan right out of awareness.\""),
                             .cross("Memory failure doesn't explain searching how hot a car gets to kill?", "\"No. That's not my field.\""),
                             .cross("Or opening the car door at lunch with the child behind?", "\"A rear-facing seat can be invisible from the front.\"")
                         ])

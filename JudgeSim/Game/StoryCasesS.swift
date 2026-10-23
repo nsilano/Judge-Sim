@@ -139,15 +139,19 @@ extension StoryCases {
                         exam: [
                             .direct("What did the messages show in the last two weeks?", "\"A countdown. She helped him research methods, pushed him when he hesitated, and asked over and over when he'd do it.\""),
                             .direct("And the text to her friend?", "\"That he got out of the truck because he was scared, and she told him to get back in.\""),
-                            .cross("Months earlier, {DL} begged him to get help?", "\"She did. That changed.\"")
+                            .cross("Months earlier, {DL} begged him to get help?", "\"She did. That changed.\""),
+                            .cross("There's no recording of what was actually said on that call?", "\"No. We have the call records and her own text describing it.\"")
                         ]),
             WitnessSeed(name: nil, role: "Friend who received the text",
                         direct: ["\"She said she told him to get back in.\""],
                         cross: ["\"She was hysterical.\""],
                         weight: 2, lay: true,
                         exam: [
+                            .direct("How do you know {DL}?", "\"We're friends. We talked all the time.\""),
                             .direct("What did {DL} tell you?", "\"That she was on the phone, he got out of the truck, and she told him to get back in. She said his death was her fault.\""),
-                            .cross("She was crying and upset when she wrote that?", "\"Yes. She was a mess.\"")
+                            .direct("How did you react when you read that?", "\"I felt sick. I didn't know what to write back.\""),
+                            .cross("She was crying and upset when she wrote that?", "\"Yes. She was a mess.\""),
+                            .cross("You weren't on that call, so all you know is what {DL} wrote you?", "\"Yes. Only what she told me.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -157,6 +161,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What was {DL}'s state of mind?", "\"An immature, medicated teenager who came to believe, wrongly, that ending his pain was what a loving person would support.\""),
+                            .direct("Did the medication matter?", "\"She was on an antidepressant that can affect a teenager's judgment. In my opinion it's part of the picture.\""),
                             .cross("She understood he would die?", "\"She understood. That's the hard part of my report.\""),
                             .cross("She didn't call anyone?", "\"She didn't. Not one call.\"")
                         ])
@@ -233,6 +238,7 @@ extension StoryCases {
                         cross: ["\"I didn't call either.\""],
                         weight: 3, lay: true,
                         exam: [
+                            .direct("Who set up the gauntlet?", "\"{DL}. {D.He} was pledge master. {D.He} planned the drinking stations.\""),
                             .direct("Did anyone suggest calling for help?", "\"Around midnight a brother said we should call 911. {DL} said no, it'd get the house shut down, and he'd be fine.\""),
                             .cross("You didn't call either?", "\"No. I'll live with that.\""),
                             .cross("You've been promised leniency?", "\"My charges were reduced.\"")
@@ -242,8 +248,11 @@ extension StoryCases {
                         cross: ["\"The fall caused the injuries.\""],
                         weight: 3, lay: false,
                         exam: [
+                            .direct("What was the cause of death?", "\"A ruptured spleen and traumatic brain injury. He bled internally for hours.\""),
+                            .direct("How intoxicated was he?", "\"His blood alcohol was estimated at 0.36. That's a dangerous level on its own.\""),
                             .direct("Would prompt medical care have made a difference?", "\"Almost certainly. The spleen bled for hours. With an ambulance in the first two hours, he very likely survives.\""),
-                            .cross("The fall caused the injuries, not anyone hitting him?", "\"The fall was the main injury. The delay is what killed him.\"")
+                            .cross("The fall caused the injuries, not anyone hitting him?", "\"The fall was the main injury. The delay is what killed him.\""),
+                            .cross("You can't say to the minute when it became too late?", "\"No. Not to the minute.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -252,8 +261,11 @@ extension StoryCases {
                         cross: ["\"Nobody stopped.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Were you at the house that night?", "\"Yes. I was a pledge too. I went through the gauntlet.\""),
                             .direct("Were pledges forced to drink?", "\"They said we could stop. Nobody held anybody down.\""),
-                            .cross("Did anyone stop?", "\"No. You don't, if you want to get in.\"")
+                            .direct("Did you see {DL} do anything for {VL}?", "\"I saw {D.him} put {VL} on his side and stick a backpack behind him so he wouldn't roll.\""),
+                            .cross("Did anyone stop?", "\"No. You don't, if you want to get in.\""),
+                            .cross("And nobody called 911 that night?", "\"No. Nobody did.\"")
                         ])
         ],
         prosecutionTheory: ["{D} designed a drinking gauntlet that left a nineteen-year-old with a deadly blood alcohol level, then refused to call for help to protect the house. Twelve hours of video show what culpable negligence looks like."],
@@ -329,6 +341,7 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("How did {DL} come to be at your apartment?", "\"She texted me that she needed to get away, that her husband was abusive. I drove ten hours and picked her up. She stayed three weeks. She hurt herself. She asked me to drive her back and leave her by the highway.\""),
+                            .direct("How was the pickup arranged?", "\"Texts on a prepaid phone, weeks ahead. She told me when and where to be.\""),
                             .cross("You're not being charged?", "\"Nobody's charged me. Nobody's promised me anything either.\""),
                             .cross("You didn't call anyone during three weeks of national news?", "\"She begged me not to. I should have.\"")
                         ]),
@@ -338,7 +351,10 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What happened to the two women {DL} described?", "\"We spent months and thousands of hours looking for them. They don't exist. The sketch she helped create was shared across the country.\""),
-                            .cross("Her injuries were real?", "\"Self-inflicted, according to the evidence. But real.\"")
+                            .direct("What led you to the former boyfriend?", "\"Male DNA on her clothes. It matched him.\""),
+                            .direct("What did you find at his apartment?", "\"Her DNA and hair, and a store receipt for the same type of chain she was found in.\""),
+                            .cross("Her injuries were real?", "\"Self-inflicted, according to the evidence. But real.\""),
+                            .cross("The former boyfriend hasn't been charged because he cooperated?", "\"He hasn't been charged. He cooperated.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -347,8 +363,10 @@ extension StoryCases {
                         cross: ["\"She planned the pickup weeks ahead.\""],
                         weight: 1, lay: false,
                         exam: [
+                            .direct("What is {DL}'s history?", "\"A long history of depression and dissociative episodes. It's all through her records.\""),
                             .direct("What explains her account?", "\"A severe dissociative episode. She may have partly believed the story she told.\""),
-                            .cross("She arranged a prepaid phone and a pickup weeks in advance?", "\"Yes. That's planning.\"")
+                            .cross("She arranged a prepaid phone and a pickup weeks in advance?", "\"Yes. That's planning.\""),
+                            .cross("And she filed a $30,000 compensation claim citing the abduction?", "\"She did. I can't tell you what she believed when she filed it.\"")
                         ])
         ],
         prosecutionTheory: ["{D} staged her own abduction, cost the community months of fear and the government thousands of hours, and then took money meant for real crime victims."],
@@ -426,6 +444,7 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("What happened after the brake?", "\"The truck came up behind us, flashing, honking, so close I couldn't see its headlights. {VL} said, 'Let's just get off at the next exit.' Then it came alongside and I saw a gun.\""),
+                            .direct("What happened when the shots were fired?", "\"Glass everywhere. {VL} was hit in the neck and the car went into the median. A bullet grazed my arm.\""),
                             .cross("{VL} braked hard in front of the truck?", "\"Once. After it rode our bumper for miles.\""),
                             .cross("Did your car swerve toward the truck?", "\"No. We were trying to get away from it.\"")
                         ]),
@@ -435,7 +454,9 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What do the dashcams and data show?", "\"After the brake, the pickup accelerated to 97 mph and closed four miles on the car. The car was in the right lane, slowing, when the shots were fired.\""),
-                            .cross("Both drivers were driving aggressively?", "\"Before the brake check, yes. After it, one of them was chasing the other.\"")
+                            .direct("Where were the shots fired from?", "\"From the pickup, pulled alongside, through the car's passenger window. Four casings were recovered from the truck bed.\""),
+                            .cross("Both drivers were driving aggressively?", "\"Before the brake check, yes. After it, one of them was chasing the other.\""),
+                            .cross("And another clip shows {VL}'s car braking hard in front of the pickup twice?", "\"Yes, it does.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -444,8 +465,11 @@ extension StoryCases {
                         cross: ["\"The truck went after them.\""],
                         weight: 1, lay: true,
                         exam: [
+                            .direct("Where were you?", "\"On I-40, behind both of them.\""),
                             .direct("What did you see?", "\"The car slammed its brakes twice in front of the truck. Nearly caused a pileup.\""),
-                            .cross("After that, the truck sped up and chased the car?", "\"Yes. Way faster than everyone else.\"")
+                            .direct("Was that dangerous?", "\"Yes. At highway speed, somebody could have died right there.\""),
+                            .cross("After that, the truck sped up and chased the car?", "\"Yes. Way faster than everyone else.\""),
+                            .cross("And before any braking, the truck had been riding the car's bumper?", "\"Yes. It was right on it.\"")
                         ])
         ],
         prosecutionTheory: ["A brake check made {D} angry. He chased {V} for four miles at 95 mph and fired four shots into the car. That is malice, not fear."],
