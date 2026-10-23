@@ -101,6 +101,7 @@ private struct SaveData: Codable {
     var weekTally: CourtDay.Tally?
     var mood: CourthouseMood?
     var investigations: [OpenInvestigation]?
+    var placeHistory: [String: [String]]?
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -152,6 +153,8 @@ final class GameState: ObservableObject {
     @Published private(set) var mood = CourthouseMood()
     /// Crimes the paper is following before anyone is charged; each becomes a case at the arrest.
     @Published private(set) var investigations: [OpenInvestigation] = []
+    /// The dockets that came out of each place on the county map, oldest first.
+    @Published private(set) var placeHistory: [String: [String]] = [:]
     /// What happened in court since the paper last went out.
     private var happenings: [Happening] = []
 
@@ -2183,6 +2186,22 @@ final class GameState: ObservableObject {
                                   returningDefendant: d.isReturning && !retried,
                                   appealStatus: outcome.appealNotice == nil && !outcome.pending.contains(where: { $0.news.kind == .appeal && $0.news.docket == courtCase.docket }) ? nil : "Appeal pending",
                                   kind: "trial"), at: 0)
+        // The place it happened remembers it; a place that keeps coming up makes the paper.
+        if let scene = courtCase.investigation?.facts?.place,
+           let place = Gazetteer.places.sorted(by: { $0.name.count > $1.name.count }).first(where: { scene.contains($0.name) }) {
+            var dockets = placeHistory[place.name] ?? []
+            if !dockets.contains(courtCase.docket) { dockets.append(courtCase.docket) }
+            placeHistory[place.name] = dockets
+            if dockets.count >= 2, let judgeName {
+                let ordinals = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"]
+                let nth = dockets.count < ordinals.count ? ordinals[dockets.count] : "\(dockets.count)th"
+                post(NewsItem(date: currentDate, kind: .community,
+                              headline: "Another case out of \(place.name)",
+                              body: "\(courtCase.caption) is the \(nth) case from \(place.described) to reach Judge \(lastName(judgeName))'s courtroom. "
+                                + (place.kind == .bar || place.kind == .club ? "Neighbors on \(place.street) say the late nights there have gotten worse." : "Regulars say they're tired of seeing it in the paper."),
+                              docket: courtCase.docket, prominence: 0, section: "Local"))
+            }
+        }
         if let position = outcome.sentencePosition {
             switch position {
             case .below: stats.belowPresumptive += 1
@@ -2351,6 +2370,7 @@ final class GameState: ObservableObject {
         weekTally = CourtDay.Tally()
         mood = CourthouseMood()
         investigations = []
+        placeHistory = [:]
         CalendarCalls.prosecutorEdge = 0
         CourthouseMood.current = mood
         careerStart = Date()
@@ -2712,7 +2732,7 @@ final class GameState: ObservableObject {
                             reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated,
                             reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, schedule: schedule, awaiting: awaiting,
-                            weekTally: weekTally, mood: mood, investigations: investigations)
+                            weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -2781,6 +2801,7 @@ final class GameState: ObservableObject {
         weekTally = data.weekTally ?? CourtDay.Tally()
         mood = data.mood ?? CourthouseMood()
         investigations = data.investigations ?? []
+        placeHistory = data.placeHistory ?? [:]
         CalendarCalls.prosecutorEdge = mood.prosecutorEdge
         CourthouseMood.current = mood
         // Runs only after every field is restored: it may save, and an earlier save would drop today's calendar.

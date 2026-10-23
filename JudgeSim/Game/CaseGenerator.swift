@@ -328,8 +328,8 @@ enum CaseGenerator {
         }
         // A case set at a place on the county map happens in that place's town, on its street.
         // Where it happened comes first (the bar, the store, the pharmacy), not a company or a church that's only mentioned.
-        let sites = ["BAR", "CLUB", "SHOP", "STORE", "PHARM", "LOT", "FAC", "PAWN", "REST", "GYM", "SPA", "BANK", "GROCER",
-                     "SCHOOL", "CHURCH", "POST"]
+        let sites = ["BAR", "CLUB", "SHOP", "STORE", "STORE2", "PHARM", "LOT", "FAC", "PAWN", "REST", "GYM", "SPA", "BANK", "GROCER",
+                     "COMPLEX", "BIZ", "SCHOOL", "CHURCH", "POST", "CH"]
         if let known = sites.filter({ t.extras[$0] != nil }).compactMap({ values[$0].flatMap(Gazetteer.place(named:)) }).first {
             values["HOOD"] = known.town
             values["STREET"] = known.street
@@ -426,22 +426,23 @@ enum CaseGenerator {
         }
 
         // Witnesses
+        let regulars = Gazetteer.regulars(for: county)
         var witnesses: [Witness] = []
         if t.story != nil {
             // A written case calls every witness, in order, exactly as written.
             for item in t.prosecutionWitnesses {
-                witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, impeach: false))
+                witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, impeach: false, regulars: regulars))
             }
             for item in t.defenseWitnesses {
-                witnesses.append(makeWitness(item, side: .defense, fill: fill, rng: &rng, used: &used, impeach: false))
+                witnesses.append(makeWitness(item, side: .defense, fill: fill, rng: &rng, used: &used, impeach: false, regulars: regulars))
             }
         }
         let prosecutionWitnessCount = t.story != nil ? 0 : min(t.prosecutionWitnesses.count, rng.int(1...2))
         for item in rng.pick(t.prosecutionWitnesses, count: prosecutionWitnessCount) {
-            witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used))
+            witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, regulars: regulars))
         }
         if t.story == nil && !t.defenseWitnesses.isEmpty && (band != .strong || rng.chance(0.3)) {
-            witnesses.append(makeWitness(rng.pick(t.defenseWitnesses), side: .defense, fill: fill, rng: &rng, used: &used))
+            witnesses.append(makeWitness(rng.pick(t.defenseWitnesses), side: .defense, fill: fill, rng: &rng, used: &used, regulars: regulars))
         }
 
         // The investigation file and fact sheet come first: every generated witness reads from them.
@@ -1251,10 +1252,15 @@ enum CaseGenerator {
     }
 
     private static func makeWitness(_ seed: WitnessSeed, side: Side, fill: TextFiller,
-                                    rng: inout SeededRNG, used: inout Set<String>, impeach: Bool = true) -> Witness {
+                                    rng: inout SeededRNG, used: inout Set<String>, impeach: Bool = true,
+                                    regulars: [String: String] = [:]) -> Witness {
         let name: String
         if let token = seed.name {
             name = fill(token)
+        } else if let key = Gazetteer.regularKey(forRole: fill(seed.role)), let regular = regulars[key], !used.contains(regular) {
+            // The county's medical examiner, lab analysts and ER doctor are the same people case after case.
+            name = regular
+            used.insert(regular)
         } else {
             // A role that names a woman or a man ("the victim's mother", "{DL}'s brother") gets a name to match.
             let role = " " + fill(seed.role).lowercased() + " "

@@ -537,7 +537,10 @@ enum DefendantProfiles {
         }
 
         // Where the defendant lives agrees with the background and the person's age.
-        let town = county.towns.first { background.contains($0) } ?? (background.contains("Port Hollis") ? "Port Hollis" : rng.pick(county.towns))
+        // Most people live near where they work, when the job is at a place on the county map.
+        let workTown = jobs.first { $0.current }.flatMap { Gazetteer.place(named: $0.employer) }?.town
+        let town = county.towns.first { background.contains($0) }
+            ?? (background.contains("Port Hollis") ? "Port Hollis" : (workTown.flatMap { rng.chance(0.7) ? $0 : nil } ?? rng.pick(county.towns)))
         let street = Gazetteer.street(in: town, rng: &rng)
         let residence: String
         if background.contains("same apartment") {

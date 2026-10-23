@@ -19,6 +19,12 @@ struct LawLibraryView: View {
                             Label("Felony & Misdemeanor Punishment Charts", systemImage: "tablecells.fill")
                                 .font(.body.weight(.semibold))
                         }
+                        NavigationLink {
+                            CountyDirectoryView()
+                        } label: {
+                            Label("Hollis County Directory", systemImage: "map.fill")
+                                .font(.body.weight(.semibold))
+                        }
                     }
                 }
 

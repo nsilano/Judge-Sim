@@ -178,8 +178,80 @@ enum Gazetteer {
         Place(name: "Port Hollis High School", kind: .school, town: "Port Hollis", street: "Saint Agnes Way"),
         Place(name: "Harbor Point Outboard", kind: .store, town: "Port Hollis", street: "Harbor Street"),
         Place(name: "Riverbend Boat & Motor", kind: .store, town: "Bayard", street: "Landing Road"),
-        Place(name: "Tidewater Marine Supply", kind: .store, town: "Port Hollis", street: "Canal Street")
+        Place(name: "Tidewater Marine Supply", kind: .store, town: "Port Hollis", street: "Canal Street"),
+        // Places the older case templates name
+        Place(name: "CareWell Pharmacy", kind: .pharmacy, town: "Wexley", street: "Ridgeview Drive"),
+        Place(name: "Hollis Drug & Sundry", kind: .pharmacy, town: "Port Hollis", street: "Courthouse Square"),
+        Place(name: "MediMart Pharmacy", kind: .pharmacy, town: "Cane Creek", street: "Highway 41"),
+        Place(name: "the CVS in Bayard", kind: .pharmacy, town: "Bayard", street: "Front Street"),
+        Place(name: "the Walgreens on Pell Avenue", kind: .pharmacy, town: "Bayard", street: "Pell Avenue"),
+        Place(name: "Coastal Plains Logistics", kind: .warehouse, town: "Cane Creek", street: "Industrial Boulevard"),
+        Place(name: "Corner Pantry", kind: .store, town: "Dunmore Mills", street: "Railroad Avenue"),
+        Place(name: "Hollis 24/7 Fuel", kind: .gasStation, town: "Port Hollis", street: "Harbor Bypass"),
+        Place(name: "Hollis Hardware", kind: .store, town: "Port Hollis", street: "Fifth Street"),
+        Place(name: "Hollis Memorial Gardens", kind: .park, town: "Wexley", street: "Old Wexley Road"),
+        Place(name: "Lucky Dragon Market", kind: .grocery, town: "Port Hollis", street: "Canal Street"),
+        Place(name: "Quik-Stop Mart", kind: .gasStation, town: "Cane Creek", street: "Route 9"),
+        Place(name: "Sunset Liquors", kind: .store, town: "Bayard", street: "River Road"),
+        Place(name: "the Bojangles on Marlowe Boulevard", kind: .restaurant, town: "Wexley", street: "Marlowe Boulevard"),
+        Place(name: "the Dollar General in Bayard", kind: .store, town: "Bayard", street: "River Road"),
+        Place(name: "the Port Hollis Marina", kind: .boatLanding, town: "Port Hollis", street: "Water Street"),
+        Place(name: "Hollis County Courthouse", kind: .office, town: "Port Hollis", street: "Courthouse Square"),
+        Place(name: "old Wexley Town Hall", kind: .office, town: "Wexley", street: "Old Wexley Road"),
+        Place(name: "Mulligan's Tavern", kind: .bar, town: "Port Hollis", street: "Fifth Street"),
+        Place(name: "the Lamplighter", kind: .bar, town: "Dunmore Mills", street: "Main Street"),
+        Place(name: "the Neon Moose", kind: .bar, town: "Bayard", street: "Lantern Row"),
+        Place(name: "Casa Mirasol", kind: .restaurant, town: "Wexley", street: "Wexley Commons Drive"),
+        Place(name: "Pho Golden", kind: .restaurant, town: "Port Hollis", street: "Canal Street"),
+        Place(name: "Rosalind's Diner", kind: .restaurant, town: "Dunmore Mills", street: "Main Street"),
+        Place(name: "the Blue Gull Grill", kind: .restaurant, town: "Bayard", street: "Front Street"),
+        Place(name: "a church parking lot in Wexley", kind: .park, town: "Wexley", street: "Ridgeview Drive"),
+        Place(name: "the Hollis Transit depot", kind: .office, town: "Port Hollis", street: "Harbor Bypass"),
+        Place(name: "the U-Haul lot on Harbor Street", kind: .store, town: "Port Hollis", street: "Harbor Street"),
+        Place(name: "Cedar Hill Commons", kind: .apartments, town: "Wexley", street: "Pinewood Circle"),
+        Place(name: "the Harbor Point complex", kind: .apartments, town: "Port Hollis", street: "Canal Street"),
+        Place(name: "the Riverbend Apartments", kind: .apartments, town: "Bayard", street: "River Street"),
+        Place(name: "Hollis Piggly Wiggly", kind: .grocery, town: "Dunmore Mills", street: "Dunmore Avenue"),
+        Place(name: "the Food Lion on Pell Avenue", kind: .grocery, town: "Bayard", street: "Pell Avenue"),
+        Place(name: "the Harris Teeter in Cedar Hill", kind: .grocery, town: "Wexley", street: "Pinewood Circle"),
+        Place(name: "Cane Creek Early College", kind: .school, town: "Cane Creek", street: "Mill Pond Road"),
+        Place(name: "Hollis High School", kind: .school, town: "Port Hollis", street: "Fifth Street"),
+        Place(name: "Wexley Senior High", kind: .school, town: "Wexley", street: "Sycamore Lane"),
+        Place(name: "Hollis Target", kind: .store, town: "Wexley", street: "Marlowe Boulevard"),
+        Place(name: "the CVS in Cedar Hill", kind: .pharmacy, town: "Wexley", street: "Pinewood Circle")
     ]
+
+    // MARK: The county's regulars
+
+    /// The people who keep turning up in this county's cases: the medical examiner, the crime lab's analysts, the ER
+    /// doctor at Hollis Regional, the fire investigator. The same names for a whole career.
+    static func regulars(for county: County) -> [String: String] {
+        var hash: UInt64 = 1469598103934665603
+        for byte in (county.sheriff + county.clerk + county.districtAttorney).utf8 { hash = (hash ^ UInt64(byte)) &* 1099511628211 }
+        var rng = SeededRNG(seed: hash)
+        var used = Set([county.sheriff, county.clerk, county.districtAttorney, county.policeChief, county.chiefPublicDefender])
+        var out: [String: String] = [:]
+        for key in ["ME", "CHEMIST", "TOX", "FIREARMS", "DNA", "PRINTS", "FIRE", "DIGITAL", "ERDOC", "OWNER.BAR", "MANAGER.PLANT", "PASTOR"] {
+            out[key] = NameBank.person(using: &rng, excluding: &used)
+        }
+        return out
+    }
+
+    /// Which regular a State witness's role names, if any. Defense experts and second opinions are someone else.
+    static func regularKey(forRole role: String) -> String? {
+        let r = role.lowercased()
+        if r.contains("defense") || r.contains("second") || r.contains("pediatric") { return nil }
+        if r.contains("medical examiner") { return "ME" }
+        if r.contains("toxicolog") { return "TOX" }
+        if r.contains("chemist") { return "CHEMIST" }
+        if r.contains("firearms") { return "FIREARMS" }
+        if r.contains("dna") { return "DNA" }
+        if r.contains("latent print") { return "PRINTS" }
+        if r.contains("fire investigator") || r.contains("fire marshal") { return "FIRE" }
+        if r.contains("digital forensic") { return "DIGITAL" }
+        if r.contains("emergency physician") || r.contains("emergency room") || r.contains("er physician") || r.contains("er doctor") { return "ERDOC" }
+        return nil
+    }
 
     /// Every street and road in the county.
     static var allStreets: [String] { Array(Set(towns.flatMap { $0.streets + $0.roads })).sorted() }
