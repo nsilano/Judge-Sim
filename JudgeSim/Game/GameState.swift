@@ -1519,6 +1519,18 @@ final class GameState: ObservableObject {
                     c.background = bg
                 }
                 awaitCase(c, note: followUp.note, on: date)
+                // An arrest while on probation is also a violation: the officer files a report on the same conduct.
+                if person.status == .probation, person.probation != nil, let county,
+                   !(today?.entries ?? []).contains(where: { if case .hearing(let h) = $0.matter { return h.personID == person.id } else { return false } }),
+                   !scheduled.contains(where: { if case .hearing(let h) = $0.entry.matter { return h.personID == person.id } else { return false } }) {
+                    let offense = (c.charges.first?.law.title ?? "a new offense").lowercased()
+                    if let hearing = ViolationHearings.make(person: person, county: county, date: date, seed: rng.next(),
+                                                            newCharge: (offense: offense, docket: c.docket,
+                                                                        contact: followUp.victimName != nil && followUp.note.hasPrefix("Charged with violating"))) {
+                        place(DocketEntry(matter: .hearing(hearing), note: "Violation report filed after \(person.lastName)'s arrest in \(c.docket)."),
+                              from: nextSittingDay(after: date))
+                    }
+                }
             }
         }
         // New indictments, when the court's docket has room for them.

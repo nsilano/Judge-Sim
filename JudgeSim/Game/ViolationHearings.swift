@@ -204,7 +204,10 @@ enum ViolationHearings {
         return result
     }
 
-    static func make(person: PersonRecord, county: County, date: Date, seed: UInt64) -> ViolationHearing? {
+    /// `newCharge` is a new arrest the officer is reporting (the charge and its docket in this court); the hearing is
+    /// then about that conduct first.
+    static func make(person: PersonRecord, county: County, date: Date, seed: UInt64,
+                     newCharge: (offense: String, docket: String, contact: Bool)? = nil) -> ViolationHearing? {
         guard var term = person.probation else { return nil }
         var rng = SeededRNG(seed: seed)
         var used = Set([person.name])
@@ -290,10 +293,13 @@ enum ViolationHearings {
         }
 
         // Only a supervised probationer can abscond from supervision (G.S. 15A-1343(b)(3a)).
-        let absconded = supervised && rng.chance(0.12)
+        let absconded = newCharge == nil && supervised && rng.chance(0.12)
         // With nothing else to violate, an unsupervised probationer comes back to court on a new charge.
-        let newCrime = !absconded && (candidates.isEmpty || rng.chance(supervised ? 0.15 : 0.3))
-        var picked = candidates.isEmpty ? [] : rng.pick(candidates, count: min(candidates.count, rng.int(1...3)))
+        let newCrime = newCharge != nil || (!absconded && (candidates.isEmpty || rng.chance(supervised ? 0.15 : 0.3)))
+        // A reported arrest is the hearing; now and then the officer adds something else already in the file.
+        var picked = candidates.isEmpty ? []
+            : rng.pick(candidates, count: newCharge != nil ? (rng.chance(0.3) ? 1 : 0) : min(candidates.count, rng.int(1...3)))
+        if newCharge?.contact == true { picked.removeAll { $0.kind == .contact } }
         if absconded {
             picked.insert(("Absconded: failed to report and whereabouts were unknown for \(rng.int(35...90)) days, until arrested on an order for arrest.", 0.9, .abscond), at: 0)
         }
@@ -312,7 +318,12 @@ enum ViolationHearings {
                                    "communicating threats to a neighbor",
                                    "using a stolen debit card at two gas stations",
                                    "trespassing and resisting at a bar that had banned them"])
-        if newCrime {
+        if let newCharge {
+            if newCharge.contact && conditions.contains("no contact") {
+                picked.insert(("Contacted the victim in violation of the no-contact condition, the same conduct as the new charge.", 0.85, .contact), at: 0)
+            }
+            picked.insert(("New criminal offense: arrested and charged with \(newCharge.offense). The charge is pending before this court in \(newCharge.docket); the \(supervised ? "officer" : "State") will offer the underlying facts.", 0.85, .newCrime), at: 0)
+        } else if newCrime {
             picked.insert(("New criminal offense: charged with \(newOffense). The charge is pending in district court; the \(supervised ? "officer" : "State") will offer the underlying facts.", 0.85, .newCrime), at: 0)
         }
         let willfulChance = picked.map { $0.willfulChance }.reduce(0, +) / Double(max(1, picked.count))
