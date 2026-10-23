@@ -351,10 +351,10 @@ final class GameState: ObservableObject {
                              body: "In a ceremony at the \(county.courthouse), \(name) took the oath of office as a Resident Superior Court Judge for \(county.name). District Attorney \(county.districtAttorney), Chief Public Defender \(county.chiefPublicDefender), Sheriff \(county.sheriff), and Clerk of Superior Court \(county.clerk) attended.")]
         }
         currentDate = nextSittingDay(onOrAfter: currentDate)
-        // The new judge inherits a few indicted cases waiting for trial dates.
+        // The new judge inherits a couple of indicted cases waiting for trial dates; more come as the weeks go on.
         var intakeRNG = SeededRNG(seed: seedBase ^ 0xF125_7A11)
         var used = Set<UUID>()
-        for _ in 0..<4 {
+        for _ in 0..<2 {
             if let c = generateCase(date: currentDate, rng: &intakeRNG, excluding: &used, storySlot: true, allowMurder: false) {
                 awaitCase(c, note: "Indicted before you took the bench; waiting for a trial date.", on: currentDate)
             }
@@ -917,8 +917,9 @@ final class GameState: ObservableObject {
                                               excluding: usedPeople, seed: rng.next())
                 docketSequence += 200
                 // Leave room on the calendar for the new arrest, a relief motion, and most weeks a warrant and an arraignment.
-                let wantsWarrant = rng.chance(0.7)
-                let wantsArraignment = !lightWeeks && rng.chance(0.6)
+                // Fewer new matters while the new judge's courtroom is still filling up.
+                let wantsWarrant = rng.chance(0.7 * max(0.3, caseloadRamp))
+                let wantsArraignment = !lightWeeks && rng.chance(0.6 * max(0.3, caseloadRamp))
                 let reserved = 1 + (reliefQueue.isEmpty ? 0 : 1) + (wantsWarrant ? 1 : 0) + (wantsArraignment ? 1 : 0)
                 let room = max(1, calendarCap - reserved)
                 if call.matters.count > room {
@@ -982,7 +983,7 @@ final class GameState: ObservableObject {
                 // A new arrest for conditions of release, and a case to arraign and set for trial.
                 let held = rng.int(1...3)
                 let arrested = cal.date(byAdding: .day, value: -held, to: date) ?? date
-                if var c = freshCase(on: date, arrest: arrested, incidentBefore: 0...14, rng: &rng, excluding: &usedPeople) {
+                if rng.chance(max(0.4, caseloadRamp)), var c = freshCase(on: date, arrest: arrested, incidentBefore: 0...14, rng: &rng, excluding: &usedPeople) {
                     // Arrested days ago and held until this first hearing on conditions of release.
                     if var bg = c.background {
                         bg.custodyDays = held
@@ -1067,7 +1068,11 @@ final class GameState: ObservableObject {
     }
 
     /// How many trials the court keeps in the pipeline: about two weeks of the judge's own schedule.
-    var pipelineTarget: Int { max(4, 2 * schedule.weeklyTrials + 2) }
+    /// A new judge's courtroom starts quiet and fills over the first couple of months: a quarter of the full
+    /// caseload the first week, rising each week to all of it by week ten.
+    var caseloadRamp: Double { min(1, 0.25 + Double(calendarWeekNumber - 1) * 0.085) }
+
+    var pipelineTarget: Int { max(2, Int((Double(max(4, 2 * schedule.weeklyTrials + 2)) * caseloadRamp).rounded())) }
 
     /// Trials and hearings set for a day, today's docket included.
     func counts(on date: Date) -> (trials: Int, hearings: Int) {
@@ -1404,7 +1409,7 @@ final class GameState: ObservableObject {
             }
         }
         // New indictments, when the court's docket has room for them.
-        if trialsInPipeline < pipelineTarget && rng.chance(0.4) {
+        if trialsInPipeline < pipelineTarget && rng.chance(0.4 * max(0.35, caseloadRamp)) {
             let murderWaiting = (awaiting.map(\.entry) + scheduled.map(\.entry)).contains { entry in
                 if case .trial(let c) = entry.matter { return Self.isMurder(c) } else { return false }
             }
