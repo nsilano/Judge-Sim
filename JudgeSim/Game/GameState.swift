@@ -1797,7 +1797,9 @@ final class GameState: ObservableObject {
                 if choice == 0 {
                     setFor(c, weeks: 4, note: "Continued at the calendar call on \(heard) on the defense's motion.", continuances: before + 1)
                 } else {
-                    thisWeek(c, note: "Motion to continue denied at the calendar call; the case is tried this week.", continuances: before)
+                    // Denied: the case is ready now, and waits for the judge to give it a trial date.
+                    awaitCase(c, note: "Motion to continue denied at the calendar call on \(heard); ready for trial.", on: call.date,
+                              continuances: before)
                 }
             case .failureToAppear:
                 switch choice {

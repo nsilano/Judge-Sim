@@ -512,7 +512,7 @@ enum CalendarCalls {
                                           "The State turned over body camera video last week, nearly four hours of it. I need time to review it.",
                                           "I'm in a murder trial in another county that's running long.",
                                           "My client was just admitted to an inpatient treatment program and can't leave for 28 days."]),
-                    options: ["Grant the continuance; reset for trial in four weeks", "Deny; the case is tried this week"]))
+                    options: ["Grant the continuance; reset for trial in four weeks", "Deny; the case is ready for trial and you set the date"]))
             case .bondModification:
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
