@@ -1055,14 +1055,19 @@ final class GameState: ObservableObject {
                     }
                     // Motions, missed court dates and bond reviews are about cases already set for trial in this court,
                     // so they feed the trials you hear rather than adding new ones.
-                    let pool = scheduled.filter { $0.entry.resume == nil }.map(\.entry) + awaiting.map(\.entry)
+                    // A missed court date is about a case called at this calendar: one waiting for a trial date, or one
+                    // set for trial in the next two weeks, never a trial months away. Someone charged with murder is
+                    // held, not out on bond.
+                    let soon = cal.date(byAdding: .day, value: 14, to: date) ?? date
+                    let pool = scheduled.filter { $0.entry.resume == nil && (kind != .failureToAppear || $0.date <= soon) }.map(\.entry)
+                        + awaiting.map(\.entry)
                     let waiting = pool.compactMap { entry -> CourtCase? in
                         guard case .trial(let c) = entry.matter, !claimed.contains(c.id),
                               c.templateKey.hasPrefix("story.") else { return nil }
                         let jailed = c.background?.isJailed ?? false
                         switch kind {
                         case .bondModification: return jailed ? c : nil
-                        case .failureToAppear: return jailed ? nil : c
+                        case .failureToAppear: return jailed || Self.isMurder(c) ? nil : c
                         default: return c
                         }
                     }
@@ -1081,6 +1086,11 @@ final class GameState: ObservableObject {
                             c.background = bg
                         }
                         call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
+                        if kind == .failureToAppear {
+                            let set = scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }
+                            call.matters[index].summary += set.map { " The trial is set for \(SentenceFormat.shortDate($0.date))." }
+                                ?? " The case has no trial date yet; it was on today's calendar for setting."
+                        }
                     }
                 }
                 // A motion with no case waiting for it isn't on the calendar this week.
@@ -1754,18 +1764,33 @@ final class GameState: ObservableObject {
             // The first day court sits that week: Tuesday when Monday is a holiday.
             CourtCalendar.weekday(onOrAfter: CourtCalendar.monday(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 7 * weeks, to: call.date) ?? call.date))
         }
+        /// The trial date the judge had already set for the case being ruled on; a ruling keeps it when it still works.
+        var setDate: Date?
+        /// Puts the case back on the date the judge set, if it falls on or after `from`. Returns whether it did.
+        func keepDate(_ c: CourtCase, note: String, continuances: Int, from: Date) -> Bool {
+            guard let setDate, CourtCalendar.calendar.startOfDay(for: setDate) >= CourtCalendar.calendar.startOfDay(for: from) else { return false }
+            var entry = DocketEntry(matter: .trial(c), note: note + " The trial stays set for \(SentenceFormat.shortDate(setDate)).")
+            entry.continuances = continuances
+            scheduled.append(ScheduledMatter(date: setDate, entry: entry))
+            scheduled.sort { $0.date < $1.date }
+            return true
+        }
         func schedule(_ c: CourtCase, _ weeks: Int, _ note: String, _ continuances: Int) {
             setFor(c, weeks: weeks, note: note, continuances: continuances)
         }
-        /// Set for trial: the case joins the list waiting for the judge to give it a date, ready from the week given.
+        /// Set for trial: the case keeps its trial date if that still works; otherwise it joins the list waiting for the
+        /// judge to give it a date, ready from the week given.
         func setFor(_ c: CourtCase, weeks: Int, note: String, continuances: Int = 0) {
             let ready = later(weeks: weeks)
+            if keepDate(c, note: note, continuances: continuances, from: ready) { return }
             awaitCase(c, note: note, on: call.date, earliest: ready,
                       reason: weeks <= 2 ? "The parties need time to prepare" : "Discovery is still being exchanged",
                       continuances: continuances)
         }
         /// To be tried now: today, if the day has room under the judge's limits, or the next day that does.
         func thisWeek(_ c: CourtCase, note: String, continuances: Int = 0) {
+            if keepDate(c, note: note.replacingOccurrences(of: "; the case is tried this week", with: "")
+                            .replacingOccurrences(of: "; tried this week", with: ""), continuances: continuances, from: call.date) { return }
             var entry = DocketEntry(matter: .trial(c), note: note)
             entry.continuances = continuances
             if var day = today, hasRoom(on: day.date, for: entry) {
@@ -1782,7 +1807,9 @@ final class GameState: ObservableObject {
         for m in call.matters {
             guard let c = m.pendingCase else { continue }
             let choice = choices[m.id] ?? 0
-            // A case already set for trial, or waiting for a date, is taken off its old setting; the ruling sets the new one.
+            // A case already set for trial, or waiting for a date, is taken off its old setting; the ruling sets the new one,
+            // keeping the judge's date when it still works.
+            setDate = scheduled.first { item in if case .trial(let t) = item.entry.matter { return t.id == c.id } else { return false } }?.date
             scheduled.removeAll { item in if case .trial(let t) = item.entry.matter { return t.id == c.id } else { return false } }
             awaiting.removeAll { $0.courtCase?.id == c.id }
             switch m.kind {
@@ -1797,7 +1824,11 @@ final class GameState: ObservableObject {
                 if choice == 0 {
                     setFor(c, weeks: 4, note: "Continued at the calendar call on \(heard) on the defense's motion.", continuances: before + 1)
                 } else {
-                    thisWeek(c, note: "Motion to continue denied at the calendar call; the case is tried this week.", continuances: before)
+                    // Denied: the trial date stands; with none yet, the case is ready now and waits for the judge to set one.
+                    let note = "Motion to continue denied at the calendar call on \(heard); ready for trial."
+                    if !keepDate(c, note: note, continuances: before, from: call.date) {
+                        awaitCase(c, note: note, on: call.date, continuances: before)
+                    }
                 }
             case .failureToAppear:
                 switch choice {
