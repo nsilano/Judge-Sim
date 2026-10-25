@@ -477,15 +477,15 @@ enum CalendarCalls {
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
                     summary: rng.pick([
-                        "\(name) was called three times in the hallway and did not appear for trial on \(law.title).",
-                        "\(name), set for trial on \(law.title), did not answer when the case was called. The bondsman is in the courtroom.",
-                        "\(name) did not appear for trial on \(law.title). It is \(rng.pick(["the second", "the third", "the first"])) missed court date in this case.",
+                        "\(name) was ordered to appear at this morning's calendar call on \(law.title) and did not answer when called three times in the hallway.",
+                        "\(name), charged with \(law.title), did not answer when the case was called at the calendar call. The bondsman is in the courtroom.",
+                        "\(name) did not appear at the calendar call on \(law.title). It is \(rng.pick(["the second", "the third", "the first"])) missed court date in this case.",
                         "The clerk called \(name) on \(law.title) twice. Defense counsel is present; the defendant is not."]),
                     stateAsk: rng.pick([
                         "The State asks for an order for arrest and forfeiture of the \(rng.pick(["$5,000", "$10,000", "$20,000"])) bond.",
-                        "The State asks for an order for arrest with no bond. The witnesses are here for the second time, and the State is ready.",
+                        "The State asks for an order for arrest with no bond. The defendant was told in open court to be here today.",
                         "The State asks for an order for arrest and that any new bond be doubled. This defendant has missed court before.",
-                        "The State's witnesses drove in from out of county. We ask for an order for arrest and forfeiture."]),
+                        "The defendant signed the notice to appear for today. We ask for an order for arrest and forfeiture."]),
                     defenseAsk: rng.pick([
                         "I spoke with my client last week. They knew the date. I can't explain it.",
                         "My client texted me this morning that the car broke down on Highway 17. I've asked for a photo of the tow receipt.",

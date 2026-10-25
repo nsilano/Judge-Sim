@@ -1055,14 +1055,19 @@ final class GameState: ObservableObject {
                     }
                     // Motions, missed court dates and bond reviews are about cases already set for trial in this court,
                     // so they feed the trials you hear rather than adding new ones.
-                    let pool = scheduled.filter { $0.entry.resume == nil }.map(\.entry) + awaiting.map(\.entry)
+                    // A missed court date is about a case called at this calendar: one waiting for a trial date, or one
+                    // set for trial in the next two weeks, never a trial months away. Someone charged with murder is
+                    // held, not out on bond.
+                    let soon = cal.date(byAdding: .day, value: 14, to: date) ?? date
+                    let pool = scheduled.filter { $0.entry.resume == nil && (kind != .failureToAppear || $0.date <= soon) }.map(\.entry)
+                        + awaiting.map(\.entry)
                     let waiting = pool.compactMap { entry -> CourtCase? in
                         guard case .trial(let c) = entry.matter, !claimed.contains(c.id),
                               c.templateKey.hasPrefix("story.") else { return nil }
                         let jailed = c.background?.isJailed ?? false
                         switch kind {
                         case .bondModification: return jailed ? c : nil
-                        case .failureToAppear: return jailed ? nil : c
+                        case .failureToAppear: return jailed || Self.isMurder(c) ? nil : c
                         default: return c
                         }
                     }
@@ -1081,6 +1086,11 @@ final class GameState: ObservableObject {
                             c.background = bg
                         }
                         call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
+                        if kind == .failureToAppear {
+                            let set = scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }
+                            call.matters[index].summary += set.map { " The trial is set for \(SentenceFormat.shortDate($0.date))." }
+                                ?? " The case has no trial date yet; it was on today's calendar for setting."
+                        }
                     }
                 }
                 // A motion with no case waiting for it isn't on the calendar this week.
