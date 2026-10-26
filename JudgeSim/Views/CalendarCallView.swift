@@ -149,11 +149,15 @@ private struct MatterCard: View {
                     }
                 }
             }
-            if matter.kind != .searchWarrant, let profile = matter.pendingCase?.defendant.profile ?? game.person(matter.personID)?.profile {
+            if matter.kind != .searchWarrant {
+                let person = game.person(matter.personID)
                 NavigationLink {
-                    DefendantProfilePage(name: matter.personName, profile: profile)
+                    DefendantProfilePage(name: matter.personName,
+                                         profile: matter.pendingCase?.defendant.profile ?? person?.profile,
+                                         priors: matter.pendingCase?.defendant.priors ?? person?.priors ?? matter.priors,
+                                         person: person)
                 } label: {
-                    Label("Who \(matter.personName) is: life, work, and education", systemImage: "person.text.rectangle")
+                    Label("Who \(matter.personName) is: record, life, work, and education", systemImage: "person.text.rectangle")
                         .font(.subheadline.weight(.semibold))
                 }
             }
@@ -230,14 +234,56 @@ struct PendingCaseFile: View {
     }
 }
 
+/// The person's criminal record at a glance, for rulings on bond, pleas, and missed court dates.
+struct CriminalRecordBlock: View {
+    let priors: [PriorConviction]
+    let person: PersonRecord?
+
+    var body: some View {
+        let record = PriorRecord(priors: priors, onSupervision: person?.probation != nil)
+        let felonies = priors.filter { $0.ncClass.isFelony }.count
+        VStack(alignment: .leading, spacing: 3) {
+            Text("Criminal record").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+            if priors.isEmpty {
+                Text("No prior convictions.").font(.caption)
+            } else {
+                Text("\(priors.count) prior conviction\(priors.count == 1 ? "" : "s") (\(felonies) felon\(felonies == 1 ? "y" : "ies")) · felony record level \(SentenceFormat.romanLevels[max(0, record.felonyLevel - 1)]), misdemeanor level \(SentenceFormat.romanLevels[max(0, record.misdemeanorLevel - 1)])")
+                    .font(.caption.weight(.semibold))
+                ForEach(priors.sorted { $0.year > $1.year }) { p in
+                    Text("\(String(p.year)) · \(p.offense) (\(p.ncClass.shortLabel)) · \(p.county)\(p.fromThisCourt ? ", this court" : "") · \(p.sentence)")
+                        .font(.caption)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            if let term = person?.probation {
+                Text("On probation in \(term.docket) for \(term.offense) until \(SentenceFormat.shortDate(term.ends)).")
+                    .font(.caption).foregroundStyle(.orange)
+            }
+            if let orders = person?.stayAwayOrders, !orders.isEmpty {
+                Text("Under \(orders.count == 1 ? "a stay-away order" : "\(orders.count) stay-away orders") protecting " + orders.map(\.protectedName).joined(separator: ", ") + ".")
+                    .font(.caption).foregroundStyle(.orange)
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Theme.surface))
+    }
+}
+
 /// The defendant's life, work, and schooling, opened from a calendar call matter.
 struct DefendantProfilePage: View {
     let name: String
-    let profile: DefendantProfile
+    let profile: DefendantProfile?
+    var priors: [PriorConviction] = []
+    var person: PersonRecord? = nil
 
     var body: some View {
         FixedWidthScroll {
-            DefendantProfileView(profile: profile).card().padding()
+            VStack(alignment: .leading, spacing: 14) {
+                CriminalRecordBlock(priors: priors, person: person)
+                if let profile { DefendantProfileView(profile: profile).card() }
+            }
+            .padding()
         }
         .background(Theme.background)
         .navigationTitle(name)

@@ -1187,9 +1187,9 @@ final class GameState: ObservableObject {
     /// How many trials the court keeps in the pipeline: about two weeks of the judge's own schedule.
     /// A new judge's courtroom starts quiet and fills over the first couple of months: a quarter of the full
     /// caseload the first week, rising each week to all of it by week ten.
-    var caseloadRamp: Double { min(1, 0.25 + Double(calendarWeekNumber - 1) * 0.085) }
+    var caseloadRamp: Double { min(1, 0.4 + Double(calendarWeekNumber - 1) * 0.1) }
 
-    var pipelineTarget: Int { max(2, Int((Double(max(4, 2 * schedule.weeklyTrials + 2)) * caseloadRamp).rounded())) }
+    var pipelineTarget: Int { max(3, Int((Double(max(6, 3 * schedule.weeklyTrials + 3)) * caseloadRamp).rounded())) }
 
     /// Trials and hearings set for a day, today's docket included.
     func counts(on date: Date) -> (trials: Int, hearings: Int) {
@@ -1538,7 +1538,7 @@ final class GameState: ObservableObject {
             }
         }
         // New indictments, when the court's docket has room for them.
-        if trialsInPipeline < pipelineTarget && rng.chance(0.4 * max(0.35, caseloadRamp)) {
+        if trialsInPipeline < pipelineTarget && rng.chance(0.75 * max(0.5, caseloadRamp)) {
             let murderWaiting = (awaiting.map(\.entry) + scheduled.map(\.entry)).contains { entry in
                 if case .trial(let c) = entry.matter { return Self.isMurder(c) } else { return false }
             }
@@ -1840,12 +1840,12 @@ final class GameState: ObservableObject {
                     if var bg = held.background {
                         bg.onRelease = false
                         bg.custodyDays = max(1, bg.custodyDays)
-                        bg.bondStatus = "Arrested on the order for arrest after failing to appear; bond doubled and held for \(bg.custodyDays) days."
+                        bg.bondStatus = "Failed to appear at the calendar call on \(heard); order for arrest outstanding. Once served, held on a doubled secured bond."
                         held.background = bg
                     }
                     // Jail credit runs from the arrest, not from the missed court date.
                     held.sessionDate = arrested
-                    setFor(held, weeks: weeksOut, note: "Arrested on the order for arrest issued at the calendar call on \(heard).")
+                    setFor(held, weeks: weeksOut, note: "Order for arrest issued at the calendar call on \(heard) after a failure to appear.")
                     issueArrestOrder(for: c, issued: call.date, servedOn: arrested)
                 case 1:
                     if rng.chance(0.6) {
@@ -1855,13 +1855,13 @@ final class GameState: ObservableObject {
                         if var bg = held.background {
                             bg.onRelease = false
                             bg.custodyDays = max(1, bg.custodyDays)
-                            bg.bondStatus = "Never appeared on \(heard); arrested on the order for arrest and held for \(bg.custodyDays) days."
+                            bg.bondStatus = "Never appeared on \(heard); order for arrest outstanding. Once served, held on a doubled secured bond."
                             held.background = bg
                         }
                         let weeksOut = rng.int(2...5)
                         // Jail credit runs from the arrest, not from the missed court date.
                         held.sessionDate = CourtCalendar.calendar.date(byAdding: .day, value: 7 * weeksOut - rng.int(3...10), to: call.date) ?? call.date
-                        setFor(held, weeks: weeksOut, note: "Never appeared on \(heard); arrested on an order for arrest issued after the calendar call.")
+                        setFor(held, weeks: weeksOut, note: "Never appeared on \(heard); order for arrest issued after the calendar call.")
                         issueArrestOrder(for: c, issued: call.date, servedOn: held.sessionDate)
                     }
                 default:
@@ -2569,8 +2569,19 @@ final class GameState: ObservableObject {
             let order = arrestOrders[i]
             post(NewsItem(date: order.servedOn, kind: .arrest,
                           headline: "\(order.personName) arrested on order for failing to appear",
-                          body: "Deputies served an order for arrest on \(order.personName), who missed a trial date in Hollis County Superior Court on a charge of \(order.offense.lowercasedPhrase). \(order.personName.components(separatedBy: " ").last ?? order.personName) is held on \(order.bond) until trial.",
+                          body: "Deputies served an order for arrest on \(order.personName), who missed a court date in Hollis County Superior Court on a charge of \(order.offense.lowercasedPhrase). \(order.personName.components(separatedBy: " ").last ?? order.personName) is held on \(order.bond) until trial.",
                           docket: order.docket, prominence: 1))
+            // The case file catches up: the defendant is now in custody on the order.
+            let served = SentenceFormat.shortDate(order.servedOn)
+            func update(_ entry: inout DocketEntry) {
+                guard case .trial(var c) = entry.matter, c.docket == order.docket, var bg = c.background else { return }
+                bg.bondStatus = "Arrested on the order for arrest on \(served) after failing to appear on \(SentenceFormat.shortDate(order.issued)); held on \(order.bond)."
+                c.background = bg
+                entry.matter = .trial(c)
+                entry.note = ((entry.note ?? "") + " Served \(served); in custody.").trimmingCharacters(in: .whitespaces)
+            }
+            for j in awaiting.indices { update(&awaiting[j].entry) }
+            for j in scheduled.indices { update(&scheduled[j].entry) }
         }
 
         // Scheduled events
