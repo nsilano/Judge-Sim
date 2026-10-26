@@ -1607,6 +1607,9 @@ final class GameState: ObservableObject {
         for index in awaiting.indices {
             guard let c = awaiting[index].courtCase else { continue }
             let waited = cal.dateComponents([.day], from: awaiting[index].since, to: date).day ?? 0
+            // Days the judge could have set it: from when it reached the list, or when it was ready, whichever is later.
+            let readySince = max(awaiting[index].since, awaiting[index].earliest ?? awaiting[index].since)
+            let settable = max(0, cal.dateComponents([.day], from: readySince, to: date).day ?? 0)
             let jailed = c.background?.isJailed ?? false
             let held = jailed ? (c.background?.custodyDays ?? 0) + max(0, cal.dateComponents([.day], from: cal.startOfDay(for: c.sessionDate), to: date).day ?? 0) : 0
             func once(_ key: String, _ action: () -> Void) {
@@ -1614,15 +1617,16 @@ final class GameState: ObservableObject {
                 awaiting[index].warnings.append(key)
                 action()
             }
-            if jailed && held >= 120 {
+            // The paper and the defense only blame the court once the case has sat ready on its list for a while.
+            if jailed && held >= 120 && settable >= 30 {
                 once("jail120") {
                     stats.delayedCases = (stats.delayedCases ?? 0) + 1
                     post(NewsItem(date: date, kind: .community, headline: "\(c.defendant.name) held \(held) days with no trial date",
-                                  body: "\(c.defendant.name) has been in the Hollis County jail for \(held) days on \(c.charges.first?.law.title.lowercased() ?? "the charges") and still has no trial date before Judge \(judge). Defense lawyers say the wait is becoming a constitutional problem.",
+                                  body: "\(c.defendant.name) has been in the Hollis County jail for \(held) days on \(c.charges.first?.law.title.lowercased() ?? "the charges"), and the case has been ready for trial for \(settable) days with no date from Judge \(judge). Defense lawyers say the wait is becoming a constitutional problem.",
                                   docket: c.docket, prominence: 1))
                 }
             }
-            if jailed && held >= 240 {
+            if jailed && held >= 240 && settable >= 60 {
                 once("jail240") {
                     let note = "The defense has moved to dismiss for violation of the right to a speedy trial: \(c.defendant.lastName) has been held \(held) days awaiting trial (Barker v. Wingo; N.C. Const. art. I, § 18)."
                     awaiting[index].entry.note = ((awaiting[index].entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces)
@@ -1654,7 +1658,7 @@ final class GameState: ObservableObject {
                     awaiting[index].entry.note = ((awaiting[index].entry.note ?? "") + " The DA's office has complained that its request for a priority setting was ignored.").trimmingCharacters(in: .whitespaces)
                 }
             }
-            if waited >= 180 {
+            if settable >= 180 {
                 once("halfYear") {
                     stats.delayedCases = (stats.delayedCases ?? 0) + 1
                     post(NewsItem(date: date, kind: .community, headline: "Six months on, no trial date in \(c.caption)",
