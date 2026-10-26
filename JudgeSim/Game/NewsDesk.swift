@@ -210,7 +210,8 @@ enum NewsDesk {
             }
             topics.append(("A day in Courtroom 2",
                            "Spend a morning at the \(county.courthouse) and you'll see the whole county pass through: a mother with a toddler on her hip waiting for a child-support case, a retired teacher on jury duty, a young man in an orange jumpsuit looking for someone in the gallery. It deserves more of our attention than it gets."))
-            if w.onProbation >= 3 {
+            // Only once the court has put enough people on probation for the load to be its own doing.
+            if w.onProbation >= 25 {
                 topics.append(("Probation officers are stretched thin",
                                "\(w.onProbation) people sentenced in Judge \(w.judge)'s courtroom are on probation right now, and every probation officer in the county carries a caseload above the state's target. Supervision only works if someone is supervising."))
             }

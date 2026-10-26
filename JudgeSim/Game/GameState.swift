@@ -1187,9 +1187,9 @@ final class GameState: ObservableObject {
     /// How many trials the court keeps in the pipeline: about two weeks of the judge's own schedule.
     /// A new judge's courtroom starts quiet and fills over the first couple of months: a quarter of the full
     /// caseload the first week, rising each week to all of it by week ten.
-    var caseloadRamp: Double { min(1, 0.25 + Double(calendarWeekNumber - 1) * 0.085) }
+    var caseloadRamp: Double { min(1, 0.4 + Double(calendarWeekNumber - 1) * 0.1) }
 
-    var pipelineTarget: Int { max(2, Int((Double(max(4, 2 * schedule.weeklyTrials + 2)) * caseloadRamp).rounded())) }
+    var pipelineTarget: Int { max(3, Int((Double(max(6, 3 * schedule.weeklyTrials + 3)) * caseloadRamp).rounded())) }
 
     /// Trials and hearings set for a day, today's docket included.
     func counts(on date: Date) -> (trials: Int, hearings: Int) {
@@ -1538,7 +1538,7 @@ final class GameState: ObservableObject {
             }
         }
         // New indictments, when the court's docket has room for them.
-        if trialsInPipeline < pipelineTarget && rng.chance(0.4 * max(0.35, caseloadRamp)) {
+        if trialsInPipeline < pipelineTarget && rng.chance(0.75 * max(0.5, caseloadRamp)) {
             let murderWaiting = (awaiting.map(\.entry) + scheduled.map(\.entry)).contains { entry in
                 if case .trial(let c) = entry.matter { return Self.isMurder(c) } else { return false }
             }
