@@ -288,7 +288,31 @@ enum ViolationHearings {
                 candidates.append(("Left the state without permission: \(rng.pick(["a week in Myrtle Beach", "a trip to Atlanta", "four days in Virginia", "a cousin's wedding in Georgia"])), shown on social media.", 0.7, .travel))
             }
             if rng.chance(0.15) {
-                candidates.append(("Did not report police contact: cited for \(rng.pick(["driving without a license", "an open container", "trespassing at a closed park"])) and never told the officer.", 0.6, .arrest))
+                candidates.append(rng.pick([
+                    ("Refused to let the officer in for a warrantless search of the residence, a regular condition of supervised probation.", 0.75, Kind.search),
+                    ("A warrantless search of \(person.lastName)'s bedroom turned up a glass pipe with residue and a digital scale.", 0.7, Kind.found)
+                ]))
+            }
+            if rng.chance(0.15) {
+                candidates.append(rng.pick([
+                    ("Quit the job at the end of the second month without telling the officer, and named the old employer at the next visit.", 0.65, Kind.work),
+                    ("Gave the officer a pay stub that the employer says it never issued.", 0.85, Kind.work)
+                ]))
+            }
+            if rng.chance(0.15) {
+                candidates.append(("Was not at the approved address for two unannounced home visits; the landlord says \(person.lastName) moved out weeks ago.", 0.65, .moved))
+            }
+            if rng.chance(0.2) {
+                candidates.append(("Has paid nothing toward the $40 monthly supervision fee in \(rng.int(3...6)) months.", 0.45, .money))
+            }
+            if need.substance && rng.chance(0.4) {
+                candidates.append(rng.pick([
+                    ("Admitted at an office visit to smoking marijuana over the weekend and signed an admission form.", 0.75, Kind.drugs),
+                    ("Showed up to an office visit visibly impaired and left before giving a sample.", 0.8, Kind.drugs)
+                ]))
+            }
+            if rng.chance(0.15) {
+                candidates.append(("Did not report police contact: cited for \(rng.pick(["driving without a license", "an open container", "trespassing at a closed park", "driving while license revoked", "shoplifting $38 in groceries", "a noise violation at a party", "littering from a car window"])) and never told the officer.", 0.6, .arrest))
             }
         }
 
@@ -326,7 +350,9 @@ enum ViolationHearings {
         } else if newCrime {
             picked.insert(("New criminal offense: charged with \(newOffense). The charge is pending in district court; the \(supervised ? "officer" : "State") will offer the underlying facts.", 0.85, .newCrime), at: 0)
         }
-        let willfulChance = picked.map { $0.willfulChance }.reduce(0, +) / Double(max(1, picked.count))
+        let priorCount = person.priors.filter { $0.docket == nil || $0.docket != term.docket }.count
+        let recordLean = priorCount == 0 ? -0.15 : (priorCount >= 3 ? 0.15 : 0)
+        let willfulChance = min(0.95, max(0.05, picked.map { $0.willfulChance }.reduce(0, +) / Double(max(1, picked.count)) + recordLean))
         let willful = rng.chance(willfulChance)
 
         // The reason offered fits the main violation, and only says things the record allows.

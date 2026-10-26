@@ -2,7 +2,7 @@ import Foundation
 
 /// What a probation violation was: the excuse offered has to fit it.
 enum ViolationKind {
-    case drugs, alcohol, service, money, curfew, treatment, contact, visits, moved, travel, work, school, arrest, abscond, newCrime
+    case drugs, alcohol, service, money, curfew, treatment, contact, visits, moved, travel, work, school, arrest, abscond, newCrime, search, found
 }
 
 /// The reasons a probationer gives for falling short, by kind of violation. Each reason is written three ways, so the
@@ -213,6 +213,62 @@ enum ViolationExcuses {
                  "\(dl) isn't making excuses for the new charge. It came at a bad time.",
                  "That arrest came after \(dl) lost the job and the apartment in the same week."]
             ]
+        ]
+        // More reasons, so the same few don't come around every hearing.
+        out[.search] = [
+            ["\(dl) lives with a cousin who wouldn't let anyone in without a warrant, and \(dl) didn't think \(dl) could overrule the leaseholder.",
+             "It's a relative's house. The relative refused the officer at the door, not \(dl).",
+             "\(dl) rents a room; the homeowner said no to the search, and \(dl) froze."],
+            ["\(dl) panicked. \(dl) had been told by people inside that a search always ends in an arrest.",
+             "Fear, not defiance: \(dl) thought a search meant going back to jail.",
+             "\(dl) says the officer showed up at 11 p.m., and \(dl) didn't believe it was really the officer."]
+        ]
+        out[.found] = [
+            ["The pipe belonged to a roommate, whose things were in that bedroom too.",
+             "\(dl) shares the room with a roommate who has a habit; the pipe was in the roommate's drawer.",
+             "Two people sleep in that room. \(dl) says the pipe and scale weren't \(dl)'s."],
+            ["\(dl)'s cousin stayed in that room for two weeks and left a bag behind.",
+             "A relative crashed there for a couple of weeks; the bag was the relative's.",
+             "Somebody else slept in that room most of the month, and \(dl) never went through the things left behind."]
+        ]
+        out[.visits, default: []] += [
+            ["\(dl) was caring for a parent after a stroke and couldn't leave the house for weeks.",
+             "A parent's stroke put \(dl) in charge of round-the-clock care that month.",
+             "\(dl) was the only one who could look after a parent who'd just come home from the hospital."],
+            ["\(dl)'s phone was stolen, and the appointment card was in the same bag.",
+             "Somebody broke into the car and took the phone and the appointment card together.",
+             "\(dl) lost the phone with every appointment reminder in it and didn't know the dates."]
+        ]
+        out[.money, default: []] += [
+            ["\(dl)'s hours were cut to twelve a week when business slowed down.",
+             "Work cut \(dl) to part-time, and the payments were the first thing to go.",
+             "\(dl) went from forty hours to twelve. Rent came first."],
+            ["A medical bill from an emergency room visit went to collections and took the paycheck.",
+             "\(dl)'s wages were garnished for an old hospital bill.",
+             "An emergency room bill turned into a garnishment, and there was nothing left over."]
+        ]
+        out[.drugs, default: []] += [
+            ["\(dl) relapsed after a death in the family and stopped going to meetings.",
+             "\(dl)'s brother died in the spring, and \(dl) went back to using within the week.",
+             "Grief, Judge. \(dl) lost someone close and fell apart."],
+            ["\(dl) was prescribed pain pills after a back injury at work, and it went downhill from there.",
+             "It started with a prescription after a work injury.",
+             "A legitimate prescription after surgery turned into a problem \(dl) didn't see coming."]
+        ]
+        out[.curfew, default: []] += [
+            ["\(dl) picks up overtime that runs past curfew and didn't know to get it approved.",
+             "Those were late shifts. \(dl) didn't understand the overtime needed the officer's sign-off.",
+             "\(dl)'s supervisor kept \(dl) late, and \(dl) was afraid to say no."]
+        ]
+        out[.moved, default: []] += [
+            ["The landlord changed the locks while \(dl) was at work, with everything inside.",
+             "\(dl) was locked out by the landlord and has been sleeping wherever there's room.",
+             "\(dl) came home to new locks and a notice on the door."]
+        ]
+        out[.work, default: []] += [
+            ["\(dl) was fired after the employer found out about the conviction and was too ashamed to tell the officer.",
+             "The job let \(dl) go when a coworker found the case online, and \(dl) hid it.",
+             "\(dl) lost the job over the conviction and didn't want to admit it."]
         ]
         if kids > 0 {
             out[.visits, default: []].append(

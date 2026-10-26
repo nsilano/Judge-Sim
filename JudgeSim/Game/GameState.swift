@@ -2157,15 +2157,33 @@ final class GameState: ObservableObject {
     private func makeViolationHearing(date: Date, excluding used: inout Set<UUID>, rng: inout SeededRNG) -> ViolationHearing? {
         guard let county else { return nil }
         let recentCutoff = CourtCalendar.calendar.date(byAdding: .day, value: -45, to: date) ?? date
+        // Nobody racks up violations in their first two months: there has to be time to miss visits, fail screens, or fall behind.
+        let settledCutoff = CourtCalendar.calendar.date(byAdding: .day, value: -60, to: date) ?? date
         let candidates = people.filter { person in
             // Only a supervised probationer has an officer to file a violation report.
             person.status == .probation
                 && person.probation != nil
+                && (person.probation.flatMap { ViolationHearings.probationStart(person, $0) } ?? .distantPast) < settledCutoff
+                && (person.lastReleased ?? .distantPast) < settledCutoff
                 && (person.probation?.supervised ?? true)
                 && (person.appearances.last?.date ?? .distantPast) < recentCutoff
                 && !used.contains(person.id)
         }
-        let risks = candidates.map { $0.probation?.violationRisk ?? 0.15 }
+        // Who breaks probation follows who they are: a first offender usually keeps the conditions; someone with a long
+        // record and a pull toward trouble usually doesn't.
+        let risks = candidates.map { person -> Double in
+            let base = person.probation?.violationRisk ?? 0.15
+            let others = person.priors.filter { $0.docket == nil || $0.docket != person.probation?.docket }
+            let felonies = others.filter { $0.ncClass.isFelony }.count
+            let record: Double
+            switch others.count {
+            case 0: record = 0.25
+            case 1...2: record = 0.8
+            case 3...5: record = 1.4
+            default: record = 1.9
+            }
+            return base * (record + 0.15 * Double(min(3, felonies))) * (0.6 + person.propensity * 1.4)
+        }
         let total = risks.reduce(0, +)
         guard total > 0, rng.chance(min(0.7, total * 0.5)) else { return nil }
         var target = Double.random(in: 0..<total, using: &rng)
@@ -2796,7 +2814,9 @@ final class GameState: ObservableObject {
             // Someone already facing a new case isn't arrested on another violation before it's heard.
             let personID = people[index].id
             if reoffenseQueue.contains(where: { $0.personID == personID }) || pending.contains(where: { $0.reoffense?.personID == personID }) { continue }
-            for o in orders.indices where orders[o].issued < currentDate && orders[o].expires > currentDate {
+            // A new order isn't tested in its first month.
+            let settled = CourtCalendar.calendar.date(byAdding: .day, value: -30, to: currentDate) ?? currentDate
+            for o in orders.indices where orders[o].issued < settled && orders[o].expires > currentDate {
                 let risk = (orders[o].domestic ? 0.025 : 0.02) * (0.5 + people[index].propensity * 2.5)
                 guard rng.chance(min(0.08, risk)) else { continue }
                 orders[o].violations += 1
