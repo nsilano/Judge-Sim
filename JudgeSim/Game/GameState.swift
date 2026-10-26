@@ -2169,7 +2169,21 @@ final class GameState: ObservableObject {
                 && (person.appearances.last?.date ?? .distantPast) < recentCutoff
                 && !used.contains(person.id)
         }
-        let risks = candidates.map { $0.probation?.violationRisk ?? 0.15 }
+        // Who breaks probation follows who they are: a first offender usually keeps the conditions; someone with a long
+        // record and a pull toward trouble usually doesn't.
+        let risks = candidates.map { person -> Double in
+            let base = person.probation?.violationRisk ?? 0.15
+            let others = person.priors.filter { $0.docket == nil || $0.docket != person.probation?.docket }
+            let felonies = others.filter { $0.ncClass.isFelony }.count
+            let record: Double
+            switch others.count {
+            case 0: record = 0.25
+            case 1...2: record = 0.8
+            case 3...5: record = 1.4
+            default: record = 1.9
+            }
+            return base * (record + 0.15 * Double(min(3, felonies))) * (0.6 + person.propensity * 1.4)
+        }
         let total = risks.reduce(0, +)
         guard total > 0, rng.chance(min(0.7, total * 0.5)) else { return nil }
         var target = Double.random(in: 0..<total, using: &rng)
