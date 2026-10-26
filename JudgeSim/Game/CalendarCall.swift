@@ -253,7 +253,14 @@ enum CalendarCalls {
         bound.occupation = c.defendant.occupation
         bound.docket = c.docket
         bound.pendingCase = c
-        if m.kind == .quickPlea, let law {
+        if m.kind == .quickPlea, let charged = law {
+            // Most pleas are bargains: the State often reduces the charge, more so when the charge as filed would carry
+            // mandatory prison time.
+            var bargainRNG = SeededRNG(seed: c.seed ^ 0xBA6A)
+            let lesser = c.charges.first?.lesserLaw
+            let chargedForcesActive = pleaTerms(charged, priors: c.defendant.priors).notes.contains { $0.contains("calls for an active sentence") }
+            let reduced = lesser.map { _ in bargainRNG.chance(chargedForcesActive ? 0.75 : 0.5) } ?? false
+            let law = reduced ? lesser! : charged
             let cls = law.ncClass ?? .misd1
             let terms = pleaTerms(law, priors: c.defendant.priors)
             let priorCount = c.defendant.priors.count
@@ -262,7 +269,9 @@ enum CalendarCalls {
             bound.isFelony = cls.isFelony
             bound.activeTerm = terms.active
             bound.lawNote = terms.notes.isEmpty ? nil : terms.notes.joined(separator: " ")
-            bound.summary = "\(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation.lowercasedPhrase.withIndefiniteArticle), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
+            bound.summary = "\(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation.lowercasedPhrase.withIndefiniteArticle), offers to plead guilty to "
+                + (reduced ? "the reduced charge of \(law.title) (\(cls.shortLabel)); the State will dismiss the \(charged.title) charge" : "\(law.title) (\(cls.shortLabel))")
+                + ". Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
             var rng = SeededRNG(seed: c.seed ^ 0x9EA)
             let positions = pleaPositions(law, priors: c.defendant.priors, rangeText: terms.rangeText, notes: terms.notes,
                                           name: c.defendant.name, rng: &rng)
