@@ -284,6 +284,7 @@ struct ScheduleView: View {
         FixedWidthScroll {
             VStack(alignment: .leading, spacing: 14) {
                 weekCard
+                intakeCard
                 templatesCard
                 timeOffCard
             }
@@ -311,7 +312,23 @@ struct ScheduleView: View {
                 Label("With no trial days, cases will pile up and wait.", systemImage: "exclamationmark.triangle.fill")
                     .font(.caption).foregroundStyle(Theme.bad)
             }
-            Text("New cases come in at about the pace your schedule can take. Fewer trial days means a slower intake, but the cases already charged still have to be heard.")
+            Text("Past your first few months, the county sends more cases than one judge can hear, and the list grows. Ask for fewer under New cases; the cases already charged still have to be heard.")
+                .font(.caption2).foregroundStyle(.secondary)
+        }
+        .card()
+    }
+
+    /// How many new cases the judge takes, for when the list gets to be too much.
+    private var intakeCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "New cases", icon: "tray.and.arrow.down.fill")
+            ForEach(CourtSchedule.Intake.allCases) { level in
+                ChoiceRow(title: level.title, subtitle: level.detail, selected: (game.schedule.intake ?? .full) == level) {
+                    Haptics.tap()
+                    game.setIntake(level)
+                }
+            }
+            Text("Ask the chief judge for fewer new cases when the list gets to be too much. The paper will notice.")
                 .font(.caption2).foregroundStyle(.secondary)
         }
         .card()

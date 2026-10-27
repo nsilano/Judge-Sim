@@ -1029,8 +1029,8 @@ final class GameState: ObservableObject {
                 docketSequence += 200
                 // Leave room on the calendar for the new arrest, a relief motion, and most weeks a warrant and an arraignment.
                 // Fewer new matters while the new judge's courtroom is still filling up.
-                let wantsWarrant = rng.chance(0.7 * max(0.3, caseloadRamp))
-                let wantsArraignment = !lightWeeks && rng.chance(0.6 * max(0.3, caseloadRamp))
+                let wantsWarrant = rng.chance(0.7 * max(0.3, caseloadRamp) * intakeFactor)
+                let wantsArraignment = !lightWeeks && rng.chance(0.6 * max(0.3, caseloadRamp) * intakeFactor)
                 let reserved = 1 + (reliefQueue.isEmpty ? 0 : 1) + (wantsWarrant ? 1 : 0) + (wantsArraignment ? 1 : 0)
                 let room = max(1, calendarCap - reserved)
                 if call.matters.count > room {
@@ -1162,7 +1162,7 @@ final class GameState: ObservableObject {
                 usedPeople.insert(c.defendant.personID)
             }
             bondQueue = []
-            if isFirstSittingDayOfWeek(date) && rng.chance(max(0.4, caseloadRamp)) {
+            if isFirstSittingDayOfWeek(date) && rng.chance(max(0.4, caseloadRamp) * intakeFactor) {
                 let held = rng.int(1...3)
                 let arrested = cal.date(byAdding: .day, value: -held, to: date) ?? date
                 if var c = freshCase(on: date, arrest: arrested, incidentBefore: 0...14, rng: &rng, excluding: &usedPeople) {
@@ -1224,6 +1224,24 @@ final class GameState: ObservableObject {
     var caseloadRamp: Double { min(1, 0.4 + Double(calendarWeekNumber - 1) * 0.1) }
 
     var pipelineTarget: Int { max(3, Int((Double(max(6, 3 * schedule.weeklyTrials + 3)) * caseloadRamp * caseloadPressure).rounded())) }
+
+    /// The share of new cases the judge has asked for.
+    var intakeFactor: Double { (schedule.intake ?? .full).factor }
+
+    /// Asks the chief judge to send more or fewer new cases.
+    func setIntake(_ level: CourtSchedule.Intake) {
+        guard level != (schedule.intake ?? .full), let judgeName else { return }
+        let before = schedule.intake ?? .full
+        schedule.intake = level
+        let fewer = level.factor < before.factor
+        post(NewsItem(date: currentDate, kind: .community,
+                      headline: fewer ? "Judge \(lastName(judgeName)) asks for fewer new cases" : "Judge \(lastName(judgeName)) takes on more new cases",
+                      body: fewer
+                        ? "Citing \(trialsInPipeline) trials already waiting, Judge \(lastName(judgeName)) asked the chief judge to send " + (level == .closed ? "no new cases for now" : "fewer new felony cases") + ". Visiting judges will pick up the rest."
+                        : "Judge \(lastName(judgeName)) told the chief judge the court can take " + (level == .full ? "its full share of new cases again." : "more new cases."),
+                      prominence: 1, section: "Courts"))
+        save()
+    }
 
     /// Past the first months, arrests don't wait on the court: the county sends more cases than one judge can hear, a
     /// little more each month, until the docket is truly backed up (about double after a year).
@@ -1581,7 +1599,7 @@ final class GameState: ObservableObject {
         // Over target, arrivals slow but don't stop, and they pick up as the county's pressure grows: a few extra
         // cases a week by the end of the first year, enough that the list outruns the calendar.
         let overflow = caseloadPressure > 1.05 ? min(0.85, 0.25 + 0.5 * (caseloadPressure - 1)) : 0
-        if trialsInPipeline < pipelineTarget * 4,
+        if trialsInPipeline < pipelineTarget * 4, rng.chance(intakeFactor),
            (underTarget && rng.chance(0.75 * max(0.5, caseloadRamp))) || (!underTarget && rng.chance(overflow)) {
             let murderWaiting = (awaiting.map(\.entry) + scheduled.map(\.entry)).contains { entry in
                 if case .trial(let c) = entry.matter { return Self.isMurder(c) } else { return false }

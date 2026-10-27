@@ -175,6 +175,21 @@ var hearingDates: [UUID: Date] = [:]
     let s = CaseSession(courtCase: c, judgeName: game.judgeName ?? "", county: county, resume: resume)
     let d = c.defendant
     heardKeys.insert(c.templateKey)
+    if let facts = c.investigation?.facts {
+        for (place, closedOn) in Gazetteer.living.closed where closedOn != .distantPast && closedOn < facts.incident && facts.place.contains(place) {
+            flag("\(c.docket): the crime happened at \(place), which closed on \(short(closedOn)), before the incident on \(short(facts.incident))")
+        }
+        let held = c.background?.custodyDays ?? 0
+        if held > days(facts.incident, c.sessionDate) + 2 {
+            flag("\(c.docket): \(held) days of jail credit, but the incident was only \(days(facts.incident, c.sessionDate)) days ago")
+        }
+    }
+    for w in c.witnesses where game.residents.contains(where: { $0.name == w.name && $0.deceased }) {
+        flag("\(c.docket): \(w.name) testifies, but the county remembers that person as deceased")
+    }
+    if let person = game.person(c.defendant.personID), abs(person.age(on: c.sessionDate) - c.defendant.age) > 1 {
+        flag("\(c.docket): \(c.defendant.name) is \(c.defendant.age) in the case but \(person.age(on: c.sessionDate)) by the record")
+    }
     if resume != nil { log("  (resumed after a continuance)"); continuedIDs.remove(c.id) }
     log("TRIAL \(c.docket) · \(c.caption)")
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
@@ -203,6 +218,7 @@ var hearingDates: [UUID: Date] = [:]
         if s.stage == .verdict {
             for ch in s.courtCase.charges where s.rulings.verdicts[ch.id] == nil {
                 let options = s.verdictOptions(ch)
+                if options.contains(.insanity) && rng.chance(0.3) { s.rulings.verdicts[ch.id] = .insanity; log("  Verdict: not guilty by reason of insanity"); continue }
                 let convict = rng.chance(convictRate)
                 let pick: Verdict? = convict ? (options.contains(.lesser) && rng.chance(0.2) ? .lesser : options.first { $0.isConviction })
                                              : options.first { !$0.isConviction }
@@ -227,6 +243,7 @@ var hearingDates: [UUID: Date] = [:]
         if s.needsHabitualDecision { s.setHabitual(rng.chance(0.6)) }
         for unit in s.units {
             var choice = Judgment.defaultChoice(for: unit)
+            if unit.isDWI { choice.dwiLevel = rng.int(1...5); log("  DWI level \(choice.dwiLevel ?? 0)") }
             let allowed = unit.felonyCell?.dispositions ?? unit.misdemeanorCell?.dispositions ?? []
             let wantActive = style == "harsh" || (style == "mixed" && rng.chance(0.4))
             if !choice.lifeWithoutParole && !unit.isDWI {
@@ -275,6 +292,9 @@ var hearingDates: [UUID: Date] = [:]
     }
     if let person = game.person(h.personID), person.status != .probation, person.postRelease == nil {
         flag("\(h.personName): violation hearing, but the person's status is \(person.status)")
+    }
+    if h.violations.contains(where: { $0.contains("arrears on court-ordered payments") }) && (h.probation.monthlyObligation ?? 0) == 0 {
+        flag("\(h.personName): violation for unpaid payments, but the judgment ordered no monthly payments")
     }
     let s = HearingSession(hearing: h, judgeName: game.judgeName ?? "", county: county)
     s.rulings.finding = rng.chance(0.75) ? .established : (rng.chance(0.5) ? .excused : .notProven)
@@ -386,6 +406,22 @@ func checkText(_ text: String, where place: String) {
             }
         }
     }
+    let cal = CourtCalendar.calendar
+    for set in game.scheduled {
+        let weekday = cal.component(.weekday, from: set.date)
+        if !game.schedule.courtDays.contains(weekday) || CourtCalendar.holiday(on: set.date) != nil
+            || game.schedule.timeOff.contains(CourtSchedule.key(set.date)) {
+            flag("\(set.entry.title) set on \(short(set.date)), a day court doesn't sit (\(CourtCalendar.holiday(on: set.date) ?? "weekday off or time off"))")
+        }
+    }
+    for appeal in game.appeals {
+        if let record = game.history.first(where: { $0.docket == appeal.docket && $0.resolvedKind == "trial" }),
+           record.outcome.lowercased().contains("not guilty") || record.outcome.lowercased().contains("acquit") {
+            if !appeal.appellant.lowercased().contains("state") || !appeal.issue.lowercased().contains("suppress") {
+                flag("\(appeal.docket): appeal by \(appeal.appellant) after an acquittal (\(record.outcome))")
+            }
+        }
+    }
     for item in game.bondQueue where days(item.arrest, now) > 10 {
         flag("\(item.courtCase.defendant.name): arrested \(days(item.arrest, now)) days ago and still waiting for a bond hearing")
     }
@@ -441,6 +477,11 @@ if args.count > 1 && args[1] == "scan" {
             let end = CourtCalendar.calendar.date(byAdding: .day, value: 4, to: start) ?? start
             game.bookTimeOff(from: start, to: end)
             log("TIME OFF booked \(short(start))–\(short(end))")
+        }
+        if guardDays % 28 == 14 {
+            let pending = game.trialsInPipeline
+            if pending > 80 && (game.schedule.intake ?? .full) == .full { game.setIntake(.light); log("INTAKE set to light at \(pending) pending") }
+            else if pending < 40 && (game.schedule.intake ?? .full) != .full { game.setIntake(.full); log("INTAKE back to full at \(pending) pending") }
         }
         if guardDays % 7 == 3, rng.chance(0.3), let first = game.awaiting.first {
             log("REASSIGNED \(first.courtCase?.docket ?? "?") to another judge")

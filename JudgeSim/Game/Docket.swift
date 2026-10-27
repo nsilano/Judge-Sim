@@ -20,6 +20,39 @@ struct CourtSchedule: Codable, Hashable {
     var timeOff: Set<String> = []
     /// Court days of leave a year.
     var leavePerYear = 30
+    /// How many new cases the judge takes; the rest go to visiting judges (optional for older saves).
+    var intake: Intake? = nil
+
+    /// New-case intake the judge asks the chief judge for. Cases already on the list, probation matters, and people
+    /// the judge has sentenced still come back here.
+    enum Intake: String, Codable, CaseIterable, Identifiable {
+        case full, reduced, light, closed
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .full: return "Full share"
+            case .reduced: return "Reduced"
+            case .light: return "Light"
+            case .closed: return "No new cases"
+            }
+        }
+        var detail: String {
+            switch self {
+            case .full: return "Every new felony the county sends."
+            case .reduced: return "About 60% of new cases; visiting judges take the rest."
+            case .light: return "About a third of new cases."
+            case .closed: return "No new indictments while you clear the list. Arrests in cases you've followed, probation matters, and people you've sentenced still come to you."
+            }
+        }
+        var factor: Double {
+            switch self {
+            case .full: return 1
+            case .reduced: return 0.6
+            case .light: return 0.33
+            case .closed: return 0
+            }
+        }
+    }
 
     static let weekdayNames = [2: "Monday", 3: "Tuesday", 4: "Wednesday", 5: "Thursday", 6: "Friday"]
 
