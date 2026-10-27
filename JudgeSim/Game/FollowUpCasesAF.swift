@@ -10,13 +10,15 @@ extension FollowUpCases {
     ]
 
     /// A short follow-up: one investigating witness, two exhibits for the State, one for the defense.
-    private static func followUp(key: String, category: LawCategory, headlines: [String], law: String, lesser: String? = nil,
+    /// Shared by the later batches.
+    static func followUp(key: String, category: LawCategory, headlines: [String], law: String, lesser: String? = nil,
                                  threshold: Int = 6, spec: String, ages: ClosedRange<Int> = 22...55, victim: Bool,
                                  summary: String, state: [EvidenceSeed], defense: [EvidenceSeed], witnessRole: String,
                                  exam: [ExamLine], theory: (String, String), allocution: String, truths: (String, String),
                                  defendant: [ExamLine], openings: (String, String), closings: (String, String),
                                  timeline: [(Int, String)], identified: String, notDone: [String] = [],
-                                 impact: String? = nil) -> CaseTemplate {
+                                 impact: String? = nil, doctrines: [String] = ["burdenOfProof"],
+                                 extras: [String: [String]] = [:]) -> CaseTemplate {
         CaseTemplate(
             key: key, category: category, headlines: headlines, primaryLaw: law, lesserLaw: lesser,
             threshold: threshold, lesserThreshold: lesser == nil ? 0 : threshold - 2, specification: spec,
@@ -26,7 +28,7 @@ extension FollowUpCases {
             defenseWitnesses: [],
             prosecutionTheory: [theory.0], defenseTheory: [theory.1],
             aggravating: [], mitigating: [], victimImpacts: impact.map { [$0] } ?? [], allocutions: [allocution],
-            guiltyTruths: [truths.0], innocentTruths: [truths.1], moods: [.indifferent], doctrines: ["burdenOfProof"],
+            guiltyTruths: [truths.0], innocentTruths: [truths.1], moods: [.indifferent], doctrines: doctrines, extras: extras,
             story: StoryExtras(timeline: timeline, howIdentified: identified, notDone: notDone, defendantExam: defendant,
                                prosecutionOpening: openings.0, defenseOpening: openings.1,
                                prosecutionClosing: closings.0, defenseClosing: closings.1)

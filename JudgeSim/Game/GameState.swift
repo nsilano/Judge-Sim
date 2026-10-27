@@ -1050,6 +1050,7 @@ final class GameState: ObservableObject {
                 // what the court orders puts each one on an actual calendar.
                 var claimed = Set<UUID>()
                 var unbound: [UUID] = []
+                var priorContinuances: [UUID: Int] = [:]
                 for index in call.matters.indices
                 where [.quickPlea, .continuance, .failureToAppear, .capacity, .bondModification].contains(call.matters[index].kind) {
                     let kind = call.matters[index].kind
@@ -1072,6 +1073,13 @@ final class GameState: ObservableObject {
                     let waiting = pool.compactMap { entry -> CourtCase? in
                         guard case .trial(let c) = entry.matter, !claimed.contains(c.id),
                               c.templateKey.hasPrefix("story.") else { return nil }
+                        // A defense asks to continue a case that has been around a while, and says truthfully which
+                        // continuance it would be.
+                        if kind == .continuance {
+                            let incident = c.investigation?.facts?.incident ?? c.sessionDate
+                            guard (cal.dateComponents([.day], from: incident, to: date).day ?? 0) >= 45 else { return nil }
+                            priorContinuances[c.id] = entry.continuances
+                        }
                         let jailed = c.background?.isJailed ?? false
                         switch kind {
                         case .bondModification: return jailed ? c : nil
@@ -1094,6 +1102,14 @@ final class GameState: ObservableObject {
                             c.background = bg
                         }
                         call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
+                        if kind == .continuance {
+                            let ordinals = ["first", "second", "third", "fourth", "fifth"]
+                            let nth = ordinals[min(priorContinuances[c.id] ?? 0, ordinals.count - 1)]
+                            for word in ["second", "third", "fourth"] {
+                                call.matters[index].summary = call.matters[index].summary
+                                    .replacingOccurrences(of: "be the \(word) continuance", with: "be the \(nth) continuance")
+                            }
+                        }
                         if kind == .failureToAppear {
                             let set = scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }
                             call.matters[index].summary += set.map { " The trial is set for \(SentenceFormat.shortDate($0.date))." }
@@ -1768,9 +1784,10 @@ final class GameState: ObservableObject {
         guard var background = c.background, background.isJailed else { return }
         let cal = CourtCalendar.calendar
         let waited = cal.dateComponents([.day], from: cal.startOfDay(for: c.sessionDate), to: cal.startOfDay(for: date)).day ?? 0
-        guard waited > 0 else { return }
+        guard waited != 0 else { return }
         let before = background.custodyDays
-        background.custodyDays += waited
+        // A trial moved up to an earlier date than the file was written for takes the credit back with it.
+        background.custodyDays = max(1, background.custodyDays + waited)
         background.bondStatus = background.bondStatus.replacingOccurrences(of: "for \(before) days", with: "for \(background.custodyDays) days")
         c.background = background
     }
@@ -1895,7 +1912,7 @@ final class GameState: ObservableObject {
                 }
             case .continuance:
                 // The motion says which continuance it would be: the "third" means two came before.
-                let before = m.summary.contains("fourth") ? 3 : (m.summary.contains("third") ? 2 : 1)
+                let before = ["first", "second", "third", "fourth", "fifth"].firstIndex { m.summary.contains("be the \($0) continuance") } ?? 1
                 if choice == 0 {
                     setFor(c, weeks: 4, note: "Continued at the calendar call on \(heard) on the defense's motion.", continuances: before + 1)
                 } else {

@@ -7,12 +7,12 @@ private typealias E = EvidenceSeed
 /// the earlier victim where it fits, and {PRIOR} and {PRIORDATE}, the earlier case in this court.
 /// They come to the docket only as follow-ups, never in the ordinary rotation.
 enum FollowUpCases {
-    static let all: [CaseTemplate] = [
+    static let all: [CaseTemplate] = ([[
         workplaceVisit, newNumber, parkingLotWatch, notesOnTheCar,
         kitchenAgain, hospitalNight, barParkingLot, occupiedHouse, gasStationKnife, secondCrash, overdoseDeath, newMark,
         eludingStop, warehouseTheft, carBreakIns,
         harassAgain, assaultAgain, theftAgain, drugsAgain
-    ] + batchAB + batchAC + batchAD + batchAE + batchAF
+    ], batchAB, batchAC, batchAD, batchAE, batchAF, batchAG] as [[CaseTemplate]]).flatMap { $0 }
 
     /// Stay-away order violations: domestic first, then the rest.
     static let domesticViolations = ["story.followup.workplaceVisit", "story.followup.newNumber"]
