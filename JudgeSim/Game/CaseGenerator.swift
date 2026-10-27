@@ -202,9 +202,9 @@ enum CaseGenerator {
         let currentYear = Calendar.current.component(.year, from: context.date)
 
         var used = Set<String>()
-        let castNames = [county.districtAttorney, county.chiefPublicDefender, county.clerk, county.sheriff, county.policeChief]
-            + county.assistantDAs + county.assistantPDs + county.privateCounsel
-            + county.detectives.map(\.name) + county.officers.map(\.name) + county.troopers
+        let castNames: [String] = [[county.districtAttorney, county.chiefPublicDefender, county.clerk, county.sheriff, county.policeChief],
+                                   county.assistantDAs, county.assistantPDs, county.privateCounsel,
+                                   county.detectives.map(\.name), county.officers.map(\.name), county.troopers].flatMap { $0 }
         for name in castNames {
             used.insert(name)
             used.insert(lastName(name))
@@ -534,8 +534,9 @@ enum CaseGenerator {
             }
             profiledDefendant.profile = profile
         }
-        let factText = (t.summaries.map { fill($0) } + charges.map(\.specification) + evidence.map { $0.title + ". " + $0.detail }
-                        + witnesses.flatMap { $0.direct + $0.cross }).joined(separator: " ")
+        let factParts: [[String]] = [t.summaries.map { fill($0) }, charges.map(\.specification),
+                                     evidence.map { $0.title + ". " + $0.detail }, witnesses.flatMap { $0.direct + $0.cross }]
+        let factText = factParts.flatMap { $0 }.joined(separator: " ")
         let facts = CaseFacts(key: t.key, category: t.category, hasVictim: t.hasVictim, text: factText)
         var (investigation, gaps) = Investigations.make(t: t, facts: facts, values: values, incident: incident, sessionDate: context.date,
                                                         detective: detective, officer: officer, evidence: evidence,

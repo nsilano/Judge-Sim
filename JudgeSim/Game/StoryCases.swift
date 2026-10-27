@@ -10,9 +10,12 @@ enum StoryCases {
                                        fishingCabin, homeInvasion, protectiveOrder, afterTheParty, rentalFire,
                                        nurseryNight, snowbank, kennelShooting, missingToddler, streetRifle,
                                        harborDisappearance, bloodTestStartup, textMessages, restraintDeath, stagedAttack]
-        + batchC + batchD + batchE + batchF + batchG + batchH + batchI + batchJ + batchK + batchL
-        + batchM + batchN + batchO + batchP + batchQ + batchR + batchS + batchT + batchU + batchV
-        + batchW + batchX + batchY + batchZ + batchAA + batchAB + batchAC + batchAD + batchAE
+        + batches.flatMap { $0 }
+    private static let batches: [[CaseTemplate]] = [
+        batchC, batchD, batchE, batchF, batchG, batchH, batchI, batchJ, batchK, batchL,
+        batchM, batchN, batchO, batchP, batchQ, batchR, batchS, batchT, batchU, batchV,
+        batchW, batchX, batchY, batchZ, batchAA, batchAB, batchAC, batchAD, batchAE
+    ]
 
     // MARK: - 1. A fatal crash after a closing shift
 

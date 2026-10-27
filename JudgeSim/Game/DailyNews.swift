@@ -42,7 +42,9 @@ enum DailyNews {
         for happening in happenings.shuffled(using: &rng) where out.count < 2 {
             switch happening {
             case .trialDateSet(let caption, let defendant, let date, let jailed, let prominent):
-                guard prominent || jailed || rng.chance(0.25) else { continue }
+                // By the time the paper is out, a trial set for that day or the day before has already been called.
+                guard CourtCalendar.calendar.startOfDay(for: date) > CourtCalendar.calendar.startOfDay(for: s.date),
+                      prominent || jailed || rng.chance(0.25) else { continue }
                 add("Trial date set in \(caption)",
                     "\(judge) set \(defendant)'s trial for \(SentenceFormat.shortDate(date))."
                         + (jailed ? " \(defendant) remains in the \(c.name) Detention Center." : "")

@@ -244,7 +244,9 @@ enum CalendarCalls {
         let law = c.charges.first?.law
         func swap(_ text: String) -> String {
             var out = text.replacingOccurrences(of: oldName, with: c.defendant.name)
-            if let oldLaw = m.lawID.map({ LawLibrary.law($0).title }), let law { out = out.replacingOccurrences(of: oldLaw, with: law.title) }
+            if let oldLaw = m.lawID.map({ LawLibrary.law($0).title }), let law, oldLaw != law.title, !out.contains(law.title) {
+                out = out.replacingOccurrences(of: oldLaw, with: law.title)
+            }
             return out
         }
         bound.personID = c.defendant.personID
@@ -281,8 +283,13 @@ enum CalendarCalls {
         } else {
             bound.summary = m.summary.replacingOccurrences(of: oldName, with: c.defendant.name)
             if let law {
+                // Only the placeholder charge as a whole ("on Felony Larceny." or "on Felony Larceny,"), never as the start of a
+                // longer title, or "Assault with a Deadly Weapon" turns into a doubled name.
                 for id in ["felonyLarceny", "pwisd", "awdw", "feloniousBE", "fleeing", "embezzlement"] {
-                    bound.summary = bound.summary.replacingOccurrences(of: " on \(LawLibrary.law(id).title)", with: " on \(law.title)")
+                    let old = LawLibrary.law(id).title
+                    for end in [".", ",", ";"] {
+                        bound.summary = bound.summary.replacingOccurrences(of: " on \(old)\(end)", with: " on \(law.title)\(end)")
+                    }
                 }
             }
             bound.stateAsk = swap(m.stateAsk)
