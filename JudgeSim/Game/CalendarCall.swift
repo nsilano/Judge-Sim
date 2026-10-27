@@ -71,6 +71,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var amountOptions: [Int]? = nil
     var amountRange: ClosedRange<Int>? = nil
     var suggestedAmount: Int? = nil
+    /// Options the law doesn't allow here (a PJC on a Class A through E felony), kept out of the list.
+    var unavailableOptions: Set<Int>? = nil
 
     /// The option text with the amount the judge chose filled in.
     func optionText(_ choice: Int, amount: Int?) -> String {
@@ -273,7 +275,10 @@ enum CalendarCalls {
             bound.priors = c.defendant.priors
             bound.isFelony = cls.isFelony
             bound.activeTerm = terms.active
-            bound.lawNote = terms.notes.isEmpty ? nil : terms.notes.joined(separator: " ")
+            bound.lawNote = terms.notes.filter { !$0.hasPrefix("PJC not allowed") }.joined(separator: " ")
+            if bound.lawNote?.isEmpty == true { bound.lawNote = nil }
+            // Option 1 is the prayer for judgment; it isn't offered where the law bars it.
+            if [NCClass.A, .B1, .B2, .C, .D, .E].contains(cls) { bound.unavailableOptions = [1] }
             bound.summary = "\(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation.lowercasedPhrase.withIndefiniteArticle), offers to plead guilty to "
                 + (reduced ? "the reduced charge of \(law.title) (\(cls.shortLabel)); the State will dismiss the \(charged.title) charge" : "\(law.title) (\(cls.shortLabel))")
                 + ". Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
@@ -515,7 +520,8 @@ enum CalendarCalls {
                 defenseAsk: positions.defenseAsk,
                 options: positions.options,
                 lawID: law.id, priors: priors, activeTerm: active, isFelony: cls.isFelony,
-                lawNote: notes.isEmpty ? nil : notes.joined(separator: " ")))
+                lawNote: notes.filter { !$0.hasPrefix("PJC not allowed") }.isEmpty ? nil : notes.filter { !$0.hasPrefix("PJC not allowed") }.joined(separator: " "),
+                unavailableOptions: [NCClass.A, .B1, .B2, .C, .D, .E].contains(cls) ? [1] : nil))
         }
 
         let others: [CalendarMatter.Kind] = rng.pick([.failureToAppear, .continuance, .bondModification, .capacity], count: 2)

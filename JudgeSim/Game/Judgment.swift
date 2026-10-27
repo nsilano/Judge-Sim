@@ -739,7 +739,10 @@ enum Judgment {
 
     /// The judge may continue prayer for judgment in any case; the law limits it for serious felonies (flagged separately).
     static func pjcAvailable(_ c: CourtCase, _ r: Rulings) -> Bool {
-        !convictedLaws(c, r).isEmpty
+        // Not for a Class A through E felony (G.S. 15A-1331.2), and never for impaired driving (G.S. 20-179).
+        let barred: [NCClass] = [.A, .B1, .B2, .C, .D, .E]
+        let convicted = units(c, r)
+        return !convictedLaws(c, r).isEmpty && !convicted.contains { barred.contains($0.offenseClass) || $0.isDWI }
     }
 
     enum DischargeBasis {

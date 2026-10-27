@@ -282,7 +282,14 @@ struct SentencingStage: View {
                        detail: units.count > 1 ? "One sentence per judgment. Choose a term and a disposition for each." : "Choose a term and a disposition.")
             CollapsibleSection(title: "Form of judgment", icon: "doc.badge.gearshape.fill",
                                summary: session.rulings.special.label, expanded: false) {
-                ForEach(SpecialDisposition.allCases, id: \.self) { option in
+                // Only the forms of judgment the law allows for these convictions.
+                ForEach(SpecialDisposition.allCases.filter { option in
+                    switch option {
+                    case .prayerForJudgment: return session.pjcAvailable
+                    case .conditionalDischarge: return session.conditionalDischargeAvailable
+                    case .none: return true
+                    }
+                }, id: \.self) { option in
                     ChoiceRow(title: option.label, subtitle: formNote(option), selected: session.rulings.special == option) {
                         session.rulings.special = option
                     }

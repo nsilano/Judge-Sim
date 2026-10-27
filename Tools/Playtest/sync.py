@@ -26,6 +26,9 @@ for folder in ("Game", "Models"):
                     if depth == 0: break
                 i += 1
             text = text[:start] + "enum Keychain {\n    static var store: [String: String] = [:]\n    static func write(_ value: String, account: String) { store[account] = value }\n    static func read(_ account: String) -> String? { store[account] }\n    static func delete(_ account: String) { store[account] = nil }\n}" + text[i + 1:]
+        if name == "CaseGenerator.swift":
+            # The harness builds every written case directly to scan its text.
+            text = text.replace("private static func build(", "static func build(").replace("private enum Band {", "enum Band {")
         open(os.path.join(out, name), "w").write(text)
 
 for name in os.listdir(os.path.join(here, "Harness")):

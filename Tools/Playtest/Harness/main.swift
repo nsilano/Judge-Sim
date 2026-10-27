@@ -7,6 +7,127 @@ import Foundation
 //   style: lenient | harsh | mixed (default mixed)
 
 let args = CommandLine.arguments
+
+// MARK: - Scan: build every written case and check all of its text
+
+/// Every string inside a value, found by walking its fields.
+func strings(in value: Any, into out: inout [String], depth: Int = 0) {
+    guard depth < 12 else { return }
+    if let s = value as? String { out.append(s); return }
+    for child in Mirror(reflecting: value).children { strings(in: child.value, into: &out, depth: depth + 1) }
+}
+
+let firstSet = Set(NameBank.firstNames), lastSet = Set(NameBank.lastNames)
+let namePattern = try! NSRegularExpression(pattern: "\\b([A-Z][a-z]+) ([A-Z][a-z']+(?:-[A-Z][a-z]+)?)\\b")
+
+/// Person names ("First Last") a text mentions, by the game's own name banks.
+func names(in text: String) -> [String] {
+    let ns = text as NSString
+    return namePattern.matches(in: text, range: NSRange(location: 0, length: ns.length)).compactMap { m in
+        let first = ns.substring(with: m.range(at: 1)), last = ns.substring(with: m.range(at: 2))
+        return firstSet.contains(first) && lastSet.contains(last) ? "\(first) \(last)" : nil
+    }
+}
+
+/// Testimony and exhibits must agree with the case: nobody is named who isn't part of it, and a victim who died
+/// doesn't take the stand.
+@MainActor func consistency(_ c: CourtCase, template t: CaseTemplate, county: County) {
+    var known = Set<String>([c.defendant.name, c.prosecutor, c.defenseAttorney] + c.witnesses.map(\.name) + [c.victimName].compactMap { $0 })
+    known.formUnion([county.districtAttorney, county.chiefPublicDefender, county.clerk, county.sheriff, county.policeChief])
+    known.formUnion(county.assistantDAs + county.assistantPDs + county.privateCounsel + county.troopers)
+    known.formUnion(county.detectives.map(\.name) + county.officers.map(\.name))
+    known.formUnion(Gazetteer.regulars(for: county).values)
+    known.formUnion(t.extras.values.flatMap { $0 })
+    // The case file itself is the record of who is involved.
+    var fileText = [c.summary] + c.charges.map(\.specification)
+    strings(in: c.background as Any, into: &fileText)
+    strings(in: c.investigation as Any, into: &fileText)
+    fileText += c.evidence.map { $0.title + ". " + $0.detail }
+    for text in fileText { known.formUnion(names(in: text)) }
+    let knownLast = Set(known.compactMap { $0.split(separator: " ").last.map(String.init) })
+    var testimony: [String] = []
+    for w in c.witnesses { strings(in: w, into: &testimony) }
+    for text in testimony {
+        for name in names(in: text) where !known.contains(name) {
+            let last = String(name.split(separator: " ").last ?? "")
+            if !knownLast.contains(last) { flag("\(t.key): \"\(name)\" is named in testimony or an exhibit but isn't part of the case — \"\(text.prefix(110))\"") }
+        }
+    }
+    // Clock times, dates, and dollar amounts in testimony should come from the case file.
+    let file = fileText.joined(separator: " ")
+    func minutes(_ t: String) -> Int? {
+        let parts = t.lowercased().replacingOccurrences(of: ".", with: "").split(whereSeparator: { $0 == ":" || $0 == " " })
+        guard parts.count >= 3, var h = Int(parts[0]), let m = Int(parts[1]) else { return nil }
+        if parts[2].hasPrefix("p") && h != 12 { h += 12 }
+        if parts[2].hasPrefix("a") && h == 12 { h = 0 }
+        return h * 60 + m
+    }
+    func matches(_ pattern: String, _ text: String) -> [String] {
+        guard let re = try? NSRegularExpression(pattern: pattern) else { return [] }
+        let ns = text as NSString
+        return re.matches(in: text, range: NSRange(location: 0, length: ns.length)).map { ns.substring(with: $0.range) }
+    }
+    let timeRE = #"\b\d{1,2}:\d{2} [ap]\.m\."#
+    let fileTimes = matches(timeRE, file).compactMap(minutes)
+    let months = "January|February|March|April|May|June|July|August|September|October|November|December"
+    let fileDates = Set(matches("(\(months)) \\d{1,2}\\b", file))
+    let money = #"\$[\d,]+"#
+    let fileAmounts = matches(money, file).compactMap { Int($0.dropFirst().replacingOccurrences(of: ",", with: "")) }
+    for text in testimony {
+        if !fileTimes.isEmpty {
+            for tm in matches(timeRE, text) {
+                if let m = minutes(tm), !fileTimes.contains(where: { abs($0 - m) <= 120 || abs($0 - m) >= 1320 }) {
+                    flag("\(t.key) [time]: testimony says \(tm), the file's times are \(matches(timeRE, file).prefix(4).joined(separator: ", ")) — \"\(text.prefix(100))\"")
+                }
+            }
+        }
+        if !fileDates.isEmpty {
+            for d in matches("(\(months)) \\d{1,2}\\b", text) where !fileDates.contains(d) {
+                flag("\(t.key) [date]: testimony says \(d), not a date in the file — \"\(text.prefix(100))\"")
+            }
+        }
+        for a in matches(money, text) {
+            guard let v = Int(a.dropFirst().replacingOccurrences(of: ",", with: "")), v >= 500, !fileAmounts.isEmpty else { continue }
+            if !fileAmounts.contains(where: { abs(Double($0 - v)) <= Double(max($0, v)) * 0.15 }) && !fileAmounts.contains(where: { $0 > v * 2 }) {
+                flag("\(t.key) [money]: testimony says \(a), the file's amounts are \(matches(money, file).prefix(4).joined(separator: ", ")) — \"\(text.prefix(100))\"")
+            }
+        }
+    }
+    if Consequences.victimDied(c), let v = c.victimName, c.witnesses.contains(where: { $0.name == v }) {
+        flag("\(t.key): the victim died but \(v) testifies")
+    }
+    if c.witnesses.contains(where: { $0.name == c.defendant.name && $0.isDefendant != true }) {
+        flag("\(t.key): the defendant is listed as an ordinary witness")
+    }
+}
+
+@MainActor func scanAll() {
+    let county = County.generate(seed: 42)
+    var flagged = 0
+    var total = 0
+    var qa = 0
+    let templates = Array(CaseTemplates.byKey.values).sorted { $0.key < $1.key }
+    for t in templates {
+        for seed in [UInt64(7), 99, 1234, 5150] {
+            var rng = SeededRNG(seed: seed)
+            let ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: Date(), docketSequence: 2000, recentTemplateKeys: [])
+            let c = CaseGenerator.build(t, seed: seed, band: .strong, context: ctx, rng: &rng)
+            var texts: [String] = []
+            strings(in: c, into: &texts)
+            total += texts.count
+            consistency(c, template: t, county: county)
+            qa += texts.filter { $0.hasPrefix("\"") }.count
+            for text in texts where text.count > 8 {
+                let before = findings.count
+                checkText(text, where: t.key)
+                if findings.count > before { flagged += 1 }
+            }
+        }
+    }
+    print("Scanned \(templates.count) cases, \(total) text fields (\(qa) quoted answers). \(findings.count) flags.")
+    for f in Set(findings).sorted() { print("- " + f) }
+}
+
 let weeks = args.count > 1 ? Int(args[1]) ?? 8 : 8
 let style = args.count > 2 ? args[2] : "mixed"
 let outPath = args.count > 3 ? args[3] : "playtest.txt"
@@ -31,6 +152,8 @@ nonisolated(unsafe) var game: GameState!
 var seenNews = 0
 var seenNewsKeys = Set<String>()
 var backlog: [String] = []
+var heardKeys = Set<String>()
+var continuedIDs = Set<UUID>()
 var hearingDates: [UUID: Date] = [:]
 
 // MARK: - Trials
@@ -39,6 +162,8 @@ var hearingDates: [UUID: Date] = [:]
     guard let county = game.county else { return }
     let s = CaseSession(courtCase: c, judgeName: game.judgeName ?? "", county: county, resume: resume)
     let d = c.defendant
+    heardKeys.insert(c.templateKey)
+    if resume != nil { log("  (resumed after a continuance)"); continuedIDs.remove(c.id) }
     log("TRIAL \(c.docket) · \(c.caption)")
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
     log("  Defendant: \(d.name), \(d.age), \(d.occupation); priors: \(d.priors.count); \(c.background?.bondStatus ?? "")")
@@ -75,7 +200,18 @@ var hearingDates: [UUID: Date] = [:]
             s.advance()
         }
     }
+    // Now and then the judge stops mid-trial and continues the case, the way a player might.
+    if resume == nil && s.stage == .verdict && rng.chance(0.05) {
+        let to = CourtCalendar.calendar.date(byAdding: .day, value: 21, to: game.currentDate) ?? game.currentDate
+        log("  Continued mid-trial to about \(short(to))")
+        continuedIDs.insert(c.id)
+        game.continueMatter(c.id, to: to, reason: "A witness is unavailable", snapshot: s.snapshot)
+        return
+    }
     if s.stage == .sentencing {
+        // The rarer forms of judgment, where the law allows them.
+        if s.pjcAvailable && rng.chance(0.1) { s.rulings.special = .prayerForJudgment; log("  Form of judgment: PJC") }
+        else if s.conditionalDischargeAvailable && rng.chance(0.15) { s.rulings.special = .conditionalDischarge; log("  Form of judgment: conditional discharge") }
         if s.needsHabitualDecision { s.setHabitual(rng.chance(0.6)) }
         for unit in s.units {
             var choice = Judgment.defaultChoice(for: unit)
@@ -149,7 +285,8 @@ var hearingDates: [UUID: Date] = [:]
     var choices: [UUID: Int] = [:]
     var dates: [UUID: Date] = [:]
     for m in call.matters {
-        let pick = m.options.isEmpty ? 0 : rng.int(0...(m.options.count - 1))
+        let allowed = m.options.indices.filter { !(m.unavailableOptions ?? []).contains($0) }
+        let pick = allowed.isEmpty ? 0 : rng.pick(allowed)
         choices[m.id] = pick
         log("  \(m.kind.label) · \(m.docket) · \(m.personName): \(m.summary)")
         checkText(m.summary + " " + m.stateAsk + " " + m.defenseAsk, where: "calendar \(m.docket)")
@@ -253,6 +390,11 @@ func checkText(_ text: String, where place: String) {
     }
 }
 
+if args.count > 1 && args[1] == "scan" {
+    MainActor.assumeIsolated { scanAll() }
+    exit(0)
+}
+
 // MARK: - The career
 
 @MainActor func runCareer() {
@@ -281,7 +423,28 @@ func checkText(_ text: String, where place: String) {
             let furthest = game.scheduled.map(\.date).max().map { days(game.currentDate, $0) } ?? 0
             backlog.append("\(short(game.currentDate)): waiting \(game.awaiting.count), on calendars \(game.scheduled.count), furthest setting \(furthest) days out")
         }
+        // Every quarter the judge books a week off; now and then a case is reassigned to clear the list.
+        if guardDays % 90 == 45 {
+            let start = CourtCalendar.calendar.date(byAdding: .day, value: 14, to: game.currentDate) ?? game.currentDate
+            let end = CourtCalendar.calendar.date(byAdding: .day, value: 4, to: start) ?? start
+            game.bookTimeOff(from: start, to: end)
+            log("TIME OFF booked \(short(start))–\(short(end))")
+        }
+        if guardDays % 7 == 3, rng.chance(0.3), let first = game.awaiting.first {
+            log("REASSIGNED \(first.courtCase?.docket ?? "?") to another judge")
+            game.reassign(awaitingID: first.id)
+        }
         game.acceptSuggestions(game.suggestedDates())
+        // Close and reopen the app every four weeks: the saved game must come back exactly as it was.
+        if guardDays % 28 == 0 {
+            func print(_ g: GameState) -> String {
+                "date \(short(g.currentDate)), people \(g.people.count), awaiting \(g.awaiting.count), scheduled \(g.scheduled.count), bond \(g.bondQueue.count), investigations \(g.investigations.count), history \(g.history.count), news \(g.news.count), orders \(g.arrestOrders.count), today \(g.today?.entries.count ?? -1)"
+            }
+            let before = print(game)
+            game = GameState()
+            let after = print(game)
+            if before != after { flag("Reload changed the game: before [\(before)] after [\(after)]") }
+        }
         game.adjourn()
         checkWorld()
     }
@@ -290,6 +453,9 @@ func checkText(_ text: String, where place: String) {
     log("")
     log("END \(short(game.currentDate)) · cases heard \(game.casesHeard) · on probation \(onProbation) · awaiting \(game.awaiting.count) · scheduled \(game.scheduled.count)")
     log("")
+    let stories = Set(StoryCases.all.map(\.key))
+    log("WRITTEN CASES HEARD: \(heardKeys.intersection(stories).count) of \(stories.count)")
+    if !continuedIDs.isEmpty { flag("\(continuedIDs.count) trial(s) continued mid-trial never came back") }
     log("BACKLOG BY MONTH")
     for b in backlog { log("  \(b)") }
     log("FINDINGS (\(findings.count))")
