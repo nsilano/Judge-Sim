@@ -1578,7 +1578,11 @@ final class GameState: ObservableObject {
         // New indictments, when the court's docket has room for them.
         // Cases keep coming even when the court is full; a backed-up court just has more of them waiting.
         let underTarget = trialsInPipeline < pipelineTarget
-        if (underTarget && rng.chance(0.75 * max(0.5, caseloadRamp))) || (!underTarget && caseloadPressure > 1.1 && rng.chance(0.2)) {
+        // Over target, arrivals slow but don't stop, and they pick up as the county's pressure grows: a few extra
+        // cases a week by the end of the first year, enough that the list outruns the calendar.
+        let overflow = caseloadPressure > 1.05 ? 0.15 + 0.5 * (caseloadPressure - 1) : 0
+        if trialsInPipeline < pipelineTarget * 4,
+           (underTarget && rng.chance(0.75 * max(0.5, caseloadRamp))) || (!underTarget && rng.chance(overflow)) {
             let murderWaiting = (awaiting.map(\.entry) + scheduled.map(\.entry)).contains { entry in
                 if case .trial(let c) = entry.matter { return Self.isMurder(c) } else { return false }
             }
