@@ -201,7 +201,7 @@ var hearingDates: [UUID: Date] = [:]
         }
     }
     // Now and then the judge stops mid-trial and continues the case, the way a player might.
-    if resume == nil && s.stage == .verdict && rng.chance(0.05) {
+    if resume == nil && s.stage == .sentencing && rng.chance(0.06) {
         let to = CourtCalendar.calendar.date(byAdding: .day, value: 21, to: game.currentDate) ?? game.currentDate
         log("  Continued mid-trial to about \(short(to))")
         continuedIDs.insert(c.id)
