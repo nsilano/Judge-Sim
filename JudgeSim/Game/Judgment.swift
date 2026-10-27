@@ -1974,7 +1974,7 @@ enum Judgment {
             }
         }
         let reactions = makeReactions(c, county: county, convicted: convicted, dismissed: dismissed, active: goingIn, timeServed: timeServed,
-                                      years: life || custodyMonths >= 12, plea: plea ? r.pleaKind : nil, severity: severity, sentence: newsSentence, rng: &rng)
+                                      years: life || custodyMonths >= 12, onProbation: newProbation != nil, plea: plea ? r.pleaKind : nil, severity: severity, sentence: newsSentence, rng: &rng)
         var news = makeNews(c, county: county, judgeLast: judgeLast, date: date, convicted: convicted, dismissed: dismissed,
                             plea: plea ? r.pleaKind : nil, pleaLaw: plea ? sentencingUnits.first?.law : nil,
                             sentence: newsSentence, active: goingIn, timeServed: timeServed, reactions: reactions,
@@ -2266,7 +2266,7 @@ enum Judgment {
     // MARK: Press
 
     private static func makeReactions(_ c: CourtCase, county: County, convicted: Bool, dismissed: Bool, active: Bool,
-                                      timeServed: Bool = false, years: Bool = true, plea: PleaKind?, severity: Int, sentence: String, rng: inout SeededRNG) -> [String] {
+                                      timeServed: Bool = false, years: Bool = true, onProbation: Bool = true, plea: PleaKind?, severity: Int, sentence: String, rng: inout SeededRNG) -> [String] {
         let defenseName = c.defenseAttorney.components(separatedBy: ",").first ?? c.defenseAttorney
         let ada = c.prosecutor
         let da = rng.chance(c.mediaAttention >= 2 ? 0.7 : 0.3) ? "District Attorney \(county.districtAttorney)" : ada
@@ -2404,6 +2404,10 @@ enum Judgment {
                 line = rng.pick([died ? "\"Nothing brings back what we lost. But today someone was held responsible.\"" : "\"Today someone was held responsible. That matters.\"",
                                  "\"It's something. We can start to move on.\"",
                                  severity < 0 ? "\"I thought it would be more. But at least it's over.\"" : "\"The judge took it seriously. That's all we asked.\""])
+            case (true, false, _) where timeServed && !onProbation:
+                line = rng.pick(["\"\(dl) already sat in jail for it. I guess that's the sentence.\"",
+                                 "\"At least it's on the record now. If it happens again, everyone will know.\"",
+                                 "\"We just want to be left alone now.\""])
             case (true, false, _):
                 line = rng.pick(["\"We'll be watching to make sure every condition is followed.\"",
                                  "\"At least there's a record now. If it happens again, everyone will know.\"",

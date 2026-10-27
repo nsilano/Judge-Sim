@@ -363,7 +363,7 @@ enum ViolationHearings {
         let explanation = willful
             ? rng.pick(["My client admits the violations. \(dl) got off track and is asking for one more chance.",
                         "My client doesn't contest the report, Judge, but asks the court to consider what's been going on.",
-                        "\(dl) knows this is on \(dl), Judge. We're asking for a sanction short of prison.",
+                        "My client knows nobody else is to blame for this, Judge. We're asking for a sanction short of prison.",
                         "My client admits it and has already enrolled in a program without being told to. We'd ask the court to let that work."])
             : rng.pick(["These violations weren't willful, Judge. \(circumstances)",
                         "My client has been trying. \(circumstances) That's not the same as defiance.",

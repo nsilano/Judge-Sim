@@ -315,7 +315,7 @@ final class GameState: ObservableObject {
             reputation.insert(survey, at: 0)
         }
         post(NewsItem(date: next, kind: .community, headline: "Bar survey: lawyers rate Judge \(last)",
-                      body: "In the Hollis County Bar's annual survey, lawyers who appeared before Judge \(last) gave an overall rating of \(survey.overall) out of 100. Prosecutors: \(survey.prosecutors). Defense lawyers: \(survey.defenseBar). A newspaper poll put public approval at \(survey.publicApproval) percent. " + survey.comments.joined(separator: " "),
+                      body: "In the Hollis County Bar's annual survey, lawyers who appeared before Judge \(last) rated the judge's legal soundness \(survey.overall) out of 100. On fairness to their side, prosecutors gave \(survey.prosecutors) and defense lawyers \(survey.defenseBar). A newspaper poll put public approval at \(survey.publicApproval) percent. " + survey.comments.joined(separator: " "),
                       prominence: 2))
 
         // The year in review.
@@ -763,7 +763,7 @@ final class GameState: ObservableObject {
             date: date, county: county, judge: lastName(judgeName), awaiting: awaiting.count,
             jailedWaiting: awaiting.filter { $0.courtCase?.background?.isJailed == true }.count,
             oldestWait: awaiting.map { cal.dateComponents([.day], from: $0.since, to: date).day ?? 0 }.max() ?? 0,
-            trialsHeard: trialsHeard, leaveLeft: leaveLeft, recentHeadlines: Set(news.prefix(150).map(\.headline)))
+            trialsHeard: trialsHeard, leaveLeft: leaveLeft, recentHeadlines: Set(news.prefix(700).map(\.headline)))
         for item in DailyNews.items(snapshot, happenings: happenings, rng: &rng) { post(item) }
         happenings = []
     }
@@ -1745,8 +1745,8 @@ final class GameState: ObservableObject {
         }
         if times >= 2, let victim = c.victimName, rng.chance(0.6) {
             post(NewsItem(date: c.sessionDate, kind: .community,
-                          headline: "Family of \(victim) frustrated as \(c.defendant.lastName) case is delayed again",
-                          body: "The case against \(c.defendant.name) in Hollis County Superior Court has been continued \(times) times. \(victim)'s family told reporters they have taken days off work for every setting. \"We just want it over,\" a relative said.",
+                          headline: "After \(times) delays, \(c.defendant.lastName) case is finally called",
+                          body: "The case against \(c.defendant.name) in Hollis County Superior Court had been continued \(times) times before it was called this week. \(victim)'s family told reporters they took days off work for every setting. \"We just want it over,\" a relative said.",
                           docket: c.docket, prominence: 1))
             notes.append("\(victim)'s family has written to the court about the delays.")
         }
@@ -1853,7 +1853,12 @@ final class GameState: ObservableObject {
                     issueArrestOrder(for: c, issued: call.date, servedOn: arrested)
                 case 1:
                     if rng.chance(0.6) {
-                        thisWeek(c, note: "Appeared at the afternoon session after missing the morning call; tried this week.")
+                        var appeared = c
+                        if var bg = appeared.background {
+                            bg.bondStatus = "Out on bond; missed the morning calendar call on \(heard) but appeared that afternoon."
+                            appeared.background = bg
+                        }
+                        thisWeek(appeared, note: "Appeared at the afternoon session after missing the morning call; tried this week.")
                     } else {
                         var held = c
                         if var bg = held.background {

@@ -78,7 +78,7 @@ enum NewsDesk {
     static func lede(_ f: VerdictFacts, convicted: Bool, rng: inout SeededRNG) -> String {
         let place = f.place.map { " in \($0)" } ?? ""
         let counts = f.countsTotal > 1
-            ? (f.countsConvicted == f.countsTotal ? " on all \(f.countsTotal) counts" : " on \(f.countsConvicted) of \(f.countsTotal) counts")
+            ? (f.countsConvicted == f.countsTotal ? (f.countsTotal == 2 ? " on both counts" : " on all \(f.countsTotal) counts") : " on \(f.countsConvicted) of \(f.countsTotal) counts")
             : ""
         if convicted {
             let sentence = f.sentence.isEmpty ? "" : ", and imposed \(f.sentence)"

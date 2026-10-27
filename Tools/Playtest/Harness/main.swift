@@ -123,6 +123,9 @@ var hearingDates: [UUID: Date] = [:]
        days(start, h.date) < 60, !h.newCriminalConduct {
         flag("\(h.personName) (\(h.probation.docket)): violation hearing \(days(start, h.date)) days after probation began")
     }
+    if let person = game.person(h.personID), person.status != .probation, person.postRelease == nil {
+        flag("\(h.personName): violation hearing, but the person's status is \(person.status)")
+    }
     let s = HearingSession(hearing: h, judgeName: game.judgeName ?? "", county: county)
     s.rulings.finding = rng.chance(0.75) ? .established : (rng.chance(0.5) ? .excused : .notProven)
     var decisions: [HearingDecision] = [.continueAsIs, .modify, .quickDip, .crv]
@@ -224,6 +227,12 @@ func checkText(_ text: String, where place: String) {
                 flag("\(order.docket): order for arrest not yet served, but the case file says the defendant was arrested")
             }
         }
+    }
+    for p in game.people where p.status == .probation {
+        if let term = p.probation, days(term.ends, now) > 7 {
+            flag("\(p.name): still on probation \(days(term.ends, now)) days after it was due to end (\(term.docket))")
+        }
+        if p.probation == nil { flag("\(p.name): status is probation but no probation term on file") }
     }
     for p in game.people where p.status == .incarcerated {
         if let release = p.releaseDate, days(release, now) > 3 {
