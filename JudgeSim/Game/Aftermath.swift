@@ -110,11 +110,8 @@ enum Aftermath {
         let violent = [LawCategory.violent, .family, .robbery].contains(c.category)
         if (trigger == .freed && violent) || (trigger == .probation && violent && c.victimName != nil) || c.mediaAttention >= 3 {
             let when = later(5...18)
-            out.append(PendingEvent(due: when, news: NewsItem(date: when, kind: .community,
-                                                              headline: rng.pick(["Letters: readers weigh in on the \(d.lastName) case",
-                                                                                  "Editorial: what the \(d.lastName) decision tells us",
-                                                                                  "Courthouse talk turns to Judge \(judgeLast)'s ruling"]),
-                                                              body: reaction(c, trigger: trigger, judgeLast: judgeLast, rng: &rng),
+            let piece = reaction(c, trigger: trigger, judgeLast: judgeLast, rng: &rng)
+            out.append(PendingEvent(due: when, news: NewsItem(date: when, kind: .community, headline: piece.headline, body: piece.body,
                                                               docket: c.docket, prominence: 1)))
         }
         // After a dismissal there was no verdict; every line the paper runs says so.
@@ -178,21 +175,41 @@ enum Aftermath {
     }
 
     /// What people said after a judgment that stirred them up.
-    private static func reaction(_ c: CourtCase, trigger: Trigger, judgeLast: String, rng: inout SeededRNG) -> String {
+    /// The talk after a judgment that stirred people up: each headline goes with its own story, and the story names the
+    /// case, the town, and the people in it.
+    private static func reaction(_ c: CourtCase, trigger: Trigger, judgeLast: String, rng: inout SeededRNG) -> (headline: String, body: String) {
         let d = c.defendant
+        let town = c.investigation?.facts?.town ?? "the county"
+        let offense = c.charges.first?.law.title.lowercased() ?? "the charges"
+        let victim = c.victimName
         switch trigger {
         case .freed, .cleared:
-            return rng.pick(["Readers wrote in large numbers this week about Judge \(judgeLast)'s verdict for \(d.name). \"Not guilty doesn't mean innocent,\" one wrote. Another: \"The State didn't prove it. That's the whole job.\"",
-                             "The District Attorney's office said it respects the verdict but \"disagrees with it profoundly.\" The public defender's office called it \"the presumption of innocence working as intended.\"",
-                             "At the courthouse coffee counter, lawyers on both sides agreed on one thing: Judge \(judgeLast) will hear about the \(d.lastName) case at election time."])
+            return rng.pick([
+                ("Letters: readers weigh in on the \(d.lastName) case",
+                 "Readers wrote in large numbers this week about Judge \(judgeLast)'s verdict for \(d.name). \"Not guilty doesn't mean innocent,\" a reader from \(town) wrote. Another: \"The State didn't prove it. That's the whole job.\""),
+                ("DA's office \u{2018}disagrees profoundly\u{2019} with \(d.lastName) verdict",
+                 "The District Attorney's office said it respects Judge \(judgeLast)'s verdict acquitting \(d.name) of \(offense) but \"disagrees with it profoundly.\" The public defender's office called it \"the presumption of innocence working as intended.\""),
+                ("In \(town), the \(d.lastName) verdict is all anyone talks about",
+                 "At the diner counter and after Sunday services, people in \(town) were still arguing about \(d.name)'s acquittal this week."
+                    + (victim.map { " \"Somebody hurt \($0),\" one man said. \"That didn't change because of a verdict.\"" } ?? " \"I'd want the same rules if it was me,\" one woman said."))
+            ])
         case .probation:
-            return rng.pick(["Letters this week split over the probationary sentence for \(d.name). \"Prison isn't the only accountability,\" one reader wrote. \"Tell that to the victim,\" wrote another.",
-                             "A victims' rights group said it will watch \(d.name)'s probation closely and asked Judge \(judgeLast) to explain the sentence. The judge, as judges do, declined to comment."])
+            return rng.pick([
+                ("Letters: readers split over probation for \(d.name)",
+                 "Letters this week split over Judge \(judgeLast)'s probationary sentence for \(d.name) on \(offense). \"Prison isn't the only accountability,\" a reader from \(town) wrote. \"Tell that to the victim,\" wrote another."),
+                ("Victims' group asks Judge \(judgeLast) to explain \(d.lastName) sentence",
+                 "A victims' rights group said it will watch \(d.name)'s probation closely and asked Judge \(judgeLast) to explain the sentence. The judge, as judges do, declined to comment.")
+            ])
         case .prison:
-            return rng.pick(["Most letters this week supported the sentence in the \(d.lastName) case. A few asked whether the years would make anyone safer.",
-                             "\(d.name)'s family spoke at a church gathering this week. \"We're not saying no consequence,\" a relative said. \"We're saying this one is too long.\""])
+            return rng.pick([
+                ("Letters: most readers back the \(d.lastName) sentence",
+                 "Most letters this week supported the prison sentence for \(d.name) on \(offense). A few, mostly from \(town), asked whether the years would make anyone safer."),
+                ("\(d.lastName) family: \u{2018}This one is too long\u{2019}",
+                 "\(d.name)'s family spoke at a church gathering in \(town) this week. \"We're not saying no consequence,\" a relative said. \"We're saying this one is too long.\"")
+            ])
         case .wronglyConvicted:
-            return "Some readers questioned the evidence that convicted \(d.name). \"I sat through two days of it,\" one wrote. \"I'm not sure I'd have been sure.\""
+            return ("Readers question the evidence against \(d.name)",
+                    "Some readers questioned the evidence that convicted \(d.name) of \(offense). \"I sat through two days of it,\" a reader from \(town) wrote. \"I'm not sure I'd have been sure.\"")
         }
     }
 }

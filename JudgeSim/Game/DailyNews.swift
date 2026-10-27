@@ -42,7 +42,9 @@ enum DailyNews {
         for happening in happenings.shuffled(using: &rng) where out.count < 2 {
             switch happening {
             case .trialDateSet(let caption, let defendant, let date, let jailed, let prominent):
-                guard prominent || jailed || rng.chance(0.25) else { continue }
+                // By the time the paper is out, a trial set for that day or the day before has already been called.
+                guard CourtCalendar.calendar.startOfDay(for: date) > CourtCalendar.calendar.startOfDay(for: s.date),
+                      prominent || jailed || rng.chance(0.25) else { continue }
                 add("Trial date set in \(caption)",
                     "\(judge) set \(defendant)'s trial for \(SentenceFormat.shortDate(date))."
                         + (jailed ? " \(defendant) remains in the \(c.name) Detention Center." : "")
@@ -97,11 +99,9 @@ enum DailyNews {
                     "Pleas, bond hearings and motions filled \(judge)'s administrative session. " +
                     rng.pick(["The hallway was standing room only by 9.", "One defendant brought a grandmother, a pastor and a former teacher to vouch for him.", "Court ran through lunch."]),
                     section: "Courts")
-            case .hearingHeld(let name, let revoked):
-                guard rng.chance(0.4) else { continue }
-                add(revoked ? "Probation revoked for \(name)" : "\(name) stays on probation",
-                    revoked ? "\(judge) activated \(name)'s suspended sentence after a violation hearing." : "\(judge) continued \(name) on probation after a violation hearing, with new conditions.",
-                    section: "Courts")
+            case .hearingHeld:
+                // The hearing's own story already ran the day it was decided.
+                continue
             case .perjuryReferral(let name):
                 add("\(judge) sends witness's testimony to DA",
                     "\(judge) referred testimony by \(name) to the district attorney for possible perjury charges. Judges rarely do it; lawyers say it's a warning to every witness who takes the stand.",
@@ -165,10 +165,13 @@ enum DailyNews {
             ("Sheriff \(c.sheriff) swears in nine new deputies", "The class includes two former teachers and a retired Marine. They start on patrol next week.", "Community"),
             ("Cow on Route 17 slows morning traffic", "A deputy and a farmer walked the cow home after twenty minutes. No one was hurt, though the cow did not cooperate.", "Community"),
             ("Alligator spotted in \(town) retention pond", "Wildlife officers say to leave it alone. Neighbors have named it.", "Community"),
-            ("\(town) High wins on a last-second field goal", "The kicker had never made one from that far. The crowd rushed the field; a deputy said nobody got arrested, which counts as a good night.", "Sports"),
             ("Library hosts free legal-aid clinic", "Volunteer lawyers helped 40 people with expunctions, custody papers and traffic tickets.", "Community"),
             ("\(c.policeDepartment) launches coffee-with-a-cop", "Officers will be at a different diner each week. The first one ran out of biscuits by 8.", "Community"),
         ]
+
+        if (9...11).contains(month) {
+            pool.append(("\(town) High wins on a last-second field goal", "The kicker had never made one from that far. The crowd rushed the field; a deputy said nobody got arrested, which counts as a good night.", "Sports"))
+        }
 
         // The county's own places, the same ones the cases happen at.
         if let diner = Gazetteer.place(.restaurant, rng: &rng), let church = Gazetteer.place(.church, rng: &rng),
@@ -179,12 +182,17 @@ enum DailyNews {
                 ("\(diner.name) marks 30 years on \(diner.street)", "The owners served the first plate at the original prices for an hour. The line went around the block in \(diner.town).", "Community"),
                 ("Fish fry at \(church.name) sells out by noon", "Volunteers fried 400 pounds of whiting. Proceeds go to the church's heating-assistance fund in \(church.town).", "Community"),
                 ("\(plant.name) adds a weekend shift", "The \(plant.town) employer says it will hire about 60 people. Applications are taken at the gate on \(plant.street).", "Business"),
-                ("Splash pad reopens at \(park.name)", "Repairs took most of the summer. Parents in \(park.town) say it was worth the wait; the kids did not comment.", "Community"),
                 ("\(bar.name) hosts a fundraiser for a sick bartender", "Regulars raised $7,400 in one night on \(bar.street) in \(bar.town). The owner matched the tips.", "Community"),
-                ("Kayak rentals return to \(landing.name)", "The rental stand is open weekends through October. Wildlife officers remind paddlers that life jackets are the law for children under 13.", "Community"),
                 ("\(school.name) robotics team heads to state", "The team built its robot in a borrowed shop class. Local businesses in \(school.town) covered the bus.", "Community"),
                 ("\(grocery.name) expands its produce section", "The store on \(grocery.street) will now carry vegetables from three \(grocery.town)-area farms.", "Business"),
             ]
+            // Only in their season.
+            if (5...8).contains(month) {
+                pool.append(("Splash pad reopens at \(park.name)", "Repairs took most of the spring. Parents in \(park.town) say it was worth the wait; the kids did not comment.", "Community"))
+            }
+            if (4...6).contains(month) {
+                pool.append(("Kayak rentals return to \(landing.name)", "The rental stand is open weekends through October. Wildlife officers remind paddlers that life jackets are the law for children under 13.", "Community"))
+            }
         }
 
         // Know your court: short explainers.
@@ -200,7 +208,10 @@ enum DailyNews {
         if s.leaveLeft <= 3 {
             pool.append(("Hardworking or overworked?", "Court watchers note \(s.judge.isEmpty ? "the judge" : "Judge " + s.judge) has used nearly all of this year's leave. \"It's a heavy docket,\" one lawyer said.", "Courts"))
         }
-        let fresh = pool.filter { !s.recentHeadlines.contains($0.0) }
+        // The same story with a different town or place is still the same story: compare the words after the name.
+        func gist(_ headline: String) -> String { headline.split(separator: " ").suffix(3).joined(separator: " ") }
+        let recentGists = Set(s.recentHeadlines.map(gist))
+        let fresh = pool.filter { !s.recentHeadlines.contains($0.0) && !recentGists.contains(gist($0.0)) }
         return fresh.isEmpty ? nil : rng.pick(fresh)
     }
 }

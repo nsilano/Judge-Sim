@@ -71,6 +71,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var amountOptions: [Int]? = nil
     var amountRange: ClosedRange<Int>? = nil
     var suggestedAmount: Int? = nil
+    /// Options the law doesn't allow here (a PJC on a Class A through E felony), kept out of the list.
+    var unavailableOptions: Set<Int>? = nil
 
     /// The option text with the amount the judge chose filled in.
     func optionText(_ choice: Int, amount: Int?) -> String {
@@ -100,6 +102,9 @@ struct CalendarCall: Identifiable, Codable, Hashable {
     var id = UUID()
     var date: Date
     var matters: [CalendarMatter]
+    /// First appearances: bond hearings for people held since their arrest, apart from the week's calendar call.
+    var bondSession: Bool? = nil
+    var isBondSession: Bool { bondSession == true }
 }
 
 enum CalendarCalls {
@@ -244,7 +249,9 @@ enum CalendarCalls {
         let law = c.charges.first?.law
         func swap(_ text: String) -> String {
             var out = text.replacingOccurrences(of: oldName, with: c.defendant.name)
-            if let oldLaw = m.lawID.map({ LawLibrary.law($0).title }), let law { out = out.replacingOccurrences(of: oldLaw, with: law.title) }
+            if let oldLaw = m.lawID.map({ LawLibrary.law($0).title }), let law, oldLaw != law.title, !out.contains(law.title) {
+                out = out.replacingOccurrences(of: oldLaw, with: law.title)
+            }
             return out
         }
         bound.personID = c.defendant.personID
@@ -268,7 +275,10 @@ enum CalendarCalls {
             bound.priors = c.defendant.priors
             bound.isFelony = cls.isFelony
             bound.activeTerm = terms.active
-            bound.lawNote = terms.notes.isEmpty ? nil : terms.notes.joined(separator: " ")
+            bound.lawNote = terms.notes.filter { !$0.hasPrefix("PJC not allowed") }.joined(separator: " ")
+            if bound.lawNote?.isEmpty == true { bound.lawNote = nil }
+            // Option 1 is the prayer for judgment; it isn't offered where the law bars it.
+            if [NCClass.A, .B1, .B2, .C, .D, .E].contains(cls) { bound.unavailableOptions = [1] }
             bound.summary = "\(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation.lowercasedPhrase.withIndefiniteArticle), offers to plead guilty to "
                 + (reduced ? "the reduced charge of \(law.title) (\(cls.shortLabel)); the State will dismiss the \(charged.title) charge" : "\(law.title) (\(cls.shortLabel))")
                 + ". Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
@@ -281,8 +291,13 @@ enum CalendarCalls {
         } else {
             bound.summary = m.summary.replacingOccurrences(of: oldName, with: c.defendant.name)
             if let law {
+                // Only the placeholder charge as a whole ("on Felony Larceny." or "on Felony Larceny,"), never as the start of a
+                // longer title, or "Assault with a Deadly Weapon" turns into a doubled name.
                 for id in ["felonyLarceny", "pwisd", "awdw", "feloniousBE", "fleeing", "embezzlement"] {
-                    bound.summary = bound.summary.replacingOccurrences(of: " on \(LawLibrary.law(id).title)", with: " on \(law.title)")
+                    let old = LawLibrary.law(id).title
+                    for end in [".", ",", ";"] {
+                        bound.summary = bound.summary.replacingOccurrences(of: " on \(old)\(end)", with: " on \(law.title)\(end)")
+                    }
                 }
             }
             bound.stateAsk = swap(m.stateAsk)
@@ -425,7 +440,9 @@ enum CalendarCalls {
         return CalendarMatter(kind: .arraignment, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
                               summary: "\(d.name) is arraigned on \(counts) count\(counts == 1 ? "" : "s"), led by \(c.charges.first?.law.title.lowercased() ?? "the indictment"), and pleads not guilty. \(jailed ? "\(d.lastName) is in custody." : "\(d.lastName) is out on bond.") Set the trial date.",
-                              stateAsk: "The State will be ready in about five weeks; the lab work is back.",
+                              stateAsk: c.evidence.contains { $0.kind == .forensic && $0.side == .prosecution }
+                                ? "The State will be ready in about five weeks; the lab work is back."
+                                : "The State will be ready in about five weeks; discovery has been turned over.",
                               defenseAsk: counts > 2 ? "With this many counts we need time for discovery. Ten weeks." : "We'd like five weeks to review discovery.",
                               options: ["Set the trial date now", "Put it on the waiting list; set the date later"],
                               pendingCase: c)
@@ -503,7 +520,8 @@ enum CalendarCalls {
                 defenseAsk: positions.defenseAsk,
                 options: positions.options,
                 lawID: law.id, priors: priors, activeTerm: active, isFelony: cls.isFelony,
-                lawNote: notes.isEmpty ? nil : notes.joined(separator: " ")))
+                lawNote: notes.filter { !$0.hasPrefix("PJC not allowed") }.isEmpty ? nil : notes.filter { !$0.hasPrefix("PJC not allowed") }.joined(separator: " "),
+                unavailableOptions: [NCClass.A, .B1, .B2, .C, .D, .E].contains(cls) ? [1] : nil))
         }
 
         let others: [CalendarMatter.Kind] = rng.pick([.failureToAppear, .continuance, .bondModification, .capacity], count: 2)
@@ -579,6 +597,7 @@ enum CalendarCalls {
         let probationers = people.filter { $0.status == .probation && $0.probation != nil && !excluding.contains($0.id) }
         let steady = probationers.filter { person in
             guard let term = person.probation, (term.violationRisk ?? 0.2) < 0.25,
+                  !(person.violations ?? []).contains(where: { $0.docket == term.docket }),
                   let start = ViolationHearings.probationStart(person, term) else { return false }
             let halfway = start.addingTimeInterval(term.ends.timeIntervalSince(start) / 2)
             return halfway <= date
@@ -606,7 +625,19 @@ enum CalendarCalls {
                           "Deny: probation continues as ordered"],
                 owesMoney: owes))
         }
-        if let person = probationers.isEmpty ? nil : rng.pick(probationers), let term = person.probation, rng.chance(0.6),
+        // An admission comes from someone who has had time to slip, hasn't just been before the court, and, more often
+        // than not, has a record: first offenders mostly keep their conditions.
+        let cal = CourtCalendar.calendar
+        let settled = cal.date(byAdding: .day, value: -60, to: date) ?? date
+        let recent = cal.date(byAdding: .day, value: -45, to: date) ?? date
+        let slipping = probationers.filter { person in
+            guard let term = person.probation, (ViolationHearings.probationStart(person, term) ?? .distantPast) < settled,
+                  (person.lastReleased ?? .distantPast) < settled,
+                  (person.appearances.last?.date ?? .distantPast) < recent else { return false }
+            let others = person.priors.filter { $0.docket == nil || $0.docket != term.docket }.count
+            return rng.chance(others == 0 ? 0.25 : (others >= 3 ? 1 : 0.7))
+        }
+        if let person = slipping.isEmpty ? nil : rng.pick(slipping), let term = person.probation, rng.chance(0.6),
            !matters.contains(where: { $0.personID == person.id }) {
             let supervised = term.supervised ?? true
             let crv = ViolationHearings.crvDays(term)
@@ -616,8 +647,8 @@ enum CalendarCalls {
                 summary: "\(person.name) admits " + pvAdmissionConduct(supervised: supervised) + " while on probation in \(term.docket).",
                 stateAsk: "The State asks for a three-day quick dip.",
                 defenseAsk: "My client admits it and is back on track. We ask the court to continue probation.",
-                options: ["Continue probation on the same terms", "Modify: add substance abuse treatment", "Order a three-day quick dip",
-                          crv > 0 ? "Order a \(crv)-day CRV" : "Order a CRV (no suspended time remains)"]))
+                options: ["Continue probation on the same terms", "Modify: add substance abuse treatment", "Order a three-day quick dip"]
+                    + (crv > 0 ? ["Order a \(crv)-day CRV"] : [])))
         }
         return CalendarCall(date: date, matters: matters)
     }

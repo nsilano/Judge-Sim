@@ -202,9 +202,9 @@ enum CaseGenerator {
         let currentYear = Calendar.current.component(.year, from: context.date)
 
         var used = Set<String>()
-        let castNames = [county.districtAttorney, county.chiefPublicDefender, county.clerk, county.sheriff, county.policeChief]
-            + county.assistantDAs + county.assistantPDs + county.privateCounsel
-            + county.detectives.map(\.name) + county.officers.map(\.name) + county.troopers
+        let castNames: [String] = [[county.districtAttorney, county.chiefPublicDefender, county.clerk, county.sheriff, county.policeChief],
+                                   county.assistantDAs, county.assistantPDs, county.privateCounsel,
+                                   county.detectives.map(\.name), county.officers.map(\.name), county.troopers].flatMap { $0 }
         for name in castNames {
             used.insert(name)
             used.insert(lastName(name))
@@ -291,10 +291,10 @@ enum CaseGenerator {
         let sheriffs = storyText.contains("deput") || storyText.contains("sheriff")
         let sheriffDetectives = county.detectives.filter { $0.agency.contains("Sheriff") }
         let sheriffOfficers = county.officers.filter { $0.agency.contains("Sheriff") }
-        let detective = setting == .road && !sheriffs
+        var detective = setting == .road && !sheriffs
             ? CastMember(name: trooperName, title: rng.pick(["Trooper", "Master Trooper", "Sergeant"]), agency: "N.C. State Highway Patrol")
             : rng.pick(sheriffs && !sheriffDetectives.isEmpty ? sheriffDetectives : county.detectives)
-        let officer = setting == .road && !sheriffs && rng.chance(0.5)
+        var officer = setting == .road && !sheriffs && rng.chance(0.5)
             ? CastMember(name: NameBank.person(using: &rng, excluding: &used), title: "Trooper", agency: "N.C. State Highway Patrol")
             : rng.pick(sheriffs && !sheriffOfficers.isEmpty ? sheriffOfficers : county.officers)
         // The day it happened, fixed once so every report, witness, and exhibit agrees.
@@ -360,6 +360,17 @@ enum CaseGenerator {
         if let known = sites.filter({ t.extras[$0] != nil }).compactMap({ values[$0].flatMap(Gazetteer.place(named:)) }).first {
             values["HOOD"] = known.town
             values["STREET"] = known.street
+        }
+        // City police work inside the city; anywhere else in the county, it's the Sheriff's Office.
+        if (values["HOOD"] ?? hood) != county.seat {
+            if detective.agency.contains("Police"), !sheriffDetectives.isEmpty {
+                detective = rng.pick(sheriffDetectives)
+                values["DET"] = detective.display
+            }
+            if officer.agency.contains("Police"), !sheriffOfficers.isEmpty {
+                officer = rng.pick(sheriffOfficers)
+                values["OFF"] = officer.display
+            }
         }
         // Real places in the case's own town for {PLACE.BAR}, {PLACE.GASSTATION} and the rest.
         values.merge(Gazetteer.tokens(town: values["HOOD"] ?? hood, rng: &rng)) { a, _ in a }
@@ -534,8 +545,9 @@ enum CaseGenerator {
             }
             profiledDefendant.profile = profile
         }
-        let factText = (t.summaries.map { fill($0) } + charges.map(\.specification) + evidence.map { $0.title + ". " + $0.detail }
-                        + witnesses.flatMap { $0.direct + $0.cross }).joined(separator: " ")
+        let factParts: [[String]] = [t.summaries.map { fill($0) }, charges.map(\.specification),
+                                     evidence.map { $0.title + ". " + $0.detail }, witnesses.flatMap { $0.direct + $0.cross }]
+        let factText = factParts.flatMap { $0 }.joined(separator: " ")
         let facts = CaseFacts(key: t.key, category: t.category, hasVictim: t.hasVictim, text: factText)
         var (investigation, gaps) = Investigations.make(t: t, facts: facts, values: values, incident: incident, sessionDate: context.date,
                                                         detective: detective, officer: officer, evidence: evidence,
@@ -982,16 +994,21 @@ enum CaseGenerator {
         }
 
         // Custody
-        let inCustody = rng.chance(0.45) && maxCustodyDays > 0
-        let custodyDays = inCustody ? min(rng.int(21...420), maxCustodyDays) : 0
-        // The bond fits the charge: the same draw as before, scaled to the most serious count's class.
-        let bondFactor = rng.pick([0.5, 0.75, 1.0, 1.5, 2.0])
+        // The bond fits the charge: the same draw as before, scaled to the most serious count's class. The most serious
+        // charges almost always mean jail until trial; a murder charge is usually held without bond.
         let worstClass = charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
+        let gravest = [NCClass.A, .B1, .B2].contains(worstClass ?? .misd1)
+        let serious = gravest || [NCClass.C, .D].contains(worstClass ?? .misd1)
+        let inCustody = rng.chance(gravest ? 0.9 : (serious ? 0.7 : 0.45)) && maxCustodyDays > 0
+        let custodyDays = inCustody ? min(rng.int(21...420), maxCustodyDays) : 0
+        let bondFactor = rng.pick([0.5, 0.75, 1.0, 1.5, 2.0])
         let bond = "$" + CalendarCalls.roundBond(Double(CalendarCalls.bondBase(worstClass)) * bondFactor).formatted()
         let bondStatus = inCustody
-            ? "Held in the Hollis County jail on a \(bond) secured bond for \(custodyDays) days."
+            ? (gravest && rng.chance(0.6)
+                ? "Held without bond in the Hollis County jail for \(custodyDays) days."
+                : "Held in the Hollis County jail on a \(bond) secured bond for \(custodyDays) days.")
             : rng.pick(["Released on a \(bond) secured bond. Has made every court date.",
-                        "Released on a written promise to appear, with electronic monitoring.",
+                        serious ? "Released on a \(bond) secured bond with electronic monitoring." : "Released on a written promise to appear, with electronic monitoring.",
                         "Released on a \(bond) secured bond; missed one court date early on, then was re-released."])
 
         // Restitution

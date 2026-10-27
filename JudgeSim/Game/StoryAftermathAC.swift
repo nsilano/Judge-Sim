@@ -62,7 +62,7 @@ extension StoryAftermath {
                  followUps: ["story.followup.trooperShove"]),
             Beat(triggers: [.freed, .cleared, .probation], chance: 0.5, days: 60...180,
                  headline: "Sheriff: unmarked cars will stop running traffic at night on Route 17",
-                 body: "The Sheriff's Office said its unmarked cars will no longer make nighttime traffic stops on Route 17 except in emergencies, citing the case of {D}, who said {DL} fled because {DL} feared a fake officer."),
+                 body: "The Sheriff's Office said its unmarked cars will no longer make nighttime traffic stops on Route 17 except in emergencies, citing the case of {D}, who told the court {D.he} kept driving because {D.he} feared the car behind {D.him} was a fake officer."),
         ],
         "story.pruittMillRoad": [
             Beat(triggers: [.freed, .probation], chance: 0.3, days: 90...300,

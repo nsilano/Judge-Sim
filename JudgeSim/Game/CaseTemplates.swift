@@ -471,7 +471,7 @@ enum CaseTemplates {
         ],
         defenseWitnesses: [
             WitnessSeed(name: nil, role: "Former board member",
-                        direct: ["\"The board knew about the advances. {ALT} called it 'the treasurer's float.'\""],
+                        direct: ["\"The board knew about the advances. The board president, {ALT}, called it 'the treasurer's float.'\""],
                         cross: ["\"No, I never saw a written agreement.\""],
                         weight: 2, lay: true)
         ],
