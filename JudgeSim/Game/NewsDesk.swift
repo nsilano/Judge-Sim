@@ -169,7 +169,7 @@ enum NewsDesk {
         var harshShare: Double
         var lenientShare: Double
         var recentHeadlines: Set<String>
-        /// Cases on the judge's list waiting for a trial date, and how long the oldest has waited.
+        /// Trials pending before the judge (with or without a date), and how far out the last trial date is.
         var waiting: Int = 0
         var oldestWaitDays: Int = 0
     }
@@ -220,9 +220,9 @@ enum NewsDesk {
         // A column or editorial, now and then, on what the numbers show.
         if rng.chance(0.3) {
             var topics: [(String, String)] = []
-            if w.waiting >= 15 {
+            if w.waiting >= 30 {
                 topics.append(("Hollis County's criminal backlog reaches \(w.waiting) cases",
-                               "\(w.waiting) felony cases are waiting for a trial date in Hollis County Superior Court; the oldest has waited \(w.oldestWaitDays) days. Judge \(w.judge) is hearing cases as fast as the calendar allows, lawyers say, but the arrests haven't slowed. The District Attorney says the office has asked the state for another courtroom and a second resident judge."))
+                               "\(w.waiting) felony cases are waiting for trial in Hollis County Superior Court, and new trial dates now run \(w.oldestWaitDays) days out. Judge \(w.judge) is hearing cases as fast as the calendar allows, lawyers say, but the arrests haven't slowed. The District Attorney says the office has asked the state for another courtroom and a second resident judge."))
             }
             if w.jailedAwaitingTrial >= 3 {
                 topics.append(("Our jail is full of people who haven't been convicted",

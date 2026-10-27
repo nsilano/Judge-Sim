@@ -254,7 +254,7 @@ final class GameState: ObservableObject {
             harshShare: sentenced < 4 ? 0 : Double(stats.abovePresumptive) / Double(sentenced),
             lenientShare: sentenced < 4 ? 0 : Double(stats.belowPresumptive) / Double(sentenced),
             recentHeadlines: Set(news.prefix(80).map(\.headline)),
-            waiting: awaiting.count, oldestWaitDays: awaiting.map { CourtCalendar.calendar.dateComponents([.day], from: $0.since, to: date).day ?? 0 }.max() ?? 0)
+            waiting: trialsInPipeline, oldestWaitDays: scheduled.map { CourtCalendar.calendar.dateComponents([.day], from: date, to: $0.date).day ?? 0 }.max() ?? 0)
         for item in NewsDesk.weekly(snapshot, rng: &rng) {
             // A new prosecutor joins the District Attorney's office: the courthouse roster gets the name, so the
             // new ADA appears under Courthouse names and starts trying cases.
