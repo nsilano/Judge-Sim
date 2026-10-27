@@ -62,6 +62,10 @@ enum Aftermath {
             }
             var out = text.replacingOccurrences(of: "{D}", with: d.name).replacingOccurrences(of: "{DL}", with: d.lastName)
                 .replacingOccurrences(of: "{JUDGE}", with: judgeLast)
+            // The defendant's pronouns, the same as in the case itself.
+            for (key, value) in NameBank.gender(of: d.name).tokens(for: "D") {
+                out = out.replacingOccurrences(of: "{\(key)}", with: value)
+            }
             if let v = c.victimName {
                 out = out.replacingOccurrences(of: "{V}", with: v)
                     .replacingOccurrences(of: "{VL}", with: v.components(separatedBy: " ").last ?? v)

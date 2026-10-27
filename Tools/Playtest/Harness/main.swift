@@ -124,6 +124,18 @@ func names(in text: String) -> [String] {
             }
         }
     }
+    // The news that follows each written case, filled the way the game fills it.
+    var beatCount = 0
+    for (key, beats) in StoryAftermath.beats {
+        for beat in beats {
+            beatCount += 1
+            var text = (beat.headline + " " + beat.body).replacingOccurrences(of: "{D}", with: "Pat Doe").replacingOccurrences(of: "{DL}", with: "Doe")
+                .replacingOccurrences(of: "{JUDGE}", with: "Hale").replacingOccurrences(of: "{V}", with: "Sam Roe").replacingOccurrences(of: "{VL}", with: "Roe")
+            for (k, v) in Gender.male.tokens(for: "D") { text = text.replacingOccurrences(of: "{\(k)}", with: v) }
+            checkText(text, where: "aftermath \(key)")
+        }
+    }
+    print("Scanned \(beatCount) news follow-ups.")
     print("Scanned \(templates.count) cases, \(total) text fields (\(qa) quoted answers). \(findings.count) flags.")
     for f in Set(findings).sorted() { print("- " + f) }
 }
@@ -455,6 +467,7 @@ if args.count > 1 && args[1] == "scan" {
     log("")
     let stories = Set(StoryCases.all.map(\.key))
     log("WRITTEN CASES HEARD: \(heardKeys.intersection(stories).count) of \(stories.count)")
+    log("  never came up: " + stories.subtracting(heardKeys).sorted().joined(separator: ", "))
     if !continuedIDs.isEmpty { flag("\(continuedIDs.count) trial(s) continued mid-trial never came back") }
     log("BACKLOG BY MONTH")
     for b in backlog { log("  \(b)") }
