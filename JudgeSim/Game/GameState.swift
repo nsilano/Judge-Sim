@@ -1226,8 +1226,8 @@ final class GameState: ObservableObject {
     var pipelineTarget: Int { max(3, Int((Double(max(6, 3 * schedule.weeklyTrials + 3)) * caseloadRamp * caseloadPressure).rounded())) }
 
     /// Past the first months, arrests don't wait on the court: the county sends more cases than one judge can hear, a
-    /// little more each month, until the docket is truly backed up (about 80% over capacity after a year).
-    var caseloadPressure: Double { min(1.8, 1 + Double(max(0, calendarWeekNumber - 10)) * 0.02) }
+    /// little more each month, until the docket is truly backed up (about double after a year).
+    var caseloadPressure: Double { min(2.2, 1 + Double(max(0, calendarWeekNumber - 10)) * 0.025) }
 
     /// Trials and hearings set for a day, today's docket included.
     func counts(on date: Date) -> (trials: Int, hearings: Int) {
@@ -1580,7 +1580,7 @@ final class GameState: ObservableObject {
         let underTarget = trialsInPipeline < pipelineTarget
         // Over target, arrivals slow but don't stop, and they pick up as the county's pressure grows: a few extra
         // cases a week by the end of the first year, enough that the list outruns the calendar.
-        let overflow = caseloadPressure > 1.05 ? 0.15 + 0.5 * (caseloadPressure - 1) : 0
+        let overflow = caseloadPressure > 1.05 ? min(0.85, 0.25 + 0.5 * (caseloadPressure - 1)) : 0
         if trialsInPipeline < pipelineTarget * 4,
            (underTarget && rng.chance(0.75 * max(0.5, caseloadRamp))) || (!underTarget && rng.chance(overflow)) {
             let murderWaiting = (awaiting.map(\.entry) + scheduled.map(\.entry)).contains { entry in
