@@ -108,6 +108,8 @@ private struct SaveData: Codable {
     var living: LivingCounty?
     /// People arrested in followed cases, held for a bond hearing at the next calendar call (optional for older saves).
     var bondQueue: [OpenInvestigation]? = nil
+    /// Show-cause hearings waiting for the next short session (optional for older saves).
+    var showCauseQueue: [CalendarMatter]? = nil
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -161,6 +163,8 @@ final class GameState: ObservableObject {
     @Published private(set) var investigations: [OpenInvestigation] = []
     /// Arrested and held for a first bond hearing before the judge.
     @Published private(set) var bondQueue: [OpenInvestigation] = []
+    /// Stay-away violations by people not on probation, waiting for a show-cause hearing.
+    @Published private(set) var showCauseQueue: [CalendarMatter] = []
     /// The dockets that came out of each place on the county map, oldest first.
     @Published private(set) var placeHistory: [String: [String]] = [:]
     /// Victims and witnesses: everyone who has come through the court other than as a defendant.
@@ -1162,6 +1166,11 @@ final class GameState: ObservableObject {
                 usedPeople.insert(c.defendant.personID)
             }
             bondQueue = []
+            for matter in showCauseQueue where !usedPeople.contains(matter.personID) {
+                bondCall.matters.append(matter)
+                usedPeople.insert(matter.personID)
+            }
+            showCauseQueue.removeAll { m in bondCall.matters.contains { $0.id == m.id } }
             if isFirstSittingDayOfWeek(date) && rng.chance(max(0.4, caseloadRamp) * intakeFactor) {
                 let held = rng.int(1...3)
                 let arrested = cal.date(byAdding: .day, value: -held, to: date) ?? date
@@ -2213,7 +2222,7 @@ final class GameState: ObservableObject {
         }
         lastCalendarResults = result.lines + (placed.isEmpty ? [] : ["Where the cases went:"] + placed)
         history.insert(CaseRecord(docket: call.isBondSession ? "Bond hearings" : "Calendar call",
-                                  caption: call.isBondSession ? "First appearances: bond hearings" : "Administrative calendar call",
+                                  caption: call.isBondSession ? call.sessionTitle : "Administrative calendar call",
                                   headline: "\(call.matters.count) matters", category: .procedure, date: currentDate,
                                   defendantID: UUID(), outcome: "\(call.matters.count) matters handled", judgments: result.lines,
                                   returningDefendant: false, appealStatus: nil, kind: "calendar"), at: 0)
@@ -2627,6 +2636,7 @@ final class GameState: ObservableObject {
         mood = CourthouseMood()
         investigations = []
         bondQueue = []
+        showCauseQueue = []
         placeHistory = [:]
         residents = []
         officerRecords = [:]
@@ -2888,7 +2898,8 @@ final class GameState: ObservableObject {
             guard var orders = people[index].stayAwayOrders, !orders.isEmpty else { continue }
             // Someone already facing a new case isn't arrested on another violation before it's heard.
             let personID = people[index].id
-            if reoffenseQueue.contains(where: { $0.personID == personID }) || pending.contains(where: { $0.reoffense?.personID == personID }) { continue }
+            if reoffenseQueue.contains(where: { $0.personID == personID }) || pending.contains(where: { $0.reoffense?.personID == personID })
+                || showCauseQueue.contains(where: { $0.personID == personID }) { continue }
             // A new order isn't tested in its first month.
             let settled = CourtCalendar.calendar.date(byAdding: .day, value: -30, to: currentDate) ?? currentDate
             for o in orders.indices where orders[o].issued < settled && orders[o].expires > currentDate {
@@ -2919,7 +2930,7 @@ final class GameState: ObservableObject {
                 }
                 post(NewsItem(date: currentDate, kind: .arrest,
                               headline: "\(person.name) arrested for violating court order protecting \(order.protectedName)",
-                              body: "Deputies say \(person.name) \(what), in violation of the \(order.label) Judge \(lastName(judgeName)) imposed in \(order.docket) on \(SentenceFormat.shortDate(order.issued)). \(person.status == .probation && person.probation != nil ? "\(person.lastName), who is on probation, is being held for a probation violation hearing before Judge \(lastName(judgeName))." : "\(person.lastName) is being held pending a first appearance.")",
+                              body: "Deputies say \(person.name) \(what), in violation of the \(order.label) Judge \(lastName(judgeName)) imposed in \(order.docket) on \(SentenceFormat.shortDate(order.issued)). \(person.status == .probation && person.probation != nil ? "\(person.lastName), who is on probation, is being held for a probation violation hearing before Judge \(lastName(judgeName))." : "\(person.lastName) has been ordered to appear before Judge \(lastName(judgeName)) to show cause why \(person.lastName) should not be held in contempt.")",
                               docket: order.docket, prominence: 2))
                 // On probation, the violation goes back to the judge who set the conditions as a violation hearing,
                 // where the judge hears the officer and the probationer and can revoke; there's no separate trial.
@@ -2931,11 +2942,9 @@ final class GameState: ObservableObject {
                     }
                     break
                 }
-                // The arrest already happened, so the charge goes straight onto the docket at the next intake.
-                reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: [key],
-                                                victimName: order.protectedName, incident: incident,
-                                                note: "Charged with violating the \(order.label) you imposed on \(SentenceFormat.shortDate(order.issued)) in \(order.docket), protecting \(order.protectedName). It was \(person.lastName)'s violation number \(order.violations).",
-                                                priorOffense: order.offense ?? person.priors.first { $0.docket == order.docket }?.offense, priorDate: order.issued))
+                // Not on probation: a short hearing on contempt of the court's order, not a new trial.
+                var mrng = SeededRNG(seed: rng.next())
+                showCauseQueue.append(CalendarCalls.contemptMatter(person: person, order: order, conduct: what, date: currentDate, rng: &mrng))
                 break
             }
             people[index].stayAwayOrders = orders
@@ -3039,7 +3048,8 @@ final class GameState: ObservableObject {
                             reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
-                            officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue)
+                            officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
+                            showCauseQueue: showCauseQueue)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -3109,6 +3119,7 @@ final class GameState: ObservableObject {
         mood = data.mood ?? CourthouseMood()
         investigations = data.investigations ?? []
         bondQueue = data.bondQueue ?? []
+        showCauseQueue = data.showCauseQueue ?? []
         placeHistory = data.placeHistory ?? [:]
         residents = data.residents ?? []
         officerRecords = data.officerRecords ?? [:]
