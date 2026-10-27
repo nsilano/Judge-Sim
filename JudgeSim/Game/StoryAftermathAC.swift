@@ -39,7 +39,7 @@ extension StoryAftermath {
             Beat(triggers: [.freed, .probation], chance: 0.35, days: 60...200,
                  headline: "Bartender says {DL} threatened to \"finish what the stool started\"",
                  body: "{D} went back to the Loose Caboose after midnight and told the bartender who had talked to police about the injury to {V}, \"I'll finish what the stool started, on you,\" according to a threats charge filed this week. A regular two stools away told officers the same words. Judge {JUDGE} heard the bar stool case.",
-                 followUps: ["story.followup.barThreat"]),
+                 followUps: ["story.followup.barThreat"], victimRole: "Bartender"),
             Beat(triggers: [.freed, .probation], chance: 0.3, days: 120...300,
                  headline: "{DL} charged after pool cue swung in billiards hall",
                  body: "{D}, whose bar stool case was decided by Judge {JUDGE}, was charged with assault with a deadly weapon after swinging a pool cue twice at a man over a $20 bet at Eight Ball Billiards, police say. {DL} again says {D} acted in self-defense.",

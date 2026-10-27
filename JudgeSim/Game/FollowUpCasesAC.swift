@@ -342,7 +342,7 @@ extension FollowUpCases {
         specification: "Willfully threatened to physically injure {V}, communicating the threat orally in a manner and under circumstances that would cause a reasonable person to believe it was likely to be carried out, and {V} believed it would be.",
         ageRange: 24...50, occupations: [], hasVictim: true,
         summaries: [
-            "On {DATE} at about 12:30 a.m., {D} came into the Loose Caboose bar on {STREET}, where {V}, who tended bar on the night of the incident in {PRIOR}, was working. {DL}'s case was in this court in {PRIORDATE}. {V} told officers {DL} leaned over the bar and said, \"You talk to the cops about me again, I'll finish what the stool started, on you.\" {DL} left after {V} picked up the phone to call 911. A regular at the bar heard the words. {DL} says {D.he} came in to say there were no hard feelings and said nothing like that."
+            "On {DATE} at about 12:30 a.m., {D} came into the Loose Caboose bar, where {V}, who tended bar on the night of the incident in {PRIOR}, was working. {DL}'s case was in this court in {PRIORDATE}. {V} told officers {DL} leaned over the bar and said, \"You talk to the cops about me again, I'll finish what the stool started, on you.\" {DL} left after {V} picked up the phone to call 911. A regular at the bar heard the words. {DL} says {D.he} came in to say there were no hard feelings and said nothing like that."
         ],
         prosecutionEvidence: [
             E(.video, 2, "Bar Camera", "No audio. 12:29 a.m.: {DL} leans over the bar toward {VL}, points at {V.him}, and leaves at 12:31 as {VL} lifts the phone."),
@@ -407,7 +407,7 @@ extension FollowUpCases {
             defenseOpening: "A two-minute visit and words no recording captured.",
             prosecutionClosing: "Two people, interviewed apart, gave the same words.",
             defenseClosing: "The bartender fears {DL} because of the past. That fear doesn't prove the words.",
-            genders: ["D": .male, "V": .male],
+            genders: ["D": .male],
             time: "12:30 a.m."
         )
     )

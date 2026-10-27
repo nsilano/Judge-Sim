@@ -3,7 +3,7 @@ import Foundation
 /// One short matter handled at an administrative calendar call.
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
-        case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief, firstAppearance, arraignment
+        case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief, firstAppearance, arraignment, contempt
 
         var label: String {
             switch self {
@@ -18,6 +18,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .motionForRelief: return "Motion for appropriate relief"
             case .firstAppearance: return "Bond hearing"
             case .arraignment: return "Arraignment"
+            case .contempt: return "Show cause: contempt"
             }
         }
 
@@ -34,6 +35,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .motionForRelief: return "arrow.uturn.backward.circle.fill"
             case .firstAppearance: return "lock.open.fill"
             case .arraignment: return "person.wave.2.fill"
+            case .contempt: return "exclamationmark.shield.fill"
             }
         }
     }
@@ -82,7 +84,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     }
 
     /// The person's whole file is worth opening for these.
-    var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination }
+    var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination || kind == .contempt }
 }
 
 /// Pretrial release under G.S. 15A-534: the least restrictive conditions that will reasonably assure the
@@ -102,9 +104,15 @@ struct CalendarCall: Identifiable, Codable, Hashable {
     var id = UUID()
     var date: Date
     var matters: [CalendarMatter]
-    /// First appearances: bond hearings for people held since their arrest, apart from the week's calendar call.
+    /// First appearances and show-cause hearings: short matters heard apart from the week's calendar call.
     var bondSession: Bool? = nil
     var isBondSession: Bool { bondSession == true }
+    /// What the short session is called, by what's on it.
+    var sessionTitle: String {
+        let contempt = matters.contains { $0.kind == .contempt }
+        let bonds = matters.contains { $0.kind == .firstAppearance }
+        return contempt && bonds ? "Bond and show-cause hearings" : (contempt ? "Show-cause hearings" : "First appearances: bond hearings")
+    }
 }
 
 enum CalendarCalls {
@@ -430,6 +438,24 @@ enum CalendarCalls {
                               pendingCase: jailed,
                               bond: BondFacts(moderate: current, high: current, canPost: canPost, flightRisk: flight, danger: danger),
                               amountOptions: [0, 2], amountRange: 500...max(1_000, current - 500), suggestedAmount: max(500, current / 2))
+    }
+
+    /// A stay-away order broken by someone not on probation: a short hearing on criminal contempt (G.S. 5A-11, 5A-15),
+    /// not a new trial. The court may jail the person up to 30 days or fine up to $500 (G.S. 5A-12).
+    static func contemptMatter(person: PersonRecord, order: StayAwayOrder, conduct: String, date: Date, rng: inout SeededRNG) -> CalendarMatter {
+        let last = person.lastName
+        return CalendarMatter(
+            kind: .contempt, personID: person.id, personName: person.name, personAge: person.age(on: date), occupation: person.occupation,
+            docket: order.docket + " (contempt)",
+            summary: "\(person.name) is ordered to show cause why \(last) should not be held in contempt for violating the \(order.label) entered in \(order.docket), protecting \(order.protectedName). Deputies say \(last) \(conduct).",
+            stateAsk: rng.pick(["The State asks for 30 days in jail. The order was clear, and \(order.protectedName) is afraid.",
+                                "The State asks the court to find willful contempt and impose active time. This wasn't an accident.",
+                                "The State asks for a finding of contempt. \(order.protectedName) has asked the court to make it stop."]),
+            defenseAsk: rng.pick(["My client admits being there but says it was a chance meeting and left right away. We ask the court to warn, not jail.",
+                                  "My client didn't understand that the order still applied after the case ended. We ask for a warning.",
+                                  "My client accepts responsibility and asks for a fine rather than jail; there's a job at stake."]),
+            options: ["Find willful contempt: 30 days in the county jail", "Find willful contempt: 10 days in the county jail",
+                      "Find contempt: a $500 fine", "Not willful: warn \(last) and continue the order"])
     }
 
     /// Arraignment in superior court (G.S. 15A-941): the plea is entered and the court sets the trial date.
@@ -816,6 +842,17 @@ enum CalendarCalls {
                     person.appearances.append(PersonRecord.Appearance(docket: term.docket, date: date, charges: "Motion to terminate probation early",
                                                                       outcome: choice == 1 ? "Granted; nothing is owed: probation ended early"
                                                                                            : "Granted: probation ended early"))
+                }))
+            case .contempt:
+                let days = choice == 0 ? 30 : (choice == 1 ? 10 : 0)
+                updates.append((m.personID, { person in
+                    if days > 0 {
+                        person.status = .incarcerated
+                        person.releaseDate = Calendar.current.date(byAdding: .day, value: days, to: date)
+                        person.releaseNote = "Criminal contempt: \(days) days in the county jail for violating a stay-away order."
+                    }
+                    person.appearances.append(PersonRecord.Appearance(docket: m.docket, date: date, charges: "Criminal contempt (stay-away order)",
+                                                                      outcome: option.trimmingTrailingPeriods))
                 }))
             case .pvAdmission:
                 updates.append((m.personID, { person in

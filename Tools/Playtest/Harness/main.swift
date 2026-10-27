@@ -132,12 +132,87 @@ func names(in text: String) -> [String] {
             var text = (beat.headline + " " + beat.body).replacingOccurrences(of: "{D}", with: "Pat Doe").replacingOccurrences(of: "{DL}", with: "Doe")
                 .replacingOccurrences(of: "{JUDGE}", with: "Hale").replacingOccurrences(of: "{V}", with: "Sam Roe").replacingOccurrences(of: "{VL}", with: "Roe")
             for (k, v) in Gender.male.tokens(for: "D") { text = text.replacingOccurrences(of: "{\(k)}", with: v) }
+            for (k, v) in Gender.female.tokens(for: "V") { text = text.replacingOccurrences(of: "{\(k)}", with: v) }
             checkText(text, where: "aftermath \(key)")
         }
     }
     print("Scanned \(beatCount) news follow-ups.")
+    chainCheck(county: county)
     print("Scanned \(templates.count) cases, \(total) text fields (\(qa) quoted answers). \(findings.count) flags.")
     for f in Set(findings).sorted() { print("- " + f) }
+}
+
+/// Builds each written case, then each follow-up the news can bring back, for the same person, the way the game does,
+/// and checks that the second case is about the same person and the right earlier case.
+@MainActor func chainCheck(county: County) {
+    var chains = 0
+    var samples: [String] = []
+    let cal = CourtCalendar.calendar
+    for (key, beats) in StoryAftermath.beats.sorted(by: { $0.key < $1.key }) {
+        for beat in beats where !beat.followUps.isEmpty {
+            for seed in [UInt64(11), 202, 3003] {
+                let start = cal.date(from: DateComponents(year: 2027, month: 3, day: 10)) ?? Date()
+                let ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: start, docketSequence: 3000, recentTemplateKeys: [])
+                guard let t = CaseTemplates.byKey[key] else { findings.append("chain \(key): no such written case"); continue }
+                var trng = SeededRNG(seed: seed)
+                let c = CaseGenerator.build(t, seed: seed, band: .strong, context: ctx, rng: &trng)
+                guard c.templateKey == key else { findings.append("chain \(key): the original case itself came out as \(c.templateKey)"); continue }
+                let d = c.defendant
+                let person = PersonRecord(id: d.personID, name: d.name, birthYear: cal.component(.year, from: start) - d.age,
+                                          occupation: d.occupation, background: d.background, priors: d.priors,
+                                          releaseDate: nil, probation: nil, propensity: 0.5, profile: d.profile)
+                let later = cal.date(byAdding: .day, value: 200, to: start) ?? start
+                var next = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: later, docketSequence: 3100,
+                                                 recentTemplateKeys: [key], returning: person, storySlot: false)
+                next.forcedTemplateKeys = beat.followUps
+                let carried = beat.sameVictim ? c.victimName : beat.victimRole.flatMap { role in c.witnesses.first { $0.role == role }?.name }
+                next.victimOverride = carried
+                next.priorOffense = c.charges.first?.law.title
+                next.priorDate = start
+                next.incidentDaysAgo = 60
+                let f = CaseGenerator.generate(seed: seed &+ 1, context: next)
+                chains += 1
+                let tag = "chain \(key) -> \(f.templateKey)"
+                if !beat.followUps.contains(f.templateKey) {
+                    findings.append("\(tag): none of \(beat.followUps) fit a \(d.age)-year-old \(NameBank.gender(of: d.name)) defendant, so an unrelated case came instead")
+                    continue
+                }
+                if f.defendant.name != d.name { findings.append("\(tag): defendant changed from \(d.name) to \(f.defendant.name)") }
+                if f.defendant.personID != d.personID { findings.append("\(tag): defendant is a different person record") }
+                if abs(f.defendant.age - d.age) > 1 { findings.append("\(tag): defendant was \(d.age), now \(f.defendant.age)") }
+                var texts: [String] = []
+                strings(in: f, into: &texts)
+                let all = texts.joined(separator: "\n")
+                if let prior = next.priorOffense, !all.lowercased().contains(prior.lowercased()) {
+                    findings.append("\(tag): the follow-up never names the earlier offense (\(prior))")
+                }
+                if beat.victimRole != nil, f.victimName != carried {
+                    findings.append("\(tag): the follow-up victim should be \(carried ?? "the original witness"), got \(f.victimName ?? "none")")
+                }
+                if let v = c.victimName {
+                    if beat.sameVictim {
+                        if f.victimName != v { findings.append("\(tag): should be the same victim \(v), got \(f.victimName ?? "none")") }
+                    } else if all.contains(v) {
+                        findings.append("\(tag): the earlier victim \(v) appears in a case about someone else")
+                    }
+                }
+                // Anyone else from the first case (witnesses, officers) who turns up should be the same person in the same role.
+                for w in c.witnesses where all.contains(w.name) && w.name != d.name && w.name != c.victimName {
+                    if !f.witnesses.contains(where: { $0.name == w.name }) {
+                        findings.append("\(tag): \(w.name) (\(w.role) in the first case) is mentioned but isn't part of the follow-up")
+                    }
+                }
+                consistency(f, template: (FollowUpCases.all + CaseTemplates.all).first { $0.key == f.templateKey }!, county: county)
+                for text in texts where text.count > 8 { checkText(text, where: tag) }
+                if seed == 11 {
+                    let first = c.summary.prefix(160)
+                    samples.append("\(key) [\(d.name), \(d.age)]: \(first)...\n   -> \(f.templateKey) [\(f.defendant.name), \(f.defendant.age), victim \(f.victimName ?? "none")]: \(f.summary.prefix(260))...")
+                }
+            }
+        }
+    }
+    print("Chained \(chains) original-to-follow-up cases.")
+    try? samples.joined(separator: "\n\n").write(toFile: "/out/chains.txt", atomically: true, encoding: .utf8)
 }
 
 let weeks = args.count > 1 ? Int(args[1]) ?? 8 : 8
@@ -175,6 +250,21 @@ var hearingDates: [UUID: Date] = [:]
     let s = CaseSession(courtCase: c, judgeName: game.judgeName ?? "", county: county, resume: resume)
     let d = c.defendant
     heardKeys.insert(c.templateKey)
+    if let facts = c.investigation?.facts {
+        for (place, closedOn) in Gazetteer.living.closed where closedOn != .distantPast && closedOn < facts.incident && facts.place.contains(place) {
+            flag("\(c.docket): the crime happened at \(place), which closed on \(short(closedOn)), before the incident on \(short(facts.incident))")
+        }
+        let held = c.background?.custodyDays ?? 0
+        if held > days(facts.incident, c.sessionDate) + 2 {
+            flag("\(c.docket): \(held) days of jail credit, but the incident was only \(days(facts.incident, c.sessionDate)) days ago")
+        }
+    }
+    for w in c.witnesses where game.residents.contains(where: { $0.name == w.name && $0.deceased }) {
+        flag("\(c.docket): \(w.name) testifies, but the county remembers that person as deceased")
+    }
+    if let person = game.person(c.defendant.personID), abs(person.age(on: c.sessionDate) - c.defendant.age) > 1 {
+        flag("\(c.docket): \(c.defendant.name) is \(c.defendant.age) in the case but \(person.age(on: c.sessionDate)) by the record")
+    }
     if resume != nil { log("  (resumed after a continuance)"); continuedIDs.remove(c.id) }
     log("TRIAL \(c.docket) · \(c.caption)")
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
@@ -203,6 +293,7 @@ var hearingDates: [UUID: Date] = [:]
         if s.stage == .verdict {
             for ch in s.courtCase.charges where s.rulings.verdicts[ch.id] == nil {
                 let options = s.verdictOptions(ch)
+                if options.contains(.insanity) && rng.chance(0.3) { s.rulings.verdicts[ch.id] = .insanity; log("  Verdict: not guilty by reason of insanity"); continue }
                 let convict = rng.chance(convictRate)
                 let pick: Verdict? = convict ? (options.contains(.lesser) && rng.chance(0.2) ? .lesser : options.first { $0.isConviction })
                                              : options.first { !$0.isConviction }
@@ -227,6 +318,7 @@ var hearingDates: [UUID: Date] = [:]
         if s.needsHabitualDecision { s.setHabitual(rng.chance(0.6)) }
         for unit in s.units {
             var choice = Judgment.defaultChoice(for: unit)
+            if unit.isDWI { choice.dwiLevel = rng.int(1...5); log("  DWI level \(choice.dwiLevel ?? 0)") }
             let allowed = unit.felonyCell?.dispositions ?? unit.misdemeanorCell?.dispositions ?? []
             let wantActive = style == "harsh" || (style == "mixed" && rng.chance(0.4))
             if !choice.lifeWithoutParole && !unit.isDWI {
@@ -275,6 +367,9 @@ var hearingDates: [UUID: Date] = [:]
     }
     if let person = game.person(h.personID), person.status != .probation, person.postRelease == nil {
         flag("\(h.personName): violation hearing, but the person's status is \(person.status)")
+    }
+    if h.violations.contains(where: { $0.contains("arrears on court-ordered payments") }) && (h.probation.monthlyObligation ?? 0) == 0 {
+        flag("\(h.personName): violation for unpaid payments, but the judgment ordered no monthly payments")
     }
     let s = HearingSession(hearing: h, judgeName: game.judgeName ?? "", county: county)
     s.rulings.finding = rng.chance(0.75) ? .established : (rng.chance(0.5) ? .excused : .notProven)
@@ -386,6 +481,23 @@ func checkText(_ text: String, where place: String) {
             }
         }
     }
+    let cal = CourtCalendar.calendar
+    for set in game.scheduled {
+        let weekday = cal.component(.weekday, from: set.date)
+        if !game.schedule.courtDays.contains(weekday) || CourtCalendar.holiday(on: set.date) != nil
+            || game.schedule.timeOff.contains(CourtSchedule.key(set.date)) {
+            flag("\(set.entry.title) set on \(short(set.date)), a day court doesn't sit (\(CourtCalendar.holiday(on: set.date) ?? "weekday off or time off"))")
+        }
+    }
+    for appeal in game.appeals {
+        if let record = game.history.first(where: { $0.docket == appeal.docket && $0.resolvedKind == "trial" }),
+           record.outcome.lowercased().contains("not guilty") || record.outcome.lowercased().contains("acquit"),
+           !record.outcome.lowercased().replacingOccurrences(of: "not guilty", with: "").contains("guilty") {
+            if !appeal.appellant.lowercased().contains("state") || !appeal.issue.lowercased().contains("suppress") {
+                flag("\(appeal.docket): appeal by \(appeal.appellant) after an acquittal (\(record.outcome))")
+            }
+        }
+    }
     for item in game.bondQueue where days(item.arrest, now) > 10 {
         flag("\(item.courtCase.defendant.name): arrested \(days(item.arrest, now)) days ago and still waiting for a bond hearing")
     }
@@ -441,6 +553,11 @@ if args.count > 1 && args[1] == "scan" {
             let end = CourtCalendar.calendar.date(byAdding: .day, value: 4, to: start) ?? start
             game.bookTimeOff(from: start, to: end)
             log("TIME OFF booked \(short(start))–\(short(end))")
+        }
+        if guardDays % 28 == 14 {
+            let pending = game.trialsInPipeline
+            if pending > 80 && (game.schedule.intake ?? .full) == .full { game.setIntake(.light); log("INTAKE set to light at \(pending) pending") }
+            else if pending < 40 && (game.schedule.intake ?? .full) != .full { game.setIntake(.full); log("INTAKE back to full at \(pending) pending") }
         }
         if guardDays % 7 == 3, rng.chance(0.3), let first = game.awaiting.first {
             log("REASSIGNED \(first.courtCase?.docket ?? "?") to another judge")

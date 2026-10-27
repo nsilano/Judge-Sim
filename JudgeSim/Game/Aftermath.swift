@@ -30,6 +30,8 @@ enum Aftermath {
         /// A written follow-up case it brings back to this court, if any.
         var followUps: [String] = []
         var sameVictim = false
+        /// The follow-up is against someone who testified in the first case, in this role; they keep their name.
+        var victimRole: String? = nil
     }
 
     static func trigger(convicted: Bool, actuallyGuilty: Bool, active: Bool) -> Trigger {
@@ -69,6 +71,9 @@ enum Aftermath {
             if let v = c.victimName {
                 out = out.replacingOccurrences(of: "{V}", with: v)
                     .replacingOccurrences(of: "{VL}", with: v.components(separatedBy: " ").last ?? v)
+                for (key, value) in NameBank.gender(of: v).tokens(for: "V") {
+                    out = out.replacingOccurrences(of: "{\(key)}", with: value)
+                }
             }
             return out
         }
@@ -93,7 +98,9 @@ enum Aftermath {
                                                     docket: c.docket),
                                      personID: d.personID,
                                      reoffense: Reoffense(personID: d.personID, templateKeys: beat.followUps,
-                                                          victimName: beat.sameVictim ? c.victimName : nil, incident: when,
+                                                          victimName: beat.sameVictim ? c.victimName
+                                                              : beat.victimRole.flatMap { role in c.witnesses.first { $0.role == role }?.name },
+                                                          incident: when,
                                                           note: "Back in your court after your judgment in \(c.caption) on \(SentenceFormat.shortDate(date)). " + fill(beat.headline) + ".",
                                                           priorOffense: c.charges.first?.law.title, priorDate: date))
                 broughtCase = true
