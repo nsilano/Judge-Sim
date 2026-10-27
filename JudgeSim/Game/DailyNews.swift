@@ -99,11 +99,9 @@ enum DailyNews {
                     "Pleas, bond hearings and motions filled \(judge)'s administrative session. " +
                     rng.pick(["The hallway was standing room only by 9.", "One defendant brought a grandmother, a pastor and a former teacher to vouch for him.", "Court ran through lunch."]),
                     section: "Courts")
-            case .hearingHeld(let name, let revoked):
-                guard rng.chance(0.4) else { continue }
-                add(revoked ? "Probation revoked for \(name)" : "\(name) stays on probation",
-                    revoked ? "\(judge) activated \(name)'s suspended sentence after a violation hearing." : "\(judge) continued \(name) on probation after a violation hearing, with new conditions.",
-                    section: "Courts")
+            case .hearingHeld:
+                // The hearing's own story already ran the day it was decided.
+                continue
             case .perjuryReferral(let name):
                 add("\(judge) sends witness's testimony to DA",
                     "\(judge) referred testimony by \(name) to the district attorney for possible perjury charges. Judges rarely do it; lawyers say it's a warning to every witness who takes the stand.",

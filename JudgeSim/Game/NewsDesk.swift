@@ -169,6 +169,9 @@ enum NewsDesk {
         var harshShare: Double
         var lenientShare: Double
         var recentHeadlines: Set<String>
+        /// Cases on the judge's list waiting for a trial date, and how long the oldest has waited.
+        var waiting: Int = 0
+        var oldestWaitDays: Int = 0
     }
 
     /// One or two stories that aren't about a single case: letters, columns, courthouse life, follow-ups.
@@ -176,22 +179,51 @@ enum NewsDesk {
         var items: [NewsItem] = []
         let county = w.county
         let towns = county.towns
-        func resident() -> String { "\(rng.pick(NameBank.firstNames)) \(rng.pick(NameBank.lastNames)), \(rng.pick(towns))" }
 
         // Letters to the editor about last week's biggest verdict.
         if let big = w.verdicts.max(by: { ($0.prominence ?? 0) < ($1.prominence ?? 0) }), (big.prominence ?? 0) >= 2 || rng.chance(0.35) {
-            let pro = rng.pick(["Finally, a judge who listens to victims.", "The court got this one right, and it took courage.",
-                                "I sat in that courtroom. The judge was careful and fair.", "Accountability matters, and this week it happened."])
-            let con = rng.pick(["I don't understand how the court reached that result.", "We keep sending people away and nothing changes.",
-                                "The sentence says more about our courts than about the defendant.", "Justice delayed, and now justice confused."])
+            // What readers write depends on what happened: an acquittal, prison, or probation.
+            let text = (big.headline + " " + big.body).lowercased()
+            let acquitted = text.contains("not guilty") || text.contains("acquit") || text.contains("walks free") || text.contains("falls short")
+            let prison = !acquitted && (text.contains("in prison") || text.contains("headed to prison") || text.contains("months in prison"))
+            let home = rng.pick(towns)
+            let agree: [String]
+            let disagree: [String]
+            if acquitted {
+                agree = ["The State has to prove it. If it can't, the judge has to say so, even when it's unpopular.",
+                         "I sat through the whole trial. I'd have had a doubt too.",
+                         "People forget the defendant lives here too, and has to keep living here after this."]
+                disagree = ["I live in \(home), and I don't feel any safer this week.",
+                            "Somebody did it. If not this person, who's still out there?",
+                            "Tell the family that was a fair result. I'll wait."]
+            } else if prison {
+                agree = ["That family waited a long time for somebody to take it seriously. Somebody finally did.",
+                         "Hollis County isn't a place where you get to do that and go home. Good.",
+                         "My nephew is a deputy. This is the kind of outcome that keeps them going."]
+                disagree = ["Years in prison and then what? Same streets, fewer chances.",
+                            "We spend more locking people up than we do on the schools in \(home).",
+                            "I don't excuse it, but there were kids in that house. Who looks after them now?"]
+            } else {
+                agree = ["A job and a probation officer will do more good than a cell.",
+                         "Make them pay it back and stay out of trouble. That's accountability too.",
+                         "My brother got a second chance like this once. He never wasted it."]
+                disagree = ["Probation again. Nothing changes until something changes.",
+                            "Ask the victim whether probation feels like justice.",
+                            "Folks in \(home) are tired of reading about the same people."]
+            }
+            func writer() -> String { "\(rng.pick(NameBank.firstNames)) \(rng.pick(NameBank.lastNames)), \(rng.pick(towns))" }
             items.append(NewsItem(date: w.date, kind: .community, headline: "Letters: readers react to \u{2018}\(big.headline)\u{2019}",
-                                  body: "\"\(pro)\" — \(resident()). \"\(con)\" — \(resident()). \"\(rng.pick(["Whatever you think of the verdict, the people in that courtroom were doing their jobs.", "I just hope the family gets some peace.", "Our county deserves a jail that isn't bursting at the seams.", "Every one of us should sit through a day of court."]))\" — \(resident()).",
+                                  body: "\"\(rng.pick(agree))\" — \(writer()). \"\(rng.pick(disagree))\" — \(writer()).",
                                   byline: "Letters to the editor", section: "Opinion"))
         }
 
         // A column or editorial, now and then, on what the numbers show.
         if rng.chance(0.3) {
             var topics: [(String, String)] = []
+            if w.waiting >= 15 {
+                topics.append(("Hollis County's criminal backlog reaches \(w.waiting) cases",
+                               "\(w.waiting) felony cases are waiting for a trial date in Hollis County Superior Court; the oldest has waited \(w.oldestWaitDays) days. Judge \(w.judge) is hearing cases as fast as the calendar allows, lawyers say, but the arrests haven't slowed. The District Attorney says the office has asked the state for another courtroom and a second resident judge."))
+            }
             if w.jailedAwaitingTrial >= 3 {
                 topics.append(("Our jail is full of people who haven't been convicted",
                                "\(w.jailedAwaitingTrial) people on this week's court calendars are sitting in the detention center waiting for trial. Some can't post a few thousand dollars. Bond is supposed to make sure people come back to court, not punish them before a verdict."))

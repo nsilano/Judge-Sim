@@ -40,7 +40,7 @@ struct CalendarCallView: View {
                                    date: Binding(get: { dates[matter.id] }, set: { dates[matter.id] = $0 }))
                     }
 
-                    PrimaryButton(title: "Close the Calendar Call", icon: "hammer.fill",
+                    PrimaryButton(title: call.isBondSession ? "Close the Bond Hearings" : "Close the Calendar Call", icon: "hammer.fill",
                                   enabled: call.matters.allSatisfy { choices[$0.id] != nil && !(needsDate($0) && dates[$0.id] == nil) },
                                   hint: "Rule on every matter on the calendar.") {
                         Haptics.gavel()
@@ -54,7 +54,7 @@ struct CalendarCallView: View {
             }
             }
             .background(Theme.background)
-            .navigationTitle(showResults ? "Calendar Call Results" : "Calendar Call")
+            .navigationTitle(call.isBondSession ? (showResults ? "Bond Hearing Results" : "Bond Hearings") : (showResults ? "Calendar Call Results" : "Calendar Call"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

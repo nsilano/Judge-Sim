@@ -18,7 +18,7 @@ enum Gazetteer {
         let street: String
 
         /// "The Lantern Row Tavern on Lantern Row in Bayard".
-        var described: String { "\(name) on \(street) in \(town)" }
+        var described: String { name.contains(street) ? "\(name) in \(town)" : "\(name) on \(street) in \(town)" }
     }
 
     struct Town {

@@ -38,7 +38,7 @@ struct DocketEntry: Identifiable, Codable {
         switch matter {
         case .trial(let c): return c.caption
         case .hearing(let h): return "State v. \(h.personName)"
-        case .calendar: return "Administrative calendar call"
+        case .calendar(let call): return call.isBondSession ? "First appearances: bond hearings" : "Administrative calendar call"
         }
     }
 
@@ -48,7 +48,7 @@ struct DocketEntry: Identifiable, Codable {
             let counts = c.charges.count
             return "\(c.docket) · \(c.charges.first?.law.title ?? "") " + (counts > 1 ? "and \(counts - 1) more count\(counts == 2 ? "" : "s")" : "")
         case .hearing(let h): return "\(h.probation.docket) · Probation violation"
-        case .calendar(let call): return "\(call.matters.count) short matters"
+        case .calendar(let call): return call.isBondSession ? "\(call.matters.count) held since arrest" : "\(call.matters.count) short matters"
         }
     }
 
@@ -56,7 +56,7 @@ struct DocketEntry: Identifiable, Codable {
         switch matter {
         case .trial: return "scalemass.fill"
         case .hearing: return "person.badge.clock.fill"
-        case .calendar: return "list.bullet.rectangle.portrait.fill"
+        case .calendar(let call): return call.isBondSession ? "lock.open.fill" : "list.bullet.rectangle.portrait.fill"
         }
     }
 

@@ -106,6 +106,8 @@ private struct SaveData: Codable {
     var officerRecords: [String: OfficerRecord]?
     var lawyerRecords: [String: LawyerRecord]?
     var living: LivingCounty?
+    /// People arrested in followed cases, held for a bond hearing at the next calendar call (optional for older saves).
+    var bondQueue: [OpenInvestigation]? = nil
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -157,6 +159,8 @@ final class GameState: ObservableObject {
     @Published private(set) var mood = CourthouseMood()
     /// Crimes the paper is following before anyone is charged; each becomes a case at the arrest.
     @Published private(set) var investigations: [OpenInvestigation] = []
+    /// Arrested and held for a first bond hearing before the judge.
+    @Published private(set) var bondQueue: [OpenInvestigation] = []
     /// The dockets that came out of each place on the county map, oldest first.
     @Published private(set) var placeHistory: [String: [String]] = [:]
     /// Victims and witnesses: everyone who has come through the court other than as a defendant.
@@ -249,7 +253,8 @@ final class GameState: ObservableObject {
             reversals: appeals.filter(\.wasReversed).count,
             harshShare: sentenced < 4 ? 0 : Double(stats.abovePresumptive) / Double(sentenced),
             lenientShare: sentenced < 4 ? 0 : Double(stats.belowPresumptive) / Double(sentenced),
-            recentHeadlines: Set(news.prefix(80).map(\.headline)))
+            recentHeadlines: Set(news.prefix(80).map(\.headline)),
+            waiting: awaiting.count, oldestWaitDays: awaiting.map { CourtCalendar.calendar.dateComponents([.day], from: $0.since, to: date).day ?? 0 }.max() ?? 0)
         for item in NewsDesk.weekly(snapshot, rng: &rng) {
             // A new prosecutor joins the District Attorney's office: the courthouse roster gets the name, so the
             // new ADA appears under Courthouse names and starts trying cases.
@@ -713,19 +718,18 @@ final class GameState: ObservableObject {
         for item in due {
             var c = item.courtCase
             c.sessionDate = date
-            if var bg = c.background, bg.bondStatus == "Not yet arrested." && bg.onRelease == true {
-                bg.bondStatus = "Arrested on \(SentenceFormat.shortDate(item.arrest)) and released on a secured bond."
-                c.background = bg
-            } else if var bg = c.background, bg.isJailed || bg.bondStatus == "Not yet arrested." {
+            // Everyone arrested is held until the judge sets conditions of release at the next calendar call.
+            if var bg = c.background {
                 bg.onRelease = false
                 bg.custodyDays = 1
-                bg.bondStatus = "Held in the \(county.name) Detention Center since the arrest on \(SentenceFormat.shortDate(item.arrest))."
+                bg.bondStatus = "Held in the \(county.name) Detention Center since the arrest on \(SentenceFormat.shortDate(item.arrest)), awaiting a bond hearing."
                 c.background = bg
             }
             post(InvestigationArc.arrestNews(c, on: date, town: item.town, agency: c.investigation?.facts?.agency ?? c.investigatingAgency,
-                                             judge: lastName(judgeName), county: county, followed: item.note == nil))
-            awaitCase(c, note: item.note ?? "Arrested on \(SentenceFormat.shortDate(item.arrest)) after an investigation the paper followed from \(item.town).",
-                      on: date, earliest: item.ready, reason: "Discovery is still being exchanged")
+                                             judge: lastName(judgeName), county: county, followed: item.note == nil, bondHearing: true))
+            var held = item
+            held.courtCase = c
+            bondQueue.append(held)
         }
     }
 
@@ -1098,18 +1102,6 @@ final class GameState: ObservableObject {
                 // New cases come in when the trial calendar has room for them.
                 let roomForNew = trialsInPipeline < pipelineTarget
                 // A new arrest for conditions of release, and a case to arraign and set for trial.
-                let held = rng.int(1...3)
-                let arrested = cal.date(byAdding: .day, value: -held, to: date) ?? date
-                if rng.chance(max(0.4, caseloadRamp)), var c = freshCase(on: date, arrest: arrested, incidentBefore: 0...14, rng: &rng, excluding: &usedPeople) {
-                    // Arrested days ago and held until this first hearing on conditions of release.
-                    if var bg = c.background {
-                        bg.custodyDays = held
-                        bg.onRelease = false
-                        bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(arrested)) pending a bond hearing; in custody for \(held) days."
-                        c.background = bg
-                    }
-                    call.matters.append(CalendarCalls.bondMatter(for: c, rng: &rng))
-                }
                 let arrestedEarlier = cal.date(byAdding: .day, value: -rng.int(14...45), to: date) ?? date
                 if wantsArraignment && roomForNew, var c = freshCase(on: date, arrest: arrestedEarlier, incidentBefore: 0...20, rng: &rng, excluding: &usedPeople) {
                     // Held since the arrest, if held at all: the count starts on the arrest date.
@@ -1147,6 +1139,47 @@ final class GameState: ObservableObject {
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
         }
+
+        // First appearances: anyone arrested and held since the last court day gets a bond hearing, a separate short
+        // session from the week's calendar call. Most weeks there's also a fresh arrest the paper didn't follow.
+        if kind != .specialSetting {
+            let cal = CourtCalendar.calendar
+            var bondCall = CalendarCall(date: date, matters: [], bondSession: true)
+            for item in bondQueue {
+                var c = item.courtCase
+                let days = max(1, cal.dateComponents([.day], from: cal.startOfDay(for: item.arrest), to: cal.startOfDay(for: date)).day ?? 1)
+                if var bg = c.background {
+                    bg.custodyDays = days
+                    bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(item.arrest)) pending this bond hearing; in custody for \(days) day\(days == 1 ? "" : "s")."
+                    c.background = bg
+                }
+                var matter = CalendarCalls.bondMatter(for: c, rng: &rng)
+                matter.summary = matter.summary.replacingOccurrences(of: "arrested this week", with: "arrested on \(SentenceFormat.shortDate(item.arrest))")
+                if item.note == nil {
+                    matter.summary = "The arrest in the \(item.town) case the paper has followed. " + matter.summary
+                }
+                bondCall.matters.append(matter)
+                usedPeople.insert(c.defendant.personID)
+            }
+            bondQueue = []
+            if isFirstSittingDayOfWeek(date) && rng.chance(max(0.4, caseloadRamp)) {
+                let held = rng.int(1...3)
+                let arrested = cal.date(byAdding: .day, value: -held, to: date) ?? date
+                if var c = freshCase(on: date, arrest: arrested, incidentBefore: 0...14, rng: &rng, excluding: &usedPeople) {
+                    // Arrested days ago and held until this first hearing on conditions of release.
+                    if var bg = c.background {
+                        bg.custodyDays = held
+                        bg.onRelease = false
+                        bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(arrested)) pending a bond hearing; in custody for \(held) days."
+                        c.background = bg
+                    }
+                    bondCall.matters.append(CalendarCalls.bondMatter(for: c, rng: &rng))
+                }
+            }
+            if !bondCall.matters.isEmpty {
+                entries.insert(DocketEntry(matter: .calendar(bondCall)), at: 0)
+            }
+        }
         return CourtDay(date: date, clock: CourtCalendar.opening(on: date, minutesAfterMidnight: openingMinutes),
                         kind: kind, entries: entries, sessionDay: sessionDay)
     }
@@ -1162,6 +1195,7 @@ final class GameState: ObservableObject {
             }
         }
         investigations.forEach { used.insert($0.courtCase.defendant.personID) }
+        bondQueue.forEach { used.insert($0.courtCase.defendant.personID) }
         return used
     }
 
@@ -1181,7 +1215,7 @@ final class GameState: ObservableObject {
 
     /// Trials on a calendar or waiting for a date.
     var trialsInPipeline: Int {
-        awaiting.count + investigations.count + scheduled.filter { if case .trial = $0.entry.matter { return true } else { return false } }.count
+        awaiting.count + investigations.count + bondQueue.count + scheduled.filter { if case .trial = $0.entry.matter { return true } else { return false } }.count
     }
 
     /// How many trials the court keeps in the pipeline: about two weeks of the judge's own schedule.
@@ -1189,7 +1223,11 @@ final class GameState: ObservableObject {
     /// caseload the first week, rising each week to all of it by week ten.
     var caseloadRamp: Double { min(1, 0.4 + Double(calendarWeekNumber - 1) * 0.1) }
 
-    var pipelineTarget: Int { max(3, Int((Double(max(6, 3 * schedule.weeklyTrials + 3)) * caseloadRamp).rounded())) }
+    var pipelineTarget: Int { max(3, Int((Double(max(6, 3 * schedule.weeklyTrials + 3)) * caseloadRamp * caseloadPressure).rounded())) }
+
+    /// Past the first months, arrests don't wait on the court: the county sends more cases than one judge can hear, a
+    /// little more each month, until the docket is truly backed up (about 80% over capacity after a year).
+    var caseloadPressure: Double { min(1.8, 1 + Double(max(0, calendarWeekNumber - 10)) * 0.02) }
 
     /// Trials and hearings set for a day, today's docket included.
     func counts(on date: Date) -> (trials: Int, hearings: Int) {
@@ -1538,7 +1576,9 @@ final class GameState: ObservableObject {
             }
         }
         // New indictments, when the court's docket has room for them.
-        if trialsInPipeline < pipelineTarget && rng.chance(0.75 * max(0.5, caseloadRamp)) {
+        // Cases keep coming even when the court is full; a backed-up court just has more of them waiting.
+        let underTarget = trialsInPipeline < pipelineTarget
+        if (underTarget && rng.chance(0.75 * max(0.5, caseloadRamp))) || (!underTarget && caseloadPressure > 1.1 && rng.chance(0.2)) {
             let murderWaiting = (awaiting.map(\.entry) + scheduled.map(\.entry)).contains { entry in
                 if case .trial(let c) = entry.matter { return Self.isMurder(c) } else { return false }
             }
@@ -2090,7 +2130,7 @@ final class GameState: ObservableObject {
     func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], dates: [UUID: Date] = [:]) {
         guard let county, let judgeName, stillOpen(call.id) else { return }
         let result = CalendarCalls.resolve(call, choices: choices, amounts: amounts, judgeName: judgeName, county: county)
-        happened(.calendarCall(matters: call.matters.count))
+        if !call.isBondSession { happened(.calendarCall(matters: call.matters.count)) }
         for newcomer in result.newPeople {
             // A returning defendant who pleads keeps one record.
             if let index = people.firstIndex(where: { $0.id == newcomer.id }) {
@@ -2150,15 +2190,18 @@ final class GameState: ObservableObject {
             }
         }
         lastCalendarResults = result.lines + (placed.isEmpty ? [] : ["Where the cases went:"] + placed)
-        history.insert(CaseRecord(docket: "Calendar call", caption: "Administrative calendar call",
+        history.insert(CaseRecord(docket: call.isBondSession ? "Bond hearings" : "Calendar call",
+                                  caption: call.isBondSession ? "First appearances: bond hearings" : "Administrative calendar call",
                                   headline: "\(call.matters.count) matters", category: .procedure, date: currentDate,
                                   defendantID: UUID(), outcome: "\(call.matters.count) matters handled", judgments: result.lines,
                                   returningDefendant: false, appealStatus: nil, kind: "calendar"), at: 0)
         let pleas = result.newPeople.count
+        if !call.isBondSession {
         post(NewsItem(date: currentDate, kind: .community,
                       headline: "Judge \(lastName(judgeName)) works through crowded calendar",
                       body: "At an administrative session of Hollis County Superior Court, Judge \(lastName(judgeName)) handled \(call.matters.count) matters" + (pleas > 0 ? ", including \(pleas) guilty plea\(pleas == 1 ? "" : "s")." : "."),
                       prominence: 1))
+        }
         finishEntry(matterID: call.id, outcome: "\(call.matters.count) matters handled")
         save()
     }
@@ -2561,6 +2604,7 @@ final class GameState: ObservableObject {
         weekTally = CourtDay.Tally()
         mood = CourthouseMood()
         investigations = []
+        bondQueue = []
         placeHistory = [:]
         residents = []
         officerRecords = [:]
@@ -2973,7 +3017,7 @@ final class GameState: ObservableObject {
                             reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
-                            officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living)
+                            officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -3042,6 +3086,7 @@ final class GameState: ObservableObject {
         weekTally = data.weekTally ?? CourtDay.Tally()
         mood = data.mood ?? CourthouseMood()
         investigations = data.investigations ?? []
+        bondQueue = data.bondQueue ?? []
         placeHistory = data.placeHistory ?? [:]
         residents = data.residents ?? []
         officerRecords = data.officerRecords ?? [:]

@@ -100,6 +100,9 @@ struct CalendarCall: Identifiable, Codable, Hashable {
     var id = UUID()
     var date: Date
     var matters: [CalendarMatter]
+    /// First appearances: bond hearings for people held since their arrest, apart from the week's calendar call.
+    var bondSession: Bool? = nil
+    var isBondSession: Bool { bondSession == true }
 }
 
 enum CalendarCalls {
@@ -588,6 +591,7 @@ enum CalendarCalls {
         let probationers = people.filter { $0.status == .probation && $0.probation != nil && !excluding.contains($0.id) }
         let steady = probationers.filter { person in
             guard let term = person.probation, (term.violationRisk ?? 0.2) < 0.25,
+                  !(person.violations ?? []).contains(where: { $0.docket == term.docket }),
                   let start = ViolationHearings.probationStart(person, term) else { return false }
             let halfway = start.addingTimeInterval(term.ends.timeIntervalSince(start) / 2)
             return halfway <= date
@@ -615,7 +619,19 @@ enum CalendarCalls {
                           "Deny: probation continues as ordered"],
                 owesMoney: owes))
         }
-        if let person = probationers.isEmpty ? nil : rng.pick(probationers), let term = person.probation, rng.chance(0.6),
+        // An admission comes from someone who has had time to slip, hasn't just been before the court, and, more often
+        // than not, has a record: first offenders mostly keep their conditions.
+        let cal = CourtCalendar.calendar
+        let settled = cal.date(byAdding: .day, value: -60, to: date) ?? date
+        let recent = cal.date(byAdding: .day, value: -45, to: date) ?? date
+        let slipping = probationers.filter { person in
+            guard let term = person.probation, (ViolationHearings.probationStart(person, term) ?? .distantPast) < settled,
+                  (person.lastReleased ?? .distantPast) < settled,
+                  (person.appearances.last?.date ?? .distantPast) < recent else { return false }
+            let others = person.priors.filter { $0.docket == nil || $0.docket != term.docket }.count
+            return rng.chance(others == 0 ? 0.25 : (others >= 3 ? 1 : 0.7))
+        }
+        if let person = slipping.isEmpty ? nil : rng.pick(slipping), let term = person.probation, rng.chance(0.6),
            !matters.contains(where: { $0.personID == person.id }) {
             let supervised = term.supervised ?? true
             let crv = ViolationHearings.crvDays(term)
@@ -625,8 +641,8 @@ enum CalendarCalls {
                 summary: "\(person.name) admits " + pvAdmissionConduct(supervised: supervised) + " while on probation in \(term.docket).",
                 stateAsk: "The State asks for a three-day quick dip.",
                 defenseAsk: "My client admits it and is back on track. We ask the court to continue probation.",
-                options: ["Continue probation on the same terms", "Modify: add substance abuse treatment", "Order a three-day quick dip",
-                          crv > 0 ? "Order a \(crv)-day CRV" : "Order a CRV (no suspended time remains)"]))
+                options: ["Continue probation on the same terms", "Modify: add substance abuse treatment", "Order a three-day quick dip"]
+                    + (crv > 0 ? ["Order a \(crv)-day CRV"] : [])))
         }
         return CalendarCall(date: date, matters: matters)
     }

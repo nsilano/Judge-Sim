@@ -29,6 +29,8 @@ let convictRate = style == "lenient" ? 0.5 : (style == "harsh" ? 0.85 : 0.68)
 nonisolated(unsafe) var game: GameState!
 
 var seenNews = 0
+var seenNewsKeys = Set<String>()
+var backlog: [String] = []
 var hearingDates: [UUID: Date] = [:]
 
 // MARK: - Trials
@@ -196,7 +198,9 @@ func checkText(_ text: String, where place: String) {
 
 @MainActor func checkWorld() {
     let now = game.currentDate
-    for item in game.news.prefix(max(0, game.news.count - seenNews)).reversed() {
+    // The game keeps only the latest stories, so track each one rather than counting.
+    for item in game.news.filter({ !seenNewsKeys.contains($0.headline + "|" + short($0.date)) }).reversed() {
+        seenNewsKeys.insert(item.headline + "|" + short(item.date))
         log("NEWS \(short(item.date)) · \(item.headline) — \(item.body)")
         if item.headline.contains("with no trial date"), let docket = item.docket {
             if let wait = game.awaiting.first(where: { $0.courtCase?.docket == docket }) {
@@ -214,12 +218,17 @@ func checkText(_ text: String, where place: String) {
             if let set = f.date(from: text), days(set, item.date) > 0 { flag("News on \(short(item.date)) announces a trial date already past: \(item.headline) (\(text))") }
         }
         checkText(item.headline + " — " + item.body, where: "news \(short(item.date))")
+        let full = item.headline + " " + item.body
+        // City police only work inside the city.
+        if let r = full.range(of: #"Port Hollis Police Department (investigating|is asking)[^.]* in (Wexley|Cane Creek|Dunmore Mills|Bayard)"#, options: .regularExpression) {
+            flag("City police outside the city: \(full[r].prefix(120))")
+        }
+        if full.lowercased().contains("murder") && full.contains("was released on bond") { flag("Murder arrest released on bond: \(item.headline)") }
         if item.headline.lowercased().contains("stretched thin") {
             let onProbation = game.people.filter { $0.status == .probation }.count
             if onProbation < 25 { flag("'Probation officers stretched thin' with only \(onProbation) on probation") }
         }
     }
-    seenNews = game.news.count
     for order in game.arrestOrders where !order.served && order.servedOn > now {
         let entries = game.awaiting.map(\.entry) + game.scheduled.map(\.entry)
         for e in entries {
@@ -227,6 +236,9 @@ func checkText(_ text: String, where place: String) {
                 flag("\(order.docket): order for arrest not yet served, but the case file says the defendant was arrested")
             }
         }
+    }
+    for item in game.bondQueue where days(item.arrest, now) > 10 {
+        flag("\(item.courtCase.defendant.name): arrested \(days(item.arrest, now)) days ago and still waiting for a bond hearing")
     }
     for p in game.people where p.status == .probation {
         if let term = p.probation, days(term.ends, now) > 7 {
@@ -265,6 +277,10 @@ func checkText(_ text: String, where place: String) {
                 }
             }
         }
+        if CourtCalendar.calendar.component(.day, from: game.currentDate) <= 7 && CourtCalendar.calendar.component(.weekday, from: game.currentDate) == 2 {
+            let furthest = game.scheduled.map(\.date).max().map { days(game.currentDate, $0) } ?? 0
+            backlog.append("\(short(game.currentDate)): waiting \(game.awaiting.count), on calendars \(game.scheduled.count), furthest setting \(furthest) days out")
+        }
         game.acceptSuggestions(game.suggestedDates())
         game.adjourn()
         checkWorld()
@@ -274,6 +290,8 @@ func checkText(_ text: String, where place: String) {
     log("")
     log("END \(short(game.currentDate)) · cases heard \(game.casesHeard) · on probation \(onProbation) · awaiting \(game.awaiting.count) · scheduled \(game.scheduled.count)")
     log("")
+    log("BACKLOG BY MONTH")
+    for b in backlog { log("  \(b)") }
     log("FINDINGS (\(findings.count))")
     for f in findings { log("- \(f)") }
     try? transcript.joined(separator: "\n").write(toFile: outPath, atomically: true, encoding: .utf8)
