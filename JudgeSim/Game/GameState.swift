@@ -2956,8 +2956,10 @@ final class GameState: ObservableObject {
             // A new order isn't tested in its first month.
             let settled = CourtCalendar.calendar.date(byAdding: .day, value: -30, to: currentDate) ?? currentDate
             for o in orders.indices where orders[o].issued < settled && orders[o].expires > currentDate {
-                let risk = (orders[o].domestic ? 0.025 : 0.02) * (0.5 + people[index].propensity * 2.5)
-                guard rng.chance(min(0.08, risk)) else { continue }
+                // Tested weekly: a typical person under an order has about a one-in-four chance of breaking it in
+                // the first year (a bit more in domestic cases, more for someone with a long record).
+                let risk = (orders[o].domestic ? 0.007 : 0.005) * (0.5 + people[index].propensity * 2.5)
+                guard rng.chance(min(0.025, risk)) else { continue }
                 orders[o].violations += 1
                 stats.orderViolations = (stats.orderViolations ?? 0) + 1
                 let person = people[index], order = orders[o]
