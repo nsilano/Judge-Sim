@@ -333,14 +333,14 @@ extension StoryCases {
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: "{TEEN}", role: "Student (cooperating co-defendant)",
-                        direct: ["\"She said it was the only way.\""],
-                        cross: ["\"I got a deal.\""],
+                        direct: ["\"She kept saying it was the only way. Like, every time.\""],
+                        cross: ["\"Yeah. I got a deal.\""],
                         weight: 3, lay: true,
                         exam: [
-                            .direct("Whose idea was it to kill {VL}?", "\"Hers. She said if he was gone we could be together and she'd lose the condo and the dog in a divorce. She said it a lot of times until I said I'd do it.\""),
-                            .direct("What did she tell you about that night?", "\"That she'd be at a board meeting. Leave the door unlocked. Put the dog in the basement so he wouldn't see it. Make it look like a robbery.\""),
-                            .cross("You're getting out of prison in your thirties for this testimony?", "\"That's the deal.\""),
-                            .cross("You pulled the trigger?", "\"My finger on the trigger. I live with that.\"")
+                            .direct("Whose idea was it to kill {VL}?", "\"Hers. She said if he was gone we could be together, and if they got divorced she'd lose the condo and the dog. She said it like a hundred times. I kept saying no and then one day I just... said okay.\""),
+                            .direct("What did she tell you about that night?", "\"That she'd be at her board meeting. The door would be unlocked. Put the dog in the basement so he didn't have to see. Make it look like somebody robbed the place.\""),
+                            .cross("You're getting out of prison in your thirties for this testimony?", "\"That's the deal. I didn't make it up.\""),
+                            .cross("You pulled the trigger?", "\"Yeah. It was me. I think about it every night.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Lead detective",
                         direct: ["\"She told the student to lie.\""],

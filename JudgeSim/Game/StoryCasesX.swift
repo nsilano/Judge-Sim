@@ -118,15 +118,15 @@ extension StoryCases {
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: "{V}", role: "Teen on the driveway",
-                        direct: ["\"The barrel was pointed at my chest.\""],
-                        cross: ["\"Somebody in the group had eggs. Not me.\""],
+                        direct: ["\"It was pointed right at me. Right here.\" (The witness touches the center of {V.his} chest.)"],
+                        cross: ["\"Somebody had eggs. It wasn't me, I swear.\""],
                         weight: 2, lay: true,
                         exam: [
-                            .direct("Why were you on that driveway?", "\"It was Halloween. I was out with a group of friends.\""),
-                            .direct("What did you see when the door opened?", "\"A man with a shotgun. He raised it and pointed it right at my chest and said the next one on his porch gets buried.\""),
-                            .direct("How did you feel?", "\"I thought I was going to die. I couldn't move.\""),
-                            .cross("Your group brought eggs?", "\"One kid did. I didn't know until we were in the driveway.\""),
-                            .cross("You have no idea whether that gun was loaded?", "\"No. I couldn't know that.\"")
+                            .direct("Why were you on that driveway?", "\"It was Halloween. We were just walking around with my friends. Everybody goes down that street.\""),
+                            .direct("What did you see when the door opened?", "\"A man came out with a big gun. He held it up at me, like at my chest, and he said the next one of us on his porch gets buried. I didn't even know what to do.\""),
+                            .direct("How did you feel?", "\"I thought I was going to die. My legs wouldn't move. I peed a little. I never told anybody that.\"", "\"I thought he was going to shoot me. I couldn't move my legs. I just started crying.\""),
+                            .cross("Your group brought eggs?", "\"One kid did. I didn't know till we were already in the driveway. I told him that was dumb.\""),
+                            .cross("You have no idea whether that gun was loaded?", "\"How would I know that? I'm fifteen.\"")
                         ]),
             WitnessSeed(name: "{OFF}", role: "Deputy",
                         direct: ["\"The gun was unloaded when I seized it.\""],
@@ -182,7 +182,7 @@ extension StoryCases {
             defenseOpening: "An old homeowner who'd had enough, and an unloaded gun held low.",
             prosecutionClosing: "The camera caught the words and the barrel rising. That's enough.",
             defenseClosing: "Nobody can see where the gun was pointed. That's reasonable doubt.",
-            when: .months([10]),
+            when: .window(month: 10, days: 31...31),
             genders: ["D": .male]
         )
     )

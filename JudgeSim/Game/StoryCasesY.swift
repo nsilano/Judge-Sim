@@ -92,7 +92,8 @@ extension StoryCases {
             prosecutionOpening: "$3,000, a dark phone, and 'moving down for good.'",
             defenseOpening: "A frightened parent took a child to the beach.",
             prosecutionClosing: "Intent is shown by what {DL} did: the savings, the phone, the weekly rate.",
-            defenseClosing: "A note saying 'back by Wednesday' is reasonable doubt about intent."
+            defenseClosing: "A note saying 'back by Wednesday' is reasonable doubt about intent.",
+            when: .weekday(6)
         )
     )
 
@@ -145,15 +146,15 @@ extension StoryCases {
         ],
         defenseWitnesses: [
             WitnessSeed(name: nil, role: "{DL}'s teenage son",
-                        direct: ["\"They had me against the fence.\""],
-                        cross: ["\"I can't say who was who.\""],
+                        direct: ["\"They had me up against the fence. Grown men.\""],
+                        cross: ["\"I don't know who was who. It was crazy.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("Were you playing in that game?", "\"Yes. I play for the home team.\""),
-                            .direct("What happened to you?", "\"Three or four grown men had me against the fence. One hit me in the face. Then my dad was there.\""),
-                            .direct("Were you hurt?", "\"Yes. A bloody nose and a cut lip.\""),
-                            .cross("Was {VL} one of them?", "\"I don't know. It was all fast.\""),
-                            .cross("You can't say who was who in that crowd?", "\"No, I can't.\"")
+                            .direct("Were you playing in that game?", "\"Yes, sir. I'm a linebacker. Number fifty-four.\""),
+                            .direct("What happened to you?", "\"I was still in my pads walking to the bus and these like three or four grown men pushed me into the fence. One of them punched me in the face. Then all of a sudden my dad was there.\""),
+                            .direct("Were you hurt?", "\"My nose was bleeding everywhere and my lip got split. I had to sit out practice for a week.\""),
+                            .cross("Was {VL} one of them?", "\"I don't know. It all happened so fast. I just remember a lot of yelling.\""),
+                            .cross("You can't say who was who in that crowd?", "\"No, sir. I had blood in my eyes.\"")
                         ])
         ],
         prosecutionTheory: ["{D} joined a brawl and swung a metal chair into a crowd, breaking a man's ribs."],

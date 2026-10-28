@@ -17,7 +17,7 @@ extension StoryCases {
         ],
         ageRange: 58...74, occupations: ["retired postal carrier", "retired machinist", "retired Army sergeant"], hasVictim: true,
         summaries: [
-            "For six years {D} was the elected quartermaster of {POST} in {HOOD}, which runs bingo every Thursday night. The quartermaster counts the cash box with one other member, signs the count sheet, and takes the money to the bank on Friday. In {DATE}'s audit, the state bingo regulators found the count sheets showed $212,000 over three years, but the post's account received $138,000. {V}, the post commander, says {DL} always insisted on making the deposits alone. {DL} says the missing money went to cash prizes and hall repairs that were never written down, and that the post's books were a mess long before {D.he} took over."
+            "For six years {D} was the elected quartermaster of {POST} in {HOOD}, which runs bingo every Thursday night. The quartermaster counts the cash box with one other member, signs the count sheet, and takes the money to the bank on Friday. When state bingo regulators audited the post on {DATE}, they found the count sheets showed $212,000 over three years, but the post's account received $138,000. {V}, the post commander, says {DL} always insisted on making the deposits alone. {DL} says the missing money went to cash prizes and hall repairs that were never written down, and that the post's books were a mess long before {D.he} took over."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Count Sheets and Deposits", "Count sheets signed by {DL} totaling $212,000; bank deposits of $138,000 over the same 156 bingo nights.", .search),

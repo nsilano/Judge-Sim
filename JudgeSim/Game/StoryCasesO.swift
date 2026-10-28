@@ -205,7 +205,7 @@ extension StoryCases {
             defenseOpening: "A tragedy, a sick man, and a defective car. Not a plan.",
             prosecutionClosing: "Steering around people is choosing where to hit people.",
             defenseClosing: "The honking was a warning. That's not someone who wants to kill.",
-            when: .months([12]),
+            when: .window(month: 12, days: 1...14),
             genders: ["D": .male]
         )
     )
