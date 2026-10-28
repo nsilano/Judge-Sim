@@ -253,6 +253,7 @@ var backlog: [String] = []
 var heardKeys = Set<String>()
 var sameNameFlagged = Set<String>()
 var contemptHeard = 0
+var petitionsHeard: [String: Int] = [:]
 var continuedIDs = Set<UUID>()
 var hearingDates: [UUID: Date] = [:]
 
@@ -430,6 +431,15 @@ var hearingDates: [UUID: Date] = [:]
     }
     game.completeCalendar(call, choices: choices, dates: dates)
     for line in game.lastCalendarResults { log("  → \(line)") }
+    // A petition's ruling shows up on the person's record, and a granted expunction clears the conviction.
+    for m in call.matters where [.expunction, .bondForfeiture, .drivingPrivilege].contains(m.kind) {
+        petitionsHeard[m.kind.label, default: 0] += 1
+        guard let person = game.person(m.personID) else { flag("\(m.docket): petition for someone the court never recorded"); continue }
+        if !person.appearances.contains(where: { $0.docket == m.docket }) { flag("\(m.docket): petition ruling missing from \(person.name)'s record") }
+        if m.kind == .expunction, choices[m.id] == 0, let id = m.petition?.priorID, person.priors.contains(where: { $0.id == id }) {
+            flag("\(m.docket): expunction granted but the conviction is still on \(person.name)'s record")
+        }
+    }
     // A contempt ruling has to take effect on the person: jail is jail, a finding of not willful leaves them free.
     for m in call.matters where m.kind == .contempt {
         contemptHeard += 1
@@ -662,6 +672,7 @@ if args.count > 1 && args[1] == "scan" {
     if !continuedIDs.isEmpty { flag("\(continuedIDs.count) trial(s) continued mid-trial never came back") }
     let orders = game.people.flatMap { $0.stayAwayOrders ?? [] }
     log("STAY-AWAY ORDERS: \(orders.count) issued, \(game.stats.orderViolations ?? 0) violations, \(contemptHeard) contempt hearings heard, \(game.showCauseQueue.count) waiting")
+    log("PETITIONS: " + petitionsHeard.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
     log("BACKLOG BY MONTH")
     for b in backlog { log("  \(b)") }
     finish()

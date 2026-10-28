@@ -932,7 +932,30 @@ enum LawLibrary {
         Law(id: "victimRights", statute: "N.C. Const. art. I, § 37 (Marsy's Law)", title: "Victims' Rights", category: .sentencing,
             summary: "Victims have the right to be present and reasonably heard at sentencing, and to receive restitution.",
             elements: ["Victim impact statements inform, but do not dictate, the sentence."],
-            related: ["aggravatingFactors"])
+            related: ["aggravatingFactors"]),
+        Law(id: "expunction", statute: "G.S. 15A-145.5", title: "Expunction of Nonviolent Convictions", category: .sentencing,
+            summary: "A person may petition to have a nonviolent conviction removed from the record after a waiting period without another conviction.",
+            elements: ["One nonviolent misdemeanor: 5 years after the conviction or the end of the sentence, whichever is later.",
+                       "More than one nonviolent misdemeanor: 7 years.",
+                       "One nonviolent Class H or I felony, if it is the person's only conviction: 10 years.",
+                       "Excluded: Class A through G felonies, assaults, sex offenses, stalking, impaired driving, offenses involving a firearm or deadly weapon, and other listed offenses.",
+                       "The petitioner must have no conviction during the waiting period and be of good moral character; the DA may object and the victim may be heard."],
+            related: ["priorRecord"]),
+        Law(id: "bondForfeiture", statute: "G.S. 15A-544.5", title: "Setting Aside a Bond Forfeiture", category: .procedure,
+            summary: "When a defendant misses court, the bond is forfeited. The surety may move to set the forfeiture aside only on the grounds the statute lists, with the required documents.",
+            elements: ["Grounds include: the failure-to-appear order was set aside; all charges were finally disposed; the surety surrendered the defendant (sheriff's receipt); the defendant was served with the order for arrest; the defendant was incarcerated in the Department of Adult Correction or in a jail in this State at the time.",
+                       "The surety's effort to find the defendant is not itself a ground.",
+                       "The motion must be filed within 150 days of the notice of forfeiture, with the supporting documents.",
+                       "The county board of education, which receives forfeited funds, may object."],
+            related: []),
+        Law(id: "limitedPrivilege", statute: "G.S. 20-179.3", title: "Limited Driving Privilege", category: .sentencing,
+            summary: "After an impaired-driving conviction, the court may allow restricted driving for work, school, treatment, and household needs.",
+            elements: ["Only after a Level 3, 4, or 5 sentence.",
+                       "The person had a valid license at the time of the offense and no impaired-driving conviction in the previous seven years.",
+                       "A substance abuse assessment must be obtained first.",
+                       "With an alcohol concentration of 0.15 or more, the privilege must require an ignition interlock on every vehicle the person drives.",
+                       "Standard hours are 6 a.m. to 8 p.m., Monday through Friday; driving outside them is driving while license revoked."],
+            related: ["dwi"])
     ]
 
     static let ethics: [Law] = [

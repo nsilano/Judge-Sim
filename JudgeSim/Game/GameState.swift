@@ -1159,6 +1159,8 @@ final class GameState: ObservableObject {
                         call.matters.insert(CalendarCalls.warrantMatter(w, for: c), at: min(1, call.matters.count))
                     }
                 }
+                // Petitions: an expunction, a bonding company's motion, a driving privilege after a DWI.
+                call.matters += petitionMatters(on: date, excluding: usedPeople, rng: &rng)
                 call.matters.forEach { usedPeople.insert($0.personID) }
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
@@ -2443,6 +2445,100 @@ final class GameState: ObservableObject {
                           docket: newCase.docket))
         }
         return newCase
+    }
+
+    /// This week's petitions, mostly from people the court already knows: someone with an old conviction asking to
+    /// clear it, a bonding company after a missed court date, someone convicted of DWI asking to drive to work.
+    /// Now and then a petitioner the court hasn't seen.
+    private func petitionMatters(on date: Date, excluding used: Set<UUID>, rng: inout SeededRNG) -> [CalendarMatter] {
+        guard let county else { return [] }
+        let cal = CourtCalendar.calendar
+        let year = cal.component(.year, from: date)
+        var out: [CalendarMatter] = []
+        var taken = used
+        var names = namesInPlay()
+        func fresh(age: ClosedRange<Int>) -> (UUID, String, Int, String) {
+            let avoid = names
+            let name = NameBank.person(using: &rng, excluding: &names, avoiding: avoid)
+            namesIssued.insert(name)
+            return (UUID(), name, rng.int(age), rng.pick(NameBank.occupations).capitalizedFirst)
+        }
+        func docket() -> String {
+            docketSequence += rng.int(20...200)
+            return "\(year % 100) CRS \(String(format: "%06d", docketSequence))"
+        }
+
+        if rng.chance(0.35) {
+            // Someone with an old conviction and nothing since.
+            let known = people.filter { p in
+                p.status == .free && p.probation == nil && !taken.contains(p.id) && !p.priors.isEmpty
+                    && (p.appearances.last.map { (cal.dateComponents([.year], from: $0.date, to: date).year ?? 0) >= 1 } ?? true)
+            }
+            if let p = known.isEmpty || rng.chance(0.5) ? nil : rng.pick(known) {
+                docketSequence += 10
+                if let m = Petitions.expunctionMatter(personID: p.id, name: p.name, age: p.age(on: date), occupation: p.occupation, priors: p.priors,
+                                                      year: year, newPerson: false, docketSequence: docketSequence, rng: &rng) {
+                    out.append(m); taken.insert(p.id)
+                }
+            } else {
+                let (id, name, age, job) = fresh(age: 24...60)
+                let offenses: [(String, NCClass, String)] = [
+                    ("Misdemeanor Larceny", .misd1, "45 days suspended, 12 months probation"), ("Possession of Marijuana", .misd1, "Fine and costs"),
+                    ("Worthless Check", .misd2, "Fine and restitution"), ("Possession of Stolen Goods", .H, "6 to 17 months suspended"),
+                    ("Breaking or Entering a Motor Vehicle", .I, "4 to 14 months suspended"), ("Simple Assault", .misd2, "30 days suspended"),
+                    ("Driving While Impaired", .misd1, "Level 5"), ("Obtaining Property by False Pretenses", .H, "6 to 17 months suspended"),
+                    ("Assault with a Deadly Weapon", .misdA1, "60 days suspended")]
+                var priors: [PriorConviction] = []
+                let first = rng.pick(offenses)
+                priors.append(PriorConviction(offense: first.0, ncClass: first.1, year: year - rng.int(3...16), county: rng.pick(["Hollis", "Robeson", "Brunswick", "Onslow", "Pender"]), sentence: first.2))
+                if rng.chance(0.25) {
+                    let second = rng.pick(offenses)
+                    priors.append(PriorConviction(offense: second.0, ncClass: second.1, year: year - rng.int(8...22), county: "Hollis", sentence: second.2))
+                }
+                docketSequence += 10
+                if let m = Petitions.expunctionMatter(personID: id, name: name, age: max(age, 18 + (year - priors.map(\.year).min()!)), occupation: job,
+                                                      priors: priors, year: year, newPerson: true, docketSequence: docketSequence, rng: &rng) {
+                    out.append(m)
+                }
+            }
+        }
+        if rng.chance(0.25) {
+            // A missed court date on a bond: someone with an order for arrest, or a case the court hasn't seen.
+            let missed = people.filter { p in !taken.contains(p.id) && p.appearances.contains { $0.charges.lowercased().contains("failure to appear") || $0.outcome.lowercased().contains("order for arrest") } }
+            if let p = missed.isEmpty || rng.chance(0.4) ? nil : rng.pick(missed) {
+                let d = p.appearances.last(where: { $0.outcome.lowercased().contains("order for arrest") })?.docket ?? p.appearances.last?.docket ?? docket()
+                out.append(Petitions.forfeitureMatter(personID: p.id, name: p.name, age: p.age(on: date), occupation: p.occupation,
+                                                      docket: d.replacingOccurrences(of: " (forfeiture)", with: ""), date: date, newPerson: false, rng: &rng))
+                taken.insert(p.id)
+            } else {
+                let (id, name, age, job) = fresh(age: 20...50)
+                out.append(Petitions.forfeitureMatter(personID: id, name: name, age: age, occupation: job, docket: docket(), date: date,
+                                                      newPerson: true, rng: &rng))
+            }
+        }
+        if rng.chance(0.25) {
+            // A DWI conviction in the past year.
+            let drivers = people.compactMap { p -> (PersonRecord, PersonRecord.Appearance)? in
+                guard p.status != .incarcerated, !taken.contains(p.id),
+                      let a = p.appearances.last(where: { $0.charges.contains("Driving While Impaired") && !$0.outcome.lowercased().contains("not guilty") }),
+                      (cal.dateComponents([.day], from: a.date, to: date).day ?? 999) <= 365,
+                      !p.appearances.contains(where: { $0.charges.contains("limited driving privilege") && $0.docket.hasPrefix(a.docket) }) else { return nil }
+                return (p, a)
+            }
+            if let (p, a) = drivers.isEmpty || rng.chance(0.3) ? nil : rng.pick(drivers) {
+                let level = a.outcome.range(of: "Level [1-5]", options: .regularExpression).flatMap { Int(a.outcome[$0].suffix(1)) }
+                out.append(Petitions.privilegeMatter(personID: p.id, name: p.name, age: p.age(on: date), occupation: p.occupation, docket: a.docket,
+                                                     level: level, convicted: a.date, date: date, propensity: p.propensity, newPerson: false, rng: &rng))
+                taken.insert(p.id)
+            } else {
+                let (id, name, age, job) = fresh(age: 21...58)
+                let convicted = cal.date(byAdding: .day, value: -rng.int(10...90), to: date) ?? date
+                out.append(Petitions.privilegeMatter(personID: id, name: name, age: age, occupation: job, docket: docket().replacingOccurrences(of: "CRS", with: "CR"),
+                                                     level: nil, convicted: convicted, date: date, propensity: Double(rng.int(10...50)) / 100,
+                                                     newPerson: true, rng: &rng))
+            }
+        }
+        return Array(out.prefix(2))
     }
 
     private func pickReturningDefendant(rng: inout SeededRNG, date: Date) -> PersonRecord? {

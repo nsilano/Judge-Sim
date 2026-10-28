@@ -4,6 +4,7 @@ import Foundation
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
         case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief, firstAppearance, arraignment, contempt
+        case expunction, bondForfeiture, drivingPrivilege
 
         var label: String {
             switch self {
@@ -19,6 +20,9 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .firstAppearance: return "Bond hearing"
             case .arraignment: return "Arraignment"
             case .contempt: return "Show cause: contempt"
+            case .expunction: return "Petition to expunge"
+            case .bondForfeiture: return "Motion to set aside bond forfeiture"
+            case .drivingPrivilege: return "Limited driving privilege"
             }
         }
 
@@ -36,6 +40,9 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .firstAppearance: return "lock.open.fill"
             case .arraignment: return "person.wave.2.fill"
             case .contempt: return "exclamationmark.shield.fill"
+            case .expunction: return "eraser.fill"
+            case .bondForfeiture: return "banknote.fill"
+            case .drivingPrivilege: return "car.fill"
             }
         }
     }
@@ -75,6 +82,19 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var suggestedAmount: Int? = nil
     /// Options the law doesn't allow here (a PJC on a Class A through E felony), kept out of the list.
     var unavailableOptions: Set<Int>? = nil
+    /// For a petition (expunction, bond forfeiture, driving privilege): what the law turns on, kept off the card.
+    var petition: PetitionFacts? = nil
+
+    /// How the matter is captioned on its card.
+    var caption: String {
+        switch kind {
+        case .searchWarrant: return "In re: search of \(personName)"
+        case .expunction: return "In re: petition of \(personName)"
+        case .drivingPrivilege: return "In re: \(personName), limited driving privilege"
+        case .bondForfeiture: return "State v. \(personName) · surety: \(petition?.company ?? "the bonding company")"
+        default: return "State v. \(personName)"
+        }
+    }
 
     /// The option text with the amount the judge chose filled in.
     func optionText(_ choice: Int, amount: Int?) -> String {
@@ -84,7 +104,27 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     }
 
     /// The person's whole file is worth opening for these.
-    var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination || kind == .contempt }
+    var concernsProbationer: Bool {
+        [.pvAdmission, .earlyTermination, .contempt, .expunction, .bondForfeiture, .drivingPrivilege].contains(kind)
+    }
+}
+
+/// A petition decided on the papers and short argument. Whether the law allows it is in the facts on the card, not
+/// announced; a ruling the law doesn't support comes back later.
+struct PetitionFacts: Codable, Hashable {
+    var eligible: Bool
+    /// Why the law allows it or doesn't, in a sentence, for the result and any later news.
+    var reason: String
+    var offense: String?
+    var priorID: UUID?
+    /// Bond forfeiture: the amount; the surety.
+    var amount: Int?
+    var company: String?
+    /// Driving privilege: how likely the person is to drive impaired again, and whether an interlock is required.
+    var risk: Double?
+    var interlockRequired: Bool?
+    /// The person isn't in the court's records yet (a petitioner from another court or years ago).
+    var newPerson: Bool?
 }
 
 /// Pretrial release under G.S. 15A-534: the least restrictive conditions that will reasonably assure the
@@ -843,6 +883,19 @@ enum CalendarCalls {
                                                                       outcome: choice == 1 ? "Granted; nothing is owed: probation ended early"
                                                                                            : "Granted: probation ended early"))
                 }))
+            case .expunction, .bondForfeiture, .drivingPrivilege:
+                guard let p = m.petition else { continue }
+                let r = Petitions.resolve(m, facts: p, choice: choice, date: date, judgeLast: judgeLast, rng: &rng)
+                if p.newPerson == true {
+                    var person = PersonRecord(id: m.personID, name: m.personName, birthYear: year - m.personAge, occupation: m.occupation,
+                                              background: BackgroundLines.pick(age: m.personAge, occupation: m.occupation, used: [], towns: county.towns, rng: &rng),
+                                              priors: m.priors, releaseDate: nil, probation: nil, propensity: p.risk ?? 0.2)
+                    r.update(&person)
+                    newPeople.append(person)
+                } else {
+                    updates.append((m.personID, r.update))
+                }
+                pending += r.later
             case .contempt:
                 let days = choice == 0 ? 30 : (choice == 1 ? 10 : 0)
                 updates.append((m.personID, { person in
