@@ -258,9 +258,7 @@ enum NewsDesk {
         // Life around the courthouse.
         if rng.chance(0.5) {
             let ada = rng.pick(county.assistantDAs)
-            let graduates = rng.int(5...14)
             let pool: [(String, String)] = [
-                ("Drug Treatment Court graduates \(graduates)", "In a ceremony in the jury assembly room, \(graduates) participants finished Hollis County's Drug Treatment Court. One graduate, two years sober, thanked the probation officer who \"never gave up on me, even when I did.\""),
                 ("Scam calls claim to be from the courthouse", "The \(county.sheriffsOffice) warns residents about callers who say they've missed jury duty and must pay a fine by gift card. \"No court will ever call you and demand money over the phone,\" Clerk of Superior Court \(county.clerk) said."),
                 ("Courthouse elevator out again", "For the third time this year, the main elevator at the \(county.courthouse) is out of service. Deputies carried a wheelchair user up two flights for a hearing Tuesday. County commissioners say repairs are budgeted for spring."),
                 ("Public defenders carry record caseloads", "Chief Public Defender \(county.chiefPublicDefender) told county commissioners that each assistant public defender is carrying more than \(rng.int(110...180)) open felony cases. \"We are triaging justice,\" \(county.chiefPublicDefender) said."),

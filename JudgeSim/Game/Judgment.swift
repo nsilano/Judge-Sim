@@ -120,9 +120,11 @@ struct ProbationConditions: Codable, Hashable {
     var maintainEmployment = false
     var education = false
     var angerManagement = false
+    /// For a defendant who served in the military (optional so earlier saves still load).
+    var veteransTreatmentCourt: Bool? = nil
 
     var specialCount: Int {
-        [specialProbationDays > 0, houseArrestDays > 0, communityServiceHours > 0, drugTreatmentCourt, substanceTreatment,
+        [specialProbationDays > 0, houseArrestDays > 0, communityServiceHours > 0, drugTreatmentCourt, veteransTreatmentCourt == true, substanceTreatment,
          mentalHealthTreatment, randomTesting, abstainAlcohol, curfew, noContactVictim, stayAway, surrenderFirearms,
          maintainEmployment, education, angerManagement].filter { $0 }.count
     }
@@ -135,6 +137,7 @@ struct ProbationConditions: Codable, Hashable {
         if houseArrestDays > 0 { lines.append("House arrest with electronic monitoring for \(houseArrestDays) days.") }
         if communityServiceHours > 0 { lines.append("Complete \(communityServiceHours) hours of community service and pay the $250 community service fee.") }
         if drugTreatmentCourt { lines.append("Participate in and complete Hollis County Drug Treatment Court.") }
+        if veteransTreatmentCourt == true { lines.append("Participate in and complete Hollis County Veterans Treatment Court, with a veteran mentor.") }
         if substanceTreatment { lines.append("Obtain a substance abuse assessment through TASC and complete all recommended treatment.") }
         if mentalHealthTreatment { lines.append("Obtain a mental health evaluation and comply with all recommended treatment and medication.") }
         if randomTesting { lines.append("Submit to random drug and alcohol testing.") }
@@ -1507,7 +1510,7 @@ enum Judgment {
         let need = bg?.treatmentNeed ?? TreatmentNeed.none
         let k = r.conditions
         let onProbation = !suspendedTerms.isEmpty || !afterActiveTerms.isEmpty
-        let treatedSubstance = (k.substanceTreatment || k.drugTreatmentCourt) && onProbation
+        let treatedSubstance = (k.substanceTreatment || k.drugTreatmentCourt || k.veteransTreatmentCourt == true) && onProbation
             || (r.recommendations.substanceTreatment && !activeTerms.isEmpty)
         let treatedMental = (k.mentalHealthTreatment && onProbation)
             || (r.recommendations.mentalHealth && !activeTerms.isEmpty)

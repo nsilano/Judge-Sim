@@ -1161,6 +1161,7 @@ final class GameState: ObservableObject {
                 }
                 // Petitions: an expunction, a bonding company's motion, a driving privilege after a DWI.
                 call.matters += petitionMatters(on: date, excluding: usedPeople, rng: &rng)
+                call.matters += treatmentCourtMatters(on: date, excluding: usedPeople, rng: &rng)
                 call.matters.forEach { usedPeople.insert($0.personID) }
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
@@ -2238,6 +2239,14 @@ final class GameState: ObservableObject {
                 people.append(newcomer)
             }
         }
+        // Someone the judge terminates from treatment court goes to a violation hearing on the probation.
+        for m in call.matters where m.kind == .treatmentReview && m.options.count == 4 && choices[m.id] == 3 {
+            guard let person = people.first(where: { $0.id == m.personID }), person.probation != nil, !hasHearingSet(for: person.id) else { continue }
+            var vrng = SeededRNG(seed: seedBase ^ SeededRNG.stableHash(m.docket + "tc"))
+            fileViolationReport(person, text: "terminated from \(m.review?.program ?? "treatment court") for repeated setbacks: \(m.summary)",
+                                contact: false, note: "Violation report filed after termination from \(m.review?.program ?? "treatment court").",
+                                on: call.date, rng: &vrng)
+        }
         for (id, update) in result.updates {
             if let index = people.firstIndex(where: { $0.id == id }) {
                 let wasHeld = people[index].status == .incarcerated
@@ -2445,6 +2454,26 @@ final class GameState: ObservableObject {
                           docket: newCase.docket))
         }
         return newCase
+    }
+
+    /// Treatment court participants due for a review (every six weeks or so) report to the judge at the calendar call.
+    private func treatmentCourtMatters(on date: Date, excluding used: Set<UUID>, rng: inout SeededRNG) -> [CalendarMatter] {
+        let cal = CourtCalendar.calendar
+        let horizon = cal.date(byAdding: .day, value: 6, to: date) ?? date
+        var out: [CalendarMatter] = []
+        for index in people.indices where people[index].status == .probation && !used.contains(people[index].id) {
+            guard let term = people[index].probation, term.treatmentCourt != nil, term.courtGraduated != true else { continue }
+            if term.courtReviewDue == nil {
+                let start = term.starts ?? people[index].appearances.last?.date ?? date
+                people[index].probation?.courtReviewDue = cal.date(byAdding: .day, value: 42, to: start)
+                people[index].probation?.courtPhase = 1
+            }
+            guard let due = people[index].probation?.courtReviewDue, due <= horizon, out.count < 3,
+                  let current = people[index].probation,
+                  let m = TreatmentCourts.reviewMatter(people[index], term: current, date: date, rng: &rng) else { continue }
+            out.append(m)
+        }
+        return out
     }
 
     /// This week's petitions, mostly from people the court already knows: someone with an old conviction asking to
@@ -3007,10 +3036,9 @@ final class GameState: ObservableObject {
                     people[index].status = .free
                     people[index].probation = nil
                     stats.probationCompleted += 1
-                    let treatmentCourt = (probation.conditions ?? []).contains { $0.contains("Drug Treatment Court") }
-                    if treatmentCourt {
+                    if let program = probation.treatmentCourt, probation.courtGraduated != true {
                         post(NewsItem(date: probation.ends, kind: .community,
-                                      headline: "\(person.name) graduates from Hollis County Drug Treatment Court",
+                                      headline: "\(person.name) graduates from Hollis County \(program)",
                                       body: "\(person.name) was among the graduates honored this week. \"I didn't think I'd make it,\" \(person.lastName) told the gathering. The program's coordinator credited the team of judges, treatment providers, and probation officers.",
                                       docket: probation.docket, prominence: 2))
                     } else if probation.imposedInThisCourt && rng.chance(0.3) {

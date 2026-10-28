@@ -347,6 +347,11 @@ var hearingDates: [UUID: Date] = [:]
             }
             s.rulings.sentences[unit.id] = choice
         }
+        // Treatment court for some of those who stay out.
+        if s.courtCase.defendant.background.isEmpty == false && rng.chance(0.15) {
+            if TreatmentCourts.isVeteran(s.courtCase.defendant.background) { s.rulings.conditions.veteransTreatmentCourt = true; log("  Condition: Veterans Treatment Court") }
+            else { s.rulings.conditions.drugTreatmentCourt = true; log("  Condition: Drug Treatment Court") }
+        }
     }
     for _ in 0..<8 where s.stage != .judgment {
         if s.pendingPleaDeparture != nil { s.informDefendantOfDeparture() }
@@ -438,6 +443,15 @@ var hearingDates: [UUID: Date] = [:]
         if !person.appearances.contains(where: { $0.docket == m.docket }) { flag("\(m.docket): petition ruling missing from \(person.name)'s record") }
         if m.kind == .expunction, choices[m.id] == 0, let id = m.petition?.priorID, person.priors.contains(where: { $0.id == id }) {
             flag("\(m.docket): expunction granted but the conviction is still on \(person.name)'s record")
+        }
+    }
+    for m in call.matters where m.kind == .treatmentReview || m.kind == .treatmentGraduation {
+        petitionsHeard[m.kind.label, default: 0] += 1
+        guard let person = game.person(m.personID) else { flag("\(m.docket): treatment review for someone with no record"); continue }
+        if m.kind == .treatmentGraduation && choices[m.id] == 0 && person.probation != nil { flag("\(m.docket): graduated with probation ended, but \(person.name) is still on probation") }
+        if m.kind == .treatmentReview && m.options.count == 4 && choices[m.id] == 3 {
+            petitionsHeard["Treatment court terminations", default: 0] += 1
+            if person.probation?.treatmentCourt != nil { flag("\(m.docket): terminated from treatment court but still in it") }
         }
     }
     // A contempt ruling has to take effect on the person: jail is jail, a finding of not willful leaves them free.

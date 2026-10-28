@@ -4,7 +4,7 @@ import Foundation
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
         case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief, firstAppearance, arraignment, contempt
-        case expunction, bondForfeiture, drivingPrivilege
+        case expunction, bondForfeiture, drivingPrivilege, treatmentReview, treatmentGraduation
 
         var label: String {
             switch self {
@@ -23,6 +23,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .expunction: return "Petition to expunge"
             case .bondForfeiture: return "Motion to set aside bond forfeiture"
             case .drivingPrivilege: return "Limited driving privilege"
+            case .treatmentReview: return "Treatment court review"
+            case .treatmentGraduation: return "Treatment court graduation"
             }
         }
 
@@ -43,6 +45,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .expunction: return "eraser.fill"
             case .bondForfeiture: return "banknote.fill"
             case .drivingPrivilege: return "car.fill"
+            case .treatmentReview: return "heart.text.square.fill"
+            case .treatmentGraduation: return "graduationcap.fill"
             }
         }
     }
@@ -84,6 +88,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var unavailableOptions: Set<Int>? = nil
     /// For a petition (expunction, bond forfeiture, driving privilege): what the law turns on, kept off the card.
     var petition: PetitionFacts? = nil
+    /// For a treatment court review or graduation: the program, phase, and this period's report.
+    var review: TreatmentReviewFacts? = nil
 
     /// How the matter is captioned on its card.
     var caption: String {
@@ -105,7 +111,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
 
     /// The person's whole file is worth opening for these.
     var concernsProbationer: Bool {
-        [.pvAdmission, .earlyTermination, .contempt, .expunction, .bondForfeiture, .drivingPrivilege].contains(kind)
+        [.pvAdmission, .earlyTermination, .contempt, .expunction, .bondForfeiture, .drivingPrivilege, .treatmentReview, .treatmentGraduation].contains(kind)
     }
 }
 
@@ -896,6 +902,12 @@ enum CalendarCalls {
                     updates.append((m.personID, r.update))
                 }
                 pending += r.later
+            case .treatmentReview, .treatmentGraduation:
+                guard let r = m.review else { continue }
+                let ruling = TreatmentCourts.resolve(m, facts: r, choice: choice, date: date, judgeLast: judgeLast, rng: &rng)
+                updates.append((m.personID, ruling.update))
+                pending += ruling.later
+                if ruling.endsProbation { probationCompleted += 1 }
             case .contempt:
                 let days = choice == 0 ? 30 : (choice == 1 ? 10 : 0)
                 updates.append((m.personID, { person in

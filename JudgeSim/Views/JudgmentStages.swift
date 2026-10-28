@@ -618,6 +618,12 @@ struct ProbationConditionsCard: View {
                           fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
             ConditionToggle(title: "Drug Treatment Court", detail: "Intensive court-supervised treatment with frequent review hearings. An intermediate condition.",
                             isOn: $session.rulings.conditions.drugTreatmentCourt)
+            if TreatmentCourts.isVeteran(session.courtCase.defendant.background) {
+                ConditionToggle(title: "Veterans Treatment Court",
+                                detail: "Court-supervised treatment through the VA, with a fellow veteran as mentor. For defendants who served.",
+                                isOn: Binding(get: { session.rulings.conditions.veteransTreatmentCourt == true },
+                                              set: { session.rulings.conditions.veteransTreatmentCourt = $0 }))
+            }
             ConditionToggle(title: "Curfew, 9 p.m. to 6 a.m.", isOn: $session.rulings.conditions.curfew)
 
             Divider()
