@@ -508,9 +508,9 @@ enum CalendarCalls {
     }
 
     static func make(county: County, date: Date, docketSequence: Int, people: [PersonRecord], excluding: Set<UUID> = [],
-                     seed: UInt64) -> CalendarCall {
+                     seed: UInt64, takenNames: Set<String> = []) -> CalendarCall {
         var rng = SeededRNG(seed: seed)
-        var used = Set(people.map(\.name))
+        var used = Set(people.map(\.name)).union(takenNames)
         let year = Calendar.current.component(.year, from: date) % 100
         var sequence = docketSequence
         func docket(_ felony: Bool) -> String {

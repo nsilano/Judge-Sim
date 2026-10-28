@@ -201,6 +201,8 @@ final class GameState: ObservableObject {
     /// Fingerprints of testimony and argument the judge has read recently, so new cases steer away from them.
     private var recentLineKeys: [UInt64] = []
     private var usedSignatures: [String] = []
+    /// Names given out this session before their case reaches a calendar (several cases are built in one pass).
+    private var namesIssued: Set<String> = []
     private var seedBase: UInt64 = UInt64.random(in: 1...UInt64.max / 2)
     private let saveKey = "JudgeSim.nc.save.v1"
 
@@ -940,8 +942,9 @@ final class GameState: ObservableObject {
     /// A probationer sentenced elsewhere whose supervision was transferred to this county.
     private func makeOutsideHearing(date: Date, rng: inout SeededRNG) -> ViolationHearing? {
         guard let county else { return nil }
-        var used = Set(people.map(\.name))
+        var used = namesInPlay()
         let name = NameBank.person(using: &rng, excluding: &used)
+        namesIssued.insert(name)
         let age = rng.int(20...58)
         let year = CourtCalendar.calendar.component(.year, from: date)
         let seed = rng.pick(GenericPools.priorSeeds)
@@ -1029,7 +1032,8 @@ final class GameState: ObservableObject {
             // The week's administrative calendar call opens the first day the judge sits.
             if let county {
                 var call = CalendarCalls.make(county: county, date: date, docketSequence: docketSequence, people: people,
-                                              excluding: usedPeople, seed: rng.next())
+                                              excluding: usedPeople, seed: rng.next(), takenNames: namesInPlay(plus: entries))
+                call.matters.forEach { namesIssued.insert($0.personName) }
                 docketSequence += 200
                 // Leave room on the calendar for the new arrest, a relief motion, and most weeks a warrant and an arraignment.
                 // Fewer new matters while the new judge's courtroom is still filling up.
@@ -1210,6 +1214,32 @@ final class GameState: ObservableObject {
     }
 
     /// Everyone with a matter on a calendar or waiting for a trial date.
+    /// Every name already given to someone in this county: no new person ever gets one of them. Shared last names
+    /// or first names are fine; two different people never have the same full name.
+    func namesInPlay(plus extra: [DocketEntry] = []) -> Set<String> {
+        var names = Set(people.map(\.name)).union(residents.map(\.name)).union(living.owners.values).union(officerRecords.keys)
+        if let county { names.formUnion(Gazetteer.regulars(for: county).values) }
+        func add(_ c: CourtCase) {
+            names.insert(c.defendant.name)
+            if let v = c.victimName { names.insert(v) }
+            c.witnesses.forEach { names.insert($0.name) }
+        }
+        for entry in extra + (today?.entries ?? []) + scheduled.map(\.entry) + awaiting.map(\.entry) {
+            switch entry.matter {
+            case .trial(let c): add(c)
+            case .hearing(let h): names.insert(h.personName)
+            case .calendar(let call):
+                for m in call.matters {
+                    names.insert(m.personName)
+                    if let c = m.pendingCase { add(c) }
+                }
+            }
+        }
+        investigations.forEach { add($0.courtCase) }
+        bondQueue.forEach { add($0.courtCase) }
+        return names.union(namesIssued)
+    }
+
     private func peopleInPlay(plus extra: [DocketEntry] = []) -> Set<UUID> {
         var used = Set<UUID>()
         for entry in extra + (today?.entries ?? []) + scheduled.map(\.entry) + awaiting.map(\.entry) {
@@ -2353,7 +2383,10 @@ final class GameState: ObservableObject {
         // Names the county already knows; new people never share them.
         var reserved = Set(residents.map(\.name)).union(living.owners.values).union(officerRecords.keys)
         reserved.formUnion(Gazetteer.regulars(for: county).values)
-        context.reservedNames = reserved.subtracting(people.map(\.name))
+        // Everyone already in the world, past defendants included: a new person never shares a full name with them.
+        // (A returning defendant or a former witness charged later keeps their own name; that's the same person.)
+        reserved.formUnion(namesInPlay())
+        context.reservedNames = reserved
         context.residentDefendant = residentDefendant.map { ResidentRef(name: $0.name, town: $0.town, occupation: $0.occupation, lastCaption: nil) }
         context.residents = residents.filter { !$0.deceased }.map { r in
             ResidentRef(name: r.name, town: r.town, occupation: r.occupation,
@@ -2387,6 +2420,9 @@ final class GameState: ObservableObject {
         recentLineKeys.append(contentsOf: CaseAuditor.lineKeys(newCase))
         if recentLineKeys.count > 2_500 { recentLineKeys.removeFirst(recentLineKeys.count - 2_500) }
         used.insert(newCase.defendant.personID)
+        namesIssued.insert(newCase.defendant.name)
+        if let v = newCase.victimName { namesIssued.insert(v) }
+        newCase.witnesses.forEach { namesIssued.insert($0.name) }
         docketSequence += rng.int(30...420)
         recentTemplates.append(newCase.templateKey)
         if let signature = newCase.scenarioSignature { usedSignatures.append(signature) }

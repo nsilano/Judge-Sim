@@ -240,6 +240,7 @@ var seenNews = 0
 var seenNewsKeys = Set<String>()
 var backlog: [String] = []
 var heardKeys = Set<String>()
+var sameNameFlagged = Set<String>()
 var continuedIDs = Set<UUID>()
 var hearingDates: [UUID: Date] = [:]
 
@@ -488,6 +489,20 @@ func checkText(_ text: String, where place: String) {
             || game.schedule.timeOff.contains(CourtSchedule.key(set.date)) {
             flag("\(set.entry.title) set on \(short(set.date)), a day court doesn't sit (\(CourtCalendar.holiday(on: set.date) ?? "weekday off or time off"))")
         }
+    }
+    // Two different people never share a full name.
+    var ids: [String: Set<UUID>] = [:]
+    func note(_ name: String, _ id: UUID) { ids[name, default: []].insert(id) }
+    game.people.forEach { note($0.name, $0.id) }
+    var cases: [CourtCase] = game.investigations.map(\.courtCase) + game.bondQueue.map(\.courtCase)
+    for entry in (game.today?.entries ?? []) + game.scheduled.map(\.entry) + game.awaiting.map(\.entry) {
+        if case .trial(let c) = entry.matter { cases.append(c) }
+        if case .calendar(let call) = entry.matter { cases += call.matters.compactMap(\.pendingCase) }
+    }
+    cases.forEach { note($0.defendant.name, $0.defendant.personID) }
+    for (name, set) in ids where set.count > 1 && !sameNameFlagged.contains(name) {
+        sameNameFlagged.insert(name)
+        flag("two different defendants are both named \(name)")
     }
     for appeal in game.appeals {
         if let record = game.history.first(where: { $0.docket == appeal.docket && $0.resolvedKind == "trial" }),
