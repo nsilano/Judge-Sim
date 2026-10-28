@@ -180,6 +180,13 @@ final class CaseSession: ObservableObject {
             }
             // The case on file is the one as indicted; a denied motion to continue changed what the trial had.
             if resume.rulings.continuanceMotionDenied == true { applyDeniedContinuance() }
+            // A witness who couldn't testify without an interpreter stays out on the resumed trial.
+            for incident in self.courtCase.incidents ?? [] {
+                if let o = resume.rulings.choice(for: incident), o.effect == .removeWitness, let id = o.witnessID {
+                    self.courtCase.witnesses.removeAll { $0.id == id }
+                    self.courtCase.objections.removeAll { $0.witnessID == id }
+                }
+            }
             applyIndictmentRulings()
         }
     }
@@ -400,7 +407,7 @@ final class CaseSession: ObservableObject {
     }
 
     var trialComplete: Bool {
-        pendingObjections == 0 && !ethicsPending && halftimeComplete && testimonyDecided
+        pendingObjections == 0 && !ethicsPending && !incidentPending(.trial) && incidentContinuance == nil && halftimeComplete && testimonyDecided
     }
 
     /// Verdict choices left open after the motion to dismiss.
@@ -517,12 +524,14 @@ final class CaseSession: ObservableObject {
     /// The judge decides; the only requirement is that every judgment has a disposition.
     var sentencingComplete: Bool {
         if needsHabitualDecision && rulings.habitualFound == nil { return false }
+        if incidentPending(.sentencing) { return false }
         if rulings.special != .none { return true }
         return units.allSatisfy { Judgment.isComplete(self.choice(for: $0)) }
     }
 
     var sentencingHint: String? {
         if needsHabitualDecision && rulings.habitualFound == nil { return "Decide whether habitual felon status was proven." }
+        if incidentPending(.sentencing) { return "Restore order in the courtroom first." }
         if !sentencingComplete { return "Choose a disposition (Active, Intermediate, or Community) for each judgment." }
         return nil
     }
@@ -709,6 +718,8 @@ final class CaseSession: ObservableObject {
         switch stage {
         case .briefing:
             if continuanceMotionPending { return "Rule on the motion to continue." }
+            if incidentPending(.beforeTrial) { return "Rule on what just came up in the courtroom." }
+            if incidentContinuance != nil { return "Set the new date for the case." }
             if pleaPresented && rulings.pleaAccepted == nil && !rulings.pleaWithdrawn { return "Take the plea or reject it." }
             return courtCase.motions.isEmpty ? "Read the file, then start the trial." : "Read the file, then hear the pretrial motions."
         case .motions:
@@ -717,6 +728,8 @@ final class CaseSession: ObservableObject {
         case .trial:
             var parts: [String] = []
             if ethicsPending { parts.append("respond to the matter outside the courtroom") }
+            if incidentPending(.trial) { parts.append("rule on the discovery problem") }
+            if incidentContinuance != nil { return "Set the new date for the case." }
             if pendingObjections > 0 { parts.append("rule on \(pendingObjections) objection\(pendingObjections == 1 ? "" : "s")") }
             if stateRested && !halftimeComplete { parts.append("rule on the motion to dismiss") }
             if halftimeComplete && !testimonyDecided { parts.append("advise the defendant on testifying") }
@@ -866,6 +879,43 @@ final class CaseSession: ObservableObject {
     }
 
     // MARK: Flow
+
+    // MARK: Courtroom incidents
+
+    func incidents(at moment: CourtIncident.Moment) -> [CourtIncident] {
+        (courtCase.incidents ?? []).filter { $0.moment == moment }
+    }
+
+    func incidentPending(_ moment: CourtIncident.Moment) -> Bool {
+        incidents(at: moment).contains { rulings.choice(for: $0) == nil }
+    }
+
+    /// A ruling that sends the case to another date (an interpreter, new counsel, a mistrial).
+    var incidentContinuance: (incident: CourtIncident, option: IncidentOption)? {
+        for incident in courtCase.incidents ?? [] {
+            if let o = rulings.choice(for: incident), o.effect == .continueCase || o.effect == .mistrial { return (incident, o) }
+        }
+        return nil
+    }
+
+    func chooseIncident(_ incident: CourtIncident, _ option: IncidentOption) {
+        guard rulings.choice(for: incident) == nil else { return }
+        var map = rulings.incidentChoices ?? [:]
+        map[incident.id] = option.id
+        rulings.incidentChoices = map
+        switch option.effect {
+        case .removeWitness:
+            if let id = option.witnessID {
+                courtCase.witnesses.removeAll { $0.id == id }
+                courtCase.objections.removeAll { $0.witnessID == id }
+            }
+            halftimeMotion = HalftimeMotion.make(for: courtCase, excluded: rulings.excludedEvidence(in: courtCase))
+        case .excludeEvidence:
+            halftimeMotion = HalftimeMotion.make(for: courtCase, excluded: rulings.excludedEvidence(in: courtCase))
+        default:
+            break
+        }
+    }
 
     func chooseEthics(_ option: EthicsOption) {
         rulings.ethicsChoice = option.id

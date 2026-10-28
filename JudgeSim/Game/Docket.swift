@@ -99,7 +99,12 @@ struct CourtSchedule: Codable, Hashable {
 
     static func weekday(_ date: Date) -> Int { CourtCalendar.calendar.component(.weekday, from: date) }
 
-    func isOff(_ date: Date) -> Bool { timeOff.contains(Self.key(date)) }
+    func isOff(_ date: Date) -> Bool { timeOff.contains(Self.key(date)) || closures?[Self.key(date)] != nil }
+
+    /// Days the courthouse is closed or the judge is assigned elsewhere, and why. Not leave (optional for older saves).
+    var closures: [String: String]? = nil
+
+    func closure(on date: Date) -> String? { closures?[Self.key(date)] }
 
     /// The judge is in court that day: a weekday the schedule sits, not a court holiday, not booked off.
     func sits(on date: Date) -> Bool {

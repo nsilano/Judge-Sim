@@ -9,6 +9,16 @@ extension FollowUpCases {
         trailerTheft, dockCopper, fakeReturns, drawerShort, concertTickets, rentalListing, atmSkimmer, washedChecks, roofDeposit, pawnedRing
     ]
 
+    /// Who fills the investigating witness's role: the county's detective, a deputy, a trooper, or (for an animal
+    /// control officer or a fire marshal) someone with their own name.
+    static func witnessName(for role: String) -> String? {
+        let r = role.lowercased()
+        if r.contains("deputy") { return "{OFF}" }
+        if r.contains("trooper") { return "{TROOPER}" }
+        if ["animal control", "fire marshal", "marine patrol", "social worker"].contains(where: { r.contains($0) }) { return nil }
+        return "{DET}"
+    }
+
     /// A short follow-up: one investigating witness, two exhibits for the State, one for the defense.
     /// Shared by the later batches.
     static func followUp(key: String, category: LawCategory, headlines: [String], law: String, lesser: String? = nil,
@@ -24,7 +34,7 @@ extension FollowUpCases {
             threshold: threshold, lesserThreshold: lesser == nil ? 0 : threshold - 2, specification: spec,
             ageRange: ages, occupations: [], hasVictim: victim, summaries: [summary],
             prosecutionEvidence: state, defenseEvidence: defense,
-            prosecutionWitnesses: [WitnessSeed(name: "{DET}", role: witnessRole, direct: [], cross: [], weight: 2, lay: false, exam: exam)],
+            prosecutionWitnesses: [WitnessSeed(name: witnessName(for: witnessRole), role: witnessRole, direct: [], cross: [], weight: 2, lay: false, exam: exam)],
             defenseWitnesses: [],
             prosecutionTheory: [theory.0], defenseTheory: [theory.1],
             aggravating: [], mitigating: [], victimImpacts: impact.map { [$0] } ?? [], allocutions: [allocution],

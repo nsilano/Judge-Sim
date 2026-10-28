@@ -211,6 +211,7 @@ struct SentencingStage: View {
         let units = session.units
         let issues = session.legalIssues
         VStack(alignment: .leading, spacing: 16) {
+            IncidentCards(session: session, moment: .sentencing)
             Text(session.rulings.pleaAccepted == true
                  ? "You accepted the plea. The sentence is up to you."
                  : "The sentence is up to you. The chart and counsel's recommendations are guidance, not limits.")
@@ -618,6 +619,12 @@ struct ProbationConditionsCard: View {
                           fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
             ConditionToggle(title: "Drug Treatment Court", detail: "Intensive court-supervised treatment with frequent review hearings. An intermediate condition.",
                             isOn: $session.rulings.conditions.drugTreatmentCourt)
+            if TreatmentCourts.isVeteran(session.courtCase.defendant.background) {
+                ConditionToggle(title: "Veterans Treatment Court",
+                                detail: "Court-supervised treatment through the VA, with a fellow veteran as mentor. For defendants who served.",
+                                isOn: Binding(get: { session.rulings.conditions.veteransTreatmentCourt == true },
+                                              set: { session.rulings.conditions.veteransTreatmentCourt = $0 }))
+            }
             ConditionToggle(title: "Curfew, 9 p.m. to 6 a.m.", isOn: $session.rulings.conditions.curfew)
 
             Divider()
@@ -1320,6 +1327,9 @@ struct JudgmentStage: View {
                 .card()
             }
 
+            ForEach(outcome.incidentResults, id: \.self) { line in
+                Label(line, systemImage: "exclamationmark.bubble.fill").font(.callout).card()
+            }
             if let ethics = outcome.ethicsResult {
                 SectionTitle(text: "Outside the courtroom", icon: "exclamationmark.shield.fill")
                 Text(ethics).font(.callout).card()

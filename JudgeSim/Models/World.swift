@@ -197,6 +197,20 @@ struct ProbationTerm: Codable, Hashable {
     var offenseClass: NCClass?
     /// A conditional discharge: no judgment has been entered yet.
     var conditionalDischarge: Bool?
+    /// Treatment court: the phase reached (1 to 4), when the next review is due, setbacks so far, and whether the
+    /// person has graduated (optional so earlier saves still load).
+    var courtPhase: Int?
+    var courtReviewDue: Date?
+    var courtStrikes: Int?
+    var courtGraduated: Bool?
+
+    /// "Drug Treatment Court" or "Veterans Treatment Court", if the person was ordered into one.
+    var treatmentCourt: String? {
+        let all = conditions ?? []
+        if all.contains(where: { $0.contains("Veterans Treatment Court") }) { return "Veterans Treatment Court" }
+        if all.contains(where: { $0.contains("Drug Treatment Court") }) { return "Drug Treatment Court" }
+        return nil
+    }
 }
 
 /// A probation violation report on a probationer, heard on the court's calendar.

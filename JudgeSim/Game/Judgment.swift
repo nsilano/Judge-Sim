@@ -120,9 +120,11 @@ struct ProbationConditions: Codable, Hashable {
     var maintainEmployment = false
     var education = false
     var angerManagement = false
+    /// For a defendant who served in the military (optional so earlier saves still load).
+    var veteransTreatmentCourt: Bool? = nil
 
     var specialCount: Int {
-        [specialProbationDays > 0, houseArrestDays > 0, communityServiceHours > 0, drugTreatmentCourt, substanceTreatment,
+        [specialProbationDays > 0, houseArrestDays > 0, communityServiceHours > 0, drugTreatmentCourt, veteransTreatmentCourt == true, substanceTreatment,
          mentalHealthTreatment, randomTesting, abstainAlcohol, curfew, noContactVictim, stayAway, surrenderFirearms,
          maintainEmployment, education, angerManagement].filter { $0 }.count
     }
@@ -135,6 +137,7 @@ struct ProbationConditions: Codable, Hashable {
         if houseArrestDays > 0 { lines.append("House arrest with electronic monitoring for \(houseArrestDays) days.") }
         if communityServiceHours > 0 { lines.append("Complete \(communityServiceHours) hours of community service and pay the $250 community service fee.") }
         if drugTreatmentCourt { lines.append("Participate in and complete Hollis County Drug Treatment Court.") }
+        if veteransTreatmentCourt == true { lines.append("Participate in and complete Hollis County Veterans Treatment Court, with a veteran mentor.") }
         if substanceTreatment { lines.append("Obtain a substance abuse assessment through TASC and complete all recommended treatment.") }
         if mentalHealthTreatment { lines.append("Obtain a mental health evaluation and comply with all recommended treatment and medication.") }
         if randomTesting { lines.append("Submit to random drug and alcohol testing.") }
@@ -268,6 +271,13 @@ struct Rulings: Codable, Hashable {
     var postReleaseDecision: PostReleaseDecision?
     /// The lesser-included offense the court chose for each count, when it differs from the one the case came with.
     var lesserChoices: [UUID: String]?
+    /// Courtroom incidents: which option the judge chose for each (optional for older saves).
+    var incidentChoices: [UUID: UUID]? = nil
+
+    /// The option chosen for an incident, if any.
+    func choice(for incident: CourtIncident) -> IncidentOption? {
+        incidentChoices?[incident.id].flatMap { id in incident.options.first { $0.id == id } }
+    }
 
     /// Whether separate judgments run one after another.
     var runsConsecutively: Bool {
@@ -283,9 +293,14 @@ struct Rulings: Codable, Hashable {
     }
 
     func excludedEvidence(in courtCase: CourtCase) -> Set<UUID> {
-        Set(courtCase.motions.compactMap { motion in
+        var out = Set(courtCase.motions.compactMap { motion in
             (motions[motion.id] ?? false) ? motion.targetEvidenceID : nil
         })
+        // Evidence kept out as a sanction for a discovery violation.
+        for incident in courtCase.incidents ?? [] {
+            if let o = choice(for: incident), o.effect == .excludeEvidence, let id = o.evidenceID { out.insert(id) }
+        }
+        return out
     }
 }
 
@@ -330,6 +345,7 @@ extension Rulings {
         extensionMonths = try c.decodeIfPresent(Int.self, forKey: .extensionMonths)
         postReleaseDecision = try c.decodeIfPresent(PostReleaseDecision.self, forKey: .postReleaseDecision)
         lesserChoices = try c.decodeIfPresent([UUID: String].self, forKey: .lesserChoices)
+        incidentChoices = try c.decodeIfPresent([UUID: UUID].self, forKey: .incidentChoices)
     }
 }
 
@@ -404,6 +420,8 @@ struct CaseOutcome {
     var ethicsResult: String?
     var pending: [PendingEvent]
     var appearanceSummary: String
+    /// What happened with each courtroom incident, for the judgment screen.
+    var incidentResults: [String] = []
     /// How the release date was figured, for the person's status card.
     var releaseBasis: String? = nil
     /// Post-release supervision that carries on after this case (nil when revoked or none).
@@ -773,8 +791,17 @@ enum Judgment {
     }
 
     /// Offered whenever there is a conviction; eligibility is flagged, not enforced.
+    /// G.S. 15A-1341(a4): only for misdemeanors and Class H or I felonies, for someone with no felony conviction;
+    /// never for impaired driving. (G.S. 90-96 first-offense drug possession falls inside the same limits here.)
     static func conditionalDischargeAvailable(_ c: CourtCase, _ r: Rulings) -> Bool {
-        !convictedLaws(c, r).isEmpty
+        let laws = convictedLaws(c, r)
+        guard !laws.isEmpty else { return false }
+        let lowEnough = laws.allSatisfy { law in
+            guard let cls = law.ncClass else { return false }
+            return !cls.isFelony || cls == .H || cls == .I
+        }
+        let impaired = laws.contains { ["dwi", "habitualDWI", "felonyDBV", "misdDBV"].contains($0.id) }
+        return lowEnough && !impaired && !c.defendant.priors.contains { $0.ncClass.isFelony }
     }
 
     /// How the chosen sentence is harsher than the plea arrangement, if it is.
@@ -1250,6 +1277,18 @@ enum Judgment {
             Calendar.current.date(byAdding: .day, value: rng.int(days), to: date) ?? date
         }
 
+        // Courtroom incidents: the result, and any story the paper runs later.
+        var incidentResults: [String] = []
+        for incident in c.incidents ?? [] {
+            guard let o = r.choice(for: incident) else { continue }
+            incidentResults.append("\(incident.title): \(o.result)")
+            if let headline = o.laterHeadline {
+                let body = (o.laterBody ?? "The matter arose during \(c.caption), \(c.docket).").replacingOccurrences(of: "{JUDGE}", with: judgeLast)
+                pending.append(PendingEvent(due: later(5...25),
+                                            news: NewsItem(date: date, kind: .community, headline: headline, body: body, docket: c.docket)))
+            }
+        }
+
         // Ethics consequences
         var ethicsResult: String?
         if let ethics = c.ethics, let choiceID = r.ethicsChoice,
@@ -1507,7 +1546,7 @@ enum Judgment {
         let need = bg?.treatmentNeed ?? TreatmentNeed.none
         let k = r.conditions
         let onProbation = !suspendedTerms.isEmpty || !afterActiveTerms.isEmpty
-        let treatedSubstance = (k.substanceTreatment || k.drugTreatmentCourt) && onProbation
+        let treatedSubstance = (k.substanceTreatment || k.drugTreatmentCourt || k.veteransTreatmentCourt == true) && onProbation
             || (r.recommendations.substanceTreatment && !activeTerms.isEmpty)
         let treatedMental = (k.mentalHealthTreatment && onProbation)
             || (r.recommendations.mentalHealth && !activeTerms.isEmpty)
@@ -2029,7 +2068,7 @@ enum Judgment {
                            custodyMonths: custodyMonths, personStatus: status, releaseDate: releaseDate,
                            newProbation: newProbation, newPriors: newPriors, propensity: propensity,
                            appealNotice: appealNotice, reactions: reactions, news: news, ethicsResult: ethicsResult,
-                           pending: pending, appearanceSummary: appearance, releaseBasis: releaseBasis,
+                           pending: pending, appearanceSummary: appearance, incidentResults: incidentResults, releaseBasis: releaseBasis,
                            continuedPostRelease: continuedPostRelease, newPostRelease: newPostRelease,
                            violations: violationsFound, rulingNotes: rulingNotes(c, r),
                            appealGrounds: appealGroundDetails(c, r, issues: issueDetails, byState: (appealNotice ?? "").contains("The State")).map(\.text),
@@ -2093,6 +2132,10 @@ enum Judgment {
                 add("The evidence was insufficient to convict on Count \(charge.count) (\(charge.law.title)).", error: true)
             }
         }
+        for incident in c.incidents ?? [] {
+            guard let o = r.choice(for: incident), let text = o.appealText else { continue }
+            add(text, error: o.error)
+        }
         for issue in issues where issue.againstDefendant { strong.append(("The sentence: \(issue.text)", true)) }
         let grounds = strong + lesser
         return grounds.isEmpty
@@ -2135,6 +2178,13 @@ enum Judgment {
             notes.append(RulingNote(title: "Motion to dismiss count \(charge.count): \(charge.law.title)", yourRuling: ruling.label,
                                     proper: substantial ? "Deny" : (lesserSubstantial && charge.lesserLawID != nil ? "Lesser offense only" : "Dismiss"),
                                     sound: sound, note: note))
+        }
+        for incident in c.incidents ?? [] {
+            guard let o = r.choice(for: incident) else { continue }
+            let best = incident.options.filter(\.proper).map(\.label).joined(separator: ", or ")
+            notes.append(RulingNote(title: incident.title, yourRuling: o.label, proper: best, sound: !o.error,
+                                    note: o.error ? (o.appealText ?? "An appellate court would likely find this ruling wrong.")
+                                                  : (o.proper ? "A sound ruling." : "Within the court's discretion, though not the usual remedy.")))
         }
         return notes
     }

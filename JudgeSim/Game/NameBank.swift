@@ -266,6 +266,24 @@ enum NameBank {
     }()
     static let personSurnames = lastNames.filter { !placeWords.contains($0) }
 
+    /// A new person whose full name nobody in `taken` already has. Sharing only a first or a last name is fine.
+    static func person(using rng: inout SeededRNG, excluding used: inout Set<String>, gender: Gender? = nil,
+                       avoiding taken: Set<String>) -> String {
+        for _ in 0..<400 {
+            var trial = used
+            let name = person(using: &rng, excluding: &trial, gender: gender)
+            if !taken.contains(name) { used = trial; return name }
+        }
+        // Practically unreachable: build one by hand from the full lists.
+        for first in firstNames.shuffled(using: &rng) where gender.map({ self.gender(of: first) == $0 }) ?? true {
+            for last in personSurnames where !taken.contains("\(first) \(last)") && !used.contains("\(first) \(last)") {
+                used.insert("\(first) \(last)")
+                return "\(first) \(last)"
+            }
+        }
+        return person(using: &rng, excluding: &used, gender: gender)
+    }
+
     static func person(using rng: inout SeededRNG, excluding used: inout Set<String>) -> String {
         for _ in 0..<40 {
             let name = "\(rng.pick(firstNames)) \(rng.pick(personSurnames))"

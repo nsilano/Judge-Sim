@@ -258,16 +258,13 @@ enum NewsDesk {
         // Life around the courthouse.
         if rng.chance(0.5) {
             let ada = rng.pick(county.assistantDAs)
-            let graduates = rng.int(5...14)
             let pool: [(String, String)] = [
-                ("Drug Treatment Court graduates \(graduates)", "In a ceremony in the jury assembly room, \(graduates) participants finished Hollis County's Drug Treatment Court. One graduate, two years sober, thanked the probation officer who \"never gave up on me, even when I did.\""),
                 ("Scam calls claim to be from the courthouse", "The \(county.sheriffsOffice) warns residents about callers who say they've missed jury duty and must pay a fine by gift card. \"No court will ever call you and demand money over the phone,\" Clerk of Superior Court \(county.clerk) said."),
                 ("Courthouse elevator out again", "For the third time this year, the main elevator at the \(county.courthouse) is out of service. Deputies carried a wheelchair user up two flights for a hearing Tuesday. County commissioners say repairs are budgeted for spring."),
                 ("Public defenders carry record caseloads", "Chief Public Defender \(county.chiefPublicDefender) told county commissioners that each assistant public defender is carrying more than \(rng.int(110...180)) open felony cases. \"We are triaging justice,\" \(county.chiefPublicDefender) said."),
                 ("New assistant district attorney sworn in", "\(rng.pick(NameBank.firstNames)) \(rng.pick(NameBank.lastNames)), a graduate of the N.C. Central University School of Law, was sworn in as an assistant district attorney. District Attorney \(county.districtAttorney) said the hire will help with the backlog of violent felony cases."),
                 ("Jury duty no-shows frustrate clerk", "Nearly a third of residents summoned for jury duty last month didn't show up, Clerk \(county.clerk) said. Bench trials have filled some of the gap, but \"a court system needs citizens,\" the clerk said."),
                 ("Bar association food drive fills the lobby", "Lawyers from the Hollis County Bar collected \(rng.int(1_200...4_800)) pounds of canned goods in the courthouse lobby. \(ada) and a public defender who face off most weeks carried the last boxes out together."),
-                ("Storm closes courthouse early", "The \(county.courthouse) closed at noon Friday as a coastal storm brought flooding to low-lying streets in \(rng.pick(towns)). Cases set for the afternoon will be reset by the clerk's office."),
                 ("Sheriff asks for more jail staff", "Sheriff \(county.sheriff) asked commissioners for \(rng.int(6...14)) more detention officers, saying the jail averaged \(Int(Double(w.jailedAwaitingTrial + 120) * 1.1)) inmates last month in a building designed for 150."),
                 ("Teen court volunteers wanted", "Hollis County's teen court, where young people charged with minor offenses are judged by their peers, needs volunteer attorneys and students for the spring term.")
             ]

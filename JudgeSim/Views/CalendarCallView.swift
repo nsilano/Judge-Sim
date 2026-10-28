@@ -35,7 +35,7 @@ struct CalendarCallView: View {
 
                     ForEach(call.matters) { matter in
                         MatterCard(matter: matter, choice: Binding(get: { choices[matter.id] }, set: { choices[matter.id] = $0 }),
-                                   amount: Binding(get: { amounts[matter.id] ?? matter.suggestedAmount ?? 0 },
+                                   amount: Binding(get: { amounts[matter.id] ?? matter.suggested(for: choices[matter.id]) ?? 0 },
                                                    set: { amounts[matter.id] = $0 }),
                                    date: Binding(get: { dates[matter.id] }, set: { dates[matter.id] = $0 }))
                     }
@@ -97,7 +97,7 @@ private struct MatterCard: View {
                 Text(matter.docket).font(.caption2.monospaced()).foregroundStyle(.secondary)
             }
             // A warrant application has no case yet; it names the person whose property would be searched.
-            Text(matter.kind == .searchWarrant ? "In re: search of \(matter.personName)" : "State v. \(matter.personName)").font(.system(.subheadline, design: .serif).weight(.bold))
+            Text(matter.caption).font(.system(.subheadline, design: .serif).weight(.bold))
             Text(matter.summary).font(.callout)
             Label(matter.stateAsk, systemImage: "building.columns.fill")
                 .font(.caption)

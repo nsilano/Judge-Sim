@@ -215,9 +215,20 @@ func names(in text: String) -> [String] {
     try? samples.joined(separator: "\n\n").write(toFile: "/out/chains.txt", atomically: true, encoding: .utf8)
 }
 
-let weeks = args.count > 1 ? Int(args[1]) ?? 8 : 8
-let style = args.count > 2 ? args[2] : "mixed"
-let outPath = args.count > 3 ? args[3] : "playtest.txt"
+/// `Playtest loadsave <save file> <weeks> <transcript>` loads an older version's saved career first.
+let loadSavePath: String? = args.count > 2 && args[1] == "loadsave" ? args[2] : nil
+if let path = loadSavePath {
+    guard let data = FileManager.default.contents(atPath: path) else { print("no save at \(path)"); exit(1) }
+    UserDefaults.standard.set(data, forKey: "JudgeSim.nc.save.v1")
+}
+let shift = loadSavePath == nil ? 0 : 1
+let weeks = args.count > 1 + 2 * shift ? Int(args[1 + 2 * shift]) ?? 8 : 8
+let style = loadSavePath == nil && args.count > 2 ? args[2] : "mixed"
+let outPath: String = {
+    if loadSavePath != nil { return args.count > 4 ? args[4] : "playtest.txt" }
+    if args.count > 2 && args[1] == "stories" { return args[2] }
+    return args.count > 3 ? args[3] : "playtest.txt"
+}()
 
 var rng = SeededRNG(seed: UInt64(Date().timeIntervalSince1970))
 var transcript: [String] = []
@@ -240,10 +251,38 @@ var seenNews = 0
 var seenNewsKeys = Set<String>()
 var backlog: [String] = []
 var heardKeys = Set<String>()
+var sameNameFlagged = Set<String>()
+var contemptHeard = 0
+var petitionsHeard: [String: Int] = [:]
+var incidentsSeen: [String: Int] = [:]
 var continuedIDs = Set<UUID>()
 var hearingDates: [UUID: Date] = [:]
 
 // MARK: - Trials
+
+/// Rules on the courtroom incidents at one point in the case, the way a player might; true when the ruling sent the
+/// case to another date.
+@MainActor func ruleOnIncidents(_ s: CaseSession, _ moment: CourtIncident.Moment, _ c: CourtCase) -> Bool {
+    for incident in s.incidents(at: moment) where s.rulings.choice(for: incident) == nil {
+        let o = rng.pick(incident.options)
+        s.chooseIncident(incident, o)
+        incidentsSeen[incident.kind.rawValue, default: 0] += 1
+        log("  Incident: \(incident.title) -> \(o.label)\(o.error ? " [appealable error]" : "")")
+        checkText(incident.title + ". " + incident.body + " " + o.label + ". " + o.result, where: "incident \(c.docket)")
+        if o.effect == .removeWitness, let id = o.witnessID, s.courtCase.witnesses.contains(where: { $0.id == id }) {
+            flag("\(c.docket): the witness ruled out for lack of an interpreter is still in the case")
+        }
+    }
+    if let pending = s.incidentContinuance {
+        let to = CourtCalendar.calendar.date(byAdding: .day, value: pending.option.days ?? 28, to: game.currentDate) ?? game.currentDate
+        log("  Continued for the incident to about \(short(to))")
+        continuedIDs.insert(c.id)
+        game.continueMatter(c.id, to: to, reason: "\(pending.incident.title): \(pending.option.label.lowercased()).",
+                            snapshot: pending.option.effect == .mistrial ? nil : s.snapshot)
+        return true
+    }
+    return false
+}
 
 @MainActor func playTrial(_ c: CourtCase, resume: CaseSnapshot?) {
     guard let county = game.county else { return }
@@ -265,13 +304,15 @@ var hearingDates: [UUID: Date] = [:]
     if let person = game.person(c.defendant.personID), abs(person.age(on: c.sessionDate) - c.defendant.age) > 1 {
         flag("\(c.docket): \(c.defendant.name) is \(c.defendant.age) in the case but \(person.age(on: c.sessionDate)) by the record")
     }
-    if resume != nil { log("  (resumed after a continuance)"); continuedIDs.remove(c.id) }
+    if resume != nil { log("  (resumed after a continuance)") }
+    continuedIDs.remove(c.id)
     log("TRIAL \(c.docket) · \(c.caption)")
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
     log("  Defendant: \(d.name), \(d.age), \(d.occupation); priors: \(d.priors.count); \(c.background?.bondStatus ?? "")")
     log("  Summary: \(c.summary)")
     checkText(c.summary + " " + c.charges.map { $0.law.title + ": " + $0.specification }.joined(separator: " "), where: "trial \(c.docket)")
     if s.continuanceMotionPending { s.denyContinuanceMotion(); log("  Continuance motion: denied") }
+    if ruleOnIncidents(s, .beforeTrial, c) { return }
     if s.pleaPresented && rng.chance(0.6) {
         log("  Plea arrangement accepted: \(c.background?.arrangementTerms ?? "")")
         s.acceptPlea()
@@ -288,6 +329,7 @@ var hearingDates: [UUID: Date] = [:]
             s.adviseRightToTestify()
             for o in c.objections where s.rulings.objections[o.id] == nil { s.rulings.objections[o.id] = rng.chance(0.5) }
             if let ethics = c.ethics, let first = ethics.options.first { s.chooseEthics(first) }
+            if ruleOnIncidents(s, .trial, c) { return }
             s.advance()
         }
         if s.stage == .verdict {
@@ -312,10 +354,16 @@ var hearingDates: [UUID: Date] = [:]
         return
     }
     if s.stage == .sentencing {
+        _ = ruleOnIncidents(s, .sentencing, c)
         // The rarer forms of judgment, where the law allows them.
         if s.pjcAvailable && rng.chance(0.1) { s.rulings.special = .prayerForJudgment; log("  Form of judgment: PJC") }
         else if s.conditionalDischargeAvailable && rng.chance(0.15) { s.rulings.special = .conditionalDischarge; log("  Form of judgment: conditional discharge") }
         if s.needsHabitualDecision { s.setHabitual(rng.chance(0.6)) }
+        // Protect the victim the way a judge often does: no contact as a condition, or a stand-alone stay-away order.
+        if s.courtCase.victimName != nil && !Consequences.victimDied(s.courtCase) && !Consequences.victimIsChild(s.courtCase) {
+            if rng.chance(0.5) { s.rulings.conditions.noContactVictim = true; log("  Condition: no contact with the victim") }
+            if rng.chance(0.35) { s.rulings.stayAwayYears = rng.int(1...3); log("  Stay-away order: \(s.rulings.stayAwayYears) years") }
+        }
         for unit in s.units {
             var choice = Judgment.defaultChoice(for: unit)
             if unit.isDWI { choice.dwiLevel = rng.int(1...5); log("  DWI level \(choice.dwiLevel ?? 0)") }
@@ -327,6 +375,11 @@ var hearingDates: [UUID: Date] = [:]
                 else if allowed.contains(.intermediate) { choice.disposition = .intermediate }
             }
             s.rulings.sentences[unit.id] = choice
+        }
+        // Treatment court for some of those who stay out.
+        if s.courtCase.defendant.background.isEmpty == false && rng.chance(0.15) {
+            if TreatmentCourts.isVeteran(s.courtCase.defendant.background) { s.rulings.conditions.veteransTreatmentCourt = true; log("  Condition: Veterans Treatment Court") }
+            else { s.rulings.conditions.drugTreatmentCourt = true; log("  Condition: Drug Treatment Court") }
         }
     }
     for _ in 0..<8 where s.stage != .judgment {
@@ -412,6 +465,33 @@ var hearingDates: [UUID: Date] = [:]
     }
     game.completeCalendar(call, choices: choices, dates: dates)
     for line in game.lastCalendarResults { log("  → \(line)") }
+    // A petition's ruling shows up on the person's record, and a granted expunction clears the conviction.
+    for m in call.matters where [.expunction, .bondForfeiture, .drivingPrivilege].contains(m.kind) {
+        petitionsHeard[m.kind.label, default: 0] += 1
+        guard let person = game.person(m.personID) else { flag("\(m.docket): petition for someone the court never recorded"); continue }
+        if !person.appearances.contains(where: { $0.docket == m.docket }) { flag("\(m.docket): petition ruling missing from \(person.name)'s record") }
+        if m.kind == .expunction, choices[m.id] == 0, let id = m.petition?.priorID, person.priors.contains(where: { $0.id == id }) {
+            flag("\(m.docket): expunction granted but the conviction is still on \(person.name)'s record")
+        }
+    }
+    for m in call.matters where m.kind == .counselWithdrawal { petitionsHeard[m.kind.label, default: 0] += 1 }
+    for m in call.matters where m.kind == .treatmentReview || m.kind == .treatmentGraduation {
+        petitionsHeard[m.kind.label, default: 0] += 1
+        guard let person = game.person(m.personID) else { flag("\(m.docket): treatment review for someone with no record"); continue }
+        if m.kind == .treatmentGraduation && choices[m.id] == 0 && person.probation != nil { flag("\(m.docket): graduated with probation ended, but \(person.name) is still on probation") }
+        if m.kind == .treatmentReview && m.options.count == 4 && choices[m.id] == 3 {
+            petitionsHeard["Treatment court terminations", default: 0] += 1
+            if person.probation?.treatmentCourt != nil { flag("\(m.docket): terminated from treatment court but still in it") }
+        }
+    }
+    // A contempt ruling has to take effect on the person: jail is jail, a finding of not willful leaves them free.
+    for m in call.matters where m.kind == .contempt {
+        contemptHeard += 1
+        guard let person = game.person(m.personID) else { flag("\(m.docket): contempt hearing for someone with no record"); continue }
+        let pick = choices[m.id] ?? 0
+        if pick <= 1 && person.status != .incarcerated { flag("\(m.docket): contempt jail ordered, but \(person.name) is \(person.status)") }
+        if pick >= 2 && person.status == .incarcerated && person.custodyDocket == m.docket { flag("\(m.docket): no jail ordered for contempt, but \(person.name) is held on it") }
+    }
 }
 
 // MARK: - Text checks
@@ -485,12 +565,29 @@ func checkText(_ text: String, where place: String) {
     for set in game.scheduled {
         let weekday = cal.component(.weekday, from: set.date)
         if !game.schedule.courtDays.contains(weekday) || CourtCalendar.holiday(on: set.date) != nil
-            || game.schedule.timeOff.contains(CourtSchedule.key(set.date)) {
+            || game.schedule.timeOff.contains(CourtSchedule.key(set.date)) || game.schedule.closure(on: set.date) != nil {
             flag("\(set.entry.title) set on \(short(set.date)), a day court doesn't sit (\(CourtCalendar.holiday(on: set.date) ?? "weekday off or time off"))")
         }
     }
+    // Two different people never share a full name.
+    var ids: [String: Set<UUID>] = [:]
+    func note(_ name: String, _ id: UUID) { ids[name, default: []].insert(id) }
+    game.people.forEach { note($0.name, $0.id) }
+    var cases: [CourtCase] = game.investigations.map(\.courtCase) + game.bondQueue.map(\.courtCase)
+    for entry in (game.today?.entries ?? []) + game.scheduled.map(\.entry) + game.awaiting.map(\.entry) {
+        if case .trial(let c) = entry.matter { cases.append(c) }
+        if case .calendar(let call) = entry.matter { cases += call.matters.compactMap(\.pendingCase) }
+    }
+    cases.forEach { note($0.defendant.name, $0.defendant.personID) }
+    for (name, set) in ids where set.count > 1 && !sameNameFlagged.contains(name) {
+        sameNameFlagged.insert(name)
+        flag("two different defendants are both named \(name)")
+    }
     for appeal in game.appeals {
-        if let record = game.history.first(where: { $0.docket == appeal.docket && $0.resolvedKind == "trial" }),
+        // The verdict the appeal was taken from: the last trial on or before the day it was filed (a retrial after a
+        // new trial is ordered is a different judgment).
+        if let record = game.history.filter({ $0.docket == appeal.docket && $0.resolvedKind == "trial" && $0.date <= appeal.filed.addingTimeInterval(86_400) })
+            .max(by: { $0.date < $1.date }),
            record.outcome.lowercased().contains("not guilty") || record.outcome.lowercased().contains("acquit"),
            !record.outcome.lowercased().replacingOccurrences(of: "not guilty", with: "").contains("guilty") {
             if !appeal.appellant.lowercased().contains("state") || !appeal.issue.lowercased().contains("suppress") {
@@ -519,12 +616,46 @@ if args.count > 1 && args[1] == "scan" {
     exit(0)
 }
 
+// MARK: - Every written case, tried once
+
+/// Tries every written case in a fresh career, the ones a normal career rarely reaches included, with the same
+/// checks as a career.
+@MainActor func tryEveryStory() {
+    game = GameState()
+    game.resetCareer()
+    game.startCareer(name: "Morgan Hale", start: Date())
+    guard let county = game.county else { return }
+    var tried = 0
+    for (i, t) in StoryCases.all.enumerated() {
+        var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 5000 + i * 10,
+                                        recentTemplateKeys: [])
+        ctx.reservedNames = game.namesInPlay()
+        var trng = SeededRNG(seed: UInt64(i) &* 7919 &+ 17)
+        let c = CaseGenerator.build(t, seed: UInt64(i) &+ 1, band: rng.chance(0.5) ? .strong : .close, context: ctx, rng: &trng)
+        log("")
+        log("=== \(t.key) ===")
+        playTrial(c, resume: nil)
+        tried += 1
+    }
+    log("FINDINGS (\(findings.count))")
+    for f in findings { log("- \(f)") }
+    try? transcript.joined(separator: "\n").write(toFile: outPath, atomically: true, encoding: .utf8)
+    print("Tried \(tried) written cases. \(findings.count) flags. Transcript: \(outPath)")
+}
+
 // MARK: - The career
 
 @MainActor func runCareer() {
     game = GameState()
-    game.resetCareer()
-    game.startCareer(name: "Morgan Hale", start: Date())
+    if let savePath = loadSavePath {
+        // An older version's saved career: it must load whole and keep playing.
+        guard game.county != nil, game.judgeName != nil else { flag("the saved career at \(savePath) did not load"); finish(); return }
+        log("LOADED older save: date \(short(game.currentDate)), people \(game.people.count), history \(game.history.count), scheduled \(game.scheduled.count), awaiting \(game.awaiting.count), news \(game.news.count)")
+        if game.people.isEmpty || game.history.isEmpty { flag("the saved career loaded empty") }
+    } else {
+        game.resetCareer()
+        game.startCareer(name: "Morgan Hale", start: Date())
+    }
     log("CAREER START \(short(game.currentDate)) · style \(style) · \(weeks) weeks")
 
     let endDate = CourtCalendar.calendar.date(byAdding: .day, value: 7 * weeks, to: game.currentDate) ?? game.currentDate
@@ -586,12 +717,25 @@ if args.count > 1 && args[1] == "scan" {
     log("WRITTEN CASES HEARD: \(heardKeys.intersection(stories).count) of \(stories.count)")
     log("  never came up: " + stories.subtracting(heardKeys).sorted().joined(separator: ", "))
     if !continuedIDs.isEmpty { flag("\(continuedIDs.count) trial(s) continued mid-trial never came back") }
+    let orders = game.people.flatMap { $0.stayAwayOrders ?? [] }
+    log("STAY-AWAY ORDERS: \(orders.count) issued, \(game.stats.orderViolations ?? 0) violations, \(contemptHeard) contempt hearings heard, \(game.showCauseQueue.count) waiting")
+    log("PETITIONS: " + petitionsHeard.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
+    log("INCIDENTS: " + incidentsSeen.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
+    log("CLOSURES: " + Dictionary(grouping: (game.schedule.closures ?? [:]).values, by: { $0 }).map { "\($0.key) (\($0.value.count) days)" }.sorted().joined(separator: "; "))
     log("BACKLOG BY MONTH")
     for b in backlog { log("  \(b)") }
+    finish()
+}
+
+@MainActor func finish() {
     log("FINDINGS (\(findings.count))")
     for f in findings { log("- \(f)") }
     try? transcript.joined(separator: "\n").write(toFile: outPath, atomically: true, encoding: .utf8)
     print("Played \(weeks) weeks (\(style)). \(game.casesHeard) cases heard. \(findings.count) flags. Transcript: \(outPath)")
 }
 
+if args.count > 1 && args[1] == "stories" {
+    MainActor.assumeIsolated { tryEveryStory() }
+    exit(0)
+}
 MainActor.assumeIsolated { runCareer() }

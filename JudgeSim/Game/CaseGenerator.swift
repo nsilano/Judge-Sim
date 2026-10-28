@@ -230,8 +230,7 @@ enum CaseGenerator {
             let known = context.residentDefendant.flatMap { r in
                 (t.requiredGenders["D"].map { NameBank.gender(of: r.name) == $0 } ?? true) && r.occupation == nil && !used.contains(r.name) ? r.name : nil
             }
-            var drawn = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"])
-            for _ in 0..<8 where context.reservedNames.contains(drawn) { drawn = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"]) }
+            let drawn = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["D"], avoiding: context.reservedNames)
             let name = known ?? drawn
             if known != nil { used.insert(name); used.insert(lastName(name)) }
             let age = rng.int(t.ageRange)
@@ -279,10 +278,9 @@ enum CaseGenerator {
             t.requiredGenders["V"].map { $0 == NameBank.gender(of: name) } ?? true ? name : nil
         }
         let knownNames = Set(context.residents.map(\.name)).union(context.reservedNames)
-        var drawnVictim = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"])
-        for _ in 0..<8 where knownNames.contains(drawnVictim) { drawnVictim = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"]) }
+        let drawnVictim = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"], avoiding: knownNames)
         let victimName = t.hasVictim ? (sameVictim ?? drawnVictim) : nil
-        let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"])
+        let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"], avoiding: knownNames)
         let setting = CaseSetting.of(category: t.category, key: t.key)
         // Highway crashes and impaired driving are worked by the Highway Patrol.
         let trooperName = rng.pick(county.troopers)
@@ -295,7 +293,7 @@ enum CaseGenerator {
             ? CastMember(name: trooperName, title: rng.pick(["Trooper", "Master Trooper", "Sergeant"]), agency: "N.C. State Highway Patrol")
             : rng.pick(sheriffs && !sheriffDetectives.isEmpty ? sheriffDetectives : county.detectives)
         var officer = setting == .road && !sheriffs && rng.chance(0.5)
-            ? CastMember(name: NameBank.person(using: &rng, excluding: &used), title: "Trooper", agency: "N.C. State Highway Patrol")
+            ? CastMember(name: NameBank.person(using: &rng, excluding: &used, avoiding: context.reservedNames), title: "Trooper", agency: "N.C. State Highway Patrol")
             : rng.pick(sheriffs && !sheriffOfficers.isEmpty ? sheriffOfficers : county.officers)
         // The day it happened, fixed once so every report, witness, and exhibit agrees.
         // A written case's file can run long past the incident (a cold case solved years later), so the incident
@@ -576,11 +574,11 @@ enum CaseGenerator {
             added.append(Testimony.firstOfficer(name: officer.display, agency: officer.agency, ctx: testimonyContext, rng: &rng))
         }
         if t.story == nil && !roles.contains(where: { $0.contains("analyst") || $0.contains("examiner") || $0.contains("scientist") || $0.contains("chemist") }) {
-            let names = (0..<3).map { _ in NameBank.person(using: &rng, excluding: &used) }
+            let names = (0..<3).map { _ in NameBank.person(using: &rng, excluding: &used, avoiding: context.reservedNames) }
             added += Testimony.analysts(ctx: testimonyContext, names: names, rng: &rng)
         }
         if t.story == nil && rng.chance(0.55) {
-            added.append(Testimony.characterWitness(name: NameBank.person(using: &rng, excluding: &used), ctx: testimonyContext, rng: &rng))
+            added.append(Testimony.characterWitness(name: NameBank.person(using: &rng, excluding: &used, avoiding: context.reservedNames), ctx: testimonyContext, rng: &rng))
         }
         // State witnesses first, then the defense's.
         witnesses = added.filter { $0.calledBy == .prosecution } + witnesses.filter { $0.calledBy == .prosecution }
@@ -600,7 +598,10 @@ enum CaseGenerator {
                 InvestigationReport.Entry(when: CaseDates.dayYear(CaseDates.add(offset, to: incident)), what: fill(what))
             }
             // The written file says when the arrest happened; the fact sheet follows it.
-            if let offset = story.timeline.first(where: { $0.1.lowercased().contains("arrested") })?.0 {
+            // The defendant's arrest, not someone else's ("a man arrested with methamphetamine names the clerk"), and
+            // never before the crime itself.
+            let arrests = story.timeline.filter { $0.0 >= 0 && $0.1.lowercased().contains("arrested") }
+            if let offset = (arrests.first { $0.1.contains("{D") } ?? arrests.first)?.0 {
                 investigation.facts?.arrest = CaseDates.add(offset, to: incident)
             }
             investigation.howIdentified = fill(story.howIdentified)
@@ -1326,8 +1327,7 @@ enum CaseGenerator {
             } else {
                 // A new face never shares a name with someone the court already knows.
                 let known = Set(residents.map(\.name)).union(reserved)
-                var fresh = NameBank.person(using: &rng, excluding: &used, gender: gender)
-                for _ in 0..<8 where known.contains(fresh) { fresh = NameBank.person(using: &rng, excluding: &used, gender: gender) }
+                let fresh = NameBank.person(using: &rng, excluding: &used, gender: gender, avoiding: known)
                 name = fresh
             }
         }

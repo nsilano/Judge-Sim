@@ -2,10 +2,13 @@ import SwiftUI
 
 struct TrialStage: View {
     @ObservedObject var session: CaseSession
+    /// Called when a ruling sends the case to another date (reason, days, start the trial over).
+    var onIncidentContinue: (String, Int, Bool) -> Void = { _, _, _ in }
     private var c: CourtCase { session.courtCase }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            IncidentCards(session: session, moment: .trial, onContinue: onIncidentContinue)
             if let ethics = c.ethics {
                 EthicsCard(event: ethics, chosen: session.rulings.ethicsChoice) { option in
                     session.chooseEthics(option)
@@ -253,6 +256,69 @@ struct ObjectionView: View {
         .padding(14)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.objectionFill))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.objectionBorder, lineWidth: 1))
+    }
+}
+
+/// The courtroom incidents at one point in the case, each with its options until the judge rules.
+struct IncidentCards: View {
+    @ObservedObject var session: CaseSession
+    let moment: CourtIncident.Moment
+    var onContinue: (String, Int, Bool) -> Void = { _, _, _ in }
+
+    var body: some View {
+        ForEach(session.incidents(at: moment)) { incident in
+            IncidentCard(incident: incident, chosen: session.rulings.choice(for: incident)) { option in
+                session.chooseIncident(incident, option)
+                if option.effect == .continueCase || option.effect == .mistrial {
+                    onContinue("\(incident.title): \(option.label.lowercased()).", option.days ?? 28, option.effect == .mistrial)
+                }
+            }
+            if let pending = session.incidentContinuance, pending.incident.id == incident.id {
+                Button {
+                    onContinue("\(incident.title): \(pending.option.label.lowercased()).", pending.option.days ?? 28, pending.option.effect == .mistrial)
+                } label: {
+                    Label("Set the new date", systemImage: "calendar.badge.clock").font(.subheadline.weight(.semibold))
+                }
+            }
+        }
+    }
+}
+
+struct IncidentCard: View {
+    let incident: CourtIncident
+    let chosen: IncidentOption?
+    let onChoose: (IncidentOption) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(incident.title, systemImage: "exclamationmark.bubble.fill")
+                .font(.headline)
+                .foregroundStyle(.orange)
+            Text(incident.body).font(.callout)
+            if let chosen {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("You ruled: \(chosen.label)").font(.callout.weight(.semibold))
+                    Text(chosen.result).font(.callout).foregroundStyle(.secondary)
+                }
+            } else {
+                ForEach(incident.options) { option in
+                    Button {
+                        Haptics.tap()
+                        onChoose(option)
+                    } label: {
+                        Text(option.label)
+                            .font(.callout.weight(.semibold))
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(12)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Color.orange.opacity(0.12)))
+                    }
+                    .buttonStyle(.plain)
+                }
+                LawLink(lawID: incident.lawID)
+            }
+        }
+        .card(tint: .orange)
     }
 }
 

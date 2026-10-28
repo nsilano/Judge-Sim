@@ -4,6 +4,7 @@ import Foundation
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
         case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief, firstAppearance, arraignment, contempt
+        case expunction, bondForfeiture, drivingPrivilege, treatmentReview, treatmentGraduation, counselWithdrawal
 
         var label: String {
             switch self {
@@ -19,6 +20,12 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .firstAppearance: return "Bond hearing"
             case .arraignment: return "Arraignment"
             case .contempt: return "Show cause: contempt"
+            case .expunction: return "Petition to expunge"
+            case .bondForfeiture: return "Motion to set aside bond forfeiture"
+            case .drivingPrivilege: return "Limited driving privilege"
+            case .treatmentReview: return "Treatment court review"
+            case .treatmentGraduation: return "Treatment court graduation"
+            case .counselWithdrawal: return "Motion to withdraw as counsel"
             }
         }
 
@@ -36,6 +43,12 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .firstAppearance: return "lock.open.fill"
             case .arraignment: return "person.wave.2.fill"
             case .contempt: return "exclamationmark.shield.fill"
+            case .expunction: return "eraser.fill"
+            case .bondForfeiture: return "banknote.fill"
+            case .drivingPrivilege: return "car.fill"
+            case .treatmentReview: return "heart.text.square.fill"
+            case .treatmentGraduation: return "graduationcap.fill"
+            case .counselWithdrawal: return "person.crop.circle.badge.minus"
             }
         }
     }
@@ -73,18 +86,60 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var amountOptions: [Int]? = nil
     var amountRange: ClosedRange<Int>? = nil
     var suggestedAmount: Int? = nil
+    /// A different starting figure for some amount options (an unsecured bond starts lower than a secured one).
+    var suggestedAmounts: [Int: Int]? = nil
+
+    /// The amount the picker starts at for this option.
+    func suggested(for choice: Int?) -> Int? {
+        choice.flatMap { suggestedAmounts?[$0] } ?? suggestedAmount
+    }
     /// Options the law doesn't allow here (a PJC on a Class A through E felony), kept out of the list.
     var unavailableOptions: Set<Int>? = nil
+    /// For a petition (expunction, bond forfeiture, driving privilege): what the law turns on, kept off the card.
+    var petition: PetitionFacts? = nil
+    /// For a treatment court review or graduation: the program, phase, and this period's report.
+    var review: TreatmentReviewFacts? = nil
+
+    /// How the matter is captioned on its card.
+    var caption: String {
+        switch kind {
+        case .searchWarrant: return "In re: search of \(personName)"
+        case .expunction: return "In re: petition of \(personName)"
+        case .drivingPrivilege: return "In re: \(personName), limited driving privilege"
+        case .bondForfeiture: return "State v. \(personName) · surety: \(petition?.company ?? "the bonding company")"
+        default: return "State v. \(personName)"
+        }
+    }
 
     /// The option text with the amount the judge chose filled in.
     func optionText(_ choice: Int, amount: Int?) -> String {
         let option = options.indices.contains(choice) ? options[choice] : (options.first ?? "")
-        guard amountOptions?.contains(choice) == true, let amount else { return option }
+        guard amountOptions?.contains(choice) == true, let amount = amount ?? suggested(for: choice) else { return option }
         return option.replacingOccurrences(of: "an amount you set", with: "$\(amount.formatted())")
     }
 
     /// The person's whole file is worth opening for these.
-    var concernsProbationer: Bool { kind == .pvAdmission || kind == .earlyTermination || kind == .contempt }
+    var concernsProbationer: Bool {
+        [.pvAdmission, .earlyTermination, .contempt, .expunction, .bondForfeiture, .drivingPrivilege, .treatmentReview, .treatmentGraduation].contains(kind)
+    }
+}
+
+/// A petition decided on the papers and short argument. Whether the law allows it is in the facts on the card, not
+/// announced; a ruling the law doesn't support comes back later.
+struct PetitionFacts: Codable, Hashable {
+    var eligible: Bool
+    /// Why the law allows it or doesn't, in a sentence, for the result and any later news.
+    var reason: String
+    var offense: String?
+    var priorID: UUID?
+    /// Bond forfeiture: the amount; the surety.
+    var amount: Int?
+    var company: String?
+    /// Driving privilege: how likely the person is to drive impaired again, and whether an interlock is required.
+    var risk: Double?
+    var interlockRequired: Bool?
+    /// The person isn't in the court's records yet (a petitioner from another court or years ago).
+    var newPerson: Bool?
 }
 
 /// Pretrial release under G.S. 15A-534: the least restrictive conditions that will reasonably assure the
@@ -394,12 +449,15 @@ enum CalendarCalls {
                               defenseAsk: canPost == 0
                                 ? "My client has no money. Any secured bond is a detention order. We ask for a written promise to appear."
                                 : "My client can post about $\(canPost.formatted()). We ask for an unsecured bond so \(d.lastName) can keep working and help with the defense.",
+                              // Every condition G.S. 15A-534(a) allows, with the judge setting any amount.
                               options: ["Written promise to appear",
-                                        "Unsecured bond of $\(moderate.formatted())",
+                                        "Release to the custody of a designated person or program",
+                                        "Unsecured bond of an amount you set",
                                         "Secured bond of an amount you set",
                                         "Secured bond of an amount you set, with electronic house arrest"],
                               pendingCase: c, bond: BondFacts(moderate: moderate, high: high, canPost: canPost, flightRisk: flight, danger: danger),
-                              amountOptions: [2, 3], amountRange: 500...max(500_000, high * 2), suggestedAmount: high)
+                              amountOptions: [2, 3, 4], amountRange: 500...max(500_000, high * 2), suggestedAmount: high,
+                              suggestedAmounts: [2: moderate])
     }
 
     /// A jailed defendant asks to have the bond lowered (G.S. 15A-538). The judge sets the new amount.
@@ -433,11 +491,14 @@ enum CalendarCalls {
                                 ? "The State opposes any reduction. \(ftas > 0 ? "The defendant has missed court before." : "The charge is violent and the evidence is strong.")"
                                 : "The State would agree to a modest reduction with electronic monitoring.",
                               defenseAsk: "My client can post about $\(canPost.formatted()). Anything higher is a detention order by another name. There's a job and a family waiting.",
-                              options: ["Reduce the bond to an amount you set", "Leave the bond at $\(current.formatted())",
-                                        "Reduce the bond to an amount you set, with electronic house arrest"],
+                              options: ["Set a new secured bond of an amount you set", "Leave the bond at $\(current.formatted())",
+                                        "Set a new secured bond of an amount you set, with electronic house arrest",
+                                        "Change to an unsecured bond of an amount you set",
+                                        "Release on a written promise to appear"],
                               pendingCase: jailed,
                               bond: BondFacts(moderate: current, high: current, canPost: canPost, flightRisk: flight, danger: danger),
-                              amountOptions: [0, 2], amountRange: 500...max(1_000, current - 500), suggestedAmount: max(500, current / 2))
+                              amountOptions: [0, 2, 3], amountRange: 500...max(500_000, current * 2), suggestedAmount: max(500, current / 2),
+                              suggestedAmounts: [3: max(500, current / 2)])
     }
 
     /// A stay-away order broken by someone not on probation: a short hearing on criminal contempt (G.S. 5A-11, 5A-15),
@@ -508,9 +569,9 @@ enum CalendarCalls {
     }
 
     static func make(county: County, date: Date, docketSequence: Int, people: [PersonRecord], excluding: Set<UUID> = [],
-                     seed: UInt64) -> CalendarCall {
+                     seed: UInt64, takenNames: Set<String> = []) -> CalendarCall {
         var rng = SeededRNG(seed: seed)
-        var used = Set(people.map(\.name))
+        var used = Set(people.map(\.name)).union(takenNames)
         let year = Calendar.current.component(.year, from: date) % 100
         var sequence = docketSequence
         func docket(_ felony: Bool) -> String {
@@ -843,6 +904,25 @@ enum CalendarCalls {
                                                                       outcome: choice == 1 ? "Granted; nothing is owed: probation ended early"
                                                                                            : "Granted: probation ended early"))
                 }))
+            case .expunction, .bondForfeiture, .drivingPrivilege:
+                guard let p = m.petition else { continue }
+                let r = Petitions.resolve(m, facts: p, choice: choice, date: date, judgeLast: judgeLast, rng: &rng)
+                if p.newPerson == true {
+                    var person = PersonRecord(id: m.personID, name: m.personName, birthYear: year - m.personAge, occupation: m.occupation,
+                                              background: BackgroundLines.pick(age: m.personAge, occupation: m.occupation, used: [], towns: county.towns, rng: &rng),
+                                              priors: m.priors, releaseDate: nil, probation: nil, propensity: p.risk ?? 0.2)
+                    r.update(&person)
+                    newPeople.append(person)
+                } else {
+                    updates.append((m.personID, r.update))
+                }
+                pending += r.later
+            case .treatmentReview, .treatmentGraduation:
+                guard let r = m.review else { continue }
+                let ruling = TreatmentCourts.resolve(m, facts: r, choice: choice, date: date, judgeLast: judgeLast, rng: &rng)
+                updates.append((m.personID, ruling.update))
+                pending += ruling.later
+                if ruling.endsProbation { probationCompleted += 1 }
             case .contempt:
                 let days = choice == 0 ? 30 : (choice == 1 ? 10 : 0)
                 updates.append((m.personID, { person in
@@ -925,5 +1005,9 @@ extension CalendarMatter {
         amountOptions = try c.decodeIfPresent([Int].self, forKey: .amountOptions)
         amountRange = try c.decodeIfPresent(ClosedRange<Int>.self, forKey: .amountRange)
         suggestedAmount = try c.decodeIfPresent(Int.self, forKey: .suggestedAmount)
+        unavailableOptions = try c.decodeIfPresent(Set<Int>.self, forKey: .unavailableOptions)
+        petition = try c.decodeIfPresent(PetitionFacts.self, forKey: .petition)
+        review = try c.decodeIfPresent(TreatmentReviewFacts.self, forKey: .review)
+        suggestedAmounts = try c.decodeIfPresent([Int: Int].self, forKey: .suggestedAmounts)
     }
 }
