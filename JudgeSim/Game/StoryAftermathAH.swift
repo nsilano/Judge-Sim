@@ -24,7 +24,7 @@ extension StoryAftermath {
             Beat(triggers: [.freed, .cleared, .probation], chance: 0.25, days: 60...300,
                  headline: "Driver speeds away from checkpoint; chase ends in ditch",
                  body: "A trooper says {D} turned around short of a license checkpoint and fled at 80 miles per hour before sliding into a ditch on Shiloh Road. {DL}'s earlier case was heard by Judge {JUDGE}.",
-                 followUps: ["story.followup.checkpointRun"]),
+                 followUps: ["story.followup.checkpointFlight"]),
             Beat(triggers: [.freed, .cleared, .probation, .prison], chance: 0.7, days: 20...120,
                  headline: "Crosswalk named for {VL}",
                  body: "The town council voted to name the crosswalk outside the elementary school for {V}, who guided children across it for twelve years. Flashing beacons go up next month. Students made a mural of handprints for the corner."),

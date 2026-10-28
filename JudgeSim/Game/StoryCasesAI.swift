@@ -437,7 +437,7 @@ extension StoryCases {
             genders: ["V": .female],
             victim: VictimFacts(age: 78, occupation: "retired school cafeteria worker", relationship: "Grandmother", family: "Widowed; three children, seven grandchildren"),
             family: "Single, no children.",
-            residence: "{V}'s house in {HOOD}, since losing an apartment"
+            residence: "{D.His} grandmother's house in {HOOD}, since losing an apartment"
         )
     )
 }

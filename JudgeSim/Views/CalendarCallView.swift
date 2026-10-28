@@ -35,7 +35,7 @@ struct CalendarCallView: View {
 
                     ForEach(call.matters) { matter in
                         MatterCard(matter: matter, choice: Binding(get: { choices[matter.id] }, set: { choices[matter.id] = $0 }),
-                                   amount: Binding(get: { amounts[matter.id] ?? matter.suggestedAmount ?? 0 },
+                                   amount: Binding(get: { amounts[matter.id] ?? matter.suggested(for: choices[matter.id]) ?? 0 },
                                                    set: { amounts[matter.id] = $0 }),
                                    date: Binding(get: { dates[matter.id] }, set: { dates[matter.id] = $0 }))
                     }

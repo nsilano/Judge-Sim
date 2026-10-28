@@ -14,8 +14,7 @@ extension FollowUpCases {
     static let babysittingBurn = followUp(
         key: "story.followup.babysittingBurn", category: .family,
         headlines: ["Child Burned While Being Babysat, Parent Says", "Former Foster Parent Charged in Toddler's Burn"],
-        law: "childAbuseMisd", threshold: 5, ages: 32...62,
-        spec: "Being the caretaker of {V}, a child under 16, inflicted physical injury, a burn to the hand, by other than accidental means, on {DATE}.", victim: true,
+        law: "childAbuseMisd", threshold: 5, spec: "Being the caretaker of {V}, a child under 16, inflicted physical injury, a burn to the hand, by other than accidental means, on {DATE}.", ages: 32...62, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} began babysitting a neighbor's two-year-old, {V}, three days a week. On {DATE}, the parent picked {V} up and found a blistered burn across the back of {V.his} right hand. {D} said {V} touched a pan on the stove. The pediatrician says the burn's straight edge and the unburned palm fit a hand held against something hot, not a child grabbing a pan.",
         state: [E(.document, 3, "Pediatrician's Report", "A second-degree burn across the back of the hand with a straight edge; the palm is untouched."),
                 E(.document, 2, "Timeline", "{D} didn't mention the burn until the parent saw it at pickup, five hours later.")],
@@ -42,8 +41,7 @@ extension FollowUpCases {
     static let socialWorkerThreat = followUp(
         key: "story.followup.socialWorkerThreat", category: .publicOrder,
         headlines: ["Social Worker Says Former Foster Parent Made Threats", "Threat Charge Follows Foster License Revocation"],
-        law: "communicatingThreats", threshold: 5, ages: 32...62,
-        spec: "Willfully threatened to physically injure {V}, a DSS social worker, in a manner a reasonable person would believe would be carried out, on {DATE}.", victim: true,
+        law: "communicatingThreats", threshold: 5, spec: "Willfully threatened to physically injure {V}, a DSS social worker, in a manner a reasonable person would believe would be carried out, on {DATE}.", ages: 32...62, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, the county revoked {D}'s foster care license. On {DATE}, {D} waited in the DSS parking lot for {V}, the social worker on the case, and said, \"You took my family. I know where you live. You'll find out what that feels like.\" A security camera recorded {D} waiting forty minutes by {V}'s car.",
         state: [E(.video, 3, "Parking Lot Camera", "{D} waits forty minutes beside {V}'s car, then steps in front of {V} and points as {V} approaches."),
                 E(.statement, 2, "Coworker's Account", "A coworker heard \"you'll find out what that feels like.\"")],
@@ -130,8 +128,7 @@ extension FollowUpCases {
     static let cutNets = followUp(
         key: "story.followup.cutNets", category: .property,
         headlines: ["Gill Nets Slashed at Bayard Landing", "Waterman From Crab Pot Case Charged With Cutting Nets"],
-        law: "injuryPersonalProperty", threshold: 5, ages: 25...62,
-        spec: "Willfully and wantonly damaged two gill nets belonging to {V}, valued at $1,400, on {DATE}.", victim: true,
+        law: "injuryPersonalProperty", threshold: 5, spec: "Willfully and wantonly damaged two gill nets belonging to {V}, valued at $1,400, on {DATE}.", ages: 25...62, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, two gill nets belonging to {V}, another waterman, were slashed where they hung drying at the {PLACE.LANDING} overnight on {DATE}. The landing's new camera shows a figure in white rubber boots walking the dock at 3 a.m. with a knife, and {D}'s truck in the lot. {DL} says {D.he} was checking {D.his} own boat.",
         state: [E(.video, 3, "Landing Camera", "A figure in white boots cuts the nets at 3:06 a.m.; {DL}'s truck is the only one in the lot.", .search),
                 E(.physical, 2, "Net Damage", "Fourteen cuts with a straight blade; $1,400 to replace.")],
@@ -158,8 +155,7 @@ extension FollowUpCases {
     static let landingGaff = followUp(
         key: "story.followup.landingGaff", category: .violent,
         headlines: ["Fight at Boat Landing Ends With Gaff Swing", "Waterman Charged After Swinging Gaff at Rival"],
-        law: "awdw", threshold: 5, ages: 25...62,
-        spec: "Assaulted {V} with a deadly weapon, a boat gaff, at the {PLACE.LANDING}, on {DATE}.", victim: true,
+        law: "awdw", threshold: 5, spec: "Assaulted {V} with a deadly weapon, a boat gaff, at the {PLACE.LANDING}, on {DATE}.", ages: 25...62, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} and {V}, another waterman, argued on the dock at the {PLACE.LANDING} on {DATE} over who had the right to a channel. Witnesses agree {V} shoved {D}. {D} then swung a steel boat gaff that caught {V}'s shoulder and opened a cut that took nine stitches. {DL} says {V} came at {D.him} again.",
         state: [E(.document, 3, "Emergency Room Records", "A laceration to the shoulder closed with nine stitches."),
                 E(.statement, 2, "Dockhand", "A dockhand says {V} had stepped back before the gaff came around.")],
@@ -189,8 +185,7 @@ extension FollowUpCases {
     static let naloxoneNight = followUp(
         key: "story.followup.naloxoneNight", category: .drugs,
         headlines: ["Friend Revived With Naloxone After Pills From Same Supplier", "Second Overdose Tied to Defendant in Motel Death Case"],
-        law: "deliverSchedII", threshold: 6, ages: 19...35,
-        spec: "Delivered fentanyl, a Schedule II controlled substance, to {V}, on {DATE}.", victim: true,
+        law: "deliverSchedII", threshold: 6, spec: "Delivered fentanyl, a Schedule II controlled substance, to {V}, on {DATE}.", ages: 19...35, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {V} stopped breathing in a car outside a convenience store on {DATE} and was revived by a deputy with two doses of naloxone. {V} told the deputy {D} had given {V.him} a blue pill twenty minutes earlier. Texts on {V}'s phone show {V} asking {D} for \"one\" and {D} answering \"outside.\"",
         state: [E(.digital, 3, "Texts", "\"u got one?\" / \"outside\" from {DL}'s number, twenty minutes before the 911 call."),
                 E(.forensic, 2, "Lab Report", "A second pill in {V}'s pocket contained fentanyl.")],
@@ -217,8 +212,7 @@ extension FollowUpCases {
     static let fentanylCrash = followUp(
         key: "story.followup.fentanylCrash", category: .traffic,
         headlines: ["Driver Nodding Off on Fentanyl Crashes Into Mailboxes", "DWI Charge After Driver Found Slumped at Wheel"],
-        law: "dwi", threshold: 5, ages: 19...35,
-        spec: "Drove a vehicle on {STREET} while under the influence of an impairing substance, fentanyl, on {DATE}.", victim: false,
+        law: "dwi", threshold: 5, spec: "Drove a vehicle on {STREET} while under the influence of an impairing substance, fentanyl, on {DATE}.", ages: 19...35, victim: false,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D}'s car left {STREET} on {DATE}, took out three mailboxes, and stopped in a yard. A deputy found {D} slumped at the wheel with pinpoint pupils; {D} came around after naloxone. A blood test showed fentanyl. {DL} says {D.he} swerved for a deer and hit {D.his} head.",
         state: [E(.forensic, 3, "Blood Test", "Fentanyl and norfentanyl in {DL}'s blood drawn an hour after the crash."),
                 E(.video, 2, "Body Camera", "{D} slumped, pinpoint pupils, unresponsive until naloxone.")],
@@ -245,8 +239,7 @@ extension FollowUpCases {
     static let grandmasCard = followUp(
         key: "story.followup.grandmasCard", category: .whiteCollar,
         headlines: ["ATM Withdrawals From Widow's Account Traced to Grandson", "Grandson in Ring Case Charged With Card Fraud"],
-        law: "cardFraud", ages: 20...40,
-        spec: "Used the debit card of {V}, an older adult, without consent, to withdraw $1,860 in cash, between a month before {DATE} and {DATE}.", victim: true,
+        law: "cardFraud", spec: "Used the debit card of {V}, an older adult, without consent, to withdraw $1,860 in cash, between a month before {DATE} and {DATE}.", ages: 20...40, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {V}, {D}'s grandmother, found eleven ATM withdrawals {V.he} didn't make, $1,860 in all, from {V.his} checking account. ATM cameras at two banks show {D}. {DL} says {V} lent {D.him} the card for groceries and told {D.him} to take what {D.he} needed.",
         state: [E(.video, 3, "ATM Cameras", "{D} at the machine for nine of the eleven withdrawals."),
                 E(.document, 2, "Bank Statement", "Eleven withdrawals of $100 to $300, late at night, over a month.")],
@@ -272,8 +265,7 @@ extension FollowUpCases {
     static let neighborsChainsaw = followUp(
         key: "story.followup.neighborsChainsaw", category: .property,
         headlines: ["Neighbor's Chainsaw and Trimmer Turn Up at Pawn Shop", "Pawn Database Flags Tools Taken From Open Garage"],
-        law: "misdLarceny", threshold: 4, ages: 20...40,
-        spec: "Stole a chainsaw and a string trimmer, valued at $640, belonging to {V}, from an open garage, on {DATE}.", victim: true,
+        law: "misdLarceny", threshold: 4, spec: "Stole a chainsaw and a string trimmer, valued at $640, belonging to {V}, from an open garage, on {DATE}.", ages: 20...40, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a chainsaw and a string trimmer disappeared from {V}'s open garage in {HOOD} on {DATE}. The next day both were pawned at {PLACE.PAWN} for $140 under {D}'s license. {V}'s serial numbers matched the pawn report. {DL} says a man sold them to {D.him} at a yard sale.",
         state: [E(.document, 3, "Pawn Report", "Both tools pawned under {DL}'s license; the chainsaw's serial number matches {V}'s receipt."),
                 E(.video, 1, "Doorbell Camera", "A figure walks out of {V}'s garage with something orange; the face isn't clear.")],

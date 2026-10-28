@@ -86,6 +86,13 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var amountOptions: [Int]? = nil
     var amountRange: ClosedRange<Int>? = nil
     var suggestedAmount: Int? = nil
+    /// A different starting figure for some amount options (an unsecured bond starts lower than a secured one).
+    var suggestedAmounts: [Int: Int]? = nil
+
+    /// The amount the picker starts at for this option.
+    func suggested(for choice: Int?) -> Int? {
+        choice.flatMap { suggestedAmounts?[$0] } ?? suggestedAmount
+    }
     /// Options the law doesn't allow here (a PJC on a Class A through E felony), kept out of the list.
     var unavailableOptions: Set<Int>? = nil
     /// For a petition (expunction, bond forfeiture, driving privilege): what the law turns on, kept off the card.
@@ -107,7 +114,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     /// The option text with the amount the judge chose filled in.
     func optionText(_ choice: Int, amount: Int?) -> String {
         let option = options.indices.contains(choice) ? options[choice] : (options.first ?? "")
-        guard amountOptions?.contains(choice) == true, let amount else { return option }
+        guard amountOptions?.contains(choice) == true, let amount = amount ?? suggested(for: choice) else { return option }
         return option.replacingOccurrences(of: "an amount you set", with: "$\(amount.formatted())")
     }
 
@@ -442,12 +449,15 @@ enum CalendarCalls {
                               defenseAsk: canPost == 0
                                 ? "My client has no money. Any secured bond is a detention order. We ask for a written promise to appear."
                                 : "My client can post about $\(canPost.formatted()). We ask for an unsecured bond so \(d.lastName) can keep working and help with the defense.",
+                              // Every condition G.S. 15A-534(a) allows, with the judge setting any amount.
                               options: ["Written promise to appear",
-                                        "Unsecured bond of $\(moderate.formatted())",
+                                        "Release to the custody of a designated person or program",
+                                        "Unsecured bond of an amount you set",
                                         "Secured bond of an amount you set",
                                         "Secured bond of an amount you set, with electronic house arrest"],
                               pendingCase: c, bond: BondFacts(moderate: moderate, high: high, canPost: canPost, flightRisk: flight, danger: danger),
-                              amountOptions: [2, 3], amountRange: 500...max(500_000, high * 2), suggestedAmount: high)
+                              amountOptions: [2, 3, 4], amountRange: 500...max(500_000, high * 2), suggestedAmount: high,
+                              suggestedAmounts: [2: moderate])
     }
 
     /// A jailed defendant asks to have the bond lowered (G.S. 15A-538). The judge sets the new amount.
@@ -481,11 +491,14 @@ enum CalendarCalls {
                                 ? "The State opposes any reduction. \(ftas > 0 ? "The defendant has missed court before." : "The charge is violent and the evidence is strong.")"
                                 : "The State would agree to a modest reduction with electronic monitoring.",
                               defenseAsk: "My client can post about $\(canPost.formatted()). Anything higher is a detention order by another name. There's a job and a family waiting.",
-                              options: ["Reduce the bond to an amount you set", "Leave the bond at $\(current.formatted())",
-                                        "Reduce the bond to an amount you set, with electronic house arrest"],
+                              options: ["Set a new secured bond of an amount you set", "Leave the bond at $\(current.formatted())",
+                                        "Set a new secured bond of an amount you set, with electronic house arrest",
+                                        "Change to an unsecured bond of an amount you set",
+                                        "Release on a written promise to appear"],
                               pendingCase: jailed,
                               bond: BondFacts(moderate: current, high: current, canPost: canPost, flightRisk: flight, danger: danger),
-                              amountOptions: [0, 2], amountRange: 500...max(1_000, current - 500), suggestedAmount: max(500, current / 2))
+                              amountOptions: [0, 2, 3], amountRange: 500...max(500_000, current * 2), suggestedAmount: max(500, current / 2),
+                              suggestedAmounts: [3: max(500, current / 2)])
     }
 
     /// A stay-away order broken by someone not on probation: a short hearing on criminal contempt (G.S. 5A-11, 5A-15),
@@ -992,5 +1005,9 @@ extension CalendarMatter {
         amountOptions = try c.decodeIfPresent([Int].self, forKey: .amountOptions)
         amountRange = try c.decodeIfPresent(ClosedRange<Int>.self, forKey: .amountRange)
         suggestedAmount = try c.decodeIfPresent(Int.self, forKey: .suggestedAmount)
+        unavailableOptions = try c.decodeIfPresent(Set<Int>.self, forKey: .unavailableOptions)
+        petition = try c.decodeIfPresent(PetitionFacts.self, forKey: .petition)
+        review = try c.decodeIfPresent(TreatmentReviewFacts.self, forKey: .review)
+        suggestedAmounts = try c.decodeIfPresent([Int: Int].self, forKey: .suggestedAmounts)
     }
 }

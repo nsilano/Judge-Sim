@@ -5,7 +5,7 @@ private typealias E = EvidenceSeed
 /// Follow-up trials for the batch AH stories, built with the shared `followUp` helper in FollowUpCasesAF.
 extension FollowUpCases {
     static let batchAH: [CaseTemplate] = [
-        pressedPills, boxUnderAnotherName, schoolZoneSpeeding, checkpointRun, forgedLienRelease, keptDeposits,
+        pressedPills, boxUnderAnotherName, schoolZoneSpeeding, checkpointFlight, forgedLienRelease, keptDeposits,
         truckRaffle, shedFire, phonedInScript, patientsPills
     ]
 
@@ -14,8 +14,7 @@ extension FollowUpCases {
     static let pressedPills = followUp(
         key: "story.followup.pressedPills", category: .drugs,
         headlines: ["Traffic Stop Turns Up 40 Blue Pills", "Driver From Mailed-Pills Case Charged Again"],
-        law: "pwisd", ages: 21...45,
-        spec: "Possessed with intent to sell or deliver fentanyl, a Schedule II controlled substance, in the form of 40 pressed tablets, on {DATE}.", victim: false,
+        law: "pwisd", spec: "Possessed with intent to sell or deliver fentanyl, a Schedule II controlled substance, in the form of 40 pressed tablets, on {DATE}.", ages: 21...45, victim: false,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a deputy stopped {D}'s car on {STREET} on {DATE} for a dead taillight. A K-9 alerted, and under the driver's seat the deputy found a sandwich bag of 40 blue tablets stamped M30, $1,300 in twenties, and a second phone. The lab found fentanyl. {DL} says the car was borrowed and the pills, money, and phone weren't {D.his}.",
         state: [E(.forensic, 3, "Lab Report", "40 tablets containing fentanyl, 4.1 grams in all."),
                 E(.physical, 2, "Cash and Second Phone", "$1,300 in twenties folded in a rubber band, and a prepaid phone with dozens of texts asking for \"blues.\"", .search)],
@@ -42,8 +41,7 @@ extension FollowUpCases {
     static let boxUnderAnotherName = followUp(
         key: "story.followup.boxUnderAnotherName", category: .whiteCollar,
         headlines: ["Mailbox Rented With Stolen License", "Shipping Store Box Rented in Another Man's Name"],
-        law: "identityTheft", ages: 21...45,
-        spec: "Knowingly used the identifying information of {V}, a driver's license number and name, to rent a private mailbox, with intent to make financial use of it, on or about {DATE}.", victim: true,
+        law: "identityTheft", spec: "Knowingly used the identifying information of {V}, a driver's license number and name, to rent a private mailbox, with intent to make financial use of it, on or about {DATE}.", ages: 21...45, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a private mailbox at a shipping store in {HOOD} was rented in the name of {V}, using a photocopy of {V}'s driver's license that {V} had reported lost. {V} learned of it when a collection notice for a credit card {V.he} never opened arrived at {V.his} home. The store's camera shows {D} renting the box and picking up mail from it three times.",
         state: [E(.video, 3, "Store Camera", "{D} at the counter on the rental date, and at the mailbox on three later days."),
                 E(.document, 2, "Rental Agreement", "Signed \"{V}\" with a photocopy of {V}'s license. The signature doesn't match {V}'s.")],
@@ -73,8 +71,7 @@ extension FollowUpCases {
     static let schoolZoneSpeeding = followUp(
         key: "story.followup.schoolZoneSpeeding", category: .traffic,
         headlines: ["Driver in Crossing Guard Case Clocked at 52 in School Zone", "Reckless Driving Charge Near Same Elementary School"],
-        law: "recklessDriving", threshold: 4, ages: 24...65,
-        spec: "Drove a vehicle carelessly and heedlessly in willful or wanton disregard of the rights or safety of others, at 52 miles per hour in a 25 mile-per-hour school zone near {PLACE.SCHOOL}, on {DATE}.", victim: false,
+        law: "recklessDriving", threshold: 4, spec: "Drove a vehicle carelessly and heedlessly in willful or wanton disregard of the rights or safety of others, at 52 miles per hour in a 25 mile-per-hour school zone near {PLACE.SCHOOL}, on {DATE}.", ages: 24...65, victim: false,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a deputy running radar outside {PLACE.SCHOOL} on {DATE} clocked {D}'s SUV at 52 miles per hour in the 25 zone during morning drop-off, passing a stopped bus. {DL} says the radar was wrong and {D.he} was going \"maybe 35.\"",
         state: [E(.document, 3, "Radar Log", "52 miles per hour at 7:41 a.m., with the calibration certificate current."),
                 E(.video, 2, "Bus Stop-Arm Camera", "{D}'s SUV passes the bus as its stop arm swings out.")],
@@ -97,11 +94,10 @@ extension FollowUpCases {
         timeline: [(0, "7:41 a.m.: radar at 52 in the school zone; stop.")],
         identified: "Stopped by the deputy at the scene.")
 
-    static let checkpointRun = followUp(
-        key: "story.followup.checkpointRun", category: .traffic,
+    static let checkpointFlight = followUp(
+        key: "story.followup.checkpointFlight", category: .traffic,
         headlines: ["Driver Speeds Away From License Checkpoint", "Chase Ends in Ditch on Shiloh Road"],
-        law: "fleeing", ages: 24...65,
-        spec: "Operated a motor vehicle while fleeing a law enforcement officer in the lawful performance of duties, at more than 15 miles per hour over the limit and with reckless driving, on {DATE}.", victim: false,
+        law: "fleeing", spec: "Operated a motor vehicle while fleeing a law enforcement officer in the lawful performance of duties, at more than 15 miles per hour over the limit and with reckless driving, on {DATE}.", ages: 24...65, victim: false,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} turned around short of a license checkpoint on {STREET} on {DATE}. When a trooper followed with lights and siren, {D} accelerated to 80 in a 45 for three miles before sliding into a ditch on Shiloh Road. {DL} says {D.he} panicked because {D.his} insurance had lapsed.",
         state: [E(.video, 3, "Dash Camera", "Three minutes of pursuit with lights and siren; 80 miles per hour on the trooper's radar."),
                 E(.document, 2, "Insurance Record", "{DL}'s liability insurance lapsed two weeks before.")],
@@ -129,8 +125,7 @@ extension FollowUpCases {
     static let forgedLienRelease = followUp(
         key: "story.followup.forgedLienRelease", category: .whiteCollar,
         headlines: ["Truck Sold With Forged Lien Release", "Buyer Says Bank Still Holds Title to Truck"],
-        law: "forgery", ages: 35...66,
-        spec: "Falsely made a lien release, purporting to be from a bank, on the title to a pickup truck sold to {V}, with intent to defraud, on or about {DATE}.", victim: true,
+        law: "forgery", spec: "Falsely made a lien release, purporting to be from a bank, on the title to a pickup truck sold to {V}, with intent to defraud, on or about {DATE}.", ages: 35...66, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} sold a 2016 pickup to {V} for $11,000 on {DATE}, with a lien release on the title that appeared to come from a credit union. When {V} went to register the truck, the DMV said the credit union still held the lien. The credit union says the release is not theirs: the signer retired two years ago, and the seal is the wrong design.",
         state: [E(.document, 3, "The Release", "A lien release on credit union letterhead signed by an officer who retired two years earlier, with an outdated seal."),
                 E(.document, 2, "Loan Records", "{DL} still owes the credit union $8,400 on the truck.")],
@@ -157,8 +152,7 @@ extension FollowUpCases {
     static let keptDeposits = followUp(
         key: "story.followup.keptDeposits", category: .whiteCollar,
         headlines: ["Property Manager Kept Tenants' Deposits, Owner Says", "Rental Deposits Never Reached Trust Account"],
-        law: "embezzlement", ages: 35...66,
-        spec: "Embezzled $6,750 in tenant security deposits entrusted to {D.him} as manager of rental houses owned by {V}, between six months before {DATE} and {DATE}.", victim: true,
+        law: "embezzlement", spec: "Embezzled $6,750 in tenant security deposits entrusted to {D.him} as manager of rental houses owned by {V}, between six months before {DATE} and {DATE}.", ages: 35...66, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} was hired by {V} to manage four rental houses in {HOOD}. North Carolina law requires security deposits to be held in a trust account. Over six months, {D} collected $6,750 in deposits from new tenants. None reached the trust account. Bank records show the money went into {D}'s personal account.",
         state: [E(.document, 3, "Bank Records", "Five deposits from tenants into {DL}'s personal account; the trust account was never opened.", .search),
                 E(.document, 2, "Management Agreement", "{DL} agreed to hold deposits \"in a separate trust account as required by law.\"")],
@@ -189,7 +183,7 @@ extension FollowUpCases {
         headlines: ["Raffle for Pickup Truck Had No Truck", "Fire Department Raffle Organizer Charged"],
         law: "falsePretenses",
         spec: "Obtained $4,900 from people buying raffle tickets, including {V}, by falsely representing that a pickup truck would be raffled to benefit a volunteer fire department, on or about {DATE}.", victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} sold $20 raffle tickets for a \"brand new pickup\" to benefit a volunteer fire department, $4,900 worth by {DATE}. The fire chief says the department never authorized a raffle, and no truck was ever bought. {V} bought ten tickets.",
+        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} sold $20 raffle tickets for a \"brand new pickup\" worth $48,000 to benefit a volunteer fire department, $4,900 worth by {DATE}. The fire chief says the department never authorized a raffle, and no truck was ever bought. {V} bought ten tickets.",
         state: [E(.document, 3, "Fire Chief's Letter", "The department never authorized a raffle and received nothing."),
                 E(.document, 2, "Bank Records", "Ticket money deposited to {DL}'s account; no truck purchase.", .search)],
         defense: [E(.statement, 1, "A Truck on Order", "{DL} says a dealer was holding a truck and the deal fell through.")],
@@ -244,8 +238,7 @@ extension FollowUpCases {
     static let phonedInScript = followUp(
         key: "story.followup.phonedInScript", category: .drugs,
         headlines: ["Caller Posed as Doctor's Office to Order Painkillers", "Pharmacist Recognized Voice on Phoned-In Script"],
-        law: "prescriptionFraud", ages: 23...45,
-        spec: "Attempted to obtain oxycodone by fraud, by telephoning a pharmacy and falsely representing that the call came from a physician's office, on {DATE}.", victim: false,
+        law: "prescriptionFraud", spec: "Attempted to obtain oxycodone by fraud, by telephoning a pharmacy and falsely representing that the call came from a physician's office, on {DATE}.", ages: 23...45, victim: false,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a caller to {PHARM} on {DATE}, identifying as a nurse at an orthopedic practice, phoned in 20 oxycodone tablets for a patient. The pharmacist called the practice back at its listed number; no one there had called. When {D} came to pick up the prescription under the patient's name, deputies were waiting.",
         state: [E(.digital, 3, "Pharmacy Call Log", "The call came from a prepaid number found in {DL}'s phone contacts under \"work.\""),
                 E(.video, 2, "Pharmacy Camera", "{D} at the counter asking for the prescription in another person's name.")],
@@ -272,8 +265,7 @@ extension FollowUpCases {
     static let patientsPills = followUp(
         key: "story.followup.patientsPills", category: .whiteCollar,
         headlines: ["Home Health Aide Charged With Taking Patient's Pain Pills", "Pill Counts Came Up Short After Aide's Visits"],
-        law: "exploitationElder", ages: 23...45,
-        spec: "Knowingly took the property of {V}, an older adult in {D.his} care, by deception, oxycodone prescribed to {V}, between two months before {DATE} and {DATE}.", victim: true,
+        law: "exploitationElder", spec: "Knowingly took the property of {V}, an older adult in {D.his} care, by deception, oxycodone prescribed to {V}, between two months before {DATE} and {DATE}.", ages: 23...45, victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} worked as a home health aide for {V}, 84, who takes oxycodone after hip surgery. {V}'s daughter began counting the pills and found the count short after each of {D}'s visits, about 40 tablets over two months. A pill-bottle camera the daughter installed recorded {D} taking tablets on {DATE}.",
         state: [E(.video, 3, "Bottle Camera", "{D} opens {V}'s pill bottle, takes several tablets, and puts them in a pocket."),
                 E(.document, 2, "Pill Counts", "The daughter's log of counts before and after each visit.")],

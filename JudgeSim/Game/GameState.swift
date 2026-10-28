@@ -1175,7 +1175,8 @@ final class GameState: ObservableObject {
                 call.matters += petitionMatters(on: date, excluding: usedPeople, rng: &rng)
                 call.matters += treatmentCourtMatters(on: date, excluding: usedPeople, rng: &rng)
                 let onThisCall = Set(call.matters.map(\.personID) + call.matters.compactMap { $0.pendingCase?.defendant.personID })
-                if let m = counselWithdrawal(on: date, excluding: usedPeople.union(onThisCall), rng: &rng) { call.matters.append(m) }
+                // Every pending defendant is "in play"; only the ones already on this calendar are off limits.
+                if let m = counselWithdrawal(on: date, excluding: onThisCall, rng: &rng) { call.matters.append(m) }
                 call.matters.forEach { usedPeople.insert($0.personID) }
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
@@ -2031,23 +2032,33 @@ final class GameState: ObservableObject {
                 }
             case .firstAppearance, .bondModification:
                 guard let bond = m.bond else { continue }
-                let set = amounts[m.id] ?? m.suggestedAmount ?? bond.moderate
+                // A bond hearing saved before every bond type took an amount had four options: promise, a fixed
+                // unsecured bond, secured, secured with house arrest.
+                var choice = choice
+                if m.kind == .firstAppearance && m.options.count == 4 { choice = [0, 2, 3, 4][min(choice, 3)] }
+                let set = amounts[m.id] ?? (m.options.count == 4 && choice == 2 ? bond.moderate : nil) ?? m.suggested(for: choice) ?? bond.moderate
+                // Only a secured bond has to be posted; a promise, custody release, or unsecured bond releases the
+                // defendant on signing.
                 let amount: Int
                 let monitored: Bool
+                var watch: Double? = nil
                 let condition: String
                 if m.kind == .firstAppearance {
-                    amount = choice >= 2 ? set : 0
-                    monitored = choice == 3
-                    condition = ["a written promise to appear", "an unsecured bond of $\(bond.moderate.formatted())",
-                                 "a $\(set.formatted()) secured bond", "a $\(set.formatted()) secured bond with electronic house arrest"][min(choice, 3)]
+                    amount = choice >= 3 ? set : 0
+                    monitored = choice == 4
+                    if choice == 1 { watch = 0.7 }
+                    condition = ["a written promise to appear", "release to the custody of a designated person",
+                                 "a $\(set.formatted()) unsecured bond", "a $\(set.formatted()) secured bond",
+                                 "a $\(set.formatted()) secured bond with electronic house arrest"][min(choice, 4)]
                 } else {
-                    amount = choice == 1 ? bond.moderate : set
+                    amount = choice == 1 ? bond.moderate : (choice == 0 || choice == 2 ? set : 0)
                     monitored = choice == 2
-                    condition = ["a reduced $\(set.formatted()) secured bond", "the $\(bond.moderate.formatted()) secured bond left in place",
-                                 "a reduced $\(set.formatted()) secured bond with electronic house arrest"][min(choice, 2)]
+                    condition = ["a new $\(set.formatted()) secured bond", "the $\(bond.moderate.formatted()) secured bond left in place",
+                                 "a new $\(set.formatted()) secured bond with electronic house arrest", "a $\(set.formatted()) unsecured bond",
+                                 "a written promise to appear"][min(choice, 4)]
                 }
                 decideRelease(c, bond: bond, amount: amount, monitored: monitored, condition: condition, heard: heard, date: call.date,
-                              rng: &rng, schedule: schedule)
+                              rng: &rng, schedule: schedule, watch: watch)
             case .arraignment:
                 if choice == 0, let picked = dates[m.id] {
                     // The judge picks the day. Too soon, and the defense asks for more time.
@@ -2177,7 +2188,7 @@ final class GameState: ObservableObject {
     /// What follows from conditions of release: a defendant who can post goes home, and may miss court or be
     /// arrested again; one who can't sits in jail until trial, and that time counts.
     private func decideRelease(_ c: CourtCase, bond: BondFacts, amount: Int, monitored: Bool, condition: String, heard: String,
-                               date: Date, rng: inout SeededRNG, schedule: (CourtCase, Int, String, Int) -> Void) {
+                               date: Date, rng: inout SeededRNG, schedule: (CourtCase, Int, String, Int) -> Void, watch supervision: Double? = nil) {
         var held = c
         guard var bg = held.background else { schedule(c, rng.int(5...8), "Set for trial on \(heard).", 0); return }
         if amount <= bond.canPost {
@@ -2186,7 +2197,7 @@ final class GameState: ObservableObject {
             bg.bondStatus = "Released on \(condition) on \(heard)."
             held.background = bg
             // House arrest makes running and new arrests less likely.
-            let watch = monitored ? 0.4 : 1.0
+            let watch = supervision ?? (monitored ? 0.4 : 1.0)
             let cal = CourtCalendar.calendar
             if rng.chance(bond.danger * watch) {
                 let weeksOut = rng.int(1...3)
