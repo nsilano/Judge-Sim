@@ -598,7 +598,10 @@ enum CaseGenerator {
                 InvestigationReport.Entry(when: CaseDates.dayYear(CaseDates.add(offset, to: incident)), what: fill(what))
             }
             // The written file says when the arrest happened; the fact sheet follows it.
-            if let offset = story.timeline.first(where: { $0.1.lowercased().contains("arrested") })?.0 {
+            // The defendant's arrest, not someone else's ("a man arrested with methamphetamine names the clerk"), and
+            // never before the crime itself.
+            let arrests = story.timeline.filter { $0.0 >= 0 && $0.1.lowercased().contains("arrested") }
+            if let offset = (arrests.first { $0.1.contains("{D") } ?? arrests.first)?.0 {
                 investigation.facts?.arrest = CaseDates.add(offset, to: incident)
             }
             investigation.howIdentified = fill(story.howIdentified)

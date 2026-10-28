@@ -168,14 +168,15 @@ enum Incidents {
     // MARK: - Counsel with a conflict, kept on after a motion to withdraw was denied (Sixth Amendment; Cuyler v. Sullivan)
 
     static func conflictedCounsel(_ c: CourtCase, reason: String) -> CourtIncident {
-        CourtIncident(
-            kind: .selfRepresentation, moment: .beforeTrial, title: "\(c.defenseAttorney) renews the motion to withdraw",
-            body: "You denied \(c.defenseAttorney)'s motion to withdraw at the calendar call. As the trial is called, counsel renews it for the record: \(reason) \(c.defendant.name) says \(c.defendant.lastName) wants a different lawyer.",
+        let counsel = c.defenseAttorney.components(separatedBy: ", ").first ?? c.defenseAttorney
+        return CourtIncident(
+            kind: .selfRepresentation, moment: .beforeTrial, title: "\(counsel) renews the motion to withdraw",
+            body: "You denied \(counsel)'s motion to withdraw at the calendar call. As the trial is called, counsel renews it for the record: \(reason) \(c.defendant.name) says \(c.defendant.lastName) wants a different lawyer.",
             lawID: "rightToCounsel",
             options: [
                 IncidentOption(label: "Allow the withdrawal now and continue the trial four weeks for new counsel",
                                result: "New counsel is appointed and the case goes to another date.", proper: true, error: false, effect: .continueCase, days: 28),
-                IncidentOption(label: "Deny it again and proceed to trial", result: "The trial goes on with \(c.defenseAttorney) at the defense table.",
+                IncidentOption(label: "Deny it again and proceed to trial", result: "The trial goes on with \(counsel) at the defense table.",
                                proper: false, error: true,
                                appealText: "You required the defendant to go to trial with appointed counsel who had an actual conflict of interest, after counsel asked twice to withdraw.")
             ])

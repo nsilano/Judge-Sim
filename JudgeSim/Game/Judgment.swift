@@ -791,8 +791,17 @@ enum Judgment {
     }
 
     /// Offered whenever there is a conviction; eligibility is flagged, not enforced.
+    /// G.S. 15A-1341(a4): only for misdemeanors and Class H or I felonies, for someone with no felony conviction;
+    /// never for impaired driving. (G.S. 90-96 first-offense drug possession falls inside the same limits here.)
     static func conditionalDischargeAvailable(_ c: CourtCase, _ r: Rulings) -> Bool {
-        !convictedLaws(c, r).isEmpty
+        let laws = convictedLaws(c, r)
+        guard !laws.isEmpty else { return false }
+        let lowEnough = laws.allSatisfy { law in
+            guard let cls = law.ncClass else { return false }
+            return !cls.isFelony || cls == .H || cls == .I
+        }
+        let impaired = laws.contains { ["dwi", "habitualDWI", "felonyDBV", "misdDBV"].contains($0.id) }
+        return lowEnough && !impaired && !c.defendant.priors.contains { $0.ncClass.isFelony }
     }
 
     /// How the chosen sentence is harsher than the plea arrangement, if it is.

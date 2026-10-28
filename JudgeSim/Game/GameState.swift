@@ -1973,10 +1973,18 @@ final class GameState: ObservableObject {
             case .counselWithdrawal:
                 if choice <= 1 {
                     var fresh = c
-                    let lawyers = (county?.assistantPDs ?? []) + (county?.privateCounsel ?? [])
-                    if let next = lawyers.filter({ $0 != c.defenseAttorney }).randomElement(using: &rng) { fresh.defenseAttorney = next }
+                    let old = c.defenseAttorney.components(separatedBy: ", ").first ?? c.defenseAttorney
+                    let retained = c.defenseAttorney.contains("retained")
+                    // A hired lawyer is replaced by another hired one, or by the public defender; an appointed one by
+                    // another public defender or a private lawyer Indigent Defense Services appoints.
+                    let usePD = retained ? choice == 1 : choice == 0
+                    let pool = (usePD ? county?.assistantPDs : county?.privateCounsel) ?? []
+                    if let next = pool.filter({ $0 != old }).randomElement(using: &rng) {
+                        fresh.defenseAttorney = next + (usePD ? ", Assistant Public Defender" : (retained ? ", retained counsel" : ", appointed counsel"))
+                    }
+                    let newName = fresh.defenseAttorney.components(separatedBy: ", ").first ?? fresh.defenseAttorney
                     setFor(fresh, weeks: choice == 0 ? 6 : 3,
-                           note: "\(c.defenseAttorney) allowed to withdraw at the calendar call on \(heard); \(fresh.defenseAttorney) appointed.")
+                           note: "\(old) allowed to withdraw at the calendar call on \(heard); \(newName) \(retained && choice == 0 ? "hired" : "appointed").")
                 } else {
                     // A real conflict comes back when the trial is called.
                     var kept = c
@@ -2168,6 +2176,13 @@ final class GameState: ObservableObject {
             pending.removeAll { $0.appealID == trackerID || ($0.news.docket == relief.docket && ($0.news.kind == .appeal || $0.news.headline.hasPrefix("Court of Appeals hears argument"))) }
             if let h = history.firstIndex(where: { $0.appealID == trackerID }) { history[h].appealStatus = "Appeal dismissed as moot" }
         }
+        // A violation hearing on probation from the vacated judgment has nothing left to hear.
+        func onVacatedProbation(_ entry: DocketEntry) -> Bool {
+            if case .hearing(let h) = entry.matter { return h.personID == relief.personID && h.probation.docket == relief.docket }
+            return false
+        }
+        scheduled.removeAll { onVacatedProbation($0.entry) }
+        if var day = today { day.entries.removeAll { $0.isOpen && onVacatedProbation($0) }; today = day }
         guard let index = people.firstIndex(where: { $0.id == relief.personID }) else { return }
         people[index].stayAwayOrders?.removeAll { $0.docket == relief.docket }
         people[index].priors.removeAll { $0.docket == relief.docket }
@@ -2511,9 +2526,10 @@ final class GameState: ObservableObject {
             return c
         }
         guard let c = pool.isEmpty ? nil : rng.pick(pool) else { return nil }
-        let counsel = c.defenseAttorney, d = c.defendant
+        let counsel = c.defenseAttorney.components(separatedBy: ", ").first ?? c.defenseAttorney, d = c.defendant
+        let retained = c.defenseAttorney.contains("retained")
         let grounds: [(String, Bool, String)] = [
-            ("\(counsel) is carrying \(rng.int(140...190)) open felony files and says this one can't be prepared properly in time.", false,
+            (retained ? "\(counsel) says \(d.lastName) hasn't paid the fee in four months and has stopped returning calls." : "\(counsel) is carrying \(rng.int(140...190)) open felony files and says this one can't be prepared properly in time.", false,
              "A heavy caseload is for the court to weigh; it isn't a conflict that requires withdrawal."),
             ("\(counsel) has accepted a job with the District Attorney's office starting next month.", true,
              "A defense lawyer joining the prosecutor's office has a conflict; withdrawal is required."),
@@ -2526,13 +2542,17 @@ final class GameState: ObservableObject {
         let g = rng.pick(grounds)
         return CalendarMatter(
             kind: .counselWithdrawal, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation, docket: c.docket,
-            summary: "\(counsel), appointed to represent \(d.name) on \(c.charges.first?.law.title.lowercased() ?? "the charges"), moves to withdraw. \(g.0)",
+            summary: "\(counsel), \(retained ? "hired to defend \(d.name)" : "appointed to represent \(d.name)") on \(c.charges.first?.law.title.lowercased() ?? "the charges"), moves to withdraw. \(g.0)",
             stateAsk: rng.pick(["The State is ready for trial and objects to any delay.", "The State takes no position on who represents the defendant.",
                                 "The State asks that any new lawyer be ready by the current trial date."]),
             defenseAsk: "\(counsel): \(rng.pick(["I can't give this client the representation the Constitution requires.", "I'd ask the court to let me out and appoint someone who can do this right.", "I've never asked to withdraw from a case in fifteen years. I'm asking now."]))",
-            options: ["Allow withdrawal; appoint the next lawyer on the list (about six weeks to get ready)",
-                      "Allow withdrawal; ask Indigent Defense Services for a private lawyer (about three weeks)",
-                      "Deny: \(counsel) stays on the case"],
+            options: retained
+                ? ["Allow withdrawal; give \(d.lastName) time to hire a new lawyer (about six weeks)",
+                   "Allow withdrawal; appoint the public defender if \(d.lastName) can't afford one (about three weeks)",
+                   "Deny: \(counsel) stays on the case"]
+                : ["Allow withdrawal; appoint the next lawyer on the list (about six weeks to get ready)",
+                   "Allow withdrawal; ask Indigent Defense Services for a private lawyer (about three weeks)",
+                   "Deny: \(counsel) stays on the case"],
             lawID: "rightToCounsel", pendingCase: c,
             petition: PetitionFacts(eligible: g.1, reason: g.2))
     }

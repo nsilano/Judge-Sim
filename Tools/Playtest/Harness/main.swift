@@ -584,7 +584,10 @@ func checkText(_ text: String, where place: String) {
         flag("two different defendants are both named \(name)")
     }
     for appeal in game.appeals {
-        if let record = game.history.first(where: { $0.docket == appeal.docket && $0.resolvedKind == "trial" }),
+        // The verdict the appeal was taken from: the last trial on or before the day it was filed (a retrial after a
+        // new trial is ordered is a different judgment).
+        if let record = game.history.filter({ $0.docket == appeal.docket && $0.resolvedKind == "trial" && $0.date <= appeal.filed.addingTimeInterval(86_400) })
+            .max(by: { $0.date < $1.date }),
            record.outcome.lowercased().contains("not guilty") || record.outcome.lowercased().contains("acquit"),
            !record.outcome.lowercased().replacingOccurrences(of: "not guilty", with: "").contains("guilty") {
             if !appeal.appellant.lowercased().contains("state") || !appeal.issue.lowercased().contains("suppress") {
