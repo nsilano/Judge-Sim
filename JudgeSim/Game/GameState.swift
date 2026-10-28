@@ -496,6 +496,18 @@ final class GameState: ObservableObject {
             c.continuanceMotion = nil
             entry.matter = .trial(c)
         }
+        // The ruling that sent the case to another date is done; a mistrial starts a new trial with none of them.
+        if case .trial(var c) = entry.matter, let incidents = c.incidents, !incidents.isEmpty {
+            if let r = snapshot?.rulings {
+                c.incidents = incidents.filter { i in
+                    guard let o = r.choice(for: i) else { return true }
+                    return o.effect != .continueCase && o.effect != .mistrial
+                }
+            } else {
+                c.incidents = []
+            }
+            entry.matter = .trial(c)
+        }
         entry.continuances += 1
         entry.requests = requests.isEmpty ? nil : requests
         entry.note = "Continued from \(SentenceFormat.shortDate(currentDate)): \(reason)"
@@ -2427,6 +2439,8 @@ final class GameState: ObservableObject {
         }
         guard var newCase = best?.value else { return nil }
         applyTrackRecords(&newCase, rng: &rng)
+        // Now and then something happens in the courtroom that needs a ruling on the spot.
+        if newCase.incidents == nil && !generic { newCase.incidents = Incidents.make(for: newCase, rng: &rng) }
         rememberOwners(newCase)
         recentLineKeys.append(contentsOf: CaseAuditor.lineKeys(newCase))
         if recentLineKeys.count > 2_500 { recentLineKeys.removeFirst(recentLineKeys.count - 2_500) }

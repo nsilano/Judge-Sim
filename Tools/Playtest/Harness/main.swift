@@ -254,10 +254,35 @@ var heardKeys = Set<String>()
 var sameNameFlagged = Set<String>()
 var contemptHeard = 0
 var petitionsHeard: [String: Int] = [:]
+var incidentsSeen: [String: Int] = [:]
 var continuedIDs = Set<UUID>()
 var hearingDates: [UUID: Date] = [:]
 
 // MARK: - Trials
+
+/// Rules on the courtroom incidents at one point in the case, the way a player might; true when the ruling sent the
+/// case to another date.
+@MainActor func ruleOnIncidents(_ s: CaseSession, _ moment: CourtIncident.Moment, _ c: CourtCase) -> Bool {
+    for incident in s.incidents(at: moment) where s.rulings.choice(for: incident) == nil {
+        let o = rng.pick(incident.options)
+        s.chooseIncident(incident, o)
+        incidentsSeen[incident.kind.rawValue, default: 0] += 1
+        log("  Incident: \(incident.title) -> \(o.label)\(o.error ? " [appealable error]" : "")")
+        checkText(incident.title + ". " + incident.body + " " + o.label + ". " + o.result, where: "incident \(c.docket)")
+        if o.effect == .removeWitness, let id = o.witnessID, s.courtCase.witnesses.contains(where: { $0.id == id }) {
+            flag("\(c.docket): the witness ruled out for lack of an interpreter is still in the case")
+        }
+    }
+    if let pending = s.incidentContinuance {
+        let to = CourtCalendar.calendar.date(byAdding: .day, value: pending.option.days ?? 28, to: game.currentDate) ?? game.currentDate
+        log("  Continued for the incident to about \(short(to))")
+        continuedIDs.insert(c.id)
+        game.continueMatter(c.id, to: to, reason: "\(pending.incident.title): \(pending.option.label.lowercased()).",
+                            snapshot: pending.option.effect == .mistrial ? nil : s.snapshot)
+        return true
+    }
+    return false
+}
 
 @MainActor func playTrial(_ c: CourtCase, resume: CaseSnapshot?) {
     guard let county = game.county else { return }
@@ -279,13 +304,15 @@ var hearingDates: [UUID: Date] = [:]
     if let person = game.person(c.defendant.personID), abs(person.age(on: c.sessionDate) - c.defendant.age) > 1 {
         flag("\(c.docket): \(c.defendant.name) is \(c.defendant.age) in the case but \(person.age(on: c.sessionDate)) by the record")
     }
-    if resume != nil { log("  (resumed after a continuance)"); continuedIDs.remove(c.id) }
+    if resume != nil { log("  (resumed after a continuance)") }
+    continuedIDs.remove(c.id)
     log("TRIAL \(c.docket) · \(c.caption)")
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
     log("  Defendant: \(d.name), \(d.age), \(d.occupation); priors: \(d.priors.count); \(c.background?.bondStatus ?? "")")
     log("  Summary: \(c.summary)")
     checkText(c.summary + " " + c.charges.map { $0.law.title + ": " + $0.specification }.joined(separator: " "), where: "trial \(c.docket)")
     if s.continuanceMotionPending { s.denyContinuanceMotion(); log("  Continuance motion: denied") }
+    if ruleOnIncidents(s, .beforeTrial, c) { return }
     if s.pleaPresented && rng.chance(0.6) {
         log("  Plea arrangement accepted: \(c.background?.arrangementTerms ?? "")")
         s.acceptPlea()
@@ -302,6 +329,7 @@ var hearingDates: [UUID: Date] = [:]
             s.adviseRightToTestify()
             for o in c.objections where s.rulings.objections[o.id] == nil { s.rulings.objections[o.id] = rng.chance(0.5) }
             if let ethics = c.ethics, let first = ethics.options.first { s.chooseEthics(first) }
+            if ruleOnIncidents(s, .trial, c) { return }
             s.advance()
         }
         if s.stage == .verdict {
@@ -326,6 +354,7 @@ var hearingDates: [UUID: Date] = [:]
         return
     }
     if s.stage == .sentencing {
+        _ = ruleOnIncidents(s, .sentencing, c)
         // The rarer forms of judgment, where the law allows them.
         if s.pjcAvailable && rng.chance(0.1) { s.rulings.special = .prayerForJudgment; log("  Form of judgment: PJC") }
         else if s.conditionalDischargeAvailable && rng.chance(0.15) { s.rulings.special = .conditionalDischarge; log("  Form of judgment: conditional discharge") }
@@ -687,6 +716,7 @@ if args.count > 1 && args[1] == "scan" {
     let orders = game.people.flatMap { $0.stayAwayOrders ?? [] }
     log("STAY-AWAY ORDERS: \(orders.count) issued, \(game.stats.orderViolations ?? 0) violations, \(contemptHeard) contempt hearings heard, \(game.showCauseQueue.count) waiting")
     log("PETITIONS: " + petitionsHeard.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
+    log("INCIDENTS: " + incidentsSeen.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
     log("BACKLOG BY MONTH")
     for b in backlog { log("  \(b)") }
     finish()

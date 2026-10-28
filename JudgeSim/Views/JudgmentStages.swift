@@ -211,6 +211,7 @@ struct SentencingStage: View {
         let units = session.units
         let issues = session.legalIssues
         VStack(alignment: .leading, spacing: 16) {
+            IncidentCards(session: session, moment: .sentencing)
             Text(session.rulings.pleaAccepted == true
                  ? "You accepted the plea. The sentence is up to you."
                  : "The sentence is up to you. The chart and counsel's recommendations are guidance, not limits.")
@@ -1326,6 +1327,9 @@ struct JudgmentStage: View {
                 .card()
             }
 
+            ForEach(outcome.incidentResults, id: \.self) { line in
+                Label(line, systemImage: "exclamationmark.bubble.fill").font(.callout).card()
+            }
             if let ethics = outcome.ethicsResult {
                 SectionTitle(text: "Outside the courtroom", icon: "exclamationmark.shield.fill")
                 Text(ethics).font(.callout).card()

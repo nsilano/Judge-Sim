@@ -10,6 +10,9 @@ struct CourtroomView: View {
     @State private var showContinuance = false
     /// Set when the court grants a party's motion to continue, so the sheet opens with that motion's reason and follow-up.
     @State private var grantingMotion: ContinuanceMotion?
+    @State private var incidentReason: String?
+    @State private var incidentDays: Int?
+    @State private var incidentFresh = false
     @State private var reviewSection: CaseReviewSheet.Section?
 
     /// What one more delay costs in this case.
@@ -61,14 +64,14 @@ struct CourtroomView: View {
 
                         switch session.stage {
                         case .briefing:
-                            BriefingStage(session: session) { motion in
+                            BriefingStage(session: session, onIncidentContinue: continueForIncident) { motion in
                                 grantingMotion = motion
                                 showContinuance = true
                             }
                         case .motions:
                             MotionsStage(session: session)
                         case .trial:
-                            TrialStage(session: session)
+                            TrialStage(session: session, onIncidentContinue: continueForIncident)
                         case .verdict:
                             VerdictStage(session: session)
                         case .sentencing:
@@ -150,11 +153,12 @@ struct CourtroomView: View {
                                  requestOptions: session.stage.rawValue <= CaseSession.Stage.trial.rawValue
                                     ? EvidenceRequest.options(for: session.courtCase) : [],
                                  initialRequests: grantingMotion.map { [$0.request] } ?? [],
-                                 initialReason: grantingMotion.map { "On the \($0.movant == .prosecution ? "State's" : "defense's") motion: \($0.title.lowercased())." },
-                                 initialDays: grantingMotion?.suggestedDays,
+                                 initialReason: grantingMotion.map { "On the \($0.movant == .prosecution ? "State's" : "defense's") motion: \($0.title.lowercased())." } ?? incidentReason,
+                                 initialDays: grantingMotion?.suggestedDays ?? incidentDays,
                                  cost: delayCost) { date, reason, requests in
                     showContinuance = false
-                    game.continueMatter(session.courtCase.id, to: date, reason: reason, snapshot: session.snapshot, requests: requests)
+                    // A mistrial starts the trial over; anything else picks up where it stopped.
+                    game.continueMatter(session.courtCase.id, to: date, reason: reason, snapshot: incidentFresh ? nil : session.snapshot, requests: requests)
                     dismiss()
                 }
             }
@@ -180,6 +184,14 @@ struct CourtroomView: View {
 }
 
 extension CourtroomView {
+    /// A courtroom ruling that sends the case to another date opens the continuance sheet with the reason filled in.
+    func continueForIncident(_ reason: String, _ days: Int, _ fresh: Bool) {
+        incidentReason = reason
+        incidentDays = days
+        incidentFresh = fresh
+        showContinuance = true
+    }
+
     /// Tapping a finished step opens that part of the case file.
     func section(for stage: CaseSession.Stage) -> CaseReviewSheet.Section {
         switch stage {
@@ -233,6 +245,8 @@ struct StageTracker: View {
 
 struct BriefingStage: View {
     @ObservedObject var session: CaseSession
+    /// Called when a ruling sends the case to another date (reason, days, start the trial over).
+    var onIncidentContinue: (String, Int, Bool) -> Void = { _, _, _ in }
     /// Called when the judge grants a party's motion to continue.
     var onGrantContinuance: (ContinuanceMotion) -> Void = { _ in }
     @State private var showColloquy = false
@@ -277,6 +291,8 @@ struct BriefingStage: View {
                                       onGrant: { onGrantContinuance(motion) },
                                       onDeny: { session.denyContinuanceMotion() })
             }
+
+            IncidentCards(session: session, moment: .beforeTrial, onContinue: onIncidentContinue)
 
             if let twist = c.twist {
                 Label(twist, systemImage: "exclamationmark.bubble.fill")
@@ -396,8 +412,11 @@ struct BriefingStage: View {
                 }
 
             PrimaryButton(title: c.motions.isEmpty ? "Start the Trial" : "Go to Pretrial Motions",
-                          enabled: !session.continuanceMotionPending && (!session.pleaPresented || session.rulings.pleaAccepted == false),
-                          hint: session.continuanceMotionPending ? "Rule on the motion to continue first." : "Accept or reject the plea arrangement first.") {
+                          enabled: !session.continuanceMotionPending && !session.incidentPending(.beforeTrial) && session.incidentContinuance == nil
+                            && (!session.pleaPresented || session.rulings.pleaAccepted == false),
+                          hint: session.continuanceMotionPending ? "Rule on the motion to continue first."
+                            : (session.incidentPending(.beforeTrial) ? "Rule on what came up in the courtroom first."
+                               : (session.incidentContinuance != nil ? "Set the new date for the case." : "Accept or reject the plea arrangement first."))) {
                 session.advance()
             }
         }

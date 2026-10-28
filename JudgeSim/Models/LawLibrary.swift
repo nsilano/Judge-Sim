@@ -955,7 +955,32 @@ enum LawLibrary {
                        "A substance abuse assessment must be obtained first.",
                        "With an alcohol concentration of 0.15 or more, the privilege must require an ignition interlock on every vehicle the person drives.",
                        "Standard hours are 6 a.m. to 8 p.m., Monday through Friday; driving outside them is driving while license revoked."],
-            related: ["dwi"])
+            related: ["dwi"]),
+        Law(id: "selfRepresentation", statute: "G.S. 15A-1242; Faretta v. California", title: "Waiver of Counsel", category: .procedure,
+            summary: "A defendant may represent themself, but only after a clear and unequivocal request and a thorough inquiry showing a knowing, intelligent, and voluntary waiver.",
+            elements: ["The court must be satisfied the defendant has been clearly advised of the right to counsel, understands the consequences of going without, and comprehends the charges, the proceedings, and the range of permissible punishments (G.S. 15A-1242).",
+                       "The request must be clear and unequivocal; a wish for a different lawyer is not a request to proceed alone.",
+                       "Wrongly denying a proper request is structural error; allowing a waiver without the full inquiry is also reversible error.",
+                       "Standby counsel may be appointed."],
+            related: ["rightToCounsel"]),
+        Law(id: "interpreters", statute: "G.S. 7A-314; N.C. AOC Standards for Court Interpreting", title: "Court Interpreters", category: .procedure,
+            summary: "A defendant or witness who can't communicate in English must have a qualified interpreter, provided by the court.",
+            elements: ["Interpreters should be certified or qualified through the AOC; relatives, interested parties, and courtroom staff with other duties should not interpret.",
+                       "Remote interpreting by video is allowed when an in-person interpreter isn't available.",
+                       "A Deaf witness or party is entitled to a qualified sign language interpreter (G.S. 8B-2)."],
+            related: []),
+        Law(id: "discoverySanctions", statute: "G.S. 15A-903, 15A-910; Brady v. Maryland", title: "Discovery Violations", category: .procedure,
+            summary: "The State must give the defense its complete files and any favorable evidence. When it doesn't, the court chooses a remedy that fits the violation.",
+            elements: ["Remedies under G.S. 15A-910: order disclosure, grant a recess or continuance, exclude the evidence, declare a mistrial, dismiss the charge, or enter other orders.",
+                       "The court considers the materiality of the material and how much the violation prejudiced the defense.",
+                       "Suppression of evidence favorable to the defense and material to guilt violates due process (Brady v. Maryland), whatever the prosecutor's intent."],
+            related: []),
+        Law(id: "courtroomContempt", statute: "G.S. 5A-14; 15A-1032", title: "Order in the Courtroom", category: .procedure,
+            summary: "The court may keep order: warn, remove a disruptive defendant after a warning, or punish direct contempt summarily.",
+            elements: ["A defendant may be removed for disruptive conduct only after being warned that further disruption will lead to removal (G.S. 15A-1032).",
+                       "Summary punishment for direct criminal contempt requires giving the person summary notice and an opportunity to respond (G.S. 5A-14).",
+                       "Punishment for criminal contempt is up to 30 days in jail and a $500 fine."],
+            related: [])
     ]
 
     static let ethics: [Law] = [

@@ -156,6 +156,38 @@ struct EthicsOption: Identifiable, Codable, Hashable {
     var laterHeadline: String?
 }
 
+/// Something that happens in the courtroom and needs a ruling on the spot: a defendant who wants to represent
+/// themself, an interpreter who isn't there, evidence the State never turned over, an outburst.
+struct CourtIncident: Identifiable, Codable, Hashable {
+    enum Kind: String, Codable { case selfRepresentation, interpreter, discovery, outburst }
+    enum Moment: String, Codable { case beforeTrial, trial, sentencing }
+    var id = UUID()
+    var kind: Kind
+    var moment: Moment
+    var title: String
+    var body: String
+    var lawID: String
+    var options: [IncidentOption]
+}
+
+struct IncidentOption: Identifiable, Codable, Hashable {
+    enum Effect: String, Codable { case none, continueCase, mistrial, excludeEvidence, removeWitness, proSe }
+    var id = UUID()
+    var label: String
+    var result: String
+    /// What the law calls for; a ruling marked as error is a ground for appeal.
+    var proper: Bool
+    var error: Bool
+    var effect: Effect = .none
+    var evidenceID: UUID? = nil
+    var witnessID: UUID? = nil
+    var days: Int? = nil
+    /// How an appellate brief would describe the ruling.
+    var appealText: String? = nil
+    var laterHeadline: String? = nil
+    var laterBody: String? = nil
+}
+
 struct EthicsEvent: Codable, Hashable {
     var title: String
     var body: String
@@ -310,6 +342,8 @@ struct CourtCase: Identifiable, Codable, Hashable {
     var investigation: InvestigationReport?
     /// A party's motion to continue, heard when the case is called (optional; most cases have none).
     var continuanceMotion: ContinuanceMotion? = nil
+    /// Things that happen in the courtroom during this case (optional for older saves).
+    var incidents: [CourtIncident]? = nil
 
     var caption: String { "State of North Carolina v. \(defendant.name)" }
 
