@@ -795,6 +795,32 @@ if args.count > 1 && args[1] == "scan" {
     print("Played \(weeks) weeks (\(style)). \(game.casesHeard) cases heard. \(findings.count) flags. Transcript: \(outPath)")
 }
 
+/// `Playtest dossier <start> <count>`: each written case as the game fills it in, for reading.
+if args.count > 3 && args[1] == "dossier" {
+    MainActor.assumeIsolated {
+        let county = County.generate(seed: 42)
+        let start = Int(args[2]) ?? 0, count = Int(args[3]) ?? 20
+        for (i, t) in StoryCases.all.enumerated() where i >= start && i < start + count {
+            var trng = SeededRNG(seed: UInt64(i) &+ 77)
+            let ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: Date(), docketSequence: 4000 + i, recentTemplateKeys: [])
+            let c = CaseGenerator.build(t, seed: UInt64(i) &+ 77, band: .close, context: ctx, rng: &trng)
+            var out = ["##### \(i) \(t.key) | \(c.caption) | \(c.charges.map(\.law.title).joined(separator: "; "))"]
+            out.append("D: \(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation). V: \(c.victimName ?? "none")")
+            if let f = c.investigation?.facts { out.append("Incident \(SentenceFormat.shortDate(f.incident)), arrest \(SentenceFormat.shortDate(f.arrest)), \(f.place)") }
+            out.append("SUMMARY: " + c.summary)
+            if let v = VictimProfiles.make(c, county: county) { out.append("VICTIM: age \(v.age.map(String.init) ?? "?"), \(v.gender), \(v.deceased ? "deceased" : "living"); \(v.occupation); \(v.relationship); harm: \(v.harm.joined(separator: " | ")); impact: \(v.impactStatement ?? "-")") }
+            for e in c.evidence { out.append("EV \(e.side == .prosecution ? "S" : "D") \(e.title): \(e.detail)") }
+            for w in c.witnesses {
+                out.append("W \(w.name) (\(w.role)):")
+                for x in w.exchanges ?? [] { out.append("  Q \(x.question) A \(x.answer)") }
+            }
+            if let tl = c.investigation?.timeline { out.append("TIMELINE: " + tl.map { "\($0.when): \($0.what)" }.joined(separator: " / ")) }
+            out.append("IMPACT: \(c.victimImpact ?? "-")")
+            print(out.joined(separator: "\n"))
+        }
+    }
+    exit(0)
+}
 if args.count > 1 && args[1] == "stories" {
     MainActor.assumeIsolated { tryEveryStory() }
     exit(0)

@@ -199,7 +199,7 @@ extension StoryCases {
         ],
         ageRange: 48...72, occupations: ["farmer", "dairy farmer", "tobacco farmer"], hasVictim: false,
         summaries: [
-            "At 6:10 p.m. on {DATE}, two drivers on Highway 17 near {HOOD} swerved into the ditch to avoid a farm tractor crossing the center line. Trooper {TROOPER} stopped the tractor a mile on. {D} was driving it home from a friend's barbecue. The trooper smelled alcohol and saw red, glassy eyes; {DL} swayed on the clean-up walk test and refused the others. {D.His} breath test at the station, an hour and forty minutes later, was 0.09. {DL} says a tractor on a farm road isn't the same as a car, that {D.he} had two beers, and that the steering on the old tractor pulls left."
+            "At 6:10 p.m. on {DATE}, two drivers on Highway 17 near {HOOD} swerved into the ditch to avoid a farm tractor crossing the center line. {TROOPER} stopped the tractor a mile on. {D} was driving it home from a friend's barbecue. The trooper smelled alcohol and saw red, glassy eyes; {DL} swayed on the clean-up walk test and refused the others. {D.His} breath test at the station, an hour and forty minutes later, was 0.09. {DL} says a tractor on a farm road isn't the same as a car, that {D.he} had two beers, and that the steering on the old tractor pulls left."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Breath Test", "0.09 on the Intox EC/IR II, 7:52 p.m."),

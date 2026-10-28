@@ -170,6 +170,9 @@ struct StoryExtras {
     /// What checking the alibi turns up: records that back it up when the defendant didn't do it, and break it when
     /// the defendant did. Only for cases where a defense witness puts the defendant somewhere else.
     var alibiCheck: AlibiCheck? = nil
+    /// Where it happened, when the case names a business it only mentions (where the defendant worked that night)
+    /// or a place with no token (a lake cabin, a stretch of road).
+    var scene: String? = nil
 }
 
 /// What a written case says about its victim, so the victim's profile matches the story.

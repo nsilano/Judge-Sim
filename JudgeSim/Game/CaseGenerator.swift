@@ -600,7 +600,8 @@ enum CaseGenerator {
             // The written file says when the arrest happened; the fact sheet follows it.
             // The defendant's arrest, not someone else's ("a man arrested with methamphetamine names the clerk"), and
             // never before the crime itself.
-            let arrests = story.timeline.filter { $0.0 >= 0 && $0.1.lowercased().contains("arrested") }
+            let arrests = story.timeline.filter { $0.0 >= 0 && ($0.1.lowercased().contains("arrested")
+                || ($0.1.lowercased().contains("charged") && $0.1.contains("{D"))) }
             if let offset = (arrests.first { $0.1.contains("{D") } ?? arrests.first)?.0 {
                 investigation.facts?.arrest = CaseDates.add(offset, to: incident)
             }
@@ -1039,12 +1040,18 @@ enum CaseGenerator {
         }
         // Every other case with someone who lost money or was hurt: the State asks for what it can document.
         if restitution == 0 && rng.chance(0.85) {
-            let text = fill(t.specification) + " " + t.secondary.map { fill($0.specification) }.joined(separator: " ")
-            let stated = firstDollarAmount(in: text)
+            // Each count states its own amount; together they are the loss (a card count and a check count are
+            // different money). Anything already repaid, per the evidence, comes off.
+            let counts = ([fill(t.specification)] + t.secondary.map { fill($0.specification) }).compactMap { firstDollarAmount(in: $0) }
+            let refunded = (t.prosecutionEvidence + t.defenseEvidence).map { fill($0.detail) }.compactMap { detail -> Int? in
+                guard let r = detail.range(of: #"(refunded|repaid|paid back) \$[0-9,]+"#, options: .regularExpression) else { return nil }
+                return firstDollarAmount(in: String(detail[r]))
+            }.reduce(0, +)
+            let stated: Int? = counts.isEmpty ? nil : max(0, Array(Set(counts)).reduce(0, +) - refunded)
             let died = t.victimDies
             switch t.category {
             case .property:
-                restitution = stated ?? rng.int(6...80) * 100; basis = rng.pick(["unrecovered property and repairs", "the value of what was taken and the damage to the door", "replacement costs the owner documented"])
+                restitution = stated ?? rng.int(6...30) * 100; basis = rng.pick(["unrecovered property and repairs", "the value of what was taken and the damage to the door", "replacement costs the owner documented"])
             case .robbery:
                 restitution = stated ?? rng.int(3...25) * 100; basis = rng.pick(["cash and property taken", "the stolen money and a replaced phone", "what was taken and the victim's lost wages"])
             case .whiteCollar, .cyber:

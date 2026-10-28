@@ -787,7 +787,7 @@ enum Investigations {
         }
         let collected = state.filter { $0.kind == .physical || $0.kind == .forensic }
         let obtained = state.filter { $0.kind == .digital || $0.kind == .document || $0.kind == .video }
-        let place = placePhrase(values: values, facts: facts, street: street, town: town)
+        let place = t.story?.scene.map { TextFiller(values: values)($0) } ?? placePhrase(values: values, facts: facts, street: street, town: town)
         let abbreviation = detective.agency.split(separator: " ").compactMap { $0.first }.filter { $0.isLetter }.map(String.init).joined()
         let latest = CaseDates.add(-21, to: sessionDate)
         func clamp(_ d: Date) -> Date { min(d, latest) }
