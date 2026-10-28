@@ -474,6 +474,7 @@ var hearingDates: [UUID: Date] = [:]
             flag("\(m.docket): expunction granted but the conviction is still on \(person.name)'s record")
         }
     }
+    for m in call.matters where m.kind == .counselWithdrawal { petitionsHeard[m.kind.label, default: 0] += 1 }
     for m in call.matters where m.kind == .treatmentReview || m.kind == .treatmentGraduation {
         petitionsHeard[m.kind.label, default: 0] += 1
         guard let person = game.person(m.personID) else { flag("\(m.docket): treatment review for someone with no record"); continue }
@@ -564,7 +565,7 @@ func checkText(_ text: String, where place: String) {
     for set in game.scheduled {
         let weekday = cal.component(.weekday, from: set.date)
         if !game.schedule.courtDays.contains(weekday) || CourtCalendar.holiday(on: set.date) != nil
-            || game.schedule.timeOff.contains(CourtSchedule.key(set.date)) {
+            || game.schedule.timeOff.contains(CourtSchedule.key(set.date)) || game.schedule.closure(on: set.date) != nil {
             flag("\(set.entry.title) set on \(short(set.date)), a day court doesn't sit (\(CourtCalendar.holiday(on: set.date) ?? "weekday off or time off"))")
         }
     }
@@ -717,6 +718,7 @@ if args.count > 1 && args[1] == "scan" {
     log("STAY-AWAY ORDERS: \(orders.count) issued, \(game.stats.orderViolations ?? 0) violations, \(contemptHeard) contempt hearings heard, \(game.showCauseQueue.count) waiting")
     log("PETITIONS: " + petitionsHeard.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
     log("INCIDENTS: " + incidentsSeen.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
+    log("CLOSURES: " + Dictionary(grouping: (game.schedule.closures ?? [:]).values, by: { $0 }).map { "\($0.key) (\($0.value.count) days)" }.sorted().joined(separator: "; "))
     log("BACKLOG BY MONTH")
     for b in backlog { log("  \(b)") }
     finish()

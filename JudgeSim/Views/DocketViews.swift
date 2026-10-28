@@ -387,6 +387,19 @@ struct ScheduleView: View {
                     }
                 }
             }
+            let closed = (game.schedule.closures ?? [:]).compactMap { key, reason in CourtSchedule.date(key).map { ($0, reason) } }
+                .filter { $0.0 >= cal.startOfDay(for: game.today?.date ?? game.currentDate) }
+                .sorted { $0.0 < $1.0 }
+            if !closed.isEmpty {
+                Text("Closed or assigned elsewhere (not leave)").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                ForEach(closed.indices, id: \.self) { i in
+                    HStack {
+                        Text(CourtCalendar.dayTitle(closed[i].0)).font(.subheadline)
+                        Spacer()
+                        Text(closed[i].1).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+                    }
+                }
+            }
         }
         .card()
     }

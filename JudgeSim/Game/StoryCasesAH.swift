@@ -152,7 +152,7 @@ extension StoryCases {
         defenseTheory: ["{D} was blinded by the sun and thought {D.he} hit the sign. The crash was a tragedy, but leaving requires knowing a person was hurt."],
         aggravating: ["The victim was very old"],
         mitigating: ["No prior criminal record", "The defendant has accepted responsibility", "The defendant has been a person of good character"],
-        victimImpacts: ["\"Mom did that corner for twelve years. She said it kept her young. The kids made a banner of handprints for the funeral. Whoever you are, you didn't even stop to see if she was alive.\"", "\"Dad wouldn't take the money they paid him. He said he'd do it for free. He lay in that street while you drove to a meeting.\""],
+        victimImpacts: ["\"That corner was {V.his} for twelve years. {V.He} said it kept {V.him} young. The kids made a banner of handprints for the funeral. You didn't even stop to see if {V.he} was alive.\"", "\"{V.He} wouldn't take the money they paid {V.him}. {V.He} said {V.he}'d do it for free. {V.He} lay in that street while you drove to a meeting.\""],
         allocutions: ["\"I didn't know. I swear to God I didn't know. I'd have stopped. I'm so sorry.\""],
         guiltyTruths: ["{DL}'s car's crash data recorder showed {D.he} braked hard for half a second after the impact, then accelerated."],
         innocentTruths: ["The SUV's crash data recorder showed no braking at all, consistent with a driver who never saw what was hit."],
@@ -350,7 +350,7 @@ extension StoryCases {
         )
     )
 
-    // MARK: - Dr. Sato's pad (forged painkiller prescriptions)
+    // MARK: - The dentist's pad (forged painkiller prescriptions)
 
     static let prescriptionPadForgery = CaseTemplate(
         key: "story.prescriptionPadForgery", category: .drugs,
@@ -414,7 +414,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["The defendant has accepted responsibility", "The defendant has entered a drug treatment program"],
         victimImpacts: [],
-        allocutions: ["\"I got hooked after my C-section and I couldn't stop. I'm in treatment now. I'm sorry for what I did to Dr. Sato's practice.\""],
+        allocutions: ["\"I got hooked after my C-section and I couldn't stop. I'm in treatment now. I'm sorry for what I did to the dentist and the practice.\""],
         guiltyTruths: ["The missing prescription pad was found in {DL}'s glove box when {D.his} car was searched after trial in an unrelated stop."],
         innocentTruths: ["The fired receptionist's boyfriend later admitted he wrote the scripts and had {DL} pick them up, telling {D.him} they were for his sick relatives."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],

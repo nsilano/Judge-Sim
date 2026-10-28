@@ -4,7 +4,7 @@ import Foundation
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
         case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief, firstAppearance, arraignment, contempt
-        case expunction, bondForfeiture, drivingPrivilege, treatmentReview, treatmentGraduation
+        case expunction, bondForfeiture, drivingPrivilege, treatmentReview, treatmentGraduation, counselWithdrawal
 
         var label: String {
             switch self {
@@ -25,6 +25,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .drivingPrivilege: return "Limited driving privilege"
             case .treatmentReview: return "Treatment court review"
             case .treatmentGraduation: return "Treatment court graduation"
+            case .counselWithdrawal: return "Motion to withdraw as counsel"
             }
         }
 
@@ -47,6 +48,7 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .drivingPrivilege: return "car.fill"
             case .treatmentReview: return "heart.text.square.fill"
             case .treatmentGraduation: return "graduationcap.fill"
+            case .counselWithdrawal: return "person.crop.circle.badge.minus"
             }
         }
     }

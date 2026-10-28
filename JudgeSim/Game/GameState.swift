@@ -1174,6 +1174,8 @@ final class GameState: ObservableObject {
                 // Petitions: an expunction, a bonding company's motion, a driving privilege after a DWI.
                 call.matters += petitionMatters(on: date, excluding: usedPeople, rng: &rng)
                 call.matters += treatmentCourtMatters(on: date, excluding: usedPeople, rng: &rng)
+                let onThisCall = Set(call.matters.map(\.personID) + call.matters.compactMap { $0.pendingCase?.defendant.personID })
+                if let m = counselWithdrawal(on: date, excluding: usedPeople.union(onThisCall), rng: &rng) { call.matters.append(m) }
                 call.matters.forEach { usedPeople.insert($0.personID) }
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
@@ -1967,6 +1969,24 @@ final class GameState: ObservableObject {
                         awaitCase(c, note: note, on: call.date, continuances: before)
                     }
                 }
+            case .counselWithdrawal:
+                if choice <= 1 {
+                    var fresh = c
+                    let lawyers = (county?.assistantPDs ?? []) + (county?.privateCounsel ?? [])
+                    if let next = lawyers.filter({ $0 != c.defenseAttorney }).randomElement(using: &rng) { fresh.defenseAttorney = next }
+                    setFor(fresh, weeks: choice == 0 ? 6 : 3,
+                           note: "\(c.defenseAttorney) allowed to withdraw at the calendar call on \(heard); \(fresh.defenseAttorney) appointed.")
+                } else {
+                    // A real conflict comes back when the trial is called.
+                    var kept = c
+                    if m.petition?.eligible == true {
+                        kept.incidents = (kept.incidents ?? []) + [Incidents.conflictedCounsel(kept, reason: m.petition?.reason ?? "")]
+                    }
+                    let note = "Motion to withdraw denied at the calendar call on \(heard)."
+                    if !keepDate(kept, note: note, continuances: 0, from: call.date) {
+                        awaitCase(kept, note: note, on: call.date)
+                    }
+                }
             case .failureToAppear:
                 switch choice {
                 case 0:
@@ -2468,6 +2488,42 @@ final class GameState: ObservableObject {
                           docket: newCase.docket))
         }
         return newCase
+    }
+
+    /// Appointed counsel asks to get off a case set for trial here: too many files, a new job with the DA, a grievance,
+    /// a conflict just discovered. A real conflict requires letting counsel go; a caseload is the court's call.
+    private func counselWithdrawal(on date: Date, excluding used: Set<UUID>, rng: inout SeededRNG) -> CalendarMatter? {
+        guard rng.chance(min(0.3, 0.12 * caseloadPressure)) else { return nil }
+        let pool = (scheduled.filter { $0.entry.resume == nil && $0.date > date }.map(\.entry) + awaiting.map(\.entry)).compactMap { e -> CourtCase? in
+            guard case .trial(let c) = e.matter, c.templateKey.hasPrefix("story."), !used.contains(c.defendant.personID),
+                  !(c.incidents ?? []).contains(where: { $0.title.contains("renews the motion to withdraw") }) else { return nil }
+            return c
+        }
+        guard let c = pool.isEmpty ? nil : rng.pick(pool) else { return nil }
+        let counsel = c.defenseAttorney, d = c.defendant
+        let grounds: [(String, Bool, String)] = [
+            ("\(counsel) is carrying \(rng.int(140...190)) open felony files and says this one can't be prepared properly in time.", false,
+             "A heavy caseload is for the court to weigh; it isn't a conflict that requires withdrawal."),
+            ("\(counsel) has accepted a job with the District Attorney's office starting next month.", true,
+             "A defense lawyer joining the prosecutor's office has a conflict; withdrawal is required."),
+            ("\(d.name) has filed a State Bar grievance against \(counsel), and \(counsel) says they no longer speak.", true,
+             "A complete breakdown in communication, with a pending grievance, is good cause for new counsel."),
+            ("\(counsel) represented one of the State's witnesses in an earlier case and only just learned it.", true,
+             "Prior representation of a State witness is a conflict of interest; withdrawal should be allowed."),
+            ("\(d.name) says \(counsel) hasn't visited the jail in two months; \(counsel) says \(d.lastName) won't take calls.", false,
+             "A disagreement over contact or strategy isn't good cause for new appointed counsel by itself.")]
+        let g = rng.pick(grounds)
+        return CalendarMatter(
+            kind: .counselWithdrawal, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation, docket: c.docket,
+            summary: "\(counsel), appointed to represent \(d.name) on \(c.charges.first?.law.title.lowercased() ?? "the charges"), moves to withdraw. \(g.0)",
+            stateAsk: rng.pick(["The State is ready for trial and objects to any delay.", "The State takes no position on who represents the defendant.",
+                                "The State asks that any new lawyer be ready by the current trial date."]),
+            defenseAsk: "\(counsel): \(rng.pick(["I can't give this client the representation the Constitution requires.", "I'd ask the court to let me out and appoint someone who can do this right.", "I've never asked to withdraw from a case in fifteen years. I'm asking now."]))",
+            options: ["Allow withdrawal; appoint the next lawyer on the list (about six weeks to get ready)",
+                      "Allow withdrawal; ask Indigent Defense Services for a private lawyer (about three weeks)",
+                      "Deny: \(counsel) stays on the case"],
+            lawID: "rightToCounsel", pendingCase: c,
+            petition: PetitionFacts(eligible: g.1, reason: g.2))
     }
 
     /// Treatment court participants due for a review (every six weeks or so) report to the judge at the calendar call.
@@ -3029,6 +3085,7 @@ final class GameState: ObservableObject {
 
         // Stay-away orders are tested a week at a time.
         if weekly { checkStayAwayOrders(rng: &rng) }
+        if weekly { weatherAndAssignments(on: date, rng: &rng) }
         // The county changes week to week.
         if weekly {
             if let item = CountyLife.week(&living, on: date, placeHistory: placeHistory, rng: &rng) { post(item) }
@@ -3083,6 +3140,96 @@ final class GameState: ObservableObject {
 
     /// Each week, anyone free under a stay-away order this court entered may break it. A violation is news, and
     /// the new charge comes back to this courtroom.
+    // MARK: - Storms and assignments
+
+    /// Once a week: a hurricane (August through October) or an ice storm (January and February) may close the
+    /// courthouse, and once each half-year the Chief Justice assigns the judge to a week of court in a neighboring
+    /// county. Nothing is heard here on those days; whatever was set moves to the next days with room.
+    private func weatherAndAssignments(on date: Date, rng: inout SeededRNG) {
+        guard let judgeName else { return }
+        let cal = CourtCalendar.calendar
+        let month = cal.component(.month, from: date)
+        let year = cal.component(.year, from: date)
+        let judgeLast = lastName(judgeName)
+        let closures = schedule.closures ?? [:]
+        func near(_ word: String, days: Int) -> Bool {
+            closures.contains { key, reason in
+                reason.contains(word) && (CourtSchedule.date(key).map { abs(cal.dateComponents([.day], from: $0, to: date).day ?? 999) <= days } ?? false)
+            }
+        }
+        /// The next `count` days the court would otherwise sit, from `start`.
+        func sittingDays(from start: Date, count: Int, within: Int = 10) -> [Date] {
+            var out: [Date] = []
+            var day = cal.startOfDay(for: start)
+            for _ in 0..<within where out.count < count {
+                if schedule.sits(on: day) { out.append(day) }
+                day = cal.date(byAdding: .day, value: 1, to: day) ?? day
+            }
+            return out
+        }
+        func close(_ days: [Date], _ reason: String) {
+            var all = schedule.closures ?? [:]
+            for d in days { all[CourtSchedule.key(d)] = reason }
+            schedule.closures = all
+            reflow(note: reason)
+        }
+        let span = { (days: [Date]) -> String in
+            days.count == 1 ? SentenceFormat.shortDate(days[0]) : "\(SentenceFormat.shortDate(days.first!)) through \(SentenceFormat.shortDate(days.last!))"
+        }
+
+        if (8...10).contains(month) && !near("Hurricane", days: 60) && rng.chance(0.07) {
+            let name = rng.pick(["Arlene", "Bertha", "Colin", "Dorian", "Earl", "Florence", "Gaston", "Hermine", "Isaias", "Josephine", "Kyle", "Leah"])
+            let landfall = cal.date(byAdding: .day, value: rng.int(3...5), to: date) ?? date
+            let days = sittingDays(from: landfall, count: rng.int(2...4))
+            if !days.isEmpty {
+                close(days, "Courthouse closed: Hurricane \(name)")
+                let town = rng.pick(["Port Hollis", "Harbor Point", "Bayard"])
+                post(NewsItem(date: date, kind: .community, headline: "Hurricane \(name) on track for the Hollis County coast",
+                              body: "Forecasters expect Hurricane \(name) to come ashore near \(town) on \(SentenceFormat.shortDate(landfall)). The clerk of court says the courthouse will close \(span(days)), and every case set those days will be reset. The sheriff says the jail will stay staffed through the storm.",
+                              prominence: 2))
+                pending.append(PendingEvent(due: landfall, news: NewsItem(date: landfall, kind: .community,
+                    headline: "Hurricane \(name) floods \(town) waterfront",
+                    body: "Storm surge pushed water three feet deep onto Water Street, and thousands are without power across the county. Deputies moved inmates from the jail's ground floor overnight. The courthouse is closed.")))
+                if let back = days.last.flatMap({ cal.date(byAdding: .day, value: 1, to: $0) }) {
+                    pending.append(PendingEvent(due: back, news: NewsItem(date: back, kind: .community,
+                        headline: "Courthouse reopens after Hurricane \(name)",
+                        body: "The clerk's office says cases set during the closure have been moved to the next open days on Judge \(judgeLast)'s calendar. Defendants held in the jail waited \(days.count) more court day\(days.count == 1 ? "" : "s") for their hearings. Some witnesses are still displaced.")))
+                }
+            }
+        }
+
+        if (month == 1 || month == 2) && !near("ice", days: 40) && rng.chance(0.03) {
+            let days = sittingDays(from: cal.date(byAdding: .day, value: 1, to: date) ?? date, count: 1)
+            if !days.isEmpty {
+                close(days, "Courthouse closed: ice on the roads")
+                post(NewsItem(date: date, kind: .community, headline: "Ice storm closes courthouse",
+                              body: "Freezing rain coated roads across Hollis County overnight. The courthouse is closed \(span(days)); cases set that day will be reset by the clerk."))
+            }
+        }
+
+        let halfStart = month <= 6 ? 1 : 7
+        let assigned = closures.contains { key, reason in
+            reason.hasPrefix("Holding court in") && (CourtSchedule.date(key).map {
+                cal.component(.year, from: $0) == year && (halfStart..<(halfStart + 6)).contains(cal.component(.month, from: $0)) } ?? false)
+        }
+        if !assigned && (month == halfStart || month == halfStart + 1) && rng.chance(0.3) {
+            let other = rng.pick(["Pender", "Columbus", "Bladen", "Brunswick", "Robeson"])
+            let start = CourtCalendar.monday(onOrAfter: cal.date(byAdding: .day, value: 21, to: date) ?? date)
+            let days = sittingDays(from: start, count: 5, within: 5)
+            if !days.isEmpty {
+                close(days, "Holding court in \(other) County")
+                post(NewsItem(date: date, kind: .community, headline: "Judge \(judgeLast) assigned to a week of court in \(other) County",
+                              body: "The Chief Justice has assigned Judge \(judgeName) to hold a one-week criminal session in \(other) County, \(span(days)), to help with a backlog of felony cases there. Superior court judges in North Carolina rotate among counties. Cases set in Hollis County that week will be moved."))
+                if let end = days.last {
+                    let cleared = rng.int(9...18)
+                    pending.append(PendingEvent(due: end, news: NewsItem(date: end, kind: .community,
+                        headline: "Judge \(judgeLast) clears \(cleared) cases in \(other) County session",
+                        body: "In a week holding court in \(other) County, Judge \(judgeLast) took \(cleared) pleas and tried two cases, the \(other) County clerk said. The judge returns to the Hollis County calendar next week.")))
+                }
+            }
+        }
+    }
+
     private func checkStayAwayOrders(rng: inout SeededRNG) {
         guard let judgeName else { return }
         for index in people.indices where people[index].status != .incarcerated {
