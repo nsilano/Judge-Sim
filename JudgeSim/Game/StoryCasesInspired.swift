@@ -107,7 +107,8 @@ extension StoryCases {
             prosecutionClosing: "Mental illness is real, and tragic. But knowing that others would call it wrong is knowing it's wrong.",
             defenseClosing: "The defense has shown by the greater weight of the evidence that {DL} was psychotic and could not know right from wrong. The verdict the law provides is not guilty by reason of insanity.",
             genders: ["D": .female],
-            family: "Married, 3 children. Two of them are the victims in this case."
+            family: "Married, 3 children. Two of them are the victims in this case.",
+            residence: "The family home in {HOOD}, where this happened."
         )
     )
 

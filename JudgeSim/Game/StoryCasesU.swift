@@ -72,7 +72,7 @@ extension StoryCases {
         defenseTheory: ["{DL} did the last robbery out of desperation and admits it. {DL} copied the first three robberies from the news coverage, which reported the method in detail, and {DL} has an alibi for the first."],
         aggravating: ["The offense involved multiple victims"],
         mitigating: ["The defendant has expressed remorse", "The defendant accepted responsibility"],
-        victimImpacts: ["{VL}: \"I can't stand at a window with my back to the door anymore. I quit.\""],
+        victimImpacts: ["{V}: \"I can't stand at a window with my back to the door anymore. I quit.\""],
         allocutions: ["\"I was about to be homeless with a broken back. I'm ashamed. I never had a gun.\""],
         guiltyTruths: ["The pad of paper, with the indentations of all four notes, was found later in the Buick's trunk."],
         innocentTruths: ["A man arrested in Virginia for the same kind of robberies later confessed to the first two Hollis County banks, describing details."],
@@ -285,7 +285,7 @@ extension StoryCases {
                        (0, "5:33 p.m.: the shot."),
                        (0, "5:44 p.m.: {DL} calls 911."),
                        (0, "6:02 p.m.: deputies arrive; {VL} is dead."),
-                       (20, "Wildlife officer's light test; charges filed.")],
+                       (20, "Wildlife officer's light test; {DL} charged.")],
             howIdentified: "{DL} called 911 and stayed at the scene.",
             notDone: ["{DL}'s phone was not examined for the eleven minutes before the call."],
             defendantExam: [
@@ -379,7 +379,7 @@ extension StoryCases {
         defenseTheory: ["{DL} offered alternative treatments to adults who signed consent forms saying they were experimental. Infections are a known risk of any injection. This is a regulatory matter, not assault."],
         aggravating: ["The offense involved multiple victims", "The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{VL}: \"I wanted to keep playing with my grandkids. Now I can't get on the floor with them at all.\""],
+        victimImpacts: ["{V}: \"I wanted to keep playing with my grandkids. Now I can't get on the floor with them at all.\""],
         allocutions: ["\"I believed in what I was doing. I never meant for anyone to get hurt.\""],
         guiltyTruths: ["An email {DL} sent a supplier read: \"Don't worry about sterility certificates, my patients don't ask.\""],
         innocentTruths: ["The supplier later admitted relabeling a recalled lot and shipping it to {DL} as a new, tested batch."],
@@ -412,7 +412,8 @@ extension StoryCases {
             prosecutionClosing: "Consent to a doctor isn't consent to an impostor.",
             defenseClosing: "Regulatory violations aren't assaults.",
             genders: ["D": .female, "V": .female],
-            victim: VictimFacts(relationship: "A patient at the defendant's clinic.", harm: ["A severe infection in both knees after the injections; hospitalized."], restitution: 21000, restitutionBasis: "the $4,000 she paid and her hospital bills")
+            victim: VictimFacts(relationship: "A patient at the defendant's clinic.", harm: ["A severe infection in both knees after the injections; hospitalized."], restitution: 25400, restitutionBasis: "the $8,400 she paid and her hospital bills"),
+            yearsAtJob: 2
         )
     )
 
@@ -482,7 +483,7 @@ extension StoryCases {
         defenseTheory: ["The lies about service were shameful but protected speech. The charity did real good; disputes over how money was spent are civil matters."],
         aggravating: ["The offense involved multiple victims", "The defendant took advantage of a position of trust"],
         mitigating: [],
-        victimImpacts: ["{VL}: \"He used my son's name to take my money. There's no bench. There's nothing.\""],
+        victimImpacts: ["{V}: \"He used my son's name to take my money. There's no bench. There's nothing.\""],
         allocutions: ["\"I wanted to be somebody. I did some good. I'll pay it back.\""],
         guiltyTruths: ["A storage unit rented by {DL} held boxes of unused donated goods and receipts showing he resold some online."],
         innocentTruths: ["The bench {VL} paid for turned up in a city warehouse, delivered and paid for by {DL} but never installed by the parks department."],
@@ -513,7 +514,8 @@ extension StoryCases {
             prosecutionClosing: "The lie was the reason people gave.",
             defenseClosing: "Bad bookkeeping isn't a crime.",
             genders: ["D": .male, "V": .female],
-            victim: VictimFacts(relationship: "A donor to the defendant's charity.", harm: ["No physical injury."], restitution: 8000, restitutionBasis: "the $8,000 she paid for a memorial bench that was never built")
+            victim: VictimFacts(relationship: "A donor to the defendant's charity.", harm: ["No physical injury."], restitution: 8000, restitutionBasis: "the $8,000 she paid for a memorial bench that was never built"),
+            yearsAtJob: 6
         )
     )
 }

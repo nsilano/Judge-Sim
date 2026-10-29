@@ -183,7 +183,8 @@ extension StoryCases {
             prosecutionOpening: "A store about to be lost, a bigger policy, a phone near the building, and gasoline in three places.",
             defenseOpening: "A ninety-year-old building with wiring the inspector had already flagged.",
             prosecutionClosing: "Wiring doesn't start three fires, and it doesn't carry gasoline.",
-            defenseClosing: "Motive isn't proof. The State has to put {DL} at that building."
+            defenseClosing: "Motive isn't proof. The State has to put {DL} at that building.",
+            yearsAtJob: 30
         )
     )
 

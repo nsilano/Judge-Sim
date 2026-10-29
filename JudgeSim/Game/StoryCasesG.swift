@@ -76,7 +76,7 @@ extension StoryCases {
         innocentTruths: ["The employee fired a week earlier was later caught on a different camera entering after hours."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
         story: StoryExtras(
-            timeline: [(-42, "Search 'antifreeze taste coffee' on the dispatch computer."),
+            timeline: [(-63, "Search 'antifreeze taste coffee' on the dispatch computer."),
                        (-28, "{VL} recommends {DL}'s termination."),
                        (-21, "{VL} begins getting sick."),
                        (0, "{VL} hospitalized; ethylene glycol found."),
@@ -199,7 +199,8 @@ extension StoryCases {
             prosecutionOpening: "Every resealed bag carries {D}'s initials.",
             defenseOpening: "A broken lock, other keys, and a church that raised the money.",
             prosecutionClosing: "The custodian is responsible for the room.",
-            defenseClosing: "Responsibility isn't proof of theft."
+            defenseClosing: "Responsibility isn't proof of theft.",
+            yearsAtJob: 19
         )
     )
 
@@ -296,7 +297,8 @@ extension StoryCases {
             defenseOpening: "A tracker from the day they bought the car, places {DL} always went, and no threats.",
             prosecutionClosing: "The law requires distress, not threats.",
             defenseClosing: "The law requires following, not grief.",
-            victim: VictimFacts(relationship: "A former partner of the defendant.", restitution: 0)
+            victim: VictimFacts(relationship: "A former partner of the defendant.", restitution: 0),
+            family: "Single, no children. The victim, a former partner, moved out two months before."
         )
     )
 
@@ -312,7 +314,7 @@ extension StoryCases {
         ],
         ageRange: 30...60, occupations: ["home health nurse"], hasVictim: true,
         summaries: [
-            "On {DATE}, about forty protesters blocked {STREET} in {CITY}. {D}, a home health nurse on the way to a patient, stopped, then inched forward as protesters surrounded the car. Someone struck the windshield with a sign pole and another kicked the door. {DL} accelerated. The car struck {V}, a protester standing in front of the bumper, who suffered a fractured pelvis. {DL} drove three blocks, stopped, and called 911. The State says {DL} chose to drive through people. The defense says {DL} was surrounded, attacked, and fled in fear."
+            "On {DATE}, about forty protesters blocked {STREET} in {HOOD}. {D}, a home health nurse on the way to a patient, stopped, then inched forward as protesters surrounded the car. Someone struck the windshield with a sign pole and another kicked the door. {DL} accelerated. The car struck {V}, a protester standing in front of the bumper, who suffered a fractured pelvis. {DL} drove three blocks, stopped, and called 911. The State says {DL} chose to drive through people. The defense says {DL} was surrounded, attacked, and fled in fear."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Livestream Video", "{DL}'s car stops, then moves forward slowly for about ten seconds while people step aside; then a pole hits the windshield and the car accelerates, striking {VL} at about 15 mph."),
@@ -489,7 +491,8 @@ extension StoryCases {
             defenseOpening: "Injured working people abandoned by every other provider. {DL} treated them.",
             prosecutionClosing: "Prescriptions without medical purpose are distribution.",
             defenseClosing: "A provider who's lied to isn't a dealer.",
-            employer: "own pain clinic"
+            employer: "own pain clinic",
+            yearsAtJob: 2
         )
     )
 }

@@ -73,7 +73,7 @@ extension StoryCases {
         innocentTruths: ["A forensic engineer later found three of {VL}'s hairs, roots attached, clutched with feathers from a barred owl, suggesting an owl attack outside before she came in and fell."],
         moods: [.divided], doctrines: ["burdenOfProof", "expertTestimony"],
         story: StoryExtras(
-            timeline: [(0, "Evening: {DL} and {VL} drink wine by the pool."),
+            timeline: [(-1, "Evening: {DL} and {VL} drink wine by the pool."),
                        (0, "Around 1:30 a.m.: the last confirmed time {VL} was alive."),
                        (0, "2:40 a.m.: {DL} calls 911."),
                        (0, "2:48 a.m.: paramedics arrive; {VL} is dead."),
@@ -169,7 +169,7 @@ extension StoryCases {
         defenseTheory: ["No one saw {DL} poison anyone. Arsenic was in the soil, the water, the old orchard. The State took two tragedies and built a monster."],
         aggravating: ["The offense was committed for pecuniary gain", "The offense was especially heinous, atrocious, or cruel", "The offense involved multiple victims"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{VL}: \"I married her in front of my whole church. I'd have given her anything she asked for.\"",
+        victimImpacts: ["{V}: \"I married her in front of my whole church. I'd have given her anything she asked for.\"",
                         "{VIC2}'s daughter: \"He suffered for months and she held his hand the whole time.\""],
         allocutions: ["\"I never hurt anybody. God knows the truth.\""],
         guiltyTruths: ["A pharmacist later identified {DL} as the woman who asked, years earlier, which ant poisons \"still have the real arsenic in them.\""],
@@ -369,7 +369,7 @@ extension StoryCases {
                         cross: ["\"The room should have been checked anyway.\""],
                         weight: 1, lay: false,
                         exam: [
-                            .direct("Why did the couple's toxicology take seven weeks?", "\"The state lab was backlogged. We sent it routine. In hindsight it should have been expedited.\""),
+                            .direct("Why did the couple's toxicology take six weeks?", "\"The state lab was backlogged. We sent it routine. In hindsight it should have been expedited.\""),
                             .direct("If the results had come back in days, what would have happened?", "\"We'd have known it was carbon monoxide, and that room would have been closed.\""),
                             .cross("Two healthy people dying in the same room: should someone have checked the room?", "\"Someone should have. I should have.\""),
                             .cross("Nothing about the lab backlog stopped the motel from checking that room itself?", "\"No. Nothing stopped them.\"")
@@ -391,7 +391,8 @@ extension StoryCases {
                        (-50, "{V} and {VIC2} found dead in Room 225."),
                        (-50, "Room 225 rented again within days."),
                        (0, "{KID} dies in Room 225; his mother is hospitalized."),
-                       (2, "Fire marshal finds the corroded vent.")],
+                       (2, "Fire marshal finds the corroded vent."),
+                       (35, "{DL} charged with involuntary manslaughter.")],
             howIdentified: "The second death in the same room, and the fire marshal's inspection.",
             notDone: ["The contractor's own records were never subpoenaed."],
             defendantExam: [
@@ -515,7 +516,8 @@ extension StoryCases {
             prosecutionClosing: "She didn't just hide a body. She became him.",
             defenseClosing: "Other people wanted his money too.",
             genders: ["D": .female, "V": .male],
-            victim: VictimFacts(relationship: "A client of the defendant, who managed his money.")
+            victim: VictimFacts(relationship: "A client of the defendant, who managed his money."),
+            employer: "her own company"
         )
     )
 }

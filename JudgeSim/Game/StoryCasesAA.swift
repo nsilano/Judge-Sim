@@ -89,7 +89,8 @@ extension StoryCases {
             defenseOpening: "A fired employee had the same files and the same key.",
             prosecutionClosing: "Opportunity, access, and the mailbox all point to {DL}.",
             defenseClosing: "Two keys, two suspects, one blurry video. That's reasonable doubt.",
-            victim: VictimFacts(occupation: "Not stated in the case file")
+            victim: VictimFacts(occupation: "Not stated in the case file"),
+            yearsAtJob: 7
         )
     )
 
@@ -180,7 +181,8 @@ extension StoryCases {
             defenseOpening: "A one-second clip and a supervisor who wanted {DL} gone.",
             prosecutionClosing: "The jackpot was a month earlier and smaller than the payoff.",
             defenseClosing: "Recognizing a hood isn't identifying a person.",
-            victim: VictimFacts(harm: ["A broken wrist from being shoved to the pavement."], restitution: 9200, restitutionBasis: "the $9,200 payroll bag")
+            victim: VictimFacts(harm: ["A broken wrist from being shoved to the pavement."], restitution: 9200, restitutionBasis: "the $9,200 payroll bag"),
+            employer: "a temp agency in {HOOD}"
         )
     )
 

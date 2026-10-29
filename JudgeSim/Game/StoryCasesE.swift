@@ -81,7 +81,7 @@ extension StoryCases {
         story: StoryExtras(
             timeline: [(0, "6:05 a.m.: {VL} texts {DL} to come by after work."),
                        (0, "3:10 p.m.: {VL} gets into {DL}'s car. 5:20 p.m.: rest stop. 8:15 p.m.: {VL} flees at a Virginia gas station."),
-                       (1, "{DL} extradited to North Carolina."),
+                       (1, "{DL} arrested in Virginia and extradited to North Carolina."),
                        (20, "{DL} charged with second-degree kidnapping.")],
             howIdentified: "{VL} identified {DL}, and {D.he} was arrested at the scene.",
             notDone: ["The rest-stop attendant was never interviewed."],
@@ -296,7 +296,8 @@ extension StoryCases {
             prosecutionOpening: "Officers announced, wore marked vests, and {D} fired anyway, nearly killing {OFF}.",
             defenseOpening: "The wrong house, a stale warrant, and {DL}, woken by the door coming down. {DL} called 911 because {D.he} thought {D.he} was the victim.",
             prosecutionClosing: "A reasonable person hears 'police.'",
-            defenseClosing: "A reasonable person asleep doesn't, and the State's own error put everyone in that hallway."
+            defenseClosing: "A reasonable person asleep doesn't, and the State's own error put everyone in that hallway.",
+            residence: "Rents the house on {STREET} in {HOOD} that the narcotics team raided; moved in seven weeks before."
         )
     )
 
@@ -426,7 +427,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("How did you find the casino video?", "\"Before the retrial I ran {DL}'s name through the casinos' players' card systems. A card in {DL}'s name was used that night. The casino pulled video.\""),
-                            .direct("What did the jail calls show?", "\"{ALT} telling {DL}, three weeks before trial, 'Remember, it was movie night.' {D.He} said 'I know, I know.'\""),
+                            .direct("What did the jail calls show?", "\"{ALT} telling {DL}, a month before trial, 'Remember, it was movie night.' {D.He} said 'I know, I know.'\""),
                             .cross("They had movie nights three other weekends that month?", "\"The rental records show that.\""),
                             .cross("'Remember it was movie night' could be a reminder of an honest belief?", "\"It could be. In my experience, it wasn't.\"")
                         ]),

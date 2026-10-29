@@ -16,7 +16,8 @@ enum VictimVoice {
     /// Impact statements that already ask the court not to send the defendant away.
     static func asksMercy(_ impact: String?) -> Bool {
         guard let text = impact?.lowercased() else { return false }
-        return ["i forgive", "not to prison", "don't send", "don't want prison", "don't want revenge"].contains { text.contains($0) }
+        return ["i forgive", "not to prison", "don't send", "don't want prison", "don't want revenge", "asking for mercy",
+                "lose everything too", "second chance", "find whoever is making", "let him come home", "let her come home"].contains { text.contains($0) }
             || text.range(of: #"don't want \S+ in (prison|jail)"#, options: .regularExpression) != nil
     }
 
@@ -223,8 +224,9 @@ enum VictimVoice {
                      "I'd like to hear \(defendant) say it. Just once.",
                      "I trust you to get this right. I'm asking you to take it seriously."]
         case .wantsLeniency:
-            lines = ["Prison won't fix this. Please give \(defendant) a chance to.",
-                     "I've had enough loss. I don't need \(defendant) to lose everything too.",
+            lines = ["Prison won't fix this. Please give \(defendant) a chance to make it right.",
+                     died ? "I've had enough loss. I don't need \(defendant) to lose everything too."
+                        : "I don't need \(defendant) to lose everything over this.",
                      "I'm asking for mercy. I know that's strange coming from me.",
                      "Get \(defendant) help. That's all I want from today."]
         case .none:
@@ -235,7 +237,12 @@ enum VictimVoice {
 
     /// The impact statement with the speaker's closing ask, kept inside the same quotation.
     static func impact(_ base: String, stance: VictimStance, defendant: String, died: Bool, rng: inout SeededRNG) -> String {
-        guard base.hasSuffix("\""), !base.contains("don't want to talk"),
+        // A statement that already says what the speaker wants keeps its own last word.
+        // Someone speaking in an official role (a guardian ad litem, a director, a pastor) doesn't make a personal ask.
+        let speaker = base.components(separatedBy: ":").first?.lowercased() ?? ""
+        let official = ["guardian", "director", "commissioner", "manager", "deacon", "pastor", "teacher", "volunteer",
+                        "principal", "owner"].contains(where: speaker.contains)
+        guard base.hasSuffix("\""), !official, !base.contains("don't want to talk"), !asksMercy(base), !asksHarsh(base),
               let close = closing(stance: stance, defendant: defendant, died: died, rng: &rng) else { return base }
         return String(base.dropLast()) + " " + close + "\""
     }

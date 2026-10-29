@@ -171,7 +171,8 @@ extension StoryCases {
             prosecutionOpening: "Months of hunger, documented every Sunday.",
             defenseOpening: "A sick owner and a farmhand who took the money and left.",
             prosecutionClosing: "The hospital explains three weeks. It doesn't explain nine.",
-            defenseClosing: "Intent is an element. Being in intensive care isn't intent."
+            defenseClosing: "Intent is an element. Being in intensive care isn't intent.",
+            residence: "Lives on the property outside {HOOD} where the horses were kept."
         )
     )
 
@@ -341,7 +342,8 @@ extension StoryCases {
             defenseOpening: "A conversation she asked for, that ended badly.",
             prosecutionClosing: "Leaving a woman on a dark road with no phone is not releasing her in a safe place.",
             defenseClosing: "Her own text asked for this talk.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            victim: VictimFacts(restitutionBasis: "her phone, thrown from the car, and medical bills")
         )
     )
 

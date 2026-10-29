@@ -63,7 +63,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did {DL} become addicted?", "\"A fall from a roof six years ago, a broken back, eighteen months of prescribed oxycodone, and then the prescription stopped. That's the most common path I see.\""),
                             .direct("What does withdrawal feel like?", "\"Like the worst flu of your life plus panic. People do things they'd never do otherwise.\""),
-                            .direct("How is {DL} doing now?", "\"Fourteen months on methadone, every drug screen clean, back at work.\""),
+                            .direct("How is {DL} doing now?", "\"On methadone since four days after the robbery. Every drug screen clean since, and back at work.\""),
                             .cross("Withdrawal doesn't make someone rob a pharmacy at gunpoint, does it?", "\"It doesn't make them. It explains why they might.\""),
                             .cross("{DL} chose to remove the orange tip so the gun looked real.", "\"I don't know anything about that.\"")
                         ])
@@ -81,7 +81,7 @@ extension StoryCases {
         story: StoryExtras(
             timeline: [(0, "7:52 p.m.: robbery at {PHARM}; 340 oxycodone tablets taken."),
                        (4, "{DL} enrolls in a methadone program."),
-                       (7, "Anonymous tip; search warrant for {DL}'s truck: BB pistol and 290 tablets recovered. {DL} confesses."),
+                       (7, "Anonymous tip; search warrant for {DL}'s truck: BB pistol and 290 tablets recovered. {DL} arrested and confesses."),
                        (40, "Laboratory test-fires the BB pistol.")],
             howIdentified: "An anonymous tip, confirmed by the pharmacy video and the items in {DL}'s truck.",
             notDone: [],
@@ -171,12 +171,12 @@ extension StoryCases {
         defenseTheory: ["An older bleed, a sick baby the night before, and a short fall. The science of 'shaken baby' is not as certain as the State says, and {DL} has six spotless years."],
         aggravating: ["The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record or licensing complaints", "{DL} immediately called 911"],
-        victimImpacts: ["{INFANT}'s parent: \"Our baby is two now and can't sit up on their own. We trusted you.\""],
+        victimImpacts: ["{INFANT}'s parent: \"Our baby will be one soon and still can't sit up. We trusted you.\""],
         allocutions: ["\"I would never hurt a child. I've cared for dozens. I'll think about that changing table for the rest of my life.\""],
         guiltyTruths: ["A neighbor later said they heard {DL} yelling \"stop crying\" and a thud through the window that morning."],
         innocentTruths: ["Genetic testing a year later found {INFANT} had a rare clotting disorder that makes the brain bleed easily."],
         moods: [.divided], doctrines: ["burdenOfProof", "expertTestimony"],
-        extras: ["TIME": ["11:18 a.m."], "INFANT": ["baby Mila", "baby Jonah", "baby Ezra", "baby Ruby"]],
+        extras: ["TIME": ["11:18 a.m."], "INFANT": ["Mila", "Jonah", "Ezra", "Ruby"]],
         story: StoryExtras(
             timeline: [(-1, "10:00 p.m.: parent texts that the baby vomited twice and won't settle."),
                        (0, "7:30 a.m.: drop-off. 11:18 a.m.: 911 call. 11:52 a.m.: CT scan shows bleeding."),
@@ -397,7 +397,8 @@ extension StoryCases {
             defenseOpening: "A bang in the dark and rain on a road known for deer. {DL} made a terrible mistake, not a knowing choice.",
             prosecutionClosing: "Reason to know is enough. A shattered windshield is reason to know.",
             defenseClosing: "Reason to know a person was hit isn't proven when a reasonable driver could believe it was a deer.",
-            victimDied: true
+            victimDied: true,
+            scene: "Rock Quarry Road outside {CITY}"
         )
     )
 
@@ -495,7 +496,9 @@ extension StoryCases {
             defenseOpening: "{ALT}'s bag, {ALT.his} fingerprints, {ALT.his} record, and {ALT.his} disappearance. {DL} gave a ride.",
             prosecutionClosing: "Knowing possession can be shared. {DL} controlled that car.",
             defenseClosing: "Proximity isn't knowledge.",
-            yearsAtJob: 5
+            residence: "Rents an apartment in {HOOD}.",
+            yearsAtJob: 5,
+            scene: "I-40 near {CITY}"
         )
     )
 }

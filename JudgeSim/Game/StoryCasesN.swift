@@ -101,7 +101,8 @@ extension StoryCases {
             defenseClosing: "{DL} made a terrible judgment. Malice requires more.",
             when: .months([12, 1, 2]),
             genders: ["V": .male],
-            victim: VictimFacts(relationship: "Strangers; the defendant saw him on a neighbor's camera.")
+            victim: VictimFacts(relationship: "Strangers; the defendant saw him on a neighbor's camera."),
+            residence: "Lives in the {CITY} subdivision where the chase happened."
         )
     )
 
@@ -209,12 +210,12 @@ extension StoryCases {
         specification: "By culpable negligence, unintentionally killed {V} by firing a handgun believing it was a Taser.",
         ageRange: 44...52, occupations: ["Port Hollis police officer and field training officer"], hasVictim: true,
         summaries: [
-            "On {DATE}, officers stopped {V}, 20, for expired tags in {HOOD} and found a warrant for a missed court date. As they tried to handcuff {VL}, {V.he} pulled away and got back into the driver's seat. {D}, a 26-year veteran training a rookie, shouted \"Taser! Taser! Taser!\" and fired once. It was {D.his} pistol. {VL} drove a block and crashed, and died at the scene. Body camera captures {DL} saying \"Holy shit, I just shot him.\" {DL} wore the Taser on the opposite side, in a yellow holster, under department policy. {DL} says it was a horrific mistake under stress."
+            "On {DATE}, officers stopped {V}, 20, for expired tags in {HOOD} and found a warrant for a missed court date. As they tried to handcuff {VL}, {V.he} pulled away and got back into the driver's seat. {D}, a 25-year veteran training a rookie, shouted \"Taser! Taser! Taser!\" and fired once. It was {D.his} pistol. {VL} drove a block and crashed, and died at the scene. Body camera captures {DL} saying \"Holy shit, I just shot him.\" {DL} wore the Taser on the opposite side, in a yellow holster, under department policy. {DL} says it was a horrific mistake under stress."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Body Camera", "{DL} draws from the right side, points, shouts \"Taser!\" three times, fires once, then: \"Holy shit, I just shot him.\""),
             E(.document, 3, "Holster Configuration", "{DL}'s Taser was yellow and holstered on the left, cross-draw; the black pistol was on the right."),
-            E(.document, 2, "Training Records", "{DL} completed annual Taser training including weapon confusion scenarios for 26 years.")
+            E(.document, 2, "Training Records", "{DL} completed annual Taser training including weapon confusion scenarios for 25 years.")
         ],
         defenseEvidence: [
             E(.document, 2, "Weapon Confusion Studies", "Documented cases nationwide of officers drawing a firearm when intending a Taser under stress."),
@@ -289,7 +290,8 @@ extension StoryCases {
             prosecutionClosing: "The law asks what a careful officer would have done. Not this.",
             defenseClosing: "A mistake isn't culpable negligence when stress takes over.",
             genders: ["D": .female, "V": .male],
-            victim: VictimFacts(relationship: "Strangers; stopped by the defendant and a trainee for expired tags.", family: "Single, one child, a two-year-old son.")
+            victim: VictimFacts(relationship: "Strangers; stopped by the defendant and a trainee for expired tags.", family: "Single, one child, a two-year-old son."),
+            yearsAtJob: 25
         )
     )
 

@@ -74,7 +74,7 @@ extension StoryCases {
         moods: [.divided], doctrines: ["burdenOfProof"],
         extras: ["KID": ["Mason", "Ella", "Liam", "Sophie"]],
         story: StoryExtras(
-            timeline: [(-1, "{DL} withdraws $3,000."), (0, "Friday: {DL} picks up {KID}."), (2, "Sunday 6 p.m.: {KID} not returned."), (2, "Sunday 8 p.m.: police called; Amber Alert issued."), (4, "Tuesday: found at a Daytona Beach motel.")],
+            timeline: [(-1, "{DL} withdraws $3,000."), (0, "Friday: {DL} picks up {KID}."), (2, "Sunday 6 p.m.: {KID} not returned."), (2, "Sunday 8 p.m.: police called; Amber Alert issued."), (4, "Tuesday: found at a Daytona Beach motel; {DL} arrested.")],
             howIdentified: "The custody order and {DL}'s visit.",
             notDone: ["The motel room was not searched for return tickets."],
             defendantExam: [
@@ -94,7 +94,7 @@ extension StoryCases {
             prosecutionClosing: "Intent is shown by what {DL} did: the savings, the phone, the weekly rate.",
             defenseClosing: "A note saying 'back by Wednesday' is reasonable doubt about intent.",
             when: .weekday(6),
-            victim: VictimFacts(relationship: "The other parent of their child.", harm: ["No physical injury. Her daughter was missing for four days."], restitution: 0)
+            victim: VictimFacts(relationship: "The other parent of their child.", harm: ["No physical injury. Her daughter was missing for three days."], restitution: 0)
         )
     )
 
@@ -162,7 +162,7 @@ extension StoryCases {
         defenseTheory: ["A father saw grown men beating his son against a fence and acted to stop it. That's defense of another."],
         aggravating: [],
         mitigating: ["The defendant acted to protect a family member", "No prior criminal record"],
-        victimImpacts: ["{V}: \"It was a high school football game. I brought my nephew.\""],
+        victimImpacts: ["{V}: \"It was a high school football game. I was there with my brother.\""],
         allocutions: ["\"I'd do anything for my son. I'm sorry the chair hit someone who wasn't part of it.\""],
         guiltyTruths: ["A fourth video shows the fight at the fence had broken up before {DL} picked up the chair."],
         innocentTruths: ["Another fan later identified {VL} as one of the men holding {DL}'s son."],
@@ -267,7 +267,8 @@ extension StoryCases {
             defenseOpening: "A tragedy with two causes, one of them in {VL}'s car.",
             prosecutionClosing: "Racing on a public street at three times the limit is culpable negligence by definition.",
             defenseClosing: "Speed was {DL}'s fault. The rolling stop was not.",
-            victim: VictimFacts(relationship: "Strangers.")
+            victim: VictimFacts(relationship: "Strangers."),
+            scene: "Industrial Boulevard in {HOOD}"
         )
     )
 
@@ -338,7 +339,9 @@ extension StoryCases {
             prosecutionOpening: "A felon, a rifle within reach, and {D.his} fingerprint on the shells.",
             defenseOpening: "A favor for a family member with bad knees.",
             prosecutionClosing: "Knowing a gun is in your truck within reach, with the power to use it, is possession.",
-            defenseClosing: "Proximity isn't possession when the owner is standing right there."
+            defenseClosing: "Proximity isn't possession when the owner is standing right there.",
+            // Opening day of deer season falls in the fall.
+            when: .months([10, 11])
         )
     )
 
@@ -424,7 +427,8 @@ extension StoryCases {
             defenseOpening: "A house with a teenager and an open router.",
             prosecutionClosing: "Motive, the address, and the spelling all point one way.",
             defenseClosing: "An IP address is a house, not a person.",
-            victim: VictimFacts(relationship: "Coached the defendant's child.", restitution: 0)
+            victim: VictimFacts(relationship: "Coached the defendant's child.", restitution: 0),
+            family: "Married, 1 child."
         )
     )
 }

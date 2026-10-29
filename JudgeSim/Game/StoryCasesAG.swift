@@ -176,12 +176,13 @@ extension StoryCases {
             defenseOpening: "A farmer who'd been robbed twice, alone in the dark, with headlights coming at him.",
             prosecutionClosing: "Both rounds came from behind. You don't fire into the back of a leaving truck in self-defense.",
             defenseClosing: "The truck came twenty feet up {DL}'s lane at night. Fear isn't a crime, and the State hasn't proved {D.he} aimed at anyone.",
-            when: .months([9, 10, 11, 12, 1, 2, 3]),
+            when: .weekday(6),
             genders: ["D": .male],
             victim: VictimFacts(age: 18, occupation: "high school senior", relationship: "Stranger", harm: ["Glass in the face and neck; a shard removed below the left eye", "A scar below the left eye"]),
             time: "11:20 p.m.",
             family: "Married forty years, three grown children.",
-            residence: "The family farm off Shiloh Road"
+            residence: "The family farm off Shiloh Road",
+            scene: "the gravel entrance to {DL}'s farm off Shiloh Road"
         )
     )
 

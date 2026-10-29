@@ -268,7 +268,7 @@ extension StoryCases {
         guiltyTruths: ["A practice sheet with repeated signatures of {PARENT} was later found in {DL}'s desk."],
         innocentTruths: ["A bank teller later remembered {PARENT} asking, weeks before the coma, how to write a check \"for a big gift.\""],
         moods: [.divided], doctrines: ["burdenOfProof", "expertTestimony"],
-        extras: ["PARENT": ["Loretta Haines", "Walter Pruitt", "Gladys Merriweather"]],
+        extras: ["PARENT": ["Loretta {DL}", "Walter {DL}", "Gladys {DL}"]],
         story: StoryExtras(
             timeline: [(-30, "Neighbor hears {PARENT} talk about 'taking care of' {DL}."),
                        (-12, "{PARENT} on a ventilator, unresponsive."),
@@ -295,7 +295,8 @@ extension StoryCases {
             defenseOpening: "A parent's thank-you, signed early and dated late.",
             prosecutionClosing: "The dead can't sign checks, and {PARENT} couldn't sign this one.",
             defenseClosing: "Probably isn't beyond a reasonable doubt.",
-            victim: VictimFacts(relationship: "The defendant's sibling and the executor of their parent's estate.", harm: ["No physical injury."], restitution: 22000, restitutionBasis: "the $22,000 taken from their parent's estate")
+            victim: VictimFacts(relationship: "The defendant's sibling and the executor of their parent's estate.", harm: ["No physical injury."], restitution: 22000, restitutionBasis: "the $22,000 taken from their parent's estate"),
+            sameSurname: true
         )
     )
 
@@ -404,7 +405,7 @@ extension StoryCases {
         secondary: [
             SecondaryCharge(lawID: "cyberstalking", specification: "Created a second set of accounts to send messages to {V} after being blocked.", chance: 1.0, threshold: 4)
         ],
-        ageRange: 24...40, occupations: ["physical therapist", "retail manager"], hasVictim: true,
+        ageRange: 24...40, occupations: ["personal trainer"], hasVictim: true,
         summaries: [
             "For four months beginning on {DATE}, {V} received more than 200 messages from nine different social media accounts calling {V.him} names, mocking {V.his} weight, and saying {V.his} new partner \"will leave you like he left me.\" The new partner is {D}'s ex. Four of the accounts were created from an IP address at {D}'s gym; two used an email recovery address with {DL}'s initials. Many messages misspelled \"definitely\" as \"definately,\" which {DL} also does in texts. {DL} says {D.he} has never contacted {VL}, that hundreds of people use that gym's Wi-Fi, and that half the internet can't spell \"definitely.\" {DL} was convicted in district court and appealed."
         ],
@@ -488,7 +489,8 @@ extension StoryCases {
             prosecutionClosing: "Each piece alone could be coincidence. Together they're {DL}.",
             defenseClosing: "Coincidences stacked up are still coincidences.",
             genders: ["V": .female],
-            victim: VictimFacts(relationship: "No relationship; she is dating the defendant's ex.", restitution: 1800, restitutionBasis: "counseling costs")
+            victim: VictimFacts(relationship: "No relationship; she is dating the defendant's ex.", restitution: 1800, restitutionBasis: "counseling costs"),
+            employer: "Coastal CrossFit"
         )
     )
 }

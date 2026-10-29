@@ -164,6 +164,7 @@ enum Clock {
 enum DefendantProfiles {
 
     private static let employersByKeyword: [(String, [String])] = [
+        ("pharmaceutical", ["Meridian Pharmaceuticals"]),
         ("pharmacy technician", ["Hollis Family Pharmacy", "Coastal Family Pharmacy"]),
         ("pharmacist", ["Hollis Family Pharmacy", "Coastal Family Pharmacy"]),
         ("registered nurse", ["Hollis Regional Medical Center"]),
@@ -285,7 +286,7 @@ enum DefendantProfiles {
         (["lawyer", "attorney"], [("Associate attorney", "Hollis County Public Defender's Office"), ("Law clerk", "Hollis County Superior Court")]),
         (["architect"], [("Project architect", "Coastal Design Group"), ("Architectural intern", "Coastal Design Group")]),
         (["financial advisor"], [("Financial advisor", "Tidewater Financial Group"), ("Bank branch manager", "First Coastal Bank")]),
-        (["novelist", "columnist", "writer", "reporter"], [("Reporter", "The Port Hollis Ledger"), ("Copy editor", "The Port Hollis Ledger")]),
+        (["novelist", "columnist", "reporter"], [("Reporter", "The Port Hollis Ledger"), ("Copy editor", "The Port Hollis Ledger")]),
         (["teacher", "principal"], [("Teacher assistant", "Hollis County Schools"), ("Substitute teacher", "Hollis County Schools")]),
         (["nurs", "therap", "medical", "aide"], [("Certified nursing assistant", "Bayard Rehabilitation and Nursing"), ("Patient care technician", "Hollis Regional Medical Center")]),
         (["software", "analyst", "engineer"], [("Help desk technician", "Hollis Regional Medical Center"), ("IT support specialist", "Tidewater Freight Logistics")]),
@@ -326,7 +327,8 @@ enum DefendantProfiles {
         var former: String?
         if let r = role.range(of: " and part-time ") { partTime = String(role[r.upperBound...]); role = String(role[..<r.lowerBound]) }
         if let r = role.range(of: " and former ") { former = String(role[r.upperBound...]); role = String(role[..<r.lowerBound]) }
-        for prefix in ["unemployed former ", "former "] where role.hasPrefix(prefix) {
+        for prefix in ["unemployed former ", "former ", "unemployed "] where role.hasPrefix(prefix) && former == nil {
+            // "Unemployed roofer": the roofing is the job he lost.
             former = String(role.dropFirst(prefix.count)); role = "unemployed"
         }
         for prefix in ["city council candidate and ", "volunteer treasurer and "] where role.hasPrefix(prefix) {
@@ -350,7 +352,9 @@ enum DefendantProfiles {
         let schoolYear = ["freshman": "First-year", "sophomore": "Second-year", "junior": "Third-year", "senior": "Fourth-year"]
             .first { lower.contains($0.key) }?.value
         let retired = lower.hasPrefix("retired ")
-        let has = { (keys: [String]) in keys.contains(where: lower.contains) }
+        // A former career counts for training and earlier jobs: a former sheriff went to the academy.
+        let trained = lower + " " + (former ?? "")
+        let has = { (keys: [String]) in keys.contains(where: trained.contains) }
         // "Self-described financial advisor": the title is a claim, not a credential.
         let selfDescribed = lower.hasPrefix("self-described")
         // A career someone trained for: no weekend side jobs, and earlier jobs come from the same field.
@@ -358,7 +362,7 @@ enum DefendantProfiles {
                                                   "pharmacist", "physician", "doctor", "dentist", "engineer", "software", "account", "executive",
                                                   "founder", "ceo", "teacher", "inspector", "president", "owner", "sergeant", "sheriff", "deputy",
                                                   "officer", "investigator", "director", "therapist", "practitioner", "underwriter", "developer",
-                                                  "coordinator", "paralegal", "dealer", "manager", "pastor", "minister", "contractor", "farmer"])
+                                                  "coordinator", "paralegal", "dealer", "manager", "pastor", "minister", "contractor", "farmer", "real estate"])
 
         // Education first: it decides when a career can begin. Every year below is counted from the birth year.
         // A degree is finished before the career it leads to, even for someone young for the job.
@@ -407,6 +411,9 @@ enum DefendantProfiles {
         } else if has(["paralegal"]) {
             careerAge = 20
             education = "Associate degree in paralegal technology, Hollis Community College, \(grad(20))."
+        } else if has(["systems administrator", "it help desk", "it support", "network administrator", "it manager"]) {
+            careerAge = 20
+            education = "\(diploma); associate degree in information technology, Hollis Community College, \(grad(20))."
         } else if has(["physical therapist"]) {
             careerAge = 25
             education = "Bachelor's degree, \(grad(22)); Doctor of Physical Therapy, East Carolina University, \(grad(25))."
@@ -547,7 +554,7 @@ enum DefendantProfiles {
                     // The job the occupation says they used to have comes first.
                     job = Job(title: earlier.capitalizedFirst, employer: employer(for: earlier, rng: &rng), years: "\(start)–\(cursor)", current: false)
                     formerPending = nil
-                } else if let path = careerPaths.first(where: { $0.0.contains(where: lower.contains) }), start >= birthYear + 18 {
+                } else if !selfDescribed, let path = careerPaths.first(where: { $0.0.contains(where: trained.contains) }), start >= birthYear + 18 {
                     let (title, place) = rng.pick(path.1)
                     job = Job(title: title, employer: place, years: "\(start)–\(cursor)", current: false)
                 } else if professional {
@@ -582,6 +589,10 @@ enum DefendantProfiles {
             }
         }
         jobs = merged
+        // A title that names a place keeps its capitals: "Port Hollis police officer", not "Port hollis".
+        for i in jobs.indices where jobs[i].title.lowercased() == defendant.occupation.lowercased() {
+            jobs[i].title = defendant.occupation.capitalizedFirst
+        }
 
         // Family fits the person's age, the background, and whatever the case itself says about spouse and children.
         var facts = known
@@ -598,8 +609,9 @@ enum DefendantProfiles {
             if age >= 25 { statuses += ["Divorced", "Separated"] }
             if age >= 55 { statuses.append("Widowed") }
             let status = facts.status ?? rng.pick(statuses)
+            // Child support is for children still at home, not grown ones.
             let support = facts.paysSupport
-                || (children > 0 && ["Divorced", "Separated", "Single"].contains(status) && rng.chance(0.5))
+                || (children > 0 && age < 55 && ["Divorced", "Separated", "Single"].contains(status) && rng.chance(0.5))
             family = status + (children == 0 ? ", no children." : ", \(children) child\(children == 1 ? "" : "ren")" + (support ? ", pays child support." : "."))
                 + (facts.note.map { " " + $0 } ?? "")
         }

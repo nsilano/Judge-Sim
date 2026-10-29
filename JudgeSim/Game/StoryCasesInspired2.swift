@@ -505,7 +505,8 @@ extension StoryCases {
             prosecutionOpening: "Masks bought on the campaign card, a payment the day before, and a rehearsal in the parking lot. {D} staged it.",
             defenseOpening: "Two witnesses who lied twice and changed their story to avoid felonies. That's the State's case.",
             prosecutionClosing: "The receipts don't lie, even if the volunteers did.",
-            defenseClosing: "Without the volunteers, the State has a stipend and a shopping trip."
+            defenseClosing: "Without the volunteers, the State has a stipend and a shopping trip.",
+            scene: "outside {DL}'s campaign office in {CITY}"
         )
     )
 }

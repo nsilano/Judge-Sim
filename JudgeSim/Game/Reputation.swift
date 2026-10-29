@@ -42,7 +42,9 @@ enum Reputation {
         let defense = clamp(62 + 40 * (lenient - harsh) - 20 * (activeShare - 0.5) + 25 * (affirm - 0.8) - 120 * exonerationRate - 2.5 * delays)
         let overall = clamp(50 + 45 * (affirm - 0.6) + 25 * within - 150 * exonerationRate - 2 * delays)
         let publicApproval = clamp(55 + 15 * (harsh - lenient) + 10 * (activeShare - 0.5) - 8 * Double(stats.exonerations)
-                                   + 10 * (affirm - 0.8) - 2 * delays)
+                                   + 10 * (affirm - 0.8) - 2 * delays
+                                   // Rulings the public watched: each one it liked or hated moves the poll.
+                                   + 1.5 * Double(max(-14, min(14, stats.communityStanding ?? 0))))
 
         var comments: [String] = []
         if !decided.isEmpty {

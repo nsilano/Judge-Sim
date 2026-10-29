@@ -327,7 +327,9 @@ struct ChambersView: View {
                 .font(.system(.callout, design: .serif)).italic()
             Text(game.mood.line(defender: "Chief Public Defender \(county.chiefPublicDefender)"))
                 .font(.system(.callout, design: .serif)).italic()
-            Text("Prosecutors remember acquittals and light sentences, and defenders remember prison terms. The DA's plea offers at your calendar calls follow the office's mood.")
+            Text(Community.townTalk(standing: game.stats.communityStanding ?? 0))
+                .font(.system(.callout, design: .serif)).italic()
+            Text("Prosecutors remember acquittals and light sentences, and defenders remember prison terms. The public remembers how the cases it followed ended, and the newspaper poll at New Year shows it. The DA's plea offers at your calendar calls follow the office's mood.")
                 .font(.caption2).foregroundStyle(.secondary)
         }
         .card()

@@ -99,7 +99,8 @@ extension StoryCases {
             prosecutionOpening: "A failing restaurant, doubled insurance, gasoline on the floor, and the owner's phone down the block.",
             defenseOpening: "A fired cook's threat, a broken lock, and an investigation that stopped at the owner.",
             prosecutionClosing: "Every road leads back to the insurance check.",
-            defenseClosing: "Motive isn't proof. The State never looked anywhere else."
+            defenseClosing: "Motive isn't proof. The State never looked anywhere else.",
+            employer: "{REST}"
         )
     )
 
@@ -202,7 +203,8 @@ extension StoryCases {
             prosecutionClosing: "Only an IT insider knew that account, and it came from {DL}'s house.",
             defenseClosing: "A connection isn't a person. That's reasonable doubt.",
             employer: "{CO}",
-            employmentEnded: true
+            employmentEnded: true,
+            residence: "Rents an apartment in {HOOD}."
         )
     )
 
@@ -299,7 +301,8 @@ extension StoryCases {
             prosecutionClosing: "'Nobody needs to get hurt' only means one thing to a witness.",
             defenseClosing: "Words without audio, a station {DL} uses every day, and reasonable doubt.",
             genders: ["D": .male, "V": .female],
-            victim: VictimFacts(relationship: "A State's witness in a pending case against the defendant's sibling.", family: "Single parent of a son.")
+            victim: VictimFacts(relationship: "A State's witness in a pending case against the defendant's sibling.", family: "Single parent of a son."),
+            employer: "a barbershop two blocks from the gas station on {STREET}"
         )
     )
 

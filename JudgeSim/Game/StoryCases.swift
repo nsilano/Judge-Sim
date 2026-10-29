@@ -1432,7 +1432,8 @@ enum StoryCases {
             defenseClosing: "Even the State's toxicologist says an observer might not be able to tell. The hallway video and the 2:47 message are reasonable doubt about what {DL} knew.",
             genders: ["D": .male, "V": .female],
             victim: VictimFacts(age: 20, occupation: "Student at Hollis State University", relationship: "A fellow student; acquaintances."),
-            school: "Hollis State University"
+            school: "Hollis State University",
+            residence: "Rents an apartment two blocks from {STREET} in {HOOD}."
         )
     )
 

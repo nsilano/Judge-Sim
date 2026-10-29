@@ -159,6 +159,8 @@ struct StoryExtras {
     /// Where the defendant works, as the story names it (tokens allowed), and whether the job ended over this case.
     var employer: String? = nil
     var employmentEnded = false
+    /// The employer of the job the defendant held before, when the story names it (a former assistant's bank).
+    var formerEmployer: String? = nil
     /// Where the defendant goes to school, as the story names it.
     var school: String? = nil
     /// The defendant's family, home, background and time at the current job, when the story states them
@@ -175,6 +177,8 @@ struct StoryExtras {
     var scene: String? = nil
     /// The victim is family who shares the defendant's last name (a father and his sons).
     var sameSurname = false
+    /// {ALT} is family who shares the defendant's last name (a brother the defendant lives with).
+    var altSameSurname = false
 }
 
 /// What a written case says about its victim, so the victim's profile matches the story.
@@ -352,6 +356,8 @@ enum CaseSetting: String, Codable, Hashable {
     static func of(category: LawCategory, key: String) -> CaseSetting {
         switch key {
         case "perjuryTrial", "prescriptionForgery": return .paper
+        // A DWI found in a bar's parking lot is a town officer's case, not a trooper's.
+        case "story.parkingLotSleeper": return .scene
         default: break
         }
         switch category {

@@ -20,12 +20,12 @@ extension StoryCases {
         ],
         ageRange: 38...50, occupations: ["auto body shop owner"], forcedPriorOffenses: ["Possession of Stolen Goods"], hasVictim: true,
         summaries: [
-            "On {DATE}, after a GPS tracker hidden in {V}'s stolen pickup pinged inside a body shop in {HOOD}, detectives got a warrant. Inside they found {VL}'s truck half-stripped on a lift, and in the back lot, cabs, frames, engines, and tailgates from about 30 pickups reported stolen across three counties. Several had their vehicle identification numbers ground off. The shop's owner, {D}, says {D.he} buys salvage parts from many sellers, keeps receipts, and had no idea anything was stolen. Two young men arrested for stealing trucks told police {DL} paid them $1,500 a truck, cash, and told them which models {D.he} needed each week."
+            "On {DATE}, after a GPS tracker hidden in {V}'s stolen pickup pinged inside a body shop in {HOOD}, detectives got a warrant. Inside they found {VL}'s truck half-stripped on a lift, and in the back lot, cabs, frames, engines, and tailgates from about 30 pickups reported stolen across three counties. Several had their vehicle identification numbers ground off. The shop's owner, {D}, says {D.he} buys salvage parts from many sellers, keeps receipts, and had no idea anything was stolen. Two people arrested for stealing trucks told police {DL} paid them $1,500 a truck, cash, and told them which models {D.he} needed each week."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "Stolen Vehicles", "{VL}'s truck on a lift and parts from 29 other stolen trucks in the yard.", .search),
             E(.forensic, 3, "Ground-Off VINs", "VINs filed off frames and engines; the crime lab recovered 11 numbers with acid etching, all from reported stolen trucks.", .search),
-            E(.statement, 2, "Thieves' Statements", "Two men say {DL} paid $1,500 cash per truck and texted a \"shopping list\" of models."),
+            E(.statement, 2, "Thieves' Statements", "Two thieves say {DL} paid $1,500 cash per truck and texted a \"shopping list\" of models."),
             E(.digital, 2, "Text Messages", "\"Need two F-250s and a Silverado this week. Diesel only.\" sent from {DL}'s phone.", .search)
         ],
         defenseEvidence: [
@@ -70,7 +70,7 @@ extension StoryCases {
         defenseTheory: ["{DL} buys salvage from many sellers and had no reason to suspect these parts. The State's case rests on two thieves trying to save themselves."],
         aggravating: ["The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: ["The defendant has been gainfully employed", "The defendant has a support system in the community"],
-        victimImpacts: ["{VL}: \"That truck was my business. I lost three weeks of contracts and my insurance doubled.\""],
+        victimImpacts: ["{V}: \"That truck was my business. I lost three weeks of contracts and my insurance doubled.\""],
         allocutions: ["\"I should have asked more questions about where the parts came from.\""],
         guiltyTruths: ["A ledger in the shop's ceiling, found later, listed each truck by model, the thief's nickname, and $1,500."],
         innocentTruths: ["The texts were later traced to {DL}'s shop manager, who used {DL}'s old phone and ran the back lot at night without {DL}'s knowledge."],
@@ -180,7 +180,7 @@ extension StoryCases {
                        (-400, "{DL} becomes band boosters treasurer."),
                        (0, "New president gets bank statements directly."),
                        (5, "{DL} admits taking money; enters treatment."),
-                       (60, "Charges filed after audit.")],
+                       (60, "{DL} charged after the audit.")],
             howIdentified: "Bank statements obtained directly by the new PTA president.",
             notDone: ["The outgoing president's own accounts were not reviewed."],
             defendantExam: [
@@ -467,7 +467,7 @@ extension StoryCases {
         defenseTheory: ["Others had access and motive. {DL} relied on the reconditioning staff and didn't know. An as-is sale isn't a crime."],
         aggravating: ["The offense involved multiple victims"],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
-        victimImpacts: ["{VL}: \"I bought that car for my kid's commute to nursing school. The transmission went because it had 160,000 miles on it.\""],
+        victimImpacts: ["{V}: \"I bought that car for my kid's commute to nursing school. The transmission went because it had 160,000 miles on it.\""],
         allocutions: ["\"I'll make every buyer whole.\""],
         guiltyTruths: ["A text from {DL} to the former partner: \"Take another 80 off the Camry, it's moving slow.\""],
         innocentTruths: ["The device's account was registered to the former partner, and the purchase was made from the partner's home address."],
@@ -498,7 +498,7 @@ extension StoryCases {
             defenseOpening: "As-is cars, a busy lot, and many hands in the back bay.",
             prosecutionClosing: "{DL} signed every false statement. {D.He} owned the device. {D.He} owned the lot.",
             defenseClosing: "Access by others leaves reasonable doubt about who did the rolling.",
-            victim: VictimFacts(relationship: "Bought a car from the defendant's lot.", restitution: 6500, restitutionBasis: "the difference between what she paid and what the car was worth")
+            victim: VictimFacts(relationship: "Bought a car from the defendant's lot.", restitution: 4000, restitutionBasis: "the $4,000 extra she paid for miles the car didn't have")
         )
     )
 }

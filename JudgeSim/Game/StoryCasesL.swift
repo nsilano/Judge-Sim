@@ -61,8 +61,8 @@ extension StoryCases {
                         cross: ["\"I don't know what happened in the car.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("How do you know {DL}?", "\"We work at the same shop. I see {D.him} just about every day.\""),
-                            .direct("What did {DL} say about the informant?", "\"For weeks: 'That fool owes me two hundred.' When {D.he} finally got it, {D.he} bought lunch for the shop.\""),
+                            .direct("How do you know {DL}?", "\"We work the same kitchen. I see {D.him} just about every day.\""),
+                            .direct("What did {DL} say about the informant?", "\"For weeks: 'That fool owes me two hundred.' When {D.he} finally got it, {D.he} bought lunch for the kitchen.\""),
                             .direct("Did {DL} say how {D.he} planned to get the money back?", "\"{D.He} said {D.he} was going to meet up and collect it in person.\""),
                             .cross("You don't know what happened in the car?", "\"I wasn't in the car. I only know what {D.he} told me.\""),
                             .cross("So the day {DL} had cash to spend was right after meeting the informant?", "\"I guess so. {D.He} said it was the two hundred {D.he} was owed.\"")
@@ -234,7 +234,7 @@ extension StoryCases {
                             .direct("What happened?", "\"I clocked 112 on radar. When I lit up, the rider tucked down and opened it up. I paced it past 130 before I called it off for public safety.\""),
                             .direct("What did you see of the rider?", "\"Black full-face helmet, red jacket, slim build.\""),
                             .cross("You couldn't see the rider's face?", "\"The visor was down. All I saw was a helmet.\""),
-                            .cross("Slim build in a red jacket describes a lot of riders?", "\"It does. That's a lot of riders on a Saturday.\"")
+                            .cross("Slim build in a red jacket describes a lot of riders?", "\"It does. That's a lot of riders on a spring night.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"No bill of sale, no title transfer.\""],
@@ -295,6 +295,8 @@ extension StoryCases {
             defenseOpening: "A sale, a deposit, and a buyer no one looked for.",
             prosecutionClosing: "The convenient stranger is a story.",
             defenseClosing: "The State proved who owned the bike on paper. Not who rode it.",
+            family: "Single, no children.",
+            residence: "Shares a rented house with a roommate in {HOOD}.",
             alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Phone and Doorbell Records", detail: "{DL}'s phone was on the apartment's Wi-Fi from 8:40 to 11:15 p.m. A neighbor's doorbell camera from two weeks earlier shows a thin man counting out cash, putting on a helmet, and riding the black motorcycle away from the building.", kind: .digital),
                                    breaks: AlibiCheck.Finding(title: "Phone Location Records", detail: "{DL}'s phone left the apartment's Wi-Fi at 8:55 p.m. and connected to a tower along I-40 beside the exit where the trooper clocked the bike at 9:27 p.m. The streaming account shows only the roommate's TV watching the game.", kind: .digital))
         )
@@ -395,7 +397,8 @@ extension StoryCases {
             prosecutionClosing: "Of 215 videos, the one that mattered was gone.",
             defenseClosing: "A coincidence isn't a crime, and the bug is real.",
             victim: VictimFacts(relationship: "Arrested by another officer on the defendant's shift; they had no other contact.", harm: ["Says an officer slammed her head against a patrol car during the arrest; the video that would show it was deleted."], restitution: 0),
-            yearsAtJob: 17
+            yearsAtJob: 17,
+            scene: "outside a convenience store in {CITY}"
         )
     )
 
@@ -494,7 +497,9 @@ extension StoryCases {
             defenseOpening: "A person who wanted their own TV and their mother's rings.",
             prosecutionClosing: "{DL} was told never to come in, and came in anyway, at night, and took what wasn't {D.hers}.",
             defenseClosing: "An honest claim to your own property isn't intent to steal.",
-            victim: VictimFacts(relationship: "A former partner of the defendant; they shared the house until six weeks earlier.", restitution: 0)
+            victim: VictimFacts(relationship: "A former partner of the defendant; they shared the house until six weeks earlier.", restitution: 0),
+            family: "Single, no children. Lived with the victim until six weeks before.",
+            residence: "Staying on his sibling's couch in {HOOD} since moving out."
         )
     )
 }

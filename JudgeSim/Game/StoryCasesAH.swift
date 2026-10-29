@@ -124,7 +124,7 @@ extension StoryCases {
                             .cross("The sun was right behind the crosswalk that morning.", "\"It was. I had my visor down.\""),
                             .cross("You said the brake lights might have flashed.", "\"Maybe. For a second.\"")
                         ]),
-            WitnessSeed(name: "{OFF}", role: "State Highway Patrol trooper",
+            WitnessSeed(name: "{TROOPER}", role: "State Highway Patrol trooper",
                         direct: ["\"That dent is a body, not a sign post.\""],
                         cross: ["\"I can't tell you what {DL} saw.\""],
                         weight: 3, lay: false,
@@ -362,7 +362,7 @@ extension StoryCases {
         ],
         ageRange: 23...40, occupations: ["dental assistant", "dental office receptionist"], hasVictim: false,
         summaries: [
-            "A pharmacist at {PHARM} noticed something wrong on {DATE}: a prescription for 30 oxycodone tablets from a dentist, for a patient who'd supposedly had a root canal, written in a dentist's name for a dose dentists almost never write. The pharmacist called the office. The dentist had never seen the patient. The state's prescription database showed six such scripts on the same dentist's pad in two months, at four pharmacies, for four different patient names, all picked up by a person who matched {D}, a dental assistant at the practice. Pharmacy cameras at two stores show {D}. {DL} says a former coworker forged them and asked {D.him} to pick them up for \"family members who couldn't drive.\""
+            "A pharmacist at {PHARM} noticed something wrong on {DATE}: a prescription for 30 oxycodone tablets from a dentist, for a patient who'd supposedly had a root canal, written in a dentist's name for a dose dentists almost never write. The pharmacist called the office. The dentist had never seen the patient. The state's prescription database showed six such scripts on the same dentist's pad in two months, at four pharmacies, for four different patient names, all picked up by a person who matched {D}, a receptionist at the practice. Pharmacy cameras at two stores show {D}. {DL} says a former coworker forged them and asked {D.him} to pick them up for \"family members who couldn't drive.\""
         ],
         prosecutionEvidence: [
             E(.video, 3, "Pharmacy Cameras", "{D} at the counter at two pharmacies picking up oxycodone prescriptions in other people's names."),
@@ -420,7 +420,7 @@ extension StoryCases {
         moods: [.indifferent], doctrines: ["burdenOfProof"],
         extras: ["PHARM": ["Harbor Mart Pharmacy", "Main Street Drug", "Bayard Family Pharmacy"]],
         story: StoryExtras(
-            timeline: [(-60, "First forged script filled."), (-30, "Former receptionist fired; moves to Georgia two weeks later."), (0, "Pharmacist flags a script and calls the dentist."), (3, "Prescription database pulled; six scripts found; {DL} identified on camera.")],
+            timeline: [(-90, "Former receptionist fired; moves to Georgia two weeks later."), (-60, "First forged script filled."), (0, "Pharmacist flags a script and calls the dentist."), (3, "Prescription database pulled; six scripts found; {DL} identified on camera.")],
             howIdentified: "Pharmacy cameras at two stores and the pharmacist's recognition.",
             notDone: ["The pad was never found.", "No one checked the fingerprints on the forged scripts."],
             defendantExam: [

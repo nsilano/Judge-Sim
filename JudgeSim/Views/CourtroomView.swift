@@ -275,7 +275,7 @@ struct BriefingStage: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
                         Pill(text: c.court.label, color: Theme.gold, icon: "building.columns")
-                        Pill(text: c.mood.label, icon: c.mood.icon)
+                        Pill(text: Community.label(c), icon: c.mood.icon)
                         if c.defendant.isReturning {
                             Pill(text: "Returning defendant", color: .purple, icon: "arrow.uturn.left")
                         }
