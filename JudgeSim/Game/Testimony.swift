@@ -103,7 +103,9 @@ enum Testimony {
         // "Adeyemi's neighbor" starts with a name: no article, and the name keeps its capital.
         if role.contains("'s ") { return role }
         if role.lowercased().hasPrefix("the ") { return lower }
-        let vowel = "aeiou".contains(lower.prefix(1))
+        // By sound: "a use-of-force expert", "a uniformed officer", "an hour".
+        let vowelLetter = "aeiou".contains(lower.prefix(1)) && !["use", "uni", "eu", "one"].contains { lower.hasPrefix($0) }
+        let vowel = vowelLetter || ["hour", "honest", "honor"].contains { lower.hasPrefix($0) }
         return (vowel ? "an " : "a ") + lower
     }
 

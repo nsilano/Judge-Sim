@@ -1336,7 +1336,7 @@ enum StoryCases {
         ],
         defenseEvidence: [
             E(.video, 2, "Building Hallway Camera", "At 1:34 a.m., {VL} walks down {DL}'s apartment hallway under {VL}'s own power, holding {DL}'s hand, and appears to laugh."),
-            E(.document, 2, "Rideshare Message", "At 2:47 a.m., {VL}'s phone sent {DL}'s roommate's number a message: \"is ur roommate always this cute\" The roommate never answered."),
+            E(.document, 2, "Late-Night Text", "At 2:47 a.m., {VL}'s phone sent {DL}'s roommate's number a message: \"is ur roommate always this cute\" The roommate never answered."),
             E(.document, 1, "Prior Dating", "{DL} and {VL} went on two dates the previous month, according to messages between them.")
         ],
         prosecutionWitnesses: [
@@ -1400,8 +1400,8 @@ enum StoryCases {
         extras: ["TIME": ["1:28 a.m."]],
         story: StoryExtras(
             timeline: [(0, "1:12 a.m.: party video shows {VL} unable to stand. 1:28 a.m.: {DL} and {VL} leave. 1:34 a.m.: hallway camera."),
-                       (1, "9:20 a.m.: {VL} arrives at Hollis Regional; sexual assault examination performed; blood drawn."),
-                       (1, "9:51 a.m.: {DL} sends text to a friend."),
+                       (0, "9:20 a.m.: {VL} arrives at Hollis Regional; sexual assault examination performed; blood drawn."),
+                       (0, "9:51 a.m.: {DL} sends text to a friend."),
                        (4, "{VL} reports to Hollis State University police and the Sheriff's Office."),
                        (52, "State Crime Laboratory DNA results consistent with {DL}."),
                        (60, "{DL} charged with second-degree forcible rape.")],

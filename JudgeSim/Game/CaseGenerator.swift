@@ -322,6 +322,8 @@ enum CaseGenerator {
         var values: [String: String] = [
             "D": defendant.name,
             "DL": defendant.lastName,
+            // First names, for the people who'd use them: family, friends, a partner.
+            "DF": String(defendant.name.split(separator: " ").first ?? ""),
             "DA": "\(defendant.age)",
             "DO": defendant.occupation.lowercasedPhrase,
             "DET": detective.display,
@@ -340,6 +342,7 @@ enum CaseGenerator {
             "CITY": county.seat,
             "V": victimName ?? "the complainant",
             "VL": victimName.map(lastName) ?? "the complainant",
+            "VF": victimName.map { String($0.split(separator: " ").first ?? "") } ?? "the complainant",
             // A follow-up case names the earlier one in this court.
             "PRIOR": context.priorOffense?.lowercasedPhrase ?? "an earlier charge",
             "PRIORDATE": context.priorDate.map { $0.formatted(.dateTime.month(.wide).year()) } ?? "an earlier term of court"
@@ -602,7 +605,8 @@ enum CaseGenerator {
             // never before the crime itself.
             let arrests = story.timeline.filter { $0.0 >= 0 && ($0.1.lowercased().contains("arrested")
                 || ($0.1.lowercased().contains("charged") && $0.1.contains("{D"))) }
-            if let offset = (arrests.first { $0.1.contains("{D") } ?? arrests.first)?.0 {
+            // An entry naming no one ("Arrested at work.") is the defendant's; one naming someone else is not.
+            if let offset = (arrests.first { $0.1.contains("{D") } ?? arrests.first { !$0.1.contains("{") })?.0 {
                 investigation.facts?.arrest = CaseDates.add(offset, to: incident)
             }
             investigation.howIdentified = fill(story.howIdentified)
@@ -1035,11 +1039,14 @@ enum CaseGenerator {
             restitution = rng.int(12...70) * 1_000; basis = "medical bills"
         case "imageLeak", "stalking":
             restitution = rng.int(2...9) * 500; basis = "counseling costs and lost wages"
+        case "story.homeInvasion":
+            // The cash is stated; the guns and jewelry were never recovered, except the one pawned rifle.
+            restitution = 3_000 + rng.int(9...16) * 1_000; basis = "the $3,000 in cash plus the jewelry and guns that were never recovered"
         default:
             break
         }
         // Every other case with someone who lost money or was hurt: the State asks for what it can document.
-        if restitution == 0 && rng.chance(0.85) {
+        if restitution == 0 && (t.story != nil || rng.chance(0.85)) {
             // Each count states its own amount; together they are the loss (a card count and a check count are
             // different money). Anything already repaid, per the evidence, comes off.
             let counts = ([fill(t.specification)] + t.secondary.map { fill($0.specification) }).compactMap { firstDollarAmount(in: $0) }

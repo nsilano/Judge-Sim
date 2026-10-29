@@ -168,6 +168,10 @@ enum VictimProfiles {
             ("cousin", "Related to the defendant."), ("brother", "Related to the defendant."), ("sister", "Related to the defendant."),
             ("son", "Related to the defendant."), ("daughter", "Related to the defendant."), ("friend", "Knew the defendant socially.")
         ]
+        // The victim's own spouse ("Blake and his wife") is not the defendant.
+        // "Her husband, {D}" still is.
+        let dFirst = NSRegularExpression.escapedPattern(for: (c.defendant.name.split(separator: " ").first.map(String.init) ?? "").lowercased())
+        let lower = lower.replacingOccurrences(of: "\\b(his|her|their) (wife|husband|spouse)s?\\b(?!,? \(dFirst))", with: "", options: .regularExpression)
         // Whole words only: "son" isn't in "person", nor "ex-" in "next".
         for (word, line) in pairs {
             let pattern = word.hasSuffix("-") ? "\\b" + NSRegularExpression.escapedPattern(for: word) : "\\b" + NSRegularExpression.escapedPattern(for: word) + "s?\\b"
@@ -195,8 +199,10 @@ enum VictimProfiles {
         } else if c.templateKey.hasPrefix("story.") {
             // A written case says what happened to the victim; nothing is invented. The State's medical exhibit is the
             // injury, and with none, there was no physical injury.
+            // Only where someone could be hurt: a fraud's "Hospital Letter" is not an injury.
+            let canBeHurt = [.violent, .family, .robbery, .traffic].contains(c.category)
             let medical = c.evidence.first { e in
-                e.side == .prosecution && ["medical", "hospital", "emergency", "surgical", "pediatric", "x-ray", "injur", "autopsy", "necropsy",
+                canBeHurt && e.side == .prosecution && ["medical", "hospital", "emergency", "surgical", "pediatric", "x-ray", "injur", "autopsy", "necropsy", "surgeon",
                                            "nurse", "wound", "examiner", "trauma", "x-rays", "photos of"]
                     .contains { e.title.lowercased().contains($0) }
             }
@@ -235,6 +241,7 @@ enum VictimProfiles {
                 lines.append("Affected by the offense; details are in the victim impact statement.")
             }
         }
+        if lines.isEmpty && c.templateKey.hasPrefix("story.") { lines.append("No physical injury.") }
         if let bg = c.background, bg.restitution > 0 {
             lines.append("Restitution claimed: \(SentenceFormat.dollars(bg.restitution))" + (bg.restitutionBasis.map { " for \($0)" } ?? "") + ".")
         }

@@ -18,7 +18,7 @@ extension StoryCases {
         ],
         ageRange: 28...36, occupations: ["pharmaceutical sales representative"], hasVictim: true,
         summaries: [
-            "On Thanksgiving morning, {DATE}, {V}, seven months pregnant, was reported missing from the couple's home in {HOOD} by {D}, who said {D.he} had gone kayaking alone on {LAKE}, forty miles away, and came home to find {VL} gone and the dog in the yard. Three months later {VL}'s remains surfaced in a cove of {LAKE} about a mile from the boat ramp {DL} said {D.he} used. Investigators learned {DL} had a secret relationship with a coworker, had bought the kayak six days before without telling anyone, and was stopped at the Charlotte airport with a newly issued passport and $9,000 in cash the week the remains were found."
+            "On Thanksgiving afternoon, {DATE}, {V}, seven months pregnant, was reported missing from the couple's home in {HOOD} by {D}, who said {D.he} had gone kayaking alone on {LAKE}, forty miles away, and came home to find {VL} gone and the dog in the yard. Three months later {VL}'s remains surfaced in a cove of {LAKE} about a mile from the boat ramp {DL} said {D.he} used. Investigators learned {DL} had a secret relationship with a coworker, had bought the kayak six days before without telling anyone, and was stopped at the Charlotte airport with a newly issued passport and $9,000 in cash the week the remains were found."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Location of the Remains", "The remains surfaced in a cove about a mile from the boat ramp {DL} named as {D.his} only alibi. Weights matching cinder-block fragments were found nearby."),
@@ -73,7 +73,7 @@ extension StoryCases {
         defenseTheory: ["No cause of death, no crime scene, and witnesses who saw {VL} alive after {DL} was forty miles away. The State is prosecuting a liar and a cheat, not proving a murder."],
         aggravating: ["The victim was pregnant"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{VL}'s parent: \"We lost our child and our grandchild on the same day. I set two extra places at Thanksgiving every year.\""],
+        victimImpacts: ["{VL}'s parent: \"We lost our child and our grandchild on the same day. It happened on Thanksgiving. Every Thanksgiving from now on, there will be two empty places at our table.\""],
         allocutions: ["\"I've done things I'm ashamed of. I didn't kill my family.\""],
         guiltyTruths: ["A hair caught in the kayak's anchor cleat was later matched to {VL}."],
         innocentTruths: ["One of the burglars confessed years later that {VL} surprised them in a neighbor's yard that morning."],
@@ -106,7 +106,8 @@ extension StoryCases {
             prosecutionClosing: "Coincidence can't put a body a mile from the alibi.",
             defenseClosing: "Suspicion, however strong, isn't proof beyond a reasonable doubt.",
             when: .thanksgiving,
-            genders: ["V": .female]
+            genders: ["V": .female],
+            victim: VictimFacts(relationship: "Married to the defendant.")
         )
     )
 
@@ -191,7 +192,8 @@ extension StoryCases {
                        (-42, "{DL} emails chief engineer not to show raw data outside."),
                        (0, "{V} invests $400,000 after a live demo."),
                        (540, "{STARTUP} ceases operations."),
-                       (610, "Secretary of State's Securities Division refers case for prosecution.")],
+                       (610, "Secretary of State's Securities Division refers case for prosecution."),
+                       (640, "{DL} charged with securities fraud.")],
             howIdentified: "{DL} made the presentations and signed the offering documents.",
             notDone: ["The chief engineer was never interviewed; the engineer left the country."],
             defendantExam: [
@@ -211,7 +213,8 @@ extension StoryCases {
             prosecutionOpening: "A study that didn't exist, a letter {D} wrote and signed someone else's name to, and recorded demos called live.",
             defenseOpening: "A founder who believed, who never sold a share, and who was misled by the person whose job was to tell the truth about the technology.",
             prosecutionClosing: "The forged letter alone proves {DL} knew.",
-            defenseClosing: "The State must prove {DL} knew the statements were false. The chief engineer told {DL} otherwise."
+            defenseClosing: "The State must prove {DL} knew the statements were false. The chief engineer told {DL} otherwise.",
+            victim: VictimFacts(age: 71, occupation: "Retired dentist")
         )
     )
 
