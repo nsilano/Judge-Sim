@@ -100,7 +100,8 @@ extension StoryCases {
             prosecutionClosing: "You can't create the danger and then claim self-defense against it.",
             defenseClosing: "{DL} made a terrible judgment. Malice requires more.",
             when: .months([12, 1, 2]),
-            genders: ["V": .male]
+            genders: ["V": .male],
+            victim: VictimFacts(relationship: "Strangers; the defendant saw him on a neighbor's camera.")
         )
     )
 
@@ -288,7 +289,7 @@ extension StoryCases {
             prosecutionClosing: "The law asks what a careful officer would have done. Not this.",
             defenseClosing: "A mistake isn't culpable negligence when stress takes over.",
             genders: ["D": .female, "V": .male],
-            victim: VictimFacts(family: "Single, one child, a two-year-old son.")
+            victim: VictimFacts(relationship: "Strangers; stopped by the defendant and a trainee for expired tags.", family: "Single, one child, a two-year-old son.")
         )
     )
 
@@ -384,7 +385,7 @@ extension StoryCases {
             defenseOpening: "A production that cut corners, a mislabeled box, and a gun handed over without the armorer.",
             prosecutionClosing: "The armorer's one job is no live rounds. That failure killed {VL}.",
             defenseClosing: "Many failures caused this. Culpable negligence requires more than being the youngest person on set.",
-            victim: VictimFacts(occupation: "Cinematographer")
+            victim: VictimFacts(occupation: "Cinematographer", relationship: "A coworker on the film set.")
         )
     )
 

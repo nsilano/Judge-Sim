@@ -105,7 +105,7 @@ extension StoryCases {
             prosecutionClosing: "{VL} was sure enough to point. The bus pass was behind {DL}'s door.",
             defenseClosing: "Pretty sure isn't proof beyond a reasonable doubt.",
             genders: ["V": .female],
-            victim: VictimFacts(age: 74, occupation: "Retired", relationship: "Strangers before the incident.", family: "Widowed; helps raise a grandson.", harm: ["A broken wrist; months of physical therapy.", "No longer rides the bus alone."])
+            victim: VictimFacts(age: 74, occupation: "Retired", relationship: "Strangers before the incident.", family: "Widowed; helps raise a grandson.", harm: ["A broken wrist; months of physical therapy.", "No longer rides the bus alone."], restitution: 700, restitutionBasis: "what was taken and her medical bills")
         )
     )
 
@@ -297,7 +297,8 @@ extension StoryCases {
             prosecutionOpening: "A merge, a red light, and a tire iron swung at a person's head.",
             defenseOpening: "An arm through the window and a knife on the pocket.",
             prosecutionClosing: "Self-defense isn't getting out of your truck with a steel bar.",
-            defenseClosing: "{DL} didn't start this. The State has to prove {D.he} wasn't defending {D.himself}."
+            defenseClosing: "{DL} didn't start this. The State has to prove {D.he} wasn't defending {D.himself}.",
+            victim: VictimFacts(relationship: "Strangers; a traffic dispute.", harm: ["Not hurt; the swing hit her side mirror."], restitution: 350, restitutionBasis: "the broken side mirror")
         )
     )
 

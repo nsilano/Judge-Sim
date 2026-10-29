@@ -169,9 +169,10 @@ enum VictimProfiles {
             ("son", "Related to the defendant."), ("daughter", "Related to the defendant."), ("friend", "Knew the defendant socially.")
         ]
         // The victim's own spouse ("Blake and his wife") is not the defendant.
-        // "Her husband, {D}" still is.
+        // "Her husband, {D}" and "his wife, {V}" still are.
+        let vFirst = NSRegularExpression.escapedPattern(for: first.lowercased())
         let dFirst = NSRegularExpression.escapedPattern(for: (c.defendant.name.split(separator: " ").first.map(String.init) ?? "").lowercased())
-        let lower = lower.replacingOccurrences(of: "\\b(his|her|their) (wife|husband|spouse)s?\\b(?!,? \(dFirst))", with: "", options: .regularExpression)
+        let lower = lower.replacingOccurrences(of: "\\b(his|her|their) (wife|husband|spouse)s?\\b(?!,? (\(dFirst)|\(vFirst)))", with: "", options: .regularExpression)
         // Whole words only: "son" isn't in "person", nor "ex-" in "next".
         for (word, line) in pairs {
             let pattern = word.hasSuffix("-") ? "\\b" + NSRegularExpression.escapedPattern(for: word) : "\\b" + NSRegularExpression.escapedPattern(for: word) + "s?\\b"

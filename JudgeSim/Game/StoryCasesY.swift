@@ -93,7 +93,8 @@ extension StoryCases {
             defenseOpening: "A frightened parent took a child to the beach.",
             prosecutionClosing: "Intent is shown by what {DL} did: the savings, the phone, the weekly rate.",
             defenseClosing: "A note saying 'back by Wednesday' is reasonable doubt about intent.",
-            when: .weekday(6)
+            when: .weekday(6),
+            victim: VictimFacts(relationship: "The other parent of their child.", harm: ["No physical injury. Her daughter was missing for four days."], restitution: 0)
         )
     )
 
@@ -180,7 +181,8 @@ extension StoryCases {
             defenseOpening: "A father and a son in danger.",
             prosecutionClosing: "Defense of another allows reasonable force against the attacker, not a chair swung into a crowd.",
             defenseClosing: "{DL} believed {D.his} son was in danger, and that belief was reasonable.",
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(relationship: "Strangers; a visiting fan.", harm: ["Two cracked ribs from a metal folding chair."], restitution: 2400, restitutionBasis: "emergency room and follow-up care")
         )
     )
 
@@ -264,7 +266,8 @@ extension StoryCases {
             prosecutionOpening: "A post, a countdown, and 104 miles an hour.",
             defenseOpening: "A tragedy with two causes, one of them in {VL}'s car.",
             prosecutionClosing: "Racing on a public street at three times the limit is culpable negligence by definition.",
-            defenseClosing: "Speed was {DL}'s fault. The rolling stop was not."
+            defenseClosing: "Speed was {DL}'s fault. The rolling stop was not.",
+            victim: VictimFacts(relationship: "Strangers.")
         )
     )
 
@@ -420,7 +423,8 @@ extension StoryCases {
             prosecutionOpening: "A benched child, a parent's IP address, and a threat about the parking lot.",
             defenseOpening: "A house with a teenager and an open router.",
             prosecutionClosing: "Motive, the address, and the spelling all point one way.",
-            defenseClosing: "An IP address is a house, not a person."
+            defenseClosing: "An IP address is a house, not a person.",
+            victim: VictimFacts(relationship: "Coached the defendant's child.", restitution: 0)
         )
     )
 }

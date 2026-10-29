@@ -88,7 +88,8 @@ extension StoryCases {
             prosecutionOpening: "The person who held these clients' numbers had the cards mailed to {D.his} box.",
             defenseOpening: "A fired employee had the same files and the same key.",
             prosecutionClosing: "Opportunity, access, and the mailbox all point to {DL}.",
-            defenseClosing: "Two keys, two suspects, one blurry video. That's reasonable doubt."
+            defenseClosing: "Two keys, two suspects, one blurry video. That's reasonable doubt.",
+            victim: VictimFacts(occupation: "Not stated in the case file")
         )
     )
 
@@ -178,7 +179,8 @@ extension StoryCases {
             prosecutionOpening: "A grudge, a schedule, a familiar run, and a car paid off in cash.",
             defenseOpening: "A one-second clip and a supervisor who wanted {DL} gone.",
             prosecutionClosing: "The jackpot was a month earlier and smaller than the payoff.",
-            defenseClosing: "Recognizing a hood isn't identifying a person."
+            defenseClosing: "Recognizing a hood isn't identifying a person.",
+            victim: VictimFacts(harm: ["A broken wrist from being shoved to the pavement."], restitution: 9200, restitutionBasis: "the $9,200 payroll bag")
         )
     )
 
@@ -350,7 +352,7 @@ extension StoryCases {
             defenseOpening: "Frustration and a wet floor.",
             prosecutionClosing: "People who slip don't shout accusations while they hold on.",
             defenseClosing: "Three seconds of a stumble, not an assault.",
-            victim: VictimFacts(occupation: "Driver license examiner, N.C. Division of Motor Vehicles")
+            victim: VictimFacts(occupation: "Driver license examiner, N.C. Division of Motor Vehicles", relationship: "Strangers; she was his road test examiner.", harm: ["No physical injury. Grabbed by the collar and pushed against a wall."], restitution: 0)
         )
     )
 
@@ -436,7 +438,8 @@ extension StoryCases {
             defenseOpening: "An old truck and an old feud.",
             prosecutionClosing: "Rust doesn't cut clean, and it doesn't cut both lines the same.",
             defenseClosing: "The camera can't see what {DL}'s hands were doing.",
-            genders: ["V": .male]
+            genders: ["V": .male],
+            victim: VictimFacts(occupation: "Co-owner of the construction company", relationship: "The defendant's business partner.", harm: ["Bruises from the crash."], restitution: 9500, restitutionBasis: "his wrecked pickup and medical bills")
         )
     )
 }

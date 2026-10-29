@@ -98,7 +98,7 @@ extension StoryCases {
             defenseOpening: "The coworker had the secret, a bigger grudge, and the wallet's keys.",
             prosecutionClosing: "Revenge and access both point to {DL}.",
             defenseClosing: "Both point to the coworker too. That's reasonable doubt.",
-            victim: VictimFacts(occupation: "Regional bank vice president", relationship: "The defendant's former employer; the defendant was the victim's executive assistant.")
+            victim: VictimFacts(occupation: "Regional bank vice president", relationship: "The defendant's former employer; the defendant was the victim's executive assistant.", restitution: 0)
         )
     )
 
@@ -191,7 +191,8 @@ extension StoryCases {
             prosecutionOpening: "'The last time.' Then a shotgun, and a wound in {V}'s side and back.",
             defenseOpening: "Someone with a sledgehammer in {DL}'s yard after months of threats. The law presumes {DL}'s fear was reasonable.",
             prosecutionClosing: "The presumption is rebutted when the intruder is leaving.",
-            defenseClosing: "The State hasn't proven {VL} was leaving."
+            defenseClosing: "The State hasn't proven {VL} was leaving.",
+            victim: VictimFacts(relationship: "Next-door neighbor of the defendant; two years of property-line disputes.")
         )
     )
 

@@ -88,7 +88,7 @@ extension StoryCases {
             defenseOpening: "A roofer's glove from a roofing job.",
             prosecutionClosing: "The floor is mopped every night. That glove was dropped the night of the burglary.",
             defenseClosing: "DNA tells you whose glove it is, not when it got there.",
-            victim: VictimFacts(occupation: "Pharmacist and owner of the pharmacy"),
+            victim: VictimFacts(occupation: "Pharmacist and owner of the pharmacy", relationship: "The defendant had roofed her pharmacy three months earlier.", restitution: 6800, restitutionBasis: "the stolen medication and the damaged back door"),
             employer: "self-employed (roofing crew)"
         )
     )
@@ -428,6 +428,7 @@ extension StoryCases {
             prosecutionClosing: "Recent possession of stolen property, plus the code, is proof of the break-in.",
             defenseClosing: "The face on the camera is never seen. Three people had that code.",
             when: .months([1]),
+            victim: VictimFacts(relationship: "The defendant's company cleaned his rental house.", restitution: 3800, restitutionBasis: "the televisions and jewelry never recovered, and the side door"),
             employer: "own cleaning company"
         )
     )

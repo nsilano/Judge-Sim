@@ -90,6 +90,7 @@ extension StoryCases {
             defenseOpening: "A mechanic who bought parts from the wrong man.",
             prosecutionClosing: "Nobody honest pays $1,800 for $14,600 in motors and never asks for a last name. The ground-off plate tells you {DL} knew.",
             defenseClosing: "The camera shows two hoods, not {D}. Buying cheap from a stranger is careless, not theft.",
+            victim: VictimFacts(restitution: 0),
             time: "2:10 a.m.",
             yearsAtJob: 8
         )
@@ -245,7 +246,8 @@ extension StoryCases {
             prosecutionOpening: "One $300 purchase, copied six times, sold for $1,840.",
             defenseOpening: "A fan who was scammed first.",
             prosecutionClosing: "The edits were on {DL}'s phone. {D.He} knew one ticket can't seat six families.",
-            defenseClosing: "{DL} paid for real tickets, was cheated, and tried to fix it. Intent to deceive is the State's burden."
+            defenseClosing: "{DL} paid for real tickets, was cheated, and tried to fix it. Intent to deceive is the State's burden.",
+            victim: VictimFacts(relationship: "Bought tickets from the defendant's post.")
         )
     )
 
@@ -319,7 +321,8 @@ extension StoryCases {
             prosecutionOpening: "The skimmer, the cloned cards, the store cameras, and the key.",
             defenseOpening: "A borrowed car with someone else's crimes in the console.",
             prosecutionClosing: "Plain white cards don't look like prepaid cards, and nobody carries a pump key by accident.",
-            defenseClosing: "The man at the pump has no face. The car's owner has two fraud convictions."
+            defenseClosing: "The man at the pump has no face. The car's owner has two fraud convictions.",
+            victim: VictimFacts(relationship: "Strangers.")
         )
     )
 
@@ -406,7 +409,7 @@ extension StoryCases {
             defenseOpening: "A route log that puts {DL} twenty-five minutes away.",
             prosecutionClosing: "{V} picked {DL}. The vest and the pickup fit. A handheld can be left on a dashboard.",
             defenseClosing: "A tentative pick from an array the detective shouldn't have run, against a log reading a meter every four minutes.",
-            victim: VictimFacts(age: 81, occupation: "retired schoolteacher", relationship: "Stranger"),
+            victim: VictimFacts(age: 81, occupation: "retired schoolteacher", relationship: "Strangers."),
             time: "10:15 a.m."
         )
     )

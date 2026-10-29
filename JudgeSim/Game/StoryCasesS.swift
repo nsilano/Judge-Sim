@@ -102,7 +102,12 @@ extension StoryCases {
             prosecutionClosing: "He lied about the one place that mattered.",
             defenseClosing: "No weapon, no blood, no proof. Just a man everyone wants to hate.",
             genders: ["D": .male, "V": .male],
-            family: "Widowed, 1 child. The late spouse is a victim in this case, as is a second son."
+            victim: VictimFacts(relationship: "The defendant's son."),
+            employer: "the family law firm",
+            family: "Widowed, 1 child. The late spouse is a victim in this case, as is a second son.",
+            residence: "The family home in {HOOD}; the family also owns a hunting estate there.",
+            yearsAtJob: 26,
+            sameSurname: true
         )
     )
 
@@ -202,6 +207,7 @@ extension StoryCases {
             prosecutionClosing: "She was there, by phone, and she sent him back in.",
             defenseClosing: "Cruel words aren't a weapon, and his choice was his own.",
             genders: ["D": .female, "V": .male],
+            victim: VictimFacts(relationship: "The defendant's boyfriend."),
             family: "Single, no children. The victim in this case was the defendant's boyfriend."
         )
     )
@@ -303,7 +309,8 @@ extension StoryCases {
             defenseOpening: "A shared failure, and one young man made to carry all of it.",
             prosecutionClosing: "He planned the drinking and blocked the call. That's culpable.",
             defenseClosing: "Thirty people were in that house. Negligence isn't a crime unless it's this man's.",
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(occupation: "College student and fraternity pledge", relationship: "A pledge; the defendant was the fraternity's pledge master.")
         )
     )
 
@@ -506,7 +513,8 @@ extension StoryCases {
             defenseOpening: "A dangerous stranger, a highway, and a split second.",
             prosecutionClosing: "You don't chase what you're afraid of.",
             defenseClosing: "Honest fear, even if unreasonable, makes this manslaughter.",
-            genders: ["D": .male, "V": .male, "ALT": .female]
+            genders: ["D": .male, "V": .male, "ALT": .female],
+            victim: VictimFacts(relationship: "Strangers; they met on the highway.")
         )
     )
 }

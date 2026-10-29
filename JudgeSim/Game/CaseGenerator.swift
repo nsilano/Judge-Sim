@@ -279,7 +279,10 @@ enum CaseGenerator {
         }
         let knownNames = Set(context.residents.map(\.name)).union(context.reservedNames)
         let drawnVictim = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"], avoiding: knownNames)
-        let victimName = t.hasVictim ? (sameVictim ?? drawnVictim) : nil
+        // A parent, child, or sibling the story says shares the family name has the defendant's last name.
+        let familyVictim = t.story?.sameSurname == true
+            ? String(drawnVictim.split(separator: " ").first ?? "") + " " + defendant.lastName : drawnVictim
+        let victimName = t.hasVictim ? (sameVictim ?? familyVictim) : nil
         let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"], avoiding: knownNames)
         let setting = CaseSetting.of(category: t.category, key: t.key)
         // Highway crashes and impaired driving are worked by the Highway Patrol.
@@ -521,18 +524,21 @@ enum CaseGenerator {
                     for i in profile.jobs.indices where profile.jobs[i].current { profile.jobs[i].current = false; profile.jobs[i].years = profile.jobs[i].years.replacingOccurrences(of: "present", with: "\(currentYear)") }
                     profile.jobs.insert(Job(title: "Employee", employer: place, years: "\(currentYear)–present", current: true), at: 0)
                 }
-                if let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" }) {
+                // The main job, not a weekend side job that started later.
+                let side = { (j: Job) in j.title.hasPrefix("weekend ") || j.title.hasPrefix("part-time ") }
+                if let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" && !side($0) })
+                    ?? profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" }) {
                     profile.jobs[i].employer = place
                     if story.employmentEnded {
                         profile.jobs[i].current = false
-                        profile.jobs[i].years = profile.jobs[i].years.replacingOccurrences(of: "present", with: "\(currentYear) (fired)")
+                        profile.jobs[i].years = profile.jobs[i].years.replacingOccurrences(of: "present", with: "\(currentYear)" + (profile.jobs[i].title.lowercased().contains("owner") ? " (closed)" : " (fired)"))
                     }
                 }
             }
             if let school = story.school.map({ fill($0) }) { profile.education = "Currently enrolled at \(school)." }
             if let family = story.family.map({ fill($0) }) { profile.family = family }
             if let residence = story.residence.map({ fill($0) }) { profile.residence = residence }
-            if let years = story.yearsAtJob, let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" }) {
+            if let years = story.yearsAtJob, let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" && !$0.title.hasPrefix("weekend ") && !$0.title.hasPrefix("part-time ") }) {
                 let start = currentYear - years
                 profile.jobs[i].years = "\(start)–present"
                 // Earlier jobs end before this one began.
@@ -1078,6 +1084,10 @@ enum CaseGenerator {
             default:
                 break
             }
+        }
+        // A written case that says what the victim lost says it exactly; 0 means nothing to repay.
+        if let told = t.story?.victim, let amount = told.restitution {
+            restitution = amount; basis = amount > 0 ? told.restitutionBasis : nil
         }
 
         // Victim stance

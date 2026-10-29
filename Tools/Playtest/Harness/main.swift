@@ -808,6 +808,7 @@ if args.count > 3 && args[1] == "dossier" {
             out.append("D: \(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation). V: \(c.victimName ?? "none")")
             if let f = c.investigation?.facts { out.append("Incident \(SentenceFormat.shortDate(f.incident)), arrest \(SentenceFormat.shortDate(f.arrest)), \(f.place)") }
             out.append("SUMMARY: " + c.summary)
+            if let p = c.defendant.profile { out.append("DPROFILE: \(p.family) | \(p.residence) | \(p.education) | " + p.jobs.map { "\($0.title) at \($0.employer), \($0.years)\($0.current ? " (now)" : "")" }.joined(separator: "; ")) }
             if let v = VictimProfiles.make(c, county: county) { out.append("VICTIM: age \(v.age.map(String.init) ?? "?"), \(v.gender), \(v.deceased ? "deceased" : "living"); \(v.occupation); \(v.relationship); harm: \(v.harm.joined(separator: " | ")); impact: \(v.impactStatement ?? "-")") }
             for e in c.evidence { out.append("EV \(e.side == .prosecution ? "S" : "D") \(e.title): \(e.detail)") }
             for w in c.witnesses {

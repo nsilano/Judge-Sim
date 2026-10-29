@@ -391,6 +391,7 @@ enum StoryCases {
             defenseOpening: "{DL} bought a laptop that was too cheap to be honest, then walked it into a pawn shop with a license and a thumbprint. That's what an innocent fool does. The rest of the State's case is a nightlight and three seconds.",
             prosecutionClosing: "The laptop, the lineup, the shoe size, the phone tower, and a story about a man in a red truck nobody can find. Put together, it's {DL}.",
             defenseClosing: "Seventy percent from a nightlight. A shoe size half the men in the county wear. A tower that covers {DL}'s own bed. And video that would have settled this, never collected. That's reasonable doubt.",
+            victim: VictimFacts(relationship: "Strangers before the burglary.", harm: ["No physical injury. Woke to a stranger in the hallway; says she no longer sleeps through the night."], restitution: 900, restitutionBasis: "the wallet and its cash, the prescription, and the pried-open back door"),
             alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Phone and Gas Station Records", detail: "{DL}'s phone stayed on the home Wi-Fi from 11:40 p.m. until 6:15 the next morning. The Kwik Fuel's camera, two days later, shows {DL} handing cash to a man at the tailgate of a red pickup and walking away with a laptop.", kind: .digital),
                                    breaks: AlibiCheck.Finding(title: "Phone Location Records", detail: "Records obtained by warrant show {DL}'s phone dropping off the home Wi-Fi after 1 a.m., connecting to the tower that serves the duplex's block for about forty minutes around the break-in, and returning home before four.", kind: .digital))
         )
@@ -733,7 +734,7 @@ enum StoryCases {
             prosecutionClosing: "A note and a video, both arranged by the person taking the money, don't make it a free choice. Undue influence is exactly this.",
             defenseClosing: "The State's own investigator says capacity isn't all or nothing and that kindness was real. On this record there's reasonable doubt that {DL} deceived or overpowered anyone.",
             genders: ["D": .female, "V": .female],
-            victim: VictimFacts(occupation: "Retired textile mill supervisor", relationship: "The defendant was the victim's home health aide.", family: "Widowed; a niece in Ohio."),
+            victim: VictimFacts(occupation: "Retired textile mill supervisor", relationship: "The defendant was the victim's home health aide.", family: "Widowed; a niece in Ohio.", harm: ["No physical injury. Most of her savings are gone."], restitution: 68000, restitutionBasis: "the $68,000 that left her savings, including the car"),
             employer: "{AGENCY}"
         )
     )
@@ -953,7 +954,8 @@ enum StoryCases {
             prosecutionOpening: "One text: 'Cabinets are already on order.' It wasn't true, {D} knew the account was closed, and {V} paid $14,500 because of it.",
             defenseOpening: "Forty-one finished kitchens. A supplier bankruptcy. A second mortgage. {DL} made promises {D.he} couldn't keep, but believed {D.he} could. Broken promises are for civil court.",
             prosecutionClosing: "Intent is judged at the moment of the lie. {DL} knew there was no account, said the cabinets were ordered, and took the money for something else.",
-            defenseClosing: "If {DL} believed another supplier would come through, that text wasn't a knowing lie. The State never pulled the phone records that would have settled it."
+            defenseClosing: "If {DL} believed another supplier would come through, that text wasn't a knowing lie. The State never pulled the phone records that would have settled it.",
+            victim: VictimFacts(relationship: "A customer of the defendant's remodeling company.", harm: ["No physical injury. Paid a $14,500 deposit for cabinets that were never ordered."], restitution: 14500, restitutionBasis: "her $14,500 deposit")
         )
     )
 
@@ -1202,6 +1204,7 @@ enum StoryCases {
             defenseOpening: "The State's case rides on {ALT}, who got years off a prison term for naming somebody, and who texted that the partner was {COUSIN}. Nobody ever looked for {COUSIN}.",
             prosecutionClosing: "Accomplice testimony is scrutinized, and here it's corroborated: the phone near the house, the silence during the robbery, the zip ties in the trunk.",
             defenseClosing: "The court should view a bargained-for accomplice with great caution. Strip away {ALT}, and the State has a cell tower that covers {DL}'s bed and zip ties from a hardware store.",
+            victim: VictimFacts(relationship: "Strangers before the robbery.", harm: ["No physical injury. Held at gunpoint with his wrists zip-tied, alongside his spouse."]),
             alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Apartment Entrance Camera", detail: "The camera over the only entrance to the girlfriend's building shows {DL} going in with a takeout bag at 9:06 p.m. and not coming out again until 6:20 the next morning.", kind: .video),
                                    breaks: AlibiCheck.Finding(title: "Apartment Entrance Camera", detail: "The camera over the girlfriend's building entrance shows {DL} walking out at 12:58 a.m. in a dark hooded jacket and coming back in at 3:41 a.m., carrying a duffel bag.", kind: .video))
         )
@@ -1537,7 +1540,7 @@ enum StoryCases {
             prosecutionClosing: "One spill doesn't make two pools six feet apart. Motive, threat, insurance, and the truck at 3:41 make this an intentional fire, and the fire marshal says so.",
             defenseClosing: "The State's own investigator can't rule out the can. Its case on who did it is a pickup with no plate. Arson is about proof, and this isn't enough.",
             when: .months([12, 1, 2]),
-            victim: VictimFacts(relationship: "The defendant's tenant.", family: "Two children, who live with the victim.")
+            victim: VictimFacts(relationship: "The defendant's tenant.", family: "Two children, who live with the victim.", harm: ["No physical injury. She and her two children escaped the fire; they lost everything they owned."], restitution: 14000, restitutionBasis: "clothing, furniture, and belongings lost in the fire")
         )
     )
 }

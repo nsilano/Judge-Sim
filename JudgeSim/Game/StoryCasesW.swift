@@ -92,7 +92,8 @@ extension StoryCases {
             prosecutionOpening: "One person counted the money, signed for it, and carried it to the bank. A third of it never got there.",
             defenseOpening: "Bad bookkeeping by a volunteer is not a crime.",
             prosecutionClosing: "Sloppy records lose receipts. They don't put $41,000 in your own account on Fridays.",
-            defenseClosing: "Nobody can tell you where the money went. That's reasonable doubt."
+            defenseClosing: "Nobody can tell you where the money went. That's reasonable doubt.",
+            victim: VictimFacts(occupation: "Commander of VFW Post 2209", relationship: "The post commander; the defendant was the post's quartermaster.", restitution: 74000, restitutionBasis: "the $74,000 missing from the post's bingo deposits")
         )
     )
 
@@ -272,7 +273,8 @@ extension StoryCases {
             defenseOpening: "A threat to gut a man, a knife on the belt, and one swing to stay alive.",
             prosecutionClosing: "Two witnesses saw empty hands. Words don't justify a fractured skull.",
             defenseClosing: "The State has to prove beyond a reasonable doubt that this wasn't self-defense. A threat and an unsnapped knife make that impossible.",
-            genders: ["V": .male]
+            genders: ["V": .male],
+            victim: VictimFacts(relationship: "Strangers; they argued over the boat ramp.")
         )
     )
 

@@ -89,7 +89,8 @@ extension StoryCases {
             defenseOpening: "The man behind this is named Ray, and nobody went looking for him.",
             prosecutionClosing: "Ray is a name on a text. The account, the cash, and the handwriting are {DL}'s.",
             defenseClosing: "The handwriting expert said 'probably.' That isn't proof beyond a reasonable doubt.",
-            genders: ["V": .female]
+            genders: ["V": .female],
+            victim: VictimFacts(relationship: "The defendant once mowed her lot.", restitution: 62000, restitutionBasis: "the $62,000 from the sale of her land")
         )
     )
 
@@ -183,7 +184,8 @@ extension StoryCases {
             prosecutionClosing: "The camera caught the words and the barrel rising. That's enough.",
             defenseClosing: "Nobody can see where the gun was pointed. That's reasonable doubt.",
             when: .window(month: 10, days: 31...31),
-            genders: ["D": .male]
+            genders: ["D": .male],
+            victim: VictimFacts(relationship: "A trick-or-treater; no prior contact with the defendant.", restitution: 0)
         )
     )
 
@@ -444,7 +446,9 @@ extension StoryCases {
             prosecutionClosing: "Grief doesn't sign a dead woman's name.",
             defenseClosing: "Intent to conceal is an element. Illness isn't intent.",
             genders: ["V": .female],
-            residence: "Lived in {VL}'s house on {STREET} in {HOOD}."
+            victim: VictimFacts(relationship: "The defendant's mother; they lived together."),
+            residence: "Lived in {VL}'s house on {STREET} in {HOOD}.",
+            sameSurname: true
         )
     )
 }

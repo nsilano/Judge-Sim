@@ -98,7 +98,8 @@ extension StoryCases {
             prosecutionOpening: "{VL} never raised a hand. {D} threw a trained punch, and {VL} never woke up.",
             defenseOpening: "A drunk stranger stepped in close and threatened {DL}. {DL} threw one punch and then knelt in the street trying to save that stranger's life.",
             prosecutionClosing: "Words don't justify a punch from a trained fighter.",
-            defenseClosing: "{DL} reasonably believed {D.he} was about to be hit. The law doesn't require waiting for the first blow."
+            defenseClosing: "{DL} reasonably believed {D.he} was about to be hit. The law doesn't require waiting for the first blow.",
+            victim: VictimFacts(relationship: "Strangers before that night.")
         )
     )
 
@@ -195,7 +196,7 @@ extension StoryCases {
             defenseOpening: "A stolen phone, an Android {DL} doesn't own, and a network shared by two hundred units.",
             prosecutionClosing: "The threat and the access point to one person.",
             defenseClosing: "The device that posted them wasn't {DL}'s.",
-            victim: VictimFacts(relationship: "A former partner of the defendant; together two years.")
+            victim: VictimFacts(relationship: "A former partner of the defendant; together two years.", restitution: 3200, restitutionBasis: "counseling costs")
         )
     )
 

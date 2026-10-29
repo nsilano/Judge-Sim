@@ -311,7 +311,9 @@ extension StoryCases {
             defenseOpening: "{DL} is a thief and a liar, and will answer for that. But no blood, no residue, no rifle, and a farmhand nobody checked. That's not proof of murder.",
             prosecutionClosing: "Only a killer needs that lie.",
             defenseClosing: "A lie about where you were is not proof of what you did.",
-            victim: VictimFacts(relationship: "Married to the defendant.")
+            victim: VictimFacts(relationship: "Married to the defendant."),
+            residence: "The family's farm outside {HOOD}.",
+            yearsAtJob: 22
         )
     )
 

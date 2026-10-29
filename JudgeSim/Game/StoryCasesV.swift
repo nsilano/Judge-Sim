@@ -106,7 +106,8 @@ extension StoryCases {
             defenseOpening: "A terrible crime, and felony death by vehicle. Not murder.",
             prosecutionClosing: "{D.He} knew exactly what drunk driving does. {D.He}'d signed it three times.",
             defenseClosing: "Recklessness is not malice.",
-            genders: ["V": .female]
+            genders: ["V": .female],
+            victim: VictimFacts(relationship: "Strangers.")
         )
     )
 
@@ -207,7 +208,7 @@ extension StoryCases {
             prosecutionClosing: "He took responsibility for knowing the wires. That's what makes it his.",
             defenseClosing: "Two men chose a crime. Only one chose to cut.",
             genders: ["D": .male, "V": .male],
-            victim: VictimFacts(relationship: "The defendant's partner in the theft and a longtime friend.")
+            victim: VictimFacts(relationship: "The defendant's partner in the theft and a longtime friend.", restitution: 9000, restitutionBasis: "funeral and burial expenses")
         )
     )
 
@@ -515,6 +516,7 @@ extension StoryCases {
             prosecutionClosing: "Planning a kidnapping is committing one.",
             defenseClosing: "Using someone's phone doesn't make them guilty.",
             genders: ["D": .female, "V": .male],
+            victim: VictimFacts(harm: ["Held at gunpoint and driven to three ATMs over four hours, then left zip-tied in a field."]),
             employer: "a nail salon in {HOOD}"
         )
     )

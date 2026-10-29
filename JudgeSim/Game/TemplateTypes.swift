@@ -173,6 +173,8 @@ struct StoryExtras {
     /// Where it happened, when the case names a business it only mentions (where the defendant worked that night)
     /// or a place with no token (a lake cabin, a stretch of road).
     var scene: String? = nil
+    /// The victim is family who shares the defendant's last name (a father and his sons).
+    var sameSurname = false
 }
 
 /// What a written case says about its victim, so the victim's profile matches the story.
@@ -196,6 +198,9 @@ struct VictimFacts {
     var family: String? = nil
     var harm: [String]? = nil
     var record: String? = nil
+    /// What the State asks the defendant to repay this victim, and for what; 0 when there's nothing to repay.
+    var restitution: Int? = nil
+    var restitutionBasis: String? = nil
 }
 
 enum StoryDate {

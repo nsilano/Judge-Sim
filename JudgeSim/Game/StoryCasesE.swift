@@ -103,7 +103,7 @@ extension StoryCases {
             defenseOpening: "{VL} invited {DL} to talk, got in willingly, and walked back to the car from a rest stop. That's not kidnapping.",
             prosecutionClosing: "Consent to talk in a parking lot isn't consent to a five-hour drive with a threat.",
             defenseClosing: "The State has to prove restraint beyond a reasonable doubt. The rest stop shows otherwise.",
-            victim: VictimFacts(relationship: "A former partner of the defendant.")
+            victim: VictimFacts(relationship: "A former partner of the defendant.", restitution: 900, restitutionBasis: "his phone, which was never returned, and lost wages")
         )
     )
 
@@ -200,7 +200,8 @@ extension StoryCases {
             prosecutionOpening: "Access to {V}'s mail and four stolen laptops in {D}'s store.",
             defenseOpening: "Laptops from liquidation pallets, a mail thief on the route, and no proof {DL} ever touched {VL}'s identity.",
             prosecutionClosing: "The laptops tie it to {DL}.",
-            defenseClosing: "The laptops tie it to a liquidator, not to a crime by {DL}."
+            defenseClosing: "The laptops tie it to a liquidator, not to a crime by {DL}.",
+            victim: VictimFacts(relationship: "Next-door neighbor of the defendant; they share a cluster mailbox.", harm: ["No physical injury. Five credit cards were opened in his name; his credit took months to repair."], restitution: 23000, restitutionBasis: "the $23,000 charged on cards opened in his name")
         )
     )
 
@@ -392,7 +393,8 @@ extension StoryCases {
             prosecutionOpening: "Two pills for forty dollars, and fentanyl enough to kill.",
             defenseOpening: "An addict sharing pills with a friend at cost, both believing they were real. And a death the medical examiner calls combined.",
             prosecutionClosing: "Without the fentanyl, {VL} lives. That's causation.",
-            defenseClosing: "The law aims at dealers. {DL} is a sick friend."
+            defenseClosing: "The law aims at dealers. {DL} is a sick friend.",
+            victim: VictimFacts(occupation: "Restaurant server", relationship: "A longtime friend of the defendant and a fellow server.")
         )
     )
 

@@ -107,7 +107,8 @@ extension StoryCases {
             defenseClosing: "Suspicion, however strong, isn't proof beyond a reasonable doubt.",
             when: .thanksgiving,
             genders: ["V": .female],
-            victim: VictimFacts(relationship: "Married to the defendant.")
+            victim: VictimFacts(relationship: "Married to the defendant."),
+            residence: "The home in {HOOD} the defendant shared with the victim."
         )
     )
 
@@ -214,7 +215,7 @@ extension StoryCases {
             defenseOpening: "A founder who believed, who never sold a share, and who was misled by the person whose job was to tell the truth about the technology.",
             prosecutionClosing: "The forged letter alone proves {DL} knew.",
             defenseClosing: "The State must prove {DL} knew the statements were false. The chief engineer told {DL} otherwise.",
-            victim: VictimFacts(age: 71, occupation: "Retired dentist")
+            victim: VictimFacts(age: 71, occupation: "Retired dentist", relationship: "An investor in the defendant's company.", harm: ["No physical injury. Lost about a third of his retirement savings."], restitution: 400000, restitutionBasis: "his $400,000 investment")
         )
     )
 
@@ -311,6 +312,7 @@ extension StoryCases {
             defenseOpening: "A year of {DL} begging {VL} to get help, then two young people both drowning. Cruel words aren't the cause the law requires.",
             prosecutionClosing: "{DL} had the power to stop it with one call, and chose not to.",
             defenseClosing: "{VL}'s illness came long before {DL}. Causation isn't proven beyond a reasonable doubt.",
+            victim: VictimFacts(relationship: "The defendant's partner of two years."),
             family: "Single, no children. The victim in this case was the defendant's partner."
         )
     )
@@ -404,6 +406,7 @@ extension StoryCases {
             defenseOpening: "A violent detainee, a chaotic extraction, cocaine, and an enlarged heart. The State wants you to see six minutes and stop thinking.",
             prosecutionClosing: "{DL} ignored training {D.he} taught. That's malice in the law's sense.",
             defenseClosing: "The medical evidence is divided. That's reasonable doubt about causation and intent.",
+            victim: VictimFacts(relationship: "Held in the detention center where the defendant was a sergeant."),
             employer: "Hollis County Detention Center"
         )
     )

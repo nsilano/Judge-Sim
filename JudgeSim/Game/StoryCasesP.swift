@@ -101,7 +101,11 @@ extension StoryCases {
             defenseOpening: "Behind the money was a house of horror. Two boys believed they were going to die.",
             prosecutionClosing: "Fear doesn't reload. Fear doesn't go shopping.",
             defenseClosing: "Honest fear, even if unreasonable, makes this manslaughter.",
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(relationship: "The defendant's father."),
+            family: "Single, no children.",
+            residence: "Lived in his parents' home in {HOOD}.",
+            sameSurname: true
         )
     )
 
@@ -203,7 +207,10 @@ extension StoryCases {
             defenseOpening: "A man in over his head who never stopped trying to make his clients whole.",
             prosecutionClosing: "Every fake statement was a new lie to keep the money flowing.",
             defenseClosing: "Intent to repay is not intent to defraud.",
-            genders: ["D": .male]
+            genders: ["D": .male],
+            victim: VictimFacts(relationship: "An investor in the defendant's fund.", harm: ["No physical injury. Lost everything he had invested."], restitution: 14000000, restitutionBasis: "the $14 million more than 200 investors put into a fund that never existed"),
+            residence: "Owns a house in {CITY} and a lake house.",
+            yearsAtJob: 24
         )
     )
 
@@ -300,7 +307,8 @@ extension StoryCases {
             defenseOpening: "A broken nose, a head on concrete, and a split-second decision.",
             prosecutionClosing: "{DL} created the danger. You can't start the fight and then claim you were afraid of it.",
             defenseClosing: "Whoever started it, a person being beaten on concrete may defend his life.",
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(relationship: "Strangers; he was staying with his father's fiancée in the community.")
         )
     )
 
