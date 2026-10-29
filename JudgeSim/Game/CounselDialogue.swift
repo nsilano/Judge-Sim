@@ -431,7 +431,7 @@ enum CounselDialogue {
         }
         if let cell = unit.misdemeanorCell {
             return side == .prosecution
-                ? "The State asks for \(cell.maxDays) days" + (cell.dispositions.contains(.active) ? ", active." : ", suspended, on supervised probation.")
+                ? "The State asks for \(cell.maxDays) day\(cell.maxDays == 1 ? "" : "s")" + (cell.dispositions.contains(.active) ? ", active." : ", suspended, on supervised probation.")
                 : "We ask for a short suspended sentence on unsupervised probation, or a prayer for judgment continued."
         }
         return "We'll defer to the court."
@@ -532,7 +532,7 @@ enum CounselDialogue {
         if bg.custodyDays > 0 {
             q.append(CounselQuestion(id: "sen.def.credit", side: .defense,
                                      question: "How much time has your client already served?",
-                                     answer: d.opener + "\(bg.custodyDays) days in the Hollis County jail. We ask that it be credited, as the statute requires."))
+                                     answer: d.opener + "\(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s") in the Hollis County jail. We ask that it be credited, as the statute requires."))
         }
         return q
     }

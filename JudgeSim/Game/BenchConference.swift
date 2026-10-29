@@ -132,7 +132,7 @@ enum BenchConference {
                                                 "The chart requires active time, so we're asking for \(low) months, the bottom of the mitigated range, and credit for time served."])))
             } else if let cell = unit.misdemeanorCell {
                 lines.append(Line(speaker: pros, side: .prosecution,
-                                  text: Allocutions.stateArgument(c, request: "The State asks for \(cell.maxDays) days" + (cell.dispositions.contains(.active) ? ", active." : ", suspended, with supervised probation."),
+                                  text: Allocutions.stateArgument(c, request: "The State asks for \(cell.maxDays) day\(cell.maxDays == 1 ? "" : "s")" + (cell.dispositions.contains(.active) ? ", active." : ", suspended, with supervised probation."),
                                                                   plea: r.pleaAccepted == true)))
                 lines.append(Line(speaker: def, side: .defense,
                                   text: "We'd ask for unsupervised probation, Judge. This is a misdemeanor and \(dl) has learned from it."))

@@ -31,7 +31,7 @@ private struct UnderInvestigation: View {
                     Text(item.offense.prefix(1).uppercased() + String(item.offense.dropFirst()) + " in " + item.town)
                         .font(.callout)
                     Spacer()
-                    Text(days == 1 ? "1 day" : "\(days) days").font(.caption).foregroundStyle(.secondary)
+                    Text(days == 1 ? "1 day" : "\(days) day\(days == 1 ? "" : "s")").font(.caption).foregroundStyle(.secondary)
                 }
             }
         }

@@ -110,6 +110,12 @@ extension String {
         if word.count >= 2 && word.allSatisfy({ $0.isUppercase || !$0.isLetter }) {
             return ("AEFHILMNORSX".contains(firstChar) ? "an " : "a ") + self
         }
+        // A lone adjective takes no article: "21, unemployed," not "21, an unemployed,".
+        if ["unemployed", "self-employed", "retired", "disabled"].contains(lowercased()) { return self }
+        // By sound: "a use-of-force expert", "a university student", "an hourly worker".
+        let l = lowercased()
+        if ["use", "uni", "eu", "one"].contains(where: l.hasPrefix) { return "a " + self }
+        if ["hour", "honest", "honor"].contains(where: l.hasPrefix) { return "an " + self }
         return ("aeiou".contains(firstChar.lowercased()) ? "an " : "a ") + self
     }
 
@@ -177,12 +183,12 @@ enum ViolationHearings {
         let months = term.isFelony ? term.remainingFelonyMonths : 0
         let days = term.isFelony ? 0 : term.remainingDays
         let credit = term.crvCreditDays
-        let creditText = credit > 0 ? ", with credit for \(credit) days already served in confinement in response to violation" : ""
+        let creditText = credit > 0 ? ", with credit for \(credit) day\(credit == 1 ? "" : "s") already served in confinement in response to violation" : ""
         var result: Activation
         if term.isConditionalDischarge {
             let sentence = term.isFelony
                 ? "\(term.activeMonths) to \(StructuredSentencing.maximum(forMinimum: term.activeMonths, cls: cls)) months"
-                : "\(term.suspendedDays) days"
+                : "\(term.suspendedDays) day\(term.suspendedDays == 1 ? "" : "s")"
             result = Activation(months: months, days: days,
                                 text: "The court finds the conditional discharge in \(term.docket) violated, ends the deferral, and enters judgment on \(term.offense) (\(cls.shortLabel)). The defendant is sentenced to \(sentence), active\(creditText).")
             result.prior = PriorConviction(offense: term.offense, ncClass: cls, year: Calendar.current.component(.year, from: date),

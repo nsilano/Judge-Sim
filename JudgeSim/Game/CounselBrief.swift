@@ -156,7 +156,7 @@ enum CounselBrief {
             if let cell = unit.felonyCell {
                 lines.append("Chart ranges (minimum months): mitigated \(cell.mitigated.text), presumptive \(cell.presumptive.text)\(cell.aggravated.map { ", aggravated \($0.text)" } ?? ""). Dispositions allowed: \(cell.dispositionCode).")
             } else if let cell = unit.misdemeanorCell {
-                lines.append("Authorized: 1–\(cell.maxDays) days. Dispositions allowed: \(cell.dispositionCode).")
+                lines.append("Authorized: 1–\(cell.maxDays) day\(cell.maxDays == 1 ? "" : "s"). Dispositions allowed: \(cell.dispositionCode).")
             }
             lines.append("Your recommendation: \(CounselDialogue.recommendation(c, side: side, units: units, rulings: r))")
         }

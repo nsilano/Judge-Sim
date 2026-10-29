@@ -747,7 +747,7 @@ enum CaseGenerator {
         var twistKey: String?
         var chosenTwist: TwistSeed?
         let jailedDays = min(330, maxCustodyDays)
-        let jailedTime = jailedDays >= 60 ? "\(jailedDays / 30) months" : "\(jailedDays) days"
+        let jailedTime = jailedDays >= 60 ? "\(jailedDays / 30) months" : "\(jailedDays) day\(jailedDays == 1 ? "" : "s")"
         let twistPool = GenericPools.twists.filter { $0.ages.contains(defendant.age) && ($0.key != "jailed" || jailedDays >= 45) }
         if t.story == nil, rng.chance(0.5), !twistPool.isEmpty {
             let twist = rng.pick(twistPool)
@@ -871,7 +871,7 @@ enum CaseGenerator {
             }
             if twistKey == "jailed" {
                 background.custodyDays = jailedDays
-                background.bondStatus = "Held in the Hollis County jail on a $5,000 secured bond for \(jailedDays) days."
+                background.bondStatus = "Held in the Hollis County jail on a $5,000 secured bond for \(jailedDays) day\(jailedDays == 1 ? "" : "s")."
             }
             if twistKey == "rehab" && background.custodyDays > 0 {
                 background.custodyDays = 0
@@ -1017,8 +1017,8 @@ enum CaseGenerator {
         let bond = "$" + CalendarCalls.roundBond(Double(CalendarCalls.bondBase(worstClass)) * bondFactor).formatted()
         let bondStatus = inCustody
             ? (gravest && rng.chance(0.6)
-                ? "Held without bond in the Hollis County jail for \(custodyDays) days."
-                : "Held in the Hollis County jail on a \(bond) secured bond for \(custodyDays) days.")
+                ? "Held without bond in the Hollis County jail for \(custodyDays) day\(custodyDays == 1 ? "" : "s")."
+                : "Held in the Hollis County jail on a \(bond) secured bond for \(custodyDays) day\(custodyDays == 1 ? "" : "s").")
             : rng.pick(["Released on a \(bond) secured bond. Has made every court date.",
                         serious ? "Released on a \(bond) secured bond with electronic monitoring." : "Released on a written promise to appear, with electronic monitoring.",
                         "Released on a \(bond) secured bond; missed one court date early on, then was re-released."])
@@ -1252,8 +1252,8 @@ enum CaseGenerator {
             let days = min(wanted, cell?.maxDays ?? wanted)
             let activeAllowed = cell?.dispositions.contains(.active) ?? true
             districtSentence = rng.chance(0.5) || !activeAllowed
-                ? "\(days) days suspended, 12 months supervised probation"
-                : "\(days) days active"
+                ? "\(days) day\(days == 1 ? "" : "s") suspended, 12 months supervised probation"
+                : "\(days) day\(days == 1 ? "" : "s") active"
         }
 
         return CaseBackground(

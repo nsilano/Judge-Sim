@@ -219,7 +219,7 @@ struct ClassPunishmentTable: View {
                         Text("Level \(SentenceFormat.romanLevels[index])")
                             .font(.subheadline.weight(.semibold))
                             .frame(width: 70, alignment: .leading)
-                        Text("1–\(cell.maxDays) days · \(cell.dispositionCode)").font(.subheadline)
+                        Text("1–\(cell.maxDays) day\(cell.maxDays == 1 ? "" : "s") · \(cell.dispositionCode)").font(.subheadline)
                     }
                 }
                 Text("Level I: no prior convictions. II: 1–4. III: 5 or more." + (cls.maxFine.map { " Maximum fine \(SentenceFormat.dollars($0))." } ?? " Fine in the court's discretion."))

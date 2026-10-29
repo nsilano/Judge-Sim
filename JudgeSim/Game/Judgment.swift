@@ -133,8 +133,8 @@ struct ProbationConditions: Codable, Hashable {
         var lines: [String] = [supervised
             ? "Supervised probation: report as directed, submit to warrantless searches by the probation officer, remain within the jurisdiction."
             : "Unsupervised probation: commit no criminal offense and pay all monetary obligations."]
-        if specialProbationDays > 0 { lines.append("Special probation: serve \(specialProbationDays) days in the custody of the Sheriff as a condition of probation.") }
-        if houseArrestDays > 0 { lines.append("House arrest with electronic monitoring for \(houseArrestDays) days.") }
+        if specialProbationDays > 0 { lines.append("Special probation: serve \(specialProbationDays) day\(specialProbationDays == 1 ? "" : "s") in the custody of the Sheriff as a condition of probation.") }
+        if houseArrestDays > 0 { lines.append("House arrest with electronic monitoring for \(houseArrestDays) day\(houseArrestDays == 1 ? "" : "s").") }
         if communityServiceHours > 0 { lines.append("Complete \(communityServiceHours) hours of community service and pay the $250 community service fee.") }
         if drugTreatmentCourt { lines.append("Participate in and complete Hollis County Drug Treatment Court.") }
         if veteransTreatmentCourt == true { lines.append("Participate in and complete Hollis County Veterans Treatment Court, with a veteran mentor.") }
@@ -817,7 +817,7 @@ enum Judgment {
                     return "The State recommended \(cell.presumptive.low) months, the bottom of the presumptive range. You chose \(selected.minimum)."
                 }
                 if let cell = unit.misdemeanorCell, selected.minimum > misdemeanorLowEnd(cell) {
-                    return "The State recommended \(misdemeanorLowEnd(cell)) days, the low end of the range. You chose \(selected.minimum) days."
+                    return "The State recommended \(misdemeanorLowEnd(cell)) days, the low end of the range. You chose \(selected.minimum) day\(selected.minimum == 1 ? "" : "s")."
                 }
             case "suspended":
                 if selected.disposition == .active {
@@ -952,7 +952,7 @@ enum Judgment {
                     }
                 } else if let cell = unit.misdemeanorCell {
                     if selected.minimum > cell.maxDays {
-                        add("\(title): \(selected.minimum) days exceeds the \(cell.maxDays)-day maximum for this class and level.", against: true, term: true)
+                        add("\(title): \(selected.minimum) day\(selected.minimum == 1 ? "" : "s") exceeds the \(cell.maxDays)-day maximum for this class and level.", against: true, term: true)
                     }
                     if unit.sentencingClass == .misd3 && provenPriors.count <= 3 && selected.minimum > 0 {
                         add("\(title): with no more than three prior convictions, a Class 3 misdemeanor judgment may consist only of a fine (G.S. 15A-1340.23(d)).", against: true, term: true)
@@ -966,9 +966,9 @@ enum Judgment {
                     }
                 } else if unit.isDWI, let level = dwiLevel(selected) {
                     if selected.minimum > level.maxDays {
-                        add("\(title): \(selected.minimum) days exceeds the \(level.maxDays)-day maximum for \(level.label) impaired driving (G.S. 20-179).", against: true, term: true)
+                        add("\(title): \(selected.minimum) day\(selected.minimum == 1 ? "" : "s") exceeds the \(level.maxDays)-day maximum for \(level.label) impaired driving (G.S. 20-179).", against: true, term: true)
                     } else if selected.minimum < level.minDays {
-                        add("\(title): \(selected.minimum) days is below the \(level.minDays)-day minimum for \(level.label) impaired driving (G.S. 20-179).", against: false, term: true)
+                        add("\(title): \(selected.minimum) day\(selected.minimum == 1 ? "" : "s") is below the \(level.minDays)-day minimum for \(level.label) impaired driving (G.S. 20-179).", against: false, term: true)
                     }
                     if r.money.fine > level.maxFine {
                         add("\(title): the fine exceeds the \(SentenceFormat.dollars(level.maxFine)) maximum for \(level.label) (G.S. 20-179).", against: true)
@@ -1023,7 +1023,7 @@ enum Judgment {
                 let total = misdemeanors.map { choice($0, r).minimum }.reduce(0, +)
                 let cap = 2 * (misdemeanors.compactMap { $0.misdemeanorCell?.maxDays }.max() ?? 0)
                 if cap > 0 && total > cap {
-                    add("Consecutive misdemeanor sentences total \(total) days, more than twice the \(cap / 2)-day maximum for the most serious offense.", against: true, term: true)
+                    add("Consecutive misdemeanor sentences total \(total) day\(total == 1 ? "" : "s"), more than twice the \(cap / 2)-day maximum for the most serious offense.", against: true, term: true)
                 }
             }
             // Factors only matter when they support a sentence outside the presumptive range.
@@ -1111,7 +1111,7 @@ enum Judgment {
         if unit.isFelony {
             return "\(choice.minimum) to \(maximum(for: unit, choice: choice)) months"
         }
-        return "\(choice.minimum) days"
+        return "\(choice.minimum) day\(choice.minimum == 1 ? "" : "s")"
     }
 
     static func judgmentLines(for unit: SentencingUnit, choice: SentenceChoice) -> [String] {
@@ -1130,7 +1130,7 @@ enum Judgment {
         case .active?:
             lines.append(unit.isFelony
                 ? "Minimum \(choice.minimum), maximum \(maximum(for: unit, choice: choice)) months. Active: committed to the custody of the N.C. Department of Adult Correction."
-                : "\(choice.minimum) days. Active: committed to the custody of the Hollis County Sheriff.")
+                : "\(choice.minimum) day\(choice.minimum == 1 ? "" : "s"). Active: committed to the custody of the Hollis County Sheriff.")
         case .some where unit.isDWI:
             lines.append("\(term), suspended: \(choice.probationMonths) months of probation.")
         case let disposition?:
@@ -1162,7 +1162,7 @@ enum Judgment {
             if felony {
                 lines.append("Maximum term: \(maximumText). Earned time can move release toward the minimum, never below it; post-release supervision follows release.")
             }
-            if creditDays > 0 { lines.append("Credit for \(creditDays) days already served in pretrial confinement (G.S. 15-196.1).") }
+            if creditDays > 0 { lines.append("Credit for \(creditDays) day\(creditDays == 1 ? "" : "s") already served in pretrial confinement (G.S. 15-196.1).") }
             if earliest == latest {
                 lines.append("Projected release: \(SentenceFormat.date(earliest)).")
             } else {
@@ -1434,7 +1434,7 @@ enum Judgment {
                 } else if let projection = custodyProjection(c, r, units: sentencingUnits, from: date) {
                     lines.insert(contentsOf: projection.lines, at: 0)
                 } else if let days = bg?.custodyDays, days > 0 {
-                    lines.insert("Credit for \(days) days of pretrial confinement (G.S. 15-196.1).", at: 0)
+                    lines.insert("Credit for \(days) day\(days == 1 ? "" : "s") of pretrial confinement (G.S. 15-196.1).", at: 0)
                 }
                 // Supervision follows release only from a felony term that ends; split terms are on probation instead.
                 let releasedFelony = sentencingUnits.contains { unit in
@@ -1596,7 +1596,7 @@ enum Judgment {
             case .revoke:
                 let activation = ViolationHearings.activation(existing, county: county, date: date)
                 revokedMonths = activation.months + Int((Double(activation.days) / 30).rounded(.up))
-                revokedText = activation.months > 0 ? "\(activation.months) months" : "\(activation.days) days"
+                revokedText = activation.months > 0 ? "\(activation.months) months" : "\(activation.days) day\(activation.days == 1 ? "" : "s")"
                 if let prior = activation.prior { newPriors.append(prior) }
                 revokedPostRelease = activation.postRelease
                 var text = activation.text
@@ -1723,7 +1723,7 @@ enum Judgment {
             }
             newProbation = term
             if k.specialProbationDays > 0 {
-                newsExtras.append("The sentence includes \(k.specialProbationDays) days in jail as a condition of probation.")
+                newsExtras.append("The sentence includes \(k.specialProbationDays) day\(k.specialProbationDays == 1 ? "" : "s") in jail as a condition of probation.")
             }
             if k.drugTreatmentCourt { newsExtras.append("The defendant was ordered into Drug Treatment Court.") }
             if k.communityServiceHours > 0 { newsExtras.append("\(k.communityServiceHours) hours of community service were ordered.") }
@@ -1736,7 +1736,7 @@ enum Judgment {
             var parts: [String] = []
             if let projection {
                 parts.append("Minimum \(projection.minimumText)" + (projection.usesASR ? " under Advanced Supervised Release" : "") + "; maximum \(projection.maximumText).")
-                if projection.creditDays > 0 { parts.append("Less \(projection.creditDays) days of jail credit.") }
+                if projection.creditDays > 0 { parts.append("Less \(projection.creditDays) day\(projection.creditDays == 1 ? "" : "s") of jail credit.") }
                 if projection.latest > projection.earliest {
                     parts.append("Release no earlier than \(SentenceFormat.shortDate(projection.earliest)), no later than \(SentenceFormat.shortDate(projection.latest)).")
                 }
@@ -1748,7 +1748,7 @@ enum Judgment {
         }
 
         if let projection, releaseOn > date, projection.creditDays > 0 || projection.usesASR {
-            newsExtras.append("Counting \(projection.creditDays > 0 ? "\(projection.creditDays) days already served" : "Advanced Supervised Release"), the earliest possible release is \(SentenceFormat.date(projection.earliest)).")
+            newsExtras.append("Counting \(projection.creditDays > 0 ? "\(projection.creditDays) day\(projection.creditDays == 1 ? "" : "s") already served" : "Advanced Supervised Release"), the earliest possible release is \(SentenceFormat.date(projection.earliest)).")
         }
 
         // Post-release supervision that follows today's active felony term (G.S. 15A-1368.2): 12 months for
@@ -1815,12 +1815,12 @@ enum Judgment {
                 let low = minima.reduce(0, +), high = maxima.reduce(0, +)
                 newsSentence = activeFelony
                     ? "consecutive sentences totaling \(low) to \(high) months in prison"
-                    : "consecutive sentences totaling \(low) days in jail"
+                    : "consecutive sentences totaling \(low) day\(low == 1 ? "" : "s") in jail"
             } else {
                 let low = minima.max() ?? 0, high = maxima.max() ?? 0
                 newsSentence = activeFelony
                     ? "concurrent sentences, the longest \(low) to \(high) months in prison"
-                    : "concurrent sentences, the longest \(low) days in jail"
+                    : "concurrent sentences, the longest \(low) day\(low == 1 ? "" : "s") in jail"
             }
             if !suspendedTerms.isEmpty || !afterActiveTerms.isEmpty { newsSentence += ", followed by \(probationMonths) months of probation" }
         } else if probationMonths > 0 {

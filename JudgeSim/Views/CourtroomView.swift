@@ -22,7 +22,7 @@ struct CourtroomView: View {
         var parts: [String] = []
         if times > 0 { parts.append("Already continued \(times) time\(times == 1 ? "" : "s").") }
         if let days = c.background?.custodyDays, days > 0 {
-            parts.append("\(c.defendant.lastName) is in jail (\(days) days so far); every week adds to that, and to the speedy-trial claim.")
+            parts.append("\(c.defendant.lastName) is in jail (\(days) day\(days == 1 ? "" : "s") so far); every week adds to that, and to the speedy-trial claim.")
         }
         if times >= 1 { parts.append("Each delay makes it likelier a witness can't be found.") }
         if c.victimName != nil && times >= 1 { parts.append("The victim's family has been to every setting.") }
