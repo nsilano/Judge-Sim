@@ -41,6 +41,9 @@ struct CareerStats: Codable, Hashable {
     var orderViolations: Int? = nil
     /// Cases whose wait for a trial date made the news or did harm (optional for older saves).
     var delayedCases: Int? = nil
+    /// How the public has taken the court's rulings in cases it followed: up when the outcome matched what it wanted,
+    /// down when it didn't. Fades by half each New Year.
+    var communityStanding: Int? = nil
     /// Cases this judge handed to another judge.
     var delegated: Int? = nil
 }
@@ -318,6 +321,7 @@ final class GameState: ObservableObject {
                           prominence: 1))
         }
         var survey = Reputation.survey(year: oldYear, stats: stats, appeals: appeals, history: history)
+        defer { stats.communityStanding = (stats.communityStanding ?? 0) / 2 }
         if let index = reputation.firstIndex(where: { $0.year == oldYear }) {
             // The election-year survey is already on file; bring it up to date and keep the election result.
             survey.comments += reputation[index].comments.filter { $0 == Self.unseatedMarker }
@@ -432,11 +436,11 @@ final class GameState: ObservableObject {
     }
 
     /// Records an order for arrest the court signed, so its status can be followed until the case is heard.
-    private func issueArrestOrder(for c: CourtCase, issued: Date, servedOn: Date) {
+    private func issueArrestOrder(for c: CourtCase, issued: Date, servedOn: Date, how: String? = nil, heldCase: CourtCase? = nil) {
         let bond = c.background.map { _ in "a doubled secured bond" } ?? "a secured bond"
         arrestOrders.insert(ArrestOrder(personID: c.defendant.personID, personName: c.defendant.name, docket: c.docket,
                                         offense: c.charges.first?.law.title ?? "the charges", issued: issued,
-                                        servedOn: max(servedOn, issued), bond: bond), at: 0)
+                                        servedOn: max(servedOn, issued), bond: bond, how: how, heldCase: heldCase), at: 0)
         if arrestOrders.count > 60 { arrestOrders.removeLast(arrestOrders.count - 60) }
     }
 
@@ -1929,6 +1933,39 @@ final class GameState: ObservableObject {
                       reason: weeks <= 2 ? "The parties need time to prepare" : "Discovery is still being exchanged",
                       continuances: continuances)
         }
+        /// An order for arrest plays out: most people are picked up within weeks, some turn themselves in, some run and
+        /// are caught months later, often out of state, and a few are never found. The case waits for the arrest.
+        func orderForArrest(_ c: CourtCase, missed: String, note: String) {
+            var held = c
+            if var bg = held.background {
+                bg.onRelease = false
+                bg.custodyDays = max(1, bg.custodyDays)
+                bg.bondStatus = "\(missed); order for arrest outstanding. Once served, held on a doubled secured bond."
+                held.background = bg
+            }
+            let cal = CourtCalendar.calendar
+            let roll = rng.int(1...100)
+            if roll <= 80 {
+                let surrendered = roll > 65
+                let weeksOut = surrendered ? rng.int(1...3) : rng.int(2...5)
+                let arrested = cal.date(byAdding: .day, value: max(1, 7 * weeksOut - rng.int(3...6)), to: call.date) ?? call.date
+                let how = surrendered ? "Turned in at the Hollis County jail"
+                    : rng.pick(["Arrested at home by deputies", "Arrested at work by deputies", "Picked up by deputies on a traffic stop",
+                                "Arrested by deputies at a relative's house"])
+                // Jail credit runs from the arrest, not from the missed court date.
+                held.sessionDate = arrested
+                setFor(held, weeks: weeksOut + 1, note: note)
+                issueArrestOrder(for: c, issued: call.date, servedOn: arrested, how: how)
+            } else if roll <= 95 {
+                let found = cal.date(byAdding: .day, value: rng.int(45...270), to: call.date) ?? call.date
+                let how = rng.pick(["Arrested in South Carolina and returned to Hollis County", "Found in Virginia and extradited",
+                                    "Arrested on a traffic stop two counties over", "Caught by the U.S. Marshals fugitive task force",
+                                    "Arrested in Georgia on the warrant and returned"])
+                issueArrestOrder(for: c, issued: call.date, servedOn: found, how: how, heldCase: held)
+            } else {
+                issueArrestOrder(for: c, issued: call.date, servedOn: .distantFuture, heldCase: held)
+            }
+        }
         /// To be tried now: today, if the day has room under the judge's limits, or the next day that does.
         func thisWeek(_ c: CourtCase, note: String, continuances: Int = 0) {
             if keepDate(c, note: note.replacingOccurrences(of: "; the case is tried this week", with: "")
@@ -2001,20 +2038,8 @@ final class GameState: ObservableObject {
             case .failureToAppear:
                 switch choice {
                 case 0:
-                    // Picked up on the order for arrest some weeks later, and held.
-                    var held = c
-                    let weeksOut = rng.int(2...5)
-                    let arrested = CourtCalendar.calendar.date(byAdding: .day, value: 7 * weeksOut - rng.int(3...10), to: call.date) ?? call.date
-                    if var bg = held.background {
-                        bg.onRelease = false
-                        bg.custodyDays = max(1, bg.custodyDays)
-                        bg.bondStatus = "Failed to appear at the calendar call on \(heard); order for arrest outstanding. Once served, held on a doubled secured bond."
-                        held.background = bg
-                    }
-                    // Jail credit runs from the arrest, not from the missed court date.
-                    held.sessionDate = arrested
-                    setFor(held, weeks: weeksOut, note: "Order for arrest issued at the calendar call on \(heard) after a failure to appear.")
-                    issueArrestOrder(for: c, issued: call.date, servedOn: arrested)
+                    orderForArrest(c, missed: "Failed to appear at the calendar call on \(heard)",
+                                   note: "Order for arrest issued at the calendar call on \(heard) after a failure to appear.")
                 case 1:
                     if rng.chance(0.6) {
                         var appeared = c
@@ -2024,18 +2049,8 @@ final class GameState: ObservableObject {
                         }
                         thisWeek(appeared, note: "Appeared at the afternoon session after missing the morning call; tried this week.")
                     } else {
-                        var held = c
-                        if var bg = held.background {
-                            bg.onRelease = false
-                            bg.custodyDays = max(1, bg.custodyDays)
-                            bg.bondStatus = "Never appeared on \(heard); order for arrest outstanding. Once served, held on a doubled secured bond."
-                            held.background = bg
-                        }
-                        let weeksOut = rng.int(2...5)
-                        // Jail credit runs from the arrest, not from the missed court date.
-                        held.sessionDate = CourtCalendar.calendar.date(byAdding: .day, value: 7 * weeksOut - rng.int(3...10), to: call.date) ?? call.date
-                        setFor(held, weeks: weeksOut, note: "Never appeared on \(heard); order for arrest issued after the calendar call.")
-                        issueArrestOrder(for: c, issued: call.date, servedOn: held.sessionDate)
+                        orderForArrest(c, missed: "Never appeared on \(heard)",
+                                       note: "Never appeared on \(heard); order for arrest issued after the calendar call.")
                     }
                 default:
                     setFor(c, weeks: 3, note: "Continued at the calendar call on \(heard) after a failure to appear; new notice sent.", continuances: 1)
@@ -2875,6 +2890,13 @@ final class GameState: ObservableObject {
         var verdictNews = outcome.news
         verdictNews.date = currentDate
         post(verdictNews)
+        // The community takes the ruling the way it felt going in, and remembers.
+        let reaction = Community.reaction(courtCase, convicted: outcome.convicted, active: activeImposed, position: outcome.sentencePosition,
+                                          judgeLast: judgeName.map(lastName) ?? "the judge", date: currentDate)
+        if let news = reaction.news {
+            stats.communityStanding = (stats.communityStanding ?? 0) + reaction.delta
+            post(news)
+        }
         let appellant = (outcome.appealNotice ?? "").contains("The State") ? "the State" : "the defendant"
         pending.append(contentsOf: trackAppeals(outcome.pending, docket: courtCase.docket, caption: courtCase.caption, personID: d.personID,
                                                 appellant: appellant, plea: outcome.verdictLines.contains { $0.verdictLabel.contains("plea") || $0.verdictLabel.contains("No contest") },
@@ -2952,8 +2974,9 @@ final class GameState: ObservableObject {
             arrestOrders[i].served = true
             let order = arrestOrders[i]
             post(NewsItem(date: order.servedOn, kind: .arrest,
-                          headline: "\(order.personName) arrested on order for failing to appear",
-                          body: "Deputies served an order for arrest on \(order.personName), who missed a court date in Hollis County Superior Court on a charge of \(order.offense.lowercasedPhrase). \(order.personName.components(separatedBy: " ").last ?? order.personName) is held on \(order.bond) until trial.",
+                          headline: order.heldCase != nil ? "\(order.personName), wanted since \(SentenceFormat.shortDate(order.issued)), back in custody"
+                              : "\(order.personName) arrested on order for failing to appear",
+                          body: (order.how.map { "\($0). " } ?? "") + "Deputies served an order for arrest on \(order.personName), who missed a court date in Hollis County Superior Court on a charge of \(order.offense.lowercasedPhrase). \(order.personName.components(separatedBy: " ").last ?? order.personName) is held on \(order.bond) until trial.",
                           docket: order.docket, prominence: 1))
             // The case file catches up: the defendant is now in custody on the order.
             let served = SentenceFormat.shortDate(order.servedOn)
@@ -2966,6 +2989,18 @@ final class GameState: ObservableObject {
             }
             for j in awaiting.indices { update(&awaiting[j].entry) }
             for j in scheduled.indices { update(&scheduled[j].entry) }
+            // Someone who ran: the case goes on the docket now that they're caught.
+            if var c = order.heldCase {
+                if var bg = c.background {
+                    bg.bondStatus = "\(order.how ?? "Arrested on the order for arrest") on \(served) after failing to appear on \(SentenceFormat.shortDate(order.issued)); held on \(order.bond)."
+                    c.background = bg
+                }
+                c.sessionDate = order.servedOn
+                awaitCase(c, note: "Served on the order for arrest \(served); held for trial.", on: date,
+                          earliest: CourtCalendar.calendar.date(byAdding: .day, value: 21, to: date),
+                          reason: "The defendant was just returned on the order for arrest")
+                arrestOrders[i].heldCase = nil
+            }
         }
 
         // Scheduled events

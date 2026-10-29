@@ -382,10 +382,21 @@ struct ArrestOrder: Codable, Hashable, Identifiable {
     var served = false
     /// The case was later heard or resolved.
     var resolved = false
+    /// How the person was brought in: picked up by deputies, turned themselves in, caught out of state.
+    var how: String? = nil
+    /// The case, while the person is on the run; it goes on the docket once the order is served.
+    var heldCase: CourtCase? = nil
+    /// Never found: the order stays outstanding.
+    var neverFound: Bool { servedOn > Date(timeIntervalSince1970: 4_000_000_000) }
 
     func status(on date: Date) -> String {
         if resolved { return "Served \(SentenceFormat.shortDate(servedOn)); case resolved" }
-        if served || servedOn <= date { return "Served \(SentenceFormat.shortDate(servedOn)); in custody on \(bond), awaiting trial" }
-        return "Outstanding since \(SentenceFormat.shortDate(issued)); not yet served"
+        if served || servedOn <= date {
+            return "\(how ?? "Served") \(SentenceFormat.shortDate(servedOn)); in custody on \(bond), awaiting trial"
+        }
+        // Someone not found in two months is a fugitive, and the file says so.
+        let weeksOut = Int(date.timeIntervalSince(issued) / (7 * 86_400))
+        return weeksOut >= 8 ? "Outstanding since \(SentenceFormat.shortDate(issued)); whereabouts unknown, still at large"
+            : "Outstanding since \(SentenceFormat.shortDate(issued)); not yet served"
     }
 }

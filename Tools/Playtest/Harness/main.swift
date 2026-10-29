@@ -779,6 +779,12 @@ if args.count > 1 && args[1] == "scan" {
     log("  never came up: " + stories.subtracting(heardKeys).sorted().joined(separator: ", "))
     if !continuedIDs.isEmpty { flag("\(continuedIDs.count) trial(s) continued mid-trial never came back") }
     let orders = game.people.flatMap { $0.stayAwayOrders ?? [] }
+    log("COMMUNITY: standing \(game.stats.communityStanding ?? 0) | " + Community.townTalk(standing: game.stats.communityStanding ?? 0))
+    let ao = game.arrestOrders
+    let byHow = Dictionary(grouping: ao.filter { $0.served }, by: { $0.how ?? "served (old save)" }).map { "\($0.key) \($0.value.count)" }.sorted()
+    log("ORDERS FOR ARREST: \(ao.count) issued, \(ao.filter(\.served).count) served, \(ao.filter { !$0.served && !$0.neverFound }.count) at large (to be caught), \(ao.filter(\.neverFound).count) never found, \(ao.filter(\.resolved).count) resolved | " + byHow.joined(separator: "; "))
+    let stuck = ao.filter { $0.served && !$0.resolved && $0.heldCase != nil }
+    if !stuck.isEmpty { flag("\(stuck.count) served order(s) whose case never reached the docket") }
     log("STAY-AWAY ORDERS: \(orders.count) issued, \(game.stats.orderViolations ?? 0) violations, \(contemptHeard) contempt hearings heard, \(game.showCauseQueue.count) waiting")
     log("PETITIONS: " + petitionsHeard.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
     log("INCIDENTS: " + incidentsSeen.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
