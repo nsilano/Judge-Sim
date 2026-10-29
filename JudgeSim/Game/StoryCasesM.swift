@@ -313,7 +313,8 @@ extension StoryCases {
             defenseClosing: "If you can't trust the box, you can't trust what came out of it.",
             when: .yearsAgo(39),
             genders: ["D": .male],
-            victim: VictimFacts(relationship: "No known connection; the defendant lived four miles away.")
+            victim: VictimFacts(relationship: "No known connection; the defendant lived four miles away."),
+            yearsAtJob: 37
         )
     )
 
@@ -464,7 +465,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you find on the sheath?", "\"A single-source male profile on the button snap. It matches {DL} at every location. The chance of a random match is about one in five octillion.\""),
                             .cross("Touch DNA can be transferred without the person touching the object?", "\"Secondary transfer is possible.\""),
-                            .cross("You found no victim blood in {DL}'s car or homes?", "\"Not a trace of {V.his}. We swabbed everything.\""),
+                            .cross("You found no victim blood in {DL}'s car or homes?", "\"Not a trace. We swabbed everything.\""),
                             .cross("You found three other male profiles in the house you haven't identified?", "\"Three unknowns. They're still unknown.\"")
                         ])
         ],

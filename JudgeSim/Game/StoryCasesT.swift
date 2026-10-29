@@ -372,7 +372,7 @@ extension StoryCases {
         defenseTheory: ["{DL} was an unlicensed contractor overwhelmed by demand and shortages, not a thief. Some work was done. This is a contract dispute dressed up as a felony."],
         aggravating: ["The offense involved multiple victims", "The victim was especially vulnerable due to age", "The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: [],
-        victimImpacts: ["{VL}: \"I've lived in that house fifty years. The storm took my roof. He took the money to fix it.\""],
+        victimImpacts: ["{V}: \"I've lived in that house fifty years. The storm took my roof. He took the money to fix it.\""],
         allocutions: ["\"I got in over my head. I meant to do the work.\""],
         guiltyTruths: ["A notebook found in {DL}'s truck listed storms by date and county, with notes like \"elderly, insurance paid, move fast.\""],
         innocentTruths: ["Records later showed {DL}'s business partner controlled the account and made most of the withdrawals without {DL}'s knowledge."],

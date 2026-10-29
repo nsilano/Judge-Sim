@@ -545,13 +545,23 @@ enum CaseGenerator {
                 let neighbor = (story.victim?.relationship ?? "").lowercased().range(of: #"\bneighbor\b(?!'s)"#, options: .regularExpression) != nil
                     || raw.range(of: #"(lives|lived|living) next door|\{DL\}'s neighbor|\{D\.his\} neighbor|next-door neighbor"#, options: .regularExpression) != nil
                 if neighbor && t.hasVictim {
-                    profile.residence = fill("Lives on {STREET} in {HOOD}, next door to {V}.")
+                    let sameBuilding = (story.victim?.relationship ?? "").lowercased().contains("same")
+                    profile.residence = fill(sameBuilding ? "Lives in the same building as {V}, on {STREET} in {HOOD}."
+                                                          : "Lives on {STREET} in {HOOD}, next door to {V}.")
                 }
             }
             // The job the defendant lost or left, at the place the story names.
             if let place = story.formerEmployer.map({ fill($0) }),
                let i = profile.jobs.firstIndex(where: { !$0.current && $0.title != "In custody" }) {
                 profile.jobs[i].employer = place
+            }
+            // A retired career the story dates ("a deputy since before the killings") ends where it ended and starts that many years earlier.
+            if let years = story.yearsAtJob, !profile.jobs.contains(where: { $0.current && $0.title != "Unemployed" }),
+               let i = profile.jobs.firstIndex(where: { $0.years.hasSuffix("(retired)") }),
+               let end = Int(profile.jobs[i].years.components(separatedBy: "–").last?.prefix(4) ?? "") {
+                let start = end - years
+                profile.jobs[i].years = "\(start)–\(end) (retired)"
+                profile.jobs.removeAll { job in !job.years.hasSuffix("(retired)") && job.title != "In custody" && (Int(job.years.prefix(4)) ?? 0) >= start }
             }
             if let years = story.yearsAtJob, let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" && !$0.title.hasPrefix("weekend ") && !$0.title.hasPrefix("part-time ") }) {
                 let start = currentYear - years
@@ -1382,7 +1392,7 @@ enum CaseGenerator {
         // Family share the family name, and call their own people by first name.
         var fill = fill
         let rawRole = seed.role
-        let kin = #"^\{(VL|DL)\}'s (parent|parents|mother|father|sibling|brother|sister|son|daughter|child|younger sibling|older sibling|older brother|younger brother|older sister|younger sister)\b"#
+        let kin = #"^\{(VL|DL)\}'s (parent|parents|mother|father|sibling|brother|sister|son|daughter|child|adult child|adult son|adult daughter|younger sibling|older sibling|older brother|younger brother|older sister|younger sister)\b"#
         let close = #"^\{(VL|DL)\}'s (partner|spouse|wife|husband|girlfriend|boyfriend|fiancée|fiancé|grandmother|grandfather|grandparent|aunt|uncle|cousin|niece|nephew|best friend)\b"#
         if seed.name == nil, let m = rawRole.range(of: kin, options: .regularExpression) ?? rawRole.range(of: close, options: .regularExpression) {
             let who = rawRole[m].hasPrefix("{VL}") ? "V" : "D"

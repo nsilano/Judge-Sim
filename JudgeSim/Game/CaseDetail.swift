@@ -164,6 +164,7 @@ enum Clock {
 enum DefendantProfiles {
 
     private static let employersByKeyword: [(String, [String])] = [
+        ("pharmaceutical", ["Meridian Pharmaceuticals"]),
         ("pharmacy technician", ["Hollis Family Pharmacy", "Coastal Family Pharmacy"]),
         ("pharmacist", ["Hollis Family Pharmacy", "Coastal Family Pharmacy"]),
         ("registered nurse", ["Hollis Regional Medical Center"]),
@@ -285,7 +286,7 @@ enum DefendantProfiles {
         (["lawyer", "attorney"], [("Associate attorney", "Hollis County Public Defender's Office"), ("Law clerk", "Hollis County Superior Court")]),
         (["architect"], [("Project architect", "Coastal Design Group"), ("Architectural intern", "Coastal Design Group")]),
         (["financial advisor"], [("Financial advisor", "Tidewater Financial Group"), ("Bank branch manager", "First Coastal Bank")]),
-        (["novelist", "columnist", "writer", "reporter"], [("Reporter", "The Port Hollis Ledger"), ("Copy editor", "The Port Hollis Ledger")]),
+        (["novelist", "columnist", "reporter"], [("Reporter", "The Port Hollis Ledger"), ("Copy editor", "The Port Hollis Ledger")]),
         (["teacher", "principal"], [("Teacher assistant", "Hollis County Schools"), ("Substitute teacher", "Hollis County Schools")]),
         (["nurs", "therap", "medical", "aide"], [("Certified nursing assistant", "Bayard Rehabilitation and Nursing"), ("Patient care technician", "Hollis Regional Medical Center")]),
         (["software", "analyst", "engineer"], [("Help desk technician", "Hollis Regional Medical Center"), ("IT support specialist", "Tidewater Freight Logistics")]),
@@ -358,7 +359,7 @@ enum DefendantProfiles {
                                                   "pharmacist", "physician", "doctor", "dentist", "engineer", "software", "account", "executive",
                                                   "founder", "ceo", "teacher", "inspector", "president", "owner", "sergeant", "sheriff", "deputy",
                                                   "officer", "investigator", "director", "therapist", "practitioner", "underwriter", "developer",
-                                                  "coordinator", "paralegal", "dealer", "manager", "pastor", "minister", "contractor", "farmer"])
+                                                  "coordinator", "paralegal", "dealer", "manager", "pastor", "minister", "contractor", "farmer", "real estate"])
 
         // Education first: it decides when a career can begin. Every year below is counted from the birth year.
         // A degree is finished before the career it leads to, even for someone young for the job.
@@ -585,6 +586,10 @@ enum DefendantProfiles {
             }
         }
         jobs = merged
+        // A title that names a place keeps its capitals: "Port Hollis police officer", not "Port hollis".
+        for i in jobs.indices where jobs[i].title.lowercased() == defendant.occupation.lowercased() {
+            jobs[i].title = defendant.occupation.capitalizedFirst
+        }
 
         // Family fits the person's age, the background, and whatever the case itself says about spouse and children.
         var facts = known
@@ -601,8 +606,9 @@ enum DefendantProfiles {
             if age >= 25 { statuses += ["Divorced", "Separated"] }
             if age >= 55 { statuses.append("Widowed") }
             let status = facts.status ?? rng.pick(statuses)
+            // Child support is for children still at home, not grown ones.
             let support = facts.paysSupport
-                || (children > 0 && ["Divorced", "Separated", "Single"].contains(status) && rng.chance(0.5))
+                || (children > 0 && age < 55 && ["Divorced", "Separated", "Single"].contains(status) && rng.chance(0.5))
             family = status + (children == 0 ? ", no children." : ", \(children) child\(children == 1 ? "" : "ren")" + (support ? ", pays child support." : "."))
                 + (facts.note.map { " " + $0 } ?? "")
         }

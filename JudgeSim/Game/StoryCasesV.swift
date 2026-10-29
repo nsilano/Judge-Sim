@@ -483,7 +483,7 @@ extension StoryCases {
         defenseTheory: ["{DL}'s brother used {D.his} phone. The only witness who blames {DL} is a cousin who got a deal. {DL} was at work."],
         aggravating: ["The defendant induced others to participate in the commission of the offense"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{VL}: \"I don't answer messages from anybody now. I check every parking lot before I get out of my car.\""],
+        victimImpacts: ["{V}: \"I don't answer messages from anybody now. I check every parking lot before I get out of my car.\""],
         allocutions: ["\"I didn't know they'd hurt him. I'm sorry.\""],
         guiltyTruths: ["A notebook in {DL}'s room, found later, listed four other men's names, car models, and \"meet spots.\""],
         innocentTruths: ["The brother later admitted in a recorded call that he set up the profile on {DL}'s phone without {D.his} knowledge."],

@@ -82,7 +82,7 @@ extension StoryCases {
             timeline: [(0, "6:40 p.m.: {DL} and friends take beer from a grocery store."),
                        (0, "11:45 p.m.: {V}'s car stalls on Old Mill Road."),
                        (0, "11:58 p.m.: pickup strikes four people on the shoulder."),
-                       (0, "2:55 a.m.: warrant blood draw; BAC 0.24."),
+                       (1, "2:55 a.m.: warrant blood draw; BAC 0.24."),
                        (14, "{DL} indicted on four counts of felony death by vehicle.")],
             howIdentified: "{DL} was the driver and was found at the wheel.",
             notDone: ["No one ever tested the passengers to see whether any of them was less impaired and could have driven."],
@@ -103,7 +103,8 @@ extension StoryCases {
             defenseOpening: "No one disputes what happened. This case is about who {DL} was raised to be, and who {D.he} still can be.",
             prosecutionClosing: "Being spoiled is not a defense. Four families are owed accountability.",
             defenseClosing: "Punish {DL}, but punish the eighteen-year-old in front of you, not the parent who made {D.him}.",
-            victim: VictimFacts(relationship: "Strangers; her car had stalled on the shoulder.")
+            victim: VictimFacts(relationship: "Strangers; her car had stalled on the shoulder."),
+            residence: "Lives with her parents in {HOOD}."
         )
     )
 
@@ -185,7 +186,7 @@ extension StoryCases {
                        (0, "4:33 p.m.: {DL} assaults the mother of {D.his} child at a gas station."),
                        (0, "4:39 p.m.: SUV passes barricade and enters the parade route."),
                        (0, "4:40 p.m.: SUV exits the route after 31 seconds."),
-                       (0, "4:57 p.m.: {DL} detained at a nearby house."),
+                       (0, "4:57 p.m.: {DL} detained at a nearby house and arrested."),
                        (3, "Charges filed.")],
             howIdentified: "A homeowner called police after {DL} knocked on {D.his} door asking for a ride; the SUV was a block away.",
             notDone: ["The floor mat was not photographed before the SUV was towed."],
@@ -208,7 +209,8 @@ extension StoryCases {
             defenseClosing: "The honking was a warning. That's not someone who wants to kill.",
             when: .window(month: 12, days: 1...14),
             genders: ["D": .male],
-            victim: VictimFacts(relationship: "Strangers; she was at the parade.")
+            victim: VictimFacts(relationship: "Strangers; she was at the parade."),
+            scene: "Main Street in {CITY}, on the Christmas parade route"
         )
     )
 
@@ -427,7 +429,7 @@ extension StoryCases {
         ],
         ageRange: 27...30, occupations: ["photographer", "waitress"], hasVictim: true,
         summaries: [
-            "On {DATE}, friends found {V}, 30, dead in the shower of {V.his} home in {HOOD}. {V.He} had been stabbed 27 times, {V.his} throat cut nearly ear to ear, and shot in the head. {V.He} had been dead five days. A damaged camera found in the washing machine held deleted photos from that afternoon: {VL} posing in the shower, then a photo of {D}, {V.his} ex-girlfriend, at 5:22 p.m., then accidental shots of a bleeding man on the bathroom floor. A bloody palm print on the hallway wall matched {DL}. {DL} first said {D.he} wasn't there, then that masked intruders killed {VL} while {D.he} hid, and now says {VL} attacked {D.him} after years of abuse and {D.he} killed {V.him} in self-defense."
+            "Five days after {DATE}, friends found {V}, 30, dead in the shower of {V.his} home in {HOOD}. {V.He} had been stabbed 27 times, {V.his} throat cut nearly ear to ear, and shot in the head. A damaged camera found in the washing machine held deleted photos from the afternoon {V.he} died: {VL} posing in the shower, then a photo of {D}, {V.his} ex-girlfriend, at 5:22 p.m., then accidental shots of a bleeding man on the bathroom floor. A bloody palm print on the hallway wall matched {DL}. {DL} first said {D.he} wasn't there, then that masked intruders killed {VL} while {D.he} hid, and now says {VL} attacked {D.him} after years of abuse and {D.he} killed {V.him} in self-defense."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Recovered Camera Photos", "Time-stamped images: {VL} in the shower at 5:29 p.m.; an accidental image of the ceiling at 5:30; a man's body being dragged at 5:32.", .search),
@@ -514,7 +516,8 @@ extension StoryCases {
             prosecutionClosing: "Twenty-seven wounds and a cut throat is not fear. It's rage, planned for in advance.",
             defenseClosing: "{DL}'s lies were shameful. They don't prove premeditation.",
             genders: ["D": .female, "V": .male],
-            victim: VictimFacts(relationship: "A former partner of the defendant.")
+            victim: VictimFacts(relationship: "A former partner of the defendant."),
+            family: "Single, no children. A former girlfriend of the victim."
         )
     )
 }

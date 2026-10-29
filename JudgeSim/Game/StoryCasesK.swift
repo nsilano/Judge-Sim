@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "For the purpose of sexual gratification, engaged in sexual contact with {V} by force and against {V.his} will during a massage.",
         ageRange: 30...55, occupations: ["licensed massage therapist"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V} booked a 60-minute massage at {SPA} on {STREET} with {D}, a licensed therapist for twelve years. Forty minutes in, {VL} says, {DL} moved the drape and touched {V.his} breast and inner thigh. {VL} froze, then got up, dressed, and left without paying, texting a friend from the parking lot: \"Something just happened. I need you to call me.\" {DL} says {D.he} did a standard pectoral and adductor technique {VL} consented to on the intake form, and that {VL} was upset about an unrelated phone call. {DL} was convicted in district court and appealed."
+            "On {DATE}, {V} booked a 60-minute massage at {SPA} on {STREET} with {D}, a licensed therapist for nine years. Forty minutes in, {VL} says, {DL} moved the drape and touched {V.his} breast and inner thigh. {VL} froze, then got up, dressed, and left without paying, texting a friend from the parking lot: \"Something just happened. I need you to call me.\" {DL} says {D.he} did a standard pectoral and adductor technique {VL} consented to on the intake form, and that {VL} was upset about an unrelated phone call. {DL} was convicted in district court and appealed."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Parking Lot Text", "At 3:47 p.m., from the spa's lot: \"Something just happened. I need you to call me.\""),
@@ -23,7 +23,7 @@ extension StoryCases {
         ],
         defenseEvidence: [
             E(.document, 2, "Intake Form", "{VL} checked 'chest/pectoral work: yes' and 'inner leg/adductors: yes' on the intake form."),
-            E(.document, 2, "Twelve Years", "No board discipline in twelve years and more than 9,000 sessions."),
+            E(.document, 2, "Nine Years", "No board discipline in nine years and more than 7,000 sessions."),
             E(.digital, 1, "Phone Call", "{VL}'s phone shows a 4-minute call from a family member ending at 3:05 p.m., during the session, that {VL} answered on the table.")
         ],
         prosecutionWitnesses: [
@@ -97,7 +97,9 @@ extension StoryCases {
             prosecutionClosing: "No technique involves the breast. {VL} ran because it happened.",
             defenseClosing: "Fear and misunderstanding aren't proof beyond a reasonable doubt.",
             genders: ["V": .female],
-            victim: VictimFacts(relationship: "A client of the defendant's massage studio.", restitution: 1500, restitutionBasis: "counseling costs")
+            victim: VictimFacts(relationship: "A client of the defendant's massage studio.", restitution: 1500, restitutionBasis: "counseling costs"),
+            employer: "{SPA}",
+            yearsAtJob: 9
         )
     )
 

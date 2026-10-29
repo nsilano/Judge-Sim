@@ -20,18 +20,18 @@ extension StoryCases {
         ],
         ageRange: 52...56, occupations: ["personal injury lawyer"], hasVictim: true,
         summaries: [
-            "On {DATE}, {D}, a fourth-generation lawyer from one of the county's most powerful families, called 911 from the family's hunting estate in {HOOD} to report finding his wife, {VIC2}, and son, {V}, shot to death by the dog kennels. {VL} was killed with two shotgun blasts; {VIC2} with five rounds from a rifle. {DL} told investigators he'd been napping at the house and never went to the kennels. That same day, his law firm's CFO had confronted him about missing money. A video {VL} took on his phone at 8:44 p.m., found a year later, has {DL}'s voice in the background at the kennels, minutes before both phones stopped moving for good. {DL} has since admitted stealing millions from clients and to lying about the kennels, but denies the murders."
+            "On {DATE}, {D}, a fourth-generation lawyer from one of the county's most powerful families, called 911 from the family's hunting estate in {HOOD} to report finding his wife, {VIC2}, and son, {V}, shot to death by the dog kennels. {VF} was killed with two shotgun blasts; {VIC2} with five rounds from a rifle. {DL} told investigators he'd been napping at the house and never went to the kennels. That same day, his law firm's CFO had confronted him about missing money. A video {VF} took on his phone at 8:44 p.m., found a year later, has {DL}'s voice in the background at the kennels, minutes before both phones stopped moving for good. {DL} has since admitted stealing millions from clients and to lying about the kennels, but denies the murders."
         ],
         prosecutionEvidence: [
-            E(.video, 3, "Kennel Video", "{VL}'s phone video at 8:44 p.m., with three voices: {VL}, {VIC2}, and, as identified by multiple witnesses, {DL}.", .search),
-            E(.digital, 3, "Phone Activity", "{VIC2}'s and {VL}'s phones stop all activity by 8:50 p.m. {DL}'s phone shows no steps from 8:05 to 9:02, then 283 steps in 15 minutes as he drives to his mother's house.", .search),
+            E(.video, 3, "Kennel Video", "{VF}'s phone video at 8:44 p.m., with three voices: {VF}, {VIC2}, and, as identified by multiple witnesses, {DL}.", .search),
+            E(.digital, 3, "Phone Activity", "{VIC2}'s and {VF}'s phones stop all activity by 8:50 p.m. {DL}'s phone shows no steps from 8:05 to 9:02, then 283 steps in 15 minutes as he drives to his mother's house.", .search),
             E(.document, 3, "Financial Crimes", "Records of $3.4 million stolen from clients and the firm, and a CFO confrontation that day; a court hearing on his finances was set for the next week."),
             E(.forensic, 2, "Weapons", "Family rifles of the same caliber; spent casings at the kennels match casings from a range on the property.")
         ],
         defenseEvidence: [
             E(.document, 2, "No Weapons Found", "Neither murder weapon was ever found."),
             E(.forensic, 2, "No Blood on Clothes", "No blood or gunshot residue found on the clothes {DL} wore when officers arrived."),
-            E(.statement, 1, "Boat Crash Threats", "{VL} faced charges from a fatal boat crash and had received threats on social media.")
+            E(.statement, 1, "Boat Crash Threats", "{VF} faced charges from a fatal boat crash and had received threats on social media.")
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: nil, role: "Family friend who identified the voice on the video",
@@ -39,7 +39,7 @@ extension StoryCases {
                         cross: ["\"It's three seconds of audio.\""],
                         weight: 3, lay: true,
                         exam: [
-                            .direct("Whose voices are on the 8:44 video?", "\"{VL}'s. {VIC2}'s. And his. I've known him thirty years. That's his voice calling the dog.\""),
+                            .direct("Whose voices are on the 8:44 video?", "\"{VF}'s. {VIC2}'s. And his. I've known him thirty years. That's his voice calling the dog.\""),
                             .cross("It's a few seconds of muffled audio?", "\"It's enough. I'd know it anywhere.\""),
                             .cross("You only came forward after you heard the State's theory?", "\"I came forward when they asked me.\"")
                         ]),
@@ -76,12 +76,12 @@ extension StoryCases {
         extras: ["VIC2": ["Maggie", "Margaret", "Lynn"]],
         story: StoryExtras(
             timeline: [(0, "Morning: CFO confronts {DL} about missing money."),
-                       (0, "8:44 p.m.: {VL}'s video at the kennels captures three voices."),
+                       (0, "8:44 p.m.: {VF}'s video at the kennels captures three voices."),
                        (0, "8:49 p.m.: both victims' phones go still."),
                        (0, "9:06 p.m.: {DL} drives to his mother's house."),
                        (0, "10:07 p.m.: {DL} calls 911 from the kennels."),
                        (95, "{DL} reports being shot by a stranger on a roadside; later admits staging it."),
-                       (400, "Kennel video recovered from {VL}'s phone; {DL} charged with the murders.")],
+                       (400, "Kennel video recovered from {VF}'s phone; {DL} charged with the murders.")],
             howIdentified: "The kennel video and phone data contradicting his account.",
             notDone: ["The house was not processed for blood that night."],
             defendantExam: [

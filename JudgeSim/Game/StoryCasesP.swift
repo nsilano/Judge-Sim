@@ -19,16 +19,16 @@ extension StoryCases {
         ],
         ageRange: 21...22, occupations: ["college student", "tennis instructor"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V}, a media executive, and {V.his} wife, {VIC2}, were shot to death while watching television in the den of their {HOOD} home. {VL} was shot five times, once in the back of the head at close range; {VIC2} was shot ten times, the last while crawling. Their sons, {D} and {BRO}, called 911 that night, sobbing, saying they had come home from a movie and found them. Over the next six months the brothers spent nearly $700,000: watches, a restaurant, a Porsche, tennis coaching. Two days before the killings they had bought two shotguns in another county using a stolen driver's license. {BRO} confessed to a therapist, who told his lover, who told police. {DL} now says the brothers killed their parents out of fear, after years of sexual abuse by their father, because they believed their parents were about to kill them."
+            "On {DATE}, {V}, a media executive, and {V.his} wife, {VIC2}, were shot to death while watching television in the den of their {HOOD} home. {VF} was shot five times, once in the back of the head at close range; {VIC2} was shot ten times, the last while crawling. Their sons, {D} and {BRO}, called 911 that night, sobbing, saying they had come home from a movie and found them. Over the next six months the brothers spent nearly $700,000: watches, a restaurant, a Porsche, tennis coaching. Two days before the killings they had bought two shotguns in another county using a stolen driver's license. {BRO} confessed to a therapist, who told his lover, who told police. {DL} now says the brothers killed their parents out of fear, after years of sexual abuse by their father, because they believed their parents were about to kill them."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Shotgun Purchase", "A sporting goods store record of two 12-gauge shotguns bought two days before, with a stolen driver's license; the clerk identifies {DL}."),
             E(.statement, 3, "Therapist's Tape", "{BRO}'s recorded session: \"We decided to do it. It was the only way to be free.\" The court has ruled the recording not privileged because of a threat to the therapist.", .statement),
             E(.document, 2, "Spending Records", "$700,000 spent in six months: watches, cars, a restaurant, and private tennis coaching."),
-            E(.forensic, 2, "Contact Wound", "The shot to {VL}'s head was fired with the muzzle against the skin after {V.he} was already wounded. {DL} went outside to reload before the final shot to {VIC2}.")
+            E(.forensic, 2, "Contact Wound", "The shot to {VF}'s head was fired with the muzzle against the skin after {V.he} was already wounded. {DL} went outside to reload before the final shot to {VIC2}.")
         ],
         defenseEvidence: [
-            E(.statement, 2, "Relatives' Testimony", "A cousin and an aunt describe {VL} as cruel and controlling and say {DL}'s sibling told them about abuse years earlier."),
+            E(.statement, 2, "Relatives' Testimony", "A cousin and an aunt describe {VF} as cruel and controlling and say {DL}'s sibling told them about abuse years earlier."),
             E(.document, 2, "Childhood Records", "Pediatric records noting unexplained injuries and a counselor's note about \"secrets\" when the brothers were children."),
             E(.statement, 1, "Mother's Pills and Drinking", "Testimony that {VIC2} drank heavily and once threatened the boys with a gun.")
         ],
@@ -47,7 +47,7 @@ extension StoryCases {
                         cross: ["\"We didn't investigate abuse claims.\""],
                         weight: 3, lay: false,
                         exam: [
-                            .direct("Walk us through the shooting.", "\"They entered the den with two shotguns. {VL} was hit first. {VIC2} tried to get away. They ran out of shells. {DL} went to the car, reloaded, came back, and fired the last shot into {VIC2}'s face.\""),
+                            .direct("Walk us through the shooting.", "\"They entered the den with two shotguns. {VF} was hit first. {VIC2} tried to get away. They ran out of shells. {DL} went to the car, reloaded, came back, and fired the last shot into {VIC2}'s face.\""),
                             .direct("What did they say that night?", "\"That they'd been at a movie. The ticket stub they gave us was for a showing they couldn't have attended.\""),
                             .cross("Did anyone investigate the abuse claims?", "\"No. We investigated the murder.\""),
                             .cross("They were young men living at home with their father?", "\"Twenty-one and eighteen.\"")
@@ -70,8 +70,8 @@ extension StoryCases {
         mitigating: ["No prior criminal record", "The defendant was suffering from a mental or physical condition that reduced culpability"],
         victimImpacts: ["{VIC2}'s sister: \"Whatever happened in that house, my sister was crawling away when they reloaded.\""],
         allocutions: ["\"I'm sorry. I was afraid. I know that doesn't make it right.\""],
-        guiltyTruths: ["A letter {DL} wrote from jail asked a friend to testify falsely about seeing {VL} hit {D.him}."],
-        innocentTruths: ["A sealed family court file later surfaced in which {VIC2} had reported {VL}'s abuse of the boys years earlier and then withdrawn it."],
+        guiltyTruths: ["A letter {DL} wrote from jail asked a friend to testify falsely about seeing {VF} hit {D.him}."],
+        innocentTruths: ["A sealed family court file later surfaced in which {VIC2} had reported {VF}'s abuse of the boys years earlier and then withdrawn it."],
         moods: [.divided], doctrines: ["imperfectSelfDefense", "burdenOfProof"],
         extras: ["BRO": ["Erik", "Kyle", "Grant"], "VIC2": ["Kitty", "Joanne", "Mary Louise"]],
         story: StoryExtras(
@@ -174,7 +174,7 @@ extension StoryCases {
         defenseTheory: ["{DL} started out legitimately, lost money, and dug a hole trying to make investors whole. {D.He} intended to repay everyone. That's poor judgment, not intent to defraud."],
         aggravating: ["The offense involved multiple victims", "The defendant took advantage of a position of trust", "The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: ["No prior criminal record", "The defendant has a support system in the community"],
-        victimImpacts: ["{VL}: \"I was going to leave something for my grandchildren. Now my grandchildren are paying my light bill.\"",
+        victimImpacts: ["{V}: \"I was going to leave something for my grandchildren. Now my grandchildren are paying my light bill.\"",
                         "A retired firefighter: \"Thirty years of running into burning buildings and the pension's gone.\""],
         allocutions: ["\"I always meant to pay it back. I thought the next year would be better. I'm so sorry.\""],
         guiltyTruths: ["A file on {DL}'s laptop titled \"exit\" listed offshore banks and countries without extradition treaties."],
@@ -187,7 +187,7 @@ extension StoryCases {
                        (-400, "{V} cashes out retirement and invests $480,000."),
                        (0, "Fire department board requests withdrawal; no funds."),
                        (14, "{DL} confesses to {D.his} pastor."),
-                       (60, "Indictment.")],
+                       (60, "{DL} indicted and arrested.")],
             howIdentified: "The fire department board's complaint to the Secretary of State.",
             notDone: ["The business partner was never charged."],
             defendantExam: [
@@ -308,7 +308,8 @@ extension StoryCases {
             prosecutionClosing: "{DL} created the danger. You can't start the fight and then claim you were afraid of it.",
             defenseClosing: "Whoever started it, a person being beaten on concrete may defend his life.",
             genders: ["D": .male, "V": .male],
-            victim: VictimFacts(relationship: "Strangers; he was staying with his father's fiancée in the community.")
+            victim: VictimFacts(relationship: "Strangers; he was staying with his father's fiancée in the community."),
+            residence: "Lives in the gated townhouse community in {CITY} where this happened."
         )
     )
 
@@ -411,7 +412,8 @@ extension StoryCases {
             defenseClosing: "Every piece of the State's case comes from a killer who earned a deal.",
             genders: ["D": .female, "V": .male],
             employer: "Hollis County High School",
-            family: "Widowed, no children. The late spouse is the victim in this case."
+            family: "Widowed, no children. The late spouse is the victim in this case.",
+            residence: "The condominium in {HOOD} she shared with the victim."
         )
     )
 

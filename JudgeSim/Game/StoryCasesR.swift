@@ -73,7 +73,7 @@ extension StoryCases {
         innocentTruths: ["A forensic engineer later found three of {VL}'s hairs, roots attached, clutched with feathers from a barred owl, suggesting an owl attack outside before she came in and fell."],
         moods: [.divided], doctrines: ["burdenOfProof", "expertTestimony"],
         story: StoryExtras(
-            timeline: [(0, "Evening: {DL} and {VL} drink wine by the pool."),
+            timeline: [(-1, "Evening: {DL} and {VL} drink wine by the pool."),
                        (0, "Around 1:30 a.m.: the last confirmed time {VL} was alive."),
                        (0, "2:40 a.m.: {DL} calls 911."),
                        (0, "2:48 a.m.: paramedics arrive; {VL} is dead."),
@@ -169,7 +169,7 @@ extension StoryCases {
         defenseTheory: ["No one saw {DL} poison anyone. Arsenic was in the soil, the water, the old orchard. The State took two tragedies and built a monster."],
         aggravating: ["The offense was committed for pecuniary gain", "The offense was especially heinous, atrocious, or cruel", "The offense involved multiple victims"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{VL}: \"I married her in front of my whole church. I'd have given her anything she asked for.\"",
+        victimImpacts: ["{V}: \"I married her in front of my whole church. I'd have given her anything she asked for.\"",
                         "{VIC2}'s daughter: \"He suffered for months and she held his hand the whole time.\""],
         allocutions: ["\"I never hurt anybody. God knows the truth.\""],
         guiltyTruths: ["A pharmacist later identified {DL} as the woman who asked, years earlier, which ant poisons \"still have the real arsenic in them.\""],
