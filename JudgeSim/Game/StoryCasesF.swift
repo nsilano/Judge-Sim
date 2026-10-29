@@ -209,20 +209,20 @@ extension StoryCases {
         ],
         ageRange: 40...60, occupations: ["county building inspector"], hasVictim: false,
         summaries: [
-            "{D}, a Hollis County building inspector for nineteen years, was recorded by an FBI-assisted sting taking an envelope with $1,500 from {CONTRACTOR}, a developer cooperating with investigators, at a job site on {STREET}. Over the prior year, {DL} had passed 38 inspections for that developer, including two homes later found with missing fire blocking. {DL} says the envelope was repayment of a personal loan to the developer, and that the developer set {D.him} up to escape {CONTRACTOR}'s own fraud charges."
+            "{D}, a Hollis County building inspector for nineteen years, was recorded by an FBI-assisted sting taking an envelope with $1,500 from {ALT}, a developer who owns {CONTRACTOR} and was cooperating with investigators, at a job site on {STREET}. Over the prior year, {DL} had passed 38 inspections for that developer, including two homes later found with missing fire blocking. {DL} says the envelope was repayment of a personal loan to the developer, and that the developer set {D.him} up to escape {ALT}'s own fraud charges."
         ],
         prosecutionEvidence: [
-            E(.video, 4, "Recorded Handoff", "Hidden camera: {CONTRACTOR} hands {DL} an envelope and says \"for keeping things moving.\" {DL} says \"appreciate it\" and pockets it."),
+            E(.video, 4, "Recorded Handoff", "Hidden camera: {ALT} hands {DL} an envelope and says \"for keeping things moving.\" {DL} says \"appreciate it\" and pockets it."),
             E(.document, 2, "Inspection Records", "{DL} passed 38 inspections for the developer in a year, two with missing fire blocking later found by another inspector."),
             E(.document, 2, "Bank Deposits", "Monthly cash deposits of $1,000 to $2,000 into {DL}'s account over the same year.")
         ],
         defenseEvidence: [
-            E(.document, 3, "Developer's Plea Deal", "{CONTRACTOR} faces fraud charges for falsifying buyer documents and agreed to cooperate in exchange for leniency."),
-            E(.document, 2, "Loan Text", "A year earlier {DL} texted {CONTRACTOR}: \"Need that $6,000 back by spring, no rush.\" {CONTRACTOR} replied: \"I'll pay you in chunks.\""),
+            E(.document, 3, "Developer's Plea Deal", "{ALT} faces fraud charges for falsifying buyer documents and agreed to cooperate in exchange for leniency."),
+            E(.document, 2, "Loan Text", "A year earlier {DL} texted {ALT}: \"Need that $6,000 back by spring, no rush.\" {ALT} replied: \"I'll pay you in chunks.\""),
             E(.document, 1, "Inspection Volume", "{DL} inspected over 1,100 homes that year; the two failures are within normal error rates.")
         ],
         prosecutionWitnesses: [
-            WitnessSeed(name: nil, role: "{CONTRACTOR}, cooperating developer",
+            WitnessSeed(name: "{ALT}", role: "Owner of {CONTRACTOR}, cooperating developer",
                         direct: ["\"I paid {DL} every month to pass my jobs.\""],
                         cross: ["\"I'm cooperating to get a deal.\""],
                         weight: 1, lay: true,
@@ -239,8 +239,8 @@ extension StoryCases {
                         cross: ["\"{DL} didn't mention inspections on the recording.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("What did the recording capture?", "\"{CONTRACTOR} saying 'for keeping things moving,' {DL} saying 'appreciate it' and pocketing $1,500 in marked bills.\""),
-                            .direct("What do the deposits show?", "\"Cash deposits averaging about $1,500 a month into {DL}'s account, starting the month after the framing inspection {CONTRACTOR} described.\""),
+                            .direct("What did the recording capture?", "\"{ALT} saying 'for keeping things moving,' {DL} saying 'appreciate it' and pocketing $1,500 in marked bills.\""),
+                            .direct("What do the deposits show?", "\"Cash deposits averaging about $1,500 a month into {DL}'s account, starting the month after the framing inspection {ALT} described.\""),
                             .cross("{DL} never said the word 'inspection' on the recording?", "\"Not on that recording.\""),
                             .cross("{DL} also has a side business repairing lawn equipment for cash?", "\"We saw that.\"")
                         ])
@@ -258,25 +258,25 @@ extension StoryCases {
                         ])
         ],
         prosecutionTheory: ["{D} took $1,500 'for keeping things moving,' on camera, from a developer whose jobs {D.he} kept passing."],
-        defenseTheory: ["{CONTRACTOR} owed {DL} $6,000 and is trading {D.him} for leniency on {CONTRACTOR}'s own fraud. 'Keeping things moving' was the developer's script, not {DL}'s words."],
+        defenseTheory: ["{ALT} owed {DL} $6,000 and is trading {D.him} for leniency on {ALT}'s own fraud. 'Keeping things moving' was the developer's script, not {DL}'s words."],
         aggravating: ["The offense endangered public safety"],
         mitigating: ["Nineteen years of public service", "No prior criminal record"],
-        allocutions: ["\"That money was mine. I lent it when {CONTRACTOR} was going under. I never sold an inspection.\""],
+        allocutions: ["\"That money was mine. I lent it when {ALT} was going under. I never sold an inspection.\""],
         guiltyTruths: ["A ledger in {DL}'s truck later listed the developer's address with monthly checkmarks."],
-        innocentTruths: ["{CONTRACTOR}'s former bookkeeper later testified the developer bragged about framing the inspector who 'wouldn't play ball.'"],
+        innocentTruths: ["{ALT}'s former bookkeeper later testified the developer bragged about framing the inspector who 'wouldn't play ball.'"],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
         extras: ["CONTRACTOR": ["Ridgeway Homes", "Pinnacle Builders", "Sterling Custom Homes"]],
         story: StoryExtras(
             timeline: [(-400, "{DL} texts about the $6,000 loan."),
                        (-360, "Monthly cash deposits begin in {DL}'s account."),
-                       (-60, "{CONTRACTOR} charged with fraud; agrees to cooperate."),
+                       (-60, "{ALT} charged with fraud; agrees to cooperate."),
                        (0, "Recorded handoff at the job site."),
                        (30, "{DL} charged with bribery.")],
             howIdentified: "A cooperating developer and a recorded handoff.",
             notDone: ["The claimed loan repayment was never investigated.", "{DL}'s lawn-equipment business income was never compared to the deposits."],
             defendantExam: [
-                .direct("What was the envelope?", "\"Another payment on the six thousand. {CONTRACTOR} had paid me in chunks since spring. I said 'appreciate it' because I was getting my money back.\""),
-                .direct("What about 'keeping things moving'?", "\"I didn't think about it. {CONTRACTOR} talks like that about everything.\""),
+                .direct("What was the envelope?", "\"Another payment on the six thousand. {ALT} had paid me in chunks since spring. I said 'appreciate it' because I was getting my money back.\""),
+                .direct("What about 'keeping things moving'?", "\"I didn't think about it. {ALT} talks like that about everything.\""),
                 .direct("And the monthly deposits?", "\"My lawn mower business. I fix engines on weekends, cash only.\""),
                 .cross("A county inspector lending money to a developer you inspect?", "\"It was a mistake to lend it. It wasn't a bribe.\""),
                 .cross("You passed two houses missing fire blocking.", "\"Out of eleven hundred inspections that year. I missed them.\"")
