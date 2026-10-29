@@ -271,8 +271,8 @@ enum Allocutions {
     }
 
     private static func jailLine(_ f: Facts, rng: inout SeededRNG) -> String {
-        rng.pick(["I've been in the county jail \(f.custodyDays) days. I've had a lot of nights to think.",
-                  "\(f.custodyDays) days in there. I got my GED started. I want to finish it.",
+        rng.pick(["I've been in the county jail \(f.custodyDays) day\(f.custodyDays == 1 ? "" : "s"). I've had a lot of nights to think.",
+                  "\(f.custodyDays) day\(f.custodyDays == 1 ? "" : "s") in there. I got my GED started. I want to finish it.",
                   "Being locked up, I had to look at myself. I didn't like what I saw."])
     }
 

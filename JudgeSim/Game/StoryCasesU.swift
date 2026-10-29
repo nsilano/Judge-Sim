@@ -306,7 +306,8 @@ extension StoryCases {
             prosecutionClosing: "You don't shoot what you can't see.",
             defenseClosing: "Culpable negligence means more than a mistake.",
             when: .months([11, 12, 1]),
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(relationship: "Strangers.")
         )
     )
 
@@ -410,7 +411,8 @@ extension StoryCases {
             defenseOpening: "Alternative care, signed consent, and a known risk.",
             prosecutionClosing: "Consent to a doctor isn't consent to an impostor.",
             defenseClosing: "Regulatory violations aren't assaults.",
-            genders: ["D": .female, "V": .female]
+            genders: ["D": .female, "V": .female],
+            victim: VictimFacts(relationship: "A patient at the defendant's clinic.", harm: ["A severe infection in both knees after the injections; hospitalized."], restitution: 21000, restitutionBasis: "the $4,000 she paid and her hospital bills")
         )
     )
 
@@ -510,7 +512,8 @@ extension StoryCases {
             defenseOpening: "Shameful lies, protected speech, and a charity that helped real people.",
             prosecutionClosing: "The lie was the reason people gave.",
             defenseClosing: "Bad bookkeeping isn't a crime.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            victim: VictimFacts(relationship: "A donor to the defendant's charity.", harm: ["No physical injury."], restitution: 8000, restitutionBasis: "the $8,000 she paid for a memorial bench that was never built")
         )
     )
 }

@@ -394,6 +394,7 @@ extension StoryCases {
             defenseOpening: "A bulk clear, a known bug, and seventeen clean years.",
             prosecutionClosing: "Of 215 videos, the one that mattered was gone.",
             defenseClosing: "A coincidence isn't a crime, and the bug is real.",
+            victim: VictimFacts(relationship: "Arrested by another officer on the defendant's shift; they had no other contact.", harm: ["Says an officer slammed her head against a patrol car during the arrest; the video that would show it was deleted."], restitution: 0),
             yearsAtJob: 17
         )
     )
@@ -493,7 +494,7 @@ extension StoryCases {
             defenseOpening: "A person who wanted their own TV and their mother's rings.",
             prosecutionClosing: "{DL} was told never to come in, and came in anyway, at night, and took what wasn't {D.hers}.",
             defenseClosing: "An honest claim to your own property isn't intent to steal.",
-            victim: VictimFacts(relationship: "A former partner of the defendant; they shared the house until six weeks earlier.")
+            victim: VictimFacts(relationship: "A former partner of the defendant; they shared the house until six weeks earlier.", restitution: 0)
         )
     )
 }

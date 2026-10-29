@@ -808,7 +808,7 @@ final class CaseSession: ObservableObject {
             return "\(top) to \(max) months in prison" + (cls == .B1 && priorRecord.felonyLevel >= 5 ? ", or life without parole" : "")
         }
         if let cell = StructuredSentencing.misdemeanorCell(cls, level: priorRecord.misdemeanorLevel) {
-            return "\(cell.maxDays) days in jail" + (cls.maxFine.map { " and a fine of up to \(SentenceFormat.dollars($0))" } ?? "")
+            return "\(cell.maxDays) day\(cell.maxDays == 1 ? "" : "s") in jail" + (cls.maxFine.map { " and a fine of up to \(SentenceFormat.dollars($0))" } ?? "")
         }
         return "the maximum allowed by law"
     }

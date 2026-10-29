@@ -99,7 +99,10 @@ extension StoryCases {
             prosecutionClosing: "Stairs don't swing. Someone did.",
             defenseClosing: "No weapon, no fracture, no proof. A fall is still a fall.",
             genders: ["D": .male, "V": .female],
-            family: "Widowed, no children. The late spouse is the victim in this case."
+            victim: VictimFacts(relationship: "Married to the defendant."),
+            family: "Widowed, no children. The late spouse is the victim in this case.",
+            residence: "The home in {HOOD} the defendant shared with the victim.",
+            yearsAtJob: 25
         )
     )
 
@@ -200,7 +203,7 @@ extension StoryCases {
             prosecutionClosing: "Two men. Same poison. Same woman. Same payout.",
             defenseClosing: "Suspicion stacked on suspicion is still not proof.",
             genders: ["D": .female, "V": .male],
-            victim: VictimFacts(occupation: "Baptist minister"),
+            victim: VictimFacts(occupation: "Baptist minister", relationship: "Married to the defendant.", harm: ["Arsenic poisoning: numbness in his hands and feet and failing kidneys. He nearly died."]),
             family: "Married. The spouse is the alleged victim in this case; a former partner of twelve years is the other."
         )
     )
@@ -305,7 +308,8 @@ extension StoryCases {
             defenseOpening: "Twelve hours, no sleep, and a confession built from the detectives' own words.",
             prosecutionClosing: "Keys in the freezer. Only the killer knew.",
             defenseClosing: "A confession you can't trust and science that can't say when.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            victim: VictimFacts(relationship: "May have known the defendant from the restaurant he managed.")
         )
     )
 
@@ -408,7 +412,8 @@ extension StoryCases {
             prosecutionClosing: "Skipping a permit on a gas line is gambling with other people's lives.",
             defenseClosing: "Negligence isn't a crime unless it's culpable, and {DL} didn't know.",
             when: .months([6]),
-            genders: ["V": .male]
+            genders: ["V": .male],
+            victim: VictimFacts(relationship: "A guest at a motel the defendant's company managed.")
         )
     )
 
@@ -509,7 +514,8 @@ extension StoryCases {
             defenseOpening: "Bad money management and panic aren't murder.",
             prosecutionClosing: "She didn't just hide a body. She became him.",
             defenseClosing: "Other people wanted his money too.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            victim: VictimFacts(relationship: "A client of the defendant, who managed his money.")
         )
     )
 }

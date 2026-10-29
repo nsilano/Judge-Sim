@@ -164,6 +164,22 @@ enum Clock {
 enum DefendantProfiles {
 
     private static let employersByKeyword: [(String, [String])] = [
+        ("pharmacy technician", ["Hollis Family Pharmacy", "Coastal Family Pharmacy"]),
+        ("pharmacist", ["Hollis Family Pharmacy", "Coastal Family Pharmacy"]),
+        ("registered nurse", ["Hollis Regional Medical Center"]),
+        ("waitress", ["The Brickyard Grill", "Pell Avenue Diner", "Harbor House Seafood"]),
+        ("waiter", ["The Brickyard Grill", "Pell Avenue Diner", "Harbor House Seafood"]),
+        ("paralegal", ["a law office in Port Hollis"]),
+        ("underwriter", ["Coastal Mutual Insurance"]),
+        ("insurance", ["Coastal Mutual Insurance"]),
+        ("meter reader", ["Tidewater Utility Services (power company contractor)"]),
+        ("church", ["Cane Creek Baptist Church"]),
+        ("tow truck", ["Juniper Court Auto Repair (towing)"]),
+        ("auto body", ["Cane Creek Collision"]),
+        ("boat mechanic", ["Port Hollis Marina"]),
+        ("marine mechanic", ["Port Hollis Marina"]),
+        ("architect", ["Coastal Design Group"]),
+        ("sales representative", ["Port Hollis Marine Supply", "Coastal Wireless on Marlowe Boulevard"]),
         ("detention", ["Hollis County Detention Center"]),
         ("sheriff", ["Hollis County Sheriff's Office"]),
         ("media coordinator", ["Hollis County Schools"]),
@@ -266,6 +282,10 @@ enum DefendantProfiles {
     /// Earlier jobs that lead to a career, so a deputy's past isn't a poultry line.
     private static let careerPaths: [([String], [(String, String)])] = [
         (["sheriff", "police", "sergeant", "detective", "officer"], [("Detention officer", "Hollis County Detention Center"), ("Patrol officer", "Bayard Police Department"), ("Military police", "U.S. Army")]),
+        (["lawyer", "attorney"], [("Associate attorney", "Hollis County Public Defender's Office"), ("Law clerk", "Hollis County Superior Court")]),
+        (["architect"], [("Project architect", "Coastal Design Group"), ("Architectural intern", "Coastal Design Group")]),
+        (["financial advisor"], [("Financial advisor", "Tidewater Financial Group"), ("Bank branch manager", "First Coastal Bank")]),
+        (["novelist", "columnist", "writer", "reporter"], [("Reporter", "The Port Hollis Ledger"), ("Copy editor", "The Port Hollis Ledger")]),
         (["teacher", "principal"], [("Teacher assistant", "Hollis County Schools"), ("Substitute teacher", "Hollis County Schools")]),
         (["nurs", "therap", "medical", "aide"], [("Certified nursing assistant", "Bayard Rehabilitation and Nursing"), ("Patient care technician", "Hollis Regional Medical Center")]),
         (["software", "analyst", "engineer"], [("Help desk technician", "Hollis Regional Medical Center"), ("IT support specialist", "Tidewater Freight Logistics")]),
@@ -331,9 +351,18 @@ enum DefendantProfiles {
             .first { lower.contains($0.key) }?.value
         let retired = lower.hasPrefix("retired ")
         let has = { (keys: [String]) in keys.contains(where: lower.contains) }
+        // "Self-described financial advisor": the title is a claim, not a credential.
+        let selfDescribed = lower.hasPrefix("self-described")
+        // A career someone trained for: no weekend side jobs, and earlier jobs come from the same field.
+        let professional = !selfDescribed && has(["lawyer", "attorney", "architect", "novelist", "columnist", "financial advisor", "nurse",
+                                                  "pharmacist", "physician", "doctor", "dentist", "engineer", "software", "account", "executive",
+                                                  "founder", "ceo", "teacher", "inspector", "president", "owner", "sergeant", "sheriff", "deputy",
+                                                  "officer", "investigator", "director", "therapist", "practitioner", "underwriter", "developer",
+                                                  "coordinator", "paralegal", "dealer", "manager", "pastor", "minister", "contractor", "farmer"])
 
         // Education first: it decides when a career can begin. Every year below is counted from the birth year.
-        func grad(_ years: Int) -> Int { min(birthYear + years, currentYear) }
+        // A degree is finished before the career it leads to, even for someone young for the job.
+        func grad(_ years: Int) -> Int { min(birthYear + years, currentYear, max(birthYear + 18, anchorYear - 1)) }
         // Graduation at about eighteen, unless the background says otherwise.
         let hsYear = grad(18)
         let diploma: String
@@ -357,6 +386,27 @@ enum DefendantProfiles {
         } else if has(["nurse practitioner"]) {
             careerAge = 26
             education = "BSN, East Carolina University, \(grad(22)); Master of Science in Nursing, \(grad(26))."
+        } else if has(["lawyer", "attorney"]) && !selfDescribed {
+            careerAge = 25
+            education = "Bachelor's degree from \(rng.pick(["East Carolina University", "UNC Wilmington", "NC State University"])), \(grad(22)); law degree, Campbell University School of Law, \(grad(25))."
+        } else if has(["architect"]) && !has(["armorer"]) {
+            careerAge = 23
+            education = "Bachelor of Architecture, NC State University, \(grad(23))."
+        } else if has(["pharmacist"]) {
+            careerAge = 24
+            education = "Doctor of Pharmacy, UNC Chapel Hill, \(grad(24))."
+        } else if has(["registered nurse", "director of nursing"]) {
+            careerAge = 22
+            education = "BSN, East Carolina University, \(grad(22))."
+        } else if has(["nurse"]) && !has(["aide", "assistant"]) {
+            careerAge = 20
+            education = "\(diploma); associate degree in nursing, Hollis Community College, \(grad(20))."
+        } else if has(["pharmacy technician"]) {
+            careerAge = 19
+            education = "\(diploma); pharmacy technician certificate, Hollis Community College, \(hsYear + 1)."
+        } else if has(["paralegal"]) {
+            careerAge = 20
+            education = "Associate degree in paralegal technology, Hollis Community College, \(grad(20))."
         } else if has(["physical therapist"]) {
             careerAge = 25
             education = "Bachelor's degree, \(grad(22)); Doctor of Physical Therapy, East Carolina University, \(grad(25))."
@@ -372,7 +422,8 @@ enum DefendantProfiles {
         } else if has(["nursing assistant", "aide", "caregiver"]) {
             careerAge = 19
             education = "\(diploma); nurse aide certificate, Hollis Community College, \(hsYear + 1)."
-        } else if has(["software", "engineer", "account", "cpa", "founder", "ceo", "executive", "pharmaceutical", "teacher", "real estate", "sales manager"]) {
+        } else if (has(["software", "engineer", "account", "cpa", "founder", "ceo", "executive", "pharmaceutical", "teacher", "real estate", "sales manager",
+                       "financial advisor", "underwriter", "media coordinator", "novelist", "columnist", "director", "company president"]) && !selfDescribed) {
             careerAge = 22
             education = "Bachelor's degree from \(rng.pick(["East Carolina University", "UNC Wilmington", "NC State University"])), \(grad(22))."
         } else if has(["police", "sheriff", "sergeant", "deputy", "officer", "detention"]) {
@@ -455,13 +506,13 @@ enum DefendantProfiles {
         } else if !unemployed {
             let base = occupation.components(separatedBy: ",").first ?? occupation
             let earliest = min(max(careerStart, lastRelease, firstWork, afterService), anchorYear)
-            let start = max(earliest, anchorYear - rng.int(1...12))
+            let start = max(earliest, anchorYear - (professional && age >= 40 ? rng.int(8...22) : rng.int(1...12)))
             timeline.append((start, Job(title: base.capitalizedFirst, employer: employer(for: base, rng: &rng),
                                         years: "\(min(start, currentYear))–present", current: true)))
             if let job = partTime {
                 let sideStart = max(start, anchorYear - rng.int(1...3))
                 timeline.append((sideStart, Job(title: "Part-time \(job)", employer: employer(for: job, rng: &rng), years: "\(sideStart)–present", current: true)))
-            } else if rng.chance(0.3) && !has(["owner", "founder", "ceo", "therapist", "practitioner", "sergeant", "sheriff"]) {
+            } else if rng.chance(0.3) && !professional && !has(["rideshare", "driver"]) {
                 let side = rng.pick(["weekend server", "weekend security guard", "weekend delivery driver", "part-time rideshare driver"])
                 let sideEmployer: String = switch side {
                 case "weekend server": rng.pick(["The Lantern Row Tavern", "Pell Avenue Diner"])
@@ -499,6 +550,8 @@ enum DefendantProfiles {
                 } else if let path = careerPaths.first(where: { $0.0.contains(where: lower.contains) }), start >= birthYear + 18 {
                     let (title, place) = rng.pick(path.1)
                     job = Job(title: title, employer: place, years: "\(start)–\(cursor)", current: false)
+                } else if professional {
+                    break
                 } else {
                     let past = rng.pick(pastJobs.filter { !$0.contains("Army") || start >= birthYear + 18 })
                     job = Job(title: past.capitalizedFirst, employer: employer(for: past, rng: &rng), years: "\(start)–\(cursor)", current: false)
@@ -516,6 +569,19 @@ enum DefendantProfiles {
                                                   years: "\(unemployedSince + 1 > currentYear ? currentYear : unemployedSince + 1)–present", current: true)))
         }
         jobs = timeline.sorted { $0.start > $1.start }.map { $0.job }
+        // The same job at the same place twice in a row is one stretch of work ("Carpenter, 2013–2015" and "2015–2018").
+        var merged: [Job] = []
+        for job in jobs {
+            if let last = merged.last, !last.current, !job.current, last.title == job.title, last.employer == job.employer,
+               let end = last.years.components(separatedBy: "–").last, let start = job.years.components(separatedBy: "–").first {
+                merged[merged.count - 1].years = "\(start)–\(end)"
+            } else if job.title.contains("Army") && merged.contains(where: { $0.title.contains("Army") }) {
+                continue
+            } else {
+                merged.append(job)
+            }
+        }
+        jobs = merged
 
         // Family fits the person's age, the background, and whatever the case itself says about spouse and children.
         var facts = known
@@ -552,10 +618,14 @@ enum DefendantProfiles {
         } else if student {
             residence = rng.pick(["Lives in student housing.", "Lives with family on \(street) in \(town)."])
         } else {
-            var options = ["Rents an apartment on \(street) in \(town).", "Rents a room from a friend in \(town)."]
+            // A married person, a parent, or someone with a career has a home of their own, not a friend's spare room.
+            let settled = professional || family.hasPrefix("Married") || family.hasPrefix("Widowed") || !family.contains("no children")
+            var options = ["Rents an apartment on \(street) in \(town)."]
+            if !settled { options.append("Rents a room from a friend in \(town).") }
             if age >= 25 { options.append("Owns a small house on \(street) in \(town).") }
-            if age < 30 { options.append("Lives with a parent on \(street) in \(town).") }
-            if unemployed || rng.chance(0.3) { options.append("Has moved three times in the past year; most recently staying with family in \(town).") }
+            if professional && age >= 30 { options += ["Owns a house on \(street) in \(town).", "Owns a house on \(street) in \(town)."] }
+            if age < 30 && !family.hasPrefix("Married") { options.append("Lives with a parent on \(street) in \(town).") }
+            if !settled && (unemployed || rng.chance(0.3)) { options.append("Has moved three times in the past year; most recently staying with family in \(town).") }
             residence = rng.pick(options)
         }
 
@@ -787,7 +857,7 @@ enum Investigations {
         }
         let collected = state.filter { $0.kind == .physical || $0.kind == .forensic }
         let obtained = state.filter { $0.kind == .digital || $0.kind == .document || $0.kind == .video }
-        let place = placePhrase(values: values, facts: facts, street: street, town: town)
+        let place = t.story?.scene.map { TextFiller(values: values)($0) } ?? placePhrase(values: values, facts: facts, street: street, town: town)
         let abbreviation = detective.agency.split(separator: " ").compactMap { $0.first }.filter { $0.isLetter }.map(String.init).joined()
         let latest = CaseDates.add(-21, to: sessionDate)
         func clamp(_ d: Date) -> Date { min(d, latest) }

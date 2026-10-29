@@ -196,7 +196,8 @@ extension StoryCases {
             prosecutionOpening: "Seven cents on the dollar, a fake address, and a name engraved in the steel.",
             defenseOpening: "A shop owner who reported every detail to the police the same day.",
             prosecutionClosing: "Reasonable grounds to believe they were stolen is all the law requires.",
-            defenseClosing: "Nobody who knows they're fencing tools sends the police a description."
+            defenseClosing: "Nobody who knows they're fencing tools sends the police a description.",
+            victim: VictimFacts(restitution: 0)
         )
     )
 
@@ -293,7 +294,8 @@ extension StoryCases {
             prosecutionOpening: "A check dated while the signer was on a ventilator.",
             defenseOpening: "A parent's thank-you, signed early and dated late.",
             prosecutionClosing: "The dead can't sign checks, and {PARENT} couldn't sign this one.",
-            defenseClosing: "Probably isn't beyond a reasonable doubt."
+            defenseClosing: "Probably isn't beyond a reasonable doubt.",
+            victim: VictimFacts(relationship: "The defendant's sibling and the executor of their parent's estate.", harm: ["No physical injury."], restitution: 22000, restitutionBasis: "the $22,000 taken from their parent's estate")
         )
     )
 
@@ -387,6 +389,7 @@ extension StoryCases {
             defenseOpening: "A closed door, clear instructions, and a family that lost a child.",
             prosecutionClosing: "Culpable negligence is ignoring a danger anyone could see.",
             defenseClosing: "{DL} made a terrible mistake, not a crime.",
+            victim: VictimFacts(relationship: "A child at the defendant's birthday party; a cousin of the defendant's child."),
             residence: "Owns a house on {STREET} in {HOOD}."
         )
     )
@@ -484,7 +487,8 @@ extension StoryCases {
             defenseOpening: "An open network, a shared set of initials, and a common typo.",
             prosecutionClosing: "Each piece alone could be coincidence. Together they're {DL}.",
             defenseClosing: "Coincidences stacked up are still coincidences.",
-            genders: ["V": .female]
+            genders: ["V": .female],
+            victim: VictimFacts(relationship: "No relationship; she is dating the defendant's ex.", restitution: 1800, restitutionBasis: "counseling costs")
         )
     )
 }

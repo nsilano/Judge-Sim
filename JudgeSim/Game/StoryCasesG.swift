@@ -101,7 +101,7 @@ extension StoryCases {
             defenseOpening: "Two years of early arrivals, a shared computer, and an office full of people who resented {VL}.",
             prosecutionClosing: "The pieces fit only one person.",
             defenseClosing: "The pieces fit several. That's reasonable doubt.",
-            victim: VictimFacts(age: 51, occupation: "Dispatch supervisor at a trucking company", relationship: "The defendant's supervisor at work.")
+            victim: VictimFacts(age: 51, occupation: "Dispatch supervisor at a trucking company", relationship: "The defendant's supervisor at work.", harm: ["Ethylene glycol poisoning and kidney failure. Now on dialysis."], restitution: 46000, restitutionBasis: "hospital bills and ongoing dialysis")
         )
     )
 
@@ -296,7 +296,7 @@ extension StoryCases {
             defenseOpening: "A tracker from the day they bought the car, places {DL} always went, and no threats.",
             prosecutionClosing: "The law requires distress, not threats.",
             defenseClosing: "The law requires following, not grief.",
-            victim: VictimFacts(relationship: "A former partner of the defendant.")
+            victim: VictimFacts(relationship: "A former partner of the defendant.", restitution: 0)
         )
     )
 

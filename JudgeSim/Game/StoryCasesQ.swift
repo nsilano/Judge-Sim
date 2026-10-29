@@ -100,7 +100,8 @@ extension StoryCases {
             defenseOpening: "A busy shop, many sellers, and two thieves who want a deal.",
             prosecutionClosing: "Innocent buyers don't get VINs filed off. Thieves' customers do.",
             defenseClosing: "The thieves' word isn't enough to prove what {DL} knew.",
-            genders: ["D": .male]
+            genders: ["D": .male],
+            victim: VictimFacts(relationship: "Strangers.")
         )
     )
 
@@ -298,7 +299,7 @@ extension StoryCases {
             defenseOpening: "A jail flooded with fentanyl, and a snitch who needs someone to blame.",
             prosecutionClosing: "Same drug, same mix, same pod, same officer who never checked the cell.",
             defenseClosing: "Two sources of fentanyl and no proof which one killed {VL}.",
-            victim: VictimFacts(record: "Held in the county jail on a probation violation at the time of death.")
+            victim: VictimFacts(relationship: "Held in the detention center where the defendant worked.", record: "Held in the county jail on a probation violation at the time of death.")
         )
     )
 
@@ -397,7 +398,8 @@ extension StoryCases {
             defenseOpening: "A horrible accident and an owner who tried to stop it.",
             prosecutionClosing: "Knowing the risk and walking them anyway is malice.",
             defenseClosing: "Negligence, even gross negligence, is manslaughter, not murder.",
-            genders: ["D": .female, "V": .female]
+            genders: ["D": .female, "V": .female],
+            victim: VictimFacts(relationship: "A neighbor in the same apartment building.")
         )
     )
 
@@ -495,7 +497,8 @@ extension StoryCases {
             prosecutionOpening: "Miles went in at auction and disappeared on {DL}'s lot.",
             defenseOpening: "As-is cars, a busy lot, and many hands in the back bay.",
             prosecutionClosing: "{DL} signed every false statement. {D.He} owned the device. {D.He} owned the lot.",
-            defenseClosing: "Access by others leaves reasonable doubt about who did the rolling."
+            defenseClosing: "Access by others leaves reasonable doubt about who did the rolling.",
+            victim: VictimFacts(relationship: "Bought a car from the defendant's lot.", restitution: 6500, restitutionBasis: "the difference between what she paid and what the car was worth")
         )
     )
 }

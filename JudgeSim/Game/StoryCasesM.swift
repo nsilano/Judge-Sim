@@ -105,6 +105,7 @@ extension StoryCases {
             defenseOpening: "A hospital with shared badges, too few nurses, and a need for someone to blame.",
             prosecutionClosing: "The insulin came from a needle, the needle came from {DL}'s badge, and the records were erased by {DL}'s login.",
             defenseClosing: "Opportunity isn't proof. Nobody saw anything, and the badges were everyone's.",
+            victim: VictimFacts(relationship: "A patient on the defendant's unit."),
             employer: "Hollis Regional Medical Center"
         )
     )
@@ -209,7 +210,10 @@ extension StoryCases {
             defenseClosing: "New science deserves skepticism when a life is on the line.",
             when: .yearsAgo(13),
             genders: ["D": .male, "V": .female],
-            family: "Married, 2 children."
+            victim: VictimFacts(relationship: "No known connection to the defendant."),
+            employer: "an architecture firm in Port Hollis",
+            family: "Married, 2 children.",
+            yearsAtJob: 25
         )
     )
 
@@ -308,7 +312,8 @@ extension StoryCases {
             prosecutionClosing: "The DNA doesn't age, and it doesn't lie.",
             defenseClosing: "If you can't trust the box, you can't trust what came out of it.",
             when: .yearsAgo(39),
-            genders: ["D": .male]
+            genders: ["D": .male],
+            victim: VictimFacts(relationship: "No known connection; the defendant lived four miles away.")
         )
     )
 
@@ -408,7 +413,7 @@ extension StoryCases {
             prosecutionClosing: "Coincidence doesn't explain an earring from a dead woman's ear.",
             defenseClosing: "Without DNA or a witness, the State has a truck route and a hunch.",
             genders: ["D": .male, "V": .female],
-            victim: VictimFacts(family: "Single, one child, a son.")
+            victim: VictimFacts(relationship: "No known connection to the defendant.", family: "Single, one child, a son.")
         )
     )
 
@@ -511,6 +516,7 @@ extension StoryCases {
             prosecutionClosing: "Twelve visits, one sheath, and two dark hours.",
             defenseClosing: "Three men in that house are still unknown. The State stopped looking.",
             genders: ["D": .male],
+            victim: VictimFacts(occupation: "Student at Hollis State University", relationship: "No known connection to the defendant."),
             school: "East Carolina University (graduate program in criminology)"
         )
     )

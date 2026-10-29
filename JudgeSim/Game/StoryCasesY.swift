@@ -92,7 +92,9 @@ extension StoryCases {
             prosecutionOpening: "$3,000, a dark phone, and 'moving down for good.'",
             defenseOpening: "A frightened parent took a child to the beach.",
             prosecutionClosing: "Intent is shown by what {DL} did: the savings, the phone, the weekly rate.",
-            defenseClosing: "A note saying 'back by Wednesday' is reasonable doubt about intent."
+            defenseClosing: "A note saying 'back by Wednesday' is reasonable doubt about intent.",
+            when: .weekday(6),
+            victim: VictimFacts(relationship: "The other parent of their child.", harm: ["No physical injury. Her daughter was missing for four days."], restitution: 0)
         )
     )
 
@@ -145,15 +147,15 @@ extension StoryCases {
         ],
         defenseWitnesses: [
             WitnessSeed(name: nil, role: "{DL}'s teenage son",
-                        direct: ["\"They had me against the fence.\""],
-                        cross: ["\"I can't say who was who.\""],
+                        direct: ["\"They had me up against the fence. Grown men.\""],
+                        cross: ["\"I don't know who was who. It was crazy.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("Were you playing in that game?", "\"Yes. I play for the home team.\""),
-                            .direct("What happened to you?", "\"Three or four grown men had me against the fence. One hit me in the face. Then my dad was there.\""),
-                            .direct("Were you hurt?", "\"Yes. A bloody nose and a cut lip.\""),
-                            .cross("Was {VL} one of them?", "\"I don't know. It was all fast.\""),
-                            .cross("You can't say who was who in that crowd?", "\"No, I can't.\"")
+                            .direct("Were you playing in that game?", "\"Yes, sir. I'm a linebacker. Number fifty-four.\""),
+                            .direct("What happened to you?", "\"I was still in my pads walking to the bus and these like three or four grown men pushed me into the fence. One of them punched me in the face. Then all of a sudden my dad was there.\""),
+                            .direct("Were you hurt?", "\"My nose was bleeding everywhere and my lip got split. I had to sit out practice for a week.\""),
+                            .cross("Was {VL} one of them?", "\"I don't know. It all happened so fast. I just remember a lot of yelling.\""),
+                            .cross("You can't say who was who in that crowd?", "\"No, sir. I had blood in my eyes.\"")
                         ])
         ],
         prosecutionTheory: ["{D} joined a brawl and swung a metal chair into a crowd, breaking a man's ribs."],
@@ -179,7 +181,8 @@ extension StoryCases {
             defenseOpening: "A father and a son in danger.",
             prosecutionClosing: "Defense of another allows reasonable force against the attacker, not a chair swung into a crowd.",
             defenseClosing: "{DL} believed {D.his} son was in danger, and that belief was reasonable.",
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(relationship: "Strangers; a visiting fan.", harm: ["Two cracked ribs from a metal folding chair."], restitution: 2400, restitutionBasis: "emergency room and follow-up care")
         )
     )
 
@@ -263,7 +266,8 @@ extension StoryCases {
             prosecutionOpening: "A post, a countdown, and 104 miles an hour.",
             defenseOpening: "A tragedy with two causes, one of them in {VL}'s car.",
             prosecutionClosing: "Racing on a public street at three times the limit is culpable negligence by definition.",
-            defenseClosing: "Speed was {DL}'s fault. The rolling stop was not."
+            defenseClosing: "Speed was {DL}'s fault. The rolling stop was not.",
+            victim: VictimFacts(relationship: "Strangers.")
         )
     )
 
@@ -419,7 +423,8 @@ extension StoryCases {
             prosecutionOpening: "A benched child, a parent's IP address, and a threat about the parking lot.",
             defenseOpening: "A house with a teenager and an open router.",
             prosecutionClosing: "Motive, the address, and the spelling all point one way.",
-            defenseClosing: "An IP address is a house, not a person."
+            defenseClosing: "An IP address is a house, not a person.",
+            victim: VictimFacts(relationship: "Coached the defendant's child.", restitution: 0)
         )
     )
 }

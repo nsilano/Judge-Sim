@@ -116,6 +116,8 @@ func names(in text: String) -> [String] {
             strings(in: c, into: &texts)
             total += texts.count
             consistency(c, template: t, county: county)
+            datesAgree(c, where: t.key)
+            bodyAndAge(c, age: t.story?.victim?.age, where: t.key)
             qa += texts.filter { $0.hasPrefix("\"") }.count
             for text in texts where text.count > 8 {
                 let before = findings.count
@@ -140,6 +142,65 @@ func names(in text: String) -> [String] {
     chainCheck(county: county)
     print("Scanned \(templates.count) cases, \(total) text fields (\(qa) quoted answers). \(findings.count) flags.")
     for f in Set(findings).sorted() { print("- " + f) }
+}
+
+/// The same injury on the same side everywhere ("left arm" never becomes "right arm"), and the victim's age the
+/// same wherever it's given.
+func bodyAndAge(_ c: CourtCase, age victimAge: Int?, where key: String) {
+    var texts: [String] = []
+    strings(in: c, into: &texts)
+    let all = texts.joined(separator: " \n ").lowercased()
+    let parts = ["arm", "leg", "hand", "eye", "knee", "shoulder", "hip", "wrist", "ankle", "foot", "ear", "cheek", "temple", "side", "thigh", "forearm", "elbow", "ribs", "lung", "kidney", "humerus", "femur", "orbital"]
+    for part in parts {
+        let left = all.contains("left \(part)"), right = all.contains("right \(part)")
+        if left && right {
+            findings.append("\(key) [injury]: both 'left \(part)' and 'right \(part)' appear in the case")
+        }
+    }
+    // The victim's age: "{V}, 15," in the text against the case's victim facts.
+    if let v = c.victimName, let age = victimAge {
+        let pattern = "\(v), "
+        var search = c.summary[...]
+        while let r = search.range(of: pattern) {
+            let tail = search[r.upperBound...].prefix(4)
+            let digits = tail.prefix { $0.isNumber }
+            if let n = Int(digits), n != age, n < 120 {
+                findings.append("\(key) [age]: the summary gives \(v) as \(n), the case facts say \(age)")
+            }
+            search = search[r.upperBound...]
+        }
+    }
+}
+
+/// A holiday or a weekday named in the summary has to match the incident date: "Halloween night" is October 31, and
+/// "Friday night, October 3" has to fall on a Friday.
+func datesAgree(_ c: CourtCase, where key: String) {
+    guard let incident = c.investigation?.facts?.incident else { return }
+    let cal = Calendar.current
+    let m = cal.component(.month, from: incident), d = cal.component(.day, from: incident), wd = cal.component(.weekday, from: incident)
+    let text = c.summary
+    let holidays: [(String, Bool)] = [
+        ("Halloween night", m == 10 && d == 31), ("On Halloween", m == 10 && d == 31), ("Christmas Eve", m == 12 && d == 24),
+        ("Christmas morning", m == 12 && d == 25), ("Christmas Day", m == 12 && d == 25), ("New Year's Eve", m == 12 && d == 31),
+        ("New Year's Day", m == 1 && d == 1), ("Fourth of July", m == 7 && d == 4), ("July 4th", m == 7 && d == 4),
+        ("Valentine's Day", m == 2 && d == 14), ("Christmas parade", m == 12 && d <= 20),
+        ("Thanksgiving", m == 11 && wd == 5 && (22...28).contains(d))]
+    for (phrase, ok) in holidays where text.contains(phrase) && !ok {
+        findings.append("\(key) [date]: the summary says \(phrase), but the incident is \(SentenceFormat.shortDate(incident))")
+    }
+    let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    let monthName = DateFormatter().monthSymbols[m - 1]
+    for (i, name) in names.enumerated() where i + 1 != wd {
+        for dateText in ["\(monthName) \(d)", "\(d) \(monthName)"] {
+            guard let r = text.range(of: dateText) else { continue }
+            let window = text[text.index(r.lowerBound, offsetBy: -min(80, text.distance(from: text.startIndex, to: r.lowerBound)))..<r.lowerBound]
+            // Only the sentence the date is in.
+            let before = window.split(separator: ".", omittingEmptySubsequences: false).last.map(String.init) ?? String(window)
+            if before.contains(name) {
+                findings.append("\(key) [date]: the summary puts \(name) next to \(dateText), which falls on a \(names[wd - 1])")
+            }
+        }
+    }
 }
 
 /// Builds each written case, then each follow-up the news can bring back, for the same person, the way the game does,
@@ -734,6 +795,33 @@ if args.count > 1 && args[1] == "scan" {
     print("Played \(weeks) weeks (\(style)). \(game.casesHeard) cases heard. \(findings.count) flags. Transcript: \(outPath)")
 }
 
+/// `Playtest dossier <start> <count>`: each written case as the game fills it in, for reading.
+if args.count > 3 && args[1] == "dossier" {
+    MainActor.assumeIsolated {
+        let county = County.generate(seed: 42)
+        let start = Int(args[2]) ?? 0, count = Int(args[3]) ?? 20
+        for (i, t) in StoryCases.all.enumerated() where i >= start && i < start + count {
+            var trng = SeededRNG(seed: UInt64(i) &+ 77)
+            let ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: Date(), docketSequence: 4000 + i, recentTemplateKeys: [])
+            let c = CaseGenerator.build(t, seed: UInt64(i) &+ 77, band: .close, context: ctx, rng: &trng)
+            var out = ["##### \(i) \(t.key) | \(c.caption) | \(c.charges.map(\.law.title).joined(separator: "; "))"]
+            out.append("D: \(c.defendant.name), \(c.defendant.age), \(c.defendant.occupation). V: \(c.victimName ?? "none")")
+            if let f = c.investigation?.facts { out.append("Incident \(SentenceFormat.shortDate(f.incident)), arrest \(SentenceFormat.shortDate(f.arrest)), \(f.place)") }
+            out.append("SUMMARY: " + c.summary)
+            if let p = c.defendant.profile { out.append("DPROFILE: \(p.family) | \(p.residence) | \(p.education) | " + p.jobs.map { "\($0.title) at \($0.employer), \($0.years)\($0.current ? " (now)" : "")" }.joined(separator: "; ")) }
+            if let v = VictimProfiles.make(c, county: county) { out.append("VICTIM: age \(v.age.map(String.init) ?? "?"), \(v.gender), \(v.deceased ? "deceased" : "living"); \(v.occupation); \(v.relationship); harm: \(v.harm.joined(separator: " | ")); impact: \(v.impactStatement ?? "-")") }
+            for e in c.evidence { out.append("EV \(e.side == .prosecution ? "S" : "D") \(e.title): \(e.detail)") }
+            for w in c.witnesses {
+                out.append("W \(w.name) (\(w.role)):")
+                for x in w.exchanges ?? [] { out.append("  Q \(x.question) A \(x.answer)") }
+            }
+            if let tl = c.investigation?.timeline { out.append("TIMELINE: " + tl.map { "\($0.when): \($0.what)" }.joined(separator: " / ")) }
+            out.append("IMPACT: \(c.victimImpact ?? "-")")
+            print(out.joined(separator: "\n"))
+        }
+    }
+    exit(0)
+}
 if args.count > 1 && args[1] == "stories" {
     MainActor.assumeIsolated { tryEveryStory() }
     exit(0)

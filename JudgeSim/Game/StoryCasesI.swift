@@ -394,7 +394,7 @@ extension StoryCases {
             defenseOpening: "An old neighbor, a real property dispute, and an angry voicemail followed by a lawyer.",
             prosecutionClosing: "A reasonable person hears that message and fears for their life.",
             defenseClosing: "Ugly words, real grievance, no true threat.",
-            victim: VictimFacts(harm: ["Not physically hurt. Had an alarm system installed and stopped walking alone at night."]),
+            victim: VictimFacts(relationship: "Next-door neighbor of the defendant; a dispute over a fence line.", harm: ["Not physically hurt. Had an alarm system installed and stopped walking alone at night."]),
             family: "Widowed."
         )
     )
@@ -494,7 +494,8 @@ extension StoryCases {
             prosecutionOpening: "{DL}'s code, {DL}'s bolt cutters, and {DL}'s listing.",
             defenseOpening: "A borrowed code, a common lock color, and a serial number that doesn't match.",
             prosecutionClosing: "Only one code opened that gate that night.",
-            defenseClosing: "A code isn't a person, and the generator isn't the victim's."
+            defenseClosing: "A code isn't a person, and the generator isn't the victim's.",
+            victim: VictimFacts(relationship: "Strangers; both rented units at the same storage facility.", harm: ["No physical injury."], restitution: 2400, restitutionBasis: "a generator, a miter saw, and two drills")
         )
     )
 }

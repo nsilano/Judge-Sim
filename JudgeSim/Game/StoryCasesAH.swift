@@ -345,7 +345,7 @@ extension StoryCases {
             defenseOpening: "A volunteer who mixed money that should have been kept separate.",
             prosecutionClosing: "Every penny goes to the family. {DL} wrote that and spent the money on {D.him}self. That's the lie the law punishes.",
             defenseClosing: "{DL} did the work, gave the family something, and was looking for a house. Carelessness isn't fraud.",
-            victim: VictimFacts(age: 71, occupation: "retired teacher", relationship: "Donor; did not know {DL}"),
+            victim: VictimFacts(age: 71, occupation: "retired teacher", relationship: "A donor; did not know the defendant.", restitution: 500, restitutionBasis: "her $500 donation"),
             family: "Married, one child."
         )
     )

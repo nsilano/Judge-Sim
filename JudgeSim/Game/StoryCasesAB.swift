@@ -268,7 +268,7 @@ extension StoryCases {
             defenseOpening: "{DL} bought a mower off a public listing and parked it where the whole road could see it.",
             prosecutionClosing: "Reasonable grounds to believe. Every fact you heard gave {DL} grounds.",
             defenseClosing: "A good deal isn't a crime. The State has to prove what {DL} knew, not what {DL} should have asked.",
-            victim: VictimFacts(occupation: "Landscaping business owner", relationship: "A stranger to the defendant."),
+            victim: VictimFacts(occupation: "Landscaping business owner", relationship: "Strangers.", restitution: 0),
             family: "Married, 1 child.",
             residence: "A single-wide on {STREET}"
         )

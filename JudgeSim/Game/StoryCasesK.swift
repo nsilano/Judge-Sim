@@ -96,7 +96,8 @@ extension StoryCases {
             defenseOpening: "A signed intake form, a standard technique, and twelve clean years.",
             prosecutionClosing: "No technique involves the breast. {VL} ran because it happened.",
             defenseClosing: "Fear and misunderstanding aren't proof beyond a reasonable doubt.",
-            genders: ["V": .female]
+            genders: ["V": .female],
+            victim: VictimFacts(relationship: "A client of the defendant's massage studio.", restitution: 1500, restitutionBasis: "counseling costs")
         )
     )
 
@@ -194,7 +195,7 @@ extension StoryCases {
             defenseOpening: "A borrowed car, a passenger-side shooter, and a cousin with a grudge.",
             prosecutionClosing: "{DL} was in that car. Driving or shooting, {D.he} is guilty.",
             defenseClosing: "The State proved whose car it was. Not who was in it.",
-            victim: VictimFacts(relationship: "No direct relationship; the victim's nephew had fought with the defendant's cousin.", family: "Two children, who were asleep in the house.")
+            victim: VictimFacts(relationship: "No direct relationship; the victim's nephew had fought with the defendant's cousin.", family: "Two children, who were asleep in the house.", harm: ["No one was hit. One shot went through the bedroom where her two children were asleep."], restitution: 2600, restitutionBasis: "repairs to the house and windows")
         )
     )
 
@@ -292,7 +293,8 @@ extension StoryCases {
             defenseOpening: "A drunk man with a broken bottle chasing someone who walked away.",
             prosecutionClosing: "A wound in the back isn't self-defense.",
             defenseClosing: "{VL} brought a bottle to a man who was leaving. At most, it's manslaughter.",
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(relationship: "Acquaintances; they argued over a pool game that night.")
         )
     )
 
@@ -483,6 +485,7 @@ extension StoryCases {
             prosecutionClosing: "Every detail fits {DL}, and {D.he} has the lights and the badge.",
             defenseClosing: "Fits isn't proven. The State checked one car out of fourteen.",
             genders: ["D": .male, "V": .female],
+            victim: VictimFacts(relationship: "Strangers.", restitution: 0),
             alibiCheck: AlibiCheck(holds: AlibiCheck.Finding(title: "Garage Opener Log and Phone Records", detail: "The garage door's app logged no openings between 6:10 p.m. and 7:05 the next morning, and {DL}'s phone stayed on the home Wi-Fi all night.", kind: .digital),
                                    breaks: AlibiCheck.Finding(title: "Garage Opener Log and Phone Records", detail: "The garage door's app logged an opening at 10:41 p.m. and another at 11:38 p.m. {DL}'s phone connected to a tower on Route 17 at 11:03 p.m.", kind: .digital))
         )

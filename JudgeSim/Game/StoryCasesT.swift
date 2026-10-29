@@ -197,7 +197,8 @@ extension StoryCases {
             defenseClosing: "The law has room for mercy, and this is the case for it.",
             genders: ["D": .male, "V": .female],
             victim: VictimFacts(occupation: "Retired; homemaker", relationship: "Married to the defendant for sixty-one years.", family: "Married to the defendant for sixty-one years; grown children."),
-            family: "Widowed, 2 children, both grown. The late spouse is the victim in this case."
+            family: "Widowed, 2 children, both grown. The late spouse is the victim in this case.",
+            residence: "The farmhouse in {HOOD} where he and his wife lived for sixty-one years."
         )
     )
 
@@ -298,7 +299,8 @@ extension StoryCases {
             prosecutionClosing: "The flame was always there. The danger was always known.",
             defenseClosing: "A tragedy isn't always a crime.",
             when: .months([8, 9, 10]),
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(occupation: "High school student; the defendant paid him to watch the still's fire", relationship: "A neighbor's son who worked nights for the defendant.")
         )
     )
 
@@ -401,7 +403,8 @@ extension StoryCases {
             defenseOpening: "A shortage, a contractor in over his head, and a contract dispute.",
             prosecutionClosing: "Eleven cents of every dollar went to supplies.",
             defenseClosing: "Bad business isn't always a crime.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            victim: VictimFacts(relationship: "A homeowner who hired the defendant after the storm.", restitution: 14000, restitutionBasis: "her $14,000 deposit")
         )
     )
 

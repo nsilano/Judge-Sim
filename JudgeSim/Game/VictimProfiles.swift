@@ -103,7 +103,14 @@ enum VictimProfiles {
             testified = deceased ? "Deceased; the State proves the case through other witnesses." : "Not on the State's witness list."
         }
 
-        return VictimProfile(name: name, age: age, gender: NameBank.gender(of: name), deceased: deceased, occupation: occupation,
+        // A written case that never gives the victim's age or work doesn't get one made up: an invented "64-year-old
+        // student" can contradict what the victim says on the stand.
+        let written = c.templateKey.hasPrefix("story.")
+        let ageKnown = told?.age ?? statedAge(summary, name: name, last: last) ?? describedAge(inTheFile.joined(separator: " "))
+        let jobKnown = told?.occupation ?? statedOccupation(summary, name: name, last: last)
+        let shownAge: Int? = written && ageKnown == nil ? nil : age
+        let shownJob = written && jobKnown == nil ? (ageKnown.map { $0 < 18 } == true ? occupation : "Not stated in the case file") : occupation
+        return VictimProfile(name: name, age: shownAge, gender: NameBank.gender(of: name), deceased: deceased, occupation: shownJob,
                              residence: residence, family: familyLine, relationship: relationship, harm: harm, record: record,
                              testified: testified, position: c.background?.victimStanceDetail, impactStatement: c.victimImpact,
                              inTheFile: inTheFile)
@@ -161,6 +168,11 @@ enum VictimProfiles {
             ("cousin", "Related to the defendant."), ("brother", "Related to the defendant."), ("sister", "Related to the defendant."),
             ("son", "Related to the defendant."), ("daughter", "Related to the defendant."), ("friend", "Knew the defendant socially.")
         ]
+        // The victim's own spouse ("Blake and his wife") is not the defendant.
+        // "Her husband, {D}" and "his wife, {V}" still are.
+        let vFirst = NSRegularExpression.escapedPattern(for: first.lowercased())
+        let dFirst = NSRegularExpression.escapedPattern(for: (c.defendant.name.split(separator: " ").first.map(String.init) ?? "").lowercased())
+        let lower = lower.replacingOccurrences(of: "\\b(his|her|their) (wife|husband|spouse)s?\\b(?!,? (\(dFirst)|\(vFirst)))", with: "", options: .regularExpression)
         // Whole words only: "son" isn't in "person", nor "ex-" in "next".
         for (word, line) in pairs {
             let pattern = word.hasSuffix("-") ? "\\b" + NSRegularExpression.escapedPattern(for: word) : "\\b" + NSRegularExpression.escapedPattern(for: word) + "s?\\b"
@@ -185,6 +197,25 @@ enum VictimProfiles {
             lines.append(rng.pick(["Not physically hurt. Has changed routines, phone numbers, and the route to work.",
                                    "No physical injury. Started counseling and sleeps with the lights on.",
                                    "Not touched, but says the fear hasn't let up; moved in with family for a time."]))
+        } else if c.templateKey.hasPrefix("story.") {
+            // A written case says what happened to the victim; nothing is invented. The State's medical exhibit is the
+            // injury, and with none, there was no physical injury.
+            // Only where someone could be hurt: a fraud's "Hospital Letter" is not an injury.
+            let canBeHurt = [.violent, .family, .robbery, .traffic].contains(c.category)
+            let medical = c.evidence.first { e in
+                canBeHurt && e.side == .prosecution && ["medical", "hospital", "emergency", "surgical", "pediatric", "x-ray", "injur", "autopsy", "necropsy", "surgeon",
+                                           "nurse", "wound", "examiner", "trauma", "x-rays", "photos of"]
+                    .contains { e.title.lowercased().contains($0) }
+            }
+            if let medical {
+                lines.append(medical.detail)
+            } else if [.violent, .family, .robbery].contains(c.category) {
+                lines.append("No physical injury.")
+            }
+            if [.violent, .family, .robbery].contains(c.category) {
+                lines.append(rng.pick(["Has trouble sleeping and has started counseling.", "Says the fear is worse than anything else.",
+                                       "Avoids the place where it happened."]))
+            }
         } else {
             switch c.category {
             case .violent, .family:
@@ -211,6 +242,7 @@ enum VictimProfiles {
                 lines.append("Affected by the offense; details are in the victim impact statement.")
             }
         }
+        if lines.isEmpty && c.templateKey.hasPrefix("story.") { lines.append("No physical injury.") }
         if let bg = c.background, bg.restitution > 0 {
             lines.append("Restitution claimed: \(SentenceFormat.dollars(bg.restitution))" + (bg.restitutionBasis.map { " for \($0)" } ?? "") + ".")
         }

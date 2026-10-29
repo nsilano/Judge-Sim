@@ -112,7 +112,7 @@ enum DailyNews {
         // The docket, now and then.
         if s.awaiting >= 6 && rng.chance(0.2) {
             add("By the numbers: \(s.awaiting) cases wait for trial dates",
-                "\(s.awaiting) criminal cases in \(c.name) Superior Court are waiting for \(judge) to set trial dates. \(s.jailedWaiting) of the defendants are in jail. The oldest has waited \(s.oldestWait) days.",
+                "\(s.awaiting) criminal cases in \(c.name) Superior Court are waiting for \(judge) to set trial dates. \(s.jailedWaiting) of the defendants are in jail. The oldest has waited \(s.oldestWait) day\(s.oldestWait == 1 ? "" : "s").",
                 section: "Courts")
         }
 

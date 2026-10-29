@@ -102,7 +102,8 @@ extension StoryCases {
             prosecutionOpening: "Four people stopped on a dark road to help a stranger. {DL} came around the curve at seventy.",
             defenseOpening: "No one disputes what happened. This case is about who {DL} was raised to be, and who {D.he} still can be.",
             prosecutionClosing: "Being spoiled is not a defense. Four families are owed accountability.",
-            defenseClosing: "Punish {DL}, but punish the eighteen-year-old in front of you, not the parent who made {D.him}."
+            defenseClosing: "Punish {DL}, but punish the eighteen-year-old in front of you, not the parent who made {D.him}.",
+            victim: VictimFacts(relationship: "Strangers; her car had stalled on the shoulder.")
         )
     )
 
@@ -205,8 +206,9 @@ extension StoryCases {
             defenseOpening: "A tragedy, a sick man, and a defective car. Not a plan.",
             prosecutionClosing: "Steering around people is choosing where to hit people.",
             defenseClosing: "The honking was a warning. That's not someone who wants to kill.",
-            when: .months([12]),
-            genders: ["D": .male]
+            when: .window(month: 12, days: 1...14),
+            genders: ["D": .male],
+            victim: VictimFacts(relationship: "Strangers; she was at the parade.")
         )
     )
 
@@ -305,7 +307,9 @@ extension StoryCases {
             defenseOpening: "A cruel marriage and a desperate, stupid act, not a plan to kill.",
             prosecutionClosing: "You don't search how much it takes to kill a man to make him sick.",
             defenseClosing: "A weak heart killed {VL}. {DL}'s crime is reckless, not premeditated.",
-            genders: ["D": .female, "V": .male]
+            genders: ["D": .female, "V": .male],
+            victim: VictimFacts(relationship: "Married to the defendant."),
+            residence: "The home in {HOOD} the defendant shared with the victim."
         )
     )
 
@@ -404,6 +408,7 @@ extension StoryCases {
             prosecutionClosing: "A swatting call works only because it brings guns. It worked.",
             defenseClosing: "An officer's unreasonable choice to fire is the cause of this death.",
             genders: ["V": .male, "D": .male],
+            victim: VictimFacts(relationship: "Strangers; the defendant had never heard of him.", restitution: 12000, restitutionBasis: "funeral and burial expenses"),
             residence: "Lives with family in another state."
         )
     )

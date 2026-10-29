@@ -289,7 +289,7 @@ extension StoryCases {
             defenseOpening: "Two laptops, one Wi-Fi password, and no face on the video.",
             prosecutionClosing: "Only one person on that connection knew {V}, knew the password, and promised to do exactly this.",
             defenseClosing: "Motive isn't proof. The State traced a building and asked you to fill in the name.",
-            victim: VictimFacts(occupation: "dental office manager", relationship: "Former partner; ended the relationship a month before"),
+            victim: VictimFacts(occupation: "dental office manager", relationship: "Former partner; ended the relationship a month before", restitution: 0),
             time: "11:52 p.m.",
             family: "Single, no children.",
             residence: "An apartment in a fourplex in {HOOD}"
@@ -386,7 +386,7 @@ extension StoryCases {
             defenseOpening: "No gun, no residue, a phone at home, and one of nine hundred cars.",
             prosecutionClosing: "Who else had a reason two days earlier and a car like that one?",
             defenseClosing: "The State has a motive and a car color. That's suspicion, and suspicion is not proof beyond a reasonable doubt.",
-            victim: VictimFacts(relationship: "Acquaintance who owed {D} $400 for a car repair"),
+            victim: VictimFacts(relationship: "An acquaintance who owed the defendant $400 for a car repair.", harm: ["No one was hurt; a bullet went into the couch where she had been sleeping half an hour earlier."], restitution: 1800, restitutionBasis: "the front window and the couch"),
             time: "2:15 a.m.",
             family: "Lives with a partner; no children.",
             residence: "An apartment about three miles from {VL}'s house"

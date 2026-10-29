@@ -279,7 +279,10 @@ enum CaseGenerator {
         }
         let knownNames = Set(context.residents.map(\.name)).union(context.reservedNames)
         let drawnVictim = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"], avoiding: knownNames)
-        let victimName = t.hasVictim ? (sameVictim ?? drawnVictim) : nil
+        // A parent, child, or sibling the story says shares the family name has the defendant's last name.
+        let familyVictim = t.story?.sameSurname == true
+            ? String(drawnVictim.split(separator: " ").first ?? "") + " " + defendant.lastName : drawnVictim
+        let victimName = t.hasVictim ? (sameVictim ?? familyVictim) : nil
         let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"], avoiding: knownNames)
         let setting = CaseSetting.of(category: t.category, key: t.key)
         // Highway crashes and impaired driving are worked by the Highway Patrol.
@@ -322,6 +325,8 @@ enum CaseGenerator {
         var values: [String: String] = [
             "D": defendant.name,
             "DL": defendant.lastName,
+            // First names, for the people who'd use them: family, friends, a partner.
+            "DF": String(defendant.name.split(separator: " ").first ?? ""),
             "DA": "\(defendant.age)",
             "DO": defendant.occupation.lowercasedPhrase,
             "DET": detective.display,
@@ -340,6 +345,7 @@ enum CaseGenerator {
             "CITY": county.seat,
             "V": victimName ?? "the complainant",
             "VL": victimName.map(lastName) ?? "the complainant",
+            "VF": victimName.map { String($0.split(separator: " ").first ?? "") } ?? "the complainant",
             // A follow-up case names the earlier one in this court.
             "PRIOR": context.priorOffense?.lowercasedPhrase ?? "an earlier charge",
             "PRIORDATE": context.priorDate.map { $0.formatted(.dateTime.month(.wide).year()) } ?? "an earlier term of court"
@@ -518,18 +524,21 @@ enum CaseGenerator {
                     for i in profile.jobs.indices where profile.jobs[i].current { profile.jobs[i].current = false; profile.jobs[i].years = profile.jobs[i].years.replacingOccurrences(of: "present", with: "\(currentYear)") }
                     profile.jobs.insert(Job(title: "Employee", employer: place, years: "\(currentYear)–present", current: true), at: 0)
                 }
-                if let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" }) {
+                // The main job, not a weekend side job that started later.
+                let side = { (j: Job) in j.title.hasPrefix("weekend ") || j.title.hasPrefix("part-time ") }
+                if let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" && !side($0) })
+                    ?? profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" }) {
                     profile.jobs[i].employer = place
                     if story.employmentEnded {
                         profile.jobs[i].current = false
-                        profile.jobs[i].years = profile.jobs[i].years.replacingOccurrences(of: "present", with: "\(currentYear) (fired)")
+                        profile.jobs[i].years = profile.jobs[i].years.replacingOccurrences(of: "present", with: "\(currentYear)" + (profile.jobs[i].title.lowercased().contains("owner") ? " (closed)" : " (fired)"))
                     }
                 }
             }
             if let school = story.school.map({ fill($0) }) { profile.education = "Currently enrolled at \(school)." }
             if let family = story.family.map({ fill($0) }) { profile.family = family }
             if let residence = story.residence.map({ fill($0) }) { profile.residence = residence }
-            if let years = story.yearsAtJob, let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" }) {
+            if let years = story.yearsAtJob, let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" && !$0.title.hasPrefix("weekend ") && !$0.title.hasPrefix("part-time ") }) {
                 let start = currentYear - years
                 profile.jobs[i].years = "\(start)–present"
                 // Earlier jobs end before this one began.
@@ -600,8 +609,10 @@ enum CaseGenerator {
             // The written file says when the arrest happened; the fact sheet follows it.
             // The defendant's arrest, not someone else's ("a man arrested with methamphetamine names the clerk"), and
             // never before the crime itself.
-            let arrests = story.timeline.filter { $0.0 >= 0 && $0.1.lowercased().contains("arrested") }
-            if let offset = (arrests.first { $0.1.contains("{D") } ?? arrests.first)?.0 {
+            let arrests = story.timeline.filter { $0.0 >= 0 && ($0.1.lowercased().contains("arrested")
+                || ($0.1.lowercased().contains("charged") && $0.1.contains("{D"))) }
+            // An entry naming no one ("Arrested at work.") is the defendant's; one naming someone else is not.
+            if let offset = (arrests.first { $0.1.contains("{D") } ?? arrests.first { !$0.1.contains("{") })?.0 {
                 investigation.facts?.arrest = CaseDates.add(offset, to: incident)
             }
             investigation.howIdentified = fill(story.howIdentified)
@@ -736,7 +747,7 @@ enum CaseGenerator {
         var twistKey: String?
         var chosenTwist: TwistSeed?
         let jailedDays = min(330, maxCustodyDays)
-        let jailedTime = jailedDays >= 60 ? "\(jailedDays / 30) months" : "\(jailedDays) days"
+        let jailedTime = jailedDays >= 60 ? "\(jailedDays / 30) months" : "\(jailedDays) day\(jailedDays == 1 ? "" : "s")"
         let twistPool = GenericPools.twists.filter { $0.ages.contains(defendant.age) && ($0.key != "jailed" || jailedDays >= 45) }
         if t.story == nil, rng.chance(0.5), !twistPool.isEmpty {
             let twist = rng.pick(twistPool)
@@ -860,7 +871,7 @@ enum CaseGenerator {
             }
             if twistKey == "jailed" {
                 background.custodyDays = jailedDays
-                background.bondStatus = "Held in the Hollis County jail on a $5,000 secured bond for \(jailedDays) days."
+                background.bondStatus = "Held in the Hollis County jail on a $5,000 secured bond for \(jailedDays) day\(jailedDays == 1 ? "" : "s")."
             }
             if twistKey == "rehab" && background.custodyDays > 0 {
                 background.custodyDays = 0
@@ -1006,8 +1017,8 @@ enum CaseGenerator {
         let bond = "$" + CalendarCalls.roundBond(Double(CalendarCalls.bondBase(worstClass)) * bondFactor).formatted()
         let bondStatus = inCustody
             ? (gravest && rng.chance(0.6)
-                ? "Held without bond in the Hollis County jail for \(custodyDays) days."
-                : "Held in the Hollis County jail on a \(bond) secured bond for \(custodyDays) days.")
+                ? "Held without bond in the Hollis County jail for \(custodyDays) day\(custodyDays == 1 ? "" : "s")."
+                : "Held in the Hollis County jail on a \(bond) secured bond for \(custodyDays) day\(custodyDays == 1 ? "" : "s").")
             : rng.pick(["Released on a \(bond) secured bond. Has made every court date.",
                         serious ? "Released on a \(bond) secured bond with electronic monitoring." : "Released on a written promise to appear, with electronic monitoring.",
                         "Released on a \(bond) secured bond; missed one court date early on, then was re-released."])
@@ -1034,17 +1045,26 @@ enum CaseGenerator {
             restitution = rng.int(12...70) * 1_000; basis = "medical bills"
         case "imageLeak", "stalking":
             restitution = rng.int(2...9) * 500; basis = "counseling costs and lost wages"
+        case "story.homeInvasion":
+            // The cash is stated; the guns and jewelry were never recovered, except the one pawned rifle.
+            restitution = 3_000 + rng.int(9...16) * 1_000; basis = "the $3,000 in cash plus the jewelry and guns that were never recovered"
         default:
             break
         }
         // Every other case with someone who lost money or was hurt: the State asks for what it can document.
-        if restitution == 0 && rng.chance(0.85) {
-            let text = fill(t.specification) + " " + t.secondary.map { fill($0.specification) }.joined(separator: " ")
-            let stated = firstDollarAmount(in: text)
+        if restitution == 0 && (t.story != nil || rng.chance(0.85)) {
+            // Each count states its own amount; together they are the loss (a card count and a check count are
+            // different money). Anything already repaid, per the evidence, comes off.
+            let counts = ([fill(t.specification)] + t.secondary.map { fill($0.specification) }).compactMap { firstDollarAmount(in: $0) }
+            let refunded = (t.prosecutionEvidence + t.defenseEvidence).map { fill($0.detail) }.compactMap { detail -> Int? in
+                guard let r = detail.range(of: #"(refunded|repaid|paid back) \$[0-9,]+"#, options: .regularExpression) else { return nil }
+                return firstDollarAmount(in: String(detail[r]))
+            }.reduce(0, +)
+            let stated: Int? = counts.isEmpty ? nil : max(0, Array(Set(counts)).reduce(0, +) - refunded)
             let died = t.victimDies
             switch t.category {
             case .property:
-                restitution = stated ?? rng.int(6...80) * 100; basis = rng.pick(["unrecovered property and repairs", "the value of what was taken and the damage to the door", "replacement costs the owner documented"])
+                restitution = stated ?? rng.int(6...30) * 100; basis = rng.pick(["unrecovered property and repairs", "the value of what was taken and the damage to the door", "replacement costs the owner documented"])
             case .robbery:
                 restitution = stated ?? rng.int(3...25) * 100; basis = rng.pick(["cash and property taken", "the stolen money and a replaced phone", "what was taken and the victim's lost wages"])
             case .whiteCollar, .cyber:
@@ -1064,6 +1084,10 @@ enum CaseGenerator {
             default:
                 break
             }
+        }
+        // A written case that says what the victim lost says it exactly; 0 means nothing to repay.
+        if let told = t.story?.victim, let amount = told.restitution {
+            restitution = amount; basis = amount > 0 ? told.restitutionBasis : nil
         }
 
         // Victim stance
@@ -1228,8 +1252,8 @@ enum CaseGenerator {
             let days = min(wanted, cell?.maxDays ?? wanted)
             let activeAllowed = cell?.dispositions.contains(.active) ?? true
             districtSentence = rng.chance(0.5) || !activeAllowed
-                ? "\(days) days suspended, 12 months supervised probation"
-                : "\(days) days active"
+                ? "\(days) day\(days == 1 ? "" : "s") suspended, 12 months supervised probation"
+                : "\(days) day\(days == 1 ? "" : "s") active"
         }
 
         return CaseBackground(

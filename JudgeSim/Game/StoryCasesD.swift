@@ -98,7 +98,8 @@ extension StoryCases {
             prosecutionOpening: "{VL} never raised a hand. {D} threw a trained punch, and {VL} never woke up.",
             defenseOpening: "A drunk stranger stepped in close and threatened {DL}. {DL} threw one punch and then knelt in the street trying to save that stranger's life.",
             prosecutionClosing: "Words don't justify a punch from a trained fighter.",
-            defenseClosing: "{DL} reasonably believed {D.he} was about to be hit. The law doesn't require waiting for the first blow."
+            defenseClosing: "{DL} reasonably believed {D.he} was about to be hit. The law doesn't require waiting for the first blow.",
+            victim: VictimFacts(relationship: "Strangers before that night.")
         )
     )
 
@@ -195,7 +196,7 @@ extension StoryCases {
             defenseOpening: "A stolen phone, an Android {DL} doesn't own, and a network shared by two hundred units.",
             prosecutionClosing: "The threat and the access point to one person.",
             defenseClosing: "The device that posted them wasn't {DL}'s.",
-            victim: VictimFacts(relationship: "A former partner of the defendant; together two years.")
+            victim: VictimFacts(relationship: "A former partner of the defendant; together two years.", restitution: 3200, restitutionBasis: "counseling costs")
         )
     )
 
@@ -426,13 +427,14 @@ extension StoryCases {
                             .cross("Other students posted 'don't come friday' about the calculus test that week?", "\"I saw some. Without the gunshots.\"")
                         ]),
             WitnessSeed(name: nil, role: "Classmate who reported the post",
-                        direct: ["\"I was scared enough to tell my mom.\""],
-                        cross: ["\"I don't really know {DL}.\""],
+                        direct: ["\"I got scared and showed my mom. She's the one who called.\""],
+                        cross: ["\"I mean, I don't really know {DL}. We're not, like, friends.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("Why did you report it?", "\"The gunshot sounds. I didn't know if it was a joke. My little sister goes there too.\""),
-                            .cross("You don't know {DL} well?", "\"Not really. We had one class together.\""),
-                            .cross("Did you know about the canceled pep rally or the calculus test?", "\"I'm not in calculus. I heard about the pep rally.\"")
+                            .direct("Why did you report it?", "\"It had gunshot sounds on it. Like, real ones. Everybody was saying it was a joke but I didn't know. My little sister goes there too, she's in ninth grade.\""),
+                            .direct("What did you do when you saw it?", "\"I kind of froze. Then I went downstairs and showed my mom and she called the school, and then the school called the police, I think.\""),
+                            .cross("You don't know {DL} well?", "\"Not really. We had one class together. {D.He} sat in the back.\""),
+                            .cross("Did you know about the canceled pep rally or the calculus test?", "\"I'm not in calculus. I heard about the pep rally. Everybody heard about the pep rally.\"")
                         ])
         ],
         defenseWitnesses: [

@@ -170,6 +170,11 @@ struct StoryExtras {
     /// What checking the alibi turns up: records that back it up when the defendant didn't do it, and break it when
     /// the defendant did. Only for cases where a defense witness puts the defendant somewhere else.
     var alibiCheck: AlibiCheck? = nil
+    /// Where it happened, when the case names a business it only mentions (where the defendant worked that night)
+    /// or a place with no token (a lake cabin, a stretch of road).
+    var scene: String? = nil
+    /// The victim is family who shares the defendant's last name (a father and his sons).
+    var sameSurname = false
 }
 
 /// What a written case says about its victim, so the victim's profile matches the story.
@@ -193,6 +198,9 @@ struct VictimFacts {
     var family: String? = nil
     var harm: [String]? = nil
     var record: String? = nil
+    /// What the State asks the defendant to repay this victim, and for what; 0 when there's nothing to repay.
+    var restitution: Int? = nil
+    var restitutionBasis: String? = nil
 }
 
 enum StoryDate {
@@ -202,12 +210,21 @@ enum StoryDate {
     case months([Int])
     /// A cold case: about this many years before the session.
     case yearsAgo(Int)
+    /// A day in a fixed window of one month: Halloween is (10, 31...31); a Christmas parade, (12, 1...14).
+    case window(month: Int, days: ClosedRange<Int>)
+    /// The most recent day of this weekday (1 = Sunday, 6 = Friday), for a story that names the day.
+    case weekday(Int)
 
     /// The most recent qualifying day that leaves at least `minDays` before the session.
     func incident(before session: Date, minDays: Int, using rng: inout SeededRNG) -> Date? {
         let cal = Calendar.current
         if case .yearsAgo(let years) = self {
             return cal.date(byAdding: .day, value: -(max(years * 365, minDays) + rng.int(0...60)), to: session)
+        }
+        if case .weekday(let wanted) = self {
+            guard var day = cal.date(byAdding: .day, value: -(minDays + rng.int(0...40)), to: session) else { return nil }
+            while cal.component(.weekday, from: day) != wanted { day = cal.date(byAdding: .day, value: -1, to: day) ?? day }
+            return day
         }
         guard let latest = cal.date(byAdding: .day, value: -minDays, to: session) else { return nil }
         let year = cal.component(.year, from: latest)
@@ -218,8 +235,10 @@ enum StoryDate {
                 var c = DateComponents(year: y, month: 11, weekday: 5, weekdayOrdinal: 4)
                 c.hour = 12
                 if let d = cal.date(from: c) { candidates.append(d) }
-            case .yearsAgo:
+            case .yearsAgo, .weekday:
                 break
+            case .window(let month, let days):
+                if let d = cal.date(from: DateComponents(year: y, month: month, day: rng.int(days), hour: 12)) { candidates.append(d) }
             case .months(let months):
                 for m in months {
                     guard let first = cal.date(from: DateComponents(year: y, month: m, day: 1, hour: 12)),

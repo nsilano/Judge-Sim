@@ -608,13 +608,13 @@ struct ProbationConditionsCard: View {
                             isOn: $session.rulings.conditions.supervised)
 
             Text("Jail and confinement").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-            AmountStepper(title: "Special probation: \(session.rulings.conditions.specialProbationDays) days in jail",
+            AmountStepper(title: "Special probation: \(session.rulings.conditions.specialProbationDays) day\(session.rulings.conditions.specialProbationDays == 1 ? "" : "s") in jail",
                           caption: session.anyIntermediate
-                            ? "A split sentence served before or during probation. The statute caps it at one-fourth of the maximum (\(session.maxSpecialProbationDays) days here)."
+                            ? "A split sentence served before or during probation. The statute caps it at one-fourth of the maximum (\(session.maxSpecialProbationDays) day\(session.maxSpecialProbationDays == 1 ? "" : "s") here)."
                             : "An intermediate condition. With only community punishment chosen, ordering it departs from the statute.",
                           value: $session.rulings.conditions.specialProbationDays, range: 0...3_650,
                           fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
-            AmountStepper(title: "House arrest with electronic monitoring: \(session.rulings.conditions.houseArrestDays) days",
+            AmountStepper(title: "House arrest with electronic monitoring: \(session.rulings.conditions.houseArrestDays) day\(session.rulings.conditions.houseArrestDays == 1 ? "" : "s")",
                           value: $session.rulings.conditions.houseArrestDays, range: 0...3_650,
                           fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
             ConditionToggle(title: "Drug Treatment Court", detail: "Intensive court-supervised treatment with frequent review hearings. An intermediate condition.",
@@ -760,9 +760,9 @@ struct ActiveOrdersCard: View {
         let custodyDays = session.courtCase.background?.custodyDays ?? 0
         let objects = session.courtCase.background?.stateObjectsToASR ?? true
         CollapsibleSection(title: "Commitment & recommendations", icon: "lock.fill",
-                           summary: custodyDays > 0 ? "\(custodyDays) days of credit for time served" : "No pretrial credit", expanded: false) {
+                           summary: custodyDays > 0 ? "\(custodyDays) day\(custodyDays == 1 ? "" : "s") of credit for time served" : "No pretrial credit", expanded: false) {
             Label(custodyDays > 0
-                  ? "Credit for \(custodyDays) days of pretrial confinement will be applied (G.S. 15-196.1)."
+                  ? "Credit for \(custodyDays) day\(custodyDays == 1 ? "" : "s") of pretrial confinement will be applied (G.S. 15-196.1)."
                   : "No pretrial confinement credit: the defendant was out on bond.",
                   systemImage: "calendar.badge.clock")
                 .font(.subheadline)
@@ -916,7 +916,7 @@ struct UnitSentenceCard: View {
                     }
                 }
             } else if let cell = unit.misdemeanorCell {
-                ChoiceRow(title: "Authorized range", subtitle: "1–\(cell.maxDays) days for this class and level",
+                ChoiceRow(title: "Authorized range", subtitle: "1–\(cell.maxDays) day\(cell.maxDays == 1 ? "" : "s") for this class and level",
                           selected: isChart(.presumptive)) {
                     choice.lifeWithoutParole = false
                     choice.customTerm = false
@@ -991,8 +991,8 @@ struct UnitSentenceCard: View {
                       systemImage: "calendar.badge.clock")
                     .font(.caption.weight(.semibold))
                 Text(unit.isFelony
-                     ? "The defendant serves the full minimum before release; earned time can't shorten it. Release comes no later than the maximum less \(supervisionMonths) months of post-release supervision." + (creditDays > 0 ? " Includes \(creditDays) days of jail credit." : "")
-                     : "Jail time is served day for day" + (creditDays > 0 ? ", less \(creditDays) days of jail credit." : "."))
+                     ? "The defendant serves the full minimum before release; earned time can't shorten it. Release comes no later than the maximum less \(supervisionMonths) months of post-release supervision." + (creditDays > 0 ? " Includes \(creditDays) day\(creditDays == 1 ? "" : "s") of jail credit." : "")
+                     : "Jail time is served day for day" + (creditDays > 0 ? ", less \(creditDays) day\(creditDays == 1 ? "" : "s") of jail credit." : "."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -1051,7 +1051,7 @@ struct UnitSentenceCard: View {
         } else {
             let dwiCap = unit.isDWI ? choice.dwiLevel.flatMap { StructuredSentencing.dwiLevels.indices.contains($0) ? StructuredSentencing.dwiLevels[$0].maxDays : nil } : nil
             let cap = isCustom ? 3_650 : (dwiCap ?? unit.misdemeanorCell?.maxDays ?? 150)
-            AmountStepper(title: choice.minimum == 0 ? "No jail time (fine only)" : "\(choice.minimum) days",
+            AmountStepper(title: choice.minimum == 0 ? "No jail time (fine only)" : "\(choice.minimum) day\(choice.minimum == 1 ? "" : "s")",
                           value: $choice.minimum, range: 0...cap,
                           fine: 1, coarse: 30, fineLabel: "± 1 day", coarseLabel: "± 30 days")
         }

@@ -89,7 +89,8 @@ extension StoryCases {
             defenseOpening: "The man behind this is named Ray, and nobody went looking for him.",
             prosecutionClosing: "Ray is a name on a text. The account, the cash, and the handwriting are {DL}'s.",
             defenseClosing: "The handwriting expert said 'probably.' That isn't proof beyond a reasonable doubt.",
-            genders: ["V": .female]
+            genders: ["V": .female],
+            victim: VictimFacts(relationship: "The defendant once mowed her lot.", restitution: 62000, restitutionBasis: "the $62,000 from the sale of her land")
         )
     )
 
@@ -118,15 +119,15 @@ extension StoryCases {
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: "{V}", role: "Teen on the driveway",
-                        direct: ["\"The barrel was pointed at my chest.\""],
-                        cross: ["\"Somebody in the group had eggs. Not me.\""],
+                        direct: ["\"It was pointed right at me. Right here.\" (The witness touches the center of {V.his} chest.)"],
+                        cross: ["\"Somebody had eggs. It wasn't me, I swear.\""],
                         weight: 2, lay: true,
                         exam: [
-                            .direct("Why were you on that driveway?", "\"It was Halloween. I was out with a group of friends.\""),
-                            .direct("What did you see when the door opened?", "\"A man with a shotgun. He raised it and pointed it right at my chest and said the next one on his porch gets buried.\""),
-                            .direct("How did you feel?", "\"I thought I was going to die. I couldn't move.\""),
-                            .cross("Your group brought eggs?", "\"One kid did. I didn't know until we were in the driveway.\""),
-                            .cross("You have no idea whether that gun was loaded?", "\"No. I couldn't know that.\"")
+                            .direct("Why were you on that driveway?", "\"It was Halloween. We were just walking around with my friends. Everybody goes down that street.\""),
+                            .direct("What did you see when the door opened?", "\"A man came out with a big gun. He held it up at me, like at my chest, and he said the next one of us on his porch gets buried. I didn't even know what to do.\""),
+                            .direct("How did you feel?", "\"I thought I was going to die. My legs wouldn't move. I peed a little. I never told anybody that.\"", "\"I thought he was going to shoot me. I couldn't move my legs. I just started crying.\""),
+                            .cross("Your group brought eggs?", "\"One kid did. I didn't know till we were already in the driveway. I told him that was dumb.\""),
+                            .cross("You have no idea whether that gun was loaded?", "\"How would I know that? I'm fifteen.\"")
                         ]),
             WitnessSeed(name: "{OFF}", role: "Deputy",
                         direct: ["\"The gun was unloaded when I seized it.\""],
@@ -182,8 +183,9 @@ extension StoryCases {
             defenseOpening: "An old homeowner who'd had enough, and an unloaded gun held low.",
             prosecutionClosing: "The camera caught the words and the barrel rising. That's enough.",
             defenseClosing: "Nobody can see where the gun was pointed. That's reasonable doubt.",
-            when: .months([10]),
-            genders: ["D": .male]
+            when: .window(month: 10, days: 31...31),
+            genders: ["D": .male],
+            victim: VictimFacts(relationship: "A trick-or-treater; no prior contact with the defendant.", restitution: 0)
         )
     )
 
@@ -199,7 +201,7 @@ extension StoryCases {
         ],
         ageRange: 48...72, occupations: ["farmer", "dairy farmer", "tobacco farmer"], hasVictim: false,
         summaries: [
-            "At 6:10 p.m. on {DATE}, two drivers on Highway 17 near {HOOD} swerved into the ditch to avoid a farm tractor crossing the center line. Trooper {TROOPER} stopped the tractor a mile on. {D} was driving it home from a friend's barbecue. The trooper smelled alcohol and saw red, glassy eyes; {DL} swayed on the clean-up walk test and refused the others. {D.His} breath test at the station, an hour and forty minutes later, was 0.09. {DL} says a tractor on a farm road isn't the same as a car, that {D.he} had two beers, and that the steering on the old tractor pulls left."
+            "At 6:10 p.m. on {DATE}, two drivers on Highway 17 near {HOOD} swerved into the ditch to avoid a farm tractor crossing the center line. {TROOPER} stopped the tractor a mile on. {D} was driving it home from a friend's barbecue. The trooper smelled alcohol and saw red, glassy eyes; {DL} swayed on the clean-up walk test and refused the others. {D.His} breath test at the station, an hour and forty minutes later, was 0.09. {DL} says a tractor on a farm road isn't the same as a car, that {D.he} had two beers, and that the steering on the old tractor pulls left."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Breath Test", "0.09 on the Intox EC/IR II, 7:52 p.m."),
@@ -444,7 +446,9 @@ extension StoryCases {
             prosecutionClosing: "Grief doesn't sign a dead woman's name.",
             defenseClosing: "Intent to conceal is an element. Illness isn't intent.",
             genders: ["V": .female],
-            residence: "Lived in {VL}'s house on {STREET} in {HOOD}."
+            victim: VictimFacts(relationship: "The defendant's mother; they lived together."),
+            residence: "Lived in {VL}'s house on {STREET} in {HOOD}.",
+            sameSurname: true
         )
     )
 }

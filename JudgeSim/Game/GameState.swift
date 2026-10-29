@@ -1143,7 +1143,7 @@ final class GameState: ObservableObject {
                     // Held since the arrest, if held at all: the count starts on the arrest date.
                     if var bg = c.background, bg.isJailed {
                         bg.custodyDays = max(1, cal.dateComponents([.day], from: arrestedEarlier, to: date).day ?? 1)
-                        bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(arrestedEarlier)); in custody for \(bg.custodyDays) days."
+                        bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(arrestedEarlier)); in custody for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
                         c.background = bg
                     }
                     call.matters.append(CalendarCalls.arraignmentMatter(for: c))
@@ -1217,7 +1217,7 @@ final class GameState: ObservableObject {
                     if var bg = c.background {
                         bg.custodyDays = held
                         bg.onRelease = false
-                        bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(arrested)) pending a bond hearing; in custody for \(held) days."
+                        bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(arrested)) pending a bond hearing; in custody for \(held) day\(held == 1 ? "" : "s")."
                         c.background = bg
                     }
                     bondCall.matters.append(CalendarCalls.bondMatter(for: c, rng: &rng))
@@ -1756,21 +1756,21 @@ final class GameState: ObservableObject {
             if jailed && held >= 120 && settable >= 30 {
                 once("jail120") {
                     stats.delayedCases = (stats.delayedCases ?? 0) + 1
-                    post(NewsItem(date: date, kind: .community, headline: "\(c.defendant.name) held \(held) days with no trial date",
-                                  body: "\(c.defendant.name) has been in the Hollis County jail for \(held) days on \(c.charges.first?.law.title.lowercased() ?? "the charges"), and the case has been ready for trial for \(settable) days with no date from Judge \(judge). Defense lawyers say the wait is becoming a constitutional problem.",
+                    post(NewsItem(date: date, kind: .community, headline: "\(c.defendant.name) held \(held) day\(held == 1 ? "" : "s") with no trial date",
+                                  body: "\(c.defendant.name) has been in the Hollis County jail for \(held) day\(held == 1 ? "" : "s") on \(c.charges.first?.law.title.lowercased() ?? "the charges"), and the case has been ready for trial for \(settable) day\(settable == 1 ? "" : "s") with no date from Judge \(judge). Defense lawyers say the wait is becoming a constitutional problem.",
                                   docket: c.docket, prominence: 1))
                 }
             }
             if jailed && held >= 240 && settable >= 60 {
                 once("jail240") {
-                    let note = "The defense has moved to dismiss for violation of the right to a speedy trial: \(c.defendant.lastName) has been held \(held) days awaiting trial (Barker v. Wingo; N.C. Const. art. I, § 18)."
+                    let note = "The defense has moved to dismiss for violation of the right to a speedy trial: \(c.defendant.lastName) has been held \(held) day\(held == 1 ? "" : "s") awaiting trial (Barker v. Wingo; N.C. Const. art. I, § 18)."
                     awaiting[index].entry.note = ((awaiting[index].entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces)
                     if case .trial(var tc) = awaiting[index].entry.matter {
                         tc.proceduralNotes.append(note)
                         awaiting[index].entry.matter = .trial(tc)
                     }
                     post(NewsItem(date: date, kind: .community, headline: "Lawyers for \(c.defendant.name) seek dismissal over delay",
-                                  body: "After \(held) days in jail without a trial, \(c.defendant.name)'s lawyers asked Judge \(judge) to dismiss the charges for violation of the right to a speedy trial.",
+                                  body: "After \(held) day\(held == 1 ? "" : "s") in jail without a trial, \(c.defendant.name)'s lawyers asked Judge \(judge) to dismiss the charges for violation of the right to a speedy trial.",
                                   docket: c.docket, prominence: 2))
                 }
             }
@@ -1781,7 +1781,7 @@ final class GameState: ObservableObject {
                     awaiting[index].entry.note = ((awaiting[index].entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces)
                     stats.delayedCases = (stats.delayedCases ?? 0) + 1
                     post(NewsItem(date: date, kind: .arrest, headline: "\(victim) reports new contact from \(c.defendant.name) as case waits",
-                                  body: "\(victim) told deputies that \(c.defendant.name), who is free while charges are pending in Hollis County Superior Court, came to \(victim)'s home this week. The case has waited \(waited) days for a trial date before Judge \(judge).",
+                                  body: "\(victim) told deputies that \(c.defendant.name), who is free while charges are pending in Hollis County Superior Court, came to \(victim)'s home this week. The case has waited \(waited) day\(waited == 1 ? "" : "s") for a trial date before Judge \(judge).",
                                   docket: c.docket, prominence: 2))
                 }
             }
@@ -1797,7 +1797,7 @@ final class GameState: ObservableObject {
                 once("halfYear") {
                     stats.delayedCases = (stats.delayedCases ?? 0) + 1
                     post(NewsItem(date: date, kind: .community, headline: "Six months on, no trial date in \(c.caption)",
-                                  body: "The case against \(c.defendant.name) has waited \(waited) days for a trial date in Hollis County Superior Court." + (c.victimName.map { " \($0)'s family says the wait has been hard." } ?? ""),
+                                  body: "The case against \(c.defendant.name) has waited \(waited) day\(waited == 1 ? "" : "s") for a trial date in Hollis County Superior Court." + (c.victimName.map { " \($0)'s family says the wait has been hard." } ?? ""),
                                   docket: c.docket, prominence: 1))
                 }
             }
@@ -1836,7 +1836,9 @@ final class GameState: ObservableObject {
         let before = background.custodyDays
         // A trial moved up to an earlier date than the file was written for takes the credit back with it.
         background.custodyDays = max(1, background.custodyDays + waited)
-        background.bondStatus = background.bondStatus.replacingOccurrences(of: "for \(before) days", with: "for \(background.custodyDays) days")
+        let after = background.custodyDays
+        background.bondStatus = background.bondStatus.replacingOccurrences(of: "for \(before) days?\\b", with: "for \(after) day\(after == 1 ? "" : "s")",
+                                                                           options: .regularExpression)
         c.background = background
     }
 
@@ -1859,7 +1861,7 @@ final class GameState: ObservableObject {
         guard served > 0 else { return }
         background.custodyDays += served
         c.background = background
-        c.proceduralNotes.append("Credit for \(served) days in custody on the vacated judgment is added to pretrial confinement (G.S. 15-196.1).")
+        c.proceduralNotes.append("Credit for \(served) day\(served == 1 ? "" : "s") in custody on the vacated judgment is added to pretrial confinement (G.S. 15-196.1).")
     }
 
     /// Delay has a price. Each time a trial is put off, witnesses drift, the victim's family loses patience,
@@ -2223,7 +2225,7 @@ final class GameState: ObservableObject {
                     docket: c.docket, prominence: 2)))
                 bg.onRelease = false
                 bg.custodyDays = max(1, bg.custodyDays)
-                bg.bondStatus = "Released on \(condition), then arrested on a new charge; bond revoked and held for \(bg.custodyDays) days."
+                bg.bondStatus = "Released on \(condition), then arrested on a new charge; bond revoked and held for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
                 held.background = bg
                 held.sessionDate = arrested
                 schedule(held, weeksOut + rng.int(3...6), "Bond revoked after a new arrest while on release.", 0)
@@ -2234,7 +2236,7 @@ final class GameState: ObservableObject {
                 let doubled = max(1_000, amount * 2)
                 bg.onRelease = false
                 bg.custodyDays = max(1, bg.custodyDays)
-                bg.bondStatus = "Released on \(condition); failed to appear and was arrested on an order for arrest. Bond doubled to $\(doubled.formatted()) secured; held for \(bg.custodyDays) days."
+                bg.bondStatus = "Released on \(condition); failed to appear and was arrested on an order for arrest. Bond doubled to $\(doubled.formatted()) secured; held for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
                 held.background = bg
                 held.sessionDate = arrested
                 schedule(held, weeksOut + rng.int(3...6), "Missed the first trial setting after release; arrested on an order for arrest.", 0)
@@ -2244,7 +2246,7 @@ final class GameState: ObservableObject {
         } else {
             bg.custodyDays = max(1, bg.custodyDays)
             bg.onRelease = false
-            bg.bondStatus = "Held on \(condition) set on \(heard); unable to post it. In custody for \(bg.custodyDays) days."
+            bg.bondStatus = "Held on \(condition) set on \(heard); unable to post it. In custody for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
             held.background = bg
             schedule(held, rng.int(5...8), "In custody since \(heard): couldn't post \(condition).", 0)
         }
@@ -3639,7 +3641,7 @@ extension GameState {
         case .trial(let c):
             kind = .trial
             courtCase = c
-            if let bg = c.background, bg.isJailed { notes.append("Defendant held in jail \(bg.custodyDays) days awaiting trial") }
+            if let bg = c.background, bg.isJailed { notes.append("Defendant held in jail \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s") awaiting trial") }
             if Self.isMurder(c) { notes.append("Murder trial") }
             if c.background?.arrangementPresented == true { notes.append("A plea arrangement is expected; a shorter hearing") }
             if c.continuanceMotion != nil { notes.append("A party will move to continue when it is called") }

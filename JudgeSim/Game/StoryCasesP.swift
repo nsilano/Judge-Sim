@@ -101,7 +101,11 @@ extension StoryCases {
             defenseOpening: "Behind the money was a house of horror. Two boys believed they were going to die.",
             prosecutionClosing: "Fear doesn't reload. Fear doesn't go shopping.",
             defenseClosing: "Honest fear, even if unreasonable, makes this manslaughter.",
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(relationship: "The defendant's father."),
+            family: "Single, no children.",
+            residence: "Lived in his parents' home in {HOOD}.",
+            sameSurname: true
         )
     )
 
@@ -203,7 +207,10 @@ extension StoryCases {
             defenseOpening: "A man in over his head who never stopped trying to make his clients whole.",
             prosecutionClosing: "Every fake statement was a new lie to keep the money flowing.",
             defenseClosing: "Intent to repay is not intent to defraud.",
-            genders: ["D": .male]
+            genders: ["D": .male],
+            victim: VictimFacts(relationship: "An investor in the defendant's fund.", harm: ["No physical injury. Lost everything he had invested."], restitution: 14000000, restitutionBasis: "the $14 million more than 200 investors put into a fund that never existed"),
+            residence: "Owns a house in {CITY} and a lake house.",
+            yearsAtJob: 24
         )
     )
 
@@ -300,7 +307,8 @@ extension StoryCases {
             defenseOpening: "A broken nose, a head on concrete, and a split-second decision.",
             prosecutionClosing: "{DL} created the danger. You can't start the fight and then claim you were afraid of it.",
             defenseClosing: "Whoever started it, a person being beaten on concrete may defend his life.",
-            genders: ["D": .male, "V": .male]
+            genders: ["D": .male, "V": .male],
+            victim: VictimFacts(relationship: "Strangers; he was staying with his father's fiancée in the community.")
         )
     )
 
@@ -333,14 +341,14 @@ extension StoryCases {
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: "{TEEN}", role: "Student (cooperating co-defendant)",
-                        direct: ["\"She said it was the only way.\""],
-                        cross: ["\"I got a deal.\""],
+                        direct: ["\"She kept saying it was the only way. Like, every time.\""],
+                        cross: ["\"Yeah. I got a deal.\""],
                         weight: 3, lay: true,
                         exam: [
-                            .direct("Whose idea was it to kill {VL}?", "\"Hers. She said if he was gone we could be together and she'd lose the condo and the dog in a divorce. She said it a lot of times until I said I'd do it.\""),
-                            .direct("What did she tell you about that night?", "\"That she'd be at a board meeting. Leave the door unlocked. Put the dog in the basement so he wouldn't see it. Make it look like a robbery.\""),
-                            .cross("You're getting out of prison in your thirties for this testimony?", "\"That's the deal.\""),
-                            .cross("You pulled the trigger?", "\"My finger on the trigger. I live with that.\"")
+                            .direct("Whose idea was it to kill {VL}?", "\"Hers. She said if he was gone we could be together, and if they got divorced she'd lose the condo and the dog. She said it like a hundred times. I kept saying no and then one day I just... said okay.\""),
+                            .direct("What did she tell you about that night?", "\"That she'd be at her board meeting. The door would be unlocked. Put the dog in the basement so he didn't have to see. Make it look like somebody robbed the place.\""),
+                            .cross("You're getting out of prison in your thirties for this testimony?", "\"That's the deal. I didn't make it up.\""),
+                            .cross("You pulled the trigger?", "\"Yeah. It was me. I think about it every night.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Lead detective",
                         direct: ["\"She told the student to lie.\""],

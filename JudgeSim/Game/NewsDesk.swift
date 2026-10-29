@@ -70,7 +70,7 @@ enum NewsDesk {
                        "Judge acquits \(f.last) in \(f.offense) case",
                        "\(f.last) walks free after bench trial",
                        "Not guilty: State's case against \(f.last) falls short"]
-        if f.custodyDays > 0 { options.append("After \(f.custodyDays) days in jail, \(f.last) is acquitted") }
+        if f.custodyDays > 0 { options.append("After \(f.custodyDays) day\(f.custodyDays == 1 ? "" : "s") in jail, \(f.last) is acquitted") }
         if f.mediaAttention >= 2 { options.append("Acquittal in \u{2018}\(f.headline)\u{2019} case") }
         return rng.pick(options)
     }
@@ -101,12 +101,12 @@ enum NewsDesk {
         var options: [String] = []
         if convicted && f.active { options += ["\(f.last) was taken into custody in the courtroom.", "Deputies led \(f.last) out a side door."] }
         if convicted && f.timeServed {
-            options.append("With credit for \(f.custodyDays) days already spent in the Hollis County Detention Center, \(f.last) was released.")
+            options.append("With credit for \(f.custodyDays) day\(f.custodyDays == 1 ? "" : "s") already spent in the Hollis County Detention Center, \(f.last) was released.")
         } else if convicted && !f.active {
             options.append("\(f.last) left the courthouse with family.")
             if f.sentence.lowercased().contains("supervised probation") { options.append("\(f.last) is to report to a probation officer within 72 hours.") }
         }
-        if !convicted && f.custodyDays > 0 { options.append("\(f.last) had been held in the Hollis County Detention Center for \(f.custodyDays) days.") }
+        if !convicted && f.custodyDays > 0 { options.append("\(f.last) had been held in the Hollis County Detention Center for \(f.custodyDays) day\(f.custodyDays == 1 ? "" : "s").") }
         if f.returning { options.append("It was not \(f.last)'s first case in Judge \(f.judge)'s courtroom.") }
         if f.mediaAttention >= 3 { options += ["Television trucks lined the street outside the courthouse.", "The gallery was full an hour before court opened."] }
         if options.isEmpty { options = ["The case was heard over \(rng.int(1...3)) day\(rng.chance(0.5) ? "s" : "")."] }
@@ -222,7 +222,7 @@ enum NewsDesk {
             var topics: [(String, String)] = []
             if w.waiting >= 30 {
                 topics.append(("Hollis County's criminal backlog reaches \(w.waiting) cases",
-                               "\(w.waiting) felony cases are waiting for trial in Hollis County Superior Court, and new trial dates now run \(w.oldestWaitDays) days out. Judge \(w.judge) is hearing cases as fast as the calendar allows, lawyers say, but the arrests haven't slowed. The District Attorney says the office has asked the state for another courtroom and a second resident judge."))
+                               "\(w.waiting) felony cases are waiting for trial in Hollis County Superior Court, and new trial dates now run \(w.oldestWaitDays) day\(w.oldestWaitDays == 1 ? "" : "s") out. Judge \(w.judge) is hearing cases as fast as the calendar allows, lawyers say, but the arrests haven't slowed. The District Attorney says the office has asked the state for another courtroom and a second resident judge."))
             }
             if w.jailedAwaitingTrial >= 3 {
                 topics.append(("Our jail is full of people who haven't been convicted",

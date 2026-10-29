@@ -198,9 +198,9 @@ struct Urgency {
             // Jail time keeps running from the last date it was credited.
             let held = bg.custodyDays + max(0, cal.dateComponents([.day], from: cal.startOfDay(for: c.sessionDate), to: cal.startOfDay(for: today)).day ?? 0)
             switch held {
-            case 240...: raise(.critical, "In jail \(held) days: a speedy-trial dismissal is a real risk", 60)
-            case 120...: raise(.urgent, "In jail \(held) days awaiting trial", 35)
-            case 30...: raise(.soon, "In jail \(held) days awaiting trial", 20)
+            case 240...: raise(.critical, "In jail \(held) day\(held == 1 ? "" : "s"): a speedy-trial dismissal is a real risk", 60)
+            case 120...: raise(.urgent, "In jail \(held) day\(held == 1 ? "" : "s") awaiting trial", 35)
+            case 30...: raise(.soon, "In jail \(held) day\(held == 1 ? "" : "s") awaiting trial", 20)
             default: raise(.soon, "The defendant is in jail", 12)
             }
         }
@@ -218,8 +218,8 @@ struct Urgency {
         if c.mediaAttention >= 3 { raise(.soon, "The paper is following it", 8) }
         if entry.continuances >= 2 { raise(.soon, "Already continued \(entry.continuances) times", 6) }
         switch waited {
-        case 180...: raise(.urgent, "Waiting \(waited) days for a date", 20)
-        case 90...: raise(.soon, "Waiting \(waited) days for a date", 10)
+        case 180...: raise(.urgent, "Waiting \(waited) day\(waited == 1 ? "" : "s") for a date", 20)
+        case 90...: raise(.soon, "Waiting \(waited) day\(waited == 1 ? "" : "s") for a date", 10)
         default: break
         }
         return Urgency(level: level, score: score, reasons: reasons)

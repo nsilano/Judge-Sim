@@ -1059,8 +1059,8 @@ enum CaseTemplates {
         ],
         defenseWitnesses: [
             WitnessSeed(name: nil, role: "{DL}'s teenage daughter",
-                        direct: ["\"I was asleep when the bullet came through my window. It hit the wall right above my bed.\""],
-                        cross: ["\"No, I didn't know there was a gun in the car.\""],
+                        direct: ["\"I was asleep and then there was this really loud pop and glass all over my blanket. There's a hole in the wall right over my bed. My mom still won't let me sleep in there.\""],
+                        cross: ["\"No. I didn't know about any gun. Dad doesn't talk about stuff like that with me.\""],
                         weight: 1, lay: true)
         ],
         prosecutionTheory: ["The General Assembly decided people with felony convictions may not possess firearms. Fear, however real, isn't a license."],

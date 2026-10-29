@@ -219,7 +219,7 @@ enum CalendarCalls {
         if felonies >= 2 { reasons.append("\(last) has \(felonies) prior felonies. Probation has been tried.") }
         else if !priors.isEmpty { reasons.append(rng.pick(["This isn't \(last)'s first time in front of a judge.", "\(last) has been given breaks before."])) }
         if sameKind > 0 { reasons.append("It's the same kind of offense \(last) was convicted of before.") }
-        if violent { reasons.append(rng.pick(["Somebody got hurt here.", "The victim wants \(last) to serve time, and the State agrees."])) }
+        if violent { reasons.append(rng.pick(["This was a violent offense, and the State takes it seriously.", "The victim wants \(last) to serve time, and the State agrees."])) }
         if chartActive { reasons.append("The sentencing chart calls for an active sentence at this record level.") }
         if reasons.isEmpty { reasons.append(rng.pick(["A plea doesn't erase what happened.", "The State made its offer already. This is it."])) }
         let why = reasons.prefix(2).joined(separator: " ")
@@ -239,7 +239,7 @@ enum CalendarCalls {
                                    "Prison won't fix this. \(last) has a job lined up and family support. We ask for a suspended sentence.",
                                    "We'd ask the court to consider a split sentence at most. \(last) has already sat in jail on this."])
         case 1:
-            stateAsk = "The State asks for \(rangeText) suspended, with \(jailDays) days in the county jail up front as special probation, then 18 months supervised. " + why
+            stateAsk = "The State asks for \(rangeText) suspended, with \(jailDays) day\(jailDays == 1 ? "" : "s") in the county jail up front as special probation, then 18 months supervised. " + why
             defenseAsk = rng.pick(["Straight probation is enough, Judge. Jail time costs \(last) the job that pays the restitution.",
                                    "My client has been clean since the arrest. Jail now undoes that. We ask for regular probation.",
                                    "Give \(last) a chance at probation without the jail time. If it doesn't work, the court will see us again."])
@@ -270,7 +270,7 @@ enum CalendarCalls {
             "Accept the plea; continue prayer for judgment on costs" + (stance == 3 ? " (State's ask)" : ""),
             "Accept the plea; impose \(rangeText) active" + (stance == 2 ? " (State's ask)" : ""),
             "Reject the plea; set the case for trial",
-            "Accept the plea; split sentence: \(jailDays) days in jail, then probation" + (stance == 1 ? " (State's ask)" : "")
+            "Accept the plea; split sentence: \(jailDays) day\(jailDays == 1 ? "" : "s") in jail, then probation" + (stance == 1 ? " (State's ask)" : "")
         ]
         return PleaPositions(stateAsk: stateAsk, defenseAsk: defenseAsk, options: options)
     }
@@ -302,7 +302,7 @@ enum CalendarCalls {
         if let cell, !cell.dispositions.contains(.active) {
             notes.append("At this prior conviction level the chart allows only community punishment; an active term departs from it.")
         }
-        return (active, "\(active) days", notes)
+        return (active, "\(active) day\(active == 1 ? "" : "s")", notes)
     }
 
     /// Ties a matter to the real case it is about: the defendant, the docket, the charge, and the record.
@@ -473,7 +473,7 @@ enum CalendarCalls {
         if var bg = jailed.background {
             bg.custodyDays = held
             bg.onRelease = false
-            bg.bondStatus = "Held on a $\(current.formatted()) secured bond; in custody for \(held) days."
+            bg.bondStatus = "Held on a $\(current.formatted()) secured bond; in custody for \(held) day\(held == 1 ? "" : "s")."
             jailed.background = bg
         }
         let employed = !d.occupation.lowercasedPhrase.contains("unemployed")
@@ -486,7 +486,7 @@ enum CalendarCalls {
         let law = c.charges.first?.law.title.lowercased() ?? "the charge"
         return CalendarMatter(kind: .bondModification, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
-                              summary: "\(d.name), held \(held) days on a $\(current.formatted()) secured bond on \(law), asks the court to reduce it (G.S. 15A-538). \(d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s")")\(ftas > 0 ? ", \(ftas) prior failure\(ftas == 1 ? "" : "s") to appear" : ""). \(employed ? "\(d.lastName)'s employer will hold the job for two more weeks." : "\(d.lastName) was out of work before the arrest.")",
+                              summary: "\(d.name), held \(held) day\(held == 1 ? "" : "s") on a $\(current.formatted()) secured bond on \(law), asks the court to reduce it (G.S. 15A-538). \(d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s")")\(ftas > 0 ? ", \(ftas) prior failure\(ftas == 1 ? "" : "s") to appear" : ""). \(employed ? "\(d.lastName)'s employer will hold the job for two more weeks." : "\(d.lastName) was out of work before the arrest.")",
                               stateAsk: ftas > 0 || violent
                                 ? "The State opposes any reduction. \(ftas > 0 ? "The defendant has missed court before." : "The charge is violent and the evidence is strong.")"
                                 : "The State would agree to a modest reduction with electronic monitoring.",
@@ -782,7 +782,7 @@ enum CalendarCalls {
                                                                            towns: county.towns, rng: &rng),
                                           priors: m.priors,
                                           propensity: m.priors.isEmpty ? 0.18 : 0.3)
-                let termText = m.isFelony ? "\(m.activeTerm)–\(StructuredSentencing.maximum(forMinimum: m.activeTerm, cls: cls)) months" : "\(m.activeTerm) days"
+                let termText = m.isFelony ? "\(m.activeTerm)–\(StructuredSentencing.maximum(forMinimum: m.activeTerm, cls: cls)) months" : "\(m.activeTerm) day\(m.activeTerm == 1 ? "" : "s")"
                 let sentence: String
                 var choice = choice
                 if choice == 1 && [.A, .B1, .B2, .C, .D, .E].contains(cls) {
@@ -823,12 +823,12 @@ enum CalendarCalls {
                 case 4:
                     // Special probation (G.S. 15A-1351): jail first, then supervised probation on the suspended term.
                     let days = splitDays(m.options.indices.contains(4) ? m.options[4] : "")
-                    sentence = "\(termText) suspended; special probation with \(days) days active, then 18 months supervised probation"
+                    sentence = "\(termText) suspended; special probation with \(days) day\(days == 1 ? "" : "s") active, then 18 months supervised probation"
                     person.probation = ProbationTerm(docket: m.docket, offense: law.title, isFelony: m.isFelony,
                                                      suspendedSentence: termText,
                                                      activeMonths: m.isFelony ? m.activeTerm : max(1, m.activeTerm / 30),
                                                      ends: Calendar.current.date(byAdding: .month, value: 18, to: date) ?? date,
-                                                     imposedInThisCourt: true, supervised: true, conditions: ["Special probation: \(days) days in the county jail."],
+                                                     imposedInThisCourt: true, supervised: true, conditions: ["Special probation: \(days) day\(days == 1 ? "" : "s") in the county jail."],
                                                      monthlyObligation: 60, violationRisk: rng.chance(0.5) ? 0.18 : 0.1,
                                                      crvCount: 0, treatmentNeed: TreatmentNeed.none)
                     person.probation?.activeDays = m.isFelony ? nil : m.activeTerm
@@ -838,22 +838,22 @@ enum CalendarCalls {
                     if out > date {
                         person.status = .incarcerated
                         person.releaseDate = out
-                        person.releaseNote = "Special probation: \(days) days in the county jail, ordered on a plea at the calendar call. Probation follows release."
+                        person.releaseNote = "Special probation: \(days) day\(days == 1 ? "" : "s") in the county jail, ordered on a plea at the calendar call. Probation follows release."
                     } else {
                         person.status = .probation
                     }
                 default:
-                    sentence = "\(termText) active" + (credit > 0 ? ", with credit for \(credit) days served" : "")
+                    sentence = "\(termText) active" + (credit > 0 ? ", with credit for \(credit) day\(credit == 1 ? "" : "s") served" : "")
                     let full = Calendar.current.date(byAdding: m.isFelony ? .month : .day, value: m.activeTerm, to: date) ?? date
                     let release = Calendar.current.date(byAdding: .day, value: -credit, to: full) ?? full
                     if release <= date {
                         // The credit covers the whole term: released from the courtroom.
                         person.status = .free
-                        person.releaseNote = "Pleaded guilty at the calendar call; \(termText) active, fully served by \(credit) days of pretrial credit."
+                        person.releaseNote = "Pleaded guilty at the calendar call; \(termText) active, fully served by \(credit) day\(credit == 1 ? "" : "s") of pretrial credit."
                     } else {
                         person.status = .incarcerated
                         person.releaseDate = release
-                        person.releaseNote = "Committed on a guilty plea at the calendar call: \(termText) active" + (credit > 0 ? ", less \(credit) days of credit." : ".")
+                        person.releaseNote = "Committed on a guilty plea at the calendar call: \(termText) active" + (credit > 0 ? ", less \(credit) day\(credit == 1 ? "" : "s") of credit." : ".")
                     }
                     if m.isFelony {
                         // Felony actives carry post-release supervision after release (G.S. 15A-1368.2).
@@ -929,7 +929,7 @@ enum CalendarCalls {
                     if days > 0 {
                         person.status = .incarcerated
                         person.releaseDate = Calendar.current.date(byAdding: .day, value: days, to: date)
-                        person.releaseNote = "Criminal contempt: \(days) days in the county jail for violating a stay-away order."
+                        person.releaseNote = "Criminal contempt: \(days) day\(days == 1 ? "" : "s") in the county jail for violating a stay-away order."
                     }
                     person.appearances.append(PersonRecord.Appearance(docket: m.docket, date: date, charges: "Criminal contempt (stay-away order)",
                                                                       outcome: option.trimmingTrailingPeriods))
@@ -955,7 +955,7 @@ enum CalendarCalls {
                         term.crvDaysServed = term.crvCreditDays + days
                         person.status = .incarcerated
                         person.releaseDate = Calendar.current.date(byAdding: .day, value: days, to: date)
-                        person.releaseNote = "Confinement in response to violation: \(days) days, ordered at the calendar call. Probation resumes on release."
+                        person.releaseNote = "Confinement in response to violation: \(days) day\(days == 1 ? "" : "s"), ordered at the calendar call. Probation resumes on release."
                     default:
                         break
                     }

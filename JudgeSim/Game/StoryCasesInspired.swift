@@ -123,7 +123,7 @@ extension StoryCases {
         ],
         ageRange: 33...46, occupations: ["physical therapist"], hasVictim: true,
         summaries: [
-            "During an ice storm on {DATE}, {D} drove {D.his} partner, {V}, a Hollis County sheriff's deputy, to a holiday party at a fellow deputy's house on {STREET}, after the two had argued at a bar. At 6:15 a.m., {DL} and two friends found {VL} unconscious in a ditch at the edge of the yard; {VL} died at the hospital of a head injury and hypothermia. {DL}'s SUV had a broken passenger mirror. The State says {DL}, drunk and furious, clipped {VL} while making a fast U-turn and drove away. The defense says {VL} went inside, something happened there, and the deputies at that party steered the investigation toward {DL}."
+            "During an ice storm on {DATE}, {D} drove {D.his} partner, {V}, a Hollis County sheriff's deputy, to a party at a fellow deputy's house on {STREET}, after the two had argued at a bar. At 6:15 a.m., {DL} and two friends found {VL} unconscious in a ditch at the edge of the yard; {VL} died at the hospital of a head injury and hypothermia. {DL}'s SUV had a broken passenger mirror. The State says {DL}, drunk and furious, clipped {VL} while making a fast U-turn and drove away. The defense says {VL} went inside, something happened there, and the deputies at that party steered the investigation toward {DL}."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "Mirror Glass", "Mirror glass and a black plastic housing piece matching {DL}'s SUV, found in the ditch eleven days later during a second search of the yard."),
@@ -280,7 +280,7 @@ extension StoryCases {
         defenseTheory: ["No blood, no residue, no rifle. A fired farmhand who threatened {VL} was never seriously checked. {DL} lied out of panic, not guilt."],
         aggravating: ["The offense was committed to avoid exposure of other crimes"],
         mitigating: ["No prior violent record"],
-        victimImpacts: ["{VL}'s sibling: \"{VL} was the best person in that family. Find out who did this and make them pay.\""],
+        victimImpacts: ["{VL}'s sibling: \"{VF} was the best person in that family. Find out who did this and make them pay.\""],
         allocutions: ["\"I lied about the barn because I knew how it would look with the money. I loved {VL}. I didn't kill {VL}.\""],
         guiltyTruths: ["A blue tarp with gunshot residue was found in the parent's shed a year after the trial."],
         innocentTruths: ["The farmhand was arrested two years later with a .243 rifle that matched the barn bullets."],
@@ -311,7 +311,9 @@ extension StoryCases {
             defenseOpening: "{DL} is a thief and a liar, and will answer for that. But no blood, no residue, no rifle, and a farmhand nobody checked. That's not proof of murder.",
             prosecutionClosing: "Only a killer needs that lie.",
             defenseClosing: "A lie about where you were is not proof of what you did.",
-            victim: VictimFacts(relationship: "Married to the defendant.")
+            victim: VictimFacts(relationship: "Married to the defendant."),
+            residence: "The family's farm outside {HOOD}.",
+            yearsAtJob: 22
         )
     )
 
@@ -349,11 +351,11 @@ extension StoryCases {
                         cross: ["\"{DL} was a loving parent, as far as I saw.\""],
                         weight: 2, lay: true,
                         exam: [
-                            .direct("When did you last see {KID}?", "\"Sunday dinner, the week before. Then {DL} said {KID} was at the beach with a friend from work. Every time I asked to FaceTime, there was a reason.\""),
-                            .direct("What made you call the Sheriff?", "\"On day nineteen I drove to the apartment and {KID}'s bed hadn't been slept in. The car seat was gone. {DL} couldn't give me a phone number for the friend. I called.\""),
-                            .direct("What did {DL} say then?", "\"That {KID} was taken from the park and {DL} was too scared to tell anyone. That made no sense to me.\""),
-                            .cross("You saw {DL} with {KID} every week. Loving?", "\"Yes. {DL} loved that child.\""),
-                            .cross("{DL} has always hidden things when scared, since childhood?", "\"{DL} has always lied to get out of trouble. Small things. Never anything like this.\"")
+                            .direct("When did you last see {KID}?", "\"Sunday dinner, the week before. Then {DF} said {KID} was at the beach with a friend from work. Every time I asked to FaceTime, there was a reason.\""),
+                            .direct("What made you call the Sheriff?", "\"On day nineteen I drove to the apartment and {KID}'s bed hadn't been slept in. The car seat was gone. {DF} couldn't give me a phone number for the friend. I called.\""),
+                            .direct("What did {DL} say then?", "\"That {KID} was taken from the park and {DF} was too scared to tell anyone. That made no sense to me.\""),
+                            .cross("You saw {DL} with {KID} every week. Loving?", "\"Yes. {DF} loved that child.\""),
+                            .cross("{DL} has always hidden things when scared, since childhood?", "\"{DF} has always lied to get out of trouble. Small things. Never anything like this.\"")
                         ]),
             WitnessSeed(name: nil, role: "Cadaver dog handler",
                         direct: ["\"My dog alerted on the closet and the trunk.\""],
@@ -392,7 +394,8 @@ extension StoryCases {
                        (0, "{KID} last seen at day care."),
                        (19, "{DL}'s parent calls the Sheriff's Office; {DL} reports an abduction."),
                        (21, "Cadaver dog alerts at the closet and car trunk."),
-                       (54, "Remains found in a creek bed. Cause of death undetermined.")],
+                       (54, "Remains found in a creek bed. Cause of death undetermined."),
+                       (61, "{DL} charged with first-degree murder.")],
             howIdentified: "{DL} was the last adult with {KID} and gave false accounts.",
             notDone: ["The remains were not tested for antihistamine."],
             defendantExam: [
@@ -428,12 +431,12 @@ extension StoryCases {
         ],
         ageRange: 19...19, occupations: ["community college student"], hasVictim: true,
         summaries: [
-            "Two nights after Hurricane {STORM} knocked out power across {CITY}, {D}, a teenager, stood outside {D.his} uncle's hardware store on {STREET} with an AR-style rifle, saying {D.he} was protecting it from looters. At about {TIME} on {DATE}, {V} walked up, argued with {DL}, and grabbed for the rifle. {DL} fired three times, killing {VL}. As {DL} backed away, {VL}'s friend came at {DL} with a tire iron, and {D.he} fired again, wounding the friend. The State says {DL} brought a war rifle to a dark street and provoked the fight. The defense says {VL} tried to take the gun."
+            "Two nights after Hurricane {STORM} knocked out power across the county, {D}, a teenager, stood outside {D.his} uncle's hardware store on {STREET} with an AR-style rifle, saying {D.he} was protecting it from looters. At about {TIME} on {DATE}, {V} walked up, argued with {DL}, and grabbed for the rifle. {DL} fired three times, killing {VL}. As {DL} backed away, {VL}'s friend came at {DL} with a tire iron, and {D.he} fired again, wounding the friend. The State says {DL} brought a war rifle to a dark street and provoked the fight. The defense says {VL} tried to take the gun."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Store Camera on Battery Backup", "Grainy, no sound: {VL} approaches, points at {DL}, steps closer; both hands reach toward the rifle; three flashes in under a second."),
             E(.statement, 2, "Social Media Post", "Hours earlier, {DL} posted a photo with the rifle: \"Anybody wants to loot tonight, come find out.\""),
-            E(.document, 2, "Curfew Order", "A citywide curfew from 8 p.m. was in effect; {DL} was outside after curfew with a rifle.")
+            E(.document, 2, "Curfew Order", "A countywide curfew from 8 p.m. was in effect; {DL} was outside after curfew with a rifle.")
         ],
         defenseEvidence: [
             E(.video, 3, "Phone Video from Across the Street", "Shows {VL} yelling \"I'll take that and use it on you\" and grabbing the rifle barrel with both hands before the shots."),
@@ -449,7 +452,7 @@ extension StoryCases {
                             .direct("What did you find?", "\"{VL} on the sidewalk with three wounds to the chest and abdomen, a friend wounded in the thigh. {DL} sitting on the curb, rifle on the ground ten feet away, hands up.\""),
                             .direct("Why does the social media post matter?", "\"'Come find out.' That's an invitation. {DL} went out armed, after curfew, looking for a confrontation.\""),
                             .direct("Was {VL} armed?", "\"No. A phone and keys.\""),
-                            .cross("{DL} called 911 and waited for you with hands up?", "\"Hands up, waiting on the steps.\""),
+                            .cross("{DL} called 911 and waited for you with hands up?", "\"Hands up, waiting on the curb.\""),
                             .cross("The across-the-street video shows {VL} grabbing the barrel with both hands?", "\"It shows hands on the barrel.\""),
                             .cross("North Carolina law allows deadly force to prevent someone from taking your firearm and using it on you?", "\"If the belief is reasonable. That's for the court.\"")
                         ]),
@@ -458,10 +461,10 @@ extension StoryCases {
                         cross: ["\"I came at {DL} with a tire iron.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("Why did you go to the store?", "\"We were walking home from a friend's generator, charging phones. {VL} saw the rifle and got mad. {VL} said a kid shouldn't be pointing that at people.\""),
-                            .direct("What happened?", "\"They argued. {VL} reached for it. Then {VL} was on the ground.\""),
+                            .direct("Why did you go to the store?", "\"We were walking home from a friend's generator, charging phones. {VF} saw the rifle and got mad. {VF} said a kid shouldn't be pointing that at people.\""),
+                            .direct("What happened?", "\"They argued. {VF} reached for it. Then {VF} was on the ground.\""),
                             .cross("You picked up a tire iron and charged {DL}?", "\"After {DL} shot my friend. Yes.\""),
-                            .cross("{VL} said 'I'll take that and use it on you'?", "\"{VL} said something like that. {VL} was angry.\"")
+                            .cross("{VL} said 'I'll take that and use it on you'?", "\"{VF} said something like that. {VF} was angry.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -485,7 +488,7 @@ extension StoryCases {
         moods: [.divided], doctrines: ["selfDefense", "imperfectSelfDefense"],
         extras: ["TIME": ["10:52 p.m."], "STORM": ["Delphine", "Marcus", "Odette"]],
         story: StoryExtras(
-            timeline: [(-2, "Hurricane makes landfall; power out citywide; curfew ordered."),
+            timeline: [(-2, "Hurricane makes landfall; power out across the county; curfew ordered."),
                        (0, "6:10 p.m.: {DL} posts the rifle photo. 10:52 p.m.: shooting. 10:53 p.m.: {DL} calls 911."),
                        (1, "{DL} interviewed; rifle and videos collected."),
                        (10, "{DL} charged with second-degree murder.")],
@@ -509,7 +512,8 @@ extension StoryCases {
             defenseOpening: "{VL} grabbed the rifle and threatened to use it. That's when {DL} fired. On video.",
             prosecutionClosing: "Self-defense isn't available to someone who provokes the fight.",
             defenseClosing: "Words online aren't provocation. Grabbing a loaded rifle is deadly force.",
-            when: .months([8, 9, 10])
+            when: .months([8, 9, 10]),
+            victim: VictimFacts(relationship: "Strangers before that night.")
         )
     )
 }
