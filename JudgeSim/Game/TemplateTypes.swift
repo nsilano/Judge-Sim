@@ -354,6 +354,8 @@ enum CaseSetting: String, Codable, Hashable {
     static func of(category: LawCategory, key: String) -> CaseSetting {
         switch key {
         case "perjuryTrial", "prescriptionForgery": return .paper
+        // A DWI found in a bar's parking lot is a town officer's case, not a trooper's.
+        case "story.parkingLotSleeper": return .scene
         default: break
         }
         switch category {

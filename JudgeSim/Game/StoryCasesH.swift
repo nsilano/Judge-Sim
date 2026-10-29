@@ -105,7 +105,8 @@ extension StoryCases {
             prosecutionClosing: "{VL} was sure enough to point. The bus pass was behind {DL}'s door.",
             defenseClosing: "Pretty sure isn't proof beyond a reasonable doubt.",
             genders: ["V": .female],
-            victim: VictimFacts(age: 74, occupation: "Retired", relationship: "Strangers before the incident.", family: "Widowed; helps raise a grandson.", harm: ["A broken wrist; months of physical therapy.", "No longer rides the bus alone."], restitution: 700, restitutionBasis: "what was taken and her medical bills")
+            victim: VictimFacts(age: 74, occupation: "Retired", relationship: "Strangers before the incident.", family: "Widowed; helps raise a grandson.", harm: ["A broken wrist; months of physical therapy.", "No longer rides the bus alone."], restitution: 700, restitutionBasis: "what was taken and her medical bills"),
+            residence: "Rents an apartment in the complex behind the {STREET} bus stop in {HOOD}."
         )
     )
 
@@ -121,7 +122,7 @@ extension StoryCases {
         ],
         ageRange: 23...38, occupations: ["electrician's apprentice", "line cook"], hasVictim: false,
         summaries: [
-            "At 1:15 a.m. on {DATE}, Port Hollis officers were called to The Lantern Row Tavern for a fight that had already broken up. Officer {OFFICER} told {D}, who was arguing with a bouncer on the sidewalk, to leave. Within twenty seconds {DL} and the officer were on the ground and the officer's nose was broken. The officer says {DL} swung after being told {D.he} was under arrest. {DL} says the officer grabbed {D.his} neck from behind without a word and {D.he} threw an elbow by reflex. The officer's body camera fell off in the struggle. A bystander's phone video catches the last eight seconds."
+            "At 1:15 a.m. on {DATE}, officers were called to The Lantern Row Tavern for a fight that had already broken up. Officer {OFFICER} told {D}, who was arguing with a bouncer on the sidewalk, to leave. Within twenty seconds {DL} and the officer were on the ground and the officer's nose was broken. The officer says {DL} swung after being told {D.he} was under arrest. {DL} says the officer grabbed {D.his} neck from behind without a word and {D.he} threw an elbow by reflex. The officer's body camera fell off in the struggle. A bystander's phone video catches the last eight seconds."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Medical Records", "Officer {OFFICER}: nasal fracture, treated at Hollis Regional Medical Center the same night."),
@@ -135,7 +136,7 @@ extension StoryCases {
             E(.document, 1, "Bouncer's History", "The bouncer had been in the earlier fight and was not charged.")
         ],
         prosecutionWitnesses: [
-            WitnessSeed(name: "{OFFICER}", role: "Port Hollis police officer",
+            WitnessSeed(name: "{OFFICER}", role: "Police officer",
                         direct: ["\"I told {DL} {D.he} was under arrest.\""],
                         cross: ["\"I didn't say it on camera.\""],
                         weight: 2, lay: false,
@@ -204,7 +205,8 @@ extension StoryCases {
             prosecutionOpening: "A lawful order, a lawful arrest, and a broken nose.",
             defenseOpening: "An arm around the throat from behind, and a reflex.",
             prosecutionClosing: "{DL} knew who was arresting {D.him}. The uniform was right there.",
-            defenseClosing: "The only video shows an officer choking someone from behind. The State hasn't proven {DL} knew who it was."
+            defenseClosing: "The only video shows an officer choking someone from behind. The State hasn't proven {DL} knew who it was.",
+            scene: "outside The Lantern Row Tavern on {STREET} in {HOOD}"
         )
     )
 

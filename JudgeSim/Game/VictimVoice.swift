@@ -224,8 +224,9 @@ enum VictimVoice {
                      "I'd like to hear \(defendant) say it. Just once.",
                      "I trust you to get this right. I'm asking you to take it seriously."]
         case .wantsLeniency:
-            lines = ["Prison won't fix this. Please give \(defendant) a chance to.",
-                     "I've had enough loss. I don't need \(defendant) to lose everything too.",
+            lines = ["Prison won't fix this. Please give \(defendant) a chance to make it right.",
+                     died ? "I've had enough loss. I don't need \(defendant) to lose everything too."
+                        : "I don't need \(defendant) to lose everything over this.",
                      "I'm asking for mercy. I know that's strange coming from me.",
                      "Get \(defendant) help. That's all I want from today."]
         case .none:

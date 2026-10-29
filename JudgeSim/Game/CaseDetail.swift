@@ -407,6 +407,9 @@ enum DefendantProfiles {
         } else if has(["paralegal"]) {
             careerAge = 20
             education = "Associate degree in paralegal technology, Hollis Community College, \(grad(20))."
+        } else if has(["systems administrator", "it help desk", "it support", "network administrator", "it manager"]) {
+            careerAge = 20
+            education = "\(diploma); associate degree in information technology, Hollis Community College, \(grad(20))."
         } else if has(["physical therapist"]) {
             careerAge = 25
             education = "Bachelor's degree, \(grad(22)); Doctor of Physical Therapy, East Carolina University, \(grad(25))."

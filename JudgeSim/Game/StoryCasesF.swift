@@ -367,7 +367,8 @@ extension StoryCases {
         moods: [.indifferent], doctrines: ["burdenOfProof"],
         extras: ["TIME": ["2:10 a.m."]],
         story: StoryExtras(
-            timeline: [(0, "10:05 p.m.: truck arrives. 12:48 a.m.: rideshare request canceled. 12:55 a.m.: {DL} gets into truck."),
+            timeline: [(-1, "10:05 p.m.: truck arrives at the bar."),
+                       (0, "12:48 a.m.: rideshare request canceled. 12:55 a.m.: {DL} gets into truck."),
                        (0, "2:10 a.m.: officer finds {DL} asleep. 2:51 a.m.: breath test 0.14."),
                        (7, "Lot video obtained."),
                        (20, "{DL} charged with habitual DWI.")],
