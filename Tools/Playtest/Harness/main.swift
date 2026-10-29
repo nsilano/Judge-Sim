@@ -316,7 +316,7 @@ var sameNameFlagged = Set<String>()
 var contemptHeard = 0
 var petitionsHeard: [String: Int] = [:]
 var incidentsSeen: [String: Int] = [:]
-var continuedIDs = Set<UUID>()
+var continuedIDs = Set<String>()
 var hearingDates: [UUID: Date] = [:]
 
 // MARK: - Trials
@@ -337,7 +337,7 @@ var hearingDates: [UUID: Date] = [:]
     if let pending = s.incidentContinuance {
         let to = CourtCalendar.calendar.date(byAdding: .day, value: pending.option.days ?? 28, to: game.currentDate) ?? game.currentDate
         log("  Continued for the incident to about \(short(to))")
-        continuedIDs.insert(c.id)
+        continuedIDs.insert(c.docket)
         game.continueMatter(c.id, to: to, reason: "\(pending.incident.title): \(pending.option.label.lowercased()).",
                             snapshot: pending.option.effect == .mistrial ? nil : s.snapshot)
         return true
@@ -366,7 +366,7 @@ var hearingDates: [UUID: Date] = [:]
         flag("\(c.docket): \(c.defendant.name) is \(c.defendant.age) in the case but \(person.age(on: c.sessionDate)) by the record")
     }
     if resume != nil { log("  (resumed after a continuance)") }
-    continuedIDs.remove(c.id)
+    continuedIDs.remove(c.docket)
     log("TRIAL \(c.docket) · \(c.caption)")
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
     log("  Defendant: \(d.name), \(d.age), \(d.occupation); priors: \(d.priors.count); \(c.background?.bondStatus ?? "")")
@@ -410,7 +410,7 @@ var hearingDates: [UUID: Date] = [:]
     if resume == nil && s.stage == .sentencing && rng.chance(0.06) {
         let to = CourtCalendar.calendar.date(byAdding: .day, value: 21, to: game.currentDate) ?? game.currentDate
         log("  Continued mid-trial to about \(short(to))")
-        continuedIDs.insert(c.id)
+        continuedIDs.insert(c.docket)
         game.continueMatter(c.id, to: to, reason: "A witness is unavailable", snapshot: s.snapshot)
         return
     }
