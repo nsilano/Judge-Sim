@@ -310,7 +310,8 @@ extension StoryCases {
             prosecutionClosing: "He planned the drinking and blocked the call. That's culpable.",
             defenseClosing: "Thirty people were in that house. Negligence isn't a crime unless it's this man's.",
             genders: ["D": .male, "V": .male],
-            victim: VictimFacts(occupation: "College student and fraternity pledge", relationship: "A pledge; the defendant was the fraternity's pledge master.")
+            victim: VictimFacts(occupation: "College student and fraternity pledge", relationship: "A pledge; the defendant was the fraternity's pledge master."),
+            school: "Hollis State University (third-year student)"
         )
     )
 
@@ -413,7 +414,8 @@ extension StoryCases {
             defenseClosing: "Mental illness doesn't excuse it, but it explains it.",
             when: .thanksgiving,
             genders: ["D": .female],
-            family: "Married, 2 children."
+            family: "Married, 2 children.",
+            residence: "Lives with her husband and two children in {HOOD}."
         )
     )
 

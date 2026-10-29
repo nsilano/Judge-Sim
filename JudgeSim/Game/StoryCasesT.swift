@@ -99,7 +99,8 @@ extension StoryCases {
             prosecutionOpening: "Three churches, three fires, and one firefighter who was always there first.",
             defenseOpening: "A volunteer who lives in the middle of it all, and a theory built on coincidence.",
             prosecutionClosing: "First on the radio before the fire was even reported.",
-            defenseClosing: "Being nearby isn't being guilty."
+            defenseClosing: "Being nearby isn't being guilty.",
+            employer: "a convenience store in {HOOD} and the volunteer fire department"
         )
     )
 
@@ -300,7 +301,8 @@ extension StoryCases {
             defenseClosing: "A tragedy isn't always a crime.",
             when: .months([8, 9, 10]),
             genders: ["D": .male, "V": .male],
-            victim: VictimFacts(occupation: "High school student; the defendant paid him to watch the still's fire", relationship: "A neighbor's son who worked nights for the defendant.")
+            victim: VictimFacts(occupation: "High school student; the defendant paid him to watch the still's fire", relationship: "A neighbor's son who worked nights for the defendant."),
+            residence: "Owns the property in {HOOD} with the tobacco barn."
         )
     )
 

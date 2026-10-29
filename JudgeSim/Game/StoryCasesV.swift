@@ -392,7 +392,7 @@ extension StoryCases {
                        (-300, "Cabin down payment."),
                        (-120, "State Auditor begins review."),
                        (-90, "Clerk interviewed; says she was threatened."),
-                       (0, "Former sheriff indicted.")],
+                       (0, "Former sheriff indicted; {DL} arrested.")],
             howIdentified: "A routine State Auditor review.",
             notDone: ["The chief deputy's accounts were never subpoenaed."],
             defendantExam: [
@@ -412,7 +412,8 @@ extension StoryCases {
             defenseOpening: "Bad bookkeeping by a career lawman, and a clerk with a grudge.",
             prosecutionClosing: "No court order. No owner. No excuse.",
             defenseClosing: "Proof of spending isn't proof of stealing.",
-            genders: ["D": .male]
+            genders: ["D": .male],
+            yearsAtJob: 16
         )
     )
 
@@ -455,7 +456,7 @@ extension StoryCases {
                             .cross("You never saw a woman that night?", "\"I didn't see any woman.\""),
                             .cross("So you can't say who was typing those messages?", "\"No. I only saw the profile.\"")
                         ]),
-            WitnessSeed(name: nil, role: "Cousin (cooperating co-defendant)",
+            WitnessSeed(name: nil, role: "Cousin, the man who drove (cooperating co-defendant)",
                         direct: ["\"{DL} ran the profiles.\""],
                         cross: ["\"I got a deal.\""],
                         weight: 2, lay: true,

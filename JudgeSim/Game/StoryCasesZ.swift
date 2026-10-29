@@ -171,7 +171,8 @@ extension StoryCases {
             prosecutionOpening: "Months of hunger, documented every Sunday.",
             defenseOpening: "A sick owner and a farmhand who took the money and left.",
             prosecutionClosing: "The hospital explains three weeks. It doesn't explain nine.",
-            defenseClosing: "Intent is an element. Being in intensive care isn't intent."
+            defenseClosing: "Intent is an element. Being in intensive care isn't intent.",
+            residence: "Lives on the property outside {HOOD} where the horses were kept."
         )
     )
 

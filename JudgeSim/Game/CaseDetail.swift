@@ -327,7 +327,8 @@ enum DefendantProfiles {
         var former: String?
         if let r = role.range(of: " and part-time ") { partTime = String(role[r.upperBound...]); role = String(role[..<r.lowerBound]) }
         if let r = role.range(of: " and former ") { former = String(role[r.upperBound...]); role = String(role[..<r.lowerBound]) }
-        for prefix in ["unemployed former ", "former "] where role.hasPrefix(prefix) {
+        for prefix in ["unemployed former ", "former ", "unemployed "] where role.hasPrefix(prefix) && former == nil {
+            // "Unemployed roofer": the roofing is the job he lost.
             former = String(role.dropFirst(prefix.count)); role = "unemployed"
         }
         for prefix in ["city council candidate and ", "volunteer treasurer and "] where role.hasPrefix(prefix) {
@@ -351,7 +352,9 @@ enum DefendantProfiles {
         let schoolYear = ["freshman": "First-year", "sophomore": "Second-year", "junior": "Third-year", "senior": "Fourth-year"]
             .first { lower.contains($0.key) }?.value
         let retired = lower.hasPrefix("retired ")
-        let has = { (keys: [String]) in keys.contains(where: lower.contains) }
+        // A former career counts for training and earlier jobs: a former sheriff went to the academy.
+        let trained = lower + " " + (former ?? "")
+        let has = { (keys: [String]) in keys.contains(where: trained.contains) }
         // "Self-described financial advisor": the title is a claim, not a credential.
         let selfDescribed = lower.hasPrefix("self-described")
         // A career someone trained for: no weekend side jobs, and earlier jobs come from the same field.
@@ -551,7 +554,7 @@ enum DefendantProfiles {
                     // The job the occupation says they used to have comes first.
                     job = Job(title: earlier.capitalizedFirst, employer: employer(for: earlier, rng: &rng), years: "\(start)–\(cursor)", current: false)
                     formerPending = nil
-                } else if let path = careerPaths.first(where: { $0.0.contains(where: lower.contains) }), start >= birthYear + 18 {
+                } else if !selfDescribed, let path = careerPaths.first(where: { $0.0.contains(where: trained.contains) }), start >= birthYear + 18 {
                     let (title, place) = rng.pick(path.1)
                     job = Job(title: title, employer: place, years: "\(start)–\(cursor)", current: false)
                 } else if professional {

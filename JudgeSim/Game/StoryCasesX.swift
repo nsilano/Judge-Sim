@@ -269,7 +269,8 @@ extension StoryCases {
             prosecutionOpening: "A tractor is a vehicle. {DL} drove it impaired, and two drivers ended up in a ditch.",
             defenseOpening: "Two beers, bad steering, and a test taken long after the drive.",
             prosecutionClosing: "Alcohol rises and falls slowly. 0.09 at 7:52 means impaired at 6:10.",
-            defenseClosing: "Worn kingpins explain the line. Two beers don't make 0.09."
+            defenseClosing: "Worn kingpins explain the line. Two beers don't make 0.09.",
+            scene: "Highway 17 near {HOOD}"
         )
     )
 
@@ -354,7 +355,8 @@ extension StoryCases {
             prosecutionOpening: "A press, dye, and 4,000 pills of fentanyl in {DL}'s garage, with {DL}'s prints on the lever.",
             defenseOpening: "A roommate's operation in a garage {DL} rarely entered.",
             prosecutionClosing: "Constructive possession: {D.his} house, {D.his} prints, {D.his} garage.",
-            defenseClosing: "Knowledge is an element. The State proved the roommate's knowledge, not {DL}'s."
+            defenseClosing: "Knowledge is an element. The State proved the roommate's knowledge, not {DL}'s.",
+            residence: "Rents the house on {STREET} in {HOOD} where the press was found."
         )
     )
 
@@ -370,11 +372,11 @@ extension StoryCases {
         ],
         ageRange: 45...62, occupations: ["unemployed", "part-time cashier", "freelance graphic designer"], hasVictim: true,
         summaries: [
-            "{V}, 84, a retired schoolteacher, lived with {V.his} adult child, {D}, in {HOOD}. When a neighbor hadn't seen {VL} in months, deputies made a welfare check on {DATE}. They found {VL}'s remains in a locked back bedroom. The medical examiner estimated death about eight months earlier, from heart disease, with no sign of injury. In those eight months, $26,400 in {VL}'s state teacher pension had been deposited and spent from a joint account, and an annual verification form, due in the spring, was signed with {VL}'s name. {DL} says {D.he} froze when {D.his} mother died, couldn't face it, and used the money to keep the house."
+            "{V}, 84, a retired schoolteacher, lived with {V.his} adult child, {D}, in {HOOD}. When a neighbor hadn't seen {VF} in months, deputies made a welfare check on {DATE}. They found {VF}'s remains in a locked back bedroom. The medical examiner estimated death about eight months earlier, from heart disease, with no sign of injury. In those eight months, $26,400 in {VF}'s state teacher pension had been deposited and spent from a joint account, and an annual verification form, due in the spring, was signed with {VF}'s name. {DL} says {D.he} froze when {D.his} mother died, couldn't face it, and used the money to keep the house."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Autopsy Report", "Death about eight months before discovery from atherosclerotic heart disease; no trauma."),
-            E(.document, 3, "Pension Records", "Eight monthly deposits totaling $26,400 after the estimated date of death, and a benefit verification form signed in {VL}'s name.", .search),
+            E(.document, 3, "Pension Records", "Eight monthly deposits totaling $26,400 after the estimated date of death, and a benefit verification form signed in {VF}'s name.", .search),
             E(.document, 2, "Bank Records", "The deposits spent on utilities, groceries, and {DL}'s car payment.", .search)
         ],
         defenseEvidence: [
@@ -384,11 +386,11 @@ extension StoryCases {
         prosecutionWitnesses: [
             WitnessSeed(name: nil, role: "Medical examiner",
                         direct: ["\"Natural death, about eight months earlier.\""],
-                        cross: ["\"Nothing suggests {VL} was harmed.\""],
+                        cross: ["\"Nothing suggests {VF} was harmed.\""],
                         weight: 2, lay: false,
                         exam: [
                             .direct("What examination did you perform?", "\"A full autopsy, three days after the remains were found.\""),
-                            .direct("How and when did {VL} die?", "\"Heart disease. The condition of the remains puts death about eight months before discovery.\""),
+                            .direct("How and when did {VF} die?", "\"Heart disease. The condition of the remains puts death about eight months before discovery.\""),
                             .direct("What kind of heart disease?", "\"Atherosclerotic heart disease. Hardening of the arteries.\""),
                             .cross("No sign of injury or neglect causing death?", "\"None. This was a natural death.\""),
                             .cross("So nothing {DL} did caused {D.his} mother's death?", "\"Nothing I found.\"")
@@ -398,9 +400,9 @@ extension StoryCases {
                         cross: ["\"{DL} cried when we found {D.him}.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("Why did you go to the house?", "\"A neighbor hadn't seen {VL} in months, so we made a welfare check.\""),
+                            .direct("Why did you go to the house?", "\"A neighbor hadn't seen {VF} in months, so we made a welfare check.\""),
                             .direct("What did you find in the house?", "\"A back bedroom locked from the outside, towels under the door, and the air vents taped over.\""),
-                            .direct("And the verification form?", "\"Signed in {VL}'s name in April, months after the death.\""),
+                            .direct("And the verification form?", "\"Signed in {VF}'s name in April, months after the death.\""),
                             .cross("How did {DL} react?", "\"{D.He} broke down and said, 'I couldn't say it out loud.'\"")
                         ])
         ],
@@ -421,13 +423,13 @@ extension StoryCases {
         defenseTheory: ["Grief and severe depression, not a scheme. {DL} lived on a joint account {D.he} had always used for the household."],
         aggravating: [],
         mitigating: ["The defendant suffered from a mental or physical condition that reduced culpability", "No prior criminal record"],
-        victimImpacts: ["{VL}'s sister: \"Nobody got to say goodbye. Nobody got to bury her.\""],
+        victimImpacts: ["{VF}'s sister: \"Nobody got to say goodbye. Nobody got to bury her.\""],
         allocutions: ["\"I couldn't lose her. So I pretended I hadn't.\""],
         guiltyTruths: ["{DL} had searched online, the week after the death, \"how long can pension keep paying after death.\""],
         innocentTruths: ["{DL}'s treating doctor recorded a psychotic depressive episode that month, with {DL} believing {D.his} mother was still alive."],
         moods: [.sympathetic], doctrines: ["burdenOfProof"],
         story: StoryExtras(
-            timeline: [(-240, "Estimated date of {VL}'s death."), (-150, "Benefit verification form signed in {VL}'s name."), (0, "Welfare check; remains found."), (3, "Autopsy."), (30, "Pension records subpoenaed; {DL} charged.")],
+            timeline: [(-240, "Estimated date of {VF}'s death."), (-150, "Benefit verification form signed in {VF}'s name."), (0, "Welfare check; remains found."), (3, "Autopsy."), (30, "Pension records subpoenaed; {DL} charged.")],
             howIdentified: "{DL} lived in the home.",
             notDone: ["No psychological evaluation was ordered before charging."],
             defendantExam: [
@@ -448,7 +450,7 @@ extension StoryCases {
             defenseClosing: "Intent to conceal is an element. Illness isn't intent.",
             genders: ["V": .female],
             victim: VictimFacts(relationship: "The defendant's mother; they lived together."),
-            residence: "Lived in {VL}'s house on {STREET} in {HOOD}.",
+            residence: "Lived in {VF}'s house on {STREET} in {HOOD}.",
             sameSurname: true
         )
     )

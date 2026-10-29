@@ -369,7 +369,7 @@ extension StoryCases {
                         cross: ["\"The room should have been checked anyway.\""],
                         weight: 1, lay: false,
                         exam: [
-                            .direct("Why did the couple's toxicology take seven weeks?", "\"The state lab was backlogged. We sent it routine. In hindsight it should have been expedited.\""),
+                            .direct("Why did the couple's toxicology take six weeks?", "\"The state lab was backlogged. We sent it routine. In hindsight it should have been expedited.\""),
                             .direct("If the results had come back in days, what would have happened?", "\"We'd have known it was carbon monoxide, and that room would have been closed.\""),
                             .cross("Two healthy people dying in the same room: should someone have checked the room?", "\"Someone should have. I should have.\""),
                             .cross("Nothing about the lab backlog stopped the motel from checking that room itself?", "\"No. Nothing stopped them.\"")
@@ -391,7 +391,8 @@ extension StoryCases {
                        (-50, "{V} and {VIC2} found dead in Room 225."),
                        (-50, "Room 225 rented again within days."),
                        (0, "{KID} dies in Room 225; his mother is hospitalized."),
-                       (2, "Fire marshal finds the corroded vent.")],
+                       (2, "Fire marshal finds the corroded vent."),
+                       (35, "{DL} charged with involuntary manslaughter.")],
             howIdentified: "The second death in the same room, and the fire marshal's inspection.",
             notDone: ["The contractor's own records were never subpoenaed."],
             defendantExam: [
@@ -515,7 +516,8 @@ extension StoryCases {
             prosecutionClosing: "She didn't just hide a body. She became him.",
             defenseClosing: "Other people wanted his money too.",
             genders: ["D": .female, "V": .male],
-            victim: VictimFacts(relationship: "A client of the defendant, who managed his money.")
+            victim: VictimFacts(relationship: "A client of the defendant, who managed his money."),
+            employer: "her own company"
         )
     )
 }
