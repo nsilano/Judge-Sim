@@ -196,7 +196,8 @@ extension StoryCases {
             defenseOpening: "A stolen phone, an Android {DL} doesn't own, and a network shared by two hundred units.",
             prosecutionClosing: "The threat and the access point to one person.",
             defenseClosing: "The device that posted them wasn't {DL}'s.",
-            victim: VictimFacts(relationship: "A former partner of the defendant; together two years.", restitution: 3200, restitutionBasis: "counseling costs")
+            victim: VictimFacts(relationship: "A former partner of the defendant; together two years.", restitution: 3200, restitutionBasis: "counseling costs"),
+            residence: "Rents an apartment in a 214-unit complex in {HOOD}."
         )
     )
 

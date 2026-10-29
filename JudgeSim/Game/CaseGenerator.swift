@@ -537,7 +537,22 @@ enum CaseGenerator {
             }
             if let school = story.school.map({ fill($0) }) { profile.education = "Currently enrolled at \(school)." }
             if let family = story.family.map({ fill($0) }) { profile.family = family }
-            if let residence = story.residence.map({ fill($0) }) { profile.residence = residence }
+            if let residence = story.residence.map({ fill($0) }) {
+                profile.residence = residence
+            } else {
+                // A neighbor in a dispute lives next door. (A home the story names as the scene is set per case.)
+                let raw = t.summaries.joined(separator: " ")
+                let neighbor = (story.victim?.relationship ?? "").lowercased().range(of: #"\bneighbor\b(?!'s)"#, options: .regularExpression) != nil
+                    || raw.range(of: #"(lives|lived|living) next door|\{DL\}'s neighbor|\{D\.his\} neighbor|next-door neighbor"#, options: .regularExpression) != nil
+                if neighbor && t.hasVictim {
+                    profile.residence = fill("Lives on {STREET} in {HOOD}, next door to {V}.")
+                }
+            }
+            // The job the defendant lost or left, at the place the story names.
+            if let place = story.formerEmployer.map({ fill($0) }),
+               let i = profile.jobs.firstIndex(where: { !$0.current && $0.title != "In custody" }) {
+                profile.jobs[i].employer = place
+            }
             if let years = story.yearsAtJob, let i = profile.jobs.firstIndex(where: { $0.current && $0.title != "Unemployed" && !$0.title.hasPrefix("weekend ") && !$0.title.hasPrefix("part-time ") }) {
                 let start = currentYear - years
                 profile.jobs[i].years = "\(start)–present"
@@ -830,7 +845,15 @@ enum CaseGenerator {
             objections.append(objection)
         }
 
-        let impactBase = t.victimImpacts.isEmpty ? nil : fill(rng.pick(t.victimImpacts))
+        let impactBase: String? = t.victimImpacts.isEmpty ? nil : {
+            // Family speaking about their own person says the first name: "Debra was the best person in that family."
+            let raw = rng.pick(t.victimImpacts)
+            let family = #"^\{(VL|DL)\}'s (parent|parents|mother|father|sibling|brother|sister|son|daughter|children|family|partner|spouse|wife|husband|girlfriend|boyfriend|grandmother|grandfather|niece|nephew|aunt|uncle)\b"#
+            guard let m = raw.range(of: family, options: .regularExpression), let colon = raw.range(of: ": \"") else { return fill(raw) }
+            let token = raw[m].hasPrefix("{VL}") ? "{VL}" : "{DL}"
+            let first = token == "{VL}" ? "{VF}" : "{DF}"
+            return fill(String(raw[..<colon.upperBound]) + raw[colon.upperBound...].replacingOccurrences(of: token, with: first))
+        }()
         var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                         publicDefender: usePublicDefender, mitigating: mitigating,
                                         isFelony: isFelonyCase, habitual: habitual, maxCustodyDays: maxCustodyDays,
@@ -1326,8 +1349,9 @@ enum CaseGenerator {
                                     rng: inout SeededRNG, used: inout Set<String>, impeach: Bool = true,
                                     regulars: [String: String] = [:], residents: [ResidentRef] = [], hood: String = "",
                                     reserved: Set<String> = []) -> Witness {
-        let name: String
+        var name: String
         var recalled: String?
+        let roleFill = fill
         if let token = seed.name {
             name = fill(token)
         } else if let key = Gazetteer.regularKey(forRole: fill(seed.role)), let regular = regulars[key], !used.contains(regular) {
@@ -1355,6 +1379,19 @@ enum CaseGenerator {
                 name = fresh
             }
         }
+        // Family share the family name, and call their own people by first name.
+        var fill = fill
+        let rawRole = seed.role
+        let kin = #"^\{(VL|DL)\}'s (parent|parents|mother|father|sibling|brother|sister|son|daughter|child|younger sibling|older sibling|older brother|younger brother|older sister|younger sister)\b"#
+        let close = #"^\{(VL|DL)\}'s (partner|spouse|wife|husband|girlfriend|boyfriend|fiancée|fiancé|grandmother|grandfather|grandparent|aunt|uncle|cousin|niece|nephew|best friend)\b"#
+        if seed.name == nil, let m = rawRole.range(of: kin, options: .regularExpression) ?? rawRole.range(of: close, options: .regularExpression) {
+            let who = rawRole[m].hasPrefix("{VL}") ? "V" : "D"
+            if rawRole.range(of: kin, options: .regularExpression) != nil, let first = name.split(separator: " ").first {
+                name = "\(first) \(fill("{\(who)L}"))"
+                used.insert(name)
+            }
+            fill.values["\(who)L"] = fill.values["\(who)F"]
+        }
         var cross = fill(seed.cross)
         var weight = seed.weight
         let isVictim = seed.name == "{V}"
@@ -1365,7 +1402,7 @@ enum CaseGenerator {
             cross.append(fill(impeachment.text))
             weight = max(0, weight - impeachment.penalty)
         }
-        var witness = Witness(name: name, role: fill(seed.role), calledBy: side, direct: fill(seed.direct), cross: cross, weight: weight,
+        var witness = Witness(name: name, role: roleFill(seed.role), calledBy: side, direct: fill(seed.direct), cross: cross, weight: weight,
                               lay: seed.lay)
         if !seed.exam.isEmpty {
             let opposing: Side = side == .prosecution ? .defense : .prosecution
@@ -1375,7 +1412,7 @@ enum CaseGenerator {
             let keepAll = seed.exam.count <= 3
             var exchanges = seed.exam.filter { keepAll || !$0.optional || rng.chance(0.6) }.map { line in
                 TestimonyExchange(phase: line.phase, examiner: line.phase == .cross ? opposing : side,
-                                  question: fill(line.question(version)), answer: fill(line.answer(version)))
+                                  question: roleFill(line.question(version)), answer: fill(line.answer(version)))
             }
             // A witness with only a question or two gets a fuller examination from what the case already says
             // about them: who they are, their own account, and the point the other side presses on cross.

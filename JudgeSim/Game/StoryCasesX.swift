@@ -185,7 +185,8 @@ extension StoryCases {
             defenseClosing: "Nobody can see where the gun was pointed. That's reasonable doubt.",
             when: .window(month: 10, days: 31...31),
             genders: ["D": .male],
-            victim: VictimFacts(relationship: "A trick-or-treater; no prior contact with the defendant.", restitution: 0)
+            victim: VictimFacts(relationship: "A trick-or-treater; no prior contact with the defendant.", restitution: 0),
+            residence: "Owns the house in {HOOD} where this happened; has lived there for decades."
         )
     )
 

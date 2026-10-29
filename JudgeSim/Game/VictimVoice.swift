@@ -16,7 +16,8 @@ enum VictimVoice {
     /// Impact statements that already ask the court not to send the defendant away.
     static func asksMercy(_ impact: String?) -> Bool {
         guard let text = impact?.lowercased() else { return false }
-        return ["i forgive", "not to prison", "don't send", "don't want prison", "don't want revenge"].contains { text.contains($0) }
+        return ["i forgive", "not to prison", "don't send", "don't want prison", "don't want revenge", "asking for mercy",
+                "lose everything too", "second chance", "find whoever is making"].contains { text.contains($0) }
             || text.range(of: #"don't want \S+ in (prison|jail)"#, options: .regularExpression) != nil
     }
 
@@ -235,7 +236,8 @@ enum VictimVoice {
 
     /// The impact statement with the speaker's closing ask, kept inside the same quotation.
     static func impact(_ base: String, stance: VictimStance, defendant: String, died: Bool, rng: inout SeededRNG) -> String {
-        guard base.hasSuffix("\""), !base.contains("don't want to talk"),
+        // A statement that already says what the speaker wants keeps its own last word.
+        guard base.hasSuffix("\""), !base.contains("don't want to talk"), !asksMercy(base), !asksHarsh(base),
               let close = closing(stance: stance, defendant: defendant, died: died, rng: &rng) else { return base }
         return String(base.dropLast()) + " " + close + "\""
     }

@@ -98,7 +98,8 @@ extension StoryCases {
             defenseOpening: "The coworker had the secret, a bigger grudge, and the wallet's keys.",
             prosecutionClosing: "Revenge and access both point to {DL}.",
             defenseClosing: "Both point to the coworker too. That's reasonable doubt.",
-            victim: VictimFacts(occupation: "Regional bank vice president", relationship: "The defendant's former employer; the defendant was the victim's executive assistant.", restitution: 0)
+            victim: VictimFacts(occupation: "Regional bank vice president", relationship: "The defendant's former employer; the defendant was the victim's executive assistant.", restitution: 0),
+            formerEmployer: "a regional bank in {CITY}"
         )
     )
 
