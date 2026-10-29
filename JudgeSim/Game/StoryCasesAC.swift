@@ -480,10 +480,11 @@ extension StoryCases {
             defenseOpening: "One thousand one hundred forty trucks, and the State picked the one an anonymous caller named.",
             prosecutionClosing: "Same model, same paint, same side, a new mirror four days later, and a dent in the right place.",
             defenseClosing: "{V} deserves an answer. A coincidence isn't one.",
-            victim: VictimFacts(occupation: "Poultry plant worker (unable to return)", harm: ["Broken left femur", "Fractured pelvis", "Three surgeries; walks with a cane"]),
+            victim: VictimFacts(occupation: "Poultry plant worker (unable to return)", relationship: "Strangers.", harm: ["Broken left femur", "Fractured pelvis", "Three surgeries; walks with a cane"]),
             time: "11:20 p.m.",
             family: "Married, no children.",
-            residence: "Lives in a house about three miles from the crash site on Pruitt Mill Road."
+            residence: "Lives in a house about three miles from the crash site on Pruitt Mill Road.",
+            scene: "the shoulder of Pruitt Mill Road"
         )
     )
 }

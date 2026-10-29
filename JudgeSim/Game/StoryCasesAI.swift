@@ -206,7 +206,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("How do you know the pots are yours?", "\"My number's under that green paint. And I build my own pots with a zinc on the left corner. Nobody else does it that way.\""),
-                            .direct("What did losing them cost you?", "\"Two weeks of fishing in peak season. I've got a boat payment and two kids.\"", "\"About three thousand in lost catch on top of the pots. In August.\""),
+                            .direct("What did losing them cost you?", "\"Two weeks of fishing in peak season. I've got a boat payment and two kids.\"", "\"About two thousand in lost catch and pots, right at the start of the season.\""),
                             .direct("Were the pots tangled after the storm?", "\"I checked them the day after the blow. All thirty-two were sitting right where I set them.\""),
                             .cross("Storms move pots all the time.", "\"They do. They don't repaint them.\""),
                             .cross("You and {DL} have argued about that creek before.", "\"{D.He} thinks it's {D.his}. It isn't.\"")
@@ -275,7 +275,7 @@ extension StoryCases {
         specification: "Unlawfully sold fentanyl to {V}, and the ingestion of the substance caused the death of {V}, on {DATE}.",
         ageRange: 19...28, occupations: ["line cook", "warehouse worker", "community college student"], hasVictim: true,
         summaries: [
-            "{V}, 20, was found unresponsive in Room 112 at {PLACE.MOTEL} at 6:15 a.m. on {DATE}, after a birthday party that broke up around 2 a.m. The medical examiner found a fatal level of fentanyl. Texts show {V} asked {D} for \"two blues\" at 11:48 p.m., and {D} answered \"got u.\" At 12:20 a.m., {V} sent {D} $20 on a payment app with the note \"gas.\" {DL} admits giving {V} two pills from {D.his} own supply, but says {D.he} never sold anything: the $20 was for driving {V} to the party, and {D.he} took the same pills that night. The law requires a sale."
+            "{V}, 20, was found unresponsive in Room 112 at {PLACE.MOTEL} at 6:15 a.m., the morning after a birthday party on {DATE} that broke up around 2 a.m. The medical examiner found a fatal level of fentanyl. Texts show {V} asked {D} for \"two blues\" at 11:48 p.m., and {D} answered \"got u.\" At 12:20 a.m., {V} sent {D} $20 on a payment app with the note \"gas.\" {DL} admits giving {V} two pills from {D.his} own supply, but says {D.he} never sold anything: the $20 was for driving {V} to the party, and {D.he} took the same pills that night. The law requires a sale."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Texts and Payment", "11:48 p.m.: \"u got two blues?\" / \"got u.\" 12:20 a.m.: $20 from {V} to {DL}, note \"gas.\"", .search),
@@ -331,7 +331,7 @@ extension StoryCases {
         innocentTruths: ["The gas station receipt for that night, found later in {DL}'s car, shows $20 of gas bought at 8:50 p.m. on the way to pick {V} up."],
         moods: [.divided], doctrines: ["burdenOfProof", "lesserIncluded"],
         story: StoryExtras(
-            timeline: [(0, "9:05 p.m.: {V} asks {DL} for a ride."), (0, "11:48 p.m.: \"u got two blues?\" / \"got u.\""), (0, "12:20 a.m.: $20 to {DL}, \"gas.\""), (1, "6:15 a.m.: {V} found unresponsive in Room 112.")],
+            timeline: [(0, "9:05 p.m.: {V} asks {DL} for a ride."), (0, "11:48 p.m.: \"u got two blues?\" / \"got u.\""), (1, "12:20 a.m.: $20 to {DL}, \"gas.\""), (1, "6:15 a.m.: {V} found unresponsive in Room 112.")],
             howIdentified: "The texts and the payment app on {V}'s phone.",
             notDone: ["{DL}'s supplier was never identified.", "The other guests weren't tested for fentanyl."],
             defendantExam: [
@@ -435,7 +435,7 @@ extension StoryCases {
             prosecutionClosing: "A blanket 'take what you need' doesn't cover a wedding ring, and {DL} knew it.",
             defenseClosing: "{DL} pawned it in {D.his} own name. People hiding a theft don't do that.",
             genders: ["V": .female],
-            victim: VictimFacts(age: 78, occupation: "retired school cafeteria worker", relationship: "Grandmother", family: "Widowed; three children, seven grandchildren"),
+            victim: VictimFacts(age: 78, occupation: "retired school cafeteria worker", relationship: "The defendant's grandmother; they lived together.", family: "Widowed; three children, seven grandchildren", restitutionBasis: "the ring and watch, appraised at $3,500"),
             family: "Single, no children.",
             residence: "{D.His} grandmother's house in {HOOD}, since losing an apartment"
         )

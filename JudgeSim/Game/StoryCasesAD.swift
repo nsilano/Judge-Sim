@@ -200,7 +200,8 @@ extension StoryCases {
             genders: ["ALT": .male],
             time: "10:15 a.m.",
             family: "Single, no children. Lives with an older brother.",
-            residence: "A rented house on {STREET} in {HOOD}, shared with an older brother"
+            residence: "A rented house on {STREET} in {HOOD}, shared with an older brother",
+            altSameSurname: true
         )
     )
 

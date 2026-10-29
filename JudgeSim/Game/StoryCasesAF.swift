@@ -90,8 +90,9 @@ extension StoryCases {
             defenseOpening: "A mechanic who bought parts from the wrong man.",
             prosecutionClosing: "Nobody honest pays $1,800 for $14,600 in motors and never asks for a last name. The ground-off plate tells you {DL} knew.",
             defenseClosing: "The camera shows two hoods, not {D}. Buying cheap from a stranger is careless, not theft.",
-            victim: VictimFacts(restitution: 0),
+            victim: VictimFacts(restitution: 7300, restitutionBasis: "the second motor, never recovered"),
             time: "2:10 a.m.",
+            employer: "his own repair shop on Water Street",
             yearsAtJob: 8
         )
     )
@@ -228,7 +229,7 @@ extension StoryCases {
         defenseTheory: ["{D} was scammed by TixKing first, and tried to make it right with the buyers. Being taken by a scammer isn't the same as being one."],
         aggravating: ["The offense involved multiple victims"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["\"It was his birthday. He still asks why the man lied to us.\""],
+        victimImpacts: ["\"It was his birthday. He still asks why someone would lie to us like that.\""],
         allocutions: ["\"I got greedy. I'm sorry to all of them.\""],
         guiltyTruths: ["The TixKing account belonged to {DL}'s roommate, who said {DL} paid him $300 for a single real ticket that {DL} then copied."],
         innocentTruths: ["TixKing was traced to a man in Georgia who had sold the same edited PDFs to dozens of resellers across three states."],
@@ -263,11 +264,11 @@ extension StoryCases {
         ],
         ageRange: 25...45, occupations: ["HVAC technician", "tow truck driver", "unemployed"], hasVictim: true,
         summaries: [
-            "A technician servicing pump 6 at {PLACE.GASSTATION} in {HOOD} found a Bluetooth skimmer wired inside the panel; 212 cards had been swiped there in two weeks. The station's camera showed a man in a gray ball cap opening the pump panel with a key at 4:50 a.m. twelve days earlier. {V}'s card, used at that pump, was then charged for gift cards at three stores. Deputies stopped a gray sedan seen leaving one of those stores; {D} was driving, and 31 blank-white cards encoded with stolen numbers were in the console. {DL} says the car is {D.his} cousin's, the cards were in it when {D.he} borrowed it, and {D.he} has never touched a gas pump panel."
+            "A technician servicing pump 6 at {PLACE.GASSTATION} in {HOOD} found a Bluetooth skimmer wired inside the panel; 212 cards had been swiped there in two weeks. The station's camera showed a person in a gray ball cap opening the pump panel with a key at 4:50 a.m. twelve days earlier. {V}'s card, used at that pump, was then charged for gift cards at three stores. Deputies stopped a gray sedan seen leaving one of those stores; {D} was driving, and 31 blank-white cards encoded with stolen numbers were in the console. {DL} says the car is {D.his} cousin's, the cards were in it when {D.he} borrowed it, and {D.he} has never touched a gas pump panel."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "Cloned Cards", "31 white plastic cards in the car's console, each encoded with a stolen account number, including {V}'s.", .search),
-            E(.video, 2, "Pump Camera", "At 4:50 a.m., a man in a gray ball cap opens pump 6's panel with a key and works inside for three minutes. His face is mostly hidden by the cap."),
+            E(.video, 2, "Pump Camera", "At 4:50 a.m., a person in a gray ball cap opens pump 6's panel with a key and works inside for three minutes. His face is mostly hidden by the cap."),
             E(.video, 3, "Store Cameras", "At two of the three stores, {DL} is on camera buying $500 gift cards with white cards on the days {V}'s number was used."),
             E(.physical, 2, "Pump Key", "A universal gas pump key on {DL}'s key ring.", .search)
         ],
@@ -357,7 +358,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did the man say at your door?", "\"That there was a problem with the line and he had to check the back bedroom. He was polite. He had a vest and a clipboard.\""),
-                            .direct("What did you find that evening?", "\"My husband's wedding ring was gone, and my mother's pearls. Forty-eight years I wore that ring on a chain after he passed, and I'd just taken it off to bathe.\"", "\"The ring box was empty. My husband's ring, and my mother's pearls.\""),
+                            .direct("What did you find that evening?", "\"My husband's wedding ring was gone, and my mother's pearls. I've worn that ring on a chain every day since he passed, and I'd just taken it off to bathe.\"", "\"The ring box was empty. My husband's ring, and my mother's pearls.\""),
                             .direct("How did you feel after?", "\"I don't open the door now. I sit with the lights off when somebody knocks.\""),
                             .cross("In the photo lineup, you said \"I think that's him.\"", "\"That's what I said. It looked like him.\""),
                             .cross("You'd had cataract surgery that spring?", "\"Yes. I see all right for close up.\"")
@@ -409,6 +410,7 @@ extension StoryCases {
             defenseOpening: "A route log that puts {DL} twenty-five minutes away.",
             prosecutionClosing: "{V} picked {DL}. The vest and the pickup fit. A handheld can be left on a dashboard.",
             defenseClosing: "A tentative pick from an array the detective shouldn't have run, against a log reading a meter every four minutes.",
+            genders: ["D": .male, "V": .male],
             victim: VictimFacts(age: 81, occupation: "retired schoolteacher", relationship: "Strangers."),
             time: "10:15 a.m."
         )

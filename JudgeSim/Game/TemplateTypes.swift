@@ -177,6 +177,8 @@ struct StoryExtras {
     var scene: String? = nil
     /// The victim is family who shares the defendant's last name (a father and his sons).
     var sameSurname = false
+    /// {ALT} is family who shares the defendant's last name (a brother the defendant lives with).
+    var altSameSurname = false
 }
 
 /// What a written case says about its victim, so the victim's profile matches the story.

@@ -238,7 +238,11 @@ enum VictimVoice {
     /// The impact statement with the speaker's closing ask, kept inside the same quotation.
     static func impact(_ base: String, stance: VictimStance, defendant: String, died: Bool, rng: inout SeededRNG) -> String {
         // A statement that already says what the speaker wants keeps its own last word.
-        guard base.hasSuffix("\""), !base.contains("don't want to talk"), !asksMercy(base), !asksHarsh(base),
+        // Someone speaking in an official role (a guardian ad litem, a director, a pastor) doesn't make a personal ask.
+        let speaker = base.components(separatedBy: ":").first?.lowercased() ?? ""
+        let official = ["guardian", "director", "commissioner", "manager", "deacon", "pastor", "teacher", "volunteer",
+                        "principal", "owner"].contains(where: speaker.contains)
+        guard base.hasSuffix("\""), !official, !base.contains("don't want to talk"), !asksMercy(base), !asksHarsh(base),
               let close = closing(stance: stance, defendant: defendant, died: died, rng: &rng) else { return base }
         return String(base.dropLast()) + " " + close + "\""
     }

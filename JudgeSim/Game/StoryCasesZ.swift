@@ -342,7 +342,8 @@ extension StoryCases {
             defenseOpening: "A conversation she asked for, that ended badly.",
             prosecutionClosing: "Leaving a woman on a dark road with no phone is not releasing her in a safe place.",
             defenseClosing: "Her own text asked for this talk.",
-            genders: ["D": .male, "V": .female]
+            genders: ["D": .male, "V": .female],
+            victim: VictimFacts(restitutionBasis: "her phone, thrown from the car, and medical bills")
         )
     )
 

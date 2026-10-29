@@ -76,7 +76,7 @@ extension StoryCases {
         moods: [.indifferent], doctrines: ["burdenOfProof"],
         story: StoryExtras(
             timeline: [(-35, "First no-receipt return on {DL}'s license."), (-21, "Earlier kit returned with its receipt for cash."), (-20, "First of the four returns still on video."),
-                       (0, "Kit taken from aisle 14 and returned at 2:47 p.m.; {DL} stopped in the parking lot at 2:58 p.m."), (6, "Warrant search of {DL}'s phone."), (12, "Store return log and video turned over; additional count charged.")],
+                       (0, "Kit taken from aisle 14 and returned at 2:47 p.m.; {DL} stopped in the parking lot at 2:58 p.m."), (6, "Warrant search of {DL}'s phone."), (12, "Store return log and video turned over; {DL} charged, with an additional count.")],
             howIdentified: "The store's return system flagged {DL}'s driver's license; loss prevention watched on camera.",
             notDone: ["The first two returns were past the store's 30-day video retention before anyone flagged them."],
             defendantExam: [

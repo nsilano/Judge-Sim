@@ -283,7 +283,9 @@ enum CaseGenerator {
         let familyVictim = t.story?.sameSurname == true
             ? String(drawnVictim.split(separator: " ").first ?? "") + " " + defendant.lastName : drawnVictim
         let victimName = t.hasVictim ? (sameVictim ?? familyVictim) : nil
-        let alternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"], avoiding: knownNames)
+        let drawnAlternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"], avoiding: knownNames)
+        let alternate = t.story?.altSameSurname == true
+            ? String(drawnAlternate.split(separator: " ").first ?? "") + " " + defendant.lastName : drawnAlternate
         let setting = CaseSetting.of(category: t.category, key: t.key)
         // Highway crashes and impaired driving are worked by the Highway Patrol.
         let trooperName = rng.pick(county.troopers)
@@ -859,15 +861,25 @@ enum CaseGenerator {
             objections.append(objection)
         }
 
-        let impactBase: String? = t.victimImpacts.isEmpty ? nil : {
+        var impactBase: String? = nil
+        if !t.victimImpacts.isEmpty {
             // Family speaking about their own person says the first name: "Debra was the best person in that family."
             let raw = rng.pick(t.victimImpacts)
             let family = #"^\{(VL|DL)\}'s (parent|parents|mother|father|sibling|brother|sister|son|daughter|children|family|partner|spouse|wife|husband|girlfriend|boyfriend|grandmother|grandfather|niece|nephew|aunt|uncle)\b"#
-            guard let m = raw.range(of: family, options: .regularExpression), let colon = raw.range(of: ": \"") else { return fill(raw) }
-            let token = raw[m].hasPrefix("{VL}") ? "{VL}" : "{DL}"
-            let first = token == "{VL}" ? "{VF}" : "{DF}"
-            return fill(String(raw[..<colon.upperBound]) + raw[colon.upperBound...].replacingOccurrences(of: token, with: first))
-        }()
+            var base: String
+            if let m = raw.range(of: family, options: .regularExpression), let colon = raw.range(of: ": \"") {
+                let token = raw[m].hasPrefix("{VL}") ? "{VL}" : "{DL}"
+                let first = token == "{VL}" ? "{VF}" : "{DF}"
+                base = fill(String(raw[..<colon.upperBound]) + raw[colon.upperBound...].replacingOccurrences(of: token, with: first))
+            } else {
+                base = fill(raw)
+            }
+            // A statement with no speaker named is the victim's own, or the family's when the victim died.
+            if base.hasPrefix("\""), t.hasVictim {
+                base = (t.victimDies ? fill("{VL}") + "'s family: " : fill("{V}") + ": ") + base
+            }
+            impactBase = base
+        }
         var background = makeBackground(t, defendant: defendant, charges: charges, values: values, mood: mood,
                                         publicDefender: usePublicDefender, mitigating: mitigating,
                                         isFelony: isFelonyCase, habitual: habitual, maxCustodyDays: maxCustodyDays,
