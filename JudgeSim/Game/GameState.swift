@@ -3727,12 +3727,15 @@ final class GameState: ObservableObject {
                 }
             case .releases:
                 let ordered = state.releases.filter { $0.byJudge && $0.date >= notice.issued }.count
-                if jail <= beds {
+                let floor = Int(Double(beds) * Corrections.releaseFloor)
+                let due = notice.deadline.map { date >= $0 } ?? true
+                // The notice stands until the jail has some room again, or until the deadline finds it within capacity.
+                if jail <= floor || (due && jail <= beds) {
                     corrections?.notices[index].closed = date
                     corrections?.notices[index].outcome = ordered > 0
                         ? "Back under capacity on \(shortDate) after you ordered \(ordered) release\(ordered == 1 ? "" : "s"). The sheriff released no one."
                         : "Back under capacity on \(shortDate). The sheriff released no one."
-                } else if let deadline = notice.deadline, date >= deadline {
+                } else if due {
                     let released = sheriffReleases(rng: &rng)
                     corrections?.notices[index].closed = date
                     corrections?.notices[index].outcome = "The sheriff released \(released) \(released == 1 ? "person" : "people") on \(shortDate)"
@@ -3747,14 +3750,20 @@ final class GameState: ObservableObject {
             }
         }
         guard corrections?.openNotice == nil else { return }
-        if jail > beds {
+        let lastRelease = state.notices.last { $0.kind == .releases }
+        let recentRelease = lastRelease.map { date.timeIntervalSince($0.closed ?? $0.issued) < 7 * 86_400 } ?? false
+        if jail > beds && !recentRelease {
             let deadline = cal.date(byAdding: .day, value: Corrections.noticeDays, to: date) ?? date
             corrections?.notices.append(SheriffNotice(kind: .releases, issued: date, deadline: deadline, population: jail, beds: beds,
                 message: "Judge, the jail is holding \(jail) of your defendants in space for \(beds). Unless the count comes down, I'll begin releasing inmates on \(SentenceFormat.shortDate(deadline)), starting with those whose charges and records concern me least. You may choose who goes first from the jail roster. No one held for the State's prisons can be released."))
+            // The paper writes about the first notice in a while, not every one.
+            let newsworthy = lastRelease.map { date.timeIntervalSince($0.issued) > 45 * 86_400 } ?? true
+            if newsworthy {
             stats.communityStanding = (stats.communityStanding ?? 0) - 1
             post(NewsItem(date: date, kind: .community, headline: "\(county.name) jail over capacity; sheriff warns of early releases",
                           body: "The \(county.name) jail is holding \(jail) Superior Court defendants in space for \(beds), and \(sheriff) has notified Judge \(lastName(judgeName ?? "")) that early releases will begin in \(Corrections.noticeDays) days if the count doesn't come down.",
                           prominence: 2))
+            }
         } else if ratio >= Corrections.warnAt {
             let lastWarning = state.notices.last { $0.kind == .nearCapacity }?.issued ?? .distantPast
             guard date.timeIntervalSince(lastWarning) > 21 * 86_400 else { return }
@@ -3796,7 +3805,8 @@ final class GameState: ObservableObject {
                       prominence: 1))
         // The count drops tonight; a notice the releases satisfied closes now.
         let jail = jailRoster().count
-        if let index = corrections?.notices.lastIndex(where: { $0.isOpen && $0.kind == .releases }), jail <= (corrections?.beds ?? 0) {
+        if let index = corrections?.notices.lastIndex(where: { $0.isOpen && $0.kind == .releases }),
+           jail <= Int(Double(corrections?.beds ?? 0) * Corrections.releaseFloor) {
             corrections?.notices[index].closed = currentDate
             corrections?.notices[index].outcome = "Back under capacity on \(SentenceFormat.shortDate(currentDate)) after you ordered \(picked.count) release\(picked.count == 1 ? "" : "s"). The sheriff released no one."
         }

@@ -188,7 +188,7 @@ enum Corrections {
         var hash: UInt64 = 1469598103934665603
         for byte in (personID.uuidString + docket).utf8 { hash = (hash ^ UInt64(byte)) &* 1099511628211 }
         let base = 9 + Int(hash % 52)
-        return base + 3 * max(0, recentAdmissions - 4)
+        return base + min(40, 3 * max(0, recentAdmissions - 4))
     }
 
     /// How likely the person looks to be arrested again or to run, 0–1, from what the file shows: the charge and the record.

@@ -346,13 +346,14 @@ struct ReleasePickerView: View {
         let candidates = roster.filter(\.canRelease).sorted { $0.risk < $1.risk }
         List {
             Section {
-                Text("The jail holds \(roster.count) for \(beds) beds. Releasing \(over) would bring it to capacity; the sheriff, if left to choose, releases down to \(Int(Double(beds) * Corrections.releaseFloor)).")
+                let floor = Int(Double(beds) * Corrections.releaseFloor)
+                Text("The jail holds \(roster.count) for \(beds) beds. Releasing \(max(0, roster.count - floor)) would bring it down to \(floor) and end the sheriff's notice. Releasing \(over) brings it to capacity, and the sheriff releases no one if it's still there on the deadline; above capacity, the sheriff releases down to \(floor).")
                     .font(.callout)
                 HStack {
                     Text("Selected").font(.subheadline)
                     Spacer()
                     Text("\(picked.count)").font(.headline.monospacedDigit())
-                        .foregroundStyle(picked.count >= over && over > 0 ? Theme.good : Theme.gold)
+                        .foregroundStyle(picked.count >= max(0, roster.count - Int(Double(beds) * Corrections.releaseFloor)) ? Theme.good : Theme.gold)
                 }
             } footer: {
                 Text("A person awaiting trial goes home on a written promise to appear; a person serving a jail term goes home with the rest of the term forgiven. People held for the state's prisons can't be released. Anyone you let go who is arrested again will be news, and the paper will say who let them out.")
