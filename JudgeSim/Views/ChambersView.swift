@@ -14,6 +14,9 @@ struct RootView: View {
                     .tabItem { Label("Calendar", systemImage: "calendar") }
                 RecordsView()
                     .tabItem { Label("Records", systemImage: "archivebox.fill") }
+                CorrectionsView()
+                    .tabItem { Label("Corrections", systemImage: "lock.shield.fill") }
+                    .badge(game.corrections?.openNotice?.kind == .releases ? 1 : 0)
                 LawLibraryView()
                     .tabItem { Label("Law Library", systemImage: "books.vertical.fill") }
             }
@@ -131,6 +134,7 @@ struct ChambersView: View {
                     if !game.digest.isEmpty {
                         digestCard
                     }
+                    if let notice = game.corrections?.openNotice { sheriffCard(notice) }
                     docketCard
                     if !game.arrestOrders.isEmpty { arrestOrdersCard }
                     if let survey = game.reputation.first { standingCard(survey) }
@@ -320,6 +324,18 @@ struct ChambersView: View {
     }
 
     /// What the lawyers who appear before the judge are saying, from what the judge has done.
+    /// The sheriff's letter about the jail, until the count comes down.
+    private func sheriffCard(_ notice: SheriffNotice) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: notice.kind == .releases ? "From the sheriff: early releases" : "From the sheriff",
+                         icon: notice.kind == .releases ? "exclamationmark.triangle.fill" : "envelope.fill")
+            Text(notice.message).font(.system(.callout, design: .serif)).italic()
+            Text(notice.kind == .releases ? "Open the Corrections tab to choose who goes before the sheriff does." : "The Corrections tab shows who is in the jail and why.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .card(tint: notice.kind == .releases ? Theme.bad : nil)
+    }
+
     private func courthouseMoodCard(_ county: County) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             SectionTitle(text: "Around the courthouse", icon: "bubble.left.and.bubble.right.fill")
@@ -556,394 +572,6 @@ struct CourthouseView: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(name).font(.body)
             Text(role).font(.caption).foregroundStyle(.secondary)
-        }
-    }
-}
-
-struct RecordsView: View {
-    @EnvironmentObject private var game: GameState
-    @State private var section = 0
-    @State private var confirmReset = false
-    /// The stat tapped in the bar at the top of Cases; its list replaces the ledger until tapped again.
-    @State private var focus: StatFocus?
-    @State private var sort: PeopleSort = .recent
-    @State private var peopleQuery = ""
-    @State private var showArchived = false
-    @State private var rulingFilter: CalendarRuling.Group = .all
-    @State private var showAllRulings = false
-
-    /// How many recent matters the Cases tab lists before pointing to the Calendar and News tabs.
-    static let recentLimit = 10
-
-    enum StatFocus: String {
-        case cases, hearings, custody, probation
-
-        var title: String {
-            switch self {
-            case .cases: return "Cases heard"
-            case .hearings: return "Violation hearings"
-            case .custody: return "In custody now"
-            case .probation: return "On probation now"
-            }
-        }
-    }
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Picker("Records", selection: $section) {
-                    Text("Cases").tag(0)
-                    Text("Calendar").tag(3)
-                    Text("Appeals").tag(4)
-                    Text("People").tag(1)
-                    Text("News").tag(2)
-                }
-                .pickerStyle(.segmented)
-                .listRowBackground(Color.clear)
-
-                switch section {
-                case 0: casesSection
-                case 1: peopleSection
-                case 3: calendarSection
-                case 4: appealsSection
-                default: newsSection
-                }
-
-                Section {
-                    Button("Leave the Bench and Start Over", role: .destructive) { confirmReset = true }
-                }
-            }
-            .benchBackground()
-            .navigationTitle("Records")
-            .confirmationDialog("Leave the bench? This erases your county, cases, and records.",
-                                isPresented: $confirmReset, titleVisibility: .visible) {
-                Button("Leave the bench", role: .destructive) { game.resetCareer() }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var appealsSection: some View {
-        let pendingAppeals = game.appeals.filter(\.isPending)
-        let decided = game.appeals.filter { !$0.isPending }
-        Section("Pending") {
-            if pendingAppeals.isEmpty { Text("No appeals pending.").foregroundStyle(.secondary) }
-            ForEach(pendingAppeals) { appeal in
-                NavigationLink { AppealDetail(appeal: appeal, today: game.currentDate) } label: { AppealRow(appeal: appeal, today: game.currentDate) }
-            }
-        }
-        if !decided.isEmpty {
-            Section("Decided") {
-                ForEach(decided) { appeal in
-                    NavigationLink { AppealDetail(appeal: appeal, today: game.currentDate) } label: { AppealRow(appeal: appeal, today: game.currentDate) }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var calendarSection: some View {
-        Section("Coming up") {
-            if game.scheduled.isEmpty {
-                Text("Nothing has been continued to a later date.").foregroundStyle(.secondary)
-            }
-            ForEach(game.scheduled) { item in
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(CourtCalendar.dayTitle(item.date)).font(.caption.weight(.bold)).foregroundStyle(Theme.gold)
-                    Text(item.entry.title).font(.subheadline.weight(.semibold))
-                    Text(item.entry.subtitle).font(.caption).foregroundStyle(.secondary)
-                    if let note = item.entry.note { Text(note).font(.caption2).foregroundStyle(.purple) }
-                }
-            }
-        }
-        rulingsSection
-        let days = Dictionary(grouping: game.history) { Calendar.current.startOfDay(for: $0.date) }
-        ForEach(days.keys.sorted(by: >), id: \.self) { day in
-            Section(CourtCalendar.dayTitle(day)) {
-                ForEach(days[day] ?? []) { record in
-                    NavigationLink {
-                        CaseRecordDetail(record: record)
-                    } label: {
-                        DocketIndexRow(record: record, showDate: false)
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var casesSection: some View {
-        Section {
-            HStack {
-                stat("\(game.trialsHeard)", "Cases", .cases)
-                Spacer()
-                stat("\(game.hearingsHeard)", "Hearings", .hearings)
-                Spacer()
-                stat("\(game.people.filter { $0.status == .incarcerated }.count)", "In custody", .custody)
-                Spacer()
-                stat("\(game.people.filter { $0.status == .probation }.count)", "On probation", .probation)
-            }
-        } footer: {
-            Text(focus == nil ? "Tap a number to see who or what it counts." : "Tap it again to go back.")
-        }
-        if let focus {
-            focusSection(focus)
-        } else {
-            ledgerAndHistory
-        }
-    }
-
-    /// The list behind a number in the bar, right here on the same screen.
-    @ViewBuilder
-    private func focusSection(_ focus: StatFocus) -> some View {
-        switch focus {
-        case .cases, .hearings:
-            let records = game.history.filter { $0.resolvedKind == (focus == .cases ? "trial" : "hearing") }
-            Section {
-                if records.isEmpty { Text("None yet.").foregroundStyle(.secondary) }
-                ForEach(records.prefix(Self.recentLimit)) { record in
-                    NavigationLink { CaseRecordDetail(record: record) } label: { DocketIndexRow(record: record) }
-                }
-            } header: {
-                Text(focus.title)
-            } footer: {
-                if records.count > Self.recentLimit {
-                    Text("The last \(Self.recentLimit) of \(records.count). The rest are on the Calendar tab, and the coverage is in News.")
-                }
-            }
-        case .custody, .probation:
-            let people = sort.sorted(game.people.filter { $0.status == (focus == .custody ? .incarcerated : .probation) })
-            Section {
-                if people.isEmpty { Text("No one right now.").foregroundStyle(.secondary) }
-                ForEach(people) { person in
-                    NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
-                }
-            } header: {
-                sortHeader(focus.title)
-            }
-        }
-    }
-
-    /// A section title with a sort menu beside it.
-    private func sortHeader(_ title: String) -> some View {
-        HStack {
-            Text(title)
-            Spacer()
-            Menu {
-                Picker("Sort", selection: $sort) {
-                    ForEach(PeopleSort.allCases) { Text($0.label).tag($0) }
-                }
-            } label: {
-                Label("Sort", systemImage: "arrow.up.arrow.down").font(.caption.weight(.semibold))
-            }
-            .textCase(nil)
-        }
-    }
-
-    @ViewBuilder
-    private var ledgerAndHistory: some View {
-        Section {
-            DisclosureGroup("Career ledger") {
-            let trials = game.history.filter { $0.resolvedKind == "trial" }
-            let s = game.stats
-            ledgerRow("Convictions at trial", trials.filter { $0.outcome.contains("Guilty") && !$0.outcome.contains("plea)") && !$0.outcome.contains("No contest") }.count)
-            ledgerRow("Acquittals and dismissals at trial", trials.filter { $0.outcome.hasPrefix("Not guilty") || $0.outcome.hasPrefix("Dismissed") || $0.outcome.hasPrefix("All counts dismissed") }.count)
-            ledgerRow("Guilty pleas", trials.filter { $0.outcome.contains("plea)") || $0.outcome.contains("No contest") }.count)
-            // A retrial of the same case isn't a defendant returning.
-            let firstHeard = Dictionary(trials.map { ($0.docket, $0.date) }, uniquingKeysWith: { min($0, $1) })
-            ledgerRow("Returning defendants", trials.filter { $0.returningDefendant && $0.date <= (firstHeard[$0.docket] ?? $0.date) }.count)
-            ledgerRow("Felony sentences below the presumptive range", s.belowPresumptive)
-            ledgerRow("Felony sentences within the presumptive range", s.withinPresumptive)
-            ledgerRow("Felony sentences above the presumptive range", s.abovePresumptive)
-            ledgerRow("Active sentences", s.activeSentences)
-            ledgerRow("Suspended sentences", s.suspendedSentences)
-            ledgerRow("Probation completed", s.probationCompleted)
-            ledgerRow("Probation revoked", s.probationRevoked)
-            ledgerRow("Released from custody", s.releasedFromPrison)
-            ledgerRow("Affirmed on appeal", trials.filter { $0.appealStatus == "Affirmed on appeal" }.count)
-            ledgerRow("Reversed or vacated on appeal", trials.filter { ($0.appealStatus ?? "").contains("New trial") || ($0.appealStatus ?? "").contains("vacated") || ($0.appealStatus ?? "").contains("reversed") }.count)
-            ledgerRow("Exonerations", s.exonerations)
-            ledgerRow("Let go, then charged again", s.chargedAgainAfterRelease ?? 0)
-            ledgerRow("Stay-away order violations", s.orderViolations ?? 0)
-            }
-        }
-        // An overview: the most recent matters only. The full history is on the Calendar tab, the stories in News.
-        Section {
-            if game.history.isEmpty {
-                Text("No cases heard yet.").foregroundStyle(.secondary)
-            }
-            ForEach(game.history.prefix(Self.recentLimit)) { record in
-                NavigationLink {
-                    CaseRecordDetail(record: record)
-                } label: {
-                    DocketIndexRow(record: record)
-                }
-            }
-        } header: {
-            Text("Recent docket")
-        } footer: {
-            if game.history.count > Self.recentLimit {
-                Text("Showing your last \(Self.recentLimit). Every earlier matter is on the Calendar tab, and the coverage is in News.")
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var peopleSection: some View {
-        let query = peopleQuery.trimmingCharacters(in: .whitespaces).lowercased()
-        let matching = game.people.filter { person in
-            query.isEmpty || person.name.lowercased().contains(query)
-                || person.appearances.contains { $0.docket.lowercased().contains(query) || $0.charges.lowercased().contains(query) }
-        }
-        let active = matching.filter { !isArchived($0) }
-        let archived = matching.filter(isArchived)
-        Section {
-            TextField("Search by name, docket, or charge", text: $peopleQuery)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-        } footer: {
-            Text("People with no sentence, supervision, or appeal left and no appearance in the past year move to Archived.")
-        }
-        let sentenced = active.filter { person in
-            (person.status != .free || person.postRelease != nil)
-                && (person.priors.contains { $0.fromThisCourt } || (person.probation?.imposedInThisCourt ?? false))
-        }
-        if !sentenced.isEmpty {
-            Section {
-                ForEach(sort.sorted(sentenced)) { person in
-                    NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
-                }
-            } header: {
-                sortHeader("Serving a sentence you imposed")
-            }
-        }
-        Section {
-            if active.isEmpty {
-                Text(query.isEmpty ? "No one yet." : "No one matches.").foregroundStyle(.secondary)
-            }
-            ForEach(sort.sorted(active)) { person in
-                NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
-            }
-        } header: {
-            sortHeader("Everyone who has appeared before you")
-        }
-        if !archived.isEmpty {
-            Section {
-                DisclosureGroup(isExpanded: $showArchived) {
-                    ForEach(sort.sorted(archived)) { person in
-                        NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
-                    }
-                } label: {
-                    Label("Archived (\(archived.count))", systemImage: "archivebox")
-                }
-            }
-        }
-    }
-
-    /// Done with the court: nothing left to serve or supervise, no appeal pending, and nothing in the past year.
-    private func isArchived(_ person: PersonRecord) -> Bool {
-        guard person.status == .free, person.postRelease == nil, person.probation == nil else { return false }
-        if game.appeals.contains(where: { $0.personID == person.id && $0.isPending }) { return false }
-        guard let last = person.appearances.map(\.date).max() else { return false }
-        let yearAgo = Calendar.current.date(byAdding: .year, value: -1, to: game.currentDate) ?? game.currentDate
-        return last < yearAgo
-    }
-
-    /// What the judge decided at calendar calls and bond hearings, newest first, filtered by kind.
-    @ViewBuilder
-    private var rulingsSection: some View {
-        let rulings = game.calendarLog.filter { rulingFilter == .all || $0.group == rulingFilter }
-        let shown = showAllRulings ? rulings : Array(rulings.prefix(15))
-        Section {
-            Picker("Show", selection: $rulingFilter) {
-                ForEach(CalendarRuling.Group.allCases) { Text($0.label).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            if rulings.isEmpty {
-                Text("No rulings yet.").foregroundStyle(.secondary)
-            }
-            ForEach(shown) { ruling in
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack {
-                        Text(ruling.kind.label).font(.caption.weight(.bold)).foregroundStyle(Theme.gold)
-                        Spacer()
-                        Text(SentenceFormat.shortDate(ruling.date)).font(.caption2).foregroundStyle(.secondary)
-                    }
-                    Text(ruling.personName).font(.subheadline.weight(.semibold))
-                    Text(ruling.ruling).font(.caption)
-                    Text(ruling.docket).font(.caption2.monospaced()).foregroundStyle(.secondary)
-                }
-            }
-            if rulings.count > shown.count || showAllRulings && rulings.count > 15 {
-                Button(showAllRulings ? "Show fewer" : "Show all \(rulings.count)") { showAllRulings.toggle() }
-                    .font(.caption.weight(.semibold))
-            }
-        } header: {
-            Text("Calendar call and bond hearing rulings")
-        }
-    }
-
-    @ViewBuilder
-    private var newsSection: some View {
-        Section(game.county?.newspaper ?? "News") {
-            ForEach(game.news) { item in
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Label(SentenceFormat.shortDate(item.date), systemImage: item.kind.icon)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        if let placement = item.placement {
-                            Text(placement.uppercased())
-                                .font(.system(size: 9, weight: .bold))
-                                .tracking(0.6)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    if let section = item.section {
-                        Text(section.uppercased()).font(.system(size: 9, weight: .bold)).tracking(0.8).foregroundStyle(Theme.gold)
-                    }
-                    Text(item.headline).font(.system(.subheadline, design: .serif).weight(.semibold))
-                    if let byline = item.byline {
-                        Text(byline).font(.system(.caption2, design: .serif)).italic().foregroundStyle(.secondary)
-                    }
-                    Text(item.body).font(.system(.caption, design: .serif))
-                    if let docket = item.docket {
-                        Text(docket).font(.caption2.monospaced()).foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.vertical, 2)
-            }
-        }
-    }
-
-    private func ledgerRow(_ label: String, _ value: Int) -> some View {
-        HStack {
-            Text(label).font(.callout)
-            Spacer()
-            Text("\(value)").font(.callout.monospacedDigit().weight(.semibold))
-        }
-    }
-
-    /// One number in the bar. Borderless, so each one in the row is its own button.
-    private func stat(_ value: String, _ label: String, _ target: StatFocus) -> some View {
-        Button {
-            withAnimation { focus = focus == target ? nil : target }
-        } label: {
-            VStack {
-                Text(value).font(.system(.title3, design: .rounded).weight(.bold))
-                    .foregroundStyle(focus == target ? Theme.gold : Color.primary)
-                Text(label).font(.caption2).foregroundStyle(focus == target ? Theme.gold : Color.secondary)
-            }
-        }
-        .buttonStyle(.borderless)
-    }
-
-    private func statusColor(_ status: PersonRecord.Status) -> Color {
-        switch status {
-        case .free: return .secondary
-        case .probation: return .orange
-        case .incarcerated: return Theme.bad
         }
     }
 }

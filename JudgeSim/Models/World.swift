@@ -116,6 +116,10 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     var stayAwayOrders: [StayAwayOrder]? = nil
     /// When the person last walked out of custody (optional for older saves).
     var lastReleased: Date? = nil
+    /// When a prison term's state bed opens and the person leaves the county jail, and the commitment it is for
+    /// (optional for older saves).
+    var stateBedDate: Date? = nil
+    var stateBedDocket: String? = nil
 
     /// Stay-away orders still in force on a date.
     func activeOrders(on date: Date) -> [StayAwayOrder] {
