@@ -461,9 +461,15 @@ enum CalendarCalls {
     }
 
     /// A jailed defendant asks to have the bond lowered (G.S. 15A-538). The judge sets the new amount.
-    static func bondReductionMatter(for c: CourtCase, rng: inout SeededRNG) -> CalendarMatter {
+    static func bondReductionMatter(for c: CourtCase, on date: Date? = nil, rng: inout SeededRNG) -> CalendarMatter {
         let d = c.defendant
-        let held = c.background.map { max($0.custodyDays, 1) } ?? rng.int(40...210)
+        var held = c.background.map { max($0.custodyDays, 1) } ?? rng.int(40...210)
+        // No more days in jail than have passed since the arrest.
+        if let date, let arrest = c.investigation?.facts?.arrest ?? c.investigation?.facts?.incident {
+            let since = CourtCalendar.calendar.dateComponents([.day], from: CourtCalendar.calendar.startOfDay(for: arrest),
+                                                             to: CourtCalendar.calendar.startOfDay(for: date)).day ?? held
+            held = max(1, min(held, since))
+        }
         let worstClass = c.charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
         let priorFelonies = d.priors.filter { $0.ncClass.isFelony }.count
         let current = bondScale(worstClass, violent: c.category == .violent || c.category == .robbery,
@@ -1069,6 +1075,41 @@ enum HolidayAsks {
                     "The holiday is a reason to make court dates, Judge, not a reason to change the bond.",
                     "Being home for \(holiday.name) is a reason to keep the conditions, not drop them."])
             }
+        }
+    }
+}
+
+/// What the judge decided on one calendar-call or bond-hearing matter, kept so it can be looked back on.
+struct CalendarRuling: Codable, Hashable, Identifiable {
+    var id = UUID()
+    var date: Date
+    var kind: CalendarMatter.Kind
+    var personName: String
+    var docket: String
+    var summary: String
+    var ruling: String
+
+    /// Which filter in Records shows it.
+    enum Group: String, CaseIterable, Identifiable {
+        case all, bond, pleas, probation, other
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .all: return "All"
+            case .bond: return "Bond"
+            case .pleas: return "Pleas"
+            case .probation: return "Probation"
+            case .other: return "Other"
+            }
+        }
+    }
+
+    var group: Group {
+        switch kind {
+        case .firstAppearance, .bondModification, .failureToAppear, .bondForfeiture: return .bond
+        case .quickPlea, .arraignment: return .pleas
+        case .pvAdmission, .earlyTermination, .treatmentReview, .treatmentGraduation: return .probation
+        default: return .other
         }
     }
 }

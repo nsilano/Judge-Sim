@@ -41,6 +41,8 @@ enum CaseGenerator {
     }
 
     static func isMurder(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("murder") }
+    /// Embezzlement, with or without a dollar threshold in the name of the charge.
+    static func isEmbezzlement(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("embezzlement") }
 
     /// The hour a written case gives for what happened: its own setting, the first clock time on the day of the
     /// incident in its timeline, or the first in its summary. Stories that use {TIME} leave it to the draw.
@@ -119,7 +121,12 @@ enum CaseGenerator {
             if !candidates.isEmpty {
                 // Murder trials come up now and then, not every week: most draws go to another kind of case.
                 let others = candidates.filter { !isMurder($0) }
-                let story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : candidates)
+                var story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : candidates)
+                // Embezzlement comes up about a third as often as other cases: there are many of them.
+                if isEmbezzlement(story) && rng.chance(0.65) {
+                    let alternatives = candidates.filter { !isEmbezzlement($0) && !isMurder($0) }
+                    if !alternatives.isEmpty { story = rng.pick(alternatives) }
+                }
                 return build(story, seed: seed, band: .close, context: storyContext, rng: &rng)
             }
         }
@@ -165,7 +172,11 @@ enum CaseGenerator {
         var choices = pool.filter { score($0) <= lowest + 0.0001 }
         let notRecent = choices.filter { !context.recentTemplateKeys.contains($0.key) }
         if !notRecent.isEmpty { choices = notRecent }
-        let template = rng.pick(choices)
+        var template = rng.pick(choices)
+        if isEmbezzlement(template) && rng.chance(0.65) {
+            let alternatives = choices.filter { !isEmbezzlement($0) }
+            if !alternatives.isEmpty { template = rng.pick(alternatives) }
+        }
 
         let roll = Double.random(in: 0..<1, using: &rng)
         // Some cases are clear one way or the other; about half sit on the line.

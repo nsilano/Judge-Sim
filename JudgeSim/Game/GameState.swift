@@ -99,6 +99,7 @@ private struct SaveData: Codable {
     var reoffenseQueue: [Reoffense]?
     var freshAppeals: [UUID]?
     var arrestOrders: [ArrestOrder]?
+    var calendarLog: [CalendarRuling]?
     var schedule: CourtSchedule?
     var awaiting: [AwaitingCase]?
     var weekTally: CourtDay.Tally?
@@ -154,6 +155,8 @@ final class GameState: ObservableObject {
     @Published private(set) var freshAppeals: [UUID] = []
     /// Orders for arrest this court issued for failures to appear, newest first.
     @Published private(set) var arrestOrders: [ArrestOrder] = []
+    /// Every calendar-call and bond-hearing ruling, newest first.
+    @Published private(set) var calendarLog: [CalendarRuling] = []
     /// The judge's standing schedule: court days, daily limits, one-day changes and time off.
     @Published private(set) var schedule = CourtSchedule()
     /// Cases set for trial with no date yet; the judge picks each one's date.
@@ -432,6 +435,12 @@ final class GameState: ObservableObject {
         guard var day = today, let index = day.entries.firstIndex(where: { $0.matterID == matterID }) else { return }
         day.entries[index].resume = nil
         today = day
+        save()
+    }
+
+    /// Takes served and resolved orders off the list; the ones still outstanding stay.
+    func clearServedArrestOrders() {
+        arrestOrders.removeAll { $0.served || $0.resolved }
         save()
     }
 
@@ -1113,7 +1122,7 @@ final class GameState: ObservableObject {
                     }
                     claimed.insert(c.id)
                     if kind == .bondModification {
-                        call.matters[index] = CalendarCalls.bondReductionMatter(for: c, rng: &rng)
+                        call.matters[index] = CalendarCalls.bondReductionMatter(for: c, on: date, rng: &rng)
                     } else {
                         if kind == .failureToAppear, var bg = c.background {
                             // Only someone out on bond can fail to appear.
@@ -2286,6 +2295,17 @@ final class GameState: ObservableObject {
     }
 
     func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], dates: [UUID: Date] = [:]) {
+        // The record of what was decided, for the Calendar tab in Records.
+        for m in call.matters {
+            let choice = choices[m.id] ?? 0
+            var ruling = m.options.indices.contains(choice) ? m.options[choice] : "Ruled on"
+            if let amount = amounts[m.id] {
+                ruling = ruling.replacingOccurrences(of: "an amount you set", with: "$\(amount.formatted())")
+            }
+            calendarLog.insert(CalendarRuling(date: call.date, kind: m.kind, personName: m.personName, docket: m.docket,
+                                              summary: m.summary, ruling: ruling), at: 0)
+        }
+        if calendarLog.count > 600 { calendarLog.removeLast(calendarLog.count - 600) }
         guard let county, let judgeName, stillOpen(call.id) else { return }
         let result = CalendarCalls.resolve(call, choices: choices, amounts: amounts, judgeName: judgeName, county: county)
         if !call.isBondSession { happened(.calendarCall(matters: call.matters.count)) }
@@ -2934,6 +2954,7 @@ final class GameState: ObservableObject {
         murderLastWeek = false
         reoffenseQueue = []
         arrestOrders = []
+        calendarLog = []
         freshAppeals = []
         schedule = CourtSchedule()
         awaiting = []
@@ -3459,7 +3480,7 @@ final class GameState: ObservableObject {
                             weekNumber: weekNumber, lightWeeks: lightWeeks, yearStartStats: yearStartStats,
                             reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated,
                             reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
-                            freshAppeals: freshAppeals, arrestOrders: arrestOrders, schedule: schedule, awaiting: awaiting,
+                            freshAppeals: freshAppeals, arrestOrders: arrestOrders, calendarLog: calendarLog, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
                             officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
                             showCauseQueue: showCauseQueue)
@@ -3525,6 +3546,7 @@ final class GameState: ObservableObject {
         murderLastWeek = data.murderLastWeek ?? false
         reoffenseQueue = data.reoffenseQueue ?? []
         arrestOrders = data.arrestOrders ?? []
+        calendarLog = data.calendarLog ?? []
         freshAppeals = data.freshAppeals ?? []
         schedule = data.schedule ?? CourtSchedule()
         awaiting = data.awaiting ?? []
