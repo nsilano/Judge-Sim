@@ -372,7 +372,7 @@ enum CalendarCalls {
     /// What the State asks for at a first appearance, scaled to the most serious charge, the felony record and
     /// missed court dates. A murder charge draws a request to hold without bond; a Class I gets an unsecured bond.
     static func bondScale(_ cls: NCClass?, violent: Bool, felonies: Int, ftas: Int,
-                          rng: inout SeededRNG) -> (unsecured: Int, secured: Int, stateAsk: String) {
+                          rng: inout SeededRNG) -> (unsecured: Int, secured: Int, stateAsk: String, wantsSecured: Bool) {
         let base = bondBase(cls)
         let factor = (1.0 + 0.25 * Double(min(felonies, 6)) + 0.5 * Double(min(ftas, 3))) * (violent ? 1.25 : 1.0)
         let jitter = Double.random(in: 0.85...1.2, using: &rng)
@@ -394,8 +394,27 @@ enum CalendarCalls {
             ask = "The State asks for a $\(secured.formatted()) secured bond."
         } else {
             ask = "The State would agree to an unsecured bond of $\(unsecured.formatted()) with the standard conditions."
+            return (unsecured, secured, ask, false)
         }
-        return (unsecured, secured, ask)
+        return (unsecured, secured, ask, true)
+    }
+
+    /// The defense answers the State's position: what the client can post matters only against a secured bond.
+    static func defenseBondAsk(_ scale: (unsecured: Int, secured: Int, stateAsk: String, wantsSecured: Bool), canPost: Int, last: String,
+                               rng: inout SeededRNG) -> String {
+        if !scale.wantsSecured {
+            return rng.pick(["We agree with the State, Judge. An unsecured bond with the standard conditions is fine.",
+                             "We'd ask for a written promise to appear, Judge, but the State's unsecured bond is reasonable. \(last) will be here.",
+                             "No objection to the unsecured bond. \(last) has every reason to come back to court."])
+        }
+        if canPost == 0 {
+            return "My client has no money. Any secured bond is a detention order. We ask for a written promise to appear."
+        }
+        if canPost < scale.secured {
+            return "My client can post about $\(canPost.formatted()). At $\(scale.secured.formatted()), \(last) stays in jail. We ask for a secured bond \(last) can make, or an unsecured bond so \(last) can keep working and help with the defense."
+        }
+        return rng.pick(["\(last) could make a bond in that range, Judge, but every dollar spent on bail is a dollar not spent on a lawyer. We ask for an unsecured bond.",
+                         "The State's number isn't out of reach, Judge, but this record doesn't call for security. We ask for an unsecured bond with the standard conditions."])
     }
 
     /// The usual secured bond for a charge of this class, before record and missed court dates.
@@ -446,9 +465,7 @@ enum CalendarCalls {
                               docket: c.docket,
                               summary: "\(d.name), \(d.age), arrested this week and charged with \(law?.title.lowercased() ?? "a felony"), is before the court on conditions of release (G.S. 15A-534). \(record). \(d.lastName) \(ties.joined(separator: " and ")). The magistrate set no bond pending this hearing.",
                               stateAsk: scale.stateAsk,
-                              defenseAsk: canPost == 0
-                                ? "My client has no money. Any secured bond is a detention order. We ask for a written promise to appear."
-                                : "My client can post about $\(canPost.formatted()). We ask for an unsecured bond so \(d.lastName) can keep working and help with the defense.",
+                              defenseAsk: defenseBondAsk(scale, canPost: canPost, last: d.lastName, rng: &rng),
                               // Every condition G.S. 15A-534(a) allows, with the judge setting any amount.
                               options: ["Written promise to appear",
                                         "Release to the custody of a designated person or program",
