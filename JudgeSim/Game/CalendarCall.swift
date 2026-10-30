@@ -1011,3 +1011,64 @@ extension CalendarMatter {
         suggestedAmounts = try c.decodeIfPresent([Int: Int].self, forKey: .suggestedAmounts)
     }
 }
+
+/// Near Thanksgiving and Christmas, a defendant charged with something non-violent who has a family at home may ask
+/// to be there for it: out on bond for the holiday, or a sentence that doesn't put them in jail over it.
+enum HolidayAsks {
+    /// The holiday a call falls just before: within three weeks of Thanksgiving or Christmas.
+    static func upcoming(after date: Date) -> (name: String, date: Date)? {
+        let cal = CourtCalendar.calendar
+        let year = cal.component(.year, from: date)
+        var candidates: [(String, Date)] = []
+        for (day, name) in CourtCalendar.holidays(in: year) where name == "Thanksgiving" { candidates.append(("Thanksgiving", day)) }
+        if let christmas = cal.date(from: DateComponents(year: year, month: 12, day: 25)) { candidates.append(("Christmas", christmas)) }
+        let start = cal.startOfDay(for: date)
+        return candidates.first { pair in
+            let days = cal.dateComponents([.day], from: start, to: cal.startOfDay(for: pair.1)).day ?? -1
+            return days >= 1 && days <= 21
+        }.map { (name: $0.0, date: $0.1) }
+    }
+
+    static func apply(_ call: inout CalendarCall) {
+        guard let holiday = upcoming(after: call.date) else { return }
+        for i in call.matters.indices {
+            let m = call.matters[i]
+            guard [.quickPlea, .bondModification, .firstAppearance].contains(m.kind), let c = m.pendingCase,
+                  ![LawCategory.violent, .robbery, .family].contains(c.category) else { continue }
+            let profile = c.defendant.profile
+            let kids = profile?.childCount ?? 0
+            let married = profile?.married ?? false
+            guard kids > 0 || married else { continue }
+            var rng = SeededRNG(seed: c.seed ^ 0x401_1DA7)
+            guard rng.chance(0.55) else { continue }
+            let last = c.defendant.lastName
+            let count = ["", "one", "two", "three", "four", "five"]
+            let who = kids > 0 ? (kids == 1 ? "a child" : "\(kids < count.count ? count[kids] : "\(kids)") children") : "a spouse"
+            let family = kids > 0 ? (kids == 1 ? "the child" : "the kids") : "the spouse"
+            let days = CourtCalendar.calendar.dateComponents([.day], from: CourtCalendar.calendar.startOfDay(for: call.date),
+                                                              to: holiday.date).day ?? 0
+            let when = days <= 2 ? "in \(days) day\(days == 1 ? "" : "s")" : days <= 9 ? "next week" : days <= 16 ? "in two weeks" : "in three weeks"
+            switch m.kind {
+            case .quickPlea:
+                call.matters[i].defenseAsk += " " + rng.pick([
+                    "And Judge, \(holiday.name) is \(when). \(last) has \(who) at home. Whatever the court does, we ask that it not put \(last) in a cell for \(holiday.name).",
+                    "\(last) has \(who), Judge, and \(holiday.name) is \(when). A sentence that lets \(last) be home for it costs the State nothing.",
+                    "We'd ask the court to remember the calendar, Judge. \(holiday.name) is \(when), and \(family) will be waiting for \(last)."])
+                call.matters[i].stateAsk += " " + rng.pick([
+                    "The holiday doesn't change what the defendant did, Judge.",
+                    "The State understands the timing, but a plea is a plea.",
+                    "Every defendant has a family to get home to, Judge."])
+            default:
+                call.matters[i].summary += " \(last) has \(who) and asks to be home for \(holiday.name), \(when)."
+                call.matters[i].defenseAsk += " " + rng.pick([
+                    "\(holiday.name) is \(when), Judge. \(last) has \(who) at home. This is a non-violent charge; let \(last) spend it with \(family) and come back to court.",
+                    "Judge, \(last) wants to be home with \(family) for \(holiday.name). There's no danger here, and \(last) will be back on the next date.",
+                    "If \(last) stays in at this bond, \(family) spend \(holiday.name) visiting a jail. Nothing about this charge requires that."])
+                call.matters[i].stateAsk += " " + rng.pick([
+                    "The State won't stand in the way of a reasonable bond over the holiday, with conditions.",
+                    "The holiday is a reason to make court dates, Judge, not a reason to change the bond.",
+                    "Being home for \(holiday.name) is a reason to keep the conditions, not drop them."])
+            }
+        }
+    }
+}

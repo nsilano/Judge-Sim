@@ -1182,6 +1182,7 @@ final class GameState: ObservableObject {
                 // Every pending defendant is "in play"; only the ones already on this calendar are off limits.
                 if let m = counselWithdrawal(on: date, excluding: onThisCall, rng: &rng) { call.matters.append(m) }
                 call.matters.forEach { usedPeople.insert($0.personID) }
+                HolidayAsks.apply(&call)
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
         }
@@ -1228,6 +1229,7 @@ final class GameState: ObservableObject {
                 }
             }
             if !bondCall.matters.isEmpty {
+                HolidayAsks.apply(&bondCall)
                 entries.insert(DocketEntry(matter: .calendar(bondCall)), at: 0)
             }
         }
