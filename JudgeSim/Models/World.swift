@@ -392,7 +392,7 @@ struct ArrestOrder: Codable, Hashable, Identifiable {
     func status(on date: Date) -> String {
         if resolved { return "Served \(SentenceFormat.shortDate(servedOn)); case resolved" }
         if served || servedOn <= date {
-            return "\(how ?? "Served") \(SentenceFormat.shortDate(servedOn)); in custody on \(bond), awaiting trial"
+            return "\(how ?? "Served") \(SentenceFormat.shortDate(servedOn)); in custody, before the court for a bond hearing, then set for trial"
         }
         // Someone not found in two months is a fugitive, and the file says so.
         let weeksOut = Int(date.timeIntervalSince(issued) / (7 * 86_400))
