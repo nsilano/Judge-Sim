@@ -372,7 +372,7 @@ enum CalendarCalls {
     /// What the State asks for at a first appearance, scaled to the most serious charge, the felony record and
     /// missed court dates. A murder charge draws a request to hold without bond; a Class I gets an unsecured bond.
     static func bondScale(_ cls: NCClass?, violent: Bool, felonies: Int, ftas: Int,
-                          rng: inout SeededRNG) -> (unsecured: Int, secured: Int, stateAsk: String) {
+                          rng: inout SeededRNG) -> (unsecured: Int, secured: Int, stateAsk: String, wantsSecured: Bool) {
         let base = bondBase(cls)
         let factor = (1.0 + 0.25 * Double(min(felonies, 6)) + 0.5 * Double(min(ftas, 3))) * (violent ? 1.25 : 1.0)
         let jitter = Double.random(in: 0.85...1.2, using: &rng)
@@ -394,8 +394,27 @@ enum CalendarCalls {
             ask = "The State asks for a $\(secured.formatted()) secured bond."
         } else {
             ask = "The State would agree to an unsecured bond of $\(unsecured.formatted()) with the standard conditions."
+            return (unsecured, secured, ask, false)
         }
-        return (unsecured, secured, ask)
+        return (unsecured, secured, ask, true)
+    }
+
+    /// The defense answers the State's position: what the client can post matters only against a secured bond.
+    static func defenseBondAsk(_ scale: (unsecured: Int, secured: Int, stateAsk: String, wantsSecured: Bool), canPost: Int, last: String,
+                               rng: inout SeededRNG) -> String {
+        if !scale.wantsSecured {
+            return rng.pick(["We agree with the State, Judge. An unsecured bond with the standard conditions is fine.",
+                             "We'd ask for a written promise to appear, Judge, but the State's unsecured bond is reasonable. \(last) will be here.",
+                             "No objection to the unsecured bond. \(last) has every reason to come back to court."])
+        }
+        if canPost == 0 {
+            return "My client has no money. Any secured bond is a detention order. We ask for a written promise to appear."
+        }
+        if canPost < scale.secured {
+            return "My client can post about $\(canPost.formatted()). At $\(scale.secured.formatted()), \(last) stays in jail. We ask for a secured bond \(last) can make, or an unsecured bond so \(last) can keep working and help with the defense."
+        }
+        return rng.pick(["\(last) could make a bond in that range, Judge, but every dollar spent on bail is a dollar not spent on a lawyer. We ask for an unsecured bond.",
+                         "The State's number isn't out of reach, Judge, but this record doesn't call for security. We ask for an unsecured bond with the standard conditions."])
     }
 
     /// The usual secured bond for a charge of this class, before record and missed court dates.
@@ -446,9 +465,7 @@ enum CalendarCalls {
                               docket: c.docket,
                               summary: "\(d.name), \(d.age), arrested this week and charged with \(law?.title.lowercased() ?? "a felony"), is before the court on conditions of release (G.S. 15A-534). \(record). \(d.lastName) \(ties.joined(separator: " and ")). The magistrate set no bond pending this hearing.",
                               stateAsk: scale.stateAsk,
-                              defenseAsk: canPost == 0
-                                ? "My client has no money. Any secured bond is a detention order. We ask for a written promise to appear."
-                                : "My client can post about $\(canPost.formatted()). We ask for an unsecured bond so \(d.lastName) can keep working and help with the defense.",
+                              defenseAsk: defenseBondAsk(scale, canPost: canPost, last: d.lastName, rng: &rng),
                               // Every condition G.S. 15A-534(a) allows, with the judge setting any amount.
                               options: ["Written promise to appear",
                                         "Release to the custody of a designated person or program",
@@ -461,9 +478,15 @@ enum CalendarCalls {
     }
 
     /// A jailed defendant asks to have the bond lowered (G.S. 15A-538). The judge sets the new amount.
-    static func bondReductionMatter(for c: CourtCase, rng: inout SeededRNG) -> CalendarMatter {
+    static func bondReductionMatter(for c: CourtCase, on date: Date? = nil, rng: inout SeededRNG) -> CalendarMatter {
         let d = c.defendant
-        let held = c.background.map { max($0.custodyDays, 1) } ?? rng.int(40...210)
+        var held = c.background.map { max($0.custodyDays, 1) } ?? rng.int(40...210)
+        // No more days in jail than have passed since the arrest.
+        if let date, let arrest = c.investigation?.facts?.arrest ?? c.investigation?.facts?.incident {
+            let since = CourtCalendar.calendar.dateComponents([.day], from: CourtCalendar.calendar.startOfDay(for: arrest),
+                                                             to: CourtCalendar.calendar.startOfDay(for: date)).day ?? held
+            held = max(1, min(held, since))
+        }
         let worstClass = c.charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
         let priorFelonies = d.priors.filter { $0.ncClass.isFelony }.count
         let current = bondScale(worstClass, violent: c.category == .violent || c.category == .robbery,
@@ -1009,5 +1032,101 @@ extension CalendarMatter {
         petition = try c.decodeIfPresent(PetitionFacts.self, forKey: .petition)
         review = try c.decodeIfPresent(TreatmentReviewFacts.self, forKey: .review)
         suggestedAmounts = try c.decodeIfPresent([Int: Int].self, forKey: .suggestedAmounts)
+    }
+}
+
+/// Near Thanksgiving and Christmas, a defendant charged with something non-violent who has a family at home may ask
+/// to be there for it: out on bond for the holiday, or a sentence that doesn't put them in jail over it.
+enum HolidayAsks {
+    /// The holiday a call falls just before: within three weeks of Thanksgiving or Christmas.
+    static func upcoming(after date: Date) -> (name: String, date: Date)? {
+        let cal = CourtCalendar.calendar
+        let year = cal.component(.year, from: date)
+        var candidates: [(String, Date)] = []
+        for (day, name) in CourtCalendar.holidays(in: year) where name == "Thanksgiving" { candidates.append(("Thanksgiving", day)) }
+        if let christmas = cal.date(from: DateComponents(year: year, month: 12, day: 25)) { candidates.append(("Christmas", christmas)) }
+        let start = cal.startOfDay(for: date)
+        return candidates.first { pair in
+            let days = cal.dateComponents([.day], from: start, to: cal.startOfDay(for: pair.1)).day ?? -1
+            return days >= 1 && days <= 21
+        }.map { (name: $0.0, date: $0.1) }
+    }
+
+    static func apply(_ call: inout CalendarCall) {
+        guard let holiday = upcoming(after: call.date) else { return }
+        for i in call.matters.indices {
+            let m = call.matters[i]
+            guard [.quickPlea, .bondModification, .firstAppearance].contains(m.kind), let c = m.pendingCase,
+                  ![LawCategory.violent, .robbery, .family].contains(c.category) else { continue }
+            let profile = c.defendant.profile
+            let kids = profile?.childCount ?? 0
+            let married = profile?.married ?? false
+            guard kids > 0 || married else { continue }
+            var rng = SeededRNG(seed: c.seed ^ 0x401_1DA7)
+            guard rng.chance(0.55) else { continue }
+            let last = c.defendant.lastName
+            let count = ["", "one", "two", "three", "four", "five"]
+            let who = kids > 0 ? (kids == 1 ? "a child" : "\(kids < count.count ? count[kids] : "\(kids)") children") : "a spouse"
+            let family = kids > 0 ? (kids == 1 ? "the child" : "the kids") : "the spouse"
+            let days = CourtCalendar.calendar.dateComponents([.day], from: CourtCalendar.calendar.startOfDay(for: call.date),
+                                                              to: holiday.date).day ?? 0
+            let when = days <= 2 ? "in \(days) day\(days == 1 ? "" : "s")" : days <= 9 ? "next week" : days <= 16 ? "in two weeks" : "in three weeks"
+            switch m.kind {
+            case .quickPlea:
+                call.matters[i].defenseAsk += " " + rng.pick([
+                    "And Judge, \(holiday.name) is \(when). \(last) has \(who) at home. Whatever the court does, we ask that it not put \(last) in a cell for \(holiday.name).",
+                    "\(last) has \(who), Judge, and \(holiday.name) is \(when). A sentence that lets \(last) be home for it costs the State nothing.",
+                    "We'd ask the court to remember the calendar, Judge. \(holiday.name) is \(when), and \(family) will be waiting for \(last)."])
+                call.matters[i].stateAsk += " " + rng.pick([
+                    "The holiday doesn't change what the defendant did, Judge.",
+                    "The State understands the timing, but a plea is a plea.",
+                    "Every defendant has a family to get home to, Judge."])
+            default:
+                call.matters[i].summary += " \(last) has \(who) and asks to be home for \(holiday.name), \(when)."
+                call.matters[i].defenseAsk += " " + rng.pick([
+                    "\(holiday.name) is \(when), Judge. \(last) has \(who) at home. This is a non-violent charge; let \(last) spend it with \(family) and come back to court.",
+                    "Judge, \(last) wants to be home with \(family) for \(holiday.name). There's no danger here, and \(last) will be back on the next date.",
+                    "If \(last) stays in at this bond, \(family) spend \(holiday.name) visiting a jail. Nothing about this charge requires that."])
+                call.matters[i].stateAsk += " " + rng.pick([
+                    "The State won't stand in the way of a reasonable bond over the holiday, with conditions.",
+                    "The holiday is a reason to make court dates, Judge, not a reason to change the bond.",
+                    "Being home for \(holiday.name) is a reason to keep the conditions, not drop them."])
+            }
+        }
+    }
+}
+
+/// What the judge decided on one calendar-call or bond-hearing matter, kept so it can be looked back on.
+struct CalendarRuling: Codable, Hashable, Identifiable {
+    var id = UUID()
+    var date: Date
+    var kind: CalendarMatter.Kind
+    var personName: String
+    var docket: String
+    var summary: String
+    var ruling: String
+
+    /// Which filter in Records shows it.
+    enum Group: String, CaseIterable, Identifiable {
+        case all, bond, pleas, probation, other
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .all: return "All"
+            case .bond: return "Bond"
+            case .pleas: return "Pleas"
+            case .probation: return "Probation"
+            case .other: return "Other"
+            }
+        }
+    }
+
+    var group: Group {
+        switch kind {
+        case .firstAppearance, .bondModification, .failureToAppear, .bondForfeiture: return .bond
+        case .quickPlea, .arraignment: return .pleas
+        case .pvAdmission, .earlyTermination, .treatmentReview, .treatmentGraduation: return .probation
+        default: return .other
+        }
     }
 }

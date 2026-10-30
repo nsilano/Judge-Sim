@@ -99,6 +99,7 @@ private struct SaveData: Codable {
     var reoffenseQueue: [Reoffense]?
     var freshAppeals: [UUID]?
     var arrestOrders: [ArrestOrder]?
+    var calendarLog: [CalendarRuling]?
     var schedule: CourtSchedule?
     var awaiting: [AwaitingCase]?
     var weekTally: CourtDay.Tally?
@@ -154,6 +155,8 @@ final class GameState: ObservableObject {
     @Published private(set) var freshAppeals: [UUID] = []
     /// Orders for arrest this court issued for failures to appear, newest first.
     @Published private(set) var arrestOrders: [ArrestOrder] = []
+    /// Every calendar-call and bond-hearing ruling, newest first.
+    @Published private(set) var calendarLog: [CalendarRuling] = []
     /// The judge's standing schedule: court days, daily limits, one-day changes and time off.
     @Published private(set) var schedule = CourtSchedule()
     /// Cases set for trial with no date yet; the judge picks each one's date.
@@ -432,6 +435,12 @@ final class GameState: ObservableObject {
         guard var day = today, let index = day.entries.firstIndex(where: { $0.matterID == matterID }) else { return }
         day.entries[index].resume = nil
         today = day
+        save()
+    }
+
+    /// Takes served and resolved orders off the list; the ones still outstanding stay.
+    func clearServedArrestOrders() {
+        arrestOrders.removeAll { $0.served || $0.resolved }
         save()
     }
 
@@ -1113,7 +1122,7 @@ final class GameState: ObservableObject {
                     }
                     claimed.insert(c.id)
                     if kind == .bondModification {
-                        call.matters[index] = CalendarCalls.bondReductionMatter(for: c, rng: &rng)
+                        call.matters[index] = CalendarCalls.bondReductionMatter(for: c, on: date, rng: &rng)
                     } else {
                         if kind == .failureToAppear, var bg = c.background {
                             // Only someone out on bond can fail to appear.
@@ -1182,6 +1191,7 @@ final class GameState: ObservableObject {
                 // Every pending defendant is "in play"; only the ones already on this calendar are off limits.
                 if let m = counselWithdrawal(on: date, excluding: onThisCall, rng: &rng) { call.matters.append(m) }
                 call.matters.forEach { usedPeople.insert($0.personID) }
+                HolidayAsks.apply(&call)
                 entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
             }
         }
@@ -1203,6 +1213,8 @@ final class GameState: ObservableObject {
                 matter.summary = matter.summary.replacingOccurrences(of: "arrested this week", with: "arrested on \(SentenceFormat.shortDate(item.arrest))")
                 if item.note == nil {
                     matter.summary = "The arrest in the \(item.town) case the paper has followed. " + matter.summary
+                } else if let note = item.note, note.contains("on the order for arrest") {
+                    matter.summary = note + " " + matter.summary
                 }
                 bondCall.matters.append(matter)
                 usedPeople.insert(c.defendant.personID)
@@ -1228,6 +1240,7 @@ final class GameState: ObservableObject {
                 }
             }
             if !bondCall.matters.isEmpty {
+                HolidayAsks.apply(&bondCall)
                 entries.insert(DocketEntry(matter: .calendar(bondCall)), at: 0)
             }
         }
@@ -1952,10 +1965,8 @@ final class GameState: ObservableObject {
                 let how = surrendered ? "Turned in at the Hollis County jail"
                     : rng.pick(["Arrested at home by deputies", "Arrested at work by deputies", "Picked up by deputies on a traffic stop",
                                 "Arrested by deputies at a relative's house"])
-                // Jail credit runs from the arrest, not from the missed court date.
-                held.sessionDate = arrested
-                setFor(held, weeks: weeksOut + 1, note: note)
-                issueArrestOrder(for: c, issued: call.date, servedOn: arrested, how: how)
+                // The case waits with the order; once served, the defendant comes before the court on bond.
+                issueArrestOrder(for: c, issued: call.date, servedOn: arrested, how: how, heldCase: held)
             } else if roll <= 95 {
                 let found = cal.date(byAdding: .day, value: rng.int(45...270), to: call.date) ?? call.date
                 let how = rng.pick(["Arrested in South Carolina and returned to Hollis County", "Found in Virginia and extradited",
@@ -2284,6 +2295,17 @@ final class GameState: ObservableObject {
     }
 
     func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], dates: [UUID: Date] = [:]) {
+        // The record of what was decided, for the Calendar tab in Records.
+        for m in call.matters {
+            let choice = choices[m.id] ?? 0
+            var ruling = m.options.indices.contains(choice) ? m.options[choice] : "Ruled on"
+            if let amount = amounts[m.id] {
+                ruling = ruling.replacingOccurrences(of: "an amount you set", with: "$\(amount.formatted())")
+            }
+            calendarLog.insert(CalendarRuling(date: call.date, kind: m.kind, personName: m.personName, docket: m.docket,
+                                              summary: m.summary, ruling: ruling), at: 0)
+        }
+        if calendarLog.count > 600 { calendarLog.removeLast(calendarLog.count - 600) }
         guard let county, let judgeName, stillOpen(call.id) else { return }
         let result = CalendarCalls.resolve(call, choices: choices, amounts: amounts, judgeName: judgeName, county: county)
         if !call.isBondSession { happened(.calendarCall(matters: call.matters.count)) }
@@ -2932,6 +2954,7 @@ final class GameState: ObservableObject {
         murderLastWeek = false
         reoffenseQueue = []
         arrestOrders = []
+        calendarLog = []
         freshAppeals = []
         schedule = CourtSchedule()
         awaiting = []
@@ -2976,7 +2999,7 @@ final class GameState: ObservableObject {
             post(NewsItem(date: order.servedOn, kind: .arrest,
                           headline: order.heldCase != nil ? "\(order.personName), wanted since \(SentenceFormat.shortDate(order.issued)), back in custody"
                               : "\(order.personName) arrested on order for failing to appear",
-                          body: (order.how.map { "\($0). " } ?? "") + "Deputies served an order for arrest on \(order.personName), who missed a court date in Hollis County Superior Court on a charge of \(order.offense.lowercasedPhrase). \(order.personName.components(separatedBy: " ").last ?? order.personName) is held on \(order.bond) until trial.",
+                          body: (order.how.map { "\($0). " } ?? "") + "Deputies served an order for arrest on \(order.personName), who missed a court date in Hollis County Superior Court on a charge of \(order.offense.lowercasedPhrase). \(order.personName.components(separatedBy: " ").last ?? order.personName) is held until a bond hearing.",
                           docket: order.docket, prominence: 1))
             // The case file catches up: the defendant is now in custody on the order.
             let served = SentenceFormat.shortDate(order.servedOn)
@@ -2989,16 +3012,19 @@ final class GameState: ObservableObject {
             }
             for j in awaiting.indices { update(&awaiting[j].entry) }
             for j in scheduled.indices { update(&scheduled[j].entry) }
-            // Someone who ran: the case goes on the docket now that they're caught.
+            // Once served, the defendant comes before the court at the next bond hearing; after the judge sets
+            // conditions, the case waits for a trial date like any other.
             if var c = order.heldCase {
                 if var bg = c.background {
-                    bg.bondStatus = "\(order.how ?? "Arrested on the order for arrest") on \(served) after failing to appear on \(SentenceFormat.shortDate(order.issued)); held on \(order.bond)."
+                    bg.onRelease = false
+                    bg.bondStatus = "\(order.how ?? "Arrested on the order for arrest") on \(served) after failing to appear on \(SentenceFormat.shortDate(order.issued)); held pending a bond hearing."
                     c.background = bg
                 }
                 c.sessionDate = order.servedOn
-                awaitCase(c, note: "Served on the order for arrest \(served); held for trial.", on: date,
-                          earliest: CourtCalendar.calendar.date(byAdding: .day, value: 21, to: date),
-                          reason: "The defendant was just returned on the order for arrest")
+                let town = c.investigation?.facts?.town ?? county?.seat ?? ""
+                bondQueue.append(OpenInvestigation(courtCase: c, incident: c.investigation?.facts?.incident ?? order.issued,
+                                                   arrest: order.servedOn, town: town, offense: order.offense, ready: order.servedOn,
+                                                   note: "\(order.how ?? "Arrested") on \(served) on the order for arrest issued \(SentenceFormat.shortDate(order.issued)) after a failure to appear."))
                 arrestOrders[i].heldCase = nil
             }
         }
@@ -3454,7 +3480,7 @@ final class GameState: ObservableObject {
                             weekNumber: weekNumber, lightWeeks: lightWeeks, yearStartStats: yearStartStats,
                             reputation: reputation, lastYearReviewed: lastYearReviewed, unseated: unseated,
                             reliefQueue: reliefQueue, murderLastWeek: murderLastWeek, reoffenseQueue: reoffenseQueue,
-                            freshAppeals: freshAppeals, arrestOrders: arrestOrders, schedule: schedule, awaiting: awaiting,
+                            freshAppeals: freshAppeals, arrestOrders: arrestOrders, calendarLog: calendarLog, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
                             officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
                             showCauseQueue: showCauseQueue)
@@ -3520,6 +3546,7 @@ final class GameState: ObservableObject {
         murderLastWeek = data.murderLastWeek ?? false
         reoffenseQueue = data.reoffenseQueue ?? []
         arrestOrders = data.arrestOrders ?? []
+        calendarLog = data.calendarLog ?? []
         freshAppeals = data.freshAppeals ?? []
         schedule = data.schedule ?? CourtSchedule()
         awaiting = data.awaiting ?? []

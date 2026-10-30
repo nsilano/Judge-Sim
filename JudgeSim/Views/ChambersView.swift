@@ -406,6 +406,10 @@ struct ChambersView: View {
         return CollapsibleSection(title: "Orders for arrest", icon: "person.badge.shield.checkmark.fill",
                                   summary: "\(open.filter { $0.servedOn > game.currentDate && !$0.served }.count) outstanding · \(open.filter { $0.served || $0.servedOn <= game.currentDate }.count) in custody",
                                   expanded: false) {
+            if game.arrestOrders.contains(where: { $0.served || $0.resolved }) {
+                Button("Clear served orders") { withAnimation { game.clearServedArrestOrders() } }
+                    .font(.caption.weight(.semibold))
+            }
             ForEach(shown) { order in
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
@@ -563,6 +567,10 @@ struct RecordsView: View {
     /// The stat tapped in the bar at the top of Cases; its list replaces the ledger until tapped again.
     @State private var focus: StatFocus?
     @State private var sort: PeopleSort = .recent
+    @State private var peopleQuery = ""
+    @State private var showArchived = false
+    @State private var rulingFilter: CalendarRuling.Group = .all
+    @State private var showAllRulings = false
 
     /// How many recent matters the Cases tab lists before pointing to the Calendar and News tabs.
     static let recentLimit = 10
@@ -648,6 +656,7 @@ struct RecordsView: View {
                 }
             }
         }
+        rulingsSection
         let days = Dictionary(grouping: game.history) { Calendar.current.startOfDay(for: $0.date) }
         ForEach(days.keys.sorted(by: >), id: \.self) { day in
             Section(CourtCalendar.dayTitle(day)) {
@@ -781,7 +790,21 @@ struct RecordsView: View {
 
     @ViewBuilder
     private var peopleSection: some View {
-        let sentenced = game.people.filter { person in
+        let query = peopleQuery.trimmingCharacters(in: .whitespaces).lowercased()
+        let matching = game.people.filter { person in
+            query.isEmpty || person.name.lowercased().contains(query)
+                || person.appearances.contains { $0.docket.lowercased().contains(query) || $0.charges.lowercased().contains(query) }
+        }
+        let active = matching.filter { !isArchived($0) }
+        let archived = matching.filter(isArchived)
+        Section {
+            TextField("Search by name, docket, or charge", text: $peopleQuery)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+        } footer: {
+            Text("People with no sentence, supervision, or appeal left and no appearance in the past year move to Archived.")
+        }
+        let sentenced = active.filter { person in
             (person.status != .free || person.postRelease != nil)
                 && (person.priors.contains { $0.fromThisCourt } || (person.probation?.imposedInThisCourt ?? false))
         }
@@ -795,14 +818,68 @@ struct RecordsView: View {
             }
         }
         Section {
-            if game.people.isEmpty {
-                Text("No one yet.").foregroundStyle(.secondary)
+            if active.isEmpty {
+                Text(query.isEmpty ? "No one yet." : "No one matches.").foregroundStyle(.secondary)
             }
-            ForEach(sort.sorted(game.people)) { person in
+            ForEach(sort.sorted(active)) { person in
                 NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
             }
         } header: {
             sortHeader("Everyone who has appeared before you")
+        }
+        if !archived.isEmpty {
+            Section {
+                DisclosureGroup(isExpanded: $showArchived) {
+                    ForEach(sort.sorted(archived)) { person in
+                        NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { PersonCompactRow(person: person) }
+                    }
+                } label: {
+                    Label("Archived (\(archived.count))", systemImage: "archivebox")
+                }
+            }
+        }
+    }
+
+    /// Done with the court: nothing left to serve or supervise, no appeal pending, and nothing in the past year.
+    private func isArchived(_ person: PersonRecord) -> Bool {
+        guard person.status == .free, person.postRelease == nil, person.probation == nil else { return false }
+        if game.appeals.contains(where: { $0.personID == person.id && $0.isPending }) { return false }
+        guard let last = person.appearances.map(\.date).max() else { return false }
+        let yearAgo = Calendar.current.date(byAdding: .year, value: -1, to: game.currentDate) ?? game.currentDate
+        return last < yearAgo
+    }
+
+    /// What the judge decided at calendar calls and bond hearings, newest first, filtered by kind.
+    @ViewBuilder
+    private var rulingsSection: some View {
+        let rulings = game.calendarLog.filter { rulingFilter == .all || $0.group == rulingFilter }
+        let shown = showAllRulings ? rulings : Array(rulings.prefix(15))
+        Section {
+            Picker("Show", selection: $rulingFilter) {
+                ForEach(CalendarRuling.Group.allCases) { Text($0.label).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            if rulings.isEmpty {
+                Text("No rulings yet.").foregroundStyle(.secondary)
+            }
+            ForEach(shown) { ruling in
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack {
+                        Text(ruling.kind.label).font(.caption.weight(.bold)).foregroundStyle(Theme.gold)
+                        Spacer()
+                        Text(SentenceFormat.shortDate(ruling.date)).font(.caption2).foregroundStyle(.secondary)
+                    }
+                    Text(ruling.personName).font(.subheadline.weight(.semibold))
+                    Text(ruling.ruling).font(.caption)
+                    Text(ruling.docket).font(.caption2.monospaced()).foregroundStyle(.secondary)
+                }
+            }
+            if rulings.count > shown.count || showAllRulings && rulings.count > 15 {
+                Button(showAllRulings ? "Show fewer" : "Show all \(rulings.count)") { showAllRulings.toggle() }
+                    .font(.caption.weight(.semibold))
+            }
+        } header: {
+            Text("Calendar call and bond hearing rulings")
         }
     }
 
