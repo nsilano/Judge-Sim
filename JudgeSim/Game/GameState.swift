@@ -833,11 +833,21 @@ final class GameState: ObservableObject {
                                                 note: followed ? nil : "Arrested at the scene on \(SentenceFormat.shortDate(booked))."))
     }
 
-    /// After a first appearance, the case comes back at a calendar call a week or two later: a written case to be
-    /// arraigned and set for trial, any other to plead.
+    /// After a first appearance: a case that goes to trial joins the list waiting for a trial date; any other comes
+    /// back at a calendar call a week or two later to plead.
     private func queueArraignment(_ c: CourtCase, note: String, on date: Date) {
         let cal = CourtCalendar.calendar
         let start = max(cal.startOfDay(for: date), cal.startOfDay(for: c.sessionDate))
+        // After the bond hearing the case joins the list waiting for a trial date; the State needs a few weeks for
+        // discovery before it can be tried. (Only a smaller case from an older save still comes back to plead.)
+        if c.templateKey.hasPrefix("story.") {
+            var held = c
+            held.background?.arraigned = true
+            let investigationReady = (c.investigation?.facts?.arrest).flatMap { cal.date(byAdding: .day, value: 35, to: cal.startOfDay(for: $0)) }
+            let ready = max(investigationReady ?? start, cal.date(byAdding: .day, value: 21, to: start) ?? start)
+            awaitCase(held, note: note, on: date, earliest: ready, reason: "Discovery is still being exchanged")
+            return
+        }
         let due = cal.date(byAdding: .day, value: 6 + Int(c.seed % 8), to: start) ?? start
         arraignQueue.removeAll { $0.courtCase.id == c.id }
         arraignQueue.append(PendingArraignment(courtCase: c, since: date, due: due, note: note))
@@ -1801,10 +1811,6 @@ final class GameState: ObservableObject {
             let knownPool = residents.filter { !$0.deceased && $0.occupation == nil }
             let knownDefendant = rng.chance(0.06) && !knownPool.isEmpty ? knownPool[rng.int(0...(knownPool.count - 1))] : nil
             openCrime(on: date, story: true, allowMurder: !murderWaiting, knownDefendant: knownDefendant, rng: &rng, excluding: &used)
-        }
-        // Smaller crimes, the kind that usually end in a plea: each is reported, worked, and ends in an arrest too.
-        if !lightWeeks, rng.chance(min(0.7, 0.42 * max(0.5, caseloadRamp) * intakeFactor)) {
-            openCrime(on: date, story: false, allowMurder: false, knownDefendant: nil, rng: &rng, excluding: &used)
         }
         // Now and then the DA's office asks that a waiting case be set first.
         if rng.chance(0.08), let index = awaiting.indices.filter({ awaiting[$0].priorityRequested == nil && awaiting[$0].courtCase != nil }).randomElement(using: &rng),
@@ -4035,6 +4041,11 @@ final class GameState: ObservableObject {
         corrections = data.corrections
         dispositions = data.dispositions ?? []
         arraignQueue = data.arraignQueue ?? []
+        // Cases that go to trial no longer wait for an arraignment: they join the list waiting for a trial date.
+        for item in arraignQueue where item.courtCase.templateKey.hasPrefix("story.") {
+            arraignQueue.removeAll { $0.id == item.id }
+            queueArraignment(item.courtCase, note: item.note, on: item.since)
+        }
         ensureCorrections(on: currentDate)
         placeHistory = data.placeHistory ?? [:]
         residents = data.residents ?? []

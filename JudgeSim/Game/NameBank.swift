@@ -8,11 +8,13 @@ enum Gender { case male, female
     var his: String { self == .female ? "her" : "his" }
     var hers: String { self == .female ? "hers" : "his" }
     var himself: String { self == .female ? "herself" : "himself" }
+    var brother: String { self == .female ? "sister" : "brother" }
 
     /// Pronoun tokens for a person whose name token is `key`: {D.he}, {D.He}, {D.him}, {D.his}, {D.His}, {D.hers}, {D.himself}.
     func tokens(for key: String) -> [String: String] {
         ["\(key).he": he, "\(key).He": he.capitalizedFirst, "\(key).him": him, "\(key).his": his,
-         "\(key).His": his.capitalizedFirst, "\(key).hers": hers, "\(key).himself": himself]
+         "\(key).His": his.capitalizedFirst, "\(key).hers": hers, "\(key).himself": himself,
+         "\(key).brother": brother]
     }
 }
 

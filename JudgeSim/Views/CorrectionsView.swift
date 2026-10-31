@@ -113,11 +113,11 @@ private struct JailSections: View {
             let queued = game.arraignQueue.count
             let queuedHeld = game.arraignQueue.filter { $0.courtCase.background?.isJailed == true }.count
             row("Arrested, waiting for your bond hearing", "\(booked)")
-            row("Waiting to be arraigned or to plead", queued == 0 ? "0" : "\(queued) · \(queuedHeld) held")
+            if queued > 0 { row("Older cases waiting to plead", "\(queued) · \(queuedHeld) held") }
         } header: {
             Text("Coming through the court")
         } footer: {
-            Text("Everyone arrested is booked into the jail and comes before you at the next bond hearing. They count against your beds only once you set a bond they can't post.")
+            Text("Everyone arrested comes before you at the next bond hearing. Only someone who can't post the bond you set goes to the jail and counts against your beds.")
         }
 
         if !awaitingBed.isEmpty {
