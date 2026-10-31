@@ -138,6 +138,15 @@ struct CourtSchedule: Codable, Hashable {
 }
 
 /// A case set for trial that has no date yet. The judge picks the date.
+/// A case whose defendant has had a first appearance and now waits to be arraigned, or to plead, at a calendar call.
+struct PendingArraignment: Identifiable, Codable {
+    var id = UUID()
+    var courtCase: CourtCase
+    var since: Date
+    var due: Date
+    var note: String
+}
+
 struct AwaitingCase: Identifiable, Codable {
     var id = UUID()
     /// The trial as it will go on the calendar, with its notes and any earlier continuances.

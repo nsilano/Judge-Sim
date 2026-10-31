@@ -108,6 +108,18 @@ private struct JailSections: View {
             }
         }
 
+        Section {
+            let booked = game.bondQueue.count + game.investigations.filter { $0.arrest <= game.currentDate }.count
+            let queued = game.arraignQueue.count
+            let queuedHeld = game.arraignQueue.filter { $0.courtCase.background?.isJailed == true }.count
+            row("Arrested, waiting for your bond hearing", "\(booked)")
+            row("Waiting to be arraigned or to plead", queued == 0 ? "0" : "\(queued) · \(queuedHeld) held")
+        } header: {
+            Text("Coming through the court")
+        } footer: {
+            Text("Everyone arrested is booked into the jail and comes before you at the next bond hearing. They count against your beds only once you set a bond they can't post.")
+        }
+
         if !awaitingBed.isEmpty {
             Section {
                 ForEach(awaitingBed.sorted { ($0.bedDate ?? .distantFuture) < ($1.bedDate ?? .distantFuture) }) { inmate in
