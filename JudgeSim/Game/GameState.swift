@@ -1803,7 +1803,7 @@ final class GameState: ObservableObject {
             openCrime(on: date, story: true, allowMurder: !murderWaiting, knownDefendant: knownDefendant, rng: &rng, excluding: &used)
         }
         // Smaller crimes, the kind that usually end in a plea: each is reported, worked, and ends in an arrest too.
-        if !lightWeeks, rng.chance(min(0.6, 0.32 * max(0.5, caseloadRamp) * intakeFactor)) {
+        if !lightWeeks, rng.chance(min(0.7, 0.42 * max(0.5, caseloadRamp) * intakeFactor)) {
             openCrime(on: date, story: false, allowMurder: false, knownDefendant: nil, rng: &rng, excluding: &used)
         }
         // Now and then the DA's office asks that a waiting case be set first.
