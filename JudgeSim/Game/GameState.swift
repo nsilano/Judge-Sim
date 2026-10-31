@@ -2705,13 +2705,22 @@ final class GameState: ObservableObject {
 
     /// This week's petitions, mostly from people the court already knows: someone with an old conviction asking to
     /// clear it, a bonding company after a missed court date, someone convicted of DWI asking to drive to work.
-    /// Only people the court already knows.
+    /// Bond forfeitures and driving privileges only for people the court already knows; an expunction can come from
+    /// anyone with an old record.
     private func petitionMatters(on date: Date, excluding used: Set<UUID>, rng: inout SeededRNG) -> [CalendarMatter] {
         guard let county else { return [] }
         let cal = CourtCalendar.calendar
         let year = cal.component(.year, from: date)
         var out: [CalendarMatter] = []
         var taken = used
+        var names = namesInPlay()
+        // An expunction petitioner the court hasn't seen: someone with an old record and nothing since.
+        func fresh(age: ClosedRange<Int>) -> (UUID, String, Int, String) {
+            let avoid = names
+            let name = NameBank.person(using: &rng, excluding: &names, avoiding: avoid)
+            namesIssued.insert(name)
+            return (UUID(), name, rng.int(age), rng.pick(NameBank.occupations).capitalizedFirst)
+        }
         func docket() -> String {
             docketSequence += rng.int(20...200)
             return "\(year % 100) CRS \(String(format: "%06d", docketSequence))"
@@ -2723,11 +2732,31 @@ final class GameState: ObservableObject {
                 p.status == .free && p.probation == nil && !taken.contains(p.id) && !p.priors.isEmpty
                     && (p.appearances.last.map { (cal.dateComponents([.year], from: $0.date, to: date).year ?? 0) >= 1 } ?? true)
             }
-            if let p = known.isEmpty ? nil : rng.pick(known) {
+            if let p = known.isEmpty || rng.chance(0.5) ? nil : rng.pick(known) {
                 docketSequence += 10
                 if let m = Petitions.expunctionMatter(personID: p.id, name: p.name, age: p.age(on: date), occupation: p.occupation, priors: p.priors,
                                                       year: year, newPerson: false, docketSequence: docketSequence, rng: &rng) {
                     out.append(m); taken.insert(p.id)
+                }
+            } else {
+                let (id, name, age, job) = fresh(age: 24...60)
+                let offenses: [(String, NCClass, String)] = [
+                    ("Misdemeanor Larceny", .misd1, "45 days suspended, 12 months probation"), ("Possession of Marijuana", .misd1, "Fine and costs"),
+                    ("Worthless Check", .misd2, "Fine and restitution"), ("Possession of Stolen Goods", .H, "6 to 17 months suspended"),
+                    ("Breaking or Entering a Motor Vehicle", .I, "4 to 14 months suspended"), ("Simple Assault", .misd2, "30 days suspended"),
+                    ("Driving While Impaired", .misd1, "Level 5"), ("Obtaining Property by False Pretenses", .H, "6 to 17 months suspended"),
+                    ("Assault with a Deadly Weapon", .misdA1, "60 days suspended")]
+                var priors: [PriorConviction] = []
+                let first = rng.pick(offenses)
+                priors.append(PriorConviction(offense: first.0, ncClass: first.1, year: year - rng.int(3...16), county: rng.pick(["Hollis", "Robeson", "Brunswick", "Onslow", "Pender"]), sentence: first.2))
+                if rng.chance(0.25) {
+                    let second = rng.pick(offenses)
+                    priors.append(PriorConviction(offense: second.0, ncClass: second.1, year: year - rng.int(8...22), county: "Hollis", sentence: second.2))
+                }
+                docketSequence += 10
+                if let m = Petitions.expunctionMatter(personID: id, name: name, age: max(age, 18 + (year - priors.map(\.year).min()!)), occupation: job,
+                                                      priors: priors, year: year, newPerson: true, docketSequence: docketSequence, rng: &rng) {
+                    out.append(m)
                 }
             }
         }
