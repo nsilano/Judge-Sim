@@ -788,7 +788,7 @@ enum CaseGenerator {
         var twistText: String?
         var twistKey: String?
         var chosenTwist: TwistSeed?
-        let jailedDays = min(330, maxCustodyDays)
+        let jailedDays = min(110, maxCustodyDays)
         let jailedTime = jailedDays >= 60 ? "\(jailedDays / 30) months" : "\(jailedDays) day\(jailedDays == 1 ? "" : "s")"
         let twistPool = GenericPools.twists.filter { $0.ages.contains(defendant.age) && ($0.key != "jailed" || jailedDays >= 45) }
         if t.story == nil, rng.chance(0.5), !twistPool.isEmpty {
@@ -938,6 +938,7 @@ enum CaseGenerator {
                 background.bondStatus = "Released on a secured bond. Has made every court date."
             }
         }
+        background.custodyAtIntake = background.custodyDays
 
         return CourtCase(
             seed: seed,
@@ -1072,7 +1073,8 @@ enum CaseGenerator {
         let gravest = [NCClass.A, .B1, .B2].contains(worstClass ?? .misd1)
         let serious = gravest || [NCClass.C, .D].contains(worstClass ?? .misd1)
         let inCustody = rng.chance(gravest ? 0.9 : (serious ? 0.7 : 0.45)) && maxCustodyDays > 0
-        let custodyDays = inCustody ? min(rng.int(21...420), maxCustodyDays) : 0
+        // Time held before the case reaches this court: weeks to a few months, never already a speedy-trial problem.
+        let custodyDays = inCustody ? min(rng.int(14...(gravest ? 110 : 90)), maxCustodyDays) : 0
         let bondFactor = rng.pick([0.5, 0.75, 1.0, 1.5, 2.0])
         let bond = "$" + CalendarCalls.roundBond(Double(CalendarCalls.bondBase(worstClass)) * bondFactor).formatted()
         let bondStatus = inCustody
