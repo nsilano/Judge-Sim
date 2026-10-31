@@ -168,9 +168,9 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("Whose pistol is it?", "\"Mine. I bought the printer, I bought the slide and barrel, and I built it over about a month at that desk.\""),
-                            .direct("Why is your desk in the room where your brother sleeps?", "\"It's a two-bedroom house. My room is too small for the desk. The back room was my workroom before {DL} moved in, and it still is in the evenings.\""),
-                            .direct("Did your brother ever handle it?", "\"Not that I ever saw. {DL} knows {D.he} can't.\""),
-                            .cross("You left a loaded gun on a desk in the room your brother, a convicted felon, sleeps in?", "\"I wasn't thinking about it that way. It was my desk.\"", "\"I didn't think about it. It's where I work.\""),
+                            .direct("Why is your desk in the room where your {D.brother} sleeps?", "\"It's a two-bedroom house. My room is too small for the desk. The back room was my workroom before {DL} moved in, and it still is in the evenings.\""),
+                            .direct("Did your {D.brother} ever handle it?", "\"Not that I ever saw. {DL} knows {D.he} can't.\""),
+                            .cross("You left a loaded gun on a desk in the room your {D.brother}, a convicted felon, sleeps in?", "\"I wasn't thinking about it that way. It was my desk.\"", "\"I didn't think about it. It's where I work.\""),
                             .cross("And the photo of it on {DL}'s futon?", "\"I'd just finished it. I set it down there to show {DL}.\"")
                         ])
         ],
@@ -197,7 +197,7 @@ extension StoryCases {
             defenseOpening: "Everything about this gun leads to {ALT}: the printer, the parts, the money, and the major DNA.",
             prosecutionClosing: "Possession doesn't need a receipt. {DL} lived with that gun, knew its condition, and had it within reach every night.",
             defenseClosing: "Being near a gun isn't possessing it. The State needs more than a shared room, and it doesn't have it.",
-            genders: ["D": .male, "ALT": .male],
+            genders: ["ALT": .male],
             time: "10:15 a.m.",
             family: "Single, no children. Lives with an older brother.",
             residence: "A rented house on {STREET} in {HOOD}, shared with an older brother",
