@@ -239,6 +239,10 @@ struct CaseBackground: Codable, Hashable {
     var onRelease: Bool?
     /// True when the defendant is in jail because this judge set a bond the defendant couldn't post (optional for older saves).
     var heldOnCourtBond: Bool? = nil
+    /// Days already in jail when the case reached this court; only time after that is on this court (optional for older saves).
+    var custodyAtIntake: Int? = nil
+    /// True once the defendant has been arraigned in this court (optional for older saves).
+    var arraigned: Bool? = nil
     var restitution: Int
     var restitutionBasis: String?
     var victimStance: VictimStance

@@ -138,6 +138,15 @@ struct CourtSchedule: Codable, Hashable {
 }
 
 /// A case set for trial that has no date yet. The judge picks the date.
+/// A case whose defendant has had a first appearance and now waits to be arraigned, or to plead, at a calendar call.
+struct PendingArraignment: Identifiable, Codable {
+    var id = UUID()
+    var courtCase: CourtCase
+    var since: Date
+    var due: Date
+    var note: String
+}
+
 struct AwaitingCase: Identifiable, Codable {
     var id = UUID()
     /// The trial as it will go on the calendar, with its notes and any earlier continuances.
@@ -197,11 +206,17 @@ struct Urgency {
         if let bg = c.background, bg.isJailed {
             // Jail time keeps running from the last date it was credited.
             let held = bg.custodyDays + max(0, cal.dateComponents([.day], from: cal.startOfDay(for: c.sessionDate), to: cal.startOfDay(for: today)).day ?? 0)
-            switch held {
-            case 240...: raise(.critical, "In jail \(held) day\(held == 1 ? "" : "s"): a speedy-trial dismissal is a real risk", 60)
-            case 120...: raise(.urgent, "In jail \(held) day\(held == 1 ? "" : "s") awaiting trial", 35)
-            case 30...: raise(.soon, "In jail \(held) day\(held == 1 ? "" : "s") awaiting trial", 20)
-            default: raise(.soon, "The defendant is in jail", 12)
+            // Only the time held since the case reached this court is on this court. A case from before the intake
+            // count was kept counts from when it joined the list.
+            let intake = bg.custodyAtIntake ?? max(0, held - waited)
+            let here = held >= intake ? held - intake : held
+            let total = "In jail \(held) day\(held == 1 ? "" : "s")"
+            let detail = here < held ? " (\(here) since the case reached your court)" : ""
+            switch here {
+            case 150...: raise(.critical, total + detail + ": a speedy-trial dismissal is a real risk", 60)
+            case 75...: raise(.urgent, total + detail + " awaiting trial", 35)
+            case 21...: raise(.soon, total + detail + " awaiting trial", 20)
+            default: raise(.soon, total + detail + "; the defendant is waiting in jail", 12)
             }
         }
         let onRelease = c.background?.isJailed != true

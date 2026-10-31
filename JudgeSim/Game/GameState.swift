@@ -132,6 +132,7 @@ private struct SaveData: Codable {
     /// The county jail, prison, and probation picture, and what became of each defendant (optional for older saves).
     var corrections: CorrectionsState? = nil
     var dispositions: [DispositionRecord]? = nil
+    var arraignQueue: [PendingArraignment]? = nil
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -177,6 +178,8 @@ final class GameState: ObservableObject {
     @Published private(set) var calendarLog: [CalendarRuling] = []
     /// The county's jail, prison, and probation numbers as this court's rulings drive them.
     @Published private(set) var corrections: CorrectionsState?
+    /// Defendants who have had a first appearance and wait to be arraigned, or to plead, at a calendar call.
+    @Published private(set) var arraignQueue: [PendingArraignment] = []
     /// What became of each defendant at judgment, and whether the person was arrested again once free.
     @Published private(set) var dispositions: [DispositionRecord] = []
     /// The judge's standing schedule: court days, daily limits, one-day changes and time off.
@@ -397,6 +400,7 @@ final class GameState: ObservableObject {
         county = County.generate(seed: seedBase)
         corrections = nil
         dispositions = []
+        arraignQueue = []
         // Every career's county starts a little different.
         living = CountyLife.begin(seed: seedBase)
         Gazetteer.living = living
@@ -781,6 +785,7 @@ final class GameState: ObservableObject {
             if var bg = c.background {
                 bg.onRelease = false
                 bg.custodyDays = 1
+                bg.custodyAtIntake = 0
                 bg.bondStatus = "Held in the \(county.name) Detention Center since the arrest on \(SentenceFormat.shortDate(item.arrest)), awaiting a bond hearing."
                 c.background = bg
             }
@@ -792,16 +797,62 @@ final class GameState: ObservableObject {
         }
     }
 
+    /// A crime happens: the paper reports it, investigators work it, and an arrest follows, at the scene or days to
+    /// weeks later. The defendant is booked into the jail and comes before the court at the next bond hearing.
+    /// Every new case reaches the court this way.
+    private func openCrime(on date: Date, story: Bool, allowMurder: Bool, knownDefendant: Resident?, rng: inout SeededRNG,
+                           excluding used: inout Set<UUID>) {
+        let cal = CourtCalendar.calendar
+        let today = cal.startOfDay(for: date)
+        let incident = cal.date(byAdding: .day, value: -1, to: today) ?? today
+        let atScene = rng.chance(story ? 0.3 : 0.45)
+        let arrest = atScene ? incident : (cal.date(byAdding: .day, value: story ? rng.int(3...24) : rng.int(2...12), to: incident) ?? incident)
+        // The case is built as of its first possible trial day, so every entry in its file falls before it.
+        let ready = cal.date(byAdding: .day, value: rng.int(35...56), to: arrest) ?? arrest
+        let daysAgo = cal.dateComponents([.day], from: incident, to: ready).day ?? 40
+        guard var c = generateCase(date: ready, rng: &rng, excluding: &used, storySlot: story, allowMurder: allowMurder, announce: false,
+                                   generic: !story, incidentDaysAgo: daysAgo, arrestOn: arrest, residentDefendant: knownDefendant) else { return }
+        if story && c.background?.arrangementPresented != true && rng.chance(0.25) {
+            c.continuanceMotion = ContinuanceMotions.make(for: c, rng: &rng)
+        }
+        // A written case with dates of its own keeps them; it is never booked more than a day before it reaches the court.
+        let facts = c.investigation?.facts
+        let happened = facts.map { cal.startOfDay(for: $0.incident) } ?? incident
+        let booked = max(facts.map { cal.startOfDay(for: $0.arrest) } ?? arrest, incident)
+        let town = facts?.town ?? county?.seat ?? ""
+        let followed = booked > happened
+        if followed {
+            var beats = InvestigationArc.beats(for: c, incident: happened, arrest: booked, town: town,
+                                               agency: facts?.agency ?? c.investigatingAgency, rng: &rng)
+            // A smaller crime gets a line in the paper, not a running story.
+            if !story { beats = Array(beats.prefix(1)) }
+            pending.append(contentsOf: beats)
+        }
+        investigations.append(OpenInvestigation(courtCase: c, incident: happened, arrest: booked, town: town,
+                                                offense: InvestigationArc.subject(c), ready: max(ready, booked),
+                                                note: followed ? nil : "Arrested at the scene on \(SentenceFormat.shortDate(booked))."))
+    }
+
+    /// After a first appearance, the case comes back at a calendar call a week or two later: a written case to be
+    /// arraigned and set for trial, any other to plead.
+    private func queueArraignment(_ c: CourtCase, note: String, on date: Date) {
+        let cal = CourtCalendar.calendar
+        let start = max(cal.startOfDay(for: date), cal.startOfDay(for: c.sessionDate))
+        let due = cal.date(byAdding: .day, value: 6 + Int(c.seed % 8), to: start) ?? start
+        arraignQueue.removeAll { $0.courtCase.id == c.id }
+        arraignQueue.append(PendingArraignment(courtCase: c, since: date, due: due, note: note))
+    }
+
     /// A case built around an arrest the court already knows the date of: the incident comes before it, and the
     /// file's lab work and interviews finish before the first day it could be tried.
     private func freshCase(on date: Date, arrest: Date, incidentBefore: ClosedRange<Int>, categories: Set<LawCategory>? = nil,
-                           rng: inout SeededRNG, excluding used: inout Set<UUID>) -> CourtCase? {
+                           generic: Bool = false, rng: inout SeededRNG, excluding used: inout Set<UUID>) -> CourtCase? {
         let cal = CourtCalendar.calendar
         let incident = cal.date(byAdding: .day, value: -rng.int(incidentBefore), to: min(arrest, date)) ?? date
         let ready = cal.date(byAdding: .day, value: rng.int(42...56), to: max(arrest, date)) ?? date
         let daysAgo = cal.dateComponents([.day], from: incident, to: ready).day ?? 30
         guard var c = generateCase(date: ready, rng: &rng, excluding: &used, storySlot: false, categories: categories,
-                                   allowMurder: false, announce: false, incidentDaysAgo: daysAgo, arrestOn: arrest) else { return nil }
+                                   allowMurder: false, announce: false, generic: generic, incidentDaysAgo: daysAgo, arrestOn: arrest) else { return nil }
         c.sessionDate = cal.startOfDay(for: date)
         return c
     }
@@ -1091,8 +1142,10 @@ final class GameState: ObservableObject {
                 // Leave room on the calendar for the new arrest, a relief motion, and most weeks a warrant and an arraignment.
                 // Fewer new matters while the new judge's courtroom is still filling up.
                 let wantsWarrant = rng.chance(0.7 * max(0.3, caseloadRamp) * intakeFactor)
-                let wantsArraignment = !lightWeeks && rng.chance(0.6 * max(0.3, caseloadRamp) * intakeFactor)
-                let reserved = 1 + (reliefQueue.isEmpty ? 0 : 1) + (wantsWarrant ? 1 : 0) + (wantsArraignment ? 1 : 0)
+                // Defendants who had their first appearance come back to be arraigned or to plead.
+                let dueArraignments = arraignQueue.filter { cal.startOfDay(for: $0.due) <= cal.startOfDay(for: date) }
+                    .sorted { $0.due < $1.due }
+                let reserved = 1 + (reliefQueue.isEmpty ? 0 : 1) + (wantsWarrant ? 1 : 0) + min(3, dueArraignments.count)
                 let room = max(1, calendarCap - reserved)
                 if call.matters.count > room {
                     // Probation matters stay (the person is waiting on them); the overflow of the rest goes to another session.
@@ -1178,16 +1231,26 @@ final class GameState: ObservableObject {
                 call.matters.removeAll { unbound.contains($0.id) }
                 // New cases come in when the trial calendar has room for them.
                 let roomForNew = trialsInPipeline < pipelineTarget
-                // A new arrest for conditions of release, and a case to arraign and set for trial.
-                let arrestedEarlier = cal.date(byAdding: .day, value: -rng.int(14...45), to: date) ?? date
-                if wantsArraignment && roomForNew, var c = freshCase(on: date, arrest: arrestedEarlier, incidentBefore: 0...20, rng: &rng, excluding: &usedPeople) {
-                    // Held since the arrest, if held at all: the count starts on the arrest date.
+                // Arraignments and pleas: only defendants already arrested and brought before the court. A written case
+                // is arraigned and set for trial; any other case is resolved by a plea. Any left over wait for next week.
+                let arraignRoom = max(1, calendarCap - call.matters.count - (reliefQueue.isEmpty ? 0 : 1) - (wantsWarrant ? 1 : 0))
+                for item in dueArraignments.prefix(min(4, arraignRoom)) {
+                    var c = item.courtCase
+                    // Jail time keeps counting while the defendant waits.
                     if var bg = c.background, bg.isJailed {
-                        bg.custodyDays = max(1, cal.dateComponents([.day], from: arrestedEarlier, to: date).day ?? 1)
-                        bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(arrestedEarlier)); in custody for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
+                        let since = cal.dateComponents([.day], from: cal.startOfDay(for: c.sessionDate), to: cal.startOfDay(for: date)).day ?? 0
+                        let before = bg.custodyDays
+                        bg.custodyDays = max(1, before + max(0, since))
+                        bg.bondStatus = bg.bondStatus.replacingOccurrences(of: "for \(before) day\(before == 1 ? "" : "s")",
+                                                                           with: "for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")")
                         c.background = bg
+                        c.sessionDate = cal.startOfDay(for: date)
                     }
-                    call.matters.append(CalendarCalls.arraignmentMatter(for: c))
+                    var matter = c.templateKey.hasPrefix("story.") ? CalendarCalls.arraignmentMatter(for: c) : CalendarCalls.pleaMatter(for: c)
+                    if matter.kind == .quickPlea, let status = c.background?.bondStatus { matter.summary += " " + status }
+                    call.matters.append(matter)
+                    usedPeople.insert(c.defendant.personID)
+                    arraignQueue.removeAll { $0.id == item.id }
                 }
                 // Motions for appropriate relief in cases tried here come back to this judge.
                 if !reliefQueue.isEmpty, let judgeName {
@@ -1241,7 +1304,7 @@ final class GameState: ObservableObject {
                 matter.summary = matter.summary.replacingOccurrences(of: "arrested this week", with: "arrested on \(SentenceFormat.shortDate(item.arrest))")
                 if item.note == nil {
                     matter.summary = "The arrest in the \(item.town) case the paper has followed. " + matter.summary
-                } else if let note = item.note, note.contains("on the order for arrest") {
+                } else if let note = item.note, !note.hasPrefix("Arrested at the scene") {
                     matter.summary = note + " " + matter.summary
                 }
                 bondCall.matters.append(matter)
@@ -1253,20 +1316,6 @@ final class GameState: ObservableObject {
                 usedPeople.insert(matter.personID)
             }
             showCauseQueue.removeAll { m in bondCall.matters.contains { $0.id == m.id } }
-            if isFirstSittingDayOfWeek(date) && rng.chance(max(0.4, caseloadRamp) * intakeFactor) {
-                let held = rng.int(1...3)
-                let arrested = cal.date(byAdding: .day, value: -held, to: date) ?? date
-                if var c = freshCase(on: date, arrest: arrested, incidentBefore: 0...14, rng: &rng, excluding: &usedPeople) {
-                    // Arrested days ago and held until this first hearing on conditions of release.
-                    if var bg = c.background {
-                        bg.custodyDays = held
-                        bg.onRelease = false
-                        bg.bondStatus = "Held since the arrest on \(SentenceFormat.shortDate(arrested)) pending a bond hearing; in custody for \(held) day\(held == 1 ? "" : "s")."
-                        c.background = bg
-                    }
-                    bondCall.matters.append(CalendarCalls.bondMatter(for: c, rng: &rng))
-                }
-            }
             if !bondCall.matters.isEmpty {
                 HolidayAsks.apply(&bondCall)
                 entries.insert(DocketEntry(matter: .calendar(bondCall)), at: 0)
@@ -1287,6 +1336,8 @@ final class GameState: ObservableObject {
             if let v = c.victimName { names.insert(v) }
             c.witnesses.forEach { names.insert($0.name) }
         }
+        arraignQueue.forEach { add($0.courtCase) }
+        bondQueue.forEach { add($0.courtCase) }
         for entry in extra + (today?.entries ?? []) + scheduled.map(\.entry) + awaiting.map(\.entry) {
             switch entry.matter {
             case .trial(let c): add(c)
@@ -1314,6 +1365,7 @@ final class GameState: ObservableObject {
         }
         investigations.forEach { used.insert($0.courtCase.defendant.personID) }
         bondQueue.forEach { used.insert($0.courtCase.defendant.personID) }
+        arraignQueue.forEach { used.insert($0.courtCase.defendant.personID) }
         return used
     }
 
@@ -1706,7 +1758,26 @@ final class GameState: ObservableObject {
                     bg.onRelease = false
                     c.background = bg
                 }
-                awaitCase(c, note: followUp.note, on: date)
+                // The grand jury's indictment brings an order for arrest: the defendant is booked into the jail and comes
+                // before the court for conditions of release. Someone already in custody goes straight to arraignment.
+                c.sessionDate = cal.startOfDay(for: date)
+                if person.status == .incarcerated {
+                    queueArraignment(c, note: followUp.note, on: date)
+                } else {
+                    let booked = cal.startOfDay(for: date)
+                    if var bg = c.background {
+                        bg.onRelease = false
+                        bg.custodyDays = 1
+                        bg.custodyAtIntake = 0
+                        bg.bondStatus = "Held in the \(county?.name ?? "county") jail since the arrest on the indictment on \(SentenceFormat.shortDate(booked)), awaiting a bond hearing."
+                        c.background = bg
+                    }
+                    let facts = c.investigation?.facts
+                    bondQueue.append(OpenInvestigation(courtCase: c, incident: facts?.incident ?? followUp.incident, arrest: booked,
+                                                       town: facts?.town ?? county?.seat ?? "", offense: InvestigationArc.subject(c),
+                                                       ready: cal.date(byAdding: .day, value: 42, to: booked) ?? booked,
+                                                       note: followUp.note + " Arrested on the indictment on \(SentenceFormat.shortDate(booked))."))
+                }
                 // An arrest while on probation is also a violation: the officer files a report on the same conduct.
                 if person.status == .probation, person.probation != nil, !hasHearingSet(for: person.id) {
                     let offense = (c.charges.first?.law.title ?? "a new offense").lowercased()
@@ -1729,40 +1800,11 @@ final class GameState: ObservableObject {
             // Now and then someone the court knows from an earlier case (a witness, a victim) is the one charged.
             let knownPool = residents.filter { !$0.deceased && $0.occupation == nil }
             let knownDefendant = rng.chance(0.06) && !knownPool.isEmpty ? knownPool[rng.int(0...(knownPool.count - 1))] : nil
-            // About half the time the paper follows the crime from the day it happens; the case comes at the arrest.
-            if rng.chance(0.5) {
-                // The case is built as of its first possible trial day, so every entry in its file falls before it.
-                let ready = cal.date(byAdding: .day, value: rng.int(35...60), to: date) ?? date
-                let incident = cal.date(byAdding: .day, value: -1, to: date) ?? date
-                let daysAgo = (cal.dateComponents([.day], from: incident, to: ready).day ?? 30)
-                if var c = generateCase(date: ready, rng: &rng, excluding: &used, storySlot: true, allowMurder: !murderWaiting,
-                                        announce: false, incidentDaysAgo: daysAgo) {
-                    if c.background?.arrangementPresented != true && rng.chance(0.25) {
-                        c.continuanceMotion = ContinuanceMotions.make(for: c, rng: &rng)
-                    }
-                    let facts = c.investigation?.facts
-                    let happened = facts.map { cal.startOfDay(for: $0.incident) } ?? .distantPast
-                    let arrest = facts.map { cal.startOfDay(for: $0.arrest) } ?? .distantPast
-                    if cal.isDate(happened, inSameDayAs: incident) && arrest > cal.startOfDay(for: date), let facts {
-                        pending.append(contentsOf: InvestigationArc.beats(for: c, incident: happened, arrest: arrest, town: facts.town,
-                                                                          agency: facts.agency, rng: &rng))
-                        investigations.append(OpenInvestigation(courtCase: c, incident: happened, arrest: arrest, town: facts.town,
-                                                                offense: InvestigationArc.subject(c), ready: ready))
-                    } else {
-                        // A dated story or an arrest at the scene: there was nothing for the paper to follow.
-                        awaitCase(c, note: "Indicted by the grand jury on \(SentenceFormat.shortDate(date)).", on: date,
-                                  earliest: ready, reason: "Discovery is still being exchanged")
-                    }
-                }
-            } else if var c = generateCase(date: date, rng: &rng, excluding: &used, storySlot: true, allowMurder: !murderWaiting,
-                                           residentDefendant: knownDefendant) {
-                if c.background?.arrangementPresented != true && rng.chance(0.25) {
-                    c.continuanceMotion = ContinuanceMotions.make(for: c, rng: &rng)
-                }
-                let ready = cal.date(byAdding: .day, value: rng.int(7...21), to: date)
-                awaitCase(c, note: "Indicted by the grand jury on \(SentenceFormat.shortDate(date)).", on: date,
-                          earliest: ready, reason: "Discovery is still being exchanged")
-            }
+            openCrime(on: date, story: true, allowMurder: !murderWaiting, knownDefendant: knownDefendant, rng: &rng, excluding: &used)
+        }
+        // Smaller crimes, the kind that usually end in a plea: each is reported, worked, and ends in an arrest too.
+        if !lightWeeks, rng.chance(min(0.7, 0.42 * max(0.5, caseloadRamp) * intakeFactor)) {
+            openCrime(on: date, story: false, allowMurder: false, knownDefendant: nil, rng: &rng, excluding: &used)
         }
         // Now and then the DA's office asks that a waiting case be set first.
         if rng.chance(0.08), let index = awaiting.indices.filter({ awaiting[$0].priorityRequested == nil && awaiting[$0].courtCase != nil }).randomElement(using: &rng),
@@ -1776,9 +1818,6 @@ final class GameState: ObservableObject {
         }
         // Probation violations are short matters: each goes on the next day with room for a hearing.
         if rng.chance(lightWeeks ? 0.15 : 0.3), let hearing = makeViolationHearing(date: date, excluding: &used, rng: &rng) {
-            place(DocketEntry(matter: .hearing(hearing)), from: nextSittingDay(after: date))
-        }
-        if !lightWeeks, rng.chance(0.08), let hearing = makeOutsideHearing(date: date, rng: &rng) {
             place(DocketEntry(matter: .hearing(hearing)), from: nextSittingDay(after: date))
         }
     }
@@ -2125,12 +2164,17 @@ final class GameState: ObservableObject {
                                  "a new $\(set.formatted()) secured bond with electronic house arrest", "a $\(set.formatted()) unsecured bond",
                                  "a written promise to appear"][min(choice, 4)]
                 }
+                // After a first appearance the case goes on to arraignment; a case already arraigned (a defendant
+                // back on an order for arrest, or a bond review) waits for its trial date.
+                let firstUp = m.kind == .firstAppearance && c.background?.arraigned != true
+                func arraign(_ c: CourtCase, _ weeks: Int, _ note: String, _ n: Int) { queueArraignment(c, note: note, on: call.date) }
                 decideRelease(c, bond: bond, amount: amount, monitored: monitored, condition: condition, heard: heard, date: call.date,
-                              rng: &rng, schedule: schedule, watch: watch)
+                              rng: &rng, schedule: firstUp ? arraign : schedule, watch: watch)
             case .arraignment:
                 if choice == 0, let picked = dates[m.id] {
                     // The judge picks the day. Too soon, and the defense asks for more time.
                     var setCase = c
+                    setCase.background?.arraigned = true
                     let days = CourtCalendar.calendar.dateComponents([.day], from: call.date, to: picked).day ?? 35
                     if days < 21 && c.charges.count > 1 && rng.chance(0.6) {
                         setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
@@ -2138,7 +2182,9 @@ final class GameState: ObservableObject {
                     awaitCase(setCase, note: "Arraigned on \(heard); pleaded not guilty.", on: call.date)
                     if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
                 } else {
-                    setFor(c, weeks: 2, note: "Arraigned on \(heard); pleaded not guilty. Trial date to be set.")
+                    var arraigned = c
+                    arraigned.background?.arraigned = true
+                    setFor(arraigned, weeks: 2, note: "Arraigned on \(heard); pleaded not guilty. Trial date to be set.")
                 }
             case .motionForRelief:
                 guard let relief = m.relief else { continue }
@@ -2659,7 +2705,8 @@ final class GameState: ObservableObject {
 
     /// This week's petitions, mostly from people the court already knows: someone with an old conviction asking to
     /// clear it, a bonding company after a missed court date, someone convicted of DWI asking to drive to work.
-    /// Now and then a petitioner the court hasn't seen.
+    /// Bond forfeitures and driving privileges only for people the court already knows; an expunction can come from
+    /// anyone with an old record.
     private func petitionMatters(on date: Date, excluding used: Set<UUID>, rng: inout SeededRNG) -> [CalendarMatter] {
         guard let county else { return [] }
         let cal = CourtCalendar.calendar
@@ -2667,6 +2714,7 @@ final class GameState: ObservableObject {
         var out: [CalendarMatter] = []
         var taken = used
         var names = namesInPlay()
+        // An expunction petitioner the court hasn't seen: someone with an old record and nothing since.
         func fresh(age: ClosedRange<Int>) -> (UUID, String, Int, String) {
             let avoid = names
             let name = NameBank.person(using: &rng, excluding: &names, avoiding: avoid)
@@ -2715,15 +2763,11 @@ final class GameState: ObservableObject {
         if rng.chance(0.25) {
             // A missed court date on a bond: someone with an order for arrest, or a case the court hasn't seen.
             let missed = people.filter { p in !taken.contains(p.id) && p.appearances.contains { $0.charges.lowercased().contains("failure to appear") || $0.outcome.lowercased().contains("order for arrest") } }
-            if let p = missed.isEmpty || rng.chance(0.4) ? nil : rng.pick(missed) {
+            if let p = missed.isEmpty ? nil : rng.pick(missed) {
                 let d = p.appearances.last(where: { $0.outcome.lowercased().contains("order for arrest") })?.docket ?? p.appearances.last?.docket ?? docket()
                 out.append(Petitions.forfeitureMatter(personID: p.id, name: p.name, age: p.age(on: date), occupation: p.occupation,
                                                       docket: d.replacingOccurrences(of: " (forfeiture)", with: ""), date: date, newPerson: false, rng: &rng))
                 taken.insert(p.id)
-            } else {
-                let (id, name, age, job) = fresh(age: 20...50)
-                out.append(Petitions.forfeitureMatter(personID: id, name: name, age: age, occupation: job, docket: docket(), date: date,
-                                                      newPerson: true, rng: &rng))
             }
         }
         if rng.chance(0.25) {
@@ -2735,17 +2779,11 @@ final class GameState: ObservableObject {
                       !p.appearances.contains(where: { $0.charges.contains("limited driving privilege") && $0.docket.hasPrefix(a.docket) }) else { return nil }
                 return (p, a)
             }
-            if let (p, a) = drivers.isEmpty || rng.chance(0.3) ? nil : rng.pick(drivers) {
+            if let (p, a) = drivers.isEmpty ? nil : rng.pick(drivers) {
                 let level = a.outcome.range(of: "Level [1-5]", options: .regularExpression).flatMap { Int(a.outcome[$0].suffix(1)) }
                 out.append(Petitions.privilegeMatter(personID: p.id, name: p.name, age: p.age(on: date), occupation: p.occupation, docket: a.docket,
                                                      level: level, convicted: a.date, date: date, propensity: p.propensity, newPerson: false, rng: &rng))
                 taken.insert(p.id)
-            } else {
-                let (id, name, age, job) = fresh(age: 21...58)
-                let convicted = cal.date(byAdding: .day, value: -rng.int(10...90), to: date) ?? date
-                out.append(Petitions.privilegeMatter(personID: id, name: name, age: age, occupation: job, docket: docket().replacingOccurrences(of: "CRS", with: "CR"),
-                                                     level: nil, convicted: convicted, date: date, propensity: Double(rng.int(10...50)) / 100,
-                                                     newPerson: true, rng: &rng))
             }
         }
         return Array(out.prefix(2))
@@ -3024,6 +3062,7 @@ final class GameState: ObservableObject {
         showCauseQueue = []
         corrections = nil
         dispositions = []
+        arraignQueue = []
         placeHistory = [:]
         residents = []
         officerRecords = [:]
@@ -3077,6 +3116,7 @@ final class GameState: ObservableObject {
             // conditions, the case waits for a trial date like any other.
             if var c = order.heldCase {
                 if var bg = c.background {
+                    bg.arraigned = true
                     bg.onRelease = false
                     bg.bondStatus = "\(order.how ?? "Arrested on the order for arrest") on \(served) after failing to appear on \(SentenceFormat.shortDate(order.issued)); held pending a bond hearing."
                     c.background = bg
@@ -3559,8 +3599,12 @@ final class GameState: ObservableObject {
         var seen = Set<UUID>()
         var held: [CourtCase] = []
         let entries = (today?.entries.filter(\.isOpen) ?? []) + scheduled.map(\.entry) + awaiting.map(\.entry)
-        for entry in entries {
-            guard case .trial(let c) = entry.matter, let bg = c.background, bg.isJailed, bg.heldOnCourtBond == true,
+        var cases = entries.compactMap { entry -> CourtCase? in
+            if case .trial(let c) = entry.matter { return c } else { return nil }
+        }
+        cases += arraignQueue.map(\.courtCase)
+        for c in cases {
+            guard let bg = c.background, bg.isJailed, bg.heldOnCourtBond == true,
                   person(c.defendant.personID)?.status != .incarcerated, seen.insert(c.defendant.personID).inserted else { continue }
             held.append(c)
         }
@@ -3834,15 +3878,20 @@ final class GameState: ObservableObject {
         case .pretrial:
             guard let caseID = inmate.caseID else { return }
             let reason = byJudge ? "on Judge \(judge)'s order to ease jail crowding" : "by the sheriff to ease jail crowding"
-            func free(_ entry: inout DocketEntry) {
-                guard case .trial(var c) = entry.matter, c.id == caseID, var bg = c.background else { return }
+            func freeCase(_ c: inout CourtCase) {
+                guard c.id == caseID, var bg = c.background else { return }
                 days = bg.custodyDays
                 bg.onRelease = true
                 bg.heldOnCourtBond = false
                 bg.bondStatus = "Released on a written promise to appear on \(shortDate) \(reason), after \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s") in custody."
                 c.background = bg
+            }
+            func free(_ entry: inout DocketEntry) {
+                guard case .trial(var c) = entry.matter, c.id == caseID else { return }
+                freeCase(&c)
                 entry.matter = .trial(c)
             }
+            for i in arraignQueue.indices { freeCase(&arraignQueue[i].courtCase) }
             if var day = today {
                 for i in day.entries.indices { free(&day.entries[i]) }
                 today = day
@@ -3911,7 +3960,7 @@ final class GameState: ObservableObject {
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, calendarLog: calendarLog, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
                             officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
-                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions)
+                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -3985,6 +4034,7 @@ final class GameState: ObservableObject {
         showCauseQueue = data.showCauseQueue ?? []
         corrections = data.corrections
         dispositions = data.dispositions ?? []
+        arraignQueue = data.arraignQueue ?? []
         ensureCorrections(on: currentDate)
         placeHistory = data.placeHistory ?? [:]
         residents = data.residents ?? []

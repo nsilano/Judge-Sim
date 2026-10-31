@@ -543,6 +543,15 @@ enum CalendarCalls {
     }
 
     /// Arraignment in superior court (G.S. 15A-941): the plea is entered and the court sets the trial date.
+    /// A defendant arrested and brought before the court earlier offers to plead at arraignment.
+    static func pleaMatter(for c: CourtCase) -> CalendarMatter {
+        let law = c.charges.first?.law ?? LawLibrary.law("felonyLarceny")
+        let m = CalendarMatter(kind: .quickPlea, personID: c.defendant.personID, personName: c.defendant.name, personAge: c.defendant.age,
+                               occupation: c.defendant.occupation, docket: c.docket, summary: "", stateAsk: "", defenseAsk: "", options: [],
+                               lawID: law.id)
+        return bind(m, to: c)
+    }
+
     static func arraignmentMatter(for c: CourtCase) -> CalendarMatter {
         let d = c.defendant
         let jailed = c.background?.isJailed ?? false
@@ -603,36 +612,7 @@ enum CalendarCalls {
         }
 
         var matters: [CalendarMatter] = []
-        let pleaCount = rng.int(1...2)
-        for _ in 0..<pleaCount {
-            let law = LawLibrary.law(rng.pick(pleaLaws))
-            let cls = law.ncClass ?? .misd1
-            let name = NameBank.person(using: &rng, excluding: &used)
-            let age = rng.int(19...58)
-            let priorCount = rng.chance(0.5) ? 0 : rng.int(1...3)
-            var priors: [PriorConviction] = []
-            for _ in 0..<priorCount {
-                let p = rng.pick(GenericPools.priorSeeds)
-                priors.append(PriorConviction(offense: p.offense, ncClass: p.ncClass,
-                                              year: Calendar.current.component(.year, from: date) - rng.int(1...max(1, min(15, age - 18))),
-                                              county: rng.chance(0.6) ? county.name : rng.pick(GenericPools.otherCounties),
-                                              sentence: rng.pick(p.sentences)))
-            }
-            // The same sentencing math as a plea bound to a real case.
-            let (active, rangeText, notes) = pleaTerms(law, priors: priors)
-            let positions = pleaPositions(law, priors: priors, rangeText: rangeText, notes: notes, name: name, rng: &rng)
-            let occupation = rng.pick(NameBank.occupations)
-            matters.append(CalendarMatter(
-                kind: .quickPlea, personID: UUID(), personName: name, personAge: age, occupation: occupation,
-                docket: docket(cls.isFelony),
-                summary: "\(name), \(age), \(occupation.lowercasedPhrase.withIndefiniteArticle), offers to plead guilty to \(law.title) (\(cls.shortLabel)). Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")").",
-                stateAsk: positions.stateAsk,
-                defenseAsk: positions.defenseAsk,
-                options: positions.options,
-                lawID: law.id, priors: priors, activeTerm: active, isFelony: cls.isFelony,
-                lawNote: notes.filter { !$0.hasPrefix("PJC not allowed") }.isEmpty ? nil : notes.filter { !$0.hasPrefix("PJC not allowed") }.joined(separator: " "),
-                unavailableOptions: [NCClass.A, .B1, .B2, .C, .D, .E].contains(cls) ? [1] : nil))
-        }
+        // Pleas come only from defendants already arrested and brought before the court (see GameState).
 
         let others: [CalendarMatter.Kind] = rng.pick([.failureToAppear, .continuance, .bondModification, .capacity], count: 2)
         for kind in others {
