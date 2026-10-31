@@ -767,6 +767,13 @@ if args.count > 1 && args[1] == "scan" {
             if before != after { flag("Reload changed the game: before [\(before)] after [\(after)]") }
         }
         game.adjourn()
+        // Every other notice, the judge picks the lowest-risk people before the sheriff does.
+        if let notice = game.corrections?.openNotice, notice.kind == .releases, notice.issued.timeIntervalSince1970.truncatingRemainder(dividingBy: 2 * 86_400) < 86_400 {
+            let over = game.jailRoster().count - (game.corrections?.beds ?? 0)
+            let picks = game.jailRoster().filter(\.canRelease).sorted { $0.risk < $1.risk }.prefix(max(1, over))
+            game.orderEarlyRelease(Set(picks.map(\.personID)))
+            log("JUDGE RELEASES \(picks.count) from jail (\(over) over)")
+        }
         checkWorld()
     }
 
@@ -789,6 +796,23 @@ if args.count > 1 && args[1] == "scan" {
     log("PETITIONS: " + petitionsHeard.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
     log("INCIDENTS: " + incidentsSeen.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
     log("CLOSURES: " + Dictionary(grouping: (game.schedule.closures ?? [:]).values, by: { $0 }).map { "\($0.key) (\($0.value.count) days)" }.sorted().joined(separator: "; "))
+    if let c = game.corrections {
+        log("CORRECTIONS: beds \(c.beds), officers \(c.officers), peak \(c.peak), days over \(c.daysOver), notices \(c.notices.count) (\(c.notices.filter { $0.kind == .releases }.count) release), early releases \(c.releases.count) (rearrested \(c.releases.filter { $0.rearrested != nil }.count))")
+        let monthly = Dictionary(grouping: c.log, by: { short($0.date).components(separatedBy: " ").first ?? "" })
+        for day in c.log where CourtCalendar.calendar.component(.day, from: day.date) == 1 {
+            log("  \(short(day.date)): jail \(day.jail)/\(day.beds) (pretrial \(day.pretrial), sentenced \(day.sentenced), awaiting bed \(day.awaitingBed)) prison \(day.prison) probation \(day.probation) PRS \(day.postRelease)")
+        }
+        _ = monthly
+        let groups = Dictionary(grouping: game.dispositions, by: \.group)
+        log("DISPOSITIONS: " + DispositionRecord.Group.allCases.map { g in
+            let list = groups[g] ?? []
+            return "\(g.rawValue) \(list.count) (rearrested \(list.filter { $0.rearrested != nil }.count))"
+        }.joined(separator: ", "))
+        let s = game.stats
+        log("BONDS: \((s.bondKinds ?? [:]).sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", ")); not posted \(s.bondsNotPosted ?? 0)")
+        let roster = game.jailRoster()
+        for r in roster.prefix(8) { log("  ROSTER \(r.name) \(r.kindLabel) \(r.charge) risk \(String(format: "%.2f", r.risk)) bed \(r.bedDate.map(short) ?? "-")") }
+    }
     log("BACKLOG BY MONTH")
     for b in backlog { log("  \(b)") }
     finish()

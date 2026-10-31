@@ -38,11 +38,13 @@ enum Reputation {
         // Cases left to wait too long: jailed defendants, victims at risk, files gathering dust.
         // Handing off a case now and then is ordinary; making a habit of it, less so.
         let delays = Double(min(10, (stats.delayedCases ?? 0) + max(0, (stats.delegated ?? 0) - 4) / 2))
+        // A jail the court's own rulings filled past capacity: the strain fades by half each New Year.
+        let crowding = Double(min(150, stats.crowdingStrain ?? 0))
         let prosecutors = clamp(62 + 40 * (harsh - lenient) + 20 * (activeShare - 0.5) + 25 * (affirm - 0.8) - 1.5 * delays)
         let defense = clamp(62 + 40 * (lenient - harsh) - 20 * (activeShare - 0.5) + 25 * (affirm - 0.8) - 120 * exonerationRate - 2.5 * delays)
-        let overall = clamp(50 + 45 * (affirm - 0.6) + 25 * within - 150 * exonerationRate - 2 * delays)
+        let overall = clamp(50 + 45 * (affirm - 0.6) + 25 * within - 150 * exonerationRate - 2 * delays - crowding / 25)
         let publicApproval = clamp(55 + 15 * (harsh - lenient) + 10 * (activeShare - 0.5) - 8 * Double(stats.exonerations)
-                                   + 10 * (affirm - 0.8) - 2 * delays
+                                   + 10 * (affirm - 0.8) - 2 * delays - crowding / 8
                                    // Rulings the public watched: each one it liked or hated moves the poll.
                                    + 1.5 * Double(max(-14, min(14, stats.communityStanding ?? 0))))
 
@@ -62,6 +64,11 @@ enum Reputation {
         }
         if (stats.delayedCases ?? 0) >= 3 {
             comments.append("\"Cases sit too long in that courtroom. People wait in jail for a date.\"")
+        }
+        if crowding >= 20 {
+            comments.append("\"The jail stays packed with that judge's defendants, and the sheriff has had to let people go.\"")
+        } else if crowding >= 6 {
+            comments.append("\"The jail ran over capacity this year. The county noticed.\"")
         }
         if stats.exonerations > 0 {
             comments.append("\"\(stats.exonerations) conviction\(stats.exonerations == 1 ? "" : "s") from this court later fell apart. That stays with people.\"")

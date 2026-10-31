@@ -237,6 +237,8 @@ struct CaseBackground: Codable, Hashable {
     var bondStatus: String
     /// True once the defendant has made bond after time in jail: the credit stands, but the clock stops.
     var onRelease: Bool?
+    /// True when the defendant is in jail because this judge set a bond the defendant couldn't post (optional for older saves).
+    var heldOnCourtBond: Bool? = nil
     var restitution: Int
     var restitutionBasis: String?
     var victimStance: VictimStance
