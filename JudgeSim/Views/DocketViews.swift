@@ -13,6 +13,33 @@ extension Urgency.Level {
 
 // MARK: - Cases awaiting a trial date
 
+/// Smaller cases that had their bond hearing and come back at a calendar call to plead; they aren't tried.
+private struct WaitingToPlead: View {
+    @EnvironmentObject private var game: GameState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "Waiting to plead (\(game.arraignQueue.count))", icon: "signature")
+            Text("Smaller cases go from the bond hearing to a plea at a calendar call. They don't need a trial date.")
+                .font(.caption).foregroundStyle(.secondary)
+            ForEach(game.arraignQueue.sorted { $0.due < $1.due }) { item in
+                let c = item.courtCase
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text(c.defendant.name).font(.subheadline.weight(.semibold))
+                        Spacer()
+                        Text("Calendar call on or after \(SentenceFormat.shortDate(item.due))").font(.caption2).foregroundStyle(.secondary)
+                    }
+                    Text("\(c.docket) · \(c.charges.first?.law.title ?? "")").font(.caption).foregroundStyle(.secondary)
+                    Text(c.background?.isJailed == true ? "In custody" : "Out on release").font(.caption2)
+                        .foregroundStyle(c.background?.isJailed == true ? Theme.bad : Theme.good)
+                }
+            }
+        }
+        .card()
+    }
+}
+
 /// Every case set for trial that has no date yet, most urgent first. The judge sets each one's date.
 /// Crimes the paper is following that haven't led to an arrest. No names: nobody has been charged.
 private struct UnderInvestigation: View {
@@ -73,6 +100,7 @@ struct AwaitingView: View {
                         .font(.callout).foregroundStyle(.secondary).card()
                 }
                 if !game.investigations.isEmpty { UnderInvestigation() }
+                if !game.arraignQueue.isEmpty { WaitingToPlead() }
                 ForEach(game.awaitingByUrgency) { item in
                     AwaitingRow(item: item, urgency: game.urgency(of: item), today: game.today?.date ?? game.currentDate,
                                 onSet: { setting = item }, onFile: { caseFile = item.courtCase },
