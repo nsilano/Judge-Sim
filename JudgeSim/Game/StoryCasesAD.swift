@@ -197,7 +197,7 @@ extension StoryCases {
             defenseOpening: "Everything about this gun leads to {ALT}: the printer, the parts, the money, and the major DNA.",
             prosecutionClosing: "Possession doesn't need a receipt. {DL} lived with that gun, knew its condition, and had it within reach every night.",
             defenseClosing: "Being near a gun isn't possessing it. The State needs more than a shared room, and it doesn't have it.",
-            genders: ["ALT": .male],
+            genders: ["D": .male, "ALT": .male],
             time: "10:15 a.m.",
             family: "Single, no children. Lives with an older brother.",
             residence: "A rented house on {STREET} in {HOOD}, shared with an older brother",
