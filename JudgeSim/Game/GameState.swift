@@ -1202,7 +1202,8 @@ final class GameState: ObservableObject {
                         }
                         let jailed = c.background?.isJailed ?? false
                         switch kind {
-                        case .bondModification: return jailed ? c : nil
+                        // A defendant held without bond asks for a detention review, not a lower bond.
+                        case .bondModification: return jailed && !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false) ? c : nil
                         case .failureToAppear: return jailed || Self.isMurder(c) ? nil : c
                         default: return c
                         }
@@ -2174,6 +2175,22 @@ final class GameState: ObservableObject {
                 // back on an order for arrest, or a bond review) waits for its trial date.
                 let firstUp = m.kind == .firstAppearance && c.background?.arraigned != true
                 func arraign(_ c: CourtCase, _ weeks: Int, _ note: String, _ n: Int) { queueArraignment(c, note: note, on: call.date) }
+                // Iryna's Law: the judge holds the defendant without bond.
+                if m.kind == .firstAppearance && choice == 5 && m.options.count > 5 {
+                    var held = c
+                    if var bg = held.background {
+                        bg.custodyDays = max(1, bg.custodyDays)
+                        bg.onRelease = false
+                        bg.heldOnCourtBond = true
+                        bg.bondStatus = "Held without bond since \(heard) under Iryna's Law (G.S. 15A-533(b)): the court found no condition of release would reasonably assure the public's safety. In custody for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
+                        held.background = bg
+                    }
+                    var kinds = stats.bondKinds ?? [:]
+                    kinds["Held without bond", default: 0] += 1
+                    stats.bondKinds = kinds
+                    (firstUp ? arraign : schedule)(held, rng.int(5...8), "Held without bond since \(heard) under Iryna's Law.", 0)
+                    continue
+                }
                 decideRelease(c, bond: bond, amount: amount, monitored: monitored, condition: condition, heard: heard, date: call.date,
                               rng: &rng, schedule: firstUp ? arraign : schedule, watch: watch)
             case .arraignment:
@@ -3658,12 +3675,13 @@ final class GameState: ObservableObject {
             if felony { flags.append("Felony charge") }
             if orders > 0 { flags.append("Stay-away order in force") }
             if !d.priors.isEmpty { flags.append("\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s")") }
+            if c.background?.bondStatus.hasPrefix("Held without bond") == true { flags.append("Held without bond") }
             if failures > 0 { flags.append("\(failures) earlier failure\(failures == 1 ? "" : "s") to appear") }
             roster.append(JailInmate(personID: d.personID, caseID: c.id, name: d.name, age: d.age, docket: c.docket, charge: charge,
                                      kind: .pretrial, since: since, releaseDate: nil, bedDate: nil, bond: c.background?.bondStatus,
                                      violent: violent, felony: felony, priors: d.priors.count,
                                      risk: Corrections.risk(violent: violent, felony: felony, priors: d.priors.count, orders: orders, failures: failures),
-                                     flags: flags))
+                                     flags: flags, releasable: !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false)))
         }
         return roster
     }
