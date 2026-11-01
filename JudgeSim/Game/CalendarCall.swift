@@ -457,24 +457,50 @@ enum CalendarCalls {
         let high = scale.secured
         let canPost = employed ? rng.pick([1_000, 2_500, 5_000, 10_000, 25_000]) : rng.pick([0, 500, 1_000, 2_500])
         let law = c.charges.first?.law
+        // Iryna's Law (S.L. 2025-93): a felony charge involving violence. Only a judge sets conditions, the law presumes
+        // no condition will reasonably assure the public's safety, and the judge may hold the defendant without bond.
+        // Release, if any, is on a secured bond or house arrest with electronic monitoring; after an earlier violent
+        // conviction, house arrest with monitoring only.
+        let violentOffense = c.charges.contains { $0.law.ncClass?.isFelony == true }
+            && (violent || c.charges.contains { Corrections.soundsViolent($0.law.title) })
+        let priorViolent = d.priors.contains { $0.ncClass.isFelony && Corrections.soundsViolent($0.offense) }
         var record = d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s") (\(felonies) felon\(felonies == 1 ? "y" : "ies"))"
         if ftas > 0 { record += "; \(ftas) prior failure\(ftas == 1 ? "" : "s") to appear" }
         let ties = [employed ? "works as \(d.occupation.lowercasedPhrase.withIndefiniteArticle)" : "is out of work",
                     local ? "has lived in the county most of \(NameBank.gender(of: d.name) == .female ? "her" : "his") life" : "moved here from out of state last year"]
+        var stateAsk = scale.stateAsk
+        var defenseAsk = defenseBondAsk(scale, canPost: canPost, last: d.lastName, rng: &rng)
+        var options = ["Written promise to appear",
+                       "Release to the custody of a designated person or program",
+                       "Unsecured bond of an amount you set",
+                       "Secured bond of an amount you set",
+                       "Secured bond of an amount you set, with electronic house arrest"]
+        var unavailable: Set<Int>? = nil
+        var lawNote: String? = nil
+        if violentOffense {
+            options.append("Hold without bond: no condition of release will reasonably assure the public's safety (Iryna's Law)")
+            unavailable = priorViolent ? [0, 1, 2, 3] : [0, 1, 2]
+            lawNote = "Iryna's Law (S.L. 2025-93, G.S. 15A-533(b)): a violent offense. The law presumes no condition of release will reasonably assure the public's safety, and you may hold \(d.lastName) without bond. To release, you must find the presumption rebutted and impose "
+                + (priorViolent ? "house arrest with electronic monitoring: \(d.lastName) has an earlier violent conviction." : "a secured bond or house arrest with electronic monitoring. Written promises, custody releases, and unsecured bonds aren't allowed.")
+            if danger >= 0.15 || felonies > 0 || [NCClass.A, .B1, .B2, .C].contains(worst ?? .misd1) {
+                stateAsk = "The State asks that \(d.lastName) be held without bond under Iryna's Law. The charge is violent, and nothing short of detention protects the victim and the public."
+            } else {
+                stateAsk += " The State notes the Iryna's Law presumption against release."
+            }
+            defenseAsk = "We can rebut the presumption, Judge. \(d.lastName) \(ties.joined(separator: " and ")). "
+                + (priorViolent ? "House arrest with an ankle monitor protects everyone." : "A $\(max(canPost, 1_000).formatted()) secured bond with electronic monitoring protects everyone and lets \(d.lastName) keep working.")
+        }
         return CalendarMatter(kind: .firstAppearance, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
                               summary: "\(d.name), \(d.age), arrested this week and charged with \(law?.title.lowercased() ?? "a felony"), is before the court on conditions of release (G.S. 15A-534). \(record). \(d.lastName) \(ties.joined(separator: " and ")). The magistrate set no bond pending this hearing.",
-                              stateAsk: scale.stateAsk,
-                              defenseAsk: defenseBondAsk(scale, canPost: canPost, last: d.lastName, rng: &rng),
+                              stateAsk: stateAsk,
+                              defenseAsk: defenseAsk,
                               // Every condition G.S. 15A-534(a) allows, with the judge setting any amount.
-                              options: ["Written promise to appear",
-                                        "Release to the custody of a designated person or program",
-                                        "Unsecured bond of an amount you set",
-                                        "Secured bond of an amount you set",
-                                        "Secured bond of an amount you set, with electronic house arrest"],
+                              options: options,
+                              lawNote: lawNote,
                               pendingCase: c, bond: BondFacts(moderate: moderate, high: high, canPost: canPost, flightRisk: flight, danger: danger),
                               amountOptions: [2, 3, 4], amountRange: 500...max(500_000, high * 2), suggestedAmount: high,
-                              suggestedAmounts: [2: moderate])
+                              suggestedAmounts: [2: moderate], unavailableOptions: unavailable)
     }
 
     /// A jailed defendant asks to have the bond lowered (G.S. 15A-538). The judge sets the new amount.

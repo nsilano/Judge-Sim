@@ -147,7 +147,10 @@ struct JailInmate: Identifiable, Hashable {
     var risk: Double
     var flags: [String]
 
-    var canRelease: Bool { kind != .awaitingBed }
+    /// False for someone a judge ordered held without bond: the sheriff can't release them.
+    var releasable = true
+
+    var canRelease: Bool { kind != .awaitingBed && releasable }
 
     var kindLabel: String {
         switch kind {
