@@ -2340,8 +2340,19 @@ final class GameState: ObservableObject {
                         fresh.defenseAttorney = next + (usePD ? ", Assistant Public Defender" : (retained ? ", retained counsel" : ", appointed counsel"))
                     }
                     let newName = fresh.defenseAttorney.components(separatedBy: ", ").first ?? fresh.defenseAttorney
-                    setFor(fresh, weeks: choice == 0 ? 6 : 3,
-                           note: "\(old) allowed to withdraw at the calendar call on \(heard); \(newName) \(retained && choice == 0 ? "hired" : "appointed").")
+                    let needs = (m.options.indices.contains(choice) && m.options[choice].contains("six weeks")) ? 6 : 3
+                    let note = "\(old) allowed to withdraw at the calendar call on \(heard); \(newName) \(retained && choice == 0 ? "hired" : "appointed")."
+                    if let picked = dates[m.id] {
+                        // The judge picked the trial day. Too soon for the new lawyer, and the new lawyer asks for more time.
+                        let days = CourtCalendar.calendar.dateComponents([.day], from: call.date, to: picked).day ?? 0
+                        if days < 7 * needs - 7 && rng.chance(0.75) {
+                            fresh.continuanceMotion = ContinuanceMotions.make(for: fresh, rng: &rng)
+                        }
+                        awaitCase(fresh, note: note, on: call.date)
+                        if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
+                    } else {
+                        setFor(fresh, weeks: needs, note: note)
+                    }
                 } else {
                     // A real conflict comes back when the trial is called.
                     var kept = c
