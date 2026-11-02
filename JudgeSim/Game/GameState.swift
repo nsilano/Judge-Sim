@@ -3654,12 +3654,14 @@ final class GameState: ObservableObject {
             if p.priors.count > 1 { flags.append("\(p.priors.count) convictions on record") }
             if failures > 0 { flags.append("\(failures) supervision violation\(failures == 1 ? "" : "s") or missed court date\(failures == 1 ? "" : "s")") }
             let awaiting = p.awaitingStateBed(on: date)
+            let note = (p.releaseNote ?? "").lowercased()
+            let sanction = note.contains("quick dip") || note.contains("confinement in response to violation")
             roster.append(JailInmate(personID: p.id, caseID: nil, name: p.name, age: p.age(on: date), docket: docket, charge: charge,
                                      kind: awaiting ? .awaitingBed : .sentenced, since: appearance?.date, releaseDate: p.releaseDate,
                                      bedDate: p.stateBedDocket == p.custodyDocket ? p.stateBedDate : nil, bond: nil,
                                      violent: violent, felony: felony, priors: p.priors.count,
                                      risk: Corrections.risk(violent: violent, felony: felony, priors: p.priors.count, orders: orders, failures: failures),
-                                     flags: flags))
+                                     flags: flags, sanction: sanction))
         }
         for c in heldForTrial() where !seen.contains(c.defendant.personID) {
             let d = c.defendant
@@ -3681,7 +3683,9 @@ final class GameState: ObservableObject {
                                      kind: .pretrial, since: since, releaseDate: nil, bedDate: nil, bond: c.background?.bondStatus,
                                      violent: violent, felony: felony, priors: d.priors.count,
                                      risk: Corrections.risk(violent: violent, felony: felony, priors: d.priors.count, orders: orders, failures: failures),
-                                     flags: flags, releasable: !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false)))
+                                     flags: flags, releasable: !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false),
+                                     trialDate: scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }?.date,
+                                     waitingToPlead: arraignQueue.contains { $0.courtCase.id == c.id }))
         }
         return roster
     }
