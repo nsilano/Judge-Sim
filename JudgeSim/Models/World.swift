@@ -120,6 +120,8 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     /// (optional for older saves).
     var stateBedDate: Date? = nil
     var stateBedDocket: String? = nil
+    /// The commitment whose transfer to state prison is already on the record (optional for older saves).
+    var transferredDocket: String? = nil
 
     /// Stay-away orders still in force on a date.
     func activeOrders(on date: Date) -> [StayAwayOrder] {

@@ -132,6 +132,11 @@ struct CaseRecordDetail: View {
                     .font(.caption)
                     .foregroundStyle(.purple)
             }
+            if !game.log(docket: record.docket).isEmpty {
+                DeskLink(title: "Case timeline", detail: "From the crime and the arrest to today", icon: "clock.arrow.circlepath") {
+                    CaseTimelineView(docket: record.docket)
+                }
+            }
             CaseRecordDocuments(record: record)
             if let tracker = game.appeals.first(where: { $0.docket == record.docket }) {
                 DeskLink(title: "Court of Appeals file", detail: "\(CourtForms.appealsNumber(for: tracker)) · \(tracker.statusText(on: game.currentDate))",

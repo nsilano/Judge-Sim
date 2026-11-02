@@ -284,8 +284,12 @@ private struct InmateRow: View {
                 Spacer()
                 Pill(text: inmate.riskLabel, color: inmate.risk < 0.3 ? Theme.good : (inmate.risk < 0.55 ? Theme.gold : Theme.bad))
             }
-            Text(inmate.charge).font(.caption)
-            Text(detail).font(.caption2).foregroundStyle(.secondary)
+            let status = inmate.status
+            Label(status.title, systemImage: statusIcon)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(statusColor)
+            Text(status.detail).font(.caption2)
+            Text("\(inmate.charge) · \(inmate.docket)").font(.caption2).foregroundStyle(.secondary)
             if !inmate.flags.isEmpty {
                 Text(inmate.flags.joined(separator: " · ")).font(.caption2).foregroundStyle(Theme.gold)
             }
@@ -293,20 +297,23 @@ private struct InmateRow: View {
         if let person = game.person(inmate.personID) {
             NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { content }
         } else {
-            content
+            NavigationLink { CaseTimelineView(docket: inmate.docket) } label: { content }
         }
     }
 
-    private var detail: String {
+    private var statusIcon: String {
         switch inmate.kind {
-        case .pretrial:
-            let held = inmate.since.map { "Held since \(SentenceFormat.shortDate($0))" } ?? "Held"
-            return "\(held) · \(inmate.docket)" + (bondAmount(inmate.bond).map { " · $\($0.formatted()) bond" } ?? "")
-        case .sentenced:
-            return "Jail term · out \(inmate.releaseDate.map(SentenceFormat.shortDate) ?? "—") · \(inmate.docket)"
-        case .awaitingBed:
-            let bed = inmate.bedDate.map { "State bed expected \(SentenceFormat.shortDate($0))" } ?? "State bed date pending"
-            return "\(bed) · \(inmate.docket)"
+        case .pretrial: return inmate.noBond ? "lock.fill" : "dollarsign.circle"
+        case .sentenced: return "clock.fill"
+        case .awaitingBed: return "bus.fill"
+        }
+    }
+
+    private var statusColor: Color {
+        switch inmate.kind {
+        case .pretrial: return inmate.noBond ? Theme.bad : Theme.gold
+        case .sentenced: return Theme.defense
+        case .awaitingBed: return Theme.prosecution
         }
     }
 }

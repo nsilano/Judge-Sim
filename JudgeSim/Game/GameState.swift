@@ -133,6 +133,7 @@ private struct SaveData: Codable {
     var corrections: CorrectionsState? = nil
     var dispositions: [DispositionRecord]? = nil
     var arraignQueue: [PendingArraignment]? = nil
+    var caseLog: [LogEvent]? = nil
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -180,6 +181,8 @@ final class GameState: ObservableObject {
     @Published private(set) var corrections: CorrectionsState?
     /// Defendants who have had a first appearance and wait to be arraigned, or to plead, at a calendar call.
     @Published private(set) var arraignQueue: [PendingArraignment] = []
+    /// Every step of every case, for the timelines: crime, investigation, arrest, jail, bond, trial, prison, release.
+    @Published private(set) var caseLog: [LogEvent] = []
     /// What became of each defendant at judgment, and whether the person was arrested again once free.
     @Published private(set) var dispositions: [DispositionRecord] = []
     /// The judge's standing schedule: court days, daily limits, one-day changes and time off.
@@ -401,6 +404,7 @@ final class GameState: ObservableObject {
         corrections = nil
         dispositions = []
         arraignQueue = []
+        caseLog = []
         // Every career's county starts a little different.
         living = CountyLife.begin(seed: seedBase)
         Gazetteer.living = living
@@ -789,6 +793,8 @@ final class GameState: ObservableObject {
                 bg.bondStatus = "Held in the \(county.name) Detention Center since the arrest on \(SentenceFormat.shortDate(item.arrest)), awaiting a bond hearing."
                 c.background = bg
             }
+            log(.arrest, c, on: item.arrest, "Arrested by the \(c.investigation?.facts?.agency ?? c.investigatingAgency) in \(item.town).")
+            log(.jailIn, c, on: item.arrest, "Booked into the \(county.name) jail to await a bond hearing.")
             post(InvestigationArc.arrestNews(c, on: date, town: item.town, agency: c.investigation?.facts?.agency ?? c.investigatingAgency,
                                              judge: lastName(judgeName), county: county, followed: item.note == nil, bondHearing: true))
             var held = item
@@ -821,6 +827,9 @@ final class GameState: ObservableObject {
         let booked = max(facts.map { cal.startOfDay(for: $0.arrest) } ?? arrest, incident)
         let town = facts?.town ?? county?.seat ?? ""
         let followed = booked > happened
+        let agencyName = facts?.agency ?? c.investigatingAgency
+        log(.crime, c, on: happened, "Reported to the \(agencyName) in \(town): \(InvestigationArc.subject(c)).")
+        if followed { log(.investigation, c, on: happened, "\(agencyName) opens an investigation.") }
         if followed {
             var beats = InvestigationArc.beats(for: c, incident: happened, arrest: booked, town: town,
                                                agency: facts?.agency ?? c.investigatingAgency, rng: &rng)
@@ -870,6 +879,11 @@ final class GameState: ObservableObject {
     /// A signed warrant is executed a day or so later; the arrest comes then, and the case lands on the waiting list.
     private func arrestOnWarrant(_ c: CourtCase, note: String, rng: inout SeededRNG) {
         let cal = CourtCalendar.calendar
+        if let facts = c.investigation?.facts {
+            log(.crime, c, on: facts.incident, "Reported to the \(facts.agency) in \(facts.town): \(InvestigationArc.subject(c)).")
+            log(.investigation, c, on: facts.incident, "\(facts.agency) opens an investigation.")
+        }
+        log(.warrant, c, on: currentDate, "Search warrant signed by Judge \(lastName(judgeName ?? "")).")
         guard let facts = c.investigation?.facts else {
             awaitCase(c, note: note, on: currentDate)
             return
@@ -1469,6 +1483,8 @@ final class GameState: ObservableObject {
     /// A case set for trial with no date yet; the judge chooses it.
     private func awaitCase(_ c: CourtCase, note: String, on date: Date, earliest: Date? = nil, reason: String? = nil,
                            continuances: Int = 0) {
+        log(note.lowercased().contains("continued") ? .continued : .court, c, on: date,
+            note.lowercased().contains("trial date") ? note : note + " Waiting for a trial date.")
         var entry = DocketEntry(matter: .trial(c), note: note)
         entry.continuances = continuances
         let cal = CourtCalendar.calendar
@@ -1522,6 +1538,7 @@ final class GameState: ObservableObject {
         let todayDate = today.map { cal.startOfDay(for: $0.date) } ?? cal.startOfDay(for: currentDate)
         let day = nextSittingDay(onOrAfter: max(cal.startOfDay(for: date), todayDate))
         item.entry.note = ((item.entry.note ?? "") + " Set for trial on \(SentenceFormat.shortDate(day)).").trimmingCharacters(in: .whitespaces)
+        if case .trial(let c) = item.entry.matter { log(.trialSet, c, on: todayDate, "Trial set for \(SentenceFormat.shortDate(day)).") }
         // Setting a trial over someone's known conflict costs goodwill with that side.
         if let conflict = item.conflicts?[CourtSchedule.key(day)] {
             item.entry.note = (item.entry.note ?? "") + " Set over a known conflict: \(conflict.prefix(1).lowercased() + String(conflict.dropFirst()))."
@@ -1784,6 +1801,9 @@ final class GameState: ObservableObject {
                         c.background = bg
                     }
                     let facts = c.investigation?.facts
+                    log(.crime, c, on: facts?.incident ?? followUp.incident, "Reported to police: \(InvestigationArc.subject(c)).")
+                    log(.arrest, c, on: booked, "Arrested on the grand jury's indictment.")
+                    log(.jailIn, c, on: booked, "Booked into the \(county?.name ?? "county") jail to await a bond hearing.")
                     bondQueue.append(OpenInvestigation(courtCase: c, incident: facts?.incident ?? followUp.incident, arrest: booked,
                                                        town: facts?.town ?? county?.seat ?? "", offense: InvestigationArc.subject(c),
                                                        ready: cal.date(byAdding: .day, value: 42, to: booked) ?? booked,
@@ -2027,6 +2047,7 @@ final class GameState: ObservableObject {
         /// An order for arrest plays out: most people are picked up within weeks, some turn themselves in, some run and
         /// are caught months later, often out of state, and a few are never found. The case waits for the arrest.
         func orderForArrest(_ c: CourtCase, missed: String, note: String) {
+            log(.warrant, c, on: call.date, "\(missed). Order for arrest issued.")
             var held = c
             if var bg = held.background {
                 bg.onRelease = false
@@ -2185,6 +2206,7 @@ final class GameState: ObservableObject {
                         bg.bondStatus = "Held without bond since \(heard) under Iryna's Law (G.S. 15A-533(b)): the court found no condition of release would reasonably assure the public's safety. In custody for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
                         held.background = bg
                     }
+                    log(.bond, c, on: call.date, "Bond hearing: held without bond under Iryna's Law.")
                     var kinds = stats.bondKinds ?? [:]
                     kinds["Held without bond", default: 0] += 1
                     stats.bondKinds = kinds
@@ -2341,6 +2363,8 @@ final class GameState: ObservableObject {
         kinds[kind, default: 0] += 1
         stats.bondKinds = kinds
         if amount <= bond.canPost {
+            log(.bond, c, on: date, condition.hasPrefix("release to") ? "Bond hearing: released to" + condition.dropFirst("release to".count) + "." : "Bond hearing: released on \(condition).")
+            if c.background?.isJailed == true { log(.jailOut, c, on: date, "Posted bond and left the jail.") }
             // The days already spent in jail stay as credit; the clock stops while the defendant is out.
             bg.onRelease = true
             bg.heldOnCourtBond = false
@@ -2356,6 +2380,8 @@ final class GameState: ObservableObject {
                     date: arrested, kind: .arrest, headline: NewsDesk.rearrestHeadline(c.defendant.name, rng: &rng),
                     body: "\(c.defendant.name), released on \(condition) by Judge \(lastName(judgeName ?? "")), was arrested again this week, according to the \(county?.sheriffsOffice ?? "Sheriff's Office"). The new charge is pending in district court.",
                     docket: c.docket, prominence: 2)))
+                log(.arrest, c, on: arrested, "Arrested on a new charge while out on bond; bond revoked.")
+                log(.jailIn, c, on: arrested, "Back in the jail, held on the revoked bond.")
                 bg.onRelease = false
                 bg.custodyDays = max(1, bg.custodyDays)
                 bg.bondStatus = "Released on \(condition), then arrested on a new charge; bond revoked and held for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
@@ -2367,6 +2393,8 @@ final class GameState: ObservableObject {
                 let arrested = cal.date(byAdding: .day, value: 7 * weeksOut, to: date) ?? date
                 // A failure to appear doubles the bond (G.S. 15A-544.3; local bond policy).
                 let doubled = max(1_000, amount * 2)
+                log(.warrant, c, on: arrested, "Missed a court date; arrested on an order for arrest. Bond doubled to $\(doubled.formatted()).")
+                log(.jailIn, c, on: arrested, "Back in the jail on the doubled bond.")
                 bg.onRelease = false
                 bg.custodyDays = max(1, bg.custodyDays)
                 bg.bondStatus = "Released on \(condition); failed to appear and was arrested on an order for arrest. Bond doubled to $\(doubled.formatted()) secured; held for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
@@ -2377,6 +2405,7 @@ final class GameState: ObservableObject {
                 schedule(held, rng.int(5...8), "On release since \(heard).", 0)
             }
         } else {
+            log(.bond, c, on: date, "Bond hearing: \(condition); couldn't post it. Held in the jail.")
             bg.custodyDays = max(1, bg.custodyDays)
             bg.onRelease = false
             bg.heldOnCourtBond = true
@@ -2999,6 +3028,21 @@ final class GameState: ObservableObject {
                                        custodyDocket: outcome.personStatus == .incarcerated ? courtCase.docket : nil,
                                        profile: d.profile))
         }
+        // The verdict and what it means for custody, on the case's and the person's timeline.
+        log(.verdict, courtCase, on: currentDate, outcome.appearanceSummary)
+        if let p = people.first(where: { $0.id == d.personID }) {
+            let wasHeld = courtCase.background?.isJailed == true
+            if p.status == .incarcerated && p.custodyDocket == courtCase.docket {
+                let place = p.custodyPlace == .prison ? "a prison term; held in the county jail until the state has a bed"
+                    : (p.custodyPlace == .hospital ? "commitment to a state hospital" : "a jail sentence")
+                log(wasHeld ? .court : .jailIn, courtCase, on: currentDate, wasHeld ? "Stays in custody to serve \(place)." : "Taken into custody to serve \(place).")
+            } else if wasHeld && p.status != .incarcerated {
+                log(.jailOut, courtCase, on: currentDate, p.status == .probation ? "Released from the jail to begin probation." : "Released from the jail after judgment.")
+            }
+            if p.status == .probation && p.probation?.docket == courtCase.docket {
+                log(.probation, courtCase, on: currentDate, "Probation begins; ends \(SentenceFormat.shortDate(p.probation?.ends ?? currentDate)).")
+            }
+        }
         // What the judgment did with the defendant, to follow later.
         if let index = people.firstIndex(where: { $0.id == d.personID }) {
             let p = people[index]
@@ -3086,6 +3130,7 @@ final class GameState: ObservableObject {
         corrections = nil
         dispositions = []
         arraignQueue = []
+        caseLog = []
         placeHistory = [:]
         residents = []
         officerRecords = [:]
@@ -3119,6 +3164,10 @@ final class GameState: ObservableObject {
         for i in arrestOrders.indices where !arrestOrders[i].served && arrestOrders[i].servedOn <= date {
             arrestOrders[i].served = true
             let order = arrestOrders[i]
+            log(.arrest, personID: order.personID, name: order.personName, docket: order.docket, on: order.servedOn,
+                "\(order.how ?? "Arrested") on the order for arrest.")
+            log(.jailIn, personID: order.personID, name: order.personName, docket: order.docket, on: order.servedOn,
+                "Booked into the jail on \(order.bond).")
             post(NewsItem(date: order.servedOn, kind: .arrest,
                           headline: order.heldCase != nil ? "\(order.personName), wanted since \(SentenceFormat.shortDate(order.issued)), back in custody"
                               : "\(order.personName) arrested on order for failing to appear",
@@ -3326,6 +3375,7 @@ final class GameState: ObservableObject {
             case .probation:
                 // Probation stays open while a violation hearing on it is still to be heard.
                 if let probation = person.probation, probation.ends <= currentDate, !violationHearingPending(for: person.id) {
+                    log(.probation, personID: person.id, name: person.name, docket: probation.docket, on: probation.ends, "Completed probation.")
                     people[index].status = .free
                     people[index].probation = nil
                     stats.probationCompleted += 1
@@ -3530,6 +3580,9 @@ final class GameState: ObservableObject {
         people[index].releaseNote = nil
         people[index].custodyDocket = nil
         people[index].lastReleased = release
+        let place = person.custodyPlace == .prison ? "state prison" : (person.custodyPlace == .hospital ? "the state hospital" : "the county jail")
+        log(.jailOut, personID: person.id, name: person.name, docket: person.custodyDocket ?? person.appearances.last?.docket ?? "",
+            on: release, "Released from \(place)" + (person.probation.map { $0.ends > release ? "; returns to probation." : "." } ?? (person.pendingPostRelease != nil ? "; begins post-release supervision." : ".")))
         people[index].stateBedDate = nil
         people[index].stateBedDocket = nil
         if let d = dispositions.lastIndex(where: { $0.personID == person.id && $0.freeFrom == nil }) { dispositions[d].freeFrom = release }
@@ -3598,6 +3651,27 @@ final class GameState: ObservableObject {
         name.components(separatedBy: " ").last ?? name
     }
 
+    // MARK: Case log
+
+    private func log(_ kind: LogEvent.Kind, _ c: CourtCase, on date: Date, _ text: String) {
+        log(kind, personID: c.defendant.personID, name: c.defendant.name, docket: c.docket, on: date, text)
+    }
+
+    private func log(_ kind: LogEvent.Kind, personID: UUID?, name: String, docket: String, on date: Date, _ text: String) {
+        caseLog.append(LogEvent(date: date, personID: personID, name: name, docket: docket, kind: kind, text: text))
+        if caseLog.count > 15_000 { caseLog.removeFirst(caseLog.count - 15_000) }
+    }
+
+    /// A person's whole timeline, oldest first.
+    func log(for personID: UUID) -> [LogEvent] {
+        caseLog.filter { $0.personID == personID }.sorted { $0.date < $1.date }
+    }
+
+    /// A case's timeline by docket, oldest first.
+    func log(docket: String) -> [LogEvent] {
+        caseLog.filter { $0.docket == docket }.sorted { $0.date < $1.date }
+    }
+
     // MARK: Corrections
 
     /// Supervised probationers this court placed, per officer, against the caseload officers are meant to carry.
@@ -3654,12 +3728,14 @@ final class GameState: ObservableObject {
             if p.priors.count > 1 { flags.append("\(p.priors.count) convictions on record") }
             if failures > 0 { flags.append("\(failures) supervision violation\(failures == 1 ? "" : "s") or missed court date\(failures == 1 ? "" : "s")") }
             let awaiting = p.awaitingStateBed(on: date)
+            let note = (p.releaseNote ?? "").lowercased()
+            let sanction = note.contains("quick dip") || note.contains("confinement in response to violation")
             roster.append(JailInmate(personID: p.id, caseID: nil, name: p.name, age: p.age(on: date), docket: docket, charge: charge,
                                      kind: awaiting ? .awaitingBed : .sentenced, since: appearance?.date, releaseDate: p.releaseDate,
                                      bedDate: p.stateBedDocket == p.custodyDocket ? p.stateBedDate : nil, bond: nil,
                                      violent: violent, felony: felony, priors: p.priors.count,
                                      risk: Corrections.risk(violent: violent, felony: felony, priors: p.priors.count, orders: orders, failures: failures),
-                                     flags: flags))
+                                     flags: flags, sanction: sanction))
         }
         for c in heldForTrial() where !seen.contains(c.defendant.personID) {
             let d = c.defendant
@@ -3681,7 +3757,9 @@ final class GameState: ObservableObject {
                                      kind: .pretrial, since: since, releaseDate: nil, bedDate: nil, bond: c.background?.bondStatus,
                                      violent: violent, felony: felony, priors: d.priors.count,
                                      risk: Corrections.risk(violent: violent, felony: felony, priors: d.priors.count, orders: orders, failures: failures),
-                                     flags: flags, releasable: !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false)))
+                                     flags: flags, releasable: !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false),
+                                     trialDate: scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }?.date,
+                                     waitingToPlead: arraignQueue.contains { $0.courtCase.id == c.id }))
         }
         return roster
     }
@@ -3738,6 +3816,14 @@ final class GameState: ObservableObject {
             people[i].stateBedDocket = people[i].custodyDocket
         }
 
+        // Each commitment's move to a state prison bed goes on the record once.
+        for i in people.indices where people[i].custodyPlace == .prison && !people[i].awaitingStateBed(on: date)
+            && people[i].transferredDocket != people[i].custodyDocket {
+            people[i].transferredDocket = people[i].custodyDocket
+            let p = people[i]
+            log(.prison, personID: p.id, name: p.name, docket: p.custodyDocket ?? "", on: p.stateBedDate ?? date,
+                "Transferred from the county jail to state prison.")
+        }
         let inJail = people.filter { $0.inCountyJail(on: date) }
         let awaitingBed = inJail.filter { $0.awaitingStateBed(on: date) }.count
         let pretrial = heldForTrial().count
@@ -3923,6 +4009,13 @@ final class GameState: ObservableObject {
             for i in scheduled.indices { free(&scheduled[i].entry) }
             for i in awaiting.indices { free(&awaiting[i].entry) }
         }
+        if inmate.kind == .pretrial {
+            log(.early, personID: inmate.personID, name: inmate.name, docket: inmate.docket, on: date,
+                byJudge ? "Released early on your order to ease jail crowding; out on a written promise to appear." : "Released early by the sheriff to ease jail crowding; out on a written promise to appear.")
+        } else {
+            log(.early, personID: inmate.personID, name: inmate.name, docket: inmate.docket, on: date,
+                byJudge ? "Released early on your order to ease jail crowding, \(days) days short of the term." : "Released early by the sheriff to ease jail crowding, \(days) days short of the term.")
+        }
         corrections?.releases.append(EarlyRelease(personID: inmate.personID, name: inmate.name, docket: inmate.docket, charge: inmate.charge,
                                                   date: date, byJudge: byJudge, pretrial: inmate.kind == .pretrial, days: days))
         if (corrections?.releases.count ?? 0) > 400 { corrections?.releases.removeFirst() }
@@ -3984,7 +4077,7 @@ final class GameState: ObservableObject {
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, calendarLog: calendarLog, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
                             officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
-                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue)
+                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -4059,6 +4152,7 @@ final class GameState: ObservableObject {
         corrections = data.corrections
         dispositions = data.dispositions ?? []
         arraignQueue = data.arraignQueue ?? []
+        caseLog = data.caseLog ?? []
         // Cases that go to trial no longer wait for an arraignment: they join the list waiting for a trial date.
         for item in arraignQueue where item.courtCase.templateKey.hasPrefix("story.") {
             arraignQueue.removeAll { $0.id == item.id }

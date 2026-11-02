@@ -149,6 +149,32 @@ struct JailInmate: Identifiable, Hashable {
 
     /// False for someone a judge ordered held without bond: the sheriff can't release them.
     var releasable = true
+    /// Where the person's case stands: the trial date, or waiting to plead, and for a sentence what kind it is.
+    var trialDate: Date? = nil
+    var waitingToPlead = false
+    var sanction = false
+
+    var noBond: Bool { (bond ?? "").hasPrefix("Held without bond") }
+    var bondAmount: Int? { Corrections.dollars(in: bond) }
+
+    /// A plain status at a glance, and the line under it.
+    var status: (title: String, detail: String) {
+        switch kind {
+        case .pretrial:
+            let title = noBond ? "Held without bond" : (bondAmount.map { "Can't post $\($0.formatted()) bond" } ?? "Held awaiting trial")
+            let next = trialDate.map { "Trial set for \(SentenceFormat.shortDate($0))" }
+                ?? (waitingToPlead ? "Waiting to plead at a calendar call" : "Awaiting a trial date")
+            let held = since.map { "in jail since \(SentenceFormat.shortDate($0))" } ?? "in jail"
+            return (title, "\(next) · \(held)")
+        case .sentenced:
+            let out = releaseDate.map { "Out \(SentenceFormat.shortDate($0))" } ?? "Release date pending"
+            return (sanction ? "Probation violation: short jail stay" : "Serving a jail sentence", out)
+        case .awaitingBed:
+            let bed = bedDate.map { "Transfer to state prison expected \(SentenceFormat.shortDate($0))" } ?? "Transfer date pending"
+            let release = releaseDate == .distantFuture ? "life sentence" : (releaseDate.map { "prison release \(SentenceFormat.shortDate($0))" } ?? "")
+            return ("Awaiting a state prison bed", release.isEmpty ? bed : "\(bed) · \(release)")
+        }
+    }
 
     var canRelease: Bool { kind != .awaitingBed && releasable }
 
@@ -203,6 +229,12 @@ enum Corrections {
         return min(0.95, max(0.03, r))
     }
 
+    /// The first dollar amount in a bond line, e.g. 2500 from "Held on a $2,500 secured bond".
+    static func dollars(in text: String?) -> Int? {
+        guard let text, let range = text.range(of: #"\$[0-9,]+"#, options: .regularExpression) else { return nil }
+        return Int(text[range].dropFirst().replacingOccurrences(of: ",", with: ""))
+    }
+
     static func money(_ dollars: Int) -> String {
         if dollars >= 1_000_000 { return String(format: "$%.1fM", Double(dollars) / 1_000_000) }
         if dollars >= 10_000 { return "$\(dollars / 1_000)K" }
@@ -216,5 +248,77 @@ extension Corrections {
         let c = charge.lowercased()
         return ["assault", "murder", "manslaughter", "robbery", "kidnapping", "rape", "sexual", "strangulation", "homicide",
                 "firearm", "weapon", "arson", "stalking", "communicating threats", "child abuse", "domestic"].contains { c.contains($0) }
+    }
+}
+
+/// One entry in a case's and a person's timeline: the crime, the investigation, the arrest, every night in and out
+/// of the jail, the bond hearing, trial settings, the verdict, transfer to prison, and release.
+struct LogEvent: Codable, Hashable, Identifiable {
+    enum Kind: String, Codable {
+        case crime, investigation, warrant, arrest, jailIn, jailOut, bond, trialSet, continued, court, verdict, prison, release, probation, early
+
+        var icon: String {
+            switch self {
+            case .crime: return "exclamationmark.octagon.fill"
+            case .investigation: return "magnifyingglass"
+            case .warrant: return "doc.text.fill"
+            case .arrest: return "light.beacon.max.fill"
+            case .jailIn: return "lock.fill"
+            case .jailOut: return "lock.open.fill"
+            case .bond: return "dollarsign.circle.fill"
+            case .trialSet: return "calendar.badge.clock"
+            case .continued: return "arrow.uturn.right.circle"
+            case .court: return "building.columns"
+            case .verdict: return "hammer.fill"
+            case .prison: return "bus.fill"
+            case .release: return "door.left.hand.open"
+            case .probation: return "person.badge.clock.fill"
+            case .early: return "door.left.hand.open"
+            }
+        }
+    }
+    var id = UUID()
+    var date: Date
+    var personID: UUID?
+    var name: String
+    var docket: String
+    var kind: Kind
+    var text: String
+}
+
+/// A stretch of time in custody, from the log.
+struct CustodyStay: Identifiable, Hashable {
+    var id: Date { start }
+    var start: Date
+    var end: Date?
+    var reason: String
+    var endReason: String?
+
+    func days(through today: Date) -> Int {
+        max(0, CourtCalendar.calendar.dateComponents([.day], from: CourtCalendar.calendar.startOfDay(for: start),
+                                                      to: CourtCalendar.calendar.startOfDay(for: end ?? today)).day ?? 0)
+    }
+
+    /// Pairs each night in with the next night out, oldest first.
+    static func stays(from events: [LogEvent]) -> [CustodyStay] {
+        var stays: [CustodyStay] = []
+        var open: CustodyStay?
+        for e in events.sorted(by: { $0.date < $1.date }) {
+            switch e.kind {
+            case .jailIn where open == nil:
+                open = CustodyStay(start: e.date, end: nil, reason: e.text)
+            case .jailOut, .early:
+                if var stay = open {
+                    stay.end = e.date
+                    stay.endReason = e.text
+                    stays.append(stay)
+                    open = nil
+                }
+            default:
+                break
+            }
+        }
+        if let open { stays.append(open) }
+        return stays
     }
 }
