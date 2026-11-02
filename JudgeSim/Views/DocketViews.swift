@@ -75,37 +75,10 @@ private struct WaitingToPlead: View {
     }
 }
 
-/// Every case set for trial that has no date yet, most urgent first. The judge sets each one's date.
-/// Crimes the paper is following that haven't led to an arrest. No names: nobody has been charged.
-private struct UnderInvestigation: View {
-    @EnvironmentObject private var game: GameState
-
-    var body: some View {
-        let today = game.today?.date ?? game.currentDate
-        VStack(alignment: .leading, spacing: 8) {
-            Label("Under investigation", systemImage: "magnifyingglass")
-                .font(.subheadline.weight(.semibold))
-            Text("Follow these in the paper. When someone is arrested, the case lands on this list.")
-                .font(.caption).foregroundStyle(.secondary)
-            ForEach(game.investigations) { item in
-                let days = max(0, CourtCalendar.calendar.dateComponents([.day], from: item.incident, to: today).day ?? 0)
-                HStack {
-                    Text(item.offense.prefix(1).uppercased() + String(item.offense.dropFirst()) + " in " + item.town)
-                        .font(.callout)
-                    Spacer()
-                    Text(days == 1 ? "1 day" : "\(days) day\(days == 1 ? "" : "s")").font(.caption).foregroundStyle(.secondary)
-                }
-            }
-        }
-        .card()
-    }
-}
-
 struct AwaitingView: View {
     @EnvironmentObject private var game: GameState
     @State private var setting: AwaitingCase?
     @State private var caseFile: CourtCase?
-    @State private var suggestions: [(id: UUID, date: Date)] = []
     @State private var showSuggestions = false
     @State private var reassigning: AwaitingCase?
 
@@ -120,7 +93,6 @@ struct AwaitingView: View {
                     if !game.awaiting.isEmpty {
                         Button {
                             Haptics.tap()
-                            suggestions = game.suggestedDates()
                             showSuggestions = true
                         } label: {
                             Label("Suggest dates for all", systemImage: "wand.and.stars")
@@ -134,7 +106,6 @@ struct AwaitingView: View {
                     Text("Nothing is waiting. New cases come in as the days go by.")
                         .font(.callout).foregroundStyle(.secondary).card()
                 }
-                if !game.investigations.isEmpty { UnderInvestigation() }
                 if !game.arraignQueue.isEmpty { WaitingToPlead() }
                 if !game.heldCases.isEmpty { AwayForEvaluation() }
                 ForEach(game.awaitingByUrgency) { item in
@@ -150,7 +121,7 @@ struct AwaitingView: View {
             SetDateSheet(item: item)
         }
         .sheet(isPresented: $showSuggestions) {
-            SuggestionsSheet(suggestions: suggestions)
+            SuggestionsSheet()
         }
         .confirmationDialog("Reassign this case to another judge?",
                             isPresented: Binding(get: { reassigning != nil }, set: { if !$0 { reassigning = nil } }),
@@ -289,7 +260,8 @@ private struct SetDateSheet: View {
 private struct SuggestionsSheet: View {
     @EnvironmentObject private var game: GameState
     @Environment(\.dismiss) private var dismiss
-    let suggestions: [(id: UUID, date: Date)]
+    @State private var suggestions: [(id: UUID, date: Date)] = []
+    @State private var loaded = false
 
     var body: some View {
         NavigationStack {
@@ -297,7 +269,7 @@ private struct SuggestionsSheet: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Most urgent first, on the first day with room under your limits once each case is ready. Nothing is set until you confirm.")
                         .font(.caption).foregroundStyle(.secondary)
-                    if suggestions.isEmpty {
+                    if loaded && suggestions.isEmpty {
                         Text("No day in the next year has room under your limits. Raise your limits under My Schedule.")
                             .font(.callout).foregroundStyle(Theme.bad)
                     }
@@ -329,6 +301,10 @@ private struct SuggestionsSheet: View {
                 .padding()
             }
             .background(Theme.background)
+            .onAppear {
+                suggestions = game.suggestedDates()
+                loaded = true
+            }
             .navigationTitle("Suggested Dates")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }

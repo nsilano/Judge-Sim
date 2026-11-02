@@ -648,23 +648,27 @@ struct DayPickerList: View {
     var excluding: Date? = nil
     /// Days before this aren't offered: a case not ready yet, for one.
     var earliest: Date? = nil
+    /// How many sitting days ahead can be picked (at least about six months' worth).
     var count = 30
     /// Days that don't work for someone the trial needs, with the reason.
     var conflicts: [String: String] = [:]
     @Binding var choice: Date?
+    /// The month on screen, as its first day.
+    @State private var month: Date?
 
-    private var days: [Date] {
-        var out: [Date] = []
+    /// The court's current date, which every choice is measured from.
+    private var today: Date { game.today?.date ?? game.currentDate }
+
+    /// The sitting days that can be chosen.
+    private var allowed: Set<Date> {
+        var out = Set<Date>()
         var day = game.nextSittingDay(onOrAfter: max(earliest ?? game.nextCourtDate, game.nextCourtDate))
-        while out.count < count {
-            out.append(day)
+        while out.count < max(count, 130) {
+            out.insert(CourtCalendar.calendar.startOfDay(for: day))
             day = game.nextSittingDay(after: day)
         }
         return out
     }
-
-    /// The court's current date, which every choice is measured from.
-    private var today: Date { game.today?.date ?? game.currentDate }
 
     /// "tomorrow", "in 9 days", "in 3 weeks (22 days)", "in about 2 months (61 days)".
     static func distance(from today: Date, to day: Date) -> String {
@@ -677,48 +681,217 @@ struct DayPickerList: View {
         return "in about \(Int((Double(days) / 30.4).rounded())) months (\(days) days)"
     }
 
+    private static func firstOfMonth(_ date: Date) -> Date {
+        let cal = CourtCalendar.calendar
+        return cal.date(from: cal.dateComponents([.year, .month], from: date)) ?? date
+    }
+
     var body: some View {
-        VStack(spacing: 6) {
+        let open = allowed
+        let first = month ?? Self.firstOfMonth(choice ?? open.min() ?? today)
+        VStack(alignment: .leading, spacing: 10) {
             Label("Today is \(SentenceFormat.date(today))", systemImage: "calendar")
                 .font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            ForEach(days, id: \.self) { day in
-                let limit = game.schedule.limit(on: day)
-                let set = game.counts(on: day)
-                let used = kind == .trial ? set.trials : set.hearings
-                let cap = kind == .trial ? limit.trials : limit.hearings
-                let full = used >= cap
-                let current = excluding.map { CourtCalendar.isSameDay($0, day) } ?? false
-                Button { Haptics.tap(); choice = day } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: choice == day ? "largecircle.fill.circle" : "circle").foregroundStyle(Theme.gold)
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack(spacing: 6) {
-                                Text(CourtCalendar.dayTitle(day)).font(.subheadline.weight(.semibold))
-                                Text(Self.distance(from: today, to: day)).font(.caption).foregroundStyle(Theme.gold)
-                            }
-                            Text("\(set.trials)/\(limit.trials) trials · \(set.hearings)/\(limit.hearings) hearings" + (current ? " · now set here" : ""))
-                                .font(.caption).foregroundStyle(.secondary)
-                            if let conflict = conflicts[CourtSchedule.key(day)] {
-                                Label("Conflict: \(conflict)", systemImage: "exclamationmark.triangle.fill")
-                                    .font(.caption2).foregroundStyle(.orange)
-                            }
-                        }
-                        Spacer()
-                        Text(full ? "Full" : "\(cap - used) open")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(full ? Theme.bad : Theme.good)
-                    }
-                    .padding(10)
-                    .background(RoundedRectangle(cornerRadius: 10).fill(choice == day ? Theme.raised : Theme.surface))
-                }
-                .buttonStyle(.plain)
-                .disabled(current)
-                .opacity(current ? 0.5 : 1)
+            PickerMonthHeader(month: first, canGoBack: first > Self.firstOfMonth(today)) { step in
+                month = CourtCalendar.calendar.date(byAdding: .month, value: step, to: first)
             }
-            Text("A full day can still take it; you'll just be over your limit and the day will run long.")
-                .font(.caption2).foregroundStyle(.secondary)
+            PickerMonthGrid(month: first, today: today, allowed: open, choice: $choice, cell: cellState)
+            if let day = choice {
+                PickerDayDetail(day: day, today: today, kind: kind, conflict: conflicts[CourtSchedule.key(day)],
+                          current: excluding.map { CourtCalendar.isSameDay($0, day) } ?? false)
+            } else {
+                Text("Pick a day. Green has room, red is full, orange has a conflict for someone the case needs; gray days the court doesn't sit or the case isn't ready.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
+    }
+
+    /// How a day looks on the grid.
+    private func cellState(_ day: Date) -> PickerDayCell.Status {
+        if let excluding, CourtCalendar.isSameDay(excluding, day) { return .current }
+        if conflicts[CourtSchedule.key(day)] != nil { return .conflict }
+        let limit = game.schedule.limit(on: day)
+        let set = game.counts(on: day)
+        let used = kind == .trial ? set.trials : set.hearings
+        let cap = kind == .trial ? limit.trials : limit.hearings
+        return used >= cap ? .full : .open
+    }
+}
+
+private struct PickerMonthHeader: View {
+    let month: Date
+    let canGoBack: Bool
+    let step: (Int) -> Void
+
+    var body: some View {
+        HStack {
+            Button { step(-1) } label: { Image(systemName: "chevron.left") }
+                .disabled(!canGoBack)
+            Spacer()
+            Text(month.formatted(.dateTime.month(.wide).year())).font(.headline)
+            Spacer()
+            Button { step(1) } label: { Image(systemName: "chevron.right") }
+        }
+        .buttonStyle(.bordered)
+        .tint(Theme.gold)
+    }
+}
+
+struct PickerDayCell: View {
+    enum Status { case open, full, conflict, current }
+    let day: Date
+    let number: Int
+    let selectable: Bool
+    let state: Status
+    let selected: Bool
+    let isToday: Bool
+
+    private var dot: Color {
+        switch state {
+        case .open: return Theme.good
+        case .full: return Theme.bad
+        case .conflict: return .orange
+        case .current: return Theme.gold
+        }
+    }
+
+    private var textColor: Color {
+        if selected { return Theme.background }
+        return selectable ? Theme.text : Color.secondary.opacity(0.45)
+    }
+
+    private var fillColor: Color {
+        if selected { return Theme.gold }
+        return selectable ? Theme.surface : Color.clear
+    }
+
+    private var dotColor: Color { selectable ? dot : Color.clear }
+
+    private var ringColor: Color { isToday ? Theme.gold : Color.clear }
+
+    var body: some View {
+        VStack(spacing: 3) {
+            Text("\(number)")
+                .font(.subheadline.monospacedDigit())
+                .fontWeight(selected ? .bold : .regular)
+                .foregroundStyle(textColor)
+            Circle().fill(dotColor).frame(width: 5, height: 5)
+        }
+        .frame(maxWidth: .infinity, minHeight: 40)
+        .background(RoundedRectangle(cornerRadius: 8).fill(fillColor))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(ringColor, lineWidth: 1.5))
+    }
+}
+
+private struct PickerMonthGrid: View {
+    let month: Date
+    let today: Date
+    let allowed: Set<Date>
+    @Binding var choice: Date?
+    let cell: (Date) -> PickerDayCell.Status
+
+    private var slots: [Date?] {
+        let cal = CourtCalendar.calendar
+        let count = cal.range(of: .day, in: .month, for: month)?.count ?? 30
+        let lead = (cal.component(.weekday, from: month) - cal.firstWeekday + 7) % 7
+        var out: [Date?] = Array(repeating: nil, count: lead)
+        for d in 0..<count { out.append(cal.date(byAdding: .day, value: d, to: month)) }
+        return out
+    }
+
+    @ViewBuilder
+    private func slot(_ day: Date?) -> some View {
+        if let day {
+            dayButton(CourtCalendar.calendar.startOfDay(for: day))
+        } else {
+            Color.clear.frame(height: 40)
+        }
+    }
+
+    private func dayButton(_ key: Date) -> some View {
+        let status: PickerDayCell.Status = cell(key)
+        let selectable: Bool = allowed.contains(key) && status != .current
+        let isChosen: Bool = choice.map { CourtCalendar.isSameDay($0, key) } ?? false
+        let number: Int = CourtCalendar.calendar.component(.day, from: key)
+        let isToday: Bool = CourtCalendar.isSameDay(key, today)
+        return Button {
+            Haptics.tap()
+            choice = key
+        } label: {
+            PickerDayCell(day: key, number: number, selectable: selectable, state: status, selected: isChosen, isToday: isToday)
+        }
+        .buttonStyle(.plain)
+        .disabled(!selectable)
+    }
+
+    private var weekdayLetters: [String] {
+        let cal = CourtCalendar.calendar
+        let symbols = cal.veryShortWeekdaySymbols
+        return (0..<7).map { symbols[(cal.firstWeekday - 1 + $0) % 7] }
+    }
+
+    var body: some View {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
+        LazyVGrid(columns: columns, spacing: 4) {
+            ForEach(0..<7, id: \.self) { i in
+                Text(weekdayLetters[i]).font(.caption2.weight(.bold)).foregroundStyle(.secondary)
+            }
+            ForEach(Array(slots.enumerated()), id: \.offset) { item in
+                slot(item.element)
+            }
+        }
+    }
+}
+
+/// What the chosen day looks like: how far out, what's already on it, and any conflict.
+private struct PickerDayDetail: View {
+    @EnvironmentObject private var game: GameState
+    let day: Date
+    let today: Date
+    let kind: DayPickerList.Kind
+    let conflict: String?
+    let current: Bool
+
+    private var used: Int {
+        let set = game.counts(on: day)
+        return kind == .trial ? set.trials : set.hearings
+    }
+
+    private var cap: Int {
+        let limit = game.schedule.limit(on: day)
+        return kind == .trial ? limit.trials : limit.hearings
+    }
+
+    private var full: Bool { used >= cap }
+
+    private var openText: String { full ? "Full" : "\(cap - used) open" }
+
+    private var loadText: String {
+        let set = game.counts(on: day)
+        let limit = game.schedule.limit(on: day)
+        return "\(set.trials)/\(limit.trials) trials · \(set.hearings)/\(limit.hearings) hearings"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(CourtCalendar.dayTitle(day)).font(.subheadline.weight(.semibold))
+                Text(DayPickerList.distance(from: today, to: day)).font(.caption).foregroundStyle(Theme.gold)
+                Spacer()
+                Text(openText).font(.caption.weight(.semibold)).foregroundStyle(full ? Theme.bad : Theme.good)
+            }
+            Text(loadText).font(.caption).foregroundStyle(.secondary)
+            if let conflict {
+                Label("Conflict: \(conflict)", systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption2).foregroundStyle(.orange)
+            }
+            if full {
+                Text("A full day can still take it; you'll be over your limit and the day will run long.")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.raised))
     }
 }
 
