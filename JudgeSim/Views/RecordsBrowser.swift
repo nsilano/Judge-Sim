@@ -247,7 +247,8 @@ struct PersonTimeline: View {
         if let release = person.releaseDate, release != .distantFuture, person.status == .incarcerated {
             list.append(Event(date: release, icon: "door.left.hand.open", color: .secondary, text: "Projected release"))
         }
-        return list.sorted { $0.date > $1.date }
+        // Oldest first, so the story reads top to bottom in the order it happened.
+        return list.sorted { $0.date < $1.date }
     }
 
     static func color(for kind: LogEvent.Kind) -> Color {
@@ -263,7 +264,8 @@ struct PersonTimeline: View {
 
     var body: some View {
         let all = events
-        let shown = limit.map { Array(all.prefix($0)) } ?? all
+        // A short preview shows the latest events, still in the order they happened.
+        let shown = limit.map { Array(all.suffix($0)) } ?? all
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 SectionTitle(text: "Timeline", icon: "clock.arrow.circlepath")
