@@ -44,6 +44,8 @@ struct CareerStats: Codable, Hashable {
     /// How the public has taken the court's rulings in cases it followed: up when the outcome matched what it wanted,
     /// down when it didn't. Fades by half each New Year.
     var communityStanding: Int? = nil
+    /// The running effect of recent rulings on each rating (optional for older saves).
+    var ledger: StandingLedger? = nil
     /// Cases this judge handed to another judge.
     var delegated: Int? = nil
     // The judge's corrections record, which follows the judge from county to county (optional for older saves).
@@ -900,6 +902,12 @@ final class GameState: ObservableObject {
         guard !due.isEmpty else { return }
         pendingRearrests.removeAll { $0.date <= cal.startOfDay(for: date) }
         for r in due {
+            let name = (scheduled.map(\.entry) + awaiting.map(\.entry)).lazy.compactMap { entry -> String? in
+                if case .trial(let t) = entry.matter, t.id == r.caseID { return t.defendant.name } else { return nil }
+            }.first
+            if r.arrestText.contains("new charge") {
+                standing(.rearrestedOnRelease, "Arrested again while out on your bond" + (name.map { " — \($0)" } ?? ""), on: r.date)
+            }
             func jail(_ entry: inout DocketEntry) {
                 guard case .trial(var c) = entry.matter, c.id == r.caseID, var bg = c.background, !bg.isJailed else { return }
                 // Someone who can make the doubled bond posts it and is out again the same day.
@@ -1919,6 +1927,7 @@ final class GameState: ObservableObject {
                let entered = person.appearances.last(where: { $0.docket == prior.docket }) {
                 let incident = cal.date(byAdding: .day, value: -rng.int(30...70), to: date) ?? date
                 stats.chargedAgainAfterRelease = (stats.chargedAgainAfterRelease ?? 0) + 1
+                standing(.reoffendedAfterRuling, "Charged again after your sentence — \(person.name)", on: date)
                 noteRearrest(person.id, on: incident)
                 let fitting = FollowUpCases.newCharges.filter { FollowUpCases.fits($0, age: person.age(on: date)) }
                 reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: (fitting.isEmpty ? FollowUpCases.newCharges : fitting).shuffled(using: &rng),
@@ -2023,6 +2032,7 @@ final class GameState: ObservableObject {
             if jailed && held >= 120 && settable >= 30 {
                 once("jail120") {
                     stats.delayedCases = (stats.delayedCases ?? 0) + 1
+                    standing(.caseDelayed, "A case sat too long waiting for a date — \(c.defendant.name)", on: date)
                     post(NewsItem(date: date, kind: .community, headline: "\(c.defendant.name) held \(held) day\(held == 1 ? "" : "s") with no trial date",
                                   body: "\(c.defendant.name) has been in the Hollis County jail for \(held) day\(held == 1 ? "" : "s") on \(c.charges.first?.law.title.lowercased() ?? "the charges"), and the case has been ready for trial for \(settable) day\(settable == 1 ? "" : "s") with no date from Judge \(judge). Defense lawyers say the wait is becoming a constitutional problem.",
                                   docket: c.docket, prominence: 1))
@@ -2047,6 +2057,7 @@ final class GameState: ObservableObject {
                     let note = "New incident reported while the case waited for a trial date: \(victim) told deputies \(c.defendant.lastName) came to \(victim)'s home again."
                     awaiting[index].entry.note = ((awaiting[index].entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces)
                     stats.delayedCases = (stats.delayedCases ?? 0) + 1
+                    standing(.caseDelayed, "A case sat too long waiting for a date — \(c.defendant.name)", on: date)
                     post(NewsItem(date: date, kind: .arrest, headline: "\(victim) reports new contact from \(c.defendant.name) as case waits",
                                   body: "\(victim) told deputies that \(c.defendant.name), who is free while charges are pending in Hollis County Superior Court, came to \(victim)'s home this week. The case has waited \(waited) day\(waited == 1 ? "" : "s") for a trial date before Judge \(judge).",
                                   docket: c.docket, prominence: 2))
@@ -2063,6 +2074,7 @@ final class GameState: ObservableObject {
             if settable >= 180 {
                 once("halfYear") {
                     stats.delayedCases = (stats.delayedCases ?? 0) + 1
+                    standing(.caseDelayed, "A case sat too long waiting for a date — \(c.defendant.name)", on: date)
                     post(NewsItem(date: date, kind: .community, headline: "Six months on, no trial date in \(c.caption)",
                                   body: "The case against \(c.defendant.name) has waited \(waited) day\(waited == 1 ? "" : "s") for a trial date in Hollis County Superior Court." + (c.victimName.map { " \($0)'s family says the wait has been hard." } ?? ""),
                                   docket: c.docket, prominence: 1))
@@ -2283,8 +2295,10 @@ final class GameState: ObservableObject {
                 // The motion says which continuance it would be: the "third" means two came before.
                 let before = ["first", "second", "third", "fourth", "fifth"].firstIndex { m.summary.contains("be the \($0) continuance") } ?? 1
                 if choice == 0 {
+                    if before + 1 >= 3 { standing(.repeatedContinuance, "Granted a \(["", "first", "second", "third", "fourth", "fifth", "sixth"][min(6, before + 1)]) continuance — \(c.defendant.name)", on: call.date) }
                     setFor(c, weeks: 4, note: "Continued at the calendar call on \(heard) on the defense's motion.", continuances: before + 1)
                 } else {
+                    standing(.continuanceDenied, "Denied a continuance — \(c.defendant.name)", on: call.date)
                     // Denied: the trial date stands; with none yet, the case is ready now and waits for the judge to set one.
                     let note = "Motion to continue denied at the calendar call on \(heard); ready for trial."
                     if !keepDate(c, note: note, continuances: before, from: call.date) {
@@ -2320,6 +2334,7 @@ final class GameState: ObservableObject {
             case .failureToAppear:
                 switch choice {
                 case 0:
+                    standing(.ftaOrderForArrest, "Order for arrest after a missed court date — \(c.defendant.name)", on: call.date)
                     orderForArrest(c, missed: "Failed to appear at the calendar call on \(heard)",
                                    note: "Order for arrest issued at the calendar call on \(heard) after a failure to appear.")
                 case 1:
@@ -2335,6 +2350,7 @@ final class GameState: ObservableObject {
                                        note: "Never appeared on \(heard); order for arrest issued after the calendar call.")
                     }
                 default:
+                    standing(.ftaExcused, "Excused a missed court date — \(c.defendant.name)", on: call.date)
                     setFor(c, weeks: 3, note: "Continued at the calendar call on \(heard) after a failure to appear; new notice sent.", continuances: 1)
                 }
             case .firstAppearance, .bondModification:
@@ -2388,6 +2404,7 @@ final class GameState: ObservableObject {
                         held.background = bg
                     }
                     log(.bond, c, on: call.date, "Bond hearing: held without bond under Iryna's Law.")
+                    standing(.heldWithoutBond, "Held without bond — \(c.defendant.name), \(c.charges.first?.law.title.lowercased() ?? "")", on: call.date)
                     var kinds = stats.bondKinds ?? [:]
                     kinds["Held without bond", default: 0] += 1
                     stats.bondKinds = kinds
@@ -2558,7 +2575,18 @@ final class GameState: ObservableObject {
         kinds[kind, default: 0] += 1
         stats.bondKinds = kinds
         let money = bond.money
+        let charge = c.charges.first?.law
+        let violentFelony = c.charges.contains { Corrections.soundsViolent($0.law.title) && ($0.law.ncClass?.isFelony ?? false) }
+        let minor = !c.charges.contains { Corrections.soundsViolent($0.law.title) }
+            && !c.charges.contains { [.A, .B1, .B2, .C, .D, .E, .F, .G].contains($0.law.ncClass ?? .I) }
+        let who = "\(c.defendant.name), \(charge?.title.lowercased() ?? "the charges")"
         if money.canMake(amount) {
+            if violentFelony {
+                let rule: StandingRule = amount == 0 ? .releasedViolentNoMoney : (monitored ? .releasedViolentMonitored : .releasedViolentOnBond)
+                standing(rule, "Released on \(kind.lowercased()) — \(who)", on: date)
+            } else if amount == 0 {
+                standing(.releasedLowRisk, "Released on \(kind.lowercased()) — \(who)", on: date)
+            }
             let viaBondsman = money.throughBondsman(amount)
             log(.bond, c, on: date, condition.hasPrefix("release to") ? "Bond hearing: released to" + condition.dropFirst("release to".count) + "." : "Bond hearing: released on \(condition).")
             if c.background?.isJailed == true {
@@ -2605,6 +2633,11 @@ final class GameState: ObservableObject {
             bg.onRelease = false
             bg.heldOnCourtBond = true
             stats.bondsNotPosted = (stats.bondsNotPosted ?? 0) + 1
+            if violentFelony {
+                standing(.heldViolent, "Held on a bond they couldn't post — \(who)", on: date)
+            } else if minor {
+                standing(.heldOnUnaffordableBond, "Held on a bond they couldn't post — \(who)", on: date)
+            }
             bg.bondStatus = "Held on \(condition) set on \(heard); unable to post it. In custody for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
             held.background = bg
             schedule(held, rng.int(5...8), "In custody since \(heard): couldn't post \(condition).", 0)
@@ -3110,16 +3143,28 @@ final class GameState: ObservableObject {
                               docket: courtCase.docket, prominence: 0, section: "Local"))
             }
         }
+        let violentCase = courtCase.charges.contains { Corrections.soundsViolent($0.law.title) }
+        let felonyCase = courtCase.charges.contains { $0.law.ncClass?.isFelony ?? false }
+        let who = "\(courtCase.defendant.name), \(courtCase.charges.first?.law.title.lowercased() ?? "the charges")"
         if let position = outcome.sentencePosition {
             switch position {
-            case .below: stats.belowPresumptive += 1
-            case .within: stats.withinPresumptive += 1
-            case .above: stats.abovePresumptive += 1
+            case .below:
+                stats.belowPresumptive += 1
+                standing(violentCase ? .lenientViolentSentence : .mercyNonviolent, "Sentenced below the range — \(who)")
+            case .within:
+                stats.withinPresumptive += 1
+                standing(.byTheBook, "Sentenced within the range — \(who)")
+            case .above:
+                stats.abovePresumptive += 1
+                standing(violentCase ? .toughViolent : .harshNonviolent, "Sentenced above the range — \(who)")
             }
         }
         let activeImposed = outcome.custodyMonths > 0
             || outcome.newPriors.contains { $0.sentence.hasSuffix(" active") || $0.sentence.hasPrefix("Life") }
-        if activeImposed { stats.activeSentences += 1 } else if outcome.newProbation != nil && outcome.convicted { stats.suspendedSentences += 1 }
+        if activeImposed { stats.activeSentences += 1 } else if outcome.newProbation != nil && outcome.convicted {
+            stats.suspendedSentences += 1
+            if violentCase && felonyCase { standing(.probationViolent, "Probation for a violent felony — \(who)") }
+        }
         if var day = today {
             var tally = day.tally ?? CourtDay.Tally()
             if outcome.convicted { tally.convictions += 1 } else { tally.withoutConviction += 1 }
@@ -3274,7 +3319,7 @@ final class GameState: ObservableObject {
         let reaction = Community.reaction(courtCase, convicted: outcome.convicted, active: activeImposed, position: outcome.sentencePosition,
                                           judgeLast: judgeName.map(lastName) ?? "the judge", date: currentDate)
         if let news = reaction.news {
-            stats.communityStanding = (stats.communityStanding ?? 0) + reaction.delta
+            standing(.publicReaction(reaction.delta), (reaction.delta < 0 ? "The public disliked your ruling — " : "The public approved of your ruling — ") + courtCase.caption)
             post(news)
         }
         let appellant = (outcome.appealNotice ?? "").contains("The State") ? "the State" : "the defendant"
@@ -3433,10 +3478,16 @@ final class GameState: ObservableObject {
             }
             if let followUp = event.reoffense {
                 reoffenseQueue.append(followUp)
-                if followUp.note.hasPrefix("You ") { stats.chargedAgainAfterRelease = (stats.chargedAgainAfterRelease ?? 0) + 1 }
+                if followUp.note.hasPrefix("You ") {
+                    stats.chargedAgainAfterRelease = (stats.chargedAgainAfterRelease ?? 0) + 1
+                    standing(.reoffendedAfterRuling, "Charged again after you let them go" + (event.personID.flatMap { id in people.first { $0.id == id }?.name }.map { " — \($0)" } ?? ""), on: event.due)
+                }
             }
             if let relief = event.reliefMotion { reliefQueue.append(relief) }
-            if item.kind == .exoneration { stats.exonerations += 1 }
+            if item.kind == .exoneration {
+                stats.exonerations += 1
+                standing(.exoneration, "A conviction from your court fell apart", on: event.due)
+            }
             if let personID = event.personID, let index = people.firstIndex(where: { $0.id == personID }) {
                 switch event.effect {
                 case .releasePerson:
@@ -3537,6 +3588,11 @@ final class GameState: ObservableObject {
                         appeals[index].opinion = event.news.body
                         appeals[index].holdings = Appeals.holdings(for: appeals[index], reversed: appeals[index].wasReversed)
                         freshAppeals.append(appeals[index].id)
+                        if appeals[index].wasReversed {
+                            standing(.reversed, "Reversed on appeal — \(appeals[index].caption)", on: event.due)
+                        } else if !appeals[index].isMoot && appeals[index].result != "Appeal dismissed" {
+                            standing(.affirmed, "Affirmed on appeal — \(appeals[index].caption)", on: event.due)
+                        }
                     } else {
                         appeals[index].followUps.append("\(SentenceFormat.shortDate(event.due)): \(event.news.headline)")
                         if followUp { appeals[index].result = Appeals.status(for: event) }
@@ -3555,6 +3611,7 @@ final class GameState: ObservableObject {
         returnHeldCases(on: date)
         carryOutRearrests(on: date)
         updateCorrections(on: date, rng: &rng)
+        standingDay(on: date, rng: &rng)
         if weekly { weatherAndAssignments(on: date, rng: &rng) }
         // The county changes week to week.
         if weekly {
@@ -4099,7 +4156,7 @@ final class GameState: ObservableObject {
                     corrections?.notices[index].outcome = "The sheriff released \(released) \(released == 1 ? "person" : "people") on \(shortDate)"
                         + (ordered > 0 ? ", after you ordered \(ordered) release\(ordered == 1 ? "" : "s")." : ".")
                     if released > 0 {
-                        stats.communityStanding = (stats.communityStanding ?? 0) - 2
+                        standing(.sheriffReleased, "The sheriff released \(released) from the crowded jail", on: date)
                         post(NewsItem(date: date, kind: .community, headline: "Sheriff releases \(released) early from crowded \(county.name) jail",
                                       body: "\(sheriff) released \(released) \(released == 1 ? "inmate" : "inmates") early this week to bring the jail back under capacity. The jail held \(jail) of the Superior Court's defendants in space for \(beds). \"I gave the court notice,\" the sheriff said. \"We can't stack people in the hallways.\"",
                                       prominence: 2))
@@ -4117,7 +4174,7 @@ final class GameState: ObservableObject {
             // The paper writes about the first notice in a while, not every one.
             let newsworthy = lastRelease.map { date.timeIntervalSince($0.issued) > 45 * 86_400 } ?? true
             if newsworthy {
-            stats.communityStanding = (stats.communityStanding ?? 0) - 1
+            standing(.jailNotice, "The sheriff warned the jail is over capacity", on: date)
             post(NewsItem(date: date, kind: .community, headline: "\(county.name) jail over capacity; sheriff warns of early releases",
                           body: "The \(county.name) jail is holding \(jail) Superior Court defendants in space for \(beds), and \(sheriff) has notified Judge \(lastName(judgeName ?? "")) that early releases will begin in \(Corrections.noticeDays) days if the count doesn't come down.",
                           prominence: 2))
@@ -4208,6 +4265,11 @@ final class GameState: ObservableObject {
 
     private func releaseEarly(_ inmate: JailInmate, byJudge: Bool, rng: inout SeededRNG) {
         let date = currentDate
+        if byJudge && inmate.kind != .awaitingBed {
+            let violent = Corrections.soundsViolent(inmate.charge)
+            standing(violent ? .earlyReleaseViolent : .earlyReleaseNonviolent,
+                     "Released early from the jail — \(inmate.name), \(inmate.charge.lowercased())", on: date)
+        }
         let cal = CourtCalendar.calendar
         let shortDate = SentenceFormat.shortDate(date)
         let judge = lastName(judgeName ?? "")
@@ -4286,6 +4348,49 @@ final class GameState: ObservableObject {
                                  victimName: nil, incident: incident, note: note, priorOffense: inmate.charge, priorDate: date)))
     }
 
+    /// Moves the judge's standing by one of the rules in StandingRule, and keeps the reason for the Standing card.
+    func standing(_ rule: StandingRule, _ reason: String, on date: Date? = nil) {
+        var ledger = stats.ledger ?? StandingLedger()
+        ledger.apply(rule.shift(on: date ?? currentDate, reason))
+        stats.ledger = ledger
+    }
+
+    /// The day's turn of standing: recent rulings fade a little, a crowded jail wears on the county, and when the court
+    /// has lost every quarter, the paper starts covering what its rulings are costing the county.
+    private func standingDay(on date: Date, rng: inout SeededRNG) {
+        var ledger = stats.ledger ?? StandingLedger()
+        ledger.fade()
+        if let state = corrections, let day = state.log.last, day.jail > state.beds {
+            ledger.apply(StandingRule.jailOverCapacityDay.shift(on: date, "Jail over capacity"), record: false)
+        }
+        stats.ledger = ledger
+        guard let county, let judgeName else { return }
+        let live = liveSurvey
+        let ratings = [live.prosecutors, live.defenseBar, live.overall, live.publicApproval]
+        let judge = lastName(judgeName)
+        if ratings.allSatisfy({ $0 < StandingCoverage.lowMark }) {
+            let gap = ledger.lastCoverage.map { CourtCalendar.calendar.dateComponents([.day], from: $0, to: date).day ?? 0 } ?? .max
+            guard gap >= StandingCoverage.daysBetween else { return }
+            // The story is about whatever has hurt the court most in recent weeks.
+            var byTopic: [StandingTopic: Double] = [:]
+            for s in ledger.recent.prefix(20) { byTopic[s.topic, default: 0] += s.publicApproval + s.prosecutors + s.defense + s.overall }
+            if let state = corrections, let day = state.log.last, day.jail > state.beds { byTopic[.crowding, default: 0] -= 6 }
+            let topic = byTopic.min { $0.value < $1.value }?.key ?? .release
+            let example = ledger.recent.first { $0.topic == topic && $0.reason.contains(" — ") }?.reason.components(separatedBy: " — ").last
+            let jail = corrections.flatMap { state in state.log.last.map { (held: $0.jail, beds: state.beds) } }
+            let story = StandingCoverage.story(topic: topic, judge: judge, county: county.name.replacingOccurrences(of: " County", with: ""),
+                                               example: example, jail: jail, rng: &rng)
+            post(NewsItem(date: date, kind: .community, headline: story.headline, body: story.body, prominence: 2))
+            ledger.lastCoverage = date
+            ledger.covering = true
+        } else if ledger.covering && ratings.allSatisfy({ $0 >= StandingCoverage.recoveredMark }) {
+            let story = StandingCoverage.turnaround(judge: judge, county: county.name.replacingOccurrences(of: " County", with: ""))
+            post(NewsItem(date: date, kind: .community, headline: story.headline, body: story.body, prominence: 1))
+            ledger.covering = false
+        }
+        stats.ledger = ledger
+    }
+
     /// A new arrest of someone this court let go: counted against the disposition that freed the person.
     private func noteRearrest(_ personID: UUID, on date: Date) {
         // The arrest and the indictment that follows are one new case, counted once.
@@ -4296,7 +4401,12 @@ final class GameState: ObservableObject {
         if let index = corrections?.releases.lastIndex(where: { $0.personID == personID && $0.rearrested == nil && $0.date <= date }) {
             corrections?.releases[index].rearrested = date
             stats.earlyReleaseRearrests = (stats.earlyReleaseRearrests ?? 0) + 1
-            stats.communityStanding = (stats.communityStanding ?? 0) - ((corrections?.releases[index].byJudge ?? false) ? 2 : 1)
+            let name = people.first { $0.id == personID }?.name
+            if corrections?.releases[index].byJudge ?? false {
+                standing(.rearrestedAfterEarlyRelease, "Arrested again after you released them early" + (name.map { " — \($0)" } ?? ""), on: date)
+            } else {
+                standing(.reoffendedAfterRuling, "Arrested again after the sheriff's early release" + (name.map { " — \($0)" } ?? ""), on: date)
+            }
         }
     }
 

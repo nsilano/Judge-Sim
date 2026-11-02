@@ -393,6 +393,7 @@ struct ChambersView: View {
                     Text("Affirmed on appeal: \(affirmed)% of decided appeals").font(.caption).foregroundStyle(.secondary)
                 }
                 ForEach(survey.comments, id: \.self) { Text($0).font(.callout).italic() }
+                StandingRecentList(shifts: Array((game.stats.ledger?.recent ?? []).prefix(6)))
                 if !earlierSurveys.isEmpty {
                     Text("Year-end surveys: " + earlierSurveys.prefix(5).map { "\(String($0.year)): \($0.overall)" }.joined(separator: " · "))
                         .font(.caption).foregroundStyle(.secondary)
@@ -551,3 +552,38 @@ struct CourthouseView: View {
 }
 
 // CaseRecordDetail and PersonDetail live in RecordDocuments.swift and PersonRecordView.swift.
+
+
+/// The latest rulings that moved the judge's standing, newest first.
+private struct StandingRecentList: View {
+    let shifts: [StandingShift]
+
+    var body: some View {
+        if !shifts.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("What moved it lately").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                ForEach(shifts) { StandingShiftRow(shift: $0) }
+            }
+            .padding(.top, 4)
+        }
+    }
+}
+
+private struct StandingShiftRow: View {
+    let shift: StandingShift
+
+    private var up: Bool { shift.biggest.change >= 0 }
+    private var label: String { "\(shift.biggest.group) \(up ? "up" : "down")" }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Image(systemName: up ? "arrow.up" : "arrow.down")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(up ? Theme.good : Theme.bad)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(shift.reason).font(.caption).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: "\(SentenceFormat.shortDate(shift.date)) · \(label)").font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+    }
+}
