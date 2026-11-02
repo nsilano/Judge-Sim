@@ -864,8 +864,16 @@ final class GameState: ObservableObject {
         let cal = CourtCalendar.calendar
         let today = cal.startOfDay(for: date)
         let incident = cal.date(byAdding: .day, value: -1, to: today) ?? today
-        let atScene = rng.chance(story ? 0.3 : 0.45)
-        let arrest = atScene ? incident : (cal.date(byAdding: .day, value: story ? rng.int(3...24) : rng.int(2...12), to: incident) ?? incident)
+        // Most crimes aren't solved on the spot. Some arrests come at the scene, more within days or weeks, and a fair
+        // share only after months of work. (Traffic stops and search warrants still end in an arrest that day: the
+        // investigation file keeps those.)
+        let roll = rng.int(1...100)
+        let delay: Int
+        if roll <= (story ? 15 : 20) { delay = 0 }
+        else if roll <= 45 { delay = rng.int(1...7) }
+        else if roll <= 75 { delay = rng.int(8...30) }
+        else { delay = rng.int(31...120) }
+        let arrest = cal.date(byAdding: .day, value: delay, to: incident) ?? incident
         // The case is built as of its first possible trial day, so every entry in its file falls before it.
         let ready = cal.date(byAdding: .day, value: rng.int(35...56), to: arrest) ?? arrest
         let daysAgo = cal.dateComponents([.day], from: incident, to: ready).day ?? 40

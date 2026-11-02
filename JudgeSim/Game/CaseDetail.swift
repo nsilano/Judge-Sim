@@ -974,7 +974,10 @@ enum Investigations {
         }
         arrest = clamp(arrest)
         // A case that comes to court through a calendar matter was arrested when that matter says.
-        if let pinned = arrestOn { arrest = max(incident, pinned) }
+        // A stop or a warrant search ends in an arrest that day; a fraud or records case takes weeks to build.
+        if let pinned = arrestOn, facts.origin != .stop && facts.origin != .warrant {
+            arrest = facts.origin == .records ? max(CaseDates.add(21, to: incident), pinned) : max(incident, pinned)
+        }
 
         // The interview and arrest
         let interview: Date? = statement == nil ? nil : (facts.origin == .records ? CaseDates.add(-rng.int(5...20), to: arrest) : arrest)
