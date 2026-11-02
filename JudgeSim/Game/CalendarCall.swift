@@ -183,6 +183,20 @@ struct BailMoney: Hashable {
 
     func fee(on amount: Int) -> Int { Int((Double(amount) * feeRate).rounded()) }
 
+    /// The same, measured against the bond the State wants: whether it can be posted outright, through a bondsman, or not at all.
+    func plain(against ask: Int?) -> String {
+        guard let ask, ask > 0, cash > 0 else { return plain }
+        let pct = Int((feeRate * 100).rounded())
+        if cash >= ask {
+            return "can pay about $\(cash.formatted()), enough to post the State's $\(ask.formatted()) in cash and get it back at the end of the case"
+                + (bondsman ? " (through a bondsman, a bond up to about $\(reach.formatted()))" : "")
+        }
+        if bondsman && reach >= ask {
+            return "can pay about $\(cash.formatted()): not the State's $\(ask.formatted()) in cash, but enough for a bondsman's \(pct)% fee on it (a $\(fee(on: ask).formatted()) fee); the most a bondsman would write is about $\(reach.formatted())"
+        }
+        return plain + ", short of the State's $\(ask.formatted())"
+    }
+
     /// "can pay about $2,500, enough for a bondsman's fee on a bond up to about $16,500"
     var plain: String {
         if cash == 0 { return "can't pay anything toward a bond" }
@@ -466,11 +480,19 @@ enum CalendarCalls {
                              "Nothing in the bank and no one to borrow from, Judge. An unsecured bond of $\(scale.unsecured.formatted()) keeps \(last) accountable without keeping \(last) in jail.",
                              "We'd accept house arrest with an ankle monitor, Judge, with no money bond. \(last) can't pay one."])
         }
+        if money.cash >= scale.secured {
+            // The bond can be posted in full and comes back at the end of the case: nothing to fight about but the conditions.
+            return rng.pick(["\(last) can post the State's figure, Judge, and will. We'd ask only that the court not go above it.",
+                             "No objection to the State's number. \(last) will post it today and be back for every court date.",
+                             "\(last) can make that bond in cash, Judge, but this record doesn't call for security at all. We ask for an unsecured bond with the standard conditions.",
+                             "We won't fight a secured bond that size, Judge. We'd ask the court to skip the ankle monitor; \(last) works nights."])
+        }
         if reach >= scale.secured {
-            return rng.pick(["\(last)'s family could get a bondsman to write that, Judge, but the fee is gone for good. We ask for an unsecured bond.",
-                             "The State's number isn't out of reach, Judge, but this record doesn't call for security. We ask for an unsecured bond with the standard conditions.",
-                             "We won't fight a secured bond, Judge. We'd only ask that it not go above the State's figure.",
-                             "A secured bond that size \(last) can make. We'd ask the court to skip the ankle monitor; \(last) works nights."])
+            // Only through a bondsman: the fee is gone for good, so the defense argues for less, never more.
+            let lower = roundBond(Double(min(scale.secured, money.cash)) * 0.8)
+            return rng.pick(["\(last)'s family could get a bondsman to write that, Judge, but the $\(money.fee(on: scale.secured).formatted()) fee is gone for good. We ask for an unsecured bond.",
+                             "At the State's $\(scale.secured.formatted()), \(last) pays a bondsman a fee the family never sees again. A $\(max(500, lower).formatted()) secured bond \(last) can post in cash does the same work.",
+                             "We won't fight a secured bond, Judge. We'd only ask that it not go above the State's figure."])
         }
         let ask = roundBond(Double(reach) * Double.random(in: 0.7...1.0, using: &rng))
         if !money.bondsman {
@@ -551,15 +573,18 @@ enum CalendarCalls {
                 + (priorViolent ? "house arrest with electronic monitoring: \(d.lastName) has an earlier violent conviction." : "a secured bond or house arrest with electronic monitoring. Written promises, custody releases, and unsecured bonds aren't allowed.")
             if danger >= 0.15 || felonies > 0 || [NCClass.A, .B1, .B2, .C].contains(worst ?? .misd1) {
                 stateAsk = "The State asks that \(d.lastName) be held without bond under Iryna's Law. The charge is violent, and nothing short of detention protects the victim and the public."
+            } else if !scale.wantsSecured {
+                // An unsecured bond isn't available on a violent felony; the State asks for security instead.
+                stateAsk = "The State asks for a $\(scale.secured.formatted()) secured bond. Iryna's Law rules out an unsecured bond on this charge."
             } else {
                 stateAsk += " The State notes the Iryna's Law presumption against release."
             }
             defenseAsk = "We can rebut the presumption, Judge. \(d.lastName) \(ties.joined(separator: " and ")). "
-                + (priorViolent ? "House arrest with an ankle monitor protects everyone." : "A $\(max(money.reach, 1_000).formatted()) secured bond with electronic monitoring protects everyone and lets \(d.lastName) keep working.")
+                + (priorViolent ? "House arrest with an ankle monitor protects everyone." : "A $\(max(min(money.reach, scale.secured, max(money.cash, money.reach / 2)), 1_000).formatted()) secured bond with electronic monitoring protects everyone and lets \(d.lastName) keep working.")
         }
         return CalendarMatter(kind: .firstAppearance, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
-                              summary: "\(d.name), \(d.age), arrested this week and charged with \(law?.title.lowercased() ?? "a felony"), is before the court on conditions of release (G.S. 15A-534). \(record). \(d.lastName) \(ties.joined(separator: " and ")), and \(money.plain). The magistrate set no bond pending this hearing.",
+                              summary: "\(d.name), \(d.age), arrested this week and charged with \(law?.title.lowercased() ?? "a felony"), is before the court on conditions of release (G.S. 15A-534). \(record). \(d.lastName) \(ties.joined(separator: " and ")), and \(money.plain(against: scale.wantsSecured || violentOffense ? scale.secured : nil)). The magistrate set no bond pending this hearing.",
                               stateAsk: stateAsk,
                               defenseAsk: defenseAsk,
                               // Every condition G.S. 15A-534(a) allows, with the judge setting any amount.
