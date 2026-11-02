@@ -204,34 +204,51 @@ struct PersonTimeline: View {
 
     var events: [Event] {
         var list: [Event] = []
+        let cal = CourtCalendar.calendar
+        let logged = game.log(for: person.id)
+        /// When the court ruled in a docket on a day: the logged verdict's time, else mid-afternoon.
+        func ruled(_ docket: String, on date: Date) -> Date {
+            guard date == cal.startOfDay(for: date) else { return date }
+            if let verdict = logged.last(where: { $0.kind == .verdict && $0.docket == docket && cal.isDate($0.date, inSameDayAs: date) }) {
+                return verdict.date
+            }
+            return cal.date(byAdding: .minute, value: 15 * 60, to: date) ?? date
+        }
+        func minutes(_ n: Int, after date: Date) -> Date { cal.date(byAdding: .minute, value: n, to: date) ?? date }
         for a in person.appearances {
             let pv = a.docket.hasSuffix("(PV)")
-            list.append(Event(date: a.date, icon: pv ? "person.badge.clock.fill" : "hammer.fill", color: pv ? .orange : Theme.gold,
+            list.append(Event(date: ruled(a.docket, on: a.date), icon: pv ? "person.badge.clock.fill" : "hammer.fill", color: pv ? .orange : Theme.gold,
                               text: Self.groupedCharges(a.charges), details: Self.outcomeLines(a.outcome), tag: a.docket))
         }
         for order in person.stayAwayOrders ?? [] {
-            list.append(Event(date: order.issued, icon: "hand.raised.fill", color: Theme.prosecution,
+            list.append(Event(date: minutes(1, after: ruled(order.docket, on: order.issued)), icon: "hand.raised.fill", color: Theme.prosecution,
                               text: "\(order.label.capitalizedFirst) protecting \(order.protectedName) until \(SentenceFormat.shortDate(order.expires))"
                                 + (order.violations > 0 ? ". Violated \(order.violations) time\(order.violations == 1 ? "" : "s")." : ".")))
         }
         for v in person.violations ?? [] {
-            list.append(Event(date: v.date, icon: "exclamationmark.triangle.fill", color: .orange, text: "\(v.kind): \(v.conduct.trimmingTrailingPeriods). \(v.result)"))
+            // The conduct is reported in the evening, when officers make their home visits and checks.
+            let reported = v.date == cal.startOfDay(for: v.date) ? minutes(17 * 60 + (v.conduct.count * 37) % 240, after: v.date) : v.date
+            list.append(Event(date: reported, icon: "exclamationmark.triangle.fill", color: .orange, text: "\(v.kind): \(v.conduct.trimmingTrailingPeriods). \(v.result)"))
         }
         for appeal in game.appeals where appeal.personID == person.id {
-            list.append(Event(date: appeal.filed, icon: "building.columns", color: .secondary, text: "Appeal filed (\(appeal.appellant))"))
+            // Notice of appeal is given in open court, right after judgment.
+            list.append(Event(date: minutes(2, after: ruled(appeal.docket, on: appeal.filed)), icon: "building.columns", color: .secondary, text: "Appeal filed (\(appeal.appellant))"))
             if let decided = appeal.decided {
-                list.append(Event(date: decided, icon: "building.columns.fill", color: appeal.wasReversed ? .orange : Theme.good,
+                // The Court of Appeals files its opinions in the morning.
+                let filed = decided == cal.startOfDay(for: decided) ? minutes(11 * 60, after: decided) : decided
+                list.append(Event(date: filed, icon: "building.columns.fill", color: appeal.wasReversed ? .orange : Theme.good,
                                   text: appeal.result ?? "Appeal decided"))
             }
         }
         // The arrests, jail stays, bond hearings, trial settings, and transfers the court's log recorded.
-        for e in game.log(for: person.id) where e.kind != .verdict {
+        for e in logged where e.kind != .verdict {
             list.append(Event(date: e.date, icon: e.kind.icon, color: Self.color(for: e.kind), text: e.text, tag: e.docket))
         }
         if let release = person.releaseDate, release != .distantFuture, person.status == .incarcerated {
             list.append(Event(date: release, icon: "door.left.hand.open", color: .secondary, text: "Projected release"))
         }
-        return list.sorted { $0.date > $1.date }
+        // Oldest first, so the story reads top to bottom in the order it happened.
+        return list.sorted { $0.date < $1.date }
     }
 
     static func color(for kind: LogEvent.Kind) -> Color {
@@ -247,7 +264,8 @@ struct PersonTimeline: View {
 
     var body: some View {
         let all = events
-        let shown = limit.map { Array(all.prefix($0)) } ?? all
+        // A short preview shows the latest events, still in the order they happened.
+        let shown = limit.map { Array(all.suffix($0)) } ?? all
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 SectionTitle(text: "Timeline", icon: "clock.arrow.circlepath")
@@ -267,7 +285,7 @@ struct PersonTimeline: View {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: event.icon).foregroundStyle(event.color).frame(width: 20)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text((event.date > game.currentDate ? "\(SentenceFormat.shortDate(event.date)) (expected)" : SentenceFormat.shortDate(event.date))
+                        Text((CourtCalendar.calendar.startOfDay(for: event.date) > game.currentDate ? "\(SentenceFormat.shortDate(event.date)) (expected)" : SentenceFormat.dateAndTime(event.date))
                              + (event.tag.map { " · \($0)" } ?? ""))
                             .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
                         Text(event.text).font(.callout.weight(event.details.isEmpty ? .regular : .semibold))
@@ -339,7 +357,7 @@ struct CaseTimelineView: View {
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: e.kind.icon).foregroundStyle(PersonTimeline.color(for: e.kind)).frame(width: 20)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(e.date > game.currentDate ? "\(SentenceFormat.shortDate(e.date)) (expected)" : SentenceFormat.shortDate(e.date))
+                            Text(CourtCalendar.calendar.startOfDay(for: e.date) > game.currentDate ? "\(SentenceFormat.shortDate(e.date)) (expected)" : SentenceFormat.dateAndTime(e.date))
                                 .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
                             Text(e.text).font(.callout).fixedSize(horizontal: false, vertical: true)
                         }

@@ -304,7 +304,7 @@ func short(_ date: Date) -> String { SentenceFormat.shortDate(date) }
 func days(_ from: Date, _ to: Date) -> Int { CourtCalendar.calendar.dateComponents([.day], from: from, to: to).day ?? 0 }
 
 /// How readily this judge convicts and how hard it sentences.
-let convictRate = style == "lenient" ? 0.5 : (style == "harsh" ? 0.85 : 0.68)
+let convictRate = style == "lenient" || style == "reckless" ? 0.5 : (style == "harsh" ? 0.85 : 0.68)
 
 nonisolated(unsafe) var game: GameState!
 
@@ -502,12 +502,13 @@ var hearingDates: [UUID: Date] = [:]
 // MARK: - Calendar calls
 
 @MainActor func playCalendar(_ call: CalendarCall) {
-    log("CALENDAR CALL · \(call.matters.count) matters")
+    let live = game.liveSurvey
+    log("CALENDAR CALL · \(call.matters.count) matters · STANDING P\(live.prosecutors) D\(live.defenseBar) O\(live.overall) Pub\(live.publicApproval)")
     var choices: [UUID: Int] = [:]
     var dates: [UUID: Date] = [:]
     for m in call.matters {
         let allowed = m.options.indices.filter { !(m.unavailableOptions ?? []).contains($0) }
-        let pick = allowed.isEmpty ? 0 : rng.pick(allowed)
+        let pick = allowed.isEmpty ? 0 : (style == "reckless" ? (m.kind == .failureToAppear ? 2 : allowed[0]) : rng.pick(allowed))
         choices[m.id] = pick
         log("  \(m.kind.label) · \(m.docket) · \(m.personName): \(m.summary)")
         checkText(m.summary + " " + m.stateAsk + " " + m.defenseAsk, where: "calendar \(m.docket)")
@@ -830,6 +831,35 @@ if args.count > 1 && args[1] == "scan" {
 }
 
 @MainActor func finish() {
+    // A few case timelines as the Records screen shows them (newest first), with clock times; flag any out of order.
+    let dockets = Array(Set(game.caseLog.map(\.docket)).filter { !$0.isEmpty }).sorted().prefix(6)
+    for docket in dockets {
+        let events = game.log(docket: docket)
+        log("TIMELINE \(docket)")
+        for e in events.reversed() { log("  \(e.date.formatted(date: .abbreviated, time: .shortened)) · \(e.kind.rawValue) · \(e.text)") }
+    }
+    for docket in Set(game.caseLog.map(\.docket)) where !docket.isEmpty {
+        let events = game.log(docket: docket)
+        if let arrest = events.first(where: { $0.kind == .arrest }), let booked = events.first(where: { $0.kind == .jailIn }), booked.date < arrest.date {
+            flag("\(docket): booked before the arrest")
+        }
+        if let crime = events.first(where: { $0.kind == .crime }), let arrest = events.first(where: { $0.kind == .arrest }), arrest.date < crime.date {
+            flag("\(docket): arrested before the report")
+        }
+        if let bond = events.first(where: { $0.kind == .bond }), let booked = events.first(where: { $0.kind == .jailIn }), bond.date < booked.date {
+            flag("\(docket): bond hearing before booking")
+        }
+    }
+    var gaps: [Int] = []
+    for docket in Set(game.caseLog.map(\.docket)) where !docket.isEmpty {
+        let events = game.log(docket: docket)
+        if let crime = events.first(where: { $0.kind == .crime }), let arrest = events.first(where: { $0.kind == .arrest }) {
+            gaps.append(CourtCalendar.calendar.dateComponents([.day], from: CourtCalendar.calendar.startOfDay(for: crime.date), to: CourtCalendar.calendar.startOfDay(for: arrest.date)).day ?? 0)
+        }
+    }
+    let buckets = [("same day", gaps.filter { $0 == 0 }.count), ("1-7 days", gaps.filter { (1...7).contains($0) }.count),
+                   ("8-30 days", gaps.filter { (8...30).contains($0) }.count), ("31+ days", gaps.filter { $0 > 30 }.count)]
+    log("REPORT-TO-ARREST " + buckets.map { "\($0.0): \($0.1)" }.joined(separator: " · "))
     log("FINDINGS (\(findings.count))")
     for f in findings { log("- \(f)") }
     try? transcript.joined(separator: "\n").write(toFile: outPath, atomically: true, encoding: .utf8)

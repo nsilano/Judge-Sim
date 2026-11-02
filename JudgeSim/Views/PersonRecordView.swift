@@ -212,7 +212,7 @@ struct PersonFileDocuments: View {
             DocField(label: "Offense", value: prs.offense)
             DocFieldPair(first: ("Term", "\(prs.supervisionMonths) months"),
                          second: ("Ends", pending ? "\(prs.supervisionMonths) months after release" : SentenceFormat.shortDate(prs.ends)))
-            DocField(label: "Unserved maximum term", value: "\(prs.remainingMonths) months, which revocation would activate")
+            DocField(label: "Unserved maximum term", value: "\(prs.remainingMonths) month\(prs.remainingMonths == 1 ? "" : "s"), which revocation would activate")
         }
     }
 

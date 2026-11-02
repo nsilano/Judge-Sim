@@ -249,7 +249,8 @@ enum CaseGenerator {
             // Written cases describe the defendant's record themselves; most say there is none. A serving officer
             // has none at all: a criminal record bars certification (12 NCAC 09B .0101).
             let officer = CaseComplexity.isLawEnforcement(occupation)
-            var priors = t.story != nil || officer ? [] : randomPriors(age: age, year: currentYear, county: county, rng: &rng)
+            // A written case whose text says the defendant has no record keeps it clean; any other defendant's record is drawn.
+            var priors = officer || Self.storyClaimsCleanRecord(t) ? [] : randomPriors(age: age, year: currentYear, county: county, rng: &rng)
             for entry in t.forcedPriorOffenses where !officer {
                 // "Offense@N" pins the conviction to about N years ago; otherwise any year since the defendant turned 17 (at most 20 back).
                 let parts = entry.components(separatedBy: "@")
@@ -770,7 +771,7 @@ enum CaseGenerator {
         let aggravatingPool = t.aggravating.filter { hasPriors || !aboutRecord($0) }
         let mitigatingPool = t.mitigating.filter { !hasPriors || !aboutRecord($0) }
         var aggravating = fill(rng.pick(aggravatingPool.isEmpty ? t.aggravating : aggravatingPool, count: aggravatingCount))
-        var mitigating = fill(rng.pick(mitigatingPool.isEmpty ? t.mitigating : mitigatingPool, count: mitigatingCount))
+        var mitigating = fill(rng.pick(mitigatingPool.isEmpty && !hasPriors ? t.mitigating : mitigatingPool, count: mitigatingCount))
         if !hasPriors {
             aggravating.removeAll(where: aboutRecord)
             if !mitigating.contains(where: aboutRecord) {
@@ -1353,13 +1354,35 @@ enum CaseGenerator {
         )
     }
 
+    /// Whether a written case says anywhere outside its sentencing factors that the defendant has no record
+    /// (a witness's "never been in trouble", a "No Prior History" exhibit, a summary's "with no record").
+    static func storyClaimsCleanRecord(_ t: CaseTemplate) -> Bool {
+        guard let story = t.story else { return false }
+        var text: [String] = t.summaries + t.prosecutionTheory + t.defenseTheory + t.victimImpacts + t.allocutions
+        text += (t.prosecutionEvidence + t.defenseEvidence).flatMap { [$0.title, $0.detail] }
+        for seed in t.prosecutionWitnesses + t.defenseWitnesses {
+            text += seed.direct + seed.cross
+            for line in seed.exam { text += line.questions + line.answers }
+        }
+        for line in story.defendantExam { text += line.questions + line.answers }
+        text += story.timeline.map(\.1)
+        text += [story.howIdentified, story.prosecutionOpening, story.defenseOpening, story.prosecutionClosing, story.defenseClosing]
+        text += [story.background, story.family].compactMap { $0 }
+        let pattern = #"\b(no|clean|spotless) (prior )?(criminal )?(record|history|convictions?|arrests?)\b(?! of)|never been (arrested|in trouble|charged|convicted)|first[- ]offen|first-time offender|first time in (a )?court"#
+        return text.contains { $0.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil }
+    }
+
     private static func randomPriors(age: Int, year: Int, county: County, rng: inout SeededRNG) -> [PriorConviction] {
+        // Records run the whole range: many people have none, some a conviction or two, and some a long history.
         let roll = Double.random(in: 0..<1, using: &rng)
-        let count: Int
-        if roll < 0.45 { count = 0 }
-        else if roll < 0.72 { count = rng.int(1...2) }
-        else if roll < 0.9 { count = rng.int(3...4) }
-        else { count = rng.int(5...7) }
+        var count: Int
+        if roll < 0.35 { count = 0 }
+        else if roll < 0.60 { count = rng.int(1...2) }
+        else if roll < 0.78 { count = rng.int(3...5) }
+        else if roll < 0.92 { count = rng.int(6...10) }
+        else { count = rng.int(11...18) }
+        // A long record takes years to build: about one conviction a year since 17, at most.
+        count = min(count, max(1, age - 16))
         guard count > 0 else { return [] }
 
         let earliest = year - max(1, min(age - 17, 20))

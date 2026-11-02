@@ -199,8 +199,8 @@ private struct JailSections: View {
             row("Days over capacity in this county", "\(state?.daysOver ?? 0)")
             row("Highest count", state.map { "\($0.peak)" + ($0.peakDate.map { " on \(SentenceFormat.shortDate($0))" } ?? "") } ?? "0")
             row("Average count, last 30 days", average(state?.log.suffix(30).map(\.jail)))
-            row("Average wait in jail for trial", pretrialDays.isEmpty ? "None held" : "\(pretrialDays.reduce(0, +) / pretrialDays.count) days")
-            row("Longest wait in jail for trial", pretrial.max { days(since: $0.since) < days(since: $1.since) }.map { "\(days(since: $0.since)) days · \($0.name)" } ?? "None held")
+            row("Average wait in jail for trial", pretrialDays.isEmpty ? "None held" : daysText(pretrialDays.reduce(0, +) / pretrialDays.count))
+            row("Longest wait in jail for trial", pretrial.max { days(since: $0.since) < days(since: $1.since) }.map { "\(daysText(days(since: $0.since))) · \($0.name)" } ?? "None held")
             row("Held on a bond under $1,000", "\(pretrial.filter { (bondAmount($0.bond) ?? .max) < 1_000 }.count)")
             row("Held on a bond under $5,000", "\(pretrial.filter { (bondAmount($0.bond) ?? .max) < 5_000 }.count)")
             }
@@ -224,6 +224,8 @@ private struct JailSections: View {
             }
         }
     }
+
+    private func daysText(_ n: Int) -> String { "\(n) day\(n == 1 ? "" : "s")" }
 
     private func days(since date: Date?) -> Int {
         guard let date else { return 0 }
@@ -486,7 +488,7 @@ private struct EarlyReleasesView: View {
                             Spacer()
                             Text(SentenceFormat.shortDate(r.date)).font(.caption2).foregroundStyle(.secondary)
                         }
-                        Text("\(r.charge) · \(r.pretrial ? "awaiting trial, held \(r.days) days" : "\(r.days) days left on the term")").font(.caption)
+                        Text("\(r.charge) · \(r.pretrial ? "awaiting trial, held \(r.days) day\(r.days == 1 ? "" : "s")" : "\(r.days) day\(r.days == 1 ? "" : "s") left on the term")").font(.caption)
                         Text(r.byJudge ? "Your choice" : "The sheriff's choice").font(.caption2).foregroundStyle(Theme.gold)
                         if let again = r.rearrested {
                             Text("Arrested again \(SentenceFormat.shortDate(again))").font(.caption2.weight(.semibold)).foregroundStyle(Theme.bad)
@@ -630,7 +632,7 @@ private struct ProbationSections: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text(String(format: "%.0f", perOfficer)).font(.system(size: 40, weight: .bold, design: .rounded))
                         .foregroundStyle(load > 1 ? Theme.bad : (load >= 0.9 ? Theme.gold : Theme.text))
-                    Text("cases per officer").font(.headline).foregroundStyle(.secondary)
+                    Text(String(format: "%.0f", perOfficer) == "1" ? "case per officer" : "cases per officer").font(.headline).foregroundStyle(.secondary)
                     Spacer()
                     Text("of \(Corrections.caseloadPerOfficer)").font(.subheadline).foregroundStyle(.secondary)
                 }
@@ -703,7 +705,8 @@ private struct ProbationSections: View {
     private func averageLeft(_ people: [PersonRecord]) -> String {
         let days = people.compactMap { $0.probation.map { max(0, CourtCalendar.calendar.dateComponents([.day], from: game.currentDate, to: $0.ends).day ?? 0) } }
         guard !days.isEmpty else { return "—" }
-        return "\(days.reduce(0, +) / days.count / 30) months"
+        let months = days.reduce(0, +) / days.count / 30
+        return months < 1 ? "Under a month" : "\(months) month\(months == 1 ? "" : "s")"
     }
 }
 

@@ -94,7 +94,7 @@ enum DailyNews {
                     break
                 }
             case .calendarCall(let matters):
-                guard rng.chance(0.35) else { continue }
+                guard matters >= 4, rng.chance(0.35) else { continue }
                 add("Busy calendar call: \(matters) matters in one morning",
                     "Pleas, bond hearings and motions filled \(judge)'s administrative session. " +
                     rng.pick(["The hallway was standing room only by 9.", "One defendant brought a grandmother, a pastor and a former teacher to vouch for him.", "Court ran through lunch."]),

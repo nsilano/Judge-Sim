@@ -136,7 +136,7 @@ struct ChambersView: View {
                     }
                     if let notice = game.corrections?.openNotice { sheriffCard(notice) }
                     docketCard
-                    if let survey = game.reputation.first { standingCard(survey) }
+                    if !game.history.isEmpty || !game.reputation.isEmpty { standingCard(game.liveSurvey) }
                     if game.history.contains(where: { $0.resolvedKind == "trial" }), let county = game.county { courthouseMoodCard(county) }
 
                     if let county = game.county {
@@ -376,7 +376,12 @@ struct ChambersView: View {
         .card(tint: .orange)
     }
 
-    /// The most recent bar survey.
+    private var earlierSurveys: [BarSurvey] {
+        let year = CourtCalendar.calendar.component(.year, from: game.currentDate)
+        return game.reputation.filter { $0.year < year }
+    }
+
+    /// Where the judge stands now, from the record so far; the bar's year-end surveys are listed below it.
     private func standingCard(_ survey: BarSurvey) -> some View {
         DisclosureGroup {
             VStack(alignment: .leading, spacing: 8) {
@@ -388,8 +393,9 @@ struct ChambersView: View {
                     Text("Affirmed on appeal: \(affirmed)% of decided appeals").font(.caption).foregroundStyle(.secondary)
                 }
                 ForEach(survey.comments, id: \.self) { Text($0).font(.callout).italic() }
-                if game.reputation.count > 1 {
-                    Text("Earlier years: " + game.reputation.dropFirst().prefix(5).map { "\($0.year): \($0.overall)" }.joined(separator: " · "))
+                StandingRecentList(shifts: Array((game.stats.ledger?.recent ?? []).prefix(6)))
+                if !earlierSurveys.isEmpty {
+                    Text("Year-end surveys: " + earlierSurveys.prefix(5).map { "\(String($0.year)): \($0.overall)" }.joined(separator: " · "))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -398,7 +404,7 @@ struct ChambersView: View {
             HStack {
                 SectionTitle(text: "Standing with the bar", icon: "person.3.sequence.fill")
                 Spacer()
-                Text("\(survey.year) · \(survey.overall)/100").font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
+                Text(verbatim: "\(survey.overall)/100").font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
             }
         }
         .card()
@@ -546,3 +552,38 @@ struct CourthouseView: View {
 }
 
 // CaseRecordDetail and PersonDetail live in RecordDocuments.swift and PersonRecordView.swift.
+
+
+/// The latest rulings that moved the judge's standing, newest first.
+private struct StandingRecentList: View {
+    let shifts: [StandingShift]
+
+    var body: some View {
+        if !shifts.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("What moved it lately").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                ForEach(shifts) { StandingShiftRow(shift: $0) }
+            }
+            .padding(.top, 4)
+        }
+    }
+}
+
+private struct StandingShiftRow: View {
+    let shift: StandingShift
+
+    private var up: Bool { shift.biggest.change >= 0 }
+    private var label: String { "\(shift.biggest.group) \(up ? "up" : "down")" }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Image(systemName: up ? "arrow.up" : "arrow.down")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(up ? Theme.good : Theme.bad)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(shift.reason).font(.caption).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: "\(SentenceFormat.shortDate(shift.date)) · \(label)").font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+    }
+}
