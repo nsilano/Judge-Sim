@@ -1297,7 +1297,10 @@ final class GameState: ObservableObject {
                         let jailed = c.background?.isJailed ?? false
                         switch kind {
                         // A defendant held without bond asks for a detention review, not a lower bond.
-                        case .bondModification: return jailed && !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false) ? c : nil
+                        // A defendant who just had a bond motion heard doesn't file another for six weeks.
+                        case .bondModification:
+                            let recent = c.background?.lastBondMotion.map { (cal.dateComponents([.day], from: $0, to: date).day ?? 99) < 42 } ?? false
+                            return jailed && !recent && !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false) ? c : nil
                         case .failureToAppear: return jailed || Self.isMurder(c) ? nil : c
                         default: return c
                         }
@@ -2193,8 +2196,28 @@ final class GameState: ObservableObject {
             // A case already set for trial, or waiting for a date, is taken off its old setting; the ruling sets the new one,
             // keeping the judge's date when it still works.
             setDate = scheduled.first { item in if case .trial(let t) = item.entry.matter { return t.id == c.id } else { return false } }?.date
+            let previousSetting = scheduled.first { item in if case .trial(let t) = item.entry.matter { return t.id == c.id } else { return false } }
+            let previousWait = awaiting.first { $0.courtCase?.id == c.id }
             scheduled.removeAll { item in if case .trial(let t) = item.entry.matter { return t.id == c.id } else { return false } }
             awaiting.removeAll { $0.courtCase?.id == c.id }
+            /// A ruling on bond changes nothing about the trial: the case goes back exactly where it was, its trial date
+            /// or its place on the waiting list kept, with the new bond in the file.
+            func backInPlace(_ updated: CourtCase, _ weeks: Int, _ note: String, _ n: Int) {
+                var c = updated
+                c.background?.lastBondMotion = call.date
+                if var setting = previousSetting {
+                    setting.entry.matter = .trial(c)
+                    setting.entry.note = ((setting.entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces)
+                    scheduled.append(setting)
+                    scheduled.sort { $0.date < $1.date }
+                } else if var waiting = previousWait {
+                    waiting.entry.matter = .trial(c)
+                    waiting.entry.note = ((waiting.entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces)
+                    awaiting.append(waiting)
+                } else {
+                    setFor(c, weeks: weeks, note: note, continuances: n)
+                }
+            }
             switch m.kind {
             case .quickPlea where choice == 3:
                 // Only written cases are tried before you; a rejected calendar-call plea goes to another session.
@@ -2293,7 +2316,7 @@ final class GameState: ObservableObject {
                 // A review that keeps a defendant held without bond changes nothing but the record.
                 if m.kind == .bondModification && choice == 1 && (c.background?.bondStatus.hasPrefix("Held without bond") ?? false) {
                     log(.bond, c, on: call.date, "Bond review: kept held without bond.")
-                    schedule(c, rng.int(5...8), "Kept held without bond at a review on \(heard).", 0)
+                    backInPlace(c, rng.int(5...8), "Kept held without bond at a review on \(heard).", 0)
                     continue
                 }
                 // Iryna's Law: the judge holds the defendant without bond.
@@ -2317,7 +2340,7 @@ final class GameState: ObservableObject {
                     continue
                 }
                 decideRelease(c, bond: bond, amount: amount, monitored: monitored, condition: condition, heard: heard, date: call.date,
-                              rng: &rng, schedule: firstUp ? arraign : schedule, watch: watch)
+                              rng: &rng, schedule: m.kind == .bondModification ? backInPlace : (firstUp ? arraign : schedule), watch: watch)
             case .arraignment:
                 if choice == 0, let picked = dates[m.id] {
                     // The judge picks the day. Too soon, and the defense asks for more time.

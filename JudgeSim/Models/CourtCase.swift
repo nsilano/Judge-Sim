@@ -248,6 +248,8 @@ struct CaseBackground: Codable, Hashable {
     /// A bail bondsman's fee rate for this defendant, and whether one will write the bond (optional for older saves).
     var bondsmanRate: Double? = nil
     var bondsmanWilling: Bool? = nil
+    /// When the court last heard a motion to change this bond (optional for older saves).
+    var lastBondMotion: Date? = nil
     var restitution: Int
     var restitutionBasis: String?
     var victimStance: VictimStance
