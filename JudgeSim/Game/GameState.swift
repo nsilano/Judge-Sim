@@ -2224,6 +2224,8 @@ final class GameState: ObservableObject {
                     var held = c
                     if var bg = held.background {
                         bg.canPost = bond.canPost
+                        bg.bondsmanRate = bond.feeRate
+                        bg.bondsmanWilling = bond.bondsman
                         bg.custodyDays = max(1, bg.custodyDays)
                         bg.onRelease = false
                         bg.heldOnCourtBond = true
@@ -2382,18 +2384,24 @@ final class GameState: ObservableObject {
         var held = c
         guard var bg = held.background else { schedule(c, rng.int(5...8), "Set for trial on \(heard).", 0); return }
         bg.canPost = bond.canPost
+        bg.bondsmanRate = bond.feeRate
+        bg.bondsmanWilling = bond.bondsman
         let kind = condition.contains("promise") ? "Written promise" : condition.contains("custody of") ? "Custody release"
             : condition.contains("unsecured") ? "Unsecured bond" : condition.contains("house arrest") ? "Secured bond with house arrest" : "Secured bond"
         var kinds = stats.bondKinds ?? [:]
         kinds[kind, default: 0] += 1
         stats.bondKinds = kinds
-        if amount <= bond.canPost {
+        let money = bond.money
+        if money.canMake(amount) {
+            let viaBondsman = money.throughBondsman(amount)
             log(.bond, c, on: date, condition.hasPrefix("release to") ? "Bond hearing: released to" + condition.dropFirst("release to".count) + "." : "Bond hearing: released on \(condition).")
-            if c.background?.isJailed == true { log(.jailOut, c, on: date, "Posted bond and left the jail.") }
+            if c.background?.isJailed == true {
+                log(.jailOut, c, on: date, viaBondsman ? "Posted bond through a bail bondsman (a $\(money.fee(on: amount).formatted()) fee) and left the jail." : "Posted bond and left the jail.")
+            }
             // The days already spent in jail stay as credit; the clock stops while the defendant is out.
             bg.onRelease = true
             bg.heldOnCourtBond = false
-            bg.bondStatus = "Released on \(condition) on \(heard)."
+            bg.bondStatus = "Released on \(condition) on \(heard)" + (viaBondsman ? ", posted through a bail bondsman for a $\(money.fee(on: amount).formatted()) fee." : ".")
             held.background = bg
             // House arrest makes running and new arrests less likely.
             let watch = supervision ?? (monitored ? 0.4 : 1.0)
@@ -3788,7 +3796,8 @@ final class GameState: ObservableObject {
                                      flags: flags, releasable: !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false),
                                      trialDate: scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }?.date,
                                      waitingToPlead: arraignQueue.contains { $0.courtCase.id == c.id },
-                                     canPost: c.background?.canPost, reviewSet: bondReviews.contains(c.id)))
+                                     canPost: c.background?.canPost, reviewSet: bondReviews.contains(c.id),
+                                     bondsmanRate: c.background?.bondsmanRate, bondsmanWilling: c.background?.bondsmanWilling))
         }
         return roster
     }

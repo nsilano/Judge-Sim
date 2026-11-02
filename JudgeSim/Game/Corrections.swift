@@ -155,6 +155,11 @@ struct JailInmate: Identifiable, Hashable {
     var sanction = false
     var canPost: Int? = nil
     var reviewSet = false
+    var bondsmanRate: Double? = nil
+    var bondsmanWilling: Bool? = nil
+
+    /// Cash on hand and what a bondsman would write, when the bond hearing learned it.
+    var money: BailMoney? { canPost.map { BailMoney(cash: $0, feeRate: bondsmanRate ?? 0.15, bondsman: bondsmanWilling ?? false) } }
 
     var noBond: Bool { (bond ?? "").hasPrefix("Held without bond") }
     var bondAmount: Int? { Corrections.dollars(in: bond) }
@@ -167,7 +172,9 @@ struct JailInmate: Identifiable, Hashable {
             let next = trialDate.map { "Trial set for \(SentenceFormat.shortDate($0))" }
                 ?? (waitingToPlead ? "Waiting to plead at a calendar call" : "Awaiting a trial date")
             let held = since.map { "in jail since \(SentenceFormat.shortDate($0))" } ?? "in jail"
-            let post = canPost.map { $0 == 0 ? " · can't post any bond" : " · can post about $\($0.formatted())" } ?? ""
+            let post = money.map { m in
+                m.cash == 0 ? " · can't pay anything" : (m.bondsman ? " · can make a bond up to about $\(m.reach.formatted()) through a bondsman" : " · about $\(m.cash.formatted()) cash; no bondsman will write it")
+            } ?? ""
             return (title, "\(next) · \(held)\(post)" + (reviewSet ? " · bond review set" : ""))
         case .sentenced:
             let out = releaseDate.map { "Out \(SentenceFormat.shortDate($0))" } ?? "Release date pending"

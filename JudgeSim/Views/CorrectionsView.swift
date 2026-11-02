@@ -794,7 +794,7 @@ private struct BondReviewView: View {
 
     var body: some View {
         let held = game.jailRoster().filter { $0.kind == .pretrial }
-            .sorted { ($0.bondAmount ?? .max) - ($0.canPost ?? 0) > ($1.bondAmount ?? .max) - ($1.canPost ?? 0) }
+            .sorted { ($0.bondAmount ?? .max) - ($0.money?.reach ?? 0) > ($1.bondAmount ?? .max) - ($1.money?.reach ?? 0) }
         List {
             Section {
                 Text("A review goes on the next court day's bond session. The State and the defense argue it, and you can set a bond the defendant can post, add house arrest, keep it as is, or, for a defendant held without bond, set conditions. It takes a day, but it's a ruling, not a jailbreak: the defendant is out on conditions you chose.")
@@ -817,10 +817,19 @@ private struct BondReviewView: View {
                                     .foregroundStyle(Theme.bad)
                             }
                             VStack(alignment: .leading) {
-                                Text("Can post").font(.caption2).foregroundStyle(.secondary)
-                                Text(inmate.canPost.map { $0 == 0 ? "Nothing" : "About $\($0.formatted())" } ?? "Not known").font(.subheadline.weight(.bold))
+                                Text("Can pay").font(.caption2).foregroundStyle(.secondary)
+                                Text(inmate.money.map { $0.cash == 0 ? "Nothing" : "About $\($0.cash.formatted())" } ?? "Not known").font(.subheadline.weight(.bold))
                                     .foregroundStyle(Theme.good)
                             }
+                            VStack(alignment: .leading) {
+                                Text("Bond they can make").font(.caption2).foregroundStyle(.secondary)
+                                Text(inmate.money.map { $0.reach == 0 ? "None" : "Up to $\($0.reach.formatted())" } ?? "Not known").font(.subheadline.weight(.bold))
+                                    .foregroundStyle(Theme.good)
+                            }
+                        }
+                        if let money = inmate.money, money.cash > 0 {
+                            Text(money.bondsman ? "A bondsman would write it for a \(Int((money.feeRate * 100).rounded()))% fee the family never gets back." : "No bondsman will write it; the bond has to be posted in cash.")
+                                .font(.caption2).foregroundStyle(.secondary)
                         }
                         if !inmate.flags.isEmpty {
                             Text(inmate.flags.joined(separator: " · ")).font(.caption2).foregroundStyle(Theme.gold)
