@@ -975,7 +975,11 @@ enum Investigations {
         arrest = clamp(arrest)
         // A case that comes to court through a calendar matter was arrested when that matter says.
         // A stop or a warrant search ends in an arrest that day; a fraud or records case takes weeks to build.
-        if let pinned = arrestOn, facts.origin != .stop && facts.origin != .warrant {
+        // A written case that says the arrest came at the scene or the next day keeps it, whatever the calendar would pick.
+        let writtenArrest = t.story?.timeline.first { $0.0 >= 0 && $0.0 <= 1 && $0.1.range(of: "arrested", options: .caseInsensitive) != nil }?.0
+        if let day = writtenArrest {
+            arrest = CaseDates.add(day, to: incident)
+        } else if let pinned = arrestOn, facts.origin != .stop && facts.origin != .warrant {
             arrest = facts.origin == .records ? max(CaseDates.add(21, to: incident), pinned) : max(incident, pinned)
         }
 

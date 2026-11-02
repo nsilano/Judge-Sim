@@ -4007,6 +4007,22 @@ final class GameState: ObservableObject {
         return (out.isEmpty ? "" : out + " ") + latest.trimmingCharacters(in: .whitespaces)
     }
 
+    /// The county's crime rate as the paper reports it, in percent of residents touched by reported crime in a year.
+    /// It starts at the state average and moves with what the people this court let go do afterward: new arrests of
+    /// people released in the last six months push it up, and a low reoffense rate pulls it down.
+    func crimeRate(on date: Date) -> (rate: Double, rearrests: Int, reoffense: Double?) {
+        let cal = CourtCalendar.calendar
+        let since = cal.date(byAdding: .day, value: -180, to: date) ?? date
+        let yearAgo = cal.date(byAdding: .day, value: -365, to: date) ?? date
+        let recent = dispositions.filter { r in r.rearrested.map { $0 > since && $0 <= date } ?? false }.count
+            + (corrections?.releases.filter { r in r.rearrested.map { $0 > since && $0 <= date } ?? false }.count ?? 0)
+        let freed = dispositions.filter { r in (r.freeFrom.map { $0 > yearAgo && $0 <= date }) ?? false }
+        let again = freed.filter { r in r.rearrested.map { $0 <= date } ?? false }.count
+        let share = freed.count < 5 ? nil : Double(again) / Double(freed.count)
+        let rate = 3.0 + 0.08 * Double(recent) + 2.0 * ((share ?? 0.25) - 0.25)
+        return (min(9.9, max(1.5, rate)), recent, share)
+    }
+
     /// An older save's log kept dates only: give each event a time, keeping the order events of a case were logged in.
     private static func timedLog(_ events: [LogEvent]) -> [LogEvent] {
         let cal = CourtCalendar.calendar
@@ -4615,6 +4631,8 @@ final class GameState: ObservableObject {
         dispositions = data.dispositions ?? []
         arraignQueue = data.arraignQueue ?? []
         caseLog = Self.timedLog(data.caseLog ?? [])
+        // Recent family names carry over between sessions, so a restart doesn't bring the same surnames right back.
+        NameBank.recentSurnames = Array(people.suffix(600).compactMap { $0.name.components(separatedBy: " ").last })
         // Older saves piled a new bond line onto a case's note at every review; keep only the latest.
         for i in scheduled.indices { scheduled[i].entry.note = scheduled[i].entry.note.map(Self.latestBondNote) }
         for i in awaiting.indices { awaiting[i].entry.note = awaiting[i].entry.note.map(Self.latestBondNote) }

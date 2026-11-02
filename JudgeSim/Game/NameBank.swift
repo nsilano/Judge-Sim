@@ -315,13 +315,19 @@ enum NameBank {
         return person(using: &rng, excluding: &used, gender: gender)
     }
 
+    /// Surnames given to new people lately, across cases, so the same family name doesn't turn up case after case.
+    nonisolated(unsafe) static var recentSurnames: [String] = []
+
     static func person(using rng: inout SeededRNG, excluding used: inout Set<String>) -> String {
-        for _ in 0..<40 {
+        for attempt in 0..<170 {
             let name = "\(rng.pick(firstNames)) \(rng.pick(personSurnames))"
             let last = name.components(separatedBy: " ").last ?? name
-            if !used.contains(name) && !used.contains(last) {
+            let recent = attempt < 150 && recentSurnames.contains(last)
+            if !used.contains(name) && !used.contains(last) && !recent {
                 used.insert(name)
                 used.insert(last)
+                recentSurnames.append(last)
+                if recentSurnames.count > 600 { recentSurnames.removeFirst(recentSurnames.count - 600) }
                 return name
             }
         }
