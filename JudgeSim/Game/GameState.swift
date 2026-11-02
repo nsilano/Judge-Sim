@@ -3914,8 +3914,26 @@ final class GameState: ObservableObject {
     }
 
     private func log(_ kind: LogEvent.Kind, personID: UUID?, name: String, docket: String, on date: Date, _ text: String) {
-        caseLog.append(LogEvent(date: date, personID: personID, name: name, docket: docket, kind: kind, text: text))
+        let cal = CourtCalendar.calendar
+        let previous = caseLog.last { $0.docket == docket && cal.isDate($0.date, inSameDayAs: date) }?.date
+        let when = LogEvent.timed(kind, on: date, after: previous, seed: caseLog.count &+ text.count)
+        caseLog.append(LogEvent(date: when, personID: personID, name: name, docket: docket, kind: kind, text: text))
         if caseLog.count > 15_000 { caseLog.removeFirst(caseLog.count - 15_000) }
+    }
+
+    /// An older save's log kept dates only: give each event a time, keeping the order events of a case were logged in.
+    private static func timedLog(_ events: [LogEvent]) -> [LogEvent] {
+        let cal = CourtCalendar.calendar
+        var lastByDocket: [String: Date] = [:]
+        var out: [LogEvent] = []
+        out.reserveCapacity(events.count)
+        for (index, var e) in events.enumerated() {
+            let previous = lastByDocket[e.docket].flatMap { cal.isDate($0, inSameDayAs: e.date) ? $0 : nil }
+            e.date = LogEvent.timed(e.kind, on: e.date, after: previous, seed: index &+ e.text.count)
+            lastByDocket[e.docket] = e.date
+            out.append(e)
+        }
+        return out
     }
 
     /// A person's whole timeline, oldest first.
@@ -4003,7 +4021,7 @@ final class GameState: ObservableObject {
             let failures = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count
             let days = max(1, c.background?.custodyDays ?? 1)
             // The night the defendant was booked, as the log has it; otherwise counted back from the days held.
-            let since = caseLog.last { $0.docket == c.docket && $0.kind == .jailIn }?.date
+            let since = caseLog.last { $0.docket == c.docket && $0.kind == .jailIn }.map { CourtCalendar.calendar.startOfDay(for: $0.date) }
                 ?? CourtCalendar.calendar.date(byAdding: .day, value: -days, to: date)
             var flags: [String] = []
             if violent { flags.append("Violent charge") }
@@ -4218,7 +4236,7 @@ final class GameState: ObservableObject {
         for c in cases {
             guard let bg = c.background, !bg.isJailed, bg.bondStatus != "Not yet arrested.", seen.insert(c.id).inserted,
                   person(c.defendant.personID)?.status != .incarcerated else { continue }
-            let since = caseLog.last { $0.docket == c.docket && ($0.kind == .jailOut || $0.kind == .early || $0.kind == .bond) }?.date
+            let since = caseLog.last { $0.docket == c.docket && ($0.kind == .jailOut || $0.kind == .early || $0.kind == .bond) }.map { CourtCalendar.calendar.startOfDay(for: $0.date) }
             out.append(OnReleaseDefendant(caseID: c.id, personID: c.defendant.personID, name: c.defendant.name, age: c.defendant.age,
                                           docket: c.docket, charge: c.charges.first?.law.title ?? "",
                                           conditions: bg.bondStatus, since: since,
@@ -4501,7 +4519,7 @@ final class GameState: ObservableObject {
         corrections = data.corrections
         dispositions = data.dispositions ?? []
         arraignQueue = data.arraignQueue ?? []
-        caseLog = data.caseLog ?? []
+        caseLog = Self.timedLog(data.caseLog ?? [])
         bondReviews = data.bondReviews ?? []
         heldCases = data.heldCases ?? []
         // Bond hearings and bond motions still waiting on the calendar from an older build get today's short wording.

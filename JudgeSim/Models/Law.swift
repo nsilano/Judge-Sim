@@ -162,5 +162,12 @@ enum SentenceFormat {
         date.formatted(date: .abbreviated, time: .omitted)
     }
 
+    /// The date with its clock time ("Nov 19, 2026 · 3:42 PM"), or just the date when no time was kept.
+    static func dateAndTime(_ date: Date) -> String {
+        let cal = CourtCalendar.calendar
+        guard date != cal.startOfDay(for: date) else { return shortDate(date) }
+        return shortDate(date) + " · " + date.formatted(date: .omitted, time: .shortened)
+    }
+
     static let romanLevels = ["I", "II", "III", "IV", "V", "VI"]
 }

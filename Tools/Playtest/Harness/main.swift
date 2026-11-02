@@ -304,7 +304,7 @@ func short(_ date: Date) -> String { SentenceFormat.shortDate(date) }
 func days(_ from: Date, _ to: Date) -> Int { CourtCalendar.calendar.dateComponents([.day], from: from, to: to).day ?? 0 }
 
 /// How readily this judge convicts and how hard it sentences.
-let convictRate = style == "lenient" ? 0.5 : (style == "harsh" ? 0.85 : 0.68)
+let convictRate = style == "lenient" || style == "reckless" ? 0.5 : (style == "harsh" ? 0.85 : 0.68)
 
 nonisolated(unsafe) var game: GameState!
 
@@ -502,12 +502,13 @@ var hearingDates: [UUID: Date] = [:]
 // MARK: - Calendar calls
 
 @MainActor func playCalendar(_ call: CalendarCall) {
-    log("CALENDAR CALL · \(call.matters.count) matters")
+    let live = game.liveSurvey
+    log("CALENDAR CALL · \(call.matters.count) matters · STANDING P\(live.prosecutors) D\(live.defenseBar) O\(live.overall) Pub\(live.publicApproval)")
     var choices: [UUID: Int] = [:]
     var dates: [UUID: Date] = [:]
     for m in call.matters {
         let allowed = m.options.indices.filter { !(m.unavailableOptions ?? []).contains($0) }
-        let pick = allowed.isEmpty ? 0 : rng.pick(allowed)
+        let pick = allowed.isEmpty ? 0 : (style == "reckless" ? (m.kind == .failureToAppear ? 2 : allowed[0]) : rng.pick(allowed))
         choices[m.id] = pick
         log("  \(m.kind.label) · \(m.docket) · \(m.personName): \(m.summary)")
         checkText(m.summary + " " + m.stateAsk + " " + m.defenseAsk, where: "calendar \(m.docket)")
