@@ -153,6 +153,8 @@ struct JailInmate: Identifiable, Hashable {
     var trialDate: Date? = nil
     var waitingToPlead = false
     var sanction = false
+    var canPost: Int? = nil
+    var reviewSet = false
 
     var noBond: Bool { (bond ?? "").hasPrefix("Held without bond") }
     var bondAmount: Int? { Corrections.dollars(in: bond) }
@@ -165,7 +167,8 @@ struct JailInmate: Identifiable, Hashable {
             let next = trialDate.map { "Trial set for \(SentenceFormat.shortDate($0))" }
                 ?? (waitingToPlead ? "Waiting to plead at a calendar call" : "Awaiting a trial date")
             let held = since.map { "in jail since \(SentenceFormat.shortDate($0))" } ?? "in jail"
-            return (title, "\(next) · \(held)")
+            let post = canPost.map { $0 == 0 ? " · can't post any bond" : " · can post about $\($0.formatted())" } ?? ""
+            return (title, "\(next) · \(held)\(post)" + (reviewSet ? " · bond review set" : ""))
         case .sentenced:
             let out = releaseDate.map { "Out \(SentenceFormat.shortDate($0))" } ?? "Release date pending"
             return (sanction ? "Probation violation: short jail stay" : "Serving a jail sentence", out)

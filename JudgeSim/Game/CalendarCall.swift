@@ -504,7 +504,7 @@ enum CalendarCalls {
     }
 
     /// A jailed defendant asks to have the bond lowered (G.S. 15A-538). The judge sets the new amount.
-    static func bondReductionMatter(for c: CourtCase, on date: Date? = nil, rng: inout SeededRNG) -> CalendarMatter {
+    static func bondReductionMatter(for c: CourtCase, on date: Date? = nil, courtOrdered: Bool = false, rng: inout SeededRNG) -> CalendarMatter {
         let d = c.defendant
         var held = c.background.map { max($0.custodyDays, 1) } ?? rng.int(40...210)
         // No more days in jail than have passed since the arrest.
@@ -515,39 +515,56 @@ enum CalendarCalls {
         }
         let worstClass = c.charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
         let priorFelonies = d.priors.filter { $0.ncClass.isFelony }.count
-        let current = bondScale(worstClass, violent: c.category == .violent || c.category == .robbery,
-                                felonies: priorFelonies, ftas: 0, rng: &rng).secured
-        // The file shows the bond the defendant is actually held on.
+        let violent = c.category == .violent || c.category == .robbery
+        let noBond = c.background?.bondStatus.hasPrefix("Held without bond") ?? false
+        // The bond the defendant is actually held on, when the file says it.
+        let current = Corrections.dollars(in: c.background?.bondStatus)
+            ?? bondScale(worstClass, violent: violent, felonies: priorFelonies, ftas: 0, rng: &rng).secured
         var jailed = c
         if var bg = jailed.background {
             bg.custodyDays = held
             bg.onRelease = false
-            bg.bondStatus = "Held on a $\(current.formatted()) secured bond; in custody for \(held) day\(held == 1 ? "" : "s")."
+            bg.bondStatus = noBond
+                ? "Held without bond under Iryna's Law; in custody for \(held) day\(held == 1 ? "" : "s")."
+                : "Held on a $\(current.formatted()) secured bond; in custody for \(held) day\(held == 1 ? "" : "s")."
             jailed.background = bg
         }
         let employed = !d.occupation.lowercasedPhrase.contains("unemployed")
-        let canPost = employed ? rng.pick([1_000, 2_500, 5_000, 10_000, 15_000]) : rng.pick([0, 500, 1_000, 2_500])
+        // What the defendant told the court at the first hearing, when the court heard it.
+        let canPost = c.background?.canPost ?? (employed ? rng.pick([1_000, 2_500, 5_000, 10_000, 15_000]) : rng.pick([0, 500, 1_000, 2_500]))
         let ftas = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count + (rng.chance(0.3) ? 1 : 0)
         let felonies = d.priors.filter { $0.ncClass.isFelony }.count
-        let violent = c.category == .violent || c.category == .robbery
         let flight = min(0.6, 0.06 + 0.12 * Double(ftas) + (employed ? 0 : 0.06) + 0.02 * Double(d.priors.count))
         let danger = min(0.5, 0.04 + (violent ? 0.08 : 0) + 0.05 * Double(felonies))
         let law = c.charges.first?.law.title.lowercased() ?? "the charge"
+        // Iryna's Law limits release on a violent felony to a secured bond or house arrest.
+        let violentOffense = c.charges.contains { $0.law.ncClass?.isFelony == true }
+            && (violent || c.charges.contains { Corrections.soundsViolent($0.law.title) })
+        let priorViolent = d.priors.contains { $0.ncClass.isFelony && Corrections.soundsViolent($0.offense) }
+        let unavailable: Set<Int>? = violentOffense ? (priorViolent ? [0, 3, 4] : [3, 4]) : nil
+        let record = "\(d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s")")\(ftas > 0 ? ", \(ftas) prior failure\(ftas == 1 ? "" : "s") to appear" : "")."
+        let heldText = noBond ? "held \(held) day\(held == 1 ? "" : "s") without bond under Iryna's Law" : "held \(held) day\(held == 1 ? "" : "s") on a $\(current.formatted()) secured bond"
+        let opening = courtOrdered
+            ? "On the court's own motion: a review of conditions of release for \(d.name), \(heldText) on \(law) (G.S. 15A-538)."
+            : "\(d.name), \(heldText) on \(law), asks the court to \(noBond ? "set conditions of release" : "reduce it") (G.S. 15A-538)."
         return CalendarMatter(kind: .bondModification, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
-                              summary: "\(d.name), held \(held) day\(held == 1 ? "" : "s") on a $\(current.formatted()) secured bond on \(law), asks the court to reduce it (G.S. 15A-538). \(d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s")")\(ftas > 0 ? ", \(ftas) prior failure\(ftas == 1 ? "" : "s") to appear" : ""). \(employed ? "\(d.lastName)'s employer will hold the job for two more weeks." : "\(d.lastName) was out of work before the arrest.")",
-                              stateAsk: ftas > 0 || violent
+                              summary: "\(opening) \(record) \(employed ? "\(d.lastName)'s employer will hold the job for two more weeks." : "\(d.lastName) was out of work before the arrest.") \(canPost == 0 ? "\(d.lastName) can't post any bond at all." : "\(d.lastName) can realistically post about $\(canPost.formatted()).")",
+                              stateAsk: noBond ? "The State asks that \(d.lastName) stay held without bond. Nothing about the danger has changed."
+                                : (ftas > 0 || violent
                                 ? "The State opposes any reduction. \(ftas > 0 ? "The defendant has missed court before." : "The charge is violent and the evidence is strong.")"
-                                : "The State would agree to a modest reduction with electronic monitoring.",
+                                : "The State would agree to a modest reduction with electronic monitoring."),
                               defenseAsk: "My client can post about $\(canPost.formatted()). Anything higher is a detention order by another name. There's a job and a family waiting.",
-                              options: ["Set a new secured bond of an amount you set", "Leave the bond at $\(current.formatted())",
+                              options: ["Set a new secured bond of an amount you set",
+                                        noBond ? "Keep \(d.lastName) held without bond" : "Leave the bond at $\(current.formatted())",
                                         "Set a new secured bond of an amount you set, with electronic house arrest",
                                         "Change to an unsecured bond of an amount you set",
                                         "Release on a written promise to appear"],
+                              lawNote: violentOffense ? "Iryna's Law: a violent felony. Release only on a secured bond" + (priorViolent ? " is barred by the earlier violent conviction; house arrest with electronic monitoring is the only release." : " or house arrest with electronic monitoring.") : nil,
                               pendingCase: jailed,
                               bond: BondFacts(moderate: current, high: current, canPost: canPost, flightRisk: flight, danger: danger),
-                              amountOptions: [0, 2, 3], amountRange: 500...max(500_000, current * 2), suggestedAmount: max(500, current / 2),
-                              suggestedAmounts: [3: max(500, current / 2)])
+                              amountOptions: [0, 2, 3], amountRange: 500...max(500_000, current * 2), suggestedAmount: max(500, min(current / 2, max(500, canPost))),
+                              suggestedAmounts: [3: max(500, current / 2)], unavailableOptions: unavailable)
     }
 
     /// A stay-away order broken by someone not on probation: a short hearing on criminal contempt (G.S. 5A-11, 5A-15),

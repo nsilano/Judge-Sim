@@ -134,6 +134,7 @@ private struct SaveData: Codable {
     var dispositions: [DispositionRecord]? = nil
     var arraignQueue: [PendingArraignment]? = nil
     var caseLog: [LogEvent]? = nil
+    var bondReviews: [UUID]? = nil
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -183,6 +184,8 @@ final class GameState: ObservableObject {
     @Published private(set) var arraignQueue: [PendingArraignment] = []
     /// Every step of every case, for the timelines: crime, investigation, arrest, jail, bond, trial, prison, release.
     @Published private(set) var caseLog: [LogEvent] = []
+    /// Cases the judge has set for a review of conditions of release at the next bond session.
+    @Published private(set) var bondReviews: [UUID] = []
     /// What became of each defendant at judgment, and whether the person was arrested again once free.
     @Published private(set) var dispositions: [DispositionRecord] = []
     /// The judge's standing schedule: court days, daily limits, one-day changes and time off.
@@ -405,6 +408,7 @@ final class GameState: ObservableObject {
         dispositions = []
         arraignQueue = []
         caseLog = []
+        bondReviews = []
         // Every career's county starts a little different.
         living = CountyLife.begin(seed: seedBase)
         Gazetteer.living = living
@@ -1336,6 +1340,19 @@ final class GameState: ObservableObject {
                 usedPeople.insert(c.defendant.personID)
             }
             bondQueue = []
+            // Reviews of conditions of release the judge ordered from the jail roster.
+            if !bondReviews.isEmpty {
+                let pending = scheduled.map(\.entry) + awaiting.map(\.entry)
+                for id in bondReviews {
+                    guard let c = pending.compactMap({ entry -> CourtCase? in
+                        if case .trial(let t) = entry.matter, t.id == id { return t } else { return nil }
+                    }).first, c.background?.isJailed == true,
+                          !bondCall.matters.contains(where: { $0.personID == c.defendant.personID }) else { continue }
+                    bondCall.matters.append(CalendarCalls.bondReductionMatter(for: c, on: date, courtOrdered: true, rng: &rng))
+                    usedPeople.insert(c.defendant.personID)
+                }
+                bondReviews = []
+            }
             for matter in showCauseQueue where !usedPeople.contains(matter.personID) {
                 bondCall.matters.append(matter)
                 usedPeople.insert(matter.personID)
@@ -2196,10 +2213,17 @@ final class GameState: ObservableObject {
                 // back on an order for arrest, or a bond review) waits for its trial date.
                 let firstUp = m.kind == .firstAppearance && c.background?.arraigned != true
                 func arraign(_ c: CourtCase, _ weeks: Int, _ note: String, _ n: Int) { queueArraignment(c, note: note, on: call.date) }
+                // A review that keeps a defendant held without bond changes nothing but the record.
+                if m.kind == .bondModification && choice == 1 && (c.background?.bondStatus.hasPrefix("Held without bond") ?? false) {
+                    log(.bond, c, on: call.date, "Bond review: kept held without bond.")
+                    schedule(c, rng.int(5...8), "Kept held without bond at a review on \(heard).", 0)
+                    continue
+                }
                 // Iryna's Law: the judge holds the defendant without bond.
                 if m.kind == .firstAppearance && choice == 5 && m.options.count > 5 {
                     var held = c
                     if var bg = held.background {
+                        bg.canPost = bond.canPost
                         bg.custodyDays = max(1, bg.custodyDays)
                         bg.onRelease = false
                         bg.heldOnCourtBond = true
@@ -2357,6 +2381,7 @@ final class GameState: ObservableObject {
                                date: Date, rng: inout SeededRNG, schedule: (CourtCase, Int, String, Int) -> Void, watch supervision: Double? = nil) {
         var held = c
         guard var bg = held.background else { schedule(c, rng.int(5...8), "Set for trial on \(heard).", 0); return }
+        bg.canPost = bond.canPost
         let kind = condition.contains("promise") ? "Written promise" : condition.contains("custody of") ? "Custody release"
             : condition.contains("unsecured") ? "Unsecured bond" : condition.contains("house arrest") ? "Secured bond with house arrest" : "Secured bond"
         var kinds = stats.bondKinds ?? [:]
@@ -3131,6 +3156,7 @@ final class GameState: ObservableObject {
         dispositions = []
         arraignQueue = []
         caseLog = []
+        bondReviews = []
         placeHistory = [:]
         residents = []
         officerRecords = [:]
@@ -3759,7 +3785,8 @@ final class GameState: ObservableObject {
                                      risk: Corrections.risk(violent: violent, felony: felony, priors: d.priors.count, orders: orders, failures: failures),
                                      flags: flags, releasable: !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false),
                                      trialDate: scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }?.date,
-                                     waitingToPlead: arraignQueue.contains { $0.courtCase.id == c.id }))
+                                     waitingToPlead: arraignQueue.contains { $0.courtCase.id == c.id },
+                                     canPost: c.background?.canPost, reviewSet: bondReviews.contains(c.id)))
         }
         return roster
     }
@@ -3945,6 +3972,20 @@ final class GameState: ObservableObject {
         return released
     }
 
+    /// Sets a review of a jailed defendant's conditions of release for the next bond session.
+    func requestBondReview(caseID: UUID) {
+        guard !bondReviews.contains(caseID) else { return }
+        bondReviews.append(caseID)
+        if let c = (scheduled.map(\.entry) + awaiting.map(\.entry)).compactMap({ entry -> CourtCase? in
+            if case .trial(let t) = entry.matter, t.id == caseID { return t } else { return nil }
+        }).first {
+            log(.court, c, on: currentDate, "The court set a review of conditions of release for the next bond session.")
+        }
+        save()
+    }
+
+    func bondReviewPending(_ caseID: UUID) -> Bool { bondReviews.contains(caseID) }
+
     /// The judge's own picks from the jail roster while the sheriff's notice is open.
     func orderEarlyRelease(_ personIDs: Set<UUID>) {
         guard !personIDs.isEmpty, let county else { return }
@@ -4077,7 +4118,7 @@ final class GameState: ObservableObject {
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, calendarLog: calendarLog, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
                             officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
-                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog)
+                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog, bondReviews: bondReviews)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -4153,6 +4194,7 @@ final class GameState: ObservableObject {
         dispositions = data.dispositions ?? []
         arraignQueue = data.arraignQueue ?? []
         caseLog = data.caseLog ?? []
+        bondReviews = data.bondReviews ?? []
         // Cases that go to trial no longer wait for an arraignment: they join the list waiting for a trial date.
         for item in arraignQueue where item.courtCase.templateKey.hasPrefix("story.") {
             arraignQueue.removeAll { $0.id == item.id }
