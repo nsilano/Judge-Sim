@@ -2345,8 +2345,10 @@ final class GameState: ObservableObject {
                     if let picked = dates[m.id] {
                         // The judge picked the trial day. Too soon for the new lawyer, and the new lawyer asks for more time.
                         let days = CourtCalendar.calendar.dateComponents([.day], from: call.date, to: picked).day ?? 0
-                        if days < 7 * needs - 7 && rng.chance(0.75) {
-                            fresh.continuanceMotion = ContinuanceMotions.make(for: fresh, rng: &rng)
+                        if days < 7 * needs - 7 {
+                            // Too soon for the new lawyer: it will come up when the trial is called.
+                            fresh.incidents = (fresh.incidents ?? []) + [Incidents.unpreparedCounsel(fresh, had: max(1, days), needed: 7 * needs,
+                                reason: "New counsel came into the case on \(heard), when you allowed \(old) to withdraw.")]
                         }
                         awaitCase(fresh, note: note, on: call.date)
                         if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
@@ -2455,7 +2457,12 @@ final class GameState: ObservableObject {
                     setCase.background?.arraigned = true
                     let days = CourtCalendar.calendar.dateComponents([.day], from: call.date, to: picked).day ?? 35
                     if days < 21 && c.charges.count > 1 && rng.chance(0.6) {
-                        setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
+                        if c.templateKey.hasPrefix("story.") {
+                            setCase.incidents = (setCase.incidents ?? []) + [Incidents.unpreparedCounsel(setCase, had: max(1, days), needed: 35,
+                                reason: "You set this \(c.charges.count)-count case for trial \(days) day\(days == 1 ? "" : "s") after the arraignment.")]
+                        } else {
+                            setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
+                        }
                     }
                     awaitCase(setCase, note: "Arraigned on \(heard); pleaded not guilty.", on: call.date)
                     if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
