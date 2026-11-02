@@ -813,6 +813,11 @@ if args.count > 1 && args[1] == "scan" {
         let roster = game.jailRoster()
         for r in roster.prefix(8) { log("  ROSTER \(r.name) \(r.kindLabel) \(r.charge) risk \(String(format: "%.2f", r.risk)) bed \(r.bedDate.map(short) ?? "-")") }
     }
+    let dockets = Array(Set(game.caseLog.map(\.docket))).sorted().prefix(4)
+    for d in dockets {
+        log("CASE LOG \(d)")
+        for e in game.log(docket: d) { log("  \(short(e.date)) [\(e.kind.rawValue)] \(e.text)") }
+    }
     log("BACKLOG BY MONTH")
     for b in backlog { log("  \(b)") }
     finish()

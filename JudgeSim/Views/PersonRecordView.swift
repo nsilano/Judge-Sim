@@ -16,6 +16,7 @@ struct PersonDetail: View {
             PersonStatusCard(person: current, today: game.currentDate, appeals: file.appeals, upcoming: file.upcoming)
                 .card(tint: statusTint(current))
             PersonTimeline(person: current)
+            CustodyHistory(personID: current.id)
             // Before they were charged, the court may have known them as a victim or a witness.
             if let known = game.residents.first(where: { $0.name == current.name }), !known.roles.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {

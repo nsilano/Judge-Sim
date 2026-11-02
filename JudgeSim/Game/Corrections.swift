@@ -250,3 +250,75 @@ extension Corrections {
                 "firearm", "weapon", "arson", "stalking", "communicating threats", "child abuse", "domestic"].contains { c.contains($0) }
     }
 }
+
+/// One entry in a case's and a person's timeline: the crime, the investigation, the arrest, every night in and out
+/// of the jail, the bond hearing, trial settings, the verdict, transfer to prison, and release.
+struct LogEvent: Codable, Hashable, Identifiable {
+    enum Kind: String, Codable {
+        case crime, investigation, warrant, arrest, jailIn, jailOut, bond, trialSet, continued, court, verdict, prison, release, probation, early
+
+        var icon: String {
+            switch self {
+            case .crime: return "exclamationmark.octagon.fill"
+            case .investigation: return "magnifyingglass"
+            case .warrant: return "doc.text.fill"
+            case .arrest: return "light.beacon.max.fill"
+            case .jailIn: return "lock.fill"
+            case .jailOut: return "lock.open.fill"
+            case .bond: return "dollarsign.circle.fill"
+            case .trialSet: return "calendar.badge.clock"
+            case .continued: return "arrow.uturn.right.circle"
+            case .court: return "building.columns"
+            case .verdict: return "hammer.fill"
+            case .prison: return "bus.fill"
+            case .release: return "door.left.hand.open"
+            case .probation: return "person.badge.clock.fill"
+            case .early: return "door.left.hand.open"
+            }
+        }
+    }
+    var id = UUID()
+    var date: Date
+    var personID: UUID?
+    var name: String
+    var docket: String
+    var kind: Kind
+    var text: String
+}
+
+/// A stretch of time in custody, from the log.
+struct CustodyStay: Identifiable, Hashable {
+    var id: Date { start }
+    var start: Date
+    var end: Date?
+    var reason: String
+    var endReason: String?
+
+    func days(through today: Date) -> Int {
+        max(0, CourtCalendar.calendar.dateComponents([.day], from: CourtCalendar.calendar.startOfDay(for: start),
+                                                      to: CourtCalendar.calendar.startOfDay(for: end ?? today)).day ?? 0)
+    }
+
+    /// Pairs each night in with the next night out, oldest first.
+    static func stays(from events: [LogEvent]) -> [CustodyStay] {
+        var stays: [CustodyStay] = []
+        var open: CustodyStay?
+        for e in events.sorted(by: { $0.date < $1.date }) {
+            switch e.kind {
+            case .jailIn where open == nil:
+                open = CustodyStay(start: e.date, end: nil, reason: e.text)
+            case .jailOut, .early:
+                if var stay = open {
+                    stay.end = e.date
+                    stay.endReason = e.text
+                    stays.append(stay)
+                    open = nil
+                }
+            default:
+                break
+            }
+        }
+        if let open { stays.append(open) }
+        return stays
+    }
+}

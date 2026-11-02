@@ -297,7 +297,7 @@ private struct InmateRow: View {
         if let person = game.person(inmate.personID) {
             NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { content }
         } else {
-            content
+            NavigationLink { CaseTimelineView(docket: inmate.docket) } label: { content }
         }
     }
 

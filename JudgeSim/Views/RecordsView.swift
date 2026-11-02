@@ -207,6 +207,11 @@ struct RecordsView: View {
                 } label: {
                     Label("Career ledger", systemImage: "book.closed.fill")
                 }
+                NavigationLink {
+                    CaseLogIndex()
+                } label: {
+                    Label("Case log: arrests, jail, and every step", systemImage: "clock.arrow.circlepath")
+                }
             }
             Section {
                 if game.history.isEmpty { Text("No cases heard yet.").foregroundStyle(.secondary) }

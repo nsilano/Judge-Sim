@@ -224,10 +224,25 @@ struct PersonTimeline: View {
                                   text: appeal.result ?? "Appeal decided"))
             }
         }
+        // The arrests, jail stays, bond hearings, trial settings, and transfers the court's log recorded.
+        for e in game.log(for: person.id) where e.kind != .verdict {
+            list.append(Event(date: e.date, icon: e.kind.icon, color: Self.color(for: e.kind), text: e.text, tag: e.docket))
+        }
         if let release = person.releaseDate, release != .distantFuture, person.status == .incarcerated {
             list.append(Event(date: release, icon: "door.left.hand.open", color: .secondary, text: "Projected release"))
         }
         return list.sorted { $0.date > $1.date }
+    }
+
+    static func color(for kind: LogEvent.Kind) -> Color {
+        switch kind {
+        case .crime, .arrest, .warrant: return Theme.prosecution
+        case .jailIn, .prison: return Theme.bad
+        case .jailOut, .release, .early: return Theme.good
+        case .bond: return Theme.gold
+        case .probation: return .orange
+        case .investigation, .trialSet, .continued, .court, .verdict: return Theme.defense
+        }
     }
 
     var body: some View {
@@ -265,5 +280,127 @@ struct PersonTimeline: View {
             }
         }
         .card()
+    }
+}
+
+
+/// Every stretch a person spent in custody, from the court's log.
+struct CustodyHistory: View {
+    @EnvironmentObject private var game: GameState
+    let personID: UUID
+
+    var body: some View {
+        let stays = CustodyStay.stays(from: game.log(for: personID))
+        if !stays.isEmpty {
+            let total = stays.map { $0.days(through: game.currentDate) }.reduce(0, +)
+            VStack(alignment: .leading, spacing: 8) {
+                SectionTitle(text: "Time in custody · \(total) day\(total == 1 ? "" : "s")", icon: "lock.fill")
+                ForEach(stays.reversed()) { stay in
+                    let days = stay.days(through: game.currentDate)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(SentenceFormat.shortDate(stay.start)) – \(stay.end.map(SentenceFormat.shortDate) ?? "now") · \(days) day\(days == 1 ? "" : "s")")
+                            .font(.caption.monospacedDigit().weight(.semibold))
+                        Text(stay.reason).font(.caption).foregroundStyle(.secondary)
+                        if let out = stay.endReason { Text(out).font(.caption).foregroundStyle(Theme.good) }
+                    }
+                }
+            }
+            .card()
+        }
+    }
+}
+
+/// One case from the crime to the last thing that happened in it.
+struct CaseTimelineView: View {
+    @EnvironmentObject private var game: GameState
+    let docket: String
+
+    var body: some View {
+        let events = game.log(docket: docket)
+        List {
+            if let first = events.first {
+                Section {
+                    Text("State v. \(first.name)").font(.system(.headline, design: .serif))
+                    let stays = CustodyStay.stays(from: events)
+                    if !stays.isEmpty {
+                        let total = stays.map { $0.days(through: game.currentDate) }.reduce(0, +)
+                        Label("\(total) day\(total == 1 ? "" : "s") in custody on this case", systemImage: "lock.fill")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    if let id = first.personID, let person = game.person(id) {
+                        NavigationLink("Full record: \(person.name)") { PersonDetail(person: person, today: game.currentDate) }
+                            .font(.caption.weight(.semibold))
+                    }
+                }
+            }
+            Section("Timeline") {
+                if events.isEmpty { Text("Nothing logged for this case yet.").foregroundStyle(.secondary) }
+                ForEach(events) { e in
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: e.kind.icon).foregroundStyle(PersonTimeline.color(for: e.kind)).frame(width: 20)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(e.date > game.currentDate ? "\(SentenceFormat.shortDate(e.date)) (expected)" : SentenceFormat.shortDate(e.date))
+                                .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                            Text(e.text).font(.callout).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+        }
+        .benchBackground()
+        .navigationTitle(docket)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct CaseLogRow: Identifiable {
+    let id: String
+    let first: LogEvent
+    let last: LogEvent
+}
+
+/// Every case the log knows, newest activity first: arrests, investigations, and everything after.
+struct CaseLogIndex: View {
+    @EnvironmentObject private var game: GameState
+    @State private var query = ""
+    @State private var shown = 50
+
+    var body: some View {
+        let byDocket = Dictionary(grouping: game.caseLog, by: \.docket)
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        let cases = byDocket.compactMap { docket, events -> CaseLogRow? in
+            guard !docket.isEmpty, let first = events.min(by: { $0.date < $1.date }), let last = events.max(by: { $0.date < $1.date }) else { return nil }
+            if !q.isEmpty && !docket.lowercased().contains(q) && !first.name.lowercased().contains(q) { return nil }
+            return CaseLogRow(id: docket, first: first, last: last)
+        }.sorted { $0.last.date > $1.last.date }
+        List {
+            Section {
+                ForEach(cases.prefix(shown)) { item in
+                    NavigationLink { CaseTimelineView(docket: item.id) } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack {
+                                Text(item.first.name).font(.subheadline.weight(.semibold))
+                                Spacer()
+                                Text(item.id).font(.caption2.monospaced()).foregroundStyle(.secondary)
+                            }
+                            Label(item.last.text, systemImage: item.last.kind.icon).font(.caption).lineLimit(2)
+                                .foregroundStyle(PersonTimeline.color(for: item.last.kind))
+                            Text("Latest: \(SentenceFormat.shortDate(item.last.date)) · began \(SentenceFormat.shortDate(item.first.date))")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                if cases.count > shown {
+                    Button("Show more") { shown += 50 }.font(.caption.weight(.semibold))
+                }
+            } header: {
+                Text("\(cases.count) case\(cases.count == 1 ? "" : "s")")
+            } footer: {
+                Text("Every case from the crime on: the investigation, the arrest, nights in jail, the bond hearing, trial settings, the verdict, prison, and release. Cases from before this log began start partway through.")
+            }
+        }
+        .searchable(text: $query, prompt: "Name or docket")
+        .benchBackground()
+        .navigationTitle("Case log")
     }
 }
