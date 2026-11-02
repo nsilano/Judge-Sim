@@ -3770,7 +3770,7 @@ final class GameState: ObservableObject {
         // A revocation's credit for earlier CRV time mentions the phrase too, so only the order itself counts.
         let sanction = lowerNote.contains("quick dip") || lowerNote.hasPrefix("confinement in response to violation")
             || lowerNote.contains("period of confinement in response to violation")
-        let jail = sanction || note.contains(" days active") || (note.contains(" days") && !note.contains("months"))
+        let jail = sanction || person.custodyPlace == .jail
         people[index].releaseDate = nil
         people[index].releaseNote = nil
         people[index].custodyDocket = nil

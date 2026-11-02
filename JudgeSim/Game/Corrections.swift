@@ -14,9 +14,19 @@ extension PersonRecord {
         if note.contains("not guilty by reason of insanity") || note.contains("Central Regional Hospital") { return .hospital }
         if releaseDate == .distantFuture { return .prison }
         let lower = note.lowercased()
-        let sanction = lower.contains("quick dip") || lower.hasPrefix("confinement in response to violation")
-            || lower.contains("period of confinement in response to violation")
-        let jail = sanction || note.contains(" days active") || (note.contains(" days") && !note.contains("months"))
+        // North Carolina sends active felony sentences to state prison however short; misdemeanants serve in county
+        // jails (longer terms through the Statewide Misdemeanant Confinement Program, still a county jail). A quick
+        // dip is always local; a CRV follows the probation it came from.
+        if lower.contains("quick dip") { return .jail }
+        let crv = lower.hasPrefix("confinement in response to violation") || lower.contains("period of confinement in response to violation")
+        if crv { return (probation?.isFelony ?? false) ? .prison : .jail }
+        if let docket = custodyDocket?.replacingOccurrences(of: " (PV)", with: ""),
+           let conviction = priors.last(where: { $0.docket == docket || $0.docket == custodyDocket }) {
+            return conviction.ncClass.isFelony ? .prison : .jail
+        }
+        if let term = probation, custodyDocket?.hasPrefix(term.docket) == true { return term.isFelony ? .prison : .jail }
+        // No conviction on file to go by: a term counted in days is a jail term.
+        let jail = note.contains(" days active") || (note.contains(" days") && !note.contains("months"))
         return jail ? .jail : .prison
     }
 
