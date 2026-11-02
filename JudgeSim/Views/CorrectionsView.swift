@@ -720,6 +720,7 @@ private struct JudgeRecordSections: View {
         let sentences = s.activeSentences + s.suspendedSentences
         let custodyRate = sentences == 0 ? nil : Double(s.activeSentences) / Double(sentences)
 
+        CrimeRateSection()
         Section {
             row("Active sentences", "\(s.activeSentences)")
             row("Suspended (probation) sentences", "\(s.suspendedSentences)")
@@ -1085,6 +1086,46 @@ private struct ServedRow: View {
             Text(order.personName).font(.subheadline.weight(.semibold))
             Text(servedLine).font(.caption).foregroundStyle(Theme.good)
             Text(order.offense + " · " + order.docket).font(.caption2).foregroundStyle(.secondary)
+        }
+    }
+}
+
+
+/// The county's crime rate, and how the people this court let go are moving it.
+private struct CrimeRateSection: View {
+    @EnvironmentObject private var game: GameState
+
+    var body: some View {
+        let now = game.crimeRate(on: game.currentDate)
+        let before = game.crimeRate(on: CourtCalendar.calendar.date(byAdding: .day, value: -90, to: game.currentDate) ?? game.currentDate)
+        let change = now.rate - before.rate
+        Section {
+            HStack(alignment: .firstTextBaseline) {
+                Text(String(format: "%.1f%%", now.rate)).font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundStyle(now.rate > 3.5 ? Theme.bad : (now.rate < 2.8 ? Theme.good : Theme.text))
+                Text("county crime rate").font(.headline).foregroundStyle(.secondary)
+                Spacer()
+                Text(String(format: "%@%.1f in 90 days", change >= 0 ? "+" : "", change)).font(.caption.monospacedDigit())
+                    .foregroundStyle(change > 0.05 ? Theme.bad : (change < -0.05 ? Theme.good : .secondary))
+            }
+            CrimeRateRow(label: "State average", value: "3.0%")
+            CrimeRateRow(label: "People you let go arrested again (last 6 months)", value: "\(now.rearrests)")
+            CrimeRateRow(label: "Reoffense rate of people freed this year", value: now.reoffense.map { "\(Int(($0 * 100).rounded()))%" } ?? "Too few yet")
+            Text("Every new arrest of someone you released, on bond, probation, early release, or acquittal, pushes the rate up for six months. Fewer people reoffending brings it down.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        } header: { Text("Community") }
+    }
+}
+
+private struct CrimeRateRow: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(label).font(.subheadline)
+            Spacer()
+            Text(value).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
         }
     }
 }
