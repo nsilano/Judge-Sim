@@ -2311,7 +2311,14 @@ final class GameState: ObservableObject {
                 let before = ["first", "second", "third", "fourth", "fifth"].firstIndex { m.summary.contains("be the \($0) continuance") } ?? 1
                 if choice == 0 {
                     if before + 1 >= 3 { standing(.repeatedContinuance, "Granted a \(["", "first", "second", "third", "fourth", "fifth", "sixth"][min(6, before + 1)]) continuance — \(c.defendant.name)", on: call.date) }
-                    setFor(c, weeks: 4, note: "Continued at the calendar call on \(heard) on the defense's motion.", continuances: before + 1)
+                    let note = "Continued at the calendar call on \(heard) on the defense's motion."
+                    if let picked = dates[m.id] {
+                        // The judge picked the new trial day.
+                        awaitCase(c, note: note, on: call.date, continuances: before + 1)
+                        if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
+                    } else {
+                        setFor(c, weeks: 4, note: note, continuances: before + 1)
+                    }
                 } else {
                     standing(.continuanceDenied, "Denied a continuance — \(c.defendant.name)", on: call.date)
                     // Denied: the trial date stands; with none yet, the case is ready now and waits for the judge to set one.

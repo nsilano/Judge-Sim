@@ -515,6 +515,9 @@ var hearingDates: [UUID: Date] = [:]
         log("    State: \(m.stateAsk)")
         log("    Defense: \(m.defenseAsk)")
         log("    Ruling: \(m.options.indices.contains(pick) ? m.options[pick] : "-")")
+        if m.kind == .continuance && pick == 0 {
+            dates[m.id] = game.nextSittingDay(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 28, to: game.currentDate) ?? game.currentDate)
+        }
         if m.kind == .arraignment && pick == 0 {
             dates[m.id] = game.nextSittingDay(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 35, to: game.currentDate) ?? game.currentDate)
         }

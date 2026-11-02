@@ -815,7 +815,7 @@ enum CalendarCalls {
                     defenseAsk: rng.pick(["Lab report just arrived; needs an expert.", "Newly appointed; hasn't met the client.",
                                           "A defense witness is deployed until next month.", "Four hours of new bodycam video to review.",
                                           "Stuck in a murder trial in another county.", "Client is in inpatient treatment for 28 days."]),
-                    options: ["Grant the continuance; reset for trial in four weeks", "Deny; the case is ready for trial and you set the date"]))
+                    options: ["Grant the continuance and pick the new trial date", "Deny; the case is ready for trial and you set the date"]))
             case .bondModification:
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
