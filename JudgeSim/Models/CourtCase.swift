@@ -245,6 +245,9 @@ struct CaseBackground: Codable, Hashable {
     var arraigned: Bool? = nil
     /// What the defendant can realistically post, as the bond hearing learned it (optional for older saves).
     var canPost: Int? = nil
+    /// A bail bondsman's fee rate for this defendant, and whether one will write the bond (optional for older saves).
+    var bondsmanRate: Double? = nil
+    var bondsmanWilling: Bool? = nil
     var restitution: Int
     var restitutionBasis: String?
     var victimStance: VictimStance
