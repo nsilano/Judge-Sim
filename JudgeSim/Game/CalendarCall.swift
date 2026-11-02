@@ -762,7 +762,9 @@ enum CalendarCalls {
         var matters: [CalendarMatter] = []
         // Pleas come only from defendants already arrested and brought before the court (see GameState).
 
-        let others: [CalendarMatter.Kind] = rng.pick([.failureToAppear, .continuance, .bondModification, .capacity], count: 2)
+        // Capacity motions are rare: only now and then, and only for a defendant with a known mental health need.
+        var others: [CalendarMatter.Kind] = rng.pick([.failureToAppear, .continuance, .bondModification], count: 2)
+        if rng.chance(0.1) { others.append(.capacity) }
         for kind in others {
             let name = NameBank.person(using: &rng, excluding: &used)
             let age = rng.int(19...60)

@@ -1331,6 +1331,11 @@ final class GameState: ObservableObject {
                             let recent = c.background?.lastBondMotion.map { (cal.dateComponents([.day], from: $0, to: date).day ?? 99) < 42 } ?? false
                             return jailed && !recent && !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false) ? c : nil
                         case .failureToAppear: return jailed || Self.isMurder(c) ? nil : c
+                        // Only someone with a known mental health need, and never twice for the same case.
+                        case .capacity:
+                            let need = c.background?.treatmentNeed.mentalHealth ?? false
+                            let raised = caseLog.contains { $0.docket == c.docket && $0.text.contains("evaluation") || $0.docket == c.docket && $0.text.contains("screening") }
+                            return need && !raised ? c : nil
                         default: return c
                         }
                     }
@@ -1359,6 +1364,12 @@ final class GameState: ObservableObject {
                             } else if let since {
                                 call.matters[index].summary += " Your docket: awaiting a date since \(SentenceFormat.shortDate(since))" + held + "."
                             }
+                        }
+                        if kind == .capacity {
+                            call.matters[index].defenseAsk = rng.pick([
+                                "Client hears voices and can't follow what's happening.", "Client stopped taking medication in jail.",
+                                "Client can't recall the charge from one day to the next.", "A recent head injury; client is confused.",
+                                "Client thinks the trial is about something else entirely.", "Client won't speak to counsel at all."])
                         }
                         if kind == .continuance {
                             call.matters[index].defenseAsk = continuanceReason(for: c, rng: &rng)
