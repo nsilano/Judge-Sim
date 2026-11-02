@@ -531,10 +531,12 @@ enum CalendarCalls {
     /// record has no earlier court dates to miss.
     static func missedCourtDates(_ c: CourtCase) -> Int {
         let d = c.defendant
-        guard !d.priors.isEmpty else { return 0 }
+        // The court date missed in this very case counts too.
+        let thisCase = c.background?.missedCourt != nil ? 1 : 0
+        guard !d.priors.isEmpty else { return thisCase }
         let convictions = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count
         var rng = SeededRNG(seed: c.seed ^ 0xF7A)
-        return convictions + (rng.chance(0.25) ? 1 : 0)
+        return thisCase + convictions + (rng.chance(0.25) ? 1 : 0)
     }
 
     static func bondMatter(for c: CourtCase, rng: inout SeededRNG) -> CalendarMatter {
@@ -584,17 +586,40 @@ enum CalendarCalls {
             let figure = max(min(money.reach, scale.secured, max(money.cash, money.reach / 2)), 1_000)
             defenseAsk = priorViolent || money.reach == 0 ? "Asks for house arrest with a monitor." : "Asks for $\(figure.formatted()) secured with a monitor."
         }
+        var summary = "\(d.name), \(d.age), arrested this week on \(law?.title.lowercased() ?? "a felony"). \(record). \(money.short(against: scale.wantsSecured || violentOffense ? scale.secured : nil))"
+        var flightRisk = flight
+        var floor = 500
+        var suggested = high
+        // Back on the court's own order for arrest after missing court: the law requires a secured bond of at least
+        // double the last secured bond, or $1,000, and rules out a promise, a custody release, or an unsecured bond
+        // (G.S. 15A-534(d1)). A missed court date alone is no ground to hold without bond.
+        if let missed = c.background?.missedCourt, let served = c.background?.servedOrder {
+            let minimum = c.background?.ftaMinimumBond ?? 1_000
+            floor = minimum
+            suggested = max(high, minimum)
+            flightRisk = min(0.7, flight + 0.15)
+            unavailable = (unavailable ?? []).union([0, 1, 2])
+            let missedWord = SentenceFormat.shortDate(missed)
+            summary = "Back on your order for arrest: \(d.name) missed court on \(missedWord) (\(law?.title.lowercased() ?? "the charges")) and was picked up \(SentenceFormat.shortDate(served)). \(record). \(money.short(against: suggested))"
+            stateAsk = "$\(suggested.formatted()) secured. The law requires at least $\(minimum.formatted())."
+            defenseAsk = rng.pick(["\(d.lastName) says the notice went to an old address; asks for the $\(minimum.formatted()) minimum.",
+                                   "\(d.lastName) mixed up the date; asks for the $\(minimum.formatted()) minimum.",
+                                   "\(d.lastName) had no ride that morning; asks for the $\(minimum.formatted()) minimum.",
+                                   "\(d.lastName) was at work and afraid of losing the job; asks for the $\(minimum.formatted()) minimum."])
+            lawNote = (lawNote.map { $0 + " " } ?? "")
+                + "Missed court: the law requires a secured bond of at least $\(minimum.formatted()) (G.S. 15A-534(d1)). A missed court date alone doesn't allow holding without bond."
+        }
         return CalendarMatter(kind: .firstAppearance, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
-                              summary: "\(d.name), \(d.age), arrested this week on \(law?.title.lowercased() ?? "a felony"). \(record). \(money.short(against: scale.wantsSecured || violentOffense ? scale.secured : nil))",
+                              summary: summary,
                               stateAsk: stateAsk,
                               defenseAsk: defenseAsk,
                               // Every condition G.S. 15A-534(a) allows, with the judge setting any amount.
                               options: options,
                               lawNote: lawNote,
-                              pendingCase: c, bond: BondFacts(moderate: moderate, high: high, canPost: canPost, flightRisk: flight, danger: danger,
+                              pendingCase: c, bond: BondFacts(moderate: moderate, high: high, canPost: canPost, flightRisk: flightRisk, danger: danger,
                                                               feeRate: money.feeRate, bondsman: money.bondsman),
-                              amountOptions: [2, 3, 4], amountRange: 500...max(500_000, high * 2), suggestedAmount: high,
+                              amountOptions: [2, 3, 4], amountRange: floor...max(500_000, high * 2, floor * 2), suggestedAmount: suggested,
                               suggestedAmounts: [2: moderate], unavailableOptions: unavailable)
     }
 

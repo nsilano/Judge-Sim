@@ -250,6 +250,11 @@ struct CaseBackground: Codable, Hashable {
     var bondsmanWilling: Bool? = nil
     /// When the court last heard a motion to change this bond (optional for older saves).
     var lastBondMotion: Date? = nil
+    /// A defendant back on the court's order for arrest: the court date missed, when the order was served, and the
+    /// least secured bond the law allows (double the last secured bond, or $1,000; G.S. 15A-534(d1)). Optional for older saves.
+    var missedCourt: Date? = nil
+    var servedOrder: Date? = nil
+    var ftaMinimumBond: Int? = nil
     var restitution: Int
     var restitutionBasis: String?
     var victimStance: VictimStance

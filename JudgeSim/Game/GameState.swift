@@ -1483,7 +1483,7 @@ final class GameState: ObservableObject {
                 var matter = CalendarCalls.bondMatter(for: c, rng: &rng)
                 matter.summary = matter.summary.replacingOccurrences(of: "arrested this week", with: "arrested on \(SentenceFormat.shortDate(item.arrest))")
                 // How the arrest came about is in the case timeline; the card says only what's being decided.
-                if let note = item.note, note.contains("order for arrest") {
+                if let note = item.note, note.contains("order for arrest"), !matter.summary.hasPrefix("Back on your order") {
                     matter.summary = "Back on your order for arrest. " + matter.summary
                 }
                 bondCall.matters.append(matter)
@@ -2222,6 +2222,13 @@ final class GameState: ObservableObject {
             log(.warrant, c, on: call.date, "\(missed). Order for arrest issued.")
             var held = c
             if var bg = held.background {
+                // The bond the defendant was out on sets the floor for the next one: double a secured bond, or $1,000.
+                let old = bg.bondStatus
+                let secured = old.range(of: "unsecured", options: .caseInsensitive) == nil && old.range(of: "secured", options: .caseInsensitive) != nil
+                let lastSecured = secured ? old.range(of: #"\$[0-9,]+"#, options: .regularExpression)
+                    .flatMap { Int(old[$0].dropFirst().replacingOccurrences(of: ",", with: "")) } : nil
+                bg.missedCourt = call.date
+                bg.ftaMinimumBond = max(1_000, (lastSecured ?? 0) * 2)
                 bg.onRelease = false
                 bg.custodyDays = max(1, bg.custodyDays)
                 bg.bondStatus = "\(missed); order for arrest outstanding. Once served, held on a doubled secured bond."
@@ -2367,7 +2374,9 @@ final class GameState: ObservableObject {
                 // unsecured bond, secured, secured with house arrest.
                 var choice = choice
                 if m.kind == .firstAppearance && m.options.count == 4 { choice = [0, 2, 3, 4][min(choice, 3)] }
-                let set = amounts[m.id] ?? (m.options.count == 4 && choice == 2 ? bond.moderate : nil) ?? m.suggested(for: choice) ?? bond.moderate
+                let picked = amounts[m.id] ?? (m.options.count == 4 && choice == 2 ? bond.moderate : nil) ?? m.suggested(for: choice) ?? bond.moderate
+                // Never below the least the law allows for this defendant (a failure to appear sets a floor).
+                let set = max(picked, m.amountRange?.lowerBound ?? 0)
                 // Only a secured bond has to be posted; a promise, custody release, or unsecured bond releases the
                 // defendant on signing.
                 let amount: Int
@@ -2574,6 +2583,8 @@ final class GameState: ObservableObject {
                                date: Date, rng: inout SeededRNG, schedule: (CourtCase, Int, String, Int) -> Void, watch supervision: Double? = nil) {
         var held = c
         guard var bg = held.background else { schedule(c, rng.int(5...8), "Set for trial on \(heard).", 0); return }
+        // The order for arrest has been answered; the next bond hearing on this case is an ordinary one.
+        bg.servedOrder = nil
         bg.canPost = bond.canPost
         bg.bondsmanRate = bond.feeRate
         bg.bondsmanWilling = bond.bondsman
@@ -3445,6 +3456,7 @@ final class GameState: ObservableObject {
             // conditions, the case waits for a trial date like any other.
             if var c = order.heldCase {
                 if var bg = c.background {
+                    bg.servedOrder = order.servedOn
                     bg.arraigned = true
                     bg.onRelease = false
                     bg.bondStatus = "\(order.how ?? "Arrested on the order for arrest") on \(served) after failing to appear on \(SentenceFormat.shortDate(order.issued)); held pending a bond hearing."
