@@ -1206,8 +1206,8 @@ struct ProbationStage: View {
 
     private func postReleaseSubtitle(_ decision: PostReleaseDecision, _ prs: PostReleaseTerm) -> String? {
         switch decision {
-        case .revoke: return "Serves the remaining \(prs.remainingMonths) months of the maximum term in prison. No further supervision on that sentence."
-        case .confine: return "\(min(3, prs.remainingMonths)) months in custody, then back on supervision."
+        case .revoke: return "Serves the remaining \(prs.remainingMonths) month\(prs.remainingMonths == 1 ? "" : "s") of the maximum term in prison. No further supervision on that sentence."
+        case .confine: return "\(min(3, prs.remainingMonths)) month\(min(3, prs.remainingMonths) == 1 ? "" : "s") in custody, then back on supervision."
         case .continueAsIs: return "No additional time on the old sentence."
         }
     }
@@ -1216,7 +1216,7 @@ struct ProbationStage: View {
         let credit = (probation.crvCount ?? 0) * 3
         switch decision {
         case .revoke:
-            return "Activates \(probation.suspendedSentence)" + (credit > 0 ? ", less \(credit) months already served on CRV" : "")
+            return "Activates \(probation.suspendedSentence)" + (credit > 0 ? ", less \(credit) month\(credit == 1 ? "" : "s") already served on CRV" : "")
         case .crv:
             return probation.isFelony ? "90 days for a felony probationer" : "Up to 90 days, or the rest of the suspended sentence if less"
         default:
