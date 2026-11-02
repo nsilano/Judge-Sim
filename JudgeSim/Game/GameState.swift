@@ -135,6 +135,7 @@ private struct SaveData: Codable {
     var arraignQueue: [PendingArraignment]? = nil
     var caseLog: [LogEvent]? = nil
     var bondReviews: [UUID]? = nil
+    var heldCases: [HeldCase]? = nil
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -186,6 +187,8 @@ final class GameState: ObservableObject {
     @Published private(set) var caseLog: [LogEvent] = []
     /// Cases the judge has set for a review of conditions of release at the next bond session.
     @Published private(set) var bondReviews: [UUID] = []
+    /// Cases away for a capacity evaluation or treatment, back on the list when it's done.
+    @Published private(set) var heldCases: [HeldCase] = []
     /// What became of each defendant at judgment, and whether the person was arrested again once free.
     @Published private(set) var dispositions: [DispositionRecord] = []
     /// The judge's standing schedule: court days, daily limits, one-day changes and time off.
@@ -413,6 +416,7 @@ final class GameState: ObservableObject {
         arraignQueue = []
         caseLog = []
         bondReviews = []
+        heldCases = []
         // Every career's county starts a little different.
         living = CountyLife.begin(seed: seedBase)
         Gazetteer.living = living
@@ -852,6 +856,25 @@ final class GameState: ObservableObject {
         investigations.append(OpenInvestigation(courtCase: c, incident: happened, arrest: booked, town: town,
                                                 offense: InvestigationArc.subject(c), ready: max(ready, booked),
                                                 note: followed ? nil : "Arrested at the scene on \(SentenceFormat.shortDate(booked))."))
+    }
+
+    /// Takes a case off the calendar until a date; it returns to the list waiting for a trial date then.
+    private func holdCase(_ c: CourtCase, until: Date, reason: String, note: String, on date: Date) {
+        heldCases.removeAll { $0.courtCase.id == c.id }
+        heldCases.append(HeldCase(courtCase: c, since: date, until: CourtCalendar.calendar.startOfDay(for: until), reason: reason, note: note))
+    }
+
+    /// Cases whose evaluation or treatment is done come back to the list, with the time that passed counted.
+    private func returnHeldCases(on date: Date) {
+        let cal = CourtCalendar.calendar
+        for item in heldCases where item.until <= cal.startOfDay(for: date) {
+            var c = item.courtCase
+            creditJailTime(&c, through: item.until)
+            c.sessionDate = item.until
+            log(.court, c, on: item.until, item.note)
+            awaitCase(c, note: item.note, on: item.until)
+        }
+        heldCases.removeAll { $0.until <= cal.startOfDay(for: date) }
     }
 
     /// After a first appearance: a case that goes to trial joins the list waiting for a trial date; any other comes
@@ -1420,6 +1443,7 @@ final class GameState: ObservableObject {
         investigations.forEach { used.insert($0.courtCase.defendant.personID) }
         bondQueue.forEach { used.insert($0.courtCase.defendant.personID) }
         arraignQueue.forEach { used.insert($0.courtCase.defendant.personID) }
+        heldCases.forEach { used.insert($0.courtCase.defendant.personID) }
         return used
     }
 
@@ -2322,19 +2346,30 @@ final class GameState: ObservableObject {
             case .capacity:
                 switch choice {
                 case 0:
+                    // The case leaves the calendar until the hospital reports, about ten weeks out.
+                    let cal = CourtCalendar.calendar
+                    let found = cal.date(byAdding: .day, value: 7 * rng.int(9...11), to: call.date) ?? call.date
+                    log(.court, c, on: call.date, "Forensic evaluation ordered at Central Regional Hospital (G.S. 15A-1002); the case is off the calendar until the report.")
                     if rng.chance(0.25) {
-                        // The finding comes when the evaluation is done, about ten weeks out.
-                        let found = CourtCalendar.calendar.date(byAdding: .day, value: 7 * rng.int(9...11), to: call.date) ?? call.date
                         pending.append(PendingEvent(due: found, news: NewsItem(
                             date: found, kind: .community, headline: "\(c.defendant.name) found incapable to proceed",
                             body: "After an evaluation at Central Regional Hospital, \(c.defendant.name) was found incapable of proceeding to trial on \(c.charges.first?.law.title.lowercased() ?? "the charge"). The case is on hold while treatment to restore capacity continues (G.S. 15A-1002).",
                             docket: c.docket)))
-                        setFor(c, weeks: rng.int(20...30), note: "Capacity restored after treatment at Central Regional Hospital; set for trial.")
+                        let restored = cal.date(byAdding: .day, value: 7 * rng.int(14...22), to: found) ?? found
+                        holdCase(c, until: restored, reason: "Evaluation, then treatment to restore capacity at Central Regional Hospital",
+                                 note: "Found incapable on \(SentenceFormat.shortDate(found)); capacity restored after treatment at Central Regional Hospital. Ready for trial.",
+                                 on: call.date)
                     } else {
-                        setFor(c, weeks: rng.int(9...12), note: "Central Regional Hospital found the defendant capable to proceed; set for trial.")
+                        holdCase(c, until: found, reason: "Forensic evaluation at Central Regional Hospital",
+                                 note: "Central Regional Hospital found the defendant capable to proceed on \(SentenceFormat.shortDate(found)). Ready for trial.",
+                                 on: call.date)
                     }
                 case 1:
-                    setFor(c, weeks: 3, note: "The local screening found the defendant capable to proceed; set for trial.")
+                    let back = CourtCalendar.calendar.date(byAdding: .day, value: rng.int(18...25), to: call.date) ?? call.date
+                    log(.court, c, on: call.date, "Local capacity screening ordered; the case is off the calendar until the report.")
+                    holdCase(c, until: back, reason: "Local capacity screening",
+                             note: "The local screening found the defendant capable to proceed on \(SentenceFormat.shortDate(back)). Ready for trial.",
+                             on: call.date)
                 default:
                     thisWeek(c, note: "Found capable at the calendar call; the case is tried this week.")
                 }
@@ -3177,6 +3212,7 @@ final class GameState: ObservableObject {
         arraignQueue = []
         caseLog = []
         bondReviews = []
+        heldCases = []
         placeHistory = [:]
         residents = []
         officerRecords = [:]
@@ -3401,6 +3437,7 @@ final class GameState: ObservableObject {
 
         // Stay-away orders are tested a week at a time.
         if weekly { checkStayAwayOrders(rng: &rng) }
+        returnHeldCases(on: date)
         updateCorrections(on: date, rng: &rng)
         if weekly { weatherAndAssignments(on: date, rng: &rng) }
         // The county changes week to week.
@@ -3746,6 +3783,7 @@ final class GameState: ObservableObject {
             if case .trial(let c) = entry.matter { return c } else { return nil }
         }
         cases += arraignQueue.map(\.courtCase)
+        cases += heldCases.map(\.courtCase)
         for c in cases {
             guard let bg = c.background, bg.isJailed, bg.heldOnCourtBond == true,
                   person(c.defendant.personID)?.status != .incarcerated, seen.insert(c.defendant.personID).inserted else { continue }
@@ -4162,7 +4200,7 @@ final class GameState: ObservableObject {
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, calendarLog: calendarLog, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
                             officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
-                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog, bondReviews: bondReviews)
+                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog, bondReviews: bondReviews, heldCases: heldCases)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -4239,6 +4277,7 @@ final class GameState: ObservableObject {
         arraignQueue = data.arraignQueue ?? []
         caseLog = data.caseLog ?? []
         bondReviews = data.bondReviews ?? []
+        heldCases = data.heldCases ?? []
         // Cases that go to trial no longer wait for an arraignment: they join the list waiting for a trial date.
         for item in arraignQueue where item.courtCase.templateKey.hasPrefix("story.") {
             arraignQueue.removeAll { $0.id == item.id }

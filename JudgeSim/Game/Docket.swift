@@ -138,6 +138,19 @@ struct CourtSchedule: Codable, Hashable {
 }
 
 /// A case set for trial that has no date yet. The judge picks the date.
+/// A case off the calendar while something takes its time: a capacity evaluation, or treatment to restore capacity.
+/// It returns to the list waiting for a trial date when that's done.
+struct HeldCase: Identifiable, Codable {
+    var id = UUID()
+    var courtCase: CourtCase
+    var since: Date
+    var until: Date
+    /// What the case is waiting on, for the docket ("Forensic evaluation at Central Regional Hospital").
+    var reason: String
+    /// The note it returns with.
+    var note: String
+}
+
 /// A case whose defendant has had a first appearance and now waits to be arraigned, or to plead, at a calendar call.
 struct PendingArraignment: Identifiable, Codable {
     var id = UUID()

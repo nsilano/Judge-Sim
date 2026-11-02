@@ -13,6 +13,41 @@ extension Urgency.Level {
 
 // MARK: - Cases awaiting a trial date
 
+/// Cases off the calendar while an evaluation or treatment runs; each comes back to this list when it's done.
+private struct AwayForEvaluation: View {
+    @EnvironmentObject private var game: GameState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(text: "Off the calendar (" + String(game.heldCases.count) + ")", icon: "stethoscope")
+            Text("These come back to this list on their own when the evaluation or treatment is done.")
+                .font(.caption).foregroundStyle(.secondary)
+            ForEach(game.heldCases.sorted { $0.until < $1.until }) { item in
+                HeldRow(item: item, today: game.today?.date ?? game.currentDate)
+            }
+        }
+        .card()
+    }
+}
+
+private struct HeldRow: View {
+    let item: HeldCase
+    let today: Date
+
+    private var backLine: String {
+        "Back about " + SentenceFormat.shortDate(item.until) + ", " + DayPickerList.distance(from: today, to: item.until)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(item.courtCase.defendant.name).font(.subheadline.weight(.semibold))
+            Text(item.reason).font(.caption)
+            Text(backLine).font(.caption2).foregroundStyle(Theme.gold)
+            Text(item.courtCase.docket).font(.caption2.monospaced()).foregroundStyle(.secondary)
+        }
+    }
+}
+
 /// Smaller cases that had their bond hearing and come back at a calendar call to plead; they aren't tried.
 private struct WaitingToPlead: View {
     @EnvironmentObject private var game: GameState
@@ -101,6 +136,7 @@ struct AwaitingView: View {
                 }
                 if !game.investigations.isEmpty { UnderInvestigation() }
                 if !game.arraignQueue.isEmpty { WaitingToPlead() }
+                if !game.heldCases.isEmpty { AwayForEvaluation() }
                 ForEach(game.awaitingByUrgency) { item in
                     AwaitingRow(item: item, urgency: game.urgency(of: item), today: game.today?.date ?? game.currentDate,
                                 onSet: { setting = item }, onFile: { caseFile = item.courtCase },
