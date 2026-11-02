@@ -526,10 +526,21 @@ enum CalendarCalls {
     }
 
     /// A newly charged defendant's first appearance in superior court: setting conditions of release.
+    /// Court dates the defendant has missed before: failure-to-appear convictions, plus, for someone with an earlier case,
+    /// sometimes a missed date that never became a conviction. The same answer at every hearing. A person with no
+    /// record has no earlier court dates to miss.
+    static func missedCourtDates(_ c: CourtCase) -> Int {
+        let d = c.defendant
+        guard !d.priors.isEmpty else { return 0 }
+        let convictions = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count
+        var rng = SeededRNG(seed: c.seed ^ 0xF7A)
+        return convictions + (rng.chance(0.25) ? 1 : 0)
+    }
+
     static func bondMatter(for c: CourtCase, rng: inout SeededRNG) -> CalendarMatter {
         let d = c.defendant
         let felonies = d.priors.filter { $0.ncClass.isFelony }.count
-        let ftas = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count + (rng.chance(0.25) ? 1 : 0)
+        let ftas = missedCourtDates(c)
         let violent = c.category == .violent || c.category == .robbery
         let employed = !d.occupation.lowercasedPhrase.contains("unemployed")
         let local = rng.chance(0.75)
@@ -615,7 +626,7 @@ enum CalendarCalls {
         }
         let employed = !d.occupation.lowercasedPhrase.contains("unemployed")
         // What the defendant told the court at the first hearing, when the court heard it.
-        let ftas = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count + (rng.chance(0.3) ? 1 : 0)
+        let ftas = missedCourtDates(c)
         let drawn = BailMoney.draw(employed: employed, local: true, ftas: ftas, rng: &rng)
         let money = BailMoney(cash: c.background?.canPost ?? drawn.cash, feeRate: c.background?.bondsmanRate ?? drawn.feeRate,
                               bondsman: c.background?.bondsmanWilling ?? drawn.bondsman)
