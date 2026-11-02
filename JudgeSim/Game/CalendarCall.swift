@@ -183,6 +183,14 @@ struct BailMoney: Hashable {
 
     func fee(on amount: Int) -> Int { Int((Double(amount) * feeRate).rounded()) }
 
+    /// One short line for a calendar card: "Can pay ~$5,000; a bondsman would cover up to $50,000."
+    func short(against ask: Int?) -> String {
+        if cash == 0 { return "Can't pay anything." }
+        if let ask, ask > 0, cash >= ask { return "Can post the State's $\(ask.formatted()) in cash." }
+        if !bondsman { return "Has ~$\(cash.formatted()); no bondsman will take it." }
+        return "Can pay ~$\(cash.formatted()); a bondsman would cover up to $\(reach.formatted())."
+    }
+
     /// The same, measured against the bond the State wants: whether it can be posted outright, through a bondsman, or not at all.
     func plain(against ask: Int?) -> String {
         guard let ask, ask > 0, cash > 0 else { return plain }
@@ -441,21 +449,18 @@ enum CalendarCalls {
         let secured = roundBond(Double(base) * factor * jitter)
         let unsecured = roundBond(Double(min(base, 15_000)) * Double.random(in: 0.2...0.8, using: &rng))
         let severity = cls?.severity ?? NCClass.H.severity
-        let why = ftas > 0 ? "The defendant has missed court \(ftas == 1 ? "before" : "\(ftas) times")."
-            : felonies >= 2 ? "The defendant has \(felonies) prior felony convictions."
-            : violent ? "The charge is one of violence."
-            : "The State has no objection to release, but the charge calls for security."
+        let why = ftas > 0 ? " Missed court before." : felonies >= 2 ? " \(felonies) prior felonies." : violent ? " Violent charge." : ""
         let ask: String
         if cls == .A {
-            ask = "The State asks that the defendant be held without bond. In the alternative, a $\(secured.formatted()) secured bond with electronic house arrest and no contact with the victim's family."
+            ask = "Hold without bond, or $\(secured.formatted()) secured with house arrest."
         } else if severity <= NCClass.E.severity && (violent || felonies > 0 || ftas > 0) {
-            ask = "The State asks for a $\(secured.formatted()) secured bond with electronic house arrest. \(why)"
+            ask = "$\(secured.formatted()) secured with house arrest." + why
         } else if severity <= NCClass.G.severity || felonies >= 2 || ftas > 0 {
-            ask = "The State asks for a $\(secured.formatted()) secured bond. \(why)"
+            ask = "$\(secured.formatted()) secured." + why
         } else if rng.chance(0.5) {
-            ask = "The State asks for a $\(secured.formatted()) secured bond."
+            ask = "$\(secured.formatted()) secured."
         } else {
-            ask = "The State would agree to an unsecured bond of $\(unsecured.formatted()) with the standard conditions."
+            ask = "Agrees to an unsecured bond of $\(unsecured.formatted())."
             return (unsecured, secured, ask, false)
         }
         return (unsecured, secured, ask, true)
@@ -465,44 +470,35 @@ enum CalendarCalls {
     /// against a secured bond.
     static func defenseBondAsk(_ scale: (unsecured: Int, secured: Int, stateAsk: String, wantsSecured: Bool), money: BailMoney, last: String,
                                rng: inout SeededRNG) -> String {
-        let keeper = rng.pick(["\(last)'s mother", "\(last)'s aunt", "\(last)'s pastor", "a supervised pretrial release program", "\(last)'s older brother", "\(last)'s grandmother"])
+        let keeper = rng.pick(["a parent", "a relative", "the pastor", "a pretrial release program", "a sibling", "a grandparent"])
         if !scale.wantsSecured {
-            return rng.pick(["We agree with the State, Judge. An unsecured bond with the standard conditions is fine.",
-                             "We'd ask for a written promise to appear, Judge, but the State's unsecured bond is reasonable. \(last) will be here.",
-                             "No objection to the unsecured bond. \(last) has every reason to come back to court.",
-                             "We'd ask the court to go lower, a $\(roundBond(Double(scale.unsecured) / 2).formatted()) unsecured bond, but we won't fight the State's number.",
-                             "A written promise is enough here, Judge. \(last) has never missed a court date and isn't going anywhere."])
+            return rng.pick(["Agrees to the unsecured bond.", "Asks for a written promise; won't fight the unsecured bond."])
         }
         let reach = money.reach
         if reach == 0 {
-            return rng.pick(["My client has no money at all, Judge. Any secured bond is a detention order. We ask for a written promise to appear.",
-                             "\(last) can't pay a bondsman a dime. We ask for release to the custody of \(keeper), with a curfew.",
-                             "Nothing in the bank and no one to borrow from, Judge. An unsecured bond of $\(scale.unsecured.formatted()) keeps \(last) accountable without keeping \(last) in jail.",
-                             "We'd accept house arrest with an ankle monitor, Judge, with no money bond. \(last) can't pay one."])
+            return rng.pick(["Can't pay anything. Asks for a written promise to appear.",
+                             "Asks for release to \(keeper).",
+                             "Asks for an unsecured bond of $\(scale.unsecured.formatted()) instead.",
+                             "Asks for house arrest with no money bond."])
         }
         if money.cash >= scale.secured {
-            // The bond can be posted in full and comes back at the end of the case: nothing to fight about but the conditions.
-            return rng.pick(["\(last) can post the State's figure, Judge, and will. We'd ask only that the court not go above it.",
-                             "No objection to the State's number. \(last) will post it today and be back for every court date.",
-                             "\(last) can make that bond in cash, Judge, but this record doesn't call for security at all. We ask for an unsecured bond with the standard conditions.",
-                             "We won't fight a secured bond that size, Judge. We'd ask the court to skip the ankle monitor; \(last) works nights."])
+            return rng.pick(["Will post the State's figure.",
+                             "Asks for an unsecured bond instead.",
+                             "Won't fight the bond; asks to skip the monitor."])
         }
         if reach >= scale.secured {
-            // Only through a bondsman: the fee is gone for good, so the defense argues for less, never more.
             let lower = roundBond(Double(min(scale.secured, money.cash)) * 0.8)
-            return rng.pick(["\(last)'s family could get a bondsman to write that, Judge, but the $\(money.fee(on: scale.secured).formatted()) fee is gone for good. We ask for an unsecured bond.",
-                             "At the State's $\(scale.secured.formatted()), \(last) pays a bondsman a fee the family never sees again. A $\(max(500, lower).formatted()) secured bond \(last) can post in cash does the same work.",
-                             "We won't fight a secured bond, Judge. We'd only ask that it not go above the State's figure."])
+            return rng.pick(["Asks for an unsecured bond; a bondsman's fee is money \(last) never gets back.",
+                             "Asks for $\(max(500, lower).formatted()) secured, which \(last) can post in cash.",
+                             "Won't go above the State's figure."])
         }
         let ask = roundBond(Double(reach) * Double.random(in: 0.7...1.0, using: &rng))
         if !money.bondsman {
-            return "No bail bondsman will take \(last)'s case, Judge, so whatever you set has to be paid in full, and \(last) has about $\(money.cash.formatted()). We ask for a $\(min(ask, money.cash).formatted()) secured bond, or release to \(keeper)."
+            return "Asks for $\(min(ask, money.cash).formatted()) secured (no bondsman will take it) or release to \(keeper)."
         }
-        return rng.pick(["\(last) can pay a bondsman about $\(money.cash.formatted()). That covers a bond up to about $\(reach.formatted()). We ask for a $\(ask.formatted()) secured bond.",
-                         "At $\(scale.secured.formatted()), \(last) stays in jail. Set it at $\(ask.formatted()) and a bondsman will write it.",
-                         "We ask for a $\(ask.formatted()) secured bond with house arrest, Judge. The family has the fee for that and not a dollar more.",
-                         "Release to the custody of \(keeper), Judge. No money needed; \(last) has a job to keep and someone to answer to.",
-                         "The State's $\(scale.secured.formatted()) is a number picked to keep \(last) in. \(last) can make $\(ask.formatted()) through a bondsman. We ask for that."])
+        return rng.pick(["Asks for $\(ask.formatted()) secured, which a bondsman would write.",
+                         "Asks for $\(ask.formatted()) secured with house arrest.",
+                         "Asks for release to \(keeper)."])
     }
 
     /// The usual secured bond for a charge of this class, before record and missed court dates.
@@ -553,10 +549,8 @@ enum CalendarCalls {
         let violentOffense = c.charges.contains { $0.law.ncClass?.isFelony == true }
             && (violent || c.charges.contains { Corrections.soundsViolent($0.law.title) })
         let priorViolent = d.priors.contains { $0.ncClass.isFelony && Corrections.soundsViolent($0.offense) }
-        var record = d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s") (\(felonies) felon\(felonies == 1 ? "y" : "ies"))"
-        if ftas > 0 { record += "; \(ftas) prior failure\(ftas == 1 ? "" : "s") to appear" }
-        let ties = [employed ? "works as \(d.occupation.lowercasedPhrase.withIndefiniteArticle)" : "is out of work",
-                    local ? "has lived in the county most of \(NameBank.gender(of: d.name) == .female ? "her" : "his") life" : "moved here from out of state last year"]
+        var record = d.priors.isEmpty ? "No record" : "\(d.priors.count) prior\(d.priors.count == 1 ? "" : "s") (\(felonies) felon\(felonies == 1 ? "y" : "ies"))"
+        if ftas > 0 { record += ", \(ftas) missed court date\(ftas == 1 ? "" : "s")" }
         var stateAsk = scale.stateAsk
         var defenseAsk = defenseBondAsk(scale, money: money, last: d.lastName, rng: &rng)
         var options = ["Written promise to appear",
@@ -569,22 +563,19 @@ enum CalendarCalls {
         if violentOffense {
             options.append("Hold without bond: no condition of release will reasonably assure the public's safety (Iryna's Law)")
             unavailable = priorViolent ? [0, 1, 2, 3] : [0, 1, 2]
-            lawNote = "Iryna's Law (S.L. 2025-93, G.S. 15A-533(b)): a violent offense. The law presumes no condition of release will reasonably assure the public's safety, and you may hold \(d.lastName) without bond. To release, you must find the presumption rebutted and impose "
-                + (priorViolent ? "house arrest with electronic monitoring: \(d.lastName) has an earlier violent conviction." : "a secured bond or house arrest with electronic monitoring. Written promises, custody releases, and unsecured bonds aren't allowed.")
+            lawNote = "Iryna's Law: violent felony. You may hold without bond; release only on "
+                + (priorViolent ? "house arrest (earlier violent conviction)." : "a secured bond or house arrest.")
             if danger >= 0.15 || felonies > 0 || [NCClass.A, .B1, .B2, .C].contains(worst ?? .misd1) {
-                stateAsk = "The State asks that \(d.lastName) be held without bond under Iryna's Law. The charge is violent, and nothing short of detention protects the victim and the public."
-            } else if !scale.wantsSecured {
-                // An unsecured bond isn't available on a violent felony; the State asks for security instead.
-                stateAsk = "The State asks for a $\(scale.secured.formatted()) secured bond. Iryna's Law rules out an unsecured bond on this charge."
+                stateAsk = "Hold without bond (Iryna's Law)."
             } else {
-                stateAsk += " The State notes the Iryna's Law presumption against release."
+                stateAsk = "$\(scale.secured.formatted()) secured."
             }
-            defenseAsk = "We can rebut the presumption, Judge. \(d.lastName) \(ties.joined(separator: " and ")). "
-                + (priorViolent ? "House arrest with an ankle monitor protects everyone." : "A $\(max(min(money.reach, scale.secured, max(money.cash, money.reach / 2)), 1_000).formatted()) secured bond with electronic monitoring protects everyone and lets \(d.lastName) keep working.")
+            let figure = max(min(money.reach, scale.secured, max(money.cash, money.reach / 2)), 1_000)
+            defenseAsk = priorViolent || money.reach == 0 ? "Asks for house arrest with a monitor." : "Asks for $\(figure.formatted()) secured with a monitor."
         }
         return CalendarMatter(kind: .firstAppearance, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
-                              summary: "\(d.name), \(d.age), arrested this week and charged with \(law?.title.lowercased() ?? "a felony"), is before the court on conditions of release (G.S. 15A-534). \(record). \(d.lastName) \(ties.joined(separator: " and ")), and \(money.plain(against: scale.wantsSecured || violentOffense ? scale.secured : nil)). The magistrate set no bond pending this hearing.",
+                              summary: "\(d.name), \(d.age), arrested this week on \(law?.title.lowercased() ?? "a felony"). \(record). \(money.short(against: scale.wantsSecured || violentOffense ? scale.secured : nil))",
                               stateAsk: stateAsk,
                               defenseAsk: defenseAsk,
                               // Every condition G.S. 15A-534(a) allows, with the judge setting any amount.
@@ -638,32 +629,36 @@ enum CalendarCalls {
             && (violent || c.charges.contains { Corrections.soundsViolent($0.law.title) })
         let priorViolent = d.priors.contains { $0.ncClass.isFelony && Corrections.soundsViolent($0.offense) }
         let unavailable: Set<Int>? = violentOffense ? (priorViolent ? [0, 3, 4] : [3, 4]) : nil
-        let record = "\(d.priors.isEmpty ? "No prior convictions" : "\(d.priors.count) prior conviction\(d.priors.count == 1 ? "" : "s")")\(ftas > 0 ? ", \(ftas) prior failure\(ftas == 1 ? "" : "s") to appear" : "")."
-        let heldText = noBond ? "held \(held) day\(held == 1 ? "" : "s") without bond under Iryna's Law" : "held \(held) day\(held == 1 ? "" : "s") on a $\(current.formatted()) secured bond"
+        let record = (d.priors.isEmpty ? "No record" : "\(d.priors.count) prior\(d.priors.count == 1 ? "" : "s")")
+            + (ftas > 0 ? ", \(ftas) missed court date\(ftas == 1 ? "" : "s")" : "") + "."
+        let heldText = noBond ? "held \(held) day\(held == 1 ? "" : "s") without bond" : "held \(held) day\(held == 1 ? "" : "s") on $\(current.formatted())"
         let opening = courtOrdered
-            ? "On the court's own motion: a review of conditions of release for \(d.name), \(heldText) on \(law) (G.S. 15A-538)."
-            : "\(d.name), \(heldText) on \(law), asks the court to \(noBond ? "set conditions of release" : "reduce it") (G.S. 15A-538)."
+            ? "Your bond review: \(d.name), \(heldText) on \(law)."
+            : "\(d.name), \(heldText) on \(law), asks for \(noBond ? "conditions of release" : "a lower bond")."
+        let stateAsk: String
+        if noBond { stateAsk = "Keep holding without bond." }
+        else if ftas > 0 { stateAsk = "Opposes: missed court before." }
+        else if violent { stateAsk = "Opposes: violent charge." }
+        else { stateAsk = "Would agree to a modest cut with a monitor." }
+        let defenseAsk: String
+        if !noBond && money.canMake(current) {
+            defenseAsk = "Can post the $\(current.formatted()) as it stands; asks to leave it."
+        } else if money.reach == 0 {
+            defenseAsk = rng.pick(["Can't pay anything; asks for a written promise.", "Asks for release to a pretrial program."])
+        } else {
+            defenseAsk = "Asks for $\(roundBond(Double(money.reach) * 0.8).formatted()), within reach through \(money.bondsman ? "a bondsman" : "savings")."
+        }
         return CalendarMatter(kind: .bondModification, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
-                              summary: "\(opening) \(record) \(employed ? "\(d.lastName)'s employer will hold the job for two more weeks." : "\(d.lastName) was out of work before the arrest.") \(d.lastName) \(money.plain).",
-                              stateAsk: noBond ? "The State asks that \(d.lastName) stay held without bond. Nothing about the danger has changed."
-                                : (ftas > 0 || violent
-                                ? "The State opposes any reduction. \(ftas > 0 ? "The defendant has missed court before." : "The charge is violent and the evidence is strong.")"
-                                : "The State would agree to a modest reduction with electronic monitoring."),
-                              defenseAsk: !noBond && money.canMake(current)
-                                ? "\(d.lastName) can post the $\(current.formatted()) as it stands, Judge. We ask only that the court leave it there; \(d.lastName) will be out today."
-                                : money.reach == 0
-                                ? rng.pick(["\(d.lastName) can't pay anything, Judge. Any money bond is a detention order by another name.",
-                                            "Release to a supervised pretrial program, Judge. \(d.lastName) has no money and a job waiting."])
-                                : rng.pick(["\(d.lastName) \(money.plain). Set it there and \(d.lastName) goes back to work.",
-                                            "Anything above $\(money.reach.formatted()) keeps \(d.lastName) in jail, Judge. There's a job and a family waiting.",
-                                            "We ask for $\(roundBond(Double(money.reach) * 0.8).formatted()), Judge, with house arrest if the court wants it. That's what the family can raise."]),
+                              summary: "\(opening) \(record) \(money.short(against: noBond ? nil : current))",
+                              stateAsk: stateAsk,
+                              defenseAsk: defenseAsk,
                               options: ["Set a new secured bond of an amount you set",
                                         noBond ? "Keep \(d.lastName) held without bond" : "Leave the bond at $\(current.formatted())",
                                         "Set a new secured bond of an amount you set, with electronic house arrest",
                                         "Change to an unsecured bond of an amount you set",
                                         "Release on a written promise to appear"],
-                              lawNote: violentOffense ? "Iryna's Law: a violent felony. Release only on a secured bond" + (priorViolent ? " is barred by the earlier violent conviction; house arrest with electronic monitoring is the only release." : " or house arrest with electronic monitoring.") : nil,
+                              lawNote: violentOffense ? "Iryna's Law: release only on " + (priorViolent ? "house arrest (earlier violent conviction)." : "a secured bond or house arrest.") : nil,
                               pendingCase: jailed,
                               bond: BondFacts(moderate: current, high: current, canPost: canPost, flightRisk: flight, danger: danger,
                                               feeRate: money.feeRate, bondsman: money.bondsman),
@@ -678,13 +673,10 @@ enum CalendarCalls {
         return CalendarMatter(
             kind: .contempt, personID: person.id, personName: person.name, personAge: person.age(on: date), occupation: person.occupation,
             docket: order.docket + " (contempt)",
-            summary: "\(person.name) is ordered to show cause why \(last) should not be held in contempt for violating the \(order.label) entered in \(order.docket), protecting \(order.protectedName). Deputies say \(last) \(conduct).",
-            stateAsk: rng.pick(["The State asks for 30 days in jail. The order was clear, and \(order.protectedName) is afraid.",
-                                "The State asks the court to find willful contempt and impose active time. This wasn't an accident.",
-                                "The State asks for a finding of contempt. \(order.protectedName) has asked the court to make it stop."]),
-            defenseAsk: rng.pick(["My client admits being there but says it was a chance meeting and left right away. We ask the court to warn, not jail.",
-                                  "My client didn't understand that the order still applied after the case ended. We ask for a warning.",
-                                  "My client accepts responsibility and asks for a fine rather than jail; there's a job at stake."]),
+            summary: "\(person.name) is accused of violating the stay-away order protecting \(order.protectedName): \(last) \(conduct).",
+            stateAsk: rng.pick(["30 days in jail; \(order.protectedName) is afraid.", "Find willful contempt; active time.", "Find contempt."]),
+            defenseAsk: rng.pick(["Says it was a chance meeting; asks for a warning.", "Didn't know the order still applied; asks for a warning.",
+                                  "Accepts responsibility; asks for a fine."]),
             options: ["Find willful contempt: 30 days in the county jail", "Find willful contempt: 10 days in the county jail",
                       "Find contempt: a $500 fine", "Not willful: warn \(last) and continue the order"])
     }
@@ -705,11 +697,9 @@ enum CalendarCalls {
         let counts = c.charges.count
         return CalendarMatter(kind: .arraignment, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
-                              summary: "\(d.name) is arraigned on \(counts) count\(counts == 1 ? "" : "s"), led by \(c.charges.first?.law.title.lowercased() ?? "the indictment"), and pleads not guilty. \(jailed ? "\(d.lastName) is in custody." : "\(d.lastName) is out on bond.") Set the trial date.",
-                              stateAsk: c.evidence.contains { $0.kind == .forensic && $0.side == .prosecution }
-                                ? "The State will be ready in about five weeks; the lab work is back."
-                                : "The State will be ready in about five weeks; discovery has been turned over.",
-                              defenseAsk: counts > 2 ? "With this many counts we need time for discovery. Ten weeks." : "We'd like five weeks to review discovery.",
+                              summary: "\(d.name) pleads not guilty to \(counts) count\(counts == 1 ? "" : "s") (\(c.charges.first?.law.title.lowercased() ?? "the indictment")). \(jailed ? "In custody." : "Out on bond.")",
+                              stateAsk: "Ready in about five weeks.",
+                              defenseAsk: counts > 2 ? "Wants ten weeks for discovery." : "Wants five weeks for discovery.",
                               options: ["Set the trial date now", "Put it on the waiting list; set the date later"],
                               pendingCase: c)
     }
@@ -719,16 +709,16 @@ enum CalendarCalls {
         let hearing = m.hearingHeld == true
         let heardText = hearing
             ? (m.meritorious
-                ? " At the evidentiary hearing last week, the new witness testified in detail and held up on cross-examination; the documents check out."
-                : " At the evidentiary hearing last week, the witness contradicted the affidavit twice and admitted a relative of the defendant drafted it.")
+                ? " Hearing: the witness held up on cross."
+                : " Hearing: the witness contradicted the affidavit.")
             : ""
         var options = ["Grant: vacate the conviction and order a new trial", "Deny the motion"]
         if !hearing { options.insert("Hold an evidentiary hearing next week before ruling", at: 1) }
         return CalendarMatter(kind: .motionForRelief, personID: m.personID, personName: m.personName, personAge: m.retrial.defendant.age,
                               occupation: m.retrial.defendant.occupation, docket: m.docket,
-                              summary: "\(m.personName), whom you convicted of \(m.offense.lowercased()), moves for a new trial on newly discovered evidence (G.S. 15A-1415(c)): \(m.newEvidence)" + heardText,
-                              stateAsk: "The State opposes. The evidence could have been found before trial with due diligence, and it wouldn't change the result.",
-                              defenseAsk: "This wasn't available at trial, and it goes to the heart of the case. Justice requires a new trial.",
+                              summary: "\(m.personName), convicted of \(m.offense.lowercased()), asks for a new trial on new evidence: \(m.newEvidence)" + heardText,
+                              stateAsk: "Opposes: could have been found before trial.",
+                              defenseAsk: "New evidence that goes to the heart of the case.",
                               options: options, pendingCase: m.retrial, relief: m)
     }
 
@@ -772,42 +762,21 @@ enum CalendarCalls {
             case .failureToAppear:
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
-                    summary: rng.pick([
-                        "\(name) was ordered to appear at this morning's calendar call on \(law.title) and did not answer when called three times in the hallway.",
-                        "\(name), charged with \(law.title), did not answer when the case was called at the calendar call. The bondsman is in the courtroom.",
-                        "\(name) did not appear at the calendar call on \(law.title). It is \(rng.pick(["the second", "the third", "the first"])) missed court date in this case.",
-                        "The clerk called \(name) on \(law.title) twice. Defense counsel is present; the defendant is not."]),
-                    stateAsk: rng.pick([
-                        "The State asks for an order for arrest and forfeiture of the \(rng.pick(["$5,000", "$10,000", "$20,000"])) bond.",
-                        "The State asks for an order for arrest with no bond. The defendant was told in open court to be here today.",
-                        "The State asks for an order for arrest and that any new bond be doubled. This defendant has missed court before.",
-                        "The defendant signed the notice to appear for today. We ask for an order for arrest and forfeiture."]),
-                    defenseAsk: rng.pick([
-                        "I spoke with my client last week. They knew the date. I can't explain it.",
-                        "My client texted me this morning that the car broke down on Highway 17. I've asked for a photo of the tow receipt.",
-                        "My client works second shift and may have confused the date. I'd ask for the afternoon to reach them.",
-                        "I haven't been able to reach my client in a month. The phone is disconnected. I have nothing to offer the court.",
-                        "My client's ride fell through this morning, and the first bus from Bayard doesn't get in until eleven. I'd ask for a new date.",
-                        "My client is in custody in another county on an unrelated matter. I just learned it from the jail roster.",
-                        "My client's mother called my office this morning. There may have been a hospital visit. I'd ask for a day to find out.",
-                        "Judge, my client told me last week they couldn't afford to miss another day of work. I warned them. I'll leave it to the court."]),
+                    summary: "\(name) didn't appear on \(law.title).",
+                    stateAsk: rng.pick(["Order for arrest; forfeit the bond.", "Order for arrest, no bond.", "Order for arrest; double the bond."]),
+                    defenseAsk: rng.pick(["Knew the date; no explanation.", "Car broke down; asks for the afternoon.", "May have confused the date; asks for the afternoon.",
+                                          "Can't reach the client.", "Ride fell through; asks for a new date.", "Possible hospital visit; asks for a day."]),
                     options: ["Issue an order for arrest and forfeit the bond", "Hold the matter open until the afternoon session",
                               "Continue the case three weeks and send a new notice"]))
             case .continuance:
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
                     summary: "The defense moves to continue the trial of \(name) on \(law.title). It would be the \(rng.pick(["third", "fourth", "second"])) continuance.",
-                    stateAsk: rng.pick(["The State objects. The victim has taken off work three times for this case.",
-                                        "The State doesn't object, Judge.",
-                                        "The State objects strongly. Our key witness is moving out of state next month.",
-                                        "The State objects. This case is over a year old, and the defense has had the discovery for months.",
-                                        "The State takes no position, but asks that this be the last continuance."]),
-                    defenseAsk: rng.pick(["We just received the lab report Friday. I can't effectively cross-examine the analyst without our own expert.",
-                                          "I was appointed two weeks ago. Prior counsel withdrew. I haven't met my client in person yet.",
-                                          "A defense witness is deployed with the National Guard until next month.",
-                                          "The State turned over body camera video last week, nearly four hours of it. I need time to review it.",
-                                          "I'm in a murder trial in another county that's running long.",
-                                          "My client was just admitted to an inpatient treatment program and can't leave for 28 days."]),
+                    stateAsk: rng.pick(["Objects: the victim has missed work three times.", "No objection.", "Objects: a key witness is moving away.",
+                                        "Objects: the case is over a year old.", "No position; make it the last."]),
+                    defenseAsk: rng.pick(["Lab report just arrived; needs an expert.", "Newly appointed; hasn't met the client.",
+                                          "A defense witness is deployed until next month.", "Four hours of new bodycam video to review.",
+                                          "Stuck in a murder trial in another county.", "Client is in inpatient treatment for 28 days."]),
                     options: ["Grant the continuance; reset for trial in four weeks", "Deny; the case is ready for trial and you set the date"]))
             case .bondModification:
                 matters.append(CalendarMatter(
@@ -820,9 +789,9 @@ enum CalendarCalls {
             case .capacity:
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
-                    summary: "Defense counsel questions whether \(name) has the capacity to proceed to trial on \(law.title) (G.S. 15A-1001).",
-                    stateAsk: "The State takes no position but notes the defendant seemed oriented at the bond hearing.",
-                    defenseAsk: "My client believes I work for the District Attorney and won't discuss the case. I can't assist in a defense under these conditions.",
+                    summary: "The defense questions whether \(name) is capable of standing trial on \(law.title).",
+                    stateAsk: "No position; seemed oriented at the bond hearing.",
+                    defenseAsk: "Client thinks counsel works for the DA and won't talk.",
                     options: ["Order a forensic evaluation at Central Regional Hospital (about ten weeks)",
                               "Order a local screening evaluation (about three weeks)", "Find the defendant capable; the case is tried this week"]))
             default:
@@ -831,7 +800,8 @@ enum CalendarCalls {
         }
 
         // A steady probationer asks to end probation early: only once at least half the term is served.
-        let probationers = people.filter { $0.status == .probation && $0.probation != nil && !excluding.contains($0.id) }
+        // Only probation this court imposed: a term from another court goes back to that court.
+        let probationers = people.filter { $0.status == .probation && ($0.probation?.imposedInThisCourt ?? false) && !excluding.contains($0.id) }
         let steady = probationers.filter { person in
             guard let term = person.probation, (term.violationRisk ?? 0.2) < 0.25,
                   !(person.violations ?? []).contains(where: { $0.docket == term.docket }),
@@ -840,23 +810,16 @@ enum CalendarCalls {
             return halfway <= date
         }
         if let person = steady.isEmpty ? nil : rng.pick(steady), let term = person.probation, rng.chance(0.5) {
-            let whose = term.imposedInThisCourt ? "You placed \(person.lastName) on probation." : (term.origin ?? "Sentenced in another court.")
             let owes = (term.monthlyObligation ?? 0) > 0
-            let compliance = (term.supervised ?? true)
-                ? "The probation officer reports every visit kept, clean drug screens, and steady work."
-                : "The clerk's file shows no new charges and steady work" + (owes ? ", with payments current." : ".")
+            let compliance = (term.supervised ?? true) ? "Officer reports full compliance." : "No new charges" + (owes ? "; payments current." : ".")
             matters.append(CalendarMatter(
                 kind: .earlyTermination, personID: person.id, personName: person.name, personAge: person.age(on: date),
                 occupation: person.occupation, docket: term.docket,
-                summary: "\(person.name) asks the court to end probation in \(term.docket) (\(term.offense)) early. \(whose) \(compliance)",
+                summary: "\(person.name) asks to end probation early (\(term.offense)). \(compliance)",
                 stateAsk: owes
-                    ? rng.pick(["The State takes no position.",
-                                "The State opposes. Money owed under the judgment still isn't paid in full.",
-                                "The State doesn't object, provided all money owed is paid."])
-                    : rng.pick(["The State takes no position.", "The State doesn't object."]),
-                defenseAsk: rng.pick(["My client has done everything asked. A new job requires travel that supervision makes impossible.",
-                                      "Half the term and more is served without a single violation. The goal of probation has been met.",
-                                      "My client wants to move closer to family in another county and start over."]),
+                    ? rng.pick(["No position.", "Opposes: money still owed.", "No objection once paid in full."])
+                    : rng.pick(["No position.", "No objection."]),
+                defenseAsk: rng.pick(["A new job needs travel.", "Over half served, no violations.", "Wants to move closer to family."]),
                 options: ["Grant: probation ends successfully (G.S. 15A-1342(b))",
                           owes ? "Grant once all money owed is paid" : "Grant; nothing is owed, so probation ends today",
                           "Deny: probation continues as ordered"],
@@ -882,8 +845,8 @@ enum CalendarCalls {
                 kind: .pvAdmission, personID: person.id, personName: person.name, personAge: person.age(on: date),
                 occupation: person.occupation, docket: term.docket + " (PV)",
                 summary: "\(person.name) admits " + pvAdmissionConduct(supervised: supervised) + " while on probation in \(term.docket).",
-                stateAsk: "The State asks for a three-day quick dip.",
-                defenseAsk: "My client admits it and is back on track. We ask the court to continue probation.",
+                stateAsk: "Three-day quick dip.",
+                defenseAsk: "Admits it; asks to continue probation.",
                 options: ["Continue probation on the same terms", "Modify: add substance abuse treatment", "Order a three-day quick dip"]
                     + (crv > 0 ? ["Order a \(crv)-day CRV"] : [])))
         }
@@ -1184,7 +1147,8 @@ enum HolidayAsks {
         for i in call.matters.indices {
             let m = call.matters[i]
             guard [.quickPlea, .bondModification, .firstAppearance].contains(m.kind), let c = m.pendingCase,
-                  ![LawCategory.violent, .robbery, .family].contains(c.category) else { continue }
+                  ![LawCategory.violent, .robbery, .family].contains(c.category),
+                  !c.charges.contains(where: { Corrections.soundsViolent($0.law.title) }) else { continue }
             let profile = c.defendant.profile
             let kids = profile?.childCount ?? 0
             let married = profile?.married ?? false
@@ -1198,26 +1162,12 @@ enum HolidayAsks {
             let days = CourtCalendar.calendar.dateComponents([.day], from: CourtCalendar.calendar.startOfDay(for: call.date),
                                                               to: holiday.date).day ?? 0
             let when = days <= 2 ? "in \(days) day\(days == 1 ? "" : "s")" : days <= 9 ? "next week" : days <= 16 ? "in two weeks" : "in three weeks"
+            _ = family
             switch m.kind {
             case .quickPlea:
-                call.matters[i].defenseAsk += " " + rng.pick([
-                    "And Judge, \(holiday.name) is \(when). \(last) has \(who) at home. Whatever the court does, we ask that it not put \(last) in a cell for \(holiday.name).",
-                    "\(last) has \(who), Judge, and \(holiday.name) is \(when). A sentence that lets \(last) be home for it costs the State nothing.",
-                    "We'd ask the court to remember the calendar, Judge. \(holiday.name) is \(when), and \(family) will be waiting for \(last)."])
-                call.matters[i].stateAsk += " " + rng.pick([
-                    "The holiday doesn't change what the defendant did, Judge.",
-                    "The State understands the timing, but a plea is a plea.",
-                    "Every defendant has a family to get home to, Judge."])
+                call.matters[i].defenseAsk += " Wants to be home for \(holiday.name) (\(when))."
             default:
-                call.matters[i].summary += " \(last) has \(who) and asks to be home for \(holiday.name), \(when)."
-                call.matters[i].defenseAsk += " " + rng.pick([
-                    "\(holiday.name) is \(when), Judge. \(last) has \(who) at home. This is a non-violent charge; let \(last) spend it with \(family) and come back to court.",
-                    "Judge, \(last) wants to be home with \(family) for \(holiday.name). There's no danger here, and \(last) will be back on the next date.",
-                    "If \(last) stays in at this bond, \(family) spend \(holiday.name) visiting a jail. Nothing about this charge requires that."])
-                call.matters[i].stateAsk += " " + rng.pick([
-                    "The State won't stand in the way of a reasonable bond over the holiday, with conditions.",
-                    "The holiday is a reason to make court dates, Judge, not a reason to change the bond.",
-                    "Being home for \(holiday.name) is a reason to keep the conditions, not drop them."])
+                call.matters[i].summary += " Has \(who); wants to be home for \(holiday.name) (\(when))."
             }
         }
     }

@@ -1245,7 +1245,9 @@ final class GameState: ObservableObject {
                 docketSequence += 200
                 // Leave room on the calendar for the new arrest, a relief motion, and most weeks a warrant and an arraignment.
                 // Fewer new matters while the new judge's courtroom is still filling up.
-                let wantsWarrant = rng.chance(0.7 * max(0.3, caseloadRamp) * intakeFactor)
+                // Search warrant applications concern crimes no one has been charged with yet, not cases assigned to this
+                // court, so they don't come to the calendar call.
+                let wantsWarrant = false
                 // Defendants who had their first appearance come back to be arraigned or to plead.
                 let dueArraignments = arraignQueue.filter { cal.startOfDay(for: $0.due) <= cal.startOfDay(for: date) }
                     .sorted { $0.due < $1.due }
@@ -1320,6 +1322,17 @@ final class GameState: ObservableObject {
                             c.background = bg
                         }
                         call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
+                        // Where the case stands on this court's docket, so the motion is plainly about a case the judge has.
+                        if kind == .capacity || kind == .continuance {
+                            let setOn = scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }?.date
+                            let since = awaiting.first { $0.courtCase?.id == c.id }?.since
+                            let held = c.background?.isJailed == true ? " · in jail" : " · out on release"
+                            if let setOn {
+                                call.matters[index].summary += " Your docket: trial \(SentenceFormat.shortDate(setOn))" + held + "."
+                            } else if let since {
+                                call.matters[index].summary += " Your docket: awaiting a date since \(SentenceFormat.shortDate(since))" + held + "."
+                            }
+                        }
                         if kind == .continuance {
                             let ordinals = ["first", "second", "third", "fourth", "fifth"]
                             let nth = ordinals[min(priorContinuances[c.id] ?? 0, ordinals.count - 1)]
@@ -1410,10 +1423,9 @@ final class GameState: ObservableObject {
                 }
                 var matter = CalendarCalls.bondMatter(for: c, rng: &rng)
                 matter.summary = matter.summary.replacingOccurrences(of: "arrested this week", with: "arrested on \(SentenceFormat.shortDate(item.arrest))")
-                if item.note == nil {
-                    matter.summary = "The arrest in the \(item.town) case the paper has followed. " + matter.summary
-                } else if let note = item.note, !note.hasPrefix("Arrested at the scene") {
-                    matter.summary = note + " " + matter.summary
+                // How the arrest came about is in the case timeline; the card says only what's being decided.
+                if let note = item.note, note.contains("order for arrest") {
+                    matter.summary = "Back on your order for arrest. " + matter.summary
                 }
                 bondCall.matters.append(matter)
                 usedPeople.insert(c.defendant.personID)
@@ -2678,7 +2690,7 @@ final class GameState: ObservableObject {
         let candidates = people.filter { person in
             // Only a supervised probationer has an officer to file a violation report.
             person.status == .probation
-                && person.probation != nil
+                && (person.probation?.imposedInThisCourt ?? false)
                 && (person.probation.flatMap { ViolationHearings.probationStart(person, $0) } ?? .distantPast) < settledCutoff
                 && (person.lastReleased ?? .distantPast) < settledCutoff
                 && (person.probation?.supervised ?? true)
@@ -2860,10 +2872,9 @@ final class GameState: ObservableObject {
         let g = rng.pick(grounds)
         return CalendarMatter(
             kind: .counselWithdrawal, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation, docket: c.docket,
-            summary: "\(counsel), \(retained ? "hired to defend \(d.name)" : "appointed to represent \(d.name)") on \(c.charges.first?.law.title.lowercased() ?? "the charges"), moves to withdraw. \(g.0)",
-            stateAsk: rng.pick(["The State is ready for trial and objects to any delay.", "The State takes no position on who represents the defendant.",
-                                "The State asks that any new lawyer be ready by the current trial date."]),
-            defenseAsk: "\(counsel): \(rng.pick(["I can't give this client the representation the Constitution requires.", "I'd ask the court to let me out and appoint someone who can do this right.", "I've never asked to withdraw from a case in fifteen years. I'm asking now."]))",
+            summary: "\(counsel), \(d.name)'s lawyer, moves to withdraw. \(g.0)",
+            stateAsk: rng.pick(["Objects to any delay.", "No position.", "New lawyer should be ready by the trial date."]),
+            defenseAsk: rng.pick(["Can't represent the client properly.", "Asks to be let out and replaced."]),
             options: retained
                 ? ["Allow withdrawal; give \(d.lastName) time to hire a new lawyer (about six weeks)",
                    "Allow withdrawal; appoint the public defender if \(d.lastName) can't afford one (about three weeks)",

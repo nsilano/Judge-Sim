@@ -43,7 +43,7 @@ enum TreatmentCourts {
             return CalendarMatter(
                 kind: .treatmentGraduation, personID: person.id, personName: person.name, personAge: person.age(on: date), occupation: person.occupation,
                 docket: term.docket,
-                summary: "\(person.name) has finished all four phases of \(program): \(rng.int(9...14)) months, every screen clean since phase two, \(rng.pick(["full-time work at the same job for six months", "a GED earned in phase three", "a sponsor and a home group", "custody of a child restored last month"])). The team recommends graduation.\(term.conditionalDischarge == true ? " The case is a conditional discharge: on completion the charge is dismissed." : "")",
+                summary: "\(person.name) finished all four phases of \(program), clean since phase two. The team recommends graduation.\(term.conditionalDischarge == true ? " Conditional discharge: the charge is dismissed on completion." : "")",
                 stateAsk: rng.pick(["The State joins the recommendation.", "The State agrees, Judge. This is what the program is for."]),
                 defenseAsk: "\(last) would like to say a few words to the court.\(veteran ? " \(last)'s mentor is here too." : "")",
                 options: ["Graduate \(last): end probation now\(term.conditionalDischarge == true ? " and dismiss the charge" : "")",
