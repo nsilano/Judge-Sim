@@ -823,6 +823,33 @@ final class GameState: ObservableObject {
         }
     }
 
+    /// Reasons the defense has given lately, so the same one doesn't come up week after week.
+    private var recentContinuanceReasons: [String] = []
+
+    /// Why the defense wants more time, fitted to the case and not one given lately.
+    private func continuanceReason(for c: CourtCase, rng: inout SeededRNG) -> String {
+        let jailed = c.background?.isJailed ?? false
+        let forensic = c.evidence.contains { $0.kind == .forensic }
+        let digital = c.evidence.contains { $0.kind == .digital || $0.kind == .video }
+        let witnessed = c.witnesses.count > 3
+        var pool = ["Stuck in a murder trial in another county.", "Newly appointed; hasn't met the client yet.",
+                    "Lead counsel is out on medical leave.", "Still waiting on discovery the State promised a month ago.",
+                    "The defense investigator just found a new witness.", "Needs time to subpoena records from the victim's employer.",
+                    "A defense witness is deployed until next month.", "Counsel has a death in the family.",
+                    "Plea talks are close; asks for two weeks to finish them.", "Needs an interpreter for the client's family witnesses."]
+        if forensic { pool += ["Lab report just arrived; needs an expert.", "Wants its own expert to retest the evidence."] }
+        if digital { pool += ["Four hours of new bodycam video to review.", "Phone extraction report just came in; 900 pages."] }
+        if witnessed { pool += ["Three State witnesses still haven't been interviewed."] }
+        if !jailed { pool += ["Client is in inpatient treatment for 28 days.", "Client just had surgery and can't sit through a trial yet.",
+                              "Client is out of state caring for a dying parent."] }
+        else { pool += ["Can't get jail visits to prepare; the jail is on lockdown.", "Client was moved to another county's jail and is hard to reach."] }
+        let fresh = pool.filter { !recentContinuanceReasons.contains($0) }
+        let pick = rng.pick(fresh.isEmpty ? pool : fresh)
+        recentContinuanceReasons.append(pick)
+        if recentContinuanceReasons.count > 8 { recentContinuanceReasons.removeFirst() }
+        return pick
+    }
+
     /// A crime happens: the paper reports it, investigators work it, and an arrest follows, at the scene or days to
     /// weeks later. The defendant is booked into the jail and comes before the court at the next bond hearing.
     /// Every new case reaches the court this way.
@@ -1334,6 +1361,7 @@ final class GameState: ObservableObject {
                             }
                         }
                         if kind == .continuance {
+                            call.matters[index].defenseAsk = continuanceReason(for: c, rng: &rng)
                             let ordinals = ["first", "second", "third", "fourth", "fifth"]
                             let nth = ordinals[min(priorContinuances[c.id] ?? 0, ordinals.count - 1)]
                             for word in ["second", "third", "fourth"] {
