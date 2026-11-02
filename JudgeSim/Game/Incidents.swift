@@ -6,8 +6,9 @@ enum Incidents {
         let roll = Double.random(in: 0..<1, using: &rng)
         if roll < 0.05 { return [selfRepresentation(c, rng: &rng)] }
         if roll < 0.11, let i = interpreter(c, rng: &rng) { return [i] }
-        if roll < 0.18, let i = discovery(c, rng: &rng) { return [i] }
-        if roll < 0.25 { return [outburst(c, rng: &rng)] }
+        // Only moments whose ruling changes the case: evidence out, a witness lost, a new date, a defendant without a
+        // lawyer. Ones that would only add words to the record don't come up.
+        if roll < 0.15, let i = discovery(c, rng: &rng) { return [i] }
         return []
     }
 
@@ -114,7 +115,8 @@ enum Incidents {
     static func discovery(_ c: CourtCase, rng: inout SeededRNG) -> CourtIncident? {
         let d = c.defendant.lastName
         let target = c.evidence.filter { $0.side == .prosecution && $0.weight >= 2 }.max { $0.weight < $1.weight }
-        switch rng.int(0...2) {
+        // Only the withheld video comes up now: its ruling keeps evidence in or out.
+        switch target == nil ? -1 : 1 {
         case 0:
             return CourtIncident(
                 kind: .discovery, moment: .trial, title: "A supplemental report never turned over",
@@ -146,6 +148,8 @@ enum Incidents {
                                    proper: false, error: true,
                                    appealText: "You denied any remedy after finding the State withheld body camera video bearing on \(e.exhibit) (G.S. 15A-903, 15A-910).")
                 ])
+        case -1:
+            return nil
         default:
             return CourtIncident(
                 kind: .discovery, moment: .trial, title: "A statement naming someone else",
