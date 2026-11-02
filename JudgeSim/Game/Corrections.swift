@@ -162,6 +162,12 @@ struct JailInmate: Identifiable, Hashable {
     var money: BailMoney? { canPost.map { BailMoney(cash: $0, feeRate: bondsmanRate ?? 0.15, bondsman: bondsmanWilling ?? false) } }
 
     var noBond: Bool { (bond ?? "").hasPrefix("Held without bond") }
+
+    /// How far the bond is beyond what the defendant can make: the biggest gaps first on the review list.
+    var shortfall: Int {
+        if noBond { return Int.max / 2 }
+        return (bondAmount ?? 0) - (money?.reach ?? 0)
+    }
     var bondAmount: Int? { Corrections.dollars(in: bond) }
 
     /// A plain status at a glance, and the line under it.
@@ -347,4 +353,8 @@ struct OnReleaseDefendant: Identifiable, Hashable {
     var since: Date?
     var trialDate: Date?
     var monitored: Bool { conditions.lowercased().contains("house arrest") || conditions.lowercased().contains("monitor") }
+
+    func matches(_ query: String) -> Bool {
+        name.lowercased().contains(query) || docket.lowercased().contains(query) || charge.lowercased().contains(query)
+    }
 }

@@ -812,8 +812,7 @@ private struct BondReviewView: View {
     @EnvironmentObject private var game: GameState
 
     var body: some View {
-        let held = game.jailRoster().filter { $0.kind == .pretrial }
-            .sorted { ($0.bondAmount ?? .max) - ($0.money?.reach ?? 0) > ($1.bondAmount ?? .max) - ($1.money?.reach ?? 0) }
+        let held: [JailInmate] = game.jailRoster().filter { $0.kind == .pretrial }.sorted { $0.shortfall > $1.shortfall }
         List {
             Section {
                 Text("A review goes on the next court day's bond session. The State and the defense argue it, and you can set a bond the defendant can post, add house arrest, keep it as is, or, for a defendant held without bond, set conditions. It takes a day, but it's a ruling, not a jailbreak: the defendant is out on conditions you chose.")
@@ -821,55 +820,7 @@ private struct BondReviewView: View {
             }
             Section("Held awaiting trial · \(held.count)") {
                 if held.isEmpty { Text("No one is held for trial on your bonds.").foregroundStyle(.secondary) }
-                ForEach(held) { inmate in
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(inmate.name).font(.system(.subheadline, design: .serif).weight(.semibold))
-                            Spacer()
-                            Pill(text: inmate.riskLabel, color: inmate.risk < 0.3 ? Theme.good : (inmate.risk < 0.55 ? Theme.gold : Theme.bad))
-                        }
-                        Text("\(inmate.charge) · \(inmate.docket)").font(.caption2).foregroundStyle(.secondary)
-                        HStack(spacing: 14) {
-                            VStack(alignment: .leading) {
-                                Text("Held on").font(.caption2).foregroundStyle(.secondary)
-                                Text(inmate.noBond ? "No bond" : (inmate.bondAmount.map { "$\($0.formatted())" } ?? "Bond")).font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Theme.bad)
-                            }
-                            VStack(alignment: .leading) {
-                                Text("Can pay").font(.caption2).foregroundStyle(.secondary)
-                                Text(inmate.money.map { $0.cash == 0 ? "Nothing" : "About $\($0.cash.formatted())" } ?? "Not known").font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Theme.good)
-                            }
-                            VStack(alignment: .leading) {
-                                Text("Bond they can make").font(.caption2).foregroundStyle(.secondary)
-                                Text(inmate.money.map { $0.reach == 0 ? "None" : "Up to $\($0.reach.formatted())" } ?? "Not known").font(.subheadline.weight(.bold))
-                                    .foregroundStyle(Theme.good)
-                            }
-                        }
-                        if let money = inmate.money, money.cash > 0 {
-                            Text(money.bondsman ? "A bondsman would write it for a \(Int((money.feeRate * 100).rounded()))% fee the family never gets back." : "No bondsman will write it; the bond has to be posted in cash.")
-                                .font(.caption2).foregroundStyle(.secondary)
-                        }
-                        if !inmate.flags.isEmpty {
-                            Text(inmate.flags.joined(separator: " · ")).font(.caption2).foregroundStyle(Theme.gold)
-                        }
-                        if let caseID = inmate.caseID {
-                            if game.bondReviewPending(caseID) {
-                                Label("Review set for the next bond session", systemImage: "checkmark.circle.fill")
-                                    .font(.caption.weight(.semibold)).foregroundStyle(Theme.good)
-                            } else {
-                                Button {
-                                    game.requestBondReview(caseID: caseID)
-                                } label: {
-                                    Label("Set a bond review", systemImage: "calendar.badge.plus")
-                                        .font(.caption.weight(.semibold))
-                                }
-                                .buttonStyle(.bordered).tint(Theme.gold)
-                            }
-                        }
-                    }
-                    .padding(.vertical, 2)
-                }
+                ForEach(held) { BondReviewRow(inmate: $0) }
             }
         }
         .benchBackground()
@@ -885,8 +836,8 @@ private struct OutOnBondView: View {
 
     var body: some View {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
-        let all = game.outOnBond()
-        let shown = all.filter { q.isEmpty || $0.name.lowercased().contains(q) || $0.docket.lowercased().contains(q) || $0.charge.lowercased().contains(q) }
+        let all: [OnReleaseDefendant] = game.outOnBond()
+        let shown: [OnReleaseDefendant] = all.filter { q.isEmpty || $0.matches(q) }
         List {
             Section {
                 HStack {
@@ -894,36 +845,14 @@ private struct OutOnBondView: View {
                     Spacer()
                     miniStat("\(all.filter(\.monitored).count)", "On a monitor")
                     Spacer()
-                    miniStat("\(all.filter { $0.trialDate == nil }.count)", "No trial date")
+                    miniStat(String(all.filter { $0.trialDate == nil }.count), "No trial date")
                 }
             } footer: {
                 Text("Defendants waiting for trial who aren't in the jail: on a secured or unsecured bond, a written promise, house arrest, or a release you or the sheriff ordered.")
             }
             Section("\(shown.count) \(shown.count == 1 ? "person" : "people")") {
                 if shown.isEmpty { Text(all.isEmpty ? "No one is out on release right now." : "No one matches.").foregroundStyle(.secondary) }
-                ForEach(shown) { d in
-                    NavigationLink {
-                        if let person = game.person(d.personID) {
-                            PersonDetail(person: person, today: game.currentDate)
-                        } else {
-                            CaseTimelineView(docket: d.docket)
-                        }
-                    } label: {
-                        VStack(alignment: .leading, spacing: 3) {
-                            HStack {
-                                Text(d.name).font(.system(.subheadline, design: .serif).weight(.semibold))
-                                Text("\(d.age)").font(.caption).foregroundStyle(.secondary)
-                                Spacer()
-                                if d.monitored { Pill(text: "Monitor", color: Theme.gold, icon: "dot.radiowaves.left.and.right") }
-                            }
-                            Label(d.trialDate.map { "Trial set for \(SentenceFormat.shortDate($0))" } ?? "Awaiting a trial date",
-                                  systemImage: "calendar").font(.caption.weight(.semibold)).foregroundStyle(Theme.defense)
-                            Text(d.conditions).font(.caption2).fixedSize(horizontal: false, vertical: true)
-                            Text("\(d.charge) · \(d.docket)" + (d.since.map { " · out since \(SentenceFormat.shortDate($0))" } ?? ""))
-                                .font(.caption2).foregroundStyle(.secondary)
-                        }
-                    }
-                }
+                ForEach(shown) { OutOnBondRow(d: $0) }
             }
         }
         .searchable(text: $query, prompt: "Name, docket, or charge")
@@ -939,58 +868,37 @@ private struct WantedView: View {
     @State private var showServed = false
 
     var body: some View {
-        let date = game.currentDate
-        let cal = CourtCalendar.calendar
-        let wanted = game.arrestOrders.filter { !$0.served }.sorted { $0.issued < $1.issued }
-        let served = game.arrestOrders.filter(\.served).sorted { $0.servedOn > $1.servedOn }
+        let wanted: [ArrestOrder] = game.arrestOrders.filter { !$0.served }.sorted { $0.issued < $1.issued }
+        let served: [ArrestOrder] = game.arrestOrders.filter(\.served).sorted { $0.servedOn > $1.servedOn }
+        let longGone: Int = wanted.filter { daysOut($0) >= 56 }.count
         List {
             Section {
                 HStack {
-                    miniStat("\(wanted.count)", "At large")
+                    miniStat(String(wanted.count), "At large")
                     Spacer()
-                    miniStat("\(wanted.filter { (cal.dateComponents([.day], from: $0.issued, to: date).day ?? 0) >= 56 }.count)", "Over 8 weeks")
+                    miniStat(String(longGone), "Over 8 weeks")
                     Spacer()
-                    miniStat("\(served.count)", "Brought in")
+                    miniStat(String(served.count), "Brought in")
                 }
             } footer: {
                 Text("Orders for arrest you issued when someone missed court. Deputies pick most people up within weeks; some turn themselves in, some are caught months later in another state, and a few are never found. Once arrested, they come before you at a bond hearing.")
             }
-            Section("Still at large · \(wanted.count)") {
+            Section("Still at large · " + String(wanted.count)) {
                 if wanted.isEmpty { Text("No one is wanted on your orders.").foregroundStyle(.secondary) }
                 ForEach(wanted) { order in
-                    let days = max(0, cal.dateComponents([.day], from: order.issued, to: date).day ?? 0)
-                    link(order) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            HStack {
-                                Text(order.personName).font(.system(.subheadline, design: .serif).weight(.semibold))
-                                Spacer()
-                                Pill(text: days >= 56 ? "Fugitive" : "Wanted", color: Theme.bad, icon: "exclamationmark.triangle.fill")
-                            }
-                            Text("Missed court; order issued \(SentenceFormat.shortDate(order.issued)) · at large \(days) day\(days == 1 ? "" : "s")")
-                                .font(.caption.weight(.semibold)).foregroundStyle(Theme.bad)
-                            Text("\(order.offense) · \(order.docket)").font(.caption2).foregroundStyle(.secondary)
-                            Text("Bond on arrest: \(order.bond)").font(.caption2)
-                        }
-                    }
+                    link(order) { WantedRow(order: order, days: daysOut(order)) }
                 }
             }
             if !served.isEmpty {
                 Section {
                     DisclosureGroup(isExpanded: $showServed) {
                         ForEach(served) { order in
-                            link(order) {
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(order.personName).font(.subheadline.weight(.semibold))
-                                    Text("\(order.how ?? "Arrested") \(SentenceFormat.shortDate(order.servedOn)), \(max(0, cal.dateComponents([.day], from: order.issued, to: order.servedOn).day ?? 0)) days after the order")
-                                        .font(.caption).foregroundStyle(Theme.good)
-                                    Text("\(order.offense) · \(order.docket)").font(.caption2).foregroundStyle(.secondary)
-                                }
-                            }
+                            link(order) { ServedRow(order: order) }
                         }
                         Button("Clear served orders") { withAnimation { game.clearServedArrestOrders() } }
                             .font(.caption.weight(.semibold))
                     } label: {
-                        Text("Brought in · \(served.count)").font(.subheadline.weight(.semibold))
+                        Text("Brought in · " + String(served.count)).font(.subheadline.weight(.semibold))
                     }
                 }
             }
@@ -999,12 +907,181 @@ private struct WantedView: View {
         .navigationTitle("Wanted")
     }
 
+    private func daysOut(_ order: ArrestOrder) -> Int {
+        max(0, CourtCalendar.calendar.dateComponents([.day], from: order.issued, to: game.currentDate).day ?? 0)
+    }
+
     @ViewBuilder
     private func link<Content: View>(_ order: ArrestOrder, @ViewBuilder label: () -> Content) -> some View {
         if let person = game.person(order.personID) {
             NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { label() }
         } else {
             NavigationLink { CaseTimelineView(docket: order.docket) } label: { label() }
+        }
+    }
+}
+
+
+/// One defendant on the bond review list: the bond, what the defendant can pay and make, and the review button.
+private struct BondReviewRow: View {
+    @EnvironmentObject private var game: GameState
+    let inmate: JailInmate
+
+    private var heldOn: String {
+        if inmate.noBond { return "No bond" }
+        guard let amount = inmate.bondAmount else { return "Bond" }
+        return "$" + amount.formatted()
+    }
+
+    private var canPay: String {
+        guard let money = inmate.money else { return "Not known" }
+        return money.cash == 0 ? "Nothing" : "About $" + money.cash.formatted()
+    }
+
+    private var canMake: String {
+        guard let money = inmate.money else { return "Not known" }
+        return money.reach == 0 ? "None" : "Up to $" + money.reach.formatted()
+    }
+
+    private var bondsmanLine: String? {
+        guard let money = inmate.money, money.cash > 0 else { return nil }
+        if !money.bondsman { return "No bondsman will write it; the bond has to be posted in cash." }
+        let percent = Int((money.feeRate * 100).rounded())
+        return "A bondsman would write it for a \(percent)% fee the family never gets back."
+    }
+
+    private var riskColor: Color { inmate.risk < 0.3 ? Theme.good : (inmate.risk < 0.55 ? Theme.gold : Theme.bad) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(inmate.name).font(.system(.subheadline, design: .serif).weight(.semibold))
+                Spacer()
+                Pill(text: inmate.riskLabel, color: riskColor)
+            }
+            Text(inmate.charge + " · " + inmate.docket).font(.caption2).foregroundStyle(.secondary)
+            HStack(spacing: 14) {
+                figure("Held on", heldOn, Theme.bad)
+                figure("Can pay", canPay, Theme.good)
+                figure("Bond they can make", canMake, Theme.good)
+            }
+            if let line = bondsmanLine {
+                Text(line).font(.caption2).foregroundStyle(.secondary)
+            }
+            if !inmate.flags.isEmpty {
+                Text(inmate.flags.joined(separator: " · ")).font(.caption2).foregroundStyle(Theme.gold)
+            }
+            reviewControl
+        }
+        .padding(.vertical, 2)
+    }
+
+    private func figure(_ label: String, _ value: String, _ color: Color) -> some View {
+        VStack(alignment: .leading) {
+            Text(label).font(.caption2).foregroundStyle(.secondary)
+            Text(value).font(.subheadline.weight(.bold)).foregroundStyle(color)
+        }
+    }
+
+    @ViewBuilder
+    private var reviewControl: some View {
+        if let caseID = inmate.caseID {
+            if game.bondReviewPending(caseID) {
+                Label("Review set for the next bond session", systemImage: "checkmark.circle.fill")
+                    .font(.caption.weight(.semibold)).foregroundStyle(Theme.good)
+            } else {
+                Button {
+                    game.requestBondReview(caseID: caseID)
+                } label: {
+                    Label("Set a bond review", systemImage: "calendar.badge.plus")
+                        .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.bordered).tint(Theme.gold)
+            }
+        }
+    }
+}
+
+
+private struct OutOnBondRow: View {
+    @EnvironmentObject private var game: GameState
+    let d: OnReleaseDefendant
+
+    private var trialLine: String {
+        guard let date = d.trialDate else { return "Awaiting a trial date" }
+        return "Trial set for " + SentenceFormat.shortDate(date)
+    }
+
+    private var caseLine: String {
+        var line = d.charge + " · " + d.docket
+        if let since = d.since { line += " · out since " + SentenceFormat.shortDate(since) }
+        return line
+    }
+
+    var body: some View {
+        NavigationLink {
+            destination
+        } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack {
+                    Text(d.name).font(.system(.subheadline, design: .serif).weight(.semibold))
+                    Text(String(d.age)).font(.caption).foregroundStyle(.secondary)
+                    Spacer()
+                    if d.monitored { Pill(text: "Monitor", color: Theme.gold, icon: "dot.radiowaves.left.and.right") }
+                }
+                Label(trialLine, systemImage: "calendar").font(.caption.weight(.semibold)).foregroundStyle(Theme.defense)
+                Text(d.conditions).font(.caption2).fixedSize(horizontal: false, vertical: true)
+                Text(caseLine).font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var destination: some View {
+        if let person = game.person(d.personID) {
+            PersonDetail(person: person, today: game.currentDate)
+        } else {
+            CaseTimelineView(docket: d.docket)
+        }
+    }
+}
+
+
+private struct WantedRow: View {
+    let order: ArrestOrder
+    let days: Int
+
+    private var issuedLine: String {
+        "Missed court; order issued " + SentenceFormat.shortDate(order.issued) + " · at large " + String(days) + (days == 1 ? " day" : " days")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                Text(order.personName).font(.system(.subheadline, design: .serif).weight(.semibold))
+                Spacer()
+                Pill(text: days >= 56 ? "Fugitive" : "Wanted", color: Theme.bad, icon: "exclamationmark.triangle.fill")
+            }
+            Text(issuedLine).font(.caption.weight(.semibold)).foregroundStyle(Theme.bad)
+            Text(order.offense + " · " + order.docket).font(.caption2).foregroundStyle(.secondary)
+            Text("Bond on arrest: " + order.bond).font(.caption2)
+        }
+    }
+}
+
+private struct ServedRow: View {
+    let order: ArrestOrder
+
+    private var servedLine: String {
+        let days = max(0, CourtCalendar.calendar.dateComponents([.day], from: order.issued, to: order.servedOn).day ?? 0)
+        return (order.how ?? "Arrested") + " " + SentenceFormat.shortDate(order.servedOn) + ", " + String(days) + " days after the order"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(order.personName).font(.subheadline.weight(.semibold))
+            Text(servedLine).font(.caption).foregroundStyle(Theme.good)
+            Text(order.offense + " · " + order.docket).font(.caption2).foregroundStyle(.secondary)
         }
     }
 }
