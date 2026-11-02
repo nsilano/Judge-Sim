@@ -154,6 +154,15 @@ private struct JailSections: View {
                 }
             }
             NavigationLink {
+                OutOnBondView()
+            } label: {
+                HStack {
+                    Label("Out on bond", systemImage: "figure.walk")
+                    Spacer()
+                    Text("\(game.outOnBond().count)").foregroundStyle(.secondary)
+                }
+            }
+            NavigationLink {
                 EarlyReleasesView()
             } label: {
                 HStack {
@@ -855,5 +864,60 @@ private struct BondReviewView: View {
         }
         .benchBackground()
         .navigationTitle("Bond reviews")
+    }
+}
+
+
+/// Everyone waiting for trial who is out on conditions of release: what they're charged with, the conditions, and the trial date.
+private struct OutOnBondView: View {
+    @EnvironmentObject private var game: GameState
+    @State private var query = ""
+
+    var body: some View {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        let all = game.outOnBond()
+        let shown = all.filter { q.isEmpty || $0.name.lowercased().contains(q) || $0.docket.lowercased().contains(q) || $0.charge.lowercased().contains(q) }
+        List {
+            Section {
+                HStack {
+                    miniStat("\(all.count)", "Out on release")
+                    Spacer()
+                    miniStat("\(all.filter(\.monitored).count)", "On a monitor")
+                    Spacer()
+                    miniStat("\(all.filter { $0.trialDate == nil }.count)", "No trial date")
+                }
+            } footer: {
+                Text("Defendants waiting for trial who aren't in the jail: on a secured or unsecured bond, a written promise, house arrest, or a release you or the sheriff ordered.")
+            }
+            Section("\(shown.count) \(shown.count == 1 ? "person" : "people")") {
+                if shown.isEmpty { Text(all.isEmpty ? "No one is out on release right now." : "No one matches.").foregroundStyle(.secondary) }
+                ForEach(shown) { d in
+                    NavigationLink {
+                        if let person = game.person(d.personID) {
+                            PersonDetail(person: person, today: game.currentDate)
+                        } else {
+                            CaseTimelineView(docket: d.docket)
+                        }
+                    } label: {
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack {
+                                Text(d.name).font(.system(.subheadline, design: .serif).weight(.semibold))
+                                Text("\(d.age)").font(.caption).foregroundStyle(.secondary)
+                                Spacer()
+                                if d.monitored { Pill(text: "Monitor", color: Theme.gold, icon: "dot.radiowaves.left.and.right") }
+                            }
+                            Label(d.trialDate.map { "Trial set for \(SentenceFormat.shortDate($0))" } ?? "Awaiting a trial date",
+                                  systemImage: "calendar").font(.caption.weight(.semibold)).foregroundStyle(Theme.defense)
+                            Text(d.conditions).font(.caption2).fixedSize(horizontal: false, vertical: true)
+                            Text("\(d.charge) · \(d.docket)" + (d.since.map { " · out since \(SentenceFormat.shortDate($0))" } ?? ""))
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+        .searchable(text: $query, prompt: "Name, docket, or charge")
+        .benchBackground()
+        .navigationTitle("Out on bond")
     }
 }

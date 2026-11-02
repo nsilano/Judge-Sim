@@ -332,3 +332,19 @@ struct CustodyStay: Identifiable, Hashable {
         return stays
     }
 }
+
+
+/// A defendant awaiting trial who is out on conditions of release.
+struct OnReleaseDefendant: Identifiable, Hashable {
+    var id: UUID { caseID }
+    var caseID: UUID
+    var personID: UUID
+    var name: String
+    var age: Int
+    var docket: String
+    var charge: String
+    var conditions: String
+    var since: Date?
+    var trialDate: Date?
+    var monitored: Bool { conditions.lowercased().contains("house arrest") || conditions.lowercased().contains("monitor") }
+}

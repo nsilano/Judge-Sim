@@ -3983,6 +3983,27 @@ final class GameState: ObservableObject {
         return released
     }
 
+    /// Defendants waiting for trial who are out on conditions of release, newest release first.
+    func outOnBond() -> [OnReleaseDefendant] {
+        var seen = Set<UUID>()
+        var out: [OnReleaseDefendant] = []
+        let entries = (today?.entries.filter(\.isOpen) ?? []) + scheduled.map(\.entry) + awaiting.map(\.entry)
+        var cases = entries.compactMap { entry -> CourtCase? in
+            if case .trial(let c) = entry.matter { return c } else { return nil }
+        }
+        cases += arraignQueue.map(\.courtCase)
+        for c in cases {
+            guard let bg = c.background, !bg.isJailed, bg.bondStatus != "Not yet arrested.", seen.insert(c.id).inserted,
+                  person(c.defendant.personID)?.status != .incarcerated else { continue }
+            let since = caseLog.last { $0.docket == c.docket && ($0.kind == .jailOut || $0.kind == .early || $0.kind == .bond) }?.date
+            out.append(OnReleaseDefendant(caseID: c.id, personID: c.defendant.personID, name: c.defendant.name, age: c.defendant.age,
+                                          docket: c.docket, charge: c.charges.first?.law.title ?? "",
+                                          conditions: bg.bondStatus, since: since,
+                                          trialDate: scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }?.date))
+        }
+        return out.sorted { ($0.since ?? .distantPast) > ($1.since ?? .distantPast) }
+    }
+
     /// Sets a review of a jailed defendant's conditions of release for the next bond session.
     func requestBondReview(caseID: UUID) {
         guard !bondReviews.contains(caseID) else { return }
