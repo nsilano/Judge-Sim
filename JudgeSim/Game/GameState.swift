@@ -2289,12 +2289,12 @@ final class GameState: ObservableObject {
                 c.background?.lastBondMotion = call.date
                 if var setting = previousSetting {
                     setting.entry.matter = .trial(c)
-                    setting.entry.note = ((setting.entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces)
+                    setting.entry.note = Self.latestBondNote(((setting.entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces))
                     scheduled.append(setting)
                     scheduled.sort { $0.date < $1.date }
                 } else if var waiting = previousWait {
                     waiting.entry.matter = .trial(c)
-                    waiting.entry.note = ((waiting.entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces)
+                    waiting.entry.note = Self.latestBondNote(((waiting.entry.note ?? "") + " " + note).trimmingCharacters(in: .whitespaces))
                     awaiting.append(waiting)
                 } else {
                     setFor(c, weeks: weeks, note: note, continuances: n)
@@ -2685,7 +2685,11 @@ final class GameState: ObservableObject {
             }
             bg.bondStatus = "Held on \(condition) set on \(heard); unable to post it. In custody for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
             held.background = bg
-            schedule(held, rng.int(5...8), "In custody since \(heard): couldn't post \(condition).", 0)
+            // A defendant already held keeps the original custody date; the review only changes the bond.
+            let wasHeld = c.background?.isJailed == true && c.background?.onRelease != true
+            let since = wasHeld ? (caseLog.last { $0.docket == c.docket && $0.kind == .jailIn }.map { SentenceFormat.shortDate($0.date) } ?? heard) : heard
+            schedule(held, rng.int(5...8), wasHeld ? "In custody since \(since): couldn't post \(condition) (bond reviewed \(heard))."
+                                                 : "In custody since \(heard): couldn't post \(condition).", 0)
         }
     }
 
@@ -3978,6 +3982,31 @@ final class GameState: ObservableObject {
         if caseLog.count > 15_000 { caseLog.removeFirst(caseLog.count - 15_000) }
     }
 
+    /// A case note says where the defendant stands on bond once: each new bond ruling replaces the line before it.
+    static func latestBondNote(_ note: String) -> String {
+        let pattern = #"(In custody since|Still in custody|On release since|Kept held without bond|Held without bond since)[^.]*\.(\s|$)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return note }
+        let ns = note as NSString
+        let matches = regex.matches(in: note, range: NSRange(location: 0, length: ns.length))
+        guard matches.count > 1, let first = matches.first, let last = matches.last else { return note }
+        var latest = ns.substring(with: last.range)
+        // Still held all along: the custody date is the first one, and the later lines were bond reviews.
+        let opening = ns.substring(with: first.range)
+        if opening.hasPrefix("In custody since"), latest.hasPrefix("In custody since"), !latest.contains("bond reviewed"),
+           let firstDate = opening.dropFirst("In custody since ".count).split(separator: ":").first,
+           let lastDate = latest.dropFirst("In custody since ".count).split(separator: ":").first, firstDate != lastDate {
+            latest = latest.replacingOccurrences(of: "In custody since \(lastDate):", with: "In custody since \(firstDate):")
+            latest = latest.trimmingCharacters(in: .whitespaces)
+            if latest.hasSuffix(".") { latest = String(latest.dropLast()) + " (bond reviewed \(lastDate))." }
+        }
+        var out = note
+        for m in matches.reversed() {
+            out = (out as NSString).replacingCharacters(in: m.range, with: "")
+        }
+        out = out.replacingOccurrences(of: "  ", with: " ").trimmingCharacters(in: .whitespaces)
+        return (out.isEmpty ? "" : out + " ") + latest.trimmingCharacters(in: .whitespaces)
+    }
+
     /// An older save's log kept dates only: give each event a time, keeping the order events of a case were logged in.
     private static func timedLog(_ events: [LogEvent]) -> [LogEvent] {
         let cal = CourtCalendar.calendar
@@ -4586,6 +4615,9 @@ final class GameState: ObservableObject {
         dispositions = data.dispositions ?? []
         arraignQueue = data.arraignQueue ?? []
         caseLog = Self.timedLog(data.caseLog ?? [])
+        // Older saves piled a new bond line onto a case's note at every review; keep only the latest.
+        for i in scheduled.indices { scheduled[i].entry.note = scheduled[i].entry.note.map(Self.latestBondNote) }
+        for i in awaiting.indices { awaiting[i].entry.note = awaiting[i].entry.note.map(Self.latestBondNote) }
         bondReviews = data.bondReviews ?? []
         heldCases = data.heldCases ?? []
         // Bond hearings and bond motions still waiting on the calendar from an older build get today's short wording.
