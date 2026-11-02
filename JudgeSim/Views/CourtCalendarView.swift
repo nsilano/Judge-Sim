@@ -690,7 +690,7 @@ struct DayPickerList: View {
         let open = allowed
         let first = month ?? Self.firstOfMonth(choice ?? open.min() ?? today)
         VStack(alignment: .leading, spacing: 10) {
-            Label("Today is " + SentenceFormat.date(today), systemImage: "calendar")
+            Label("Today is \(SentenceFormat.date(today))", systemImage: "calendar")
                 .font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
             PickerMonthHeader(month: first, canGoBack: first > Self.firstOfMonth(today)) { step in
                 month = CourtCalendar.calendar.date(byAdding: .month, value: step, to: first)
@@ -755,16 +755,31 @@ struct PickerDayCell: View {
         }
     }
 
+    private var textColor: Color {
+        if selected { return Theme.background }
+        return selectable ? Theme.text : Color.secondary.opacity(0.45)
+    }
+
+    private var fillColor: Color {
+        if selected { return Theme.gold }
+        return selectable ? Theme.surface : Color.clear
+    }
+
+    private var dotColor: Color { selectable ? dot : Color.clear }
+
+    private var ringColor: Color { isToday ? Theme.gold : Color.clear }
+
     var body: some View {
         VStack(spacing: 3) {
-            Text(String(number))
-                .font(.subheadline.weight(selected ? .bold : .regular).monospacedDigit())
-                .foregroundStyle(selected ? Theme.background : (selectable ? Theme.text : Color.secondary.opacity(0.45)))
-            Circle().fill(selectable ? dot : Color.clear).frame(width: 5, height: 5)
+            Text("\(number)")
+                .font(.subheadline.monospacedDigit())
+                .fontWeight(selected ? .bold : .regular)
+                .foregroundStyle(textColor)
+            Circle().fill(dotColor).frame(width: 5, height: 5)
         }
         .frame(maxWidth: .infinity, minHeight: 40)
-        .background(RoundedRectangle(cornerRadius: 8).fill(selected ? Theme.gold : (selectable ? Theme.surface : Color.clear)))
-        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(isToday ? Theme.gold : Color.clear, lineWidth: 1.5))
+        .background(RoundedRectangle(cornerRadius: 8).fill(fillColor))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(ringColor, lineWidth: 1.5))
     }
 }
 
@@ -784,6 +799,31 @@ private struct PickerMonthGrid: View {
         return out
     }
 
+    @ViewBuilder
+    private func slot(_ day: Date?) -> some View {
+        if let day {
+            dayButton(CourtCalendar.calendar.startOfDay(for: day))
+        } else {
+            Color.clear.frame(height: 40)
+        }
+    }
+
+    private func dayButton(_ key: Date) -> some View {
+        let status: PickerDayCell.Status = cell(key)
+        let selectable: Bool = allowed.contains(key) && status != .current
+        let isChosen: Bool = choice.map { CourtCalendar.isSameDay($0, key) } ?? false
+        let number: Int = CourtCalendar.calendar.component(.day, from: key)
+        let isToday: Bool = CourtCalendar.isSameDay(key, today)
+        return Button {
+            Haptics.tap()
+            choice = key
+        } label: {
+            PickerDayCell(day: key, number: number, selectable: selectable, state: status, selected: isChosen, isToday: isToday)
+        }
+        .buttonStyle(.plain)
+        .disabled(!selectable)
+    }
+
     private var weekdayLetters: [String] {
         let cal = CourtCalendar.calendar
         let symbols = cal.veryShortWeekdaySymbols
@@ -797,22 +837,7 @@ private struct PickerMonthGrid: View {
                 Text(weekdayLetters[i]).font(.caption2.weight(.bold)).foregroundStyle(.secondary)
             }
             ForEach(Array(slots.enumerated()), id: \.offset) { item in
-                if let day = item.element {
-                    let key = CourtCalendar.calendar.startOfDay(for: day)
-                    let selectable = allowed.contains(key) && cell(key) != .current
-                    Button {
-                        Haptics.tap()
-                        choice = key
-                    } label: {
-                        PickerDayCell(day: key, number: CourtCalendar.calendar.component(.day, from: key), selectable: selectable,
-                                state: cell(key), selected: choice.map { CourtCalendar.isSameDay($0, key) } ?? false,
-                                isToday: CourtCalendar.isSameDay(key, today))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!selectable)
-                } else {
-                    Color.clear.frame(height: 40)
-                }
+                slot(item.element)
             }
         }
     }
@@ -827,26 +852,40 @@ private struct PickerDayDetail: View {
     let conflict: String?
     let current: Bool
 
-    var body: some View {
-        let limit = game.schedule.limit(on: day)
+    private var used: Int {
         let set = game.counts(on: day)
-        let used = kind == .trial ? set.trials : set.hearings
-        let cap = kind == .trial ? limit.trials : limit.hearings
+        return kind == .trial ? set.trials : set.hearings
+    }
+
+    private var cap: Int {
+        let limit = game.schedule.limit(on: day)
+        return kind == .trial ? limit.trials : limit.hearings
+    }
+
+    private var full: Bool { used >= cap }
+
+    private var openText: String { full ? "Full" : "\(cap - used) open" }
+
+    private var loadText: String {
+        let set = game.counts(on: day)
+        let limit = game.schedule.limit(on: day)
+        return "\(set.trials)/\(limit.trials) trials · \(set.hearings)/\(limit.hearings) hearings"
+    }
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(CourtCalendar.dayTitle(day)).font(.subheadline.weight(.semibold))
                 Text(DayPickerList.distance(from: today, to: day)).font(.caption).foregroundStyle(Theme.gold)
                 Spacer()
-                Text(used >= cap ? "Full" : String(cap - used) + " open")
-                    .font(.caption.weight(.semibold)).foregroundStyle(used >= cap ? Theme.bad : Theme.good)
+                Text(openText).font(.caption.weight(.semibold)).foregroundStyle(full ? Theme.bad : Theme.good)
             }
-            Text(String(set.trials) + "/" + String(limit.trials) + " trials · " + String(set.hearings) + "/" + String(limit.hearings) + " hearings")
-                .font(.caption).foregroundStyle(.secondary)
+            Text(loadText).font(.caption).foregroundStyle(.secondary)
             if let conflict {
-                Label("Conflict: " + conflict, systemImage: "exclamationmark.triangle.fill")
+                Label("Conflict: \(conflict)", systemImage: "exclamationmark.triangle.fill")
                     .font(.caption2).foregroundStyle(.orange)
             }
-            if used >= cap {
+            if full {
                 Text("A full day can still take it; you'll be over your limit and the day will run long.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
