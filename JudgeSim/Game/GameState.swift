@@ -828,7 +828,7 @@ final class GameState: ObservableObject {
         let town = facts?.town ?? county?.seat ?? ""
         let followed = booked > happened
         let agencyName = facts?.agency ?? c.investigatingAgency
-        log(.crime, c, on: happened, "\(InvestigationArc.subject(c).capitalizedFirst) reported in \(town).")
+        log(.crime, c, on: happened, "Reported to the \(agencyName) in \(town): \(InvestigationArc.subject(c)).")
         if followed { log(.investigation, c, on: happened, "\(agencyName) opens an investigation.") }
         if followed {
             var beats = InvestigationArc.beats(for: c, incident: happened, arrest: booked, town: town,
@@ -880,7 +880,7 @@ final class GameState: ObservableObject {
     private func arrestOnWarrant(_ c: CourtCase, note: String, rng: inout SeededRNG) {
         let cal = CourtCalendar.calendar
         if let facts = c.investigation?.facts {
-            log(.crime, c, on: facts.incident, "\(InvestigationArc.subject(c).capitalizedFirst) reported in \(facts.town).")
+            log(.crime, c, on: facts.incident, "Reported to the \(facts.agency) in \(facts.town): \(InvestigationArc.subject(c)).")
             log(.investigation, c, on: facts.incident, "\(facts.agency) opens an investigation.")
         }
         log(.warrant, c, on: currentDate, "Search warrant signed by Judge \(lastName(judgeName ?? "")).")
@@ -1483,7 +1483,8 @@ final class GameState: ObservableObject {
     /// A case set for trial with no date yet; the judge chooses it.
     private func awaitCase(_ c: CourtCase, note: String, on date: Date, earliest: Date? = nil, reason: String? = nil,
                            continuances: Int = 0) {
-        log(note.lowercased().contains("continued") ? .continued : .court, c, on: date, note + " Waiting for a trial date.")
+        log(note.lowercased().contains("continued") ? .continued : .court, c, on: date,
+            note.lowercased().contains("trial date") ? note : note + " Waiting for a trial date.")
         var entry = DocketEntry(matter: .trial(c), note: note)
         entry.continuances = continuances
         let cal = CourtCalendar.calendar
@@ -1800,7 +1801,7 @@ final class GameState: ObservableObject {
                         c.background = bg
                     }
                     let facts = c.investigation?.facts
-                    log(.crime, c, on: facts?.incident ?? followUp.incident, "\(InvestigationArc.subject(c).capitalizedFirst) reported.")
+                    log(.crime, c, on: facts?.incident ?? followUp.incident, "Reported to police: \(InvestigationArc.subject(c)).")
                     log(.arrest, c, on: booked, "Arrested on the grand jury's indictment.")
                     log(.jailIn, c, on: booked, "Booked into the \(county?.name ?? "county") jail to await a bond hearing.")
                     bondQueue.append(OpenInvestigation(courtCase: c, incident: facts?.incident ?? followUp.incident, arrest: booked,
@@ -2362,7 +2363,7 @@ final class GameState: ObservableObject {
         kinds[kind, default: 0] += 1
         stats.bondKinds = kinds
         if amount <= bond.canPost {
-            log(.bond, c, on: date, "Bond hearing: released on \(condition).")
+            log(.bond, c, on: date, condition.hasPrefix("release to") ? "Bond hearing: released to" + condition.dropFirst("release to".count) + "." : "Bond hearing: released on \(condition).")
             if c.background?.isJailed == true { log(.jailOut, c, on: date, "Posted bond and left the jail.") }
             // The days already spent in jail stay as credit; the clock stops while the defendant is out.
             bg.onRelease = true
