@@ -1382,7 +1382,7 @@ final class GameState: ObservableObject {
                         }
                         if kind == .failureToAppear {
                             let set = scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }
-                            call.matters[index].summary += set.map { " The trial is set for \(SentenceFormat.shortDate($0.date))." }
+                            call.matters[index].summary += set.map { " Trial is still set for \(SentenceFormat.shortDate($0.date))." }
                                 ?? " The case has no trial date yet; it was on today's calendar for setting."
                         }
                     }

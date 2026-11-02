@@ -775,7 +775,7 @@ enum CalendarCalls {
             case .failureToAppear:
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
-                    summary: "\(name) didn't appear on \(law.title).",
+                    summary: "\(name) didn't answer today's calendar call on \(law.title).",
                     stateAsk: rng.pick(["Order for arrest; forfeit the bond.", "Order for arrest, no bond.", "Order for arrest; double the bond."]),
                     defenseAsk: rng.pick(["Knew the date; no explanation.", "Car broke down; asks for the afternoon.", "May have confused the date; asks for the afternoon.",
                                           "Can't reach the client.", "Ride fell through; asks for a new date.", "Possible hospital visit; asks for a day."]),
