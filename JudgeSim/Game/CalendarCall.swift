@@ -501,7 +501,7 @@ enum CalendarCalls {
         return rng.pick(["\(last) can pay a bondsman about $\(money.cash.formatted()). That covers a bond up to about $\(reach.formatted()). We ask for a $\(ask.formatted()) secured bond.",
                          "At $\(scale.secured.formatted()), \(last) stays in jail. Set it at $\(ask.formatted()) and a bondsman will write it.",
                          "We ask for a $\(ask.formatted()) secured bond with house arrest, Judge. The family has the fee for that and not a dollar more.",
-                         "Release to the custody of \(keeper), Judge, with a $\(ask.formatted()) secured bond. \(last) has a job to keep.",
+                         "Release to the custody of \(keeper), Judge. No money needed; \(last) has a job to keep and someone to answer to.",
                          "The State's $\(scale.secured.formatted()) is a number picked to keep \(last) in. \(last) can make $\(ask.formatted()) through a bondsman. We ask for that."])
     }
 
