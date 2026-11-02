@@ -110,7 +110,7 @@ private struct MatterCard: View {
             }
             // A warrant application has no case yet; it names the person whose property would be searched.
             Text(matter.caption).font(.system(.subheadline, design: .serif).weight(.bold))
-            Text(matter.summary).font(.callout).lineLimit(expanded ? nil : 3)
+            Text(matter.summary).font(.callout).fixedSize(horizontal: false, vertical: true)
             Label(matter.stateAsk, systemImage: "building.columns.fill")
                 .font(.caption)
                 .foregroundStyle(Theme.prosecution)
