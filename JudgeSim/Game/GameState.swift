@@ -2872,10 +2872,9 @@ final class GameState: ObservableObject {
         let g = rng.pick(grounds)
         return CalendarMatter(
             kind: .counselWithdrawal, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation, docket: c.docket,
-            summary: "\(counsel), \(retained ? "hired to defend \(d.name)" : "appointed to represent \(d.name)") on \(c.charges.first?.law.title.lowercased() ?? "the charges"), moves to withdraw. \(g.0)",
-            stateAsk: rng.pick(["The State is ready for trial and objects to any delay.", "The State takes no position on who represents the defendant.",
-                                "The State asks that any new lawyer be ready by the current trial date."]),
-            defenseAsk: "\(counsel): \(rng.pick(["I can't give this client the representation the Constitution requires.", "I'd ask the court to let me out and appoint someone who can do this right.", "I've never asked to withdraw from a case in fifteen years. I'm asking now."]))",
+            summary: "\(counsel), \(d.name)'s lawyer, moves to withdraw. \(g.0)",
+            stateAsk: rng.pick(["Objects to any delay.", "No position.", "New lawyer should be ready by the trial date."]),
+            defenseAsk: rng.pick(["Can't represent the client properly.", "Asks to be let out and replaced."]),
             options: retained
                 ? ["Allow withdrawal; give \(d.lastName) time to hire a new lawyer (about six weeks)",
                    "Allow withdrawal; appoint the public defender if \(d.lastName) can't afford one (about three weeks)",
