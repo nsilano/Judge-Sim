@@ -233,7 +233,7 @@ private struct SetDateSheet: View {
                             dismiss()
                         }
                     } label: {
-                        Text(choice.map { "Set for trial " + CourtCalendar.dayTitle($0) } ?? "Choose a day")
+                        Text(choice.map { "Set for trial " + CourtCalendar.dayTitle($0) + ", " + DayPickerList.distance(from: game.today?.date ?? game.currentDate, to: $0) } ?? "Choose a day")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
