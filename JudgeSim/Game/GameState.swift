@@ -1326,11 +1326,11 @@ final class GameState: ObservableObject {
                         if kind == .capacity || kind == .continuance {
                             let setOn = scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }?.date
                             let since = awaiting.first { $0.courtCase?.id == c.id }?.since
-                            let held = c.background?.isJailed == true ? " \(c.defendant.lastName) is in the jail." : " \(c.defendant.lastName) is out on release."
+                            let held = c.background?.isJailed == true ? " · in jail" : " · out on release"
                             if let setOn {
-                                call.matters[index].summary += " On your docket: set for trial on \(SentenceFormat.shortDate(setOn))." + held
+                                call.matters[index].summary += " Your docket: trial \(SentenceFormat.shortDate(setOn))" + held + "."
                             } else if let since {
-                                call.matters[index].summary += " On your docket: on the Awaiting list since \(SentenceFormat.shortDate(since)), no trial date yet." + held
+                                call.matters[index].summary += " Your docket: awaiting a date since \(SentenceFormat.shortDate(since))" + held + "."
                             }
                         }
                         if kind == .continuance {
@@ -1423,10 +1423,9 @@ final class GameState: ObservableObject {
                 }
                 var matter = CalendarCalls.bondMatter(for: c, rng: &rng)
                 matter.summary = matter.summary.replacingOccurrences(of: "arrested this week", with: "arrested on \(SentenceFormat.shortDate(item.arrest))")
-                if item.note == nil {
-                    matter.summary = "The arrest in the \(item.town) case the paper has followed. " + matter.summary
-                } else if let note = item.note, !note.hasPrefix("Arrested at the scene") {
-                    matter.summary = note + " " + matter.summary
+                // How the arrest came about is in the case timeline; the card says only what's being decided.
+                if let note = item.note, note.contains("order for arrest") {
+                    matter.summary = "Back on your order for arrest. " + matter.summary
                 }
                 bondCall.matters.append(matter)
                 usedPeople.insert(c.defendant.personID)
