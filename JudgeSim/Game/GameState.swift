@@ -4615,6 +4615,8 @@ final class GameState: ObservableObject {
         dispositions = data.dispositions ?? []
         arraignQueue = data.arraignQueue ?? []
         caseLog = Self.timedLog(data.caseLog ?? [])
+        // Recent family names carry over between sessions, so a restart doesn't bring the same surnames right back.
+        NameBank.recentSurnames = Array(people.suffix(600).compactMap { $0.name.components(separatedBy: " ").last })
         // Older saves piled a new bond line onto a case's note at every review; keep only the latest.
         for i in scheduled.indices { scheduled[i].entry.note = scheduled[i].entry.note.map(Self.latestBondNote) }
         for i in awaiting.indices { awaiting[i].entry.note = awaiting[i].entry.note.map(Self.latestBondNote) }

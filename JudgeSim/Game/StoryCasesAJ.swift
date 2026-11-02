@@ -85,6 +85,7 @@ extension StoryCases {
             defenseOpening: "An empty BB gun is not a dangerous weapon, and a mask is not an identification.",
             prosecutionClosing: "Money, hoodie, pistol, car, eleven minutes. And {V} believed the gun was real, because {DL} made it look real.",
             defenseClosing: "Even if you think {DL} was there, the State hasn't proved a dangerous weapon. That's common law robbery at most.",
+            genders: ["D": .male],
             victim: VictimFacts(age: 22, occupation: "sweepstakes parlor clerk and community college student", relationship: "None; the clerk on duty", harm: ["No physical injury; quit the job and dropped out of classes"], restitution: 50, restitutionBasis: "the $50 never recovered"),
             time: "1:04 a.m.",
             family: "Single; lives with a roommate.",
@@ -100,7 +101,7 @@ extension StoryCases {
         headlines: ["Century-Old Tobacco Barn Burns on Family Farm", "Farmer Charged After Fire Investigator Finds Gasoline Trail"],
         primaryLaw: "burningBuildings", lesserLaw: nil, threshold: 7, lesserThreshold: 0,
         specification: "Willfully and wantonly set fire to and burned a barn, a building used for curing tobacco and storing farm equipment, on {DATE}.",
-        ageRange: 40...70, occupations: ["farmer", "farm equipment dealer", "feed store owner"], hasVictim: false,
+        ageRange: 50...70, occupations: ["farmer", "farm equipment dealer", "feed store owner"], hasVictim: false,
         summaries: [
             "A 1920s log tobacco barn on {D}'s farm outside {HOOD} burned to the ground around 2 a.m. on {DATE}, along with a tractor and a hay baler inside. Six weeks earlier {D} had raised the barn's insurance from $40,000 to $185,000, listing it as \"historic.\" The farm was three payments behind on its equipment loan. The State fire investigator found a pour pattern across the dirt floor and a gas can melted near the doorway, and a lab found gasoline in the soil samples. {DL} says the barn had a wood stove for curing and an old wiring run, that the tractor always leaked fuel, and that {D.he} was asleep at home a mile away when the fire started."
         ],
@@ -186,7 +187,7 @@ extension StoryCases {
         headlines: ["Volunteer Fire Department Treasurer Charged in $63,000 Theft", "Fire Department Fish Fry Money Went to Casino, Deputies Say"],
         primaryLaw: "embezzlement", lesserLaw: nil, threshold: 6, lesserThreshold: 0,
         specification: "Being the treasurer of the {HOOD} Volunteer Fire Department, a nonprofit corporation, fraudulently embezzled $63,400 entrusted to {D.him} in that capacity, between January and {DATE}.",
-        ageRange: 35...65, occupations: ["bank teller", "insurance agent", "school bookkeeper", "auto parts store manager"], hasVictim: false,
+        ageRange: 42...65, occupations: ["bank teller", "insurance agent", "school bookkeeper", "auto parts store manager"], hasVictim: false,
         summaries: [
             "{D} kept the books for the {HOOD} Volunteer Fire Department for nine years, signing checks and depositing fish fry, raffle, and county money. When the department's new chief tried to buy a $12,000 set of turnout gear in the spring, the bank said the account held $814. An audit found $63,400 missing over fourteen months: cash from fundraisers never deposited and 41 checks written to {DL} marked \"reimbursement\" with no receipts. Casino records show {DL} spent $58,000 at a casino in Cherokee over the same months. {DL} says the chief and the board approved every reimbursement, that much of the money paid for supplies {D.he} bought with {D.his} own card, and that the department's records were a shoebox mess long before {D.he} took over."
         ],
@@ -258,8 +259,7 @@ extension StoryCases {
             defenseOpening: "A shoebox of records and a treasurer who gave nine years.",
             prosecutionClosing: "Forty-one checks to {D.himself}, no receipts, and the casino buy-ins right behind them.",
             defenseClosing: "A department with no rules can't convict a volunteer for breaking them.",
-            employer: "the {HOOD} Volunteer Fire Department (treasurer, unpaid)",
-            family: "Married; two teenagers.",
+            family: "Married; two grown children.",
             residence: "A house on {STREET} in {HOOD}"
         )
     )
@@ -324,7 +324,7 @@ extension StoryCases {
         mitigating: ["The defendant has made substantial or full restitution", "The defendant acted under strong provocation"],
         victimImpacts: ["\"Those were bred cows, my next two years of calves. I had to sell the rest to pay the lease.\""],
         allocutions: ["\"I fed those cows when nobody else would. I took what I was owed.\"", "\"I should've taken {V} to small claims court. I'm sorry.\""],
-        guiltyTruths: ["The sale barn's office camera recorded {DL} telling a buyer, \"Owner's out of state, he won't miss them.\""],
+        guiltyTruths: ["The sale barn's office camera recorded {DL} telling a buyer, \"Owner's out of state, {V.he} won't miss them.\""],
         innocentTruths: ["{V}'s own brother later testified in a civil case that he heard {V} tell {DL} to \"sell what you need\" over the fence that August."],
         moods: [.divided], doctrines: ["burdenOfProof", "mistakeOfFact", "justification"],
         story: StoryExtras(
@@ -427,6 +427,7 @@ extension StoryCases {
             defenseOpening: "A threat to cut, a pat on a knife, and a turn in a dark alley.",
             prosecutionClosing: "Fear has to be reasonable. A zipped pocket and raised hands don't make it reasonable.",
             defenseClosing: "{DL} didn't have to wait to be cut. One swing, then {D.he} called 911.",
+            genders: ["D": .male, "V": .male],
             victim: VictimFacts(age: 34, occupation: "roofer", relationship: "A customer at the bar", harm: ["Depressed skull fracture and brain bleed", "Permanent hearing loss in the left ear"], restitution: 18400, restitutionBasis: "hospital bills not covered by insurance"),
             time: "2:02 a.m.",
             employer: "a bar on {STREET} in {HOOD}",
