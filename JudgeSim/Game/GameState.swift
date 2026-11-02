@@ -136,6 +136,7 @@ private struct SaveData: Codable {
     var caseLog: [LogEvent]? = nil
     var bondReviews: [UUID]? = nil
     var heldCases: [HeldCase]? = nil
+    var pendingRearrests: [PendingRearrest]? = nil
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -189,6 +190,8 @@ final class GameState: ObservableObject {
     @Published private(set) var bondReviews: [UUID] = []
     /// Cases away for a capacity evaluation or treatment, back on the list when it's done.
     @Published private(set) var heldCases: [HeldCase] = []
+    /// Defendants out on release who will be back in the jail on a set date.
+    @Published private(set) var pendingRearrests: [PendingRearrest] = []
     /// What became of each defendant at judgment, and whether the person was arrested again once free.
     @Published private(set) var dispositions: [DispositionRecord] = []
     /// The judge's standing schedule: court days, daily limits, one-day changes and time off.
@@ -417,6 +420,7 @@ final class GameState: ObservableObject {
         caseLog = []
         bondReviews = []
         heldCases = []
+        pendingRearrests = []
         // Every career's county starts a little different.
         living = CountyLife.begin(seed: seedBase)
         Gazetteer.living = living
@@ -856,6 +860,31 @@ final class GameState: ObservableObject {
         investigations.append(OpenInvestigation(courtCase: c, incident: happened, arrest: booked, town: town,
                                                 offense: InvestigationArc.subject(c), ready: max(ready, booked),
                                                 note: followed ? nil : "Arrested at the scene on \(SentenceFormat.shortDate(booked))."))
+    }
+
+    /// A defendant out on release goes back to the jail on the day the new arrest or the missed court date catches up.
+    private func carryOutRearrests(on date: Date) {
+        let cal = CourtCalendar.calendar
+        let due = pendingRearrests.filter { $0.date <= cal.startOfDay(for: date) }
+        guard !due.isEmpty else { return }
+        pendingRearrests.removeAll { $0.date <= cal.startOfDay(for: date) }
+        for r in due {
+            func jail(_ entry: inout DocketEntry) {
+                guard case .trial(var c) = entry.matter, c.id == r.caseID, var bg = c.background, !bg.isJailed else { return }
+                bg.onRelease = false
+                bg.heldOnCourtBond = true
+                bg.custodyDays = max(1, bg.custodyDays)
+                bg.bondStatus = r.status + " In custody since then."
+                c.background = bg
+                c.sessionDate = r.date
+                entry.matter = .trial(c)
+                entry.note = ((entry.note ?? "") + " " + r.note).trimmingCharacters(in: .whitespaces)
+                log(.arrest, c, on: r.date, r.arrestText)
+                log(.jailIn, c, on: r.date, r.jailText)
+            }
+            for i in scheduled.indices { jail(&scheduled[i].entry) }
+            for i in awaiting.indices { jail(&awaiting[i].entry) }
+        }
     }
 
     /// Takes a case off the calendar until a date; it returns to the list waiting for a trial date then.
@@ -2460,27 +2489,23 @@ final class GameState: ObservableObject {
                     date: arrested, kind: .arrest, headline: NewsDesk.rearrestHeadline(c.defendant.name, rng: &rng),
                     body: "\(c.defendant.name), released on \(condition) by Judge \(lastName(judgeName ?? "")), was arrested again this week, according to the \(county?.sheriffsOffice ?? "Sheriff's Office"). The new charge is pending in district court.",
                     docket: c.docket, prominence: 2)))
-                log(.arrest, c, on: arrested, "Arrested on a new charge while out on bond; bond revoked.")
-                log(.jailIn, c, on: arrested, "Back in the jail, held on the revoked bond.")
-                bg.onRelease = false
-                bg.custodyDays = max(1, bg.custodyDays)
-                bg.bondStatus = "Released on \(condition), then arrested on a new charge; bond revoked and held for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
-                held.background = bg
-                held.sessionDate = arrested
-                schedule(held, weeksOut + rng.int(3...6), "Bond revoked after a new arrest while on release.", 0)
+                // Out until the new arrest; the case goes on as usual meanwhile.
+                pendingRearrests.append(PendingRearrest(caseID: c.id, date: cal.startOfDay(for: arrested),
+                    status: "Released on \(condition), then arrested on a new charge on \(SentenceFormat.shortDate(arrested)); bond revoked.",
+                    arrestText: "Arrested on a new charge while out on bond; bond revoked.", jailText: "Back in the jail, held on the revoked bond.",
+                    note: "Bond revoked after a new arrest while on release."))
+                schedule(held, rng.int(5...8), "On release since \(heard).", 0)
             } else if rng.chance(bond.flightRisk * watch) {
                 let weeksOut = rng.int(3...6)
                 let arrested = cal.date(byAdding: .day, value: 7 * weeksOut, to: date) ?? date
                 // A failure to appear doubles the bond (G.S. 15A-544.3; local bond policy).
                 let doubled = max(1_000, amount * 2)
-                log(.warrant, c, on: arrested, "Missed a court date; arrested on an order for arrest. Bond doubled to $\(doubled.formatted()).")
-                log(.jailIn, c, on: arrested, "Back in the jail on the doubled bond.")
-                bg.onRelease = false
-                bg.custodyDays = max(1, bg.custodyDays)
-                bg.bondStatus = "Released on \(condition); failed to appear and was arrested on an order for arrest. Bond doubled to $\(doubled.formatted()) secured; held for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
-                held.background = bg
-                held.sessionDate = arrested
-                schedule(held, weeksOut + rng.int(3...6), "Missed the first trial setting after release; arrested on an order for arrest.", 0)
+                // Out until the missed court date catches up with the defendant; the case goes on as usual meanwhile.
+                pendingRearrests.append(PendingRearrest(caseID: c.id, date: cal.startOfDay(for: arrested),
+                    status: "Released on \(condition); missed a court date and was arrested on an order for arrest on \(SentenceFormat.shortDate(arrested)). Bond doubled to $\(doubled.formatted()) secured.",
+                    arrestText: "Missed a court date; arrested on an order for arrest. Bond doubled to $\(doubled.formatted()).", jailText: "Back in the jail on the doubled bond.",
+                    note: "Missed a court date after release; arrested on an order for arrest."))
+                schedule(held, rng.int(5...8), "On release since \(heard).", 0)
             } else {
                 schedule(held, rng.int(5...8), "On release since \(heard).", 0)
             }
@@ -3213,6 +3238,7 @@ final class GameState: ObservableObject {
         caseLog = []
         bondReviews = []
         heldCases = []
+        pendingRearrests = []
         placeHistory = [:]
         residents = []
         officerRecords = [:]
@@ -3438,6 +3464,7 @@ final class GameState: ObservableObject {
         // Stay-away orders are tested a week at a time.
         if weekly { checkStayAwayOrders(rng: &rng) }
         returnHeldCases(on: date)
+        carryOutRearrests(on: date)
         updateCorrections(on: date, rng: &rng)
         if weekly { weatherAndAssignments(on: date, rng: &rng) }
         // The county changes week to week.
@@ -4200,7 +4227,7 @@ final class GameState: ObservableObject {
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, calendarLog: calendarLog, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
                             officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
-                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog, bondReviews: bondReviews, heldCases: heldCases)
+                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog, bondReviews: bondReviews, heldCases: heldCases, pendingRearrests: pendingRearrests)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -4278,6 +4305,18 @@ final class GameState: ObservableObject {
         caseLog = data.caseLog ?? []
         bondReviews = data.bondReviews ?? []
         heldCases = data.heldCases ?? []
+        pendingRearrests = data.pendingRearrests ?? []
+        // Everyone held in the jail on a case waiting in this court is on the roster and the bed count, whatever path
+        // put them there (older saves only marked the bonds set at a hearing).
+        func markHeld(_ entry: inout DocketEntry) {
+            guard case .trial(var c) = entry.matter, var bg = c.background, bg.isJailed, bg.heldOnCourtBond == nil,
+                  bg.bondStatus != "Not yet arrested." else { return }
+            bg.heldOnCourtBond = true
+            c.background = bg
+            entry.matter = .trial(c)
+        }
+        for i in scheduled.indices { markHeld(&scheduled[i].entry) }
+        for i in awaiting.indices { markHeld(&awaiting[i].entry) }
         // Cases that go to trial no longer wait for an arraignment: they join the list waiting for a trial date.
         for item in arraignQueue where item.courtCase.templateKey.hasPrefix("story.") {
             arraignQueue.removeAll { $0.id == item.id }
