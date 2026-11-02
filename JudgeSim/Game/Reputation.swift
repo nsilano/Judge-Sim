@@ -171,6 +171,8 @@ struct StandingLedger: Codable, Hashable {
     /// The last time the paper ran a story on the court's troubles, and whether it's still on the story.
     var lastCoverage: Date? = nil
     var covering = false
+    /// The last time a quiet month without public complaints was credited.
+    var lastQuietCredit: Date? = nil
 
     static let limit = 35.0
     /// The share of the ledger that fades each day: about half in six weeks.
@@ -211,6 +213,8 @@ enum StandingRule {
     case repeatedContinuance, continuanceDenied, ftaOrderForArrest, ftaExcused, caseDelayed
     // Appeals and the record
     case reversed, affirmed, exoneration
+    // Earning it back
+    case convictedViolent, victimProtected, swiftJustice, probationCompleted, treatmentGraduate, jailRecovered, quietMonth
     // A ruling in a case the public followed: the amount is the paper's reaction.
     case publicReaction(Int)
 
@@ -236,16 +240,23 @@ enum StandingRule {
         case .mercyNonviolent:             return (-1, 1, 0, 0, .fairness)
         case .harshNonviolent:             return (0, -2, -1, 0, .harshness)
         case .toughViolent:                return (1, -1, 0, 1, .sentencing)
-        case .byTheBook:                   return (0, 0, 0.5, 0, .fairness)
+        case .byTheBook:                   return (0, 0, 0.5, 0.5, .fairness)
         case .probationViolent:            return (-1, 0, 0, -2, .sentencing)
         case .repeatedContinuance:         return (-1, 0, -0.5, -1, .delay)
-        case .continuanceDenied:           return (0.5, -0.5, 0, 0, .delay)
-        case .ftaOrderForArrest:           return (0.5, 0, 0, 0, .fairness)
+        case .continuanceDenied:           return (0.5, -0.5, 0, 0.5, .delay)
+        case .ftaOrderForArrest:           return (0.5, 0, 0, 0.5, .fairness)
         case .ftaExcused:                  return (-1, 0, 0, -0.5, .release)
         case .caseDelayed:                 return (0, -2, -1, -1, .delay)
         case .reversed:                    return (0, 0, -3, 0, .appeals)
-        case .affirmed:                    return (0, 0, 1, 0, .appeals)
+        case .affirmed:                    return (0, 0, 1, 0.5, .appeals)
         case .exoneration:                 return (0, 2, -4, -4, .appeals)
+        case .convictedViolent:            return (1, 0, 0, 2, .sentencing)
+        case .victimProtected:             return (0, 0, 0, 1, .fairness)
+        case .swiftJustice:                return (0, 0, 1, 1, .delay)
+        case .probationCompleted:          return (0, 0.5, 0, 0.5, .fairness)
+        case .treatmentGraduate:           return (0, 1, 0.5, 2, .fairness)
+        case .jailRecovered:               return (0, 0, 1, 2, .crowding)
+        case .quietMonth:                  return (0, 0, 0.5, 2, .fairness)
         case .publicReaction(let delta):   return (0, 0, 0, 1.5 * Double(delta), delta < 0 ? .sentencing : .fairness)
         }
     }

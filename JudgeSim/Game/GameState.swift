@@ -3170,6 +3170,12 @@ final class GameState: ObservableObject {
         }
         let activeImposed = outcome.custodyMonths > 0
             || outcome.newPriors.contains { $0.sentence.hasSuffix(" active") || $0.sentence.hasPrefix("Life") }
+        if outcome.convicted && violentCase { standing(.convictedViolent, "Conviction in a violent case — \(who)") }
+        if let arrested = courtCase.investigation?.facts?.arrest,
+           (CourtCalendar.calendar.dateComponents([.day], from: arrested, to: currentDate).day ?? 999) <= 120 {
+            standing(.swiftJustice, "Case decided within four months of the arrest — \(who)")
+        }
+        if outcome.stayAwayOrder != nil { standing(.victimProtected, "Ordered to stay away from the victim — \(who)") }
         if activeImposed { stats.activeSentences += 1 } else if outcome.newProbation != nil && outcome.convicted {
             stats.suspendedSentences += 1
             if violentCase && felonyCase { standing(.probationViolent, "Probation for a violent felony — \(who)") }
@@ -3644,6 +3650,11 @@ final class GameState: ObservableObject {
                     people[index].status = .free
                     people[index].probation = nil
                     stats.probationCompleted += 1
+                    if probation.imposedInThisCourt {
+                        standing(probation.treatmentCourt != nil ? .treatmentGraduate : .probationCompleted,
+                                 (probation.treatmentCourt != nil ? "Graduated from treatment court — " : "Finished probation without trouble — ") + person.name,
+                                 on: probation.ends)
+                    }
                     if let program = probation.treatmentCourt, probation.courtGraduated != true {
                         post(NewsItem(date: probation.ends, kind: .community,
                                       headline: "\(person.name) graduates from Hollis County \(program)",
@@ -4173,6 +4184,7 @@ final class GameState: ObservableObject {
                 let due = notice.deadline.map { date >= $0 } ?? true
                 // The notice stands until the jail has some room again, or until the deadline finds it within capacity.
                 if jail <= floor || (due && jail <= beds) {
+                    standing(.jailRecovered, "The jail is back under capacity without early releases", on: date)
                     corrections?.notices[index].closed = date
                     corrections?.notices[index].outcome = ordered > 0
                         ? "Back under capacity on \(shortDate) after you ordered \(ordered) release\(ordered == 1 ? "" : "s"). The sheriff released no one."
@@ -4385,10 +4397,18 @@ final class GameState: ObservableObject {
     /// The day's turn of standing: recent rulings fade a little, a crowded jail wears on the county, and when the court
     /// has lost every quarter, the paper starts covering what its rulings are costing the county.
     private func standingDay(on date: Date, rng: inout SeededRNG) {
+        let cal0 = CourtCalendar.calendar
         var ledger = stats.ledger ?? StandingLedger()
         ledger.fade()
         if let state = corrections, let day = state.log.last, day.jail > state.beds {
             ledger.apply(StandingRule.jailOverCapacityDay.shift(on: date, "Jail over capacity"), record: false)
+        }
+        // A month without anything the public held against the court: people notice the quiet.
+        let lastSore = ledger.recent.first { $0.publicApproval < 0 }?.date ?? careerStart
+        let since = max(lastSore, ledger.lastQuietCredit ?? careerStart)
+        if (cal0.dateComponents([.day], from: since, to: date).day ?? 0) >= 30 {
+            ledger.apply(StandingRule.quietMonth.shift(on: date, "A month with no complaints from the public"))
+            ledger.lastQuietCredit = date
         }
         stats.ledger = ledger
         guard let county, let judgeName else { return }
