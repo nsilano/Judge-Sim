@@ -2590,7 +2590,8 @@ final class GameState: ObservableObject {
             let viaBondsman = money.throughBondsman(amount)
             log(.bond, c, on: date, condition.hasPrefix("release to") ? "Bond hearing: released to" + condition.dropFirst("release to".count) + "." : "Bond hearing: released on \(condition).")
             if c.background?.isJailed == true {
-                log(.jailOut, c, on: date, viaBondsman ? "Posted bond through a bail bondsman (a $\(money.fee(on: amount).formatted()) fee) and left the jail." : "Posted bond and left the jail.")
+                log(.jailOut, c, on: date, viaBondsman ? "Posted bond through a bail bondsman (a $\(money.fee(on: amount).formatted()) fee) and left the jail."
+                    : (amount == 0 ? "Signed the release order and left the jail." : "Posted bond and left the jail."))
             }
             // The days already spent in jail stay as credit; the clock stops while the defendant is out.
             bg.onRelease = true

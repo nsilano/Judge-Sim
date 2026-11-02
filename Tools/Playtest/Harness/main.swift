@@ -831,6 +831,25 @@ if args.count > 1 && args[1] == "scan" {
 }
 
 @MainActor func finish() {
+    // A few case timelines as the Records screen shows them (newest first), with clock times; flag any out of order.
+    let dockets = Array(Set(game.caseLog.map(\.docket)).filter { !$0.isEmpty }).sorted().prefix(6)
+    for docket in dockets {
+        let events = game.log(docket: docket)
+        log("TIMELINE \(docket)")
+        for e in events.reversed() { log("  \(e.date.formatted(date: .abbreviated, time: .shortened)) · \(e.kind.rawValue) · \(e.text)") }
+    }
+    for docket in Set(game.caseLog.map(\.docket)) where !docket.isEmpty {
+        let events = game.log(docket: docket)
+        if let arrest = events.first(where: { $0.kind == .arrest }), let booked = events.first(where: { $0.kind == .jailIn }), booked.date < arrest.date {
+            flag("\(docket): booked before the arrest")
+        }
+        if let crime = events.first(where: { $0.kind == .crime }), let arrest = events.first(where: { $0.kind == .arrest }), arrest.date < crime.date {
+            flag("\(docket): arrested before the report")
+        }
+        if let bond = events.first(where: { $0.kind == .bond }), let booked = events.first(where: { $0.kind == .jailIn }), bond.date < booked.date {
+            flag("\(docket): bond hearing before booking")
+        }
+    }
     log("FINDINGS (\(findings.count))")
     for f in findings { log("- \(f)") }
     try? transcript.joined(separator: "\n").write(toFile: outPath, atomically: true, encoding: .utf8)

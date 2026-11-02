@@ -20,9 +20,10 @@ extension PersonRecord {
         if lower.contains("quick dip") { return .jail }
         let crv = lower.hasPrefix("confinement in response to violation") || lower.contains("period of confinement in response to violation")
         if crv { return (probation?.isFelony ?? false) ? .prison : .jail }
-        if let docket = custodyDocket?.replacingOccurrences(of: " (PV)", with: ""),
-           let conviction = priors.last(where: { $0.docket == docket || $0.docket == custodyDocket }) {
-            return conviction.ncClass.isFelony ? .prison : .jail
+        // Any felony count in the case means prison: the sentences run together, and the felony controls.
+        if let docket = custodyDocket?.replacingOccurrences(of: " (PV)", with: "") {
+            let counts = priors.filter { $0.docket == docket || $0.docket == custodyDocket }
+            if !counts.isEmpty { return counts.contains { $0.ncClass.isFelony } ? .prison : .jail }
         }
         if let term = probation, custodyDocket?.hasPrefix(term.docket) == true { return term.isFelony ? .prison : .jail }
         // No conviction on file to go by: a term counted in days is a jail term.
@@ -312,15 +313,16 @@ struct LogEvent: Codable, Hashable, Identifiable {
     var kind: Kind
     var text: String
 
-    /// When in the day each kind of event usually happens, in minutes after midnight: reports and arrests in the
-    /// afternoon and evening, bookings after the arrest, court business in the morning, verdicts in the afternoon.
+    /// When in the day each kind of event usually happens, in minutes after midnight: arrests and bookings overnight,
+    /// court business in the morning, verdicts in the afternoon.
     static func clockWindow(_ kind: Kind) -> ClosedRange<Int> {
         switch kind {
         case .crime: return 360...780
         case .investigation: return 780...900
         case .warrant: return 600...720
-        case .arrest: return 840...1140
-        case .jailIn: return 900...1260
+        // Arrests are logged before the morning's bond session: overnight and early-morning pickups.
+        case .arrest: return 30...420
+        case .jailIn: return 60...480
         case .bond: return 540...660
         case .trialSet: return 600...720
         case .continued: return 540...720
