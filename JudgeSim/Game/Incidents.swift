@@ -171,6 +171,35 @@ enum Incidents {
 
     // MARK: - Counsel with a conflict, kept on after a motion to withdraw was denied (Sixth Amendment; Cuyler v. Sullivan)
 
+    /// The judge set the trial sooner than the defense could be ready. As the case is called, counsel says so on the
+    /// record and renews the request for time. Going ahead anyway weakens the defense, and when counsel truly had too
+    /// little time, it's a ground for appeal: a denial of time to prepare can deny the effective assistance of counsel
+    /// (State v. McFadden, 292 N.C. 609 (1977); State v. Rogers, 352 N.C. 119 (2000)).
+    static func unpreparedCounsel(_ c: CourtCase, had: Int, needed: Int, reason: String) -> CourtIncident {
+        let counsel = c.defenseAttorney.components(separatedBy: ", ").first ?? c.defenseAttorney
+        let d = c.defendant.lastName
+        let short = max(7, needed - had)
+        let weeks = max(1, Int((Double(short) / 7).rounded()))
+        let serious = c.charges.contains { $0.law.ncClass?.isFelony ?? false }
+        // Real error when the gap is large: weeks short on a felony, or most of the time counsel needed.
+        let error = short >= 14 && (serious || had * 2 < needed)
+        let witness = c.witnesses.first { $0.calledBy == .defense }
+        let lost = witness.map { " \($0.name) was never interviewed or subpoenaed and won't testify." } ?? " The defense has no witnesses ready."
+        return CourtIncident(
+            kind: .selfRepresentation, moment: .beforeTrial, title: "\(counsel) says the defense isn't ready",
+            body: "\(reason) \(counsel) has had \(had) day\(had == 1 ? "" : "s") on the case and tells the court it needs about \(needed). \(counsel) hasn't finished reviewing discovery\(witness == nil ? "" : " or found the defense's witnesses") and renews the request for time. The State is ready.",
+            lawID: "rightToCounsel",
+            options: [
+                IncidentOption(label: "Continue the trial about \(weeks) week\(weeks == 1 ? "" : "s") so counsel can prepare",
+                               result: "The case goes to another date; the defense will be ready.", proper: true, error: false,
+                               effect: .continueCase, days: weeks * 7),
+                IncidentOption(label: "Deny it and proceed today", result: "The trial goes forward with \(counsel) unprepared." + lost,
+                               proper: false, error: error,
+                               effect: witness == nil ? .none : .removeWitness, witnessID: witness?.id,
+                               appealText: "You forced \(d) to trial with counsel who had \(had) days to prepare and asked for about \(needed), denying the time effective assistance of counsel requires.")
+            ])
+    }
+
     static func conflictedCounsel(_ c: CourtCase, reason: String) -> CourtIncident {
         let counsel = c.defenseAttorney.components(separatedBy: ", ").first ?? c.defenseAttorney
         return CourtIncident(

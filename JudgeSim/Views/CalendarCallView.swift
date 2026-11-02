@@ -13,7 +13,10 @@ struct CalendarCallView: View {
     @State private var showResults = false
 
     /// An arraignment set for trial now needs the day picked before the calendar can close.
-    private func needsDate(_ m: CalendarMatter) -> Bool { m.kind == .arraignment && choices[m.id] == 0 }
+    private func needsDate(_ m: CalendarMatter) -> Bool {
+        ((m.kind == .arraignment || m.kind == .continuance) && choices[m.id] == 0)
+            || (m.kind == .counselWithdrawal && (choices[m.id] == 0 || choices[m.id] == 1))
+    }
 
     var body: some View {
         NavigationStack {
@@ -126,6 +129,12 @@ private struct MatterCard: View {
                 Text("Pick the trial day. The State says about five weeks; too soon and the defense will ask for more time.")
                     .font(.caption).foregroundStyle(.secondary)
                 DayPickerList(kind: .trial, count: 30, choice: $date)
+            }
+            if matter.kind == .continuance && choice == 0 {
+                ContinuanceDatePicker(date: $date)
+            }
+            if matter.kind == .counselWithdrawal, let choice, choice <= 1 {
+                NewCounselDatePicker(option: matter.options[choice], date: $date)
             }
             if let warrant = matter.warrant {
                 NavigationLink {
@@ -411,5 +420,42 @@ struct CalendarResults: View {
             }
             .padding()
         }
+    }
+}
+
+
+/// The new trial date for a continuance the judge grants: a week out at the soonest.
+private struct ContinuanceDatePicker: View {
+    @EnvironmentObject private var game: GameState
+    @Binding var date: Date?
+
+    private var earliest: Date {
+        CourtCalendar.calendar.date(byAdding: .day, value: 7, to: game.currentDate) ?? game.currentDate
+    }
+
+    var body: some View {
+        Text("Pick the new trial date. The defense asked for about four weeks.")
+            .font(.caption).foregroundStyle(.secondary)
+        DayPickerList(kind: .trial, earliest: earliest, count: 30, choice: $date)
+    }
+}
+
+
+/// The new trial date when counsel is allowed to withdraw: the option says how long the new lawyer needs.
+private struct NewCounselDatePicker: View {
+    @EnvironmentObject private var game: GameState
+    let option: String
+    @Binding var date: Date?
+
+    private var weeks: Int { option.contains("six weeks") ? 6 : 3 }
+    private var earliest: Date {
+        CourtCalendar.calendar.date(byAdding: .day, value: 7, to: game.currentDate) ?? game.currentDate
+    }
+
+    var body: some View {
+        Text("The new lawyer will need about \(weeks) weeks to get ready. Pick the new trial date; set it sooner and the new lawyer will likely ask for more time.")
+            .font(.caption).foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        DayPickerList(kind: .trial, earliest: earliest, count: 30, choice: $date)
     }
 }

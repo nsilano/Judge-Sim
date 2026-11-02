@@ -1483,7 +1483,7 @@ final class GameState: ObservableObject {
                 var matter = CalendarCalls.bondMatter(for: c, rng: &rng)
                 matter.summary = matter.summary.replacingOccurrences(of: "arrested this week", with: "arrested on \(SentenceFormat.shortDate(item.arrest))")
                 // How the arrest came about is in the case timeline; the card says only what's being decided.
-                if let note = item.note, note.contains("order for arrest") {
+                if let note = item.note, note.contains("order for arrest"), !matter.summary.hasPrefix("Back on your order") {
                     matter.summary = "Back on your order for arrest. " + matter.summary
                 }
                 bondCall.matters.append(matter)
@@ -2222,6 +2222,13 @@ final class GameState: ObservableObject {
             log(.warrant, c, on: call.date, "\(missed). Order for arrest issued.")
             var held = c
             if var bg = held.background {
+                // The bond the defendant was out on sets the floor for the next one: double a secured bond, or $1,000.
+                let old = bg.bondStatus
+                let secured = old.range(of: "unsecured", options: .caseInsensitive) == nil && old.range(of: "secured", options: .caseInsensitive) != nil
+                let lastSecured = secured ? old.range(of: #"\$[0-9,]+"#, options: .regularExpression)
+                    .flatMap { Int(old[$0].dropFirst().replacingOccurrences(of: ",", with: "")) } : nil
+                bg.missedCourt = call.date
+                bg.ftaMinimumBond = max(1_000, (lastSecured ?? 0) * 2)
                 bg.onRelease = false
                 bg.custodyDays = max(1, bg.custodyDays)
                 bg.bondStatus = "\(missed); order for arrest outstanding. Once served, held on a doubled secured bond."
@@ -2304,7 +2311,14 @@ final class GameState: ObservableObject {
                 let before = ["first", "second", "third", "fourth", "fifth"].firstIndex { m.summary.contains("be the \($0) continuance") } ?? 1
                 if choice == 0 {
                     if before + 1 >= 3 { standing(.repeatedContinuance, "Granted a \(["", "first", "second", "third", "fourth", "fifth", "sixth"][min(6, before + 1)]) continuance — \(c.defendant.name)", on: call.date) }
-                    setFor(c, weeks: 4, note: "Continued at the calendar call on \(heard) on the defense's motion.", continuances: before + 1)
+                    let note = "Continued at the calendar call on \(heard) on the defense's motion."
+                    if let picked = dates[m.id] {
+                        // The judge picked the new trial day.
+                        awaitCase(c, note: note, on: call.date, continuances: before + 1)
+                        if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
+                    } else {
+                        setFor(c, weeks: 4, note: note, continuances: before + 1)
+                    }
                 } else {
                     standing(.continuanceDenied, "Denied a continuance — \(c.defendant.name)", on: call.date)
                     // Denied: the trial date stands; with none yet, the case is ready now and waits for the judge to set one.
@@ -2326,8 +2340,21 @@ final class GameState: ObservableObject {
                         fresh.defenseAttorney = next + (usePD ? ", Assistant Public Defender" : (retained ? ", retained counsel" : ", appointed counsel"))
                     }
                     let newName = fresh.defenseAttorney.components(separatedBy: ", ").first ?? fresh.defenseAttorney
-                    setFor(fresh, weeks: choice == 0 ? 6 : 3,
-                           note: "\(old) allowed to withdraw at the calendar call on \(heard); \(newName) \(retained && choice == 0 ? "hired" : "appointed").")
+                    let needs = (m.options.indices.contains(choice) && m.options[choice].contains("six weeks")) ? 6 : 3
+                    let note = "\(old) allowed to withdraw at the calendar call on \(heard); \(newName) \(retained && choice == 0 ? "hired" : "appointed")."
+                    if let picked = dates[m.id] {
+                        // The judge picked the trial day. Too soon for the new lawyer, and the new lawyer asks for more time.
+                        let days = CourtCalendar.calendar.dateComponents([.day], from: call.date, to: picked).day ?? 0
+                        if days < 7 * needs - 7 {
+                            // Too soon for the new lawyer: it will come up when the trial is called.
+                            fresh.incidents = (fresh.incidents ?? []) + [Incidents.unpreparedCounsel(fresh, had: max(1, days), needed: 7 * needs,
+                                reason: "New counsel came into the case on \(heard), when you allowed \(old) to withdraw.")]
+                        }
+                        awaitCase(fresh, note: note, on: call.date)
+                        if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
+                    } else {
+                        setFor(fresh, weeks: needs, note: note)
+                    }
                 } else {
                     // A real conflict comes back when the trial is called.
                     var kept = c
@@ -2367,7 +2394,9 @@ final class GameState: ObservableObject {
                 // unsecured bond, secured, secured with house arrest.
                 var choice = choice
                 if m.kind == .firstAppearance && m.options.count == 4 { choice = [0, 2, 3, 4][min(choice, 3)] }
-                let set = amounts[m.id] ?? (m.options.count == 4 && choice == 2 ? bond.moderate : nil) ?? m.suggested(for: choice) ?? bond.moderate
+                let picked = amounts[m.id] ?? (m.options.count == 4 && choice == 2 ? bond.moderate : nil) ?? m.suggested(for: choice) ?? bond.moderate
+                // Never below the least the law allows for this defendant (a failure to appear sets a floor).
+                let set = max(picked, m.amountRange?.lowerBound ?? 0)
                 // Only a secured bond has to be posted; a promise, custody release, or unsecured bond releases the
                 // defendant on signing.
                 let amount: Int
@@ -2428,7 +2457,12 @@ final class GameState: ObservableObject {
                     setCase.background?.arraigned = true
                     let days = CourtCalendar.calendar.dateComponents([.day], from: call.date, to: picked).day ?? 35
                     if days < 21 && c.charges.count > 1 && rng.chance(0.6) {
-                        setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
+                        if c.templateKey.hasPrefix("story.") {
+                            setCase.incidents = (setCase.incidents ?? []) + [Incidents.unpreparedCounsel(setCase, had: max(1, days), needed: 35,
+                                reason: "You set this \(c.charges.count)-count case for trial \(days) day\(days == 1 ? "" : "s") after the arraignment.")]
+                        } else {
+                            setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
+                        }
                     }
                     awaitCase(setCase, note: "Arraigned on \(heard); pleaded not guilty.", on: call.date)
                     if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
@@ -2574,6 +2608,8 @@ final class GameState: ObservableObject {
                                date: Date, rng: inout SeededRNG, schedule: (CourtCase, Int, String, Int) -> Void, watch supervision: Double? = nil) {
         var held = c
         guard var bg = held.background else { schedule(c, rng.int(5...8), "Set for trial on \(heard).", 0); return }
+        // The order for arrest has been answered; the next bond hearing on this case is an ordinary one.
+        bg.servedOrder = nil
         bg.canPost = bond.canPost
         bg.bondsmanRate = bond.feeRate
         bg.bondsmanWilling = bond.bondsman
@@ -3445,6 +3481,7 @@ final class GameState: ObservableObject {
             // conditions, the case waits for a trial date like any other.
             if var c = order.heldCase {
                 if var bg = c.background {
+                    bg.servedOrder = order.servedOn
                     bg.arraigned = true
                     bg.onRelease = false
                     bg.bondStatus = "\(order.how ?? "Arrested on the order for arrest") on \(served) after failing to appear on \(SentenceFormat.shortDate(order.issued)); held pending a bond hearing."
