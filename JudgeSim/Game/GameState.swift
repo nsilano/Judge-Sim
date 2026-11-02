@@ -1320,6 +1320,17 @@ final class GameState: ObservableObject {
                             c.background = bg
                         }
                         call.matters[index] = CalendarCalls.bind(call.matters[index], to: c)
+                        // Where the case stands on this court's docket, so the motion is plainly about a case the judge has.
+                        if kind == .capacity || kind == .continuance {
+                            let setOn = scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }?.date
+                            let since = awaiting.first { $0.courtCase?.id == c.id }?.since
+                            let held = c.background?.isJailed == true ? " \(c.defendant.lastName) is in the jail." : " \(c.defendant.lastName) is out on release."
+                            if let setOn {
+                                call.matters[index].summary += " On your docket: set for trial on \(SentenceFormat.shortDate(setOn))." + held
+                            } else if let since {
+                                call.matters[index].summary += " On your docket: on the Awaiting list since \(SentenceFormat.shortDate(since)), no trial date yet." + held
+                            }
+                        }
                         if kind == .continuance {
                             let ordinals = ["first", "second", "third", "fourth", "fifth"]
                             let nth = ordinals[min(priorContinuances[c.id] ?? 0, ordinals.count - 1)]
