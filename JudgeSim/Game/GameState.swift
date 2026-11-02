@@ -4379,6 +4379,30 @@ final class GameState: ObservableObject {
         caseLog = data.caseLog ?? []
         bondReviews = data.bondReviews ?? []
         heldCases = data.heldCases ?? []
+        // Bond hearings and bond motions still waiting on the calendar from an older build get today's short wording.
+        if var day = today {
+            for e in day.entries.indices where day.entries[e].isOpen {
+                guard case .calendar(var call) = day.entries[e].matter else { continue }
+                for m in call.matters.indices {
+                    let old = call.matters[m]
+                    guard let c = old.pendingCase, old.summary.count > 260 else { continue }
+                    var rng = SeededRNG(seed: c.seed ^ 0x5407)
+                    var fresh: CalendarMatter
+                    switch old.kind {
+                    case .firstAppearance: fresh = CalendarCalls.bondMatter(for: c, rng: &rng)
+                    case .bondModification: fresh = CalendarCalls.bondReductionMatter(for: c, on: day.date, rng: &rng)
+                    default: continue
+                    }
+                    fresh.id = old.id
+                    // Keep the arrest date the old card gave.
+                    let when = old.summary.range(of: #"arrested on [A-Z][a-z]+ \d{1,2}, \d{4}"#, options: .regularExpression).map { String(old.summary[$0]) }
+                    fresh.summary = fresh.summary.replacingOccurrences(of: "arrested this week", with: when ?? "arrested recently")
+                    call.matters[m] = fresh
+                }
+                day.entries[e].matter = .calendar(call)
+            }
+            today = day
+        }
         pendingRearrests = data.pendingRearrests ?? []
         // Everyone held in the jail on a case waiting in this court is on the roster and the bed count, whatever path
         // put them there (older saves only marked the bonds set at a hearing).

@@ -94,12 +94,6 @@ private struct MatterCard: View {
     @Binding var choice: Int?
     @Binding var amount: Int
     @Binding var date: Date?
-    @State private var expanded = false
-
-    /// Long text folds to a few lines; the full case is in the case file.
-    private var isLong: Bool {
-        matter.summary.count > 170 || matter.stateAsk.count > 110 || matter.defenseAsk.count > 110 || (matter.lawNote?.count ?? 0) > 110
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -114,17 +108,13 @@ private struct MatterCard: View {
             Label(matter.stateAsk, systemImage: "building.columns.fill")
                 .font(.caption)
                 .foregroundStyle(Theme.prosecution)
-                .lineLimit(expanded ? nil : 2)
+                .fixedSize(horizontal: false, vertical: true)
             Label(matter.defenseAsk, systemImage: "shield.fill")
                 .font(.caption)
                 .foregroundStyle(Theme.defense)
-                .lineLimit(expanded ? nil : 2)
+                .fixedSize(horizontal: false, vertical: true)
             if let note = matter.lawNote {
-                Text(note).font(.caption).foregroundStyle(.orange).lineLimit(expanded ? nil : 2)
-            }
-            if isLong {
-                Button(expanded ? "Less" : "More") { withAnimation { expanded.toggle() } }
-                    .font(.caption.weight(.semibold))
+                Text(note).font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
             }
             ForEach(Array(matter.options.enumerated()).filter { !(matter.unavailableOptions ?? []).contains($0.offset) }, id: \.offset) { index, option in
                 ChoiceRow(title: option, selected: choice == index) { choice = index }
