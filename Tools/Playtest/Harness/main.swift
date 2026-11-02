@@ -370,6 +370,7 @@ var hearingDates: [UUID: Date] = [:]
     log("TRIAL \(c.docket) · \(c.caption)")
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
     log("  Defendant: \(d.name), \(d.age), \(d.occupation); priors: \(d.priors.count); \(c.background?.bondStatus ?? "")")
+    log("  TEMPLATE \(c.templateKey)")
     log("  Summary: \(c.summary)")
     checkText(c.summary + " " + c.charges.map { $0.law.title + ": " + $0.specification }.joined(separator: " "), where: "trial \(c.docket)")
     if s.continuanceMotionPending { s.denyContinuanceMotion(); log("  Continuance motion: denied") }
