@@ -3771,7 +3771,9 @@ final class GameState: ObservableObject {
             let orders = person(d.personID)?.activeOrders(on: date).count ?? 0
             let failures = d.priors.filter { $0.offense.lowercased().contains("failure to appear") }.count
             let days = max(1, c.background?.custodyDays ?? 1)
-            let since = c.investigation?.facts?.arrest ?? CourtCalendar.calendar.date(byAdding: .day, value: -days, to: date)
+            // The night the defendant was booked, as the log has it; otherwise counted back from the days held.
+            let since = caseLog.last { $0.docket == c.docket && $0.kind == .jailIn }?.date
+                ?? CourtCalendar.calendar.date(byAdding: .day, value: -days, to: date)
             var flags: [String] = []
             if violent { flags.append("Violent charge") }
             if felony { flags.append("Felony charge") }
