@@ -1245,7 +1245,9 @@ final class GameState: ObservableObject {
                 docketSequence += 200
                 // Leave room on the calendar for the new arrest, a relief motion, and most weeks a warrant and an arraignment.
                 // Fewer new matters while the new judge's courtroom is still filling up.
-                let wantsWarrant = rng.chance(0.7 * max(0.3, caseloadRamp) * intakeFactor)
+                // Search warrant applications concern crimes no one has been charged with yet, not cases assigned to this
+                // court, so they don't come to the calendar call.
+                let wantsWarrant = false
                 // Defendants who had their first appearance come back to be arraigned or to plead.
                 let dueArraignments = arraignQueue.filter { cal.startOfDay(for: $0.due) <= cal.startOfDay(for: date) }
                     .sorted { $0.due < $1.due }
@@ -2689,7 +2691,7 @@ final class GameState: ObservableObject {
         let candidates = people.filter { person in
             // Only a supervised probationer has an officer to file a violation report.
             person.status == .probation
-                && person.probation != nil
+                && (person.probation?.imposedInThisCourt ?? false)
                 && (person.probation.flatMap { ViolationHearings.probationStart(person, $0) } ?? .distantPast) < settledCutoff
                 && (person.lastReleased ?? .distantPast) < settledCutoff
                 && (person.probation?.supervised ?? true)

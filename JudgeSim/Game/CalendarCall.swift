@@ -831,7 +831,8 @@ enum CalendarCalls {
         }
 
         // A steady probationer asks to end probation early: only once at least half the term is served.
-        let probationers = people.filter { $0.status == .probation && $0.probation != nil && !excluding.contains($0.id) }
+        // Only probation this court imposed: a term from another court goes back to that court.
+        let probationers = people.filter { $0.status == .probation && ($0.probation?.imposedInThisCourt ?? false) && !excluding.contains($0.id) }
         let steady = probationers.filter { person in
             guard let term = person.probation, (term.violationRisk ?? 0.2) < 0.25,
                   !(person.violations ?? []).contains(where: { $0.docket == term.docket }),
