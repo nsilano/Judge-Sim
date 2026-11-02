@@ -200,7 +200,7 @@ struct BailMoney: Hashable {
     /// "can pay about $2,500, enough for a bondsman's fee on a bond up to about $16,500"
     var plain: String {
         if cash == 0 { return "can't pay anything toward a bond" }
-        if !bondsman { return "has about $\(cash.formatted()) in cash, and no bondsman will write the bond, so it has to be cash" }
+        if !bondsman { return "has about $\(cash.formatted()), but no bail bondsman will take the case, so any secured bond has to be paid in full out of pocket" }
         return "can pay about $\(cash.formatted()), enough for a bondsman's \(Int((feeRate * 100).rounded()))% fee on a bond up to about $\(reach.formatted())"
     }
 
@@ -496,7 +496,7 @@ enum CalendarCalls {
         }
         let ask = roundBond(Double(reach) * Double.random(in: 0.7...1.0, using: &rng))
         if !money.bondsman {
-            return "No bondsman will write a bond for \(last), Judge, so whatever you set has to be cash, and \(last) has about $\(money.cash.formatted()). We ask for a $\(min(ask, money.cash).formatted()) secured bond, or release to \(keeper)."
+            return "No bail bondsman will take \(last)'s case, Judge, so whatever you set has to be paid in full, and \(last) has about $\(money.cash.formatted()). We ask for a $\(min(ask, money.cash).formatted()) secured bond, or release to \(keeper)."
         }
         return rng.pick(["\(last) can pay a bondsman about $\(money.cash.formatted()). That covers a bond up to about $\(reach.formatted()). We ask for a $\(ask.formatted()) secured bond.",
                          "At $\(scale.secured.formatted()), \(last) stays in jail. Set it at $\(ask.formatted()) and a bondsman will write it.",
@@ -650,7 +650,9 @@ enum CalendarCalls {
                                 : (ftas > 0 || violent
                                 ? "The State opposes any reduction. \(ftas > 0 ? "The defendant has missed court before." : "The charge is violent and the evidence is strong.")"
                                 : "The State would agree to a modest reduction with electronic monitoring."),
-                              defenseAsk: money.reach == 0
+                              defenseAsk: !noBond && money.canMake(current)
+                                ? "\(d.lastName) can post the $\(current.formatted()) as it stands, Judge. We ask only that the court leave it there; \(d.lastName) will be out today."
+                                : money.reach == 0
                                 ? rng.pick(["\(d.lastName) can't pay anything, Judge. Any money bond is a detention order by another name.",
                                             "Release to a supervised pretrial program, Judge. \(d.lastName) has no money and a job waiting."])
                                 : rng.pick(["\(d.lastName) \(money.plain). Set it there and \(d.lastName) goes back to work.",

@@ -148,6 +148,8 @@ struct PendingRearrest: Identifiable, Codable {
     var arrestText: String
     var jailText: String
     var note: String
+    /// The doubled bond after a missed court date (nil when the bond was revoked outright).
+    var bond: Int? = nil
 }
 
 /// A case off the calendar while something takes its time: a capacity evaluation, or treatment to restore capacity.

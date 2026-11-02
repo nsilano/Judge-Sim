@@ -871,6 +871,18 @@ final class GameState: ObservableObject {
         for r in due {
             func jail(_ entry: inout DocketEntry) {
                 guard case .trial(var c) = entry.matter, c.id == r.caseID, var bg = c.background, !bg.isJailed else { return }
+                // Someone who can make the doubled bond posts it and is out again the same day.
+                if let bond = r.bond, let cash = bg.canPost,
+                   BailMoney(cash: cash, feeRate: bg.bondsmanRate ?? 0.15, bondsman: bg.bondsmanWilling ?? false).canMake(bond) {
+                    bg.bondStatus = r.status + " Posted the doubled bond the same day."
+                    c.background = bg
+                    entry.matter = .trial(c)
+                    entry.note = ((entry.note ?? "") + " " + r.note + " Posted the doubled bond.").trimmingCharacters(in: .whitespaces)
+                    log(.arrest, c, on: r.date, r.arrestText)
+                    log(.jailIn, c, on: r.date, r.jailText)
+                    log(.jailOut, c, on: r.date, "Posted the doubled $\(bond.formatted()) bond and left the jail.")
+                    return
+                }
                 bg.onRelease = false
                 bg.heldOnCourtBond = true
                 bg.custodyDays = max(1, bg.custodyDays)
@@ -2504,7 +2516,7 @@ final class GameState: ObservableObject {
                 pendingRearrests.append(PendingRearrest(caseID: c.id, date: cal.startOfDay(for: arrested),
                     status: "Released on \(condition); missed a court date and was arrested on an order for arrest on \(SentenceFormat.shortDate(arrested)). Bond doubled to $\(doubled.formatted()) secured.",
                     arrestText: "Missed a court date; arrested on an order for arrest. Bond doubled to $\(doubled.formatted()).", jailText: "Back in the jail on the doubled bond.",
-                    note: "Missed a court date after release; arrested on an order for arrest."))
+                    note: "Missed a court date after release; arrested on an order for arrest.", bond: doubled))
                 schedule(held, rng.int(5...8), "On release since \(heard).", 0)
             } else {
                 schedule(held, rng.int(5...8), "On release since \(heard).", 0)
@@ -4309,8 +4321,20 @@ final class GameState: ObservableObject {
         // Everyone held in the jail on a case waiting in this court is on the roster and the bed count, whatever path
         // put them there (older saves only marked the bonds set at a hearing).
         func markHeld(_ entry: inout DocketEntry) {
-            guard case .trial(var c) = entry.matter, var bg = c.background, bg.isJailed, bg.heldOnCourtBond == nil,
+            guard case .trial(var c) = entry.matter, var bg = c.background, bg.isJailed,
                   bg.bondStatus != "Not yet arrested." else { return }
+            // Held on a bond the defendant can plainly make: the bond gets posted.
+            if !bg.bondStatus.hasPrefix("Held without bond"), let amount = Corrections.dollars(in: bg.bondStatus), let cash = bg.canPost,
+               BailMoney(cash: cash, feeRate: bg.bondsmanRate ?? 0.15, bondsman: bg.bondsmanWilling ?? false).canMake(amount) {
+                bg.onRelease = true
+                bg.heldOnCourtBond = false
+                bg.bondStatus += " Posted the $\(amount.formatted()) bond."
+                c.background = bg
+                entry.matter = .trial(c)
+                log(.jailOut, c, on: currentDate, "Posted the $\(amount.formatted()) bond and left the jail.")
+                return
+            }
+            guard bg.heldOnCourtBond == nil else { return }
             bg.heldOnCourtBond = true
             c.background = bg
             entry.matter = .trial(c)
