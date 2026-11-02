@@ -404,6 +404,10 @@ final class GameState: ObservableObject {
     func startCareer(name: String, start: Date) {
         judgeName = name
         county = County.generate(seed: seedBase)
+        history = []
+        people = []
+        appeals = []
+        calendarLog = []
         corrections = nil
         dispositions = []
         arraignQueue = []
@@ -426,15 +430,19 @@ final class GameState: ObservableObject {
                              body: "In a ceremony at the \(county.courthouse), \(name) took the oath of office as a Resident Superior Court Judge for \(county.name). District Attorney \(county.districtAttorney), Chief Public Defender \(county.chiefPublicDefender), Sheriff \(county.sheriff), and Clerk of Superior Court \(county.clerk) attended.")]
         }
         currentDate = nextSittingDay(onOrAfter: currentDate)
-        // The new judge inherits a couple of indicted cases waiting for trial dates; more come as the weeks go on.
-        var intakeRNG = SeededRNG(seed: seedBase ^ 0xF125_7A11)
-        var used = Set<UUID>()
-        for _ in 0..<2 {
-            if let c = generateCase(date: currentDate, rng: &intakeRNG, excluding: &used, storySlot: true, allowMurder: false) {
-                awaitCase(c, note: "Indicted before you took the bench; waiting for a trial date.", on: currentDate)
-            }
-        }
-        // Day one starts with an empty docket: the new judge sets the first trials from the waiting list.
+        // A new judge starts with nothing: no cases waiting, no one in the jail. Cases arrive as crimes happen and
+        // arrests follow, starting at the first bond hearing.
+        awaiting = []
+        scheduled = []
+        investigations = []
+        bondQueue = []
+        showCauseQueue = []
+        arrestOrders = []
+        reoffenseQueue = []
+        retrials = []
+        reliefQueue = []
+        pending = []
+        // Day one starts with an empty docket.
         today = CourtDay(date: currentDate, clock: CourtCalendar.opening(on: currentDate, minutesAfterMidnight: openingMinutes),
                          kind: .trial, entries: [], sessionDay: 1)
         save()
@@ -887,13 +895,17 @@ final class GameState: ObservableObject {
             log(.crime, c, on: facts.incident, "Reported to the \(facts.agency) in \(facts.town): \(InvestigationArc.subject(c)).")
             log(.investigation, c, on: facts.incident, "\(facts.agency) opens an investigation.")
         }
-        log(.warrant, c, on: currentDate, "Search warrant signed by Judge \(lastName(judgeName ?? "")).")
+        log(.warrant, c, on: currentDate, note.contains("another judge") ? "You denied the first search warrant; another judge signed a second one."
+                                                                       : "Search warrant signed by Judge \(lastName(judgeName ?? "")).")
         guard let facts = c.investigation?.facts else {
             awaitCase(c, note: note, on: currentDate)
             return
         }
-        let ready = cal.date(byAdding: .day, value: rng.int(49...63), to: facts.arrest) ?? facts.arrest
-        investigations.append(OpenInvestigation(courtCase: c, incident: cal.startOfDay(for: facts.incident), arrest: cal.startOfDay(for: facts.arrest),
+        // The arrest follows the warrant, never comes before it.
+        let earliest = cal.date(byAdding: .day, value: rng.int(1...3), to: cal.startOfDay(for: currentDate)) ?? currentDate
+        let arrest = max(cal.startOfDay(for: facts.arrest), earliest)
+        let ready = cal.date(byAdding: .day, value: rng.int(49...63), to: arrest) ?? arrest
+        investigations.append(OpenInvestigation(courtCase: c, incident: cal.startOfDay(for: facts.incident), arrest: arrest,
                                                 town: facts.town, offense: InvestigationArc.subject(c), ready: ready, note: note))
     }
 
