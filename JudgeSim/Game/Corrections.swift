@@ -179,7 +179,7 @@ struct JailInmate: Identifiable, Hashable {
                 ?? (waitingToPlead ? "Waiting to plead at a calendar call" : "Awaiting a trial date")
             let held = since.map { "in jail since \(SentenceFormat.shortDate($0))" } ?? "in jail"
             let post = money.map { m in
-                m.cash == 0 ? " · can't pay anything" : (m.bondsman ? " · can make a bond up to about $\(m.reach.formatted()) through a bondsman" : " · about $\(m.cash.formatted()) cash; no bondsman will write it")
+                m.cash == 0 ? " · can't pay anything" : (m.bondsman ? " · can make a bond up to about $\(m.reach.formatted()) through a bondsman" : " · has about $\(m.cash.formatted()); no bail bondsman will take the case, so the whole bond must be paid up front")
             } ?? ""
             return (title, "\(next) · \(held)\(post)" + (reviewSet ? " · bond review set" : ""))
         case .sentenced:
@@ -245,9 +245,10 @@ enum Corrections {
         return min(0.95, max(0.03, r))
     }
 
-    /// The first dollar amount in a bond line, e.g. 2500 from "Held on a $2,500 secured bond".
+    /// The bond in a bond line: the last dollar amount, e.g. 2500 from "Held on a $2,500 secured bond", or the doubled
+    /// figure from "Released on a $5,000 bond; ... Bond doubled to $10,000".
     static func dollars(in text: String?) -> Int? {
-        guard let text, let range = text.range(of: #"\$[0-9,]+"#, options: .regularExpression) else { return nil }
+        guard let text, let range = text.range(of: #"\$[0-9,]+"#, options: [.regularExpression, .backwards]) else { return nil }
         return Int(text[range].dropFirst().replacingOccurrences(of: ",", with: ""))
     }
 

@@ -138,6 +138,33 @@ struct CourtSchedule: Codable, Hashable {
 }
 
 /// A case set for trial that has no date yet. The judge picks the date.
+/// A defendant out on release who will be back in custody on a date: arrested on a new charge (bond revoked) or
+/// picked up after missing court (bond doubled). Until then the person is out, and the case goes on as usual.
+struct PendingRearrest: Identifiable, Codable {
+    var id = UUID()
+    var caseID: UUID
+    var date: Date
+    var status: String
+    var arrestText: String
+    var jailText: String
+    var note: String
+    /// The doubled bond after a missed court date (nil when the bond was revoked outright).
+    var bond: Int? = nil
+}
+
+/// A case off the calendar while something takes its time: a capacity evaluation, or treatment to restore capacity.
+/// It returns to the list waiting for a trial date when that's done.
+struct HeldCase: Identifiable, Codable {
+    var id = UUID()
+    var courtCase: CourtCase
+    var since: Date
+    var until: Date
+    /// What the case is waiting on, for the docket ("Forensic evaluation at Central Regional Hospital").
+    var reason: String
+    /// The note it returns with.
+    var note: String
+}
+
 /// A case whose defendant has had a first appearance and now waits to be arraigned, or to plead, at a calendar call.
 struct PendingArraignment: Identifiable, Codable {
     var id = UUID()

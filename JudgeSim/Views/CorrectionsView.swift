@@ -945,7 +945,7 @@ private struct BondReviewRow: View {
 
     private var bondsmanLine: String? {
         guard let money = inmate.money, money.cash > 0 else { return nil }
-        if !money.bondsman { return "No bondsman will write it; the bond has to be posted in cash." }
+        if !money.bondsman { return "No bail bondsman will take this case, so the whole bond has to be paid up front, out of pocket." }
         let percent = Int((money.feeRate * 100).rounded())
         return "A bondsman would write it for a \(percent)% fee the family never gets back."
     }
