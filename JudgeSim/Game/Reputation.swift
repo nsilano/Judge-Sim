@@ -73,7 +73,7 @@ enum Reputation {
         if stats.exonerations > 0 {
             comments.append("\"\(stats.exonerations) conviction\(stats.exonerations == 1 ? "" : "s") from this court later fell apart. That stays with people.\"")
         }
-        if comments.isEmpty { comments.append("\"Still new. Fair so far.\"") }
+        if comments.isEmpty { comments.append(history.count < 15 ? "\"Still new. Fair so far.\"" : "\"Steady. Nothing worth complaining about.\"") }
         return BarSurvey(year: year, prosecutors: prosecutors, defenseBar: defense, overall: overall,
                          publicApproval: publicApproval, affirmedPercent: decided.isEmpty ? nil : Int((affirm * 100).rounded()),
                          comments: comments)

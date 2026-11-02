@@ -165,6 +165,10 @@ final class GameState: ObservableObject {
     @Published private(set) var lightWeeks = false
     /// Career standing: the bar's yearly survey of the judge, most recent first.
     @Published private(set) var reputation: [BarSurvey] = []
+    /// Standing as of today, from the whole record so far. Moves with every ruling; the year-end survey is a snapshot of it.
+    var liveSurvey: BarSurvey {
+        Reputation.survey(year: CourtCalendar.calendar.component(.year, from: currentDate), stats: stats, appeals: appeals, history: history)
+    }
     /// Set when the judge lost an election; the career can continue on emergency assignment.
     @Published private(set) var unseated = false
     /// Career statistics as of January 1, for the year in review.

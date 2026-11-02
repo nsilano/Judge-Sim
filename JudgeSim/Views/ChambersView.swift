@@ -136,7 +136,7 @@ struct ChambersView: View {
                     }
                     if let notice = game.corrections?.openNotice { sheriffCard(notice) }
                     docketCard
-                    if let survey = game.reputation.first { standingCard(survey) }
+                    if !game.history.isEmpty || !game.reputation.isEmpty { standingCard(game.liveSurvey) }
                     if game.history.contains(where: { $0.resolvedKind == "trial" }), let county = game.county { courthouseMoodCard(county) }
 
                     if let county = game.county {
@@ -376,7 +376,12 @@ struct ChambersView: View {
         .card(tint: .orange)
     }
 
-    /// The most recent bar survey.
+    private var earlierSurveys: [BarSurvey] {
+        let year = CourtCalendar.calendar.component(.year, from: game.currentDate)
+        return game.reputation.filter { $0.year < year }
+    }
+
+    /// Where the judge stands now, from the record so far; the bar's year-end surveys are listed below it.
     private func standingCard(_ survey: BarSurvey) -> some View {
         DisclosureGroup {
             VStack(alignment: .leading, spacing: 8) {
@@ -388,8 +393,8 @@ struct ChambersView: View {
                     Text("Affirmed on appeal: \(affirmed)% of decided appeals").font(.caption).foregroundStyle(.secondary)
                 }
                 ForEach(survey.comments, id: \.self) { Text($0).font(.callout).italic() }
-                if game.reputation.count > 1 {
-                    Text("Earlier years: " + game.reputation.dropFirst().prefix(5).map { "\($0.year): \($0.overall)" }.joined(separator: " · "))
+                if !earlierSurveys.isEmpty {
+                    Text("Year-end surveys: " + earlierSurveys.prefix(5).map { "\(String($0.year)): \($0.overall)" }.joined(separator: " · "))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -398,7 +403,7 @@ struct ChambersView: View {
             HStack {
                 SectionTitle(text: "Standing with the bar", icon: "person.3.sequence.fill")
                 Spacer()
-                Text("\(survey.year) · \(survey.overall)/100").font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
+                Text(verbatim: "\(survey.overall)/100").font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
             }
         }
         .card()
