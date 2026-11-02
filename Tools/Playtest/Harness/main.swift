@@ -767,6 +767,12 @@ if args.count > 1 && args[1] == "scan" {
             if before != after { flag("Reload changed the game: before [\(before)] after [\(after)]") }
         }
         game.adjourn()
+        // Now and then the judge sets a bond review for someone held on a bond they can't post.
+        if let held = game.jailRoster().first(where: { $0.kind == .pretrial && $0.caseID != nil }), let id = held.caseID,
+           Int(game.currentDate.timeIntervalSince1970 / 86_400) % 9 == 0 {
+            game.requestBondReview(caseID: id)
+            log("BOND REVIEW SET for \(held.name) (\(held.status.detail))")
+        }
         // Every other notice, the judge picks the lowest-risk people before the sheriff does.
         if let notice = game.corrections?.openNotice, notice.kind == .releases, notice.issued.timeIntervalSince1970.truncatingRemainder(dividingBy: 2 * 86_400) < 86_400 {
             let over = game.jailRoster().count - (game.corrections?.beds ?? 0)

@@ -243,6 +243,8 @@ struct CaseBackground: Codable, Hashable {
     var custodyAtIntake: Int? = nil
     /// True once the defendant has been arraigned in this court (optional for older saves).
     var arraigned: Bool? = nil
+    /// What the defendant can realistically post, as the bond hearing learned it (optional for older saves).
+    var canPost: Int? = nil
     var restitution: Int
     var restitutionBasis: String?
     var victimStance: VictimStance

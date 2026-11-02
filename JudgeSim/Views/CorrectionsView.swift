@@ -145,6 +145,15 @@ private struct JailSections: View {
                 }
             }
             NavigationLink {
+                BondReviewView()
+            } label: {
+                HStack {
+                    Label("Schedule bond reviews", systemImage: "dollarsign.arrow.circlepath")
+                    Spacer()
+                    Text("\(roster.filter { $0.kind == .pretrial }.count) held for trial").foregroundStyle(.secondary)
+                }
+            }
+            NavigationLink {
                 EarlyReleasesView()
             } label: {
                 HStack {
@@ -774,5 +783,68 @@ private struct JudgeRecordSections: View {
         var line = "\(again) of \(free.count) free so far arrested again (\(again * 100 / free.count)%)"
         if !year.isEmpty { line += " · within a year: \(withinYear * 100 / year.count)% of \(year.count)" }
         return line
+    }
+}
+
+
+/// Defendants held for trial, with what each can realistically post. The judge sets a review of conditions of release,
+/// heard at the next bond session, where the State and the defense argue it.
+private struct BondReviewView: View {
+    @EnvironmentObject private var game: GameState
+
+    var body: some View {
+        let held = game.jailRoster().filter { $0.kind == .pretrial }
+            .sorted { ($0.bondAmount ?? .max) - ($0.canPost ?? 0) > ($1.bondAmount ?? .max) - ($1.canPost ?? 0) }
+        List {
+            Section {
+                Text("A review goes on the next court day's bond session. The State and the defense argue it, and you can set a bond the defendant can post, add house arrest, keep it as is, or, for a defendant held without bond, set conditions. It takes a day, but it's a ruling, not a jailbreak: the defendant is out on conditions you chose.")
+                    .font(.callout)
+            }
+            Section("Held awaiting trial · \(held.count)") {
+                if held.isEmpty { Text("No one is held for trial on your bonds.").foregroundStyle(.secondary) }
+                ForEach(held) { inmate in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(inmate.name).font(.system(.subheadline, design: .serif).weight(.semibold))
+                            Spacer()
+                            Pill(text: inmate.riskLabel, color: inmate.risk < 0.3 ? Theme.good : (inmate.risk < 0.55 ? Theme.gold : Theme.bad))
+                        }
+                        Text("\(inmate.charge) · \(inmate.docket)").font(.caption2).foregroundStyle(.secondary)
+                        HStack(spacing: 14) {
+                            VStack(alignment: .leading) {
+                                Text("Held on").font(.caption2).foregroundStyle(.secondary)
+                                Text(inmate.noBond ? "No bond" : (inmate.bondAmount.map { "$\($0.formatted())" } ?? "Bond")).font(.subheadline.weight(.bold))
+                                    .foregroundStyle(Theme.bad)
+                            }
+                            VStack(alignment: .leading) {
+                                Text("Can post").font(.caption2).foregroundStyle(.secondary)
+                                Text(inmate.canPost.map { $0 == 0 ? "Nothing" : "About $\($0.formatted())" } ?? "Not known").font(.subheadline.weight(.bold))
+                                    .foregroundStyle(Theme.good)
+                            }
+                        }
+                        if !inmate.flags.isEmpty {
+                            Text(inmate.flags.joined(separator: " · ")).font(.caption2).foregroundStyle(Theme.gold)
+                        }
+                        if let caseID = inmate.caseID {
+                            if game.bondReviewPending(caseID) {
+                                Label("Review set for the next bond session", systemImage: "checkmark.circle.fill")
+                                    .font(.caption.weight(.semibold)).foregroundStyle(Theme.good)
+                            } else {
+                                Button {
+                                    game.requestBondReview(caseID: caseID)
+                                } label: {
+                                    Label("Set a bond review", systemImage: "calendar.badge.plus")
+                                        .font(.caption.weight(.semibold))
+                                }
+                                .buttonStyle(.bordered).tint(Theme.gold)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+        .benchBackground()
+        .navigationTitle("Bond reviews")
     }
 }
