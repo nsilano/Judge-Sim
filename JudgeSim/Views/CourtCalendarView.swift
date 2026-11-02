@@ -663,8 +663,25 @@ struct DayPickerList: View {
         return out
     }
 
+    /// The court's current date, which every choice is measured from.
+    private var today: Date { game.today?.date ?? game.currentDate }
+
+    /// "tomorrow", "in 9 days", "in 3 weeks (22 days)", "in about 2 months (61 days)".
+    static func distance(from today: Date, to day: Date) -> String {
+        let cal = CourtCalendar.calendar
+        let days = cal.dateComponents([.day], from: cal.startOfDay(for: today), to: cal.startOfDay(for: day)).day ?? 0
+        if days <= 0 { return "today" }
+        if days == 1 { return "tomorrow" }
+        if days < 14 { return "in \(days) days" }
+        if days < 60 { return "in \(days / 7) weeks (\(days) days)" }
+        return "in about \(Int((Double(days) / 30.4).rounded())) months (\(days) days)"
+    }
+
     var body: some View {
         VStack(spacing: 6) {
+            Label("Today is \(SentenceFormat.date(today))", systemImage: "calendar")
+                .font(.caption.weight(.semibold)).foregroundStyle(Theme.gold)
+                .frame(maxWidth: .infinity, alignment: .leading)
             ForEach(days, id: \.self) { day in
                 let limit = game.schedule.limit(on: day)
                 let set = game.counts(on: day)
@@ -676,7 +693,10 @@ struct DayPickerList: View {
                     HStack(spacing: 10) {
                         Image(systemName: choice == day ? "largecircle.fill.circle" : "circle").foregroundStyle(Theme.gold)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(CourtCalendar.dayTitle(day)).font(.subheadline.weight(.semibold))
+                            HStack(spacing: 6) {
+                                Text(CourtCalendar.dayTitle(day)).font(.subheadline.weight(.semibold))
+                                Text(Self.distance(from: today, to: day)).font(.caption).foregroundStyle(Theme.gold)
+                            }
                             Text("\(set.trials)/\(limit.trials) trials · \(set.hearings)/\(limit.hearings) hearings" + (current ? " · now set here" : ""))
                                 .font(.caption).foregroundStyle(.secondary)
                             if let conflict = conflicts[CourtSchedule.key(day)] {

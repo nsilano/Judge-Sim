@@ -28,7 +28,13 @@ struct CalendarCallView: View {
                             .font(.caption2.weight(.bold))
                             .tracking(1)
                             .foregroundStyle(Theme.gold)
-                        Text(SentenceFormat.date(call.date)).font(.caption.monospaced()).foregroundStyle(.secondary)
+                        HStack {
+                            Label(SentenceFormat.date(call.date), systemImage: "calendar")
+                                .font(.subheadline.weight(.semibold))
+                            Spacer()
+                            Pill(text: CourtCalendar.isSameDay(call.date, game.currentDate) ? "Today" : CourtCalendar.dayTitle(call.date),
+                                 color: Theme.gold, icon: "clock")
+                        }
                         Text("The courtroom is full. The clerk calls the calendar, and the matters come up one at a time.")
                             .font(.callout)
                     }
