@@ -226,13 +226,17 @@ struct PersonTimeline: View {
                                 + (order.violations > 0 ? ". Violated \(order.violations) time\(order.violations == 1 ? "" : "s")." : ".")))
         }
         for v in person.violations ?? [] {
-            list.append(Event(date: v.date, icon: "exclamationmark.triangle.fill", color: .orange, text: "\(v.kind): \(v.conduct.trimmingTrailingPeriods). \(v.result)"))
+            // The conduct is reported in the evening, when officers make their home visits and checks.
+            let reported = v.date == cal.startOfDay(for: v.date) ? minutes(17 * 60 + (v.conduct.count * 37) % 240, after: v.date) : v.date
+            list.append(Event(date: reported, icon: "exclamationmark.triangle.fill", color: .orange, text: "\(v.kind): \(v.conduct.trimmingTrailingPeriods). \(v.result)"))
         }
         for appeal in game.appeals where appeal.personID == person.id {
             // Notice of appeal is given in open court, right after judgment.
             list.append(Event(date: minutes(2, after: ruled(appeal.docket, on: appeal.filed)), icon: "building.columns", color: .secondary, text: "Appeal filed (\(appeal.appellant))"))
             if let decided = appeal.decided {
-                list.append(Event(date: decided, icon: "building.columns.fill", color: appeal.wasReversed ? .orange : Theme.good,
+                // The Court of Appeals files its opinions in the morning.
+                let filed = decided == cal.startOfDay(for: decided) ? minutes(11 * 60, after: decided) : decided
+                list.append(Event(date: filed, icon: "building.columns.fill", color: appeal.wasReversed ? .orange : Theme.good,
                                   text: appeal.result ?? "Appeal decided"))
             }
         }
