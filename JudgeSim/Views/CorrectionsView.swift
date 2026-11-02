@@ -163,6 +163,16 @@ private struct JailSections: View {
                 }
             }
             NavigationLink {
+                WantedView()
+            } label: {
+                HStack {
+                    Label("Wanted: orders for arrest", systemImage: "person.badge.shield.checkmark.fill")
+                    Spacer()
+                    let wanted = game.arrestOrders.filter { !$0.served }.count
+                    Text("\(wanted)").foregroundStyle(wanted > 0 ? Theme.bad : .secondary)
+                }
+            }
+            NavigationLink {
                 EarlyReleasesView()
             } label: {
                 HStack {
@@ -919,5 +929,82 @@ private struct OutOnBondView: View {
         .searchable(text: $query, prompt: "Name, docket, or charge")
         .benchBackground()
         .navigationTitle("Out on bond")
+    }
+}
+
+
+/// People the judge ordered arrested for missing court: who is still at large, for how long, and who has been brought in.
+private struct WantedView: View {
+    @EnvironmentObject private var game: GameState
+    @State private var showServed = false
+
+    var body: some View {
+        let date = game.currentDate
+        let cal = CourtCalendar.calendar
+        let wanted = game.arrestOrders.filter { !$0.served }.sorted { $0.issued < $1.issued }
+        let served = game.arrestOrders.filter(\.served).sorted { $0.servedOn > $1.servedOn }
+        List {
+            Section {
+                HStack {
+                    miniStat("\(wanted.count)", "At large")
+                    Spacer()
+                    miniStat("\(wanted.filter { (cal.dateComponents([.day], from: $0.issued, to: date).day ?? 0) >= 56 }.count)", "Over 8 weeks")
+                    Spacer()
+                    miniStat("\(served.count)", "Brought in")
+                }
+            } footer: {
+                Text("Orders for arrest you issued when someone missed court. Deputies pick most people up within weeks; some turn themselves in, some are caught months later in another state, and a few are never found. Once arrested, they come before you at a bond hearing.")
+            }
+            Section("Still at large · \(wanted.count)") {
+                if wanted.isEmpty { Text("No one is wanted on your orders.").foregroundStyle(.secondary) }
+                ForEach(wanted) { order in
+                    let days = max(0, cal.dateComponents([.day], from: order.issued, to: date).day ?? 0)
+                    link(order) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack {
+                                Text(order.personName).font(.system(.subheadline, design: .serif).weight(.semibold))
+                                Spacer()
+                                Pill(text: days >= 56 ? "Fugitive" : "Wanted", color: Theme.bad, icon: "exclamationmark.triangle.fill")
+                            }
+                            Text("Missed court; order issued \(SentenceFormat.shortDate(order.issued)) · at large \(days) day\(days == 1 ? "" : "s")")
+                                .font(.caption.weight(.semibold)).foregroundStyle(Theme.bad)
+                            Text("\(order.offense) · \(order.docket)").font(.caption2).foregroundStyle(.secondary)
+                            Text("Bond on arrest: \(order.bond)").font(.caption2)
+                        }
+                    }
+                }
+            }
+            if !served.isEmpty {
+                Section {
+                    DisclosureGroup(isExpanded: $showServed) {
+                        ForEach(served) { order in
+                            link(order) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(order.personName).font(.subheadline.weight(.semibold))
+                                    Text("\(order.how ?? "Arrested") \(SentenceFormat.shortDate(order.servedOn)), \(max(0, cal.dateComponents([.day], from: order.issued, to: order.servedOn).day ?? 0)) days after the order")
+                                        .font(.caption).foregroundStyle(Theme.good)
+                                    Text("\(order.offense) · \(order.docket)").font(.caption2).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        Button("Clear served orders") { withAnimation { game.clearServedArrestOrders() } }
+                            .font(.caption.weight(.semibold))
+                    } label: {
+                        Text("Brought in · \(served.count)").font(.subheadline.weight(.semibold))
+                    }
+                }
+            }
+        }
+        .benchBackground()
+        .navigationTitle("Wanted")
+    }
+
+    @ViewBuilder
+    private func link<Content: View>(_ order: ArrestOrder, @ViewBuilder label: () -> Content) -> some View {
+        if let person = game.person(order.personID) {
+            NavigationLink { PersonDetail(person: person, today: game.currentDate) } label: { label() }
+        } else {
+            NavigationLink { CaseTimelineView(docket: order.docket) } label: { label() }
+        }
     }
 }
