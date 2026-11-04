@@ -6,7 +6,7 @@ enum StoryAftermath {
     typealias Beat = Aftermath.Beat
 
     /// Every case's beats, the later batches included.
-    static let beats: [String: [Beat]] = baseBeats.merging(beatsAB) { a, _ in a }.merging(beatsAC) { a, _ in a }.merging(beatsAD) { a, _ in a }.merging(beatsAE) { a, _ in a }.merging(beatsAF) { a, _ in a }.merging(beatsAG) { a, _ in a }.merging(beatsAH) { a, _ in a }.merging(beatsAI) { a, _ in a }.merging(beatsAJ) { a, _ in a }.merging(beatsAK) { a, _ in a }.merging(beatsAL) { a, _ in a }.merging(beatsAN) { a, _ in a }.merging(beatsAO) { a, _ in a }.merging(beatsAP) { a, _ in a }
+    static let beats: [String: [Beat]] = baseBeats.merging(beatsAB) { a, _ in a }.merging(beatsAC) { a, _ in a }.merging(beatsAD) { a, _ in a }.merging(beatsAE) { a, _ in a }.merging(beatsAF) { a, _ in a }.merging(beatsAG) { a, _ in a }.merging(beatsAH) { a, _ in a }.merging(beatsAI) { a, _ in a }.merging(beatsAJ) { a, _ in a }.merging(beatsAK) { a, _ in a }.merging(beatsAL) { a, _ in a }.merging(beatsAN) { a, _ in a }.merging(beatsAO) { a, _ in a }.merging(beatsAP) { a, _ in a }.merging(beatsAQ) { a, _ in a }
 
     private static let baseBeats: [String: [Beat]] = [
         "story.lastPill": [
