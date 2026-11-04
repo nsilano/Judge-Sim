@@ -31,6 +31,8 @@ enum CaseGenerator {
         var arrestOn: Date? = nil
         /// Victims and witnesses from earlier cases, who may turn up again.
         var residents: [ResidentRef] = []
+        /// What the playthrough looks like now; when set, the story director picks the next written case from it.
+        var director: DirectorSnapshot? = nil
         /// Someone the court knows from an earlier case, now charged in this one (used when the written case allows them).
         var residentDefendant: ResidentRef? = nil
         /// Everyone the county already knows by name (residents, owners, regulars, officers): a new face never shares a name.
@@ -121,7 +123,8 @@ enum CaseGenerator {
             if !candidates.isEmpty {
                 // Murder trials come up now and then, not every week: most draws go to another kind of case.
                 let others = candidates.filter { !isMurder($0) }
-                var story = rng.pick(!others.isEmpty && rng.chance(0.65) ? others : candidates)
+                let pool = !others.isEmpty && rng.chance(0.65) ? others : candidates
+                var story = context.director?.pick(from: pool, using: &rng) ?? rng.pick(pool)
                 // Embezzlement comes up about a third as often as other cases: there are many of them.
                 if isEmbezzlement(story) && rng.chance(0.65) {
                     let alternatives = candidates.filter { !isEmbezzlement($0) && !isMurder($0) }

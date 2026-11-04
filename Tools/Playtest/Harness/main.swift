@@ -838,6 +838,20 @@ if args.count > 1 && args[1] == "scan" {
 }
 
 @MainActor func finish() {
+    // What the story director drew and why, newest last, with the genre mix.
+    let drawn = game.journalEntries.filter { $0.kind == .caseDrawn }
+    var mix: [String: Int] = [:]
+    for e in drawn { mix[e.category ?? "?", default: 0] += 1 }
+    log("DIRECTOR drew \(drawn.count) cases · genre mix: " + mix.sorted { $0.value > $1.value }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
+    var run = 1, maxRun = 1
+    for (previous, e) in zip(drawn, drawn.dropFirst()) {
+        run = previous.category == e.category ? run + 1 : 1
+        maxRun = max(maxRun, run)
+    }
+    let keys = drawn.compactMap { $0.detail.components(separatedBy: "[").last }
+    log("DIRECTOR longest run of one genre: \(maxRun) · repeated stories: \(keys.count - Set(keys).count)")
+    for e in drawn.suffix(12) { log("  DIRECTOR \(e.category ?? "?") · \(e.detail)") }
+
     // A few case timelines as the Records screen shows them (newest first), with clock times; flag any out of order.
     let dockets = Array(Set(game.caseLog.map(\.docket)).filter { !$0.isEmpty }).sorted().prefix(6)
     for docket in dockets {

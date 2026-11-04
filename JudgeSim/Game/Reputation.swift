@@ -264,6 +264,25 @@ enum StandingRule {
         }
     }
 
+    /// What kind of decision this is, for the career journal the story director reads.
+    var journalKind: JournalEntry.Kind {
+        switch self {
+        case .releasedViolentNoMoney, .releasedViolentOnBond, .releasedViolentMonitored, .releasedLowRisk: return .bondRelease
+        case .heldViolent, .heldOnUnaffordableBond: return .bondHeld
+        case .heldWithoutBond: return .heldWithoutBond
+        case .rearrestedOnRelease, .reoffendedAfterRuling, .rearrestedAfterEarlyRelease: return .reoffense
+        case .jailNotice, .sheriffReleased, .jailOverCapacityDay, .jailRecovered: return .jail
+        case .earlyReleaseViolent, .earlyReleaseNonviolent: return .earlyRelease
+        case .lenientViolentSentence, .mercyNonviolent, .harshNonviolent, .toughViolent, .byTheBook, .probationViolent: return .sentence
+        case .repeatedContinuance, .continuanceDenied: return .continuance
+        case .ftaOrderForArrest, .ftaExcused: return .missedCourt
+        case .caseDelayed: return .delay
+        case .reversed, .affirmed, .exoneration: return .appeal
+        case .publicReaction: return .publicReaction
+        default: return .outcome
+        }
+    }
+
     func shift(on date: Date, _ reason: String) -> StandingShift {
         let e = effect
         return StandingShift(date: date, reason: reason, topic: e.4, prosecutors: e.0, defense: e.1, overall: e.2, publicApproval: e.3)

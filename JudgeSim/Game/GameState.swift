@@ -2918,6 +2918,7 @@ final class GameState: ObservableObject {
             ResidentRef(name: r.name, town: r.town, occupation: r.occupation,
                         lastCaption: r.roles.last(where: { $0.part != "Victim" })?.caption)
         }
+        if followUp == nil { context.director = directorSnapshot() }
         if let followUp {
             context.forcedTemplateKeys = followUp.templateKeys
             context.victimOverride = followUp.victimName
@@ -2941,6 +2942,12 @@ final class GameState: ObservableObject {
             if report.fatal.isEmpty && repeats * 4 <= max(4, keys.count) { break }
         }
         guard var newCase = best?.value else { return nil }
+        // What the director drew, and why, goes in the journal for the next draw to read.
+        let drawnTemplate = StoryCases.byKey[newCase.templateKey]
+        journal.record(JournalEntry(date: date, kind: .caseDrawn, name: newCase.defendant.name, docket: newCase.docket,
+                                    category: newCase.category.rawValue,
+                                    detail: (drawnTemplate.flatMap { context.director?.score($0).why.joined(separator: ", ") } ?? "") + " [\(newCase.templateKey)]",
+                                    flags: Array(drawnTemplate.map(CaseTags.of) ?? [])), seed: seedBase)
         applyTrackRecords(&newCase, rng: &rng)
         // Now and then something happens in the courtroom that needs a ruling on the spot.
         if newCase.incidents == nil && !generic { newCase.incidents = Incidents.make(for: newCase, rng: &rng) }
@@ -3212,6 +3219,11 @@ final class GameState: ObservableObject {
         }
         let activeImposed = outcome.custodyMonths > 0
             || outcome.newPriors.contains { $0.sentence.hasSuffix(" active") || $0.sentence.hasPrefix("Life") }
+        journal.record(JournalEntry(date: currentDate, kind: .verdict, name: courtCase.defendant.name, docket: courtCase.docket,
+                                    category: courtCase.category.rawValue, detail: outcome.convicted ? "Convicted" : "Not convicted",
+                                    flags: [outcome.convicted ? "convicted" : "acquitted"]
+                                        + (activeImposed ? ["active"] : (outcome.newProbation != nil && outcome.convicted ? ["probation"] : []))
+                                        + (violentCase ? ["violent"] : [])), seed: seedBase)
         if outcome.convicted && violentCase { standing(.convictedViolent, "Conviction in a violent case — \(who)") }
         if let arrested = courtCase.investigation?.facts?.arrest,
            (CourtCalendar.calendar.dateComponents([.day], from: arrested, to: currentDate).day ?? 999) <= 120 {
@@ -3444,6 +3456,7 @@ final class GameState: ObservableObject {
         lightWeeks = false
         yearStartStats = nil
         lastYearReviewed = nil
+        journal.erase(seed: seedBase)
         seedBase = UInt64.random(in: 1...UInt64.max / 2)
         save()
     }
@@ -4480,6 +4493,9 @@ final class GameState: ObservableObject {
         }
         ledger.apply(shift)
         stats.ledger = ledger
+        journal.record(JournalEntry(date: shift.date, kind: rule.journalKind, name: StandingLedger.decisionKey(reason) ?? "", docket: "",
+                                    category: nil, detail: String(reason.prefix(140)),
+                                    flags: [String(String(describing: rule).prefix { $0 != "(" })]), seed: seedBase)
     }
 
     /// The day's turn of standing: recent rulings fade a little, a crowded jail wears on the county, and when the court
@@ -4546,6 +4562,33 @@ final class GameState: ObservableObject {
     }
 
     // MARK: Persistence
+
+    // MARK: The career journal and the story director
+
+    /// Every decision of this career, kept in its own file.
+    let journal = DecisionJournal()
+    var journalEntries: [JournalEntry] { journal.entries(seed: seedBase) }
+
+    /// The playthrough as the story director reads it: the court's books and the journal, in one snapshot.
+    private func directorSnapshot() -> DirectorSnapshot {
+        let entries = journal.entries(seed: seedBase)
+        let cal = CourtCalendar.calendar
+        let cutoff = cal.date(byAdding: .day, value: -90, to: currentDate) ?? currentDate
+        var snap = DirectorSnapshot()
+        snap.week = weekNumber
+        snap.jail = corrections?.log.last?.jail ?? 0
+        snap.beds = corrections?.beds ?? 0
+        snap.awaiting = awaiting.count
+        snap.pipelineTarget = Double(pipelineTarget)
+        snap.drawn = entries.reversed().filter { $0.kind == .caseDrawn }.prefix(14).map { Set($0.flags) }
+        let verdicts = entries.reversed().filter { $0.kind == .verdict }
+        snap.verdicts = verdicts.prefix(12).map { $0.flags.contains("convicted") }
+        let sentenced = verdicts.prefix(20).filter { $0.flags.contains("convicted") }
+        snap.activeShare = sentenced.count < 5 ? nil : Double(sentenced.filter { $0.flags.contains("active") }.count) / Double(sentenced.count)
+        snap.reoffenses90 = entries.filter { $0.kind == .reoffense && $0.date > cutoff }.count
+        snap.violentReleases90 = entries.filter { $0.kind == .bondRelease && $0.date > cutoff && $0.flags.contains { $0.hasPrefix("releasedViolent") } }.count
+        return snap
+    }
 
     private func save() {
         let data = SaveData(judgeName: judgeName, county: county, currentDate: currentDate, docketSequence: docketSequence,
