@@ -2896,7 +2896,7 @@ final class GameState: ObservableObject {
                               arrestOn: Date? = nil, residentDefendant: Resident? = nil) -> CourtCase? {
         guard let county, let judgeName else { return nil }
         // A written case brings its own defendant; returning defendants come back through calendar matters and follow-ups.
-        var returning = followUp.flatMap { person($0.personID) } ?? (storySlot && followUp == nil ? nil : pickReturningDefendant(rng: &rng, date: date))
+        var returning = followUp.flatMap { person($0.personID) } ?? (storySlot && followUp == nil ? callbackDefendant(rng: &rng, date: date) : pickReturningDefendant(rng: &rng, date: date))
         if followUp == nil, let person = returning, used.contains(person.id) { returning = nil }
         var context = CaseGenerator.Context(county: county, judgeName: judgeName, date: date,
                                             docketSequence: docketSequence, recentTemplateKeys: recentTemplates,
@@ -3143,6 +3143,26 @@ final class GameState: ObservableObject {
         return Array(out.prefix(2))
     }
 
+    /// The journal flags for rulings that put someone back on the street early or lightly.
+    private static let lenientFlags: Set<String> = ["lenientViolentSentence", "mercyNonviolent", "probationViolent", "releasedViolentNoMoney",
+                                                    "releasedViolentOnBond", "releasedViolentMonitored", "releasedLowRisk",
+                                                    "earlyReleaseViolent", "earlyReleaseNonviolent"]
+
+    /// A callback: someone the judge's own lenient ruling put back on the street, now charged again in a new written
+    /// case. The more such rulings, the likelier it is; the paper recalls the earlier decision when the case arrives.
+    private func callbackDefendant(rng: inout SeededRNG, date: Date) -> PersonRecord? {
+        let entries = journal.entries(seed: seedBase)
+        let cutoff = CourtCalendar.calendar.date(byAdding: .day, value: -45, to: date) ?? date
+        let recalled = Set(entries.filter { $0.kind == .callback }.map(\.name))
+        let names = Set(entries.filter { $0.date <= cutoff && $0.flags.contains { Self.lenientFlags.contains($0) } }.map(\.name)).subtracting(recalled)
+        guard !names.isEmpty, rng.chance(min(0.25, 0.06 + 0.02 * Double(names.count))) else { return nil }
+        let eligible = people.filter { person in
+            names.contains(person.name) && person.status != .incarcerated && person.age(on: date) < 75
+                && (person.appearances.last?.date ?? .distantPast) < cutoff
+        }
+        return eligible.isEmpty ? nil : rng.pick(eligible)
+    }
+
     private func pickReturningDefendant(rng: inout SeededRNG, date: Date) -> PersonRecord? {
         let recentCutoff = CourtCalendar.calendar.date(byAdding: .day, value: -30, to: date) ?? date
         let eligible = people.filter { person in
@@ -3152,8 +3172,7 @@ final class GameState: ObservableObject {
         }
         // People the judge's own lenient rulings put back on the street (a release, a light sentence, probation for a
         // violent felony) are likelier to come back than others: the playthrough's decisions have consequences.
-        let lenient: Set<String> = ["lenientViolentSentence", "mercyNonviolent", "probationViolent", "releasedViolentNoMoney",
-                                    "releasedViolentOnBond", "releasedViolentMonitored", "releasedLowRisk", "earlyReleaseViolent", "earlyReleaseNonviolent"]
+        let lenient = Self.lenientFlags
         let ruledOn = Set(journal.entries(seed: seedBase).filter { $0.flags.contains { lenient.contains($0) } }.map(\.name))
         func weight(_ p: PersonRecord) -> Double { p.propensity * (ruledOn.contains(p.name) ? 2.5 : 1) }
         let total = eligible.reduce(0) { $0 + weight($1) }
