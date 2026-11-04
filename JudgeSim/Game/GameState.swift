@@ -2945,9 +2945,9 @@ final class GameState: ObservableObject {
         // Someone this judge ruled on earlier is back before the court: the paper recalls the decision, once.
         if let person = returning, followUp == nil {
             let entries = journal.entries(seed: seedBase)
-            let kinds: Set<JournalEntry.Kind> = [.sentence, .bondRelease, .heldWithoutBond, .earlyRelease]
+            // Only a ruling worth recalling: a lenient one, or someone held without bond.
             if !entries.contains(where: { $0.kind == .callback && $0.name == person.name }),
-               let past = entries.last(where: { $0.name == person.name && kinds.contains($0.kind) }),
+               let past = entries.last(where: { $0.name == person.name && ($0.kind == .heldWithoutBond || $0.flags.contains { Self.lenientFlags.contains($0) }) }),
                (CourtCalendar.calendar.dateComponents([.day], from: past.date, to: date).day ?? 0) >= 30 {
                 let decision = past.detail.components(separatedBy: " — ").first ?? past.detail
                 let charge = newCase.charges.first?.law.title.lowercased() ?? "a new charge"
@@ -3155,7 +3155,7 @@ final class GameState: ObservableObject {
         let cutoff = CourtCalendar.calendar.date(byAdding: .day, value: -45, to: date) ?? date
         let recalled = Set(entries.filter { $0.kind == .callback }.map(\.name))
         let names = Set(entries.filter { $0.date <= cutoff && $0.flags.contains { Self.lenientFlags.contains($0) } }.map(\.name)).subtracting(recalled)
-        guard !names.isEmpty, rng.chance(min(0.25, 0.06 + 0.02 * Double(names.count))) else { return nil }
+        guard !names.isEmpty, rng.chance(min(0.1, 0.02 + 0.008 * Double(names.count))) else { return nil }
         let eligible = people.filter { person in
             names.contains(person.name) && person.status != .incarcerated && person.age(on: date) < 75
                 && (person.appearances.last?.date ?? .distantPast) < cutoff
