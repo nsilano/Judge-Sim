@@ -27,7 +27,8 @@ extension StoryCases {
         closings: ("{D} moved the sticker. The camera shows it.", "No proof {D.he} knew."),
         timeline: [(0, "Midday: the sticker is moved."), (0, "{DL} pays $14 at register two."), (0, "The manager reviews the aisle camera and calls deputies.")],
         identified: "The aisle camera.",
-        mitigating: ["The defendant has accepted responsibility", "The defendant has a positive employment history and is gainfully employed"])
+        mitigating: ["The defendant has accepted responsibility", "The defendant has a positive employment history and is gainfully employed"],
+        genders: ["D": .male])
 
     static let mopedFlee = SmallCases.make(
         key: "story.mopedFlee",
@@ -51,7 +52,8 @@ extension StoryCases {
         closings: ("He looked back twice.", "He never knew the deputy was there."),
         timeline: [(0, "Evening: blue lights behind the moped."), (0, "The chase through three backyards."), (0, "The moped runs out of gas and {DL} is arrested.")],
         identified: "The deputy's dash camera.",
-        mood: .indifferent)
+        mood: .indifferent,
+        genders: ["D": .male])
 
     static let parkedDwi = SmallCases.make(
         key: "story.parkedDwi",
@@ -74,7 +76,8 @@ extension StoryCases {
         closings: ("He drove there.", "He stopped, as he should."),
         timeline: [(0, "12:45 a.m.: {DL} leaves the bar."), (0, "12:55 a.m.: the car parks at the grocery store."), (0, "1:40 a.m.: deputies find {DL} asleep behind the wheel.")],
         identified: "A deputy's patrol of the lot.",
-        doctrines: ["burdenOfProof", "lesserIncluded"])
+        doctrines: ["burdenOfProof", "lesserIncluded"],
+        genders: ["D": .male])
 
     static let loudParty = SmallCases.make(
         key: "story.loudParty",
@@ -95,8 +98,9 @@ extension StoryCases {
         defendant: [.direct("Did you know deputies came?", "\"Not the first time.\""), .direct("Why yell?", "\"I was embarrassed.\""), .cross("You called them snitches.", "\"I did.\""), .cross("The music was loud.", "\"It was a party.\"")],
         openings: ("A party that wouldn't quiet down.", "A birthday and a missed warning."),
         closings: ("Two visits and a lawn full of shouting.", "A host who was never warned."),
-        timeline: [(0, "11:10 p.m.: first complaint."), (0, "1:20 a.m.: second visit."), (0, "1:30 a.m.: {DL} is arrested on the lawn.")],
-        identified: "Neighbors' calls and deputies' reports.")
+        timeline: [(0, "11:10 p.m.: first complaint."), (1, "1:20 a.m.: second visit."), (1, "1:30 a.m.: {DL} is arrested on the lawn.")],
+        identified: "Neighbors' calls and deputies' reports.",
+        genders: ["D": .male])
 
     static let dirtBikeStreet = SmallCases.make(
         key: "story.dirtBikeStreet",
@@ -104,7 +108,7 @@ extension StoryCases {
         headlines: ["Teen Popped Wheelies on County Road Near School", "Reckless Driving Charge After Dirt Bike Stunts"],
         law: "recklessDriving",
         spec: "Drove a motor vehicle on a highway carelessly and heedlessly in willful disregard of the rights and safety of others, on {DATE}.",
-        ages: 17...30,
+        ages: 18...30,
         victim: false,
         summary: "A deputy saw {D} popping wheelies on a dirt bike at about 45 mph down a county road beside an elementary school at dismissal on {DATE}, weaving between cars. {D} has no license. {DL} says {D.he} was on a road with no traffic and didn't see any children.",
         state: [E(.video, 3, "Deputy's Dash Camera", "{D} on the rear wheel at speed, weaving past two cars and a crossing guard."), E(.document, 2, "School Schedule", "Dismissal began at 3:10 p.m., the time of the stop.")],
@@ -126,7 +130,7 @@ extension StoryCases {
         headlines: ["Graffiti Covers Highway Underpass Wall", "Spray Paint Found in Teen's Car After Underpass Tagging"],
         law: "injuryRealProperty",
         spec: "Willfully and wantonly damaged real property of {V}, a concrete underpass wall, causing damage of $1,800, on {DATE}.",
-        ages: 16...30,
+        ages: 18...30,
         victim: true,
         summary: "A 40-foot wall of a highway underpass was covered overnight on {DATE} with a spray-painted tag. The state transportation department put cleanup at $1,800. A deputy found {D} in a parked car near the underpass at 4 a.m. with eleven cans of paint and paint on {D.his} hands. {DL} says {D.he} was only bringing cans for a friend who painted a legal mural.",
         state: [E(.physical, 3, "Paint Cans", "Eleven cans, the same colors as the tag; paint on {D}'s fingers.", .search), E(.video, 2, "Highway Camera", "A figure with a backpack at the wall at 3:20 a.m.")],
@@ -140,7 +144,8 @@ extension StoryCases {
         openings: ("Wet paint on a man's fingers.", "A friend with cans, not a painter."),
         closings: ("The paint was still wet.", "No one saw him paint."),
         timeline: [(0, "3:20 a.m.: a figure at the underpass wall on camera."), (0, "3:50 a.m.: the tag is finished."), (0, "4:05 a.m.: {DL} is found in a nearby car.")],
-        identified: "A deputy's patrol and a highway camera.")
+        identified: "A deputy's patrol and a highway camera.",
+        genders: ["D": .male])
 
     static let falseAlarmCall = SmallCases.make(
         key: "story.falseAlarmCall",
@@ -186,7 +191,8 @@ extension StoryCases {
         openings: ("A toy badge and a stolen sandwich.", "A joke between a customer and a clerk."),
         closings: ("He claimed to be an officer.", "Nobody believed he was."),
         timeline: [(0, "Lunchtime: {DL} shows the badge."), (0, "The clerk hands over the sandwich."), (1, "The clerk shows the camera to a deputy.")],
-        identified: "The clerk's report and the store camera.")
+        identified: "The clerk's report and the store camera.",
+        genders: ["D": .male, "V": .male])
 
     static let concealedPistolPurse = SmallCases.make(
         key: "story.concealedPistolPurse",
@@ -254,7 +260,8 @@ extension StoryCases {
         openings: ("A truck, a sedan, and a driver who left.", "A bump mistaken for a cart."),
         closings: ("The video shows {D} drive away.", "No knowledge of a crash."),
         timeline: [(0, "Afternoon: the pickup backs into the sedan."), (0, "{V} notes the plate and calls deputies."), (2, "{DL} is traced through the plate.")],
-        identified: "{V}'s plate note and the drugstore camera.")
+        identified: "{V}'s plate note and the drugstore camera.",
+        genders: ["D": .male])
 
     static let badCheckFeed = SmallCases.make(
         key: "story.badCheckFeed",
@@ -276,7 +283,8 @@ extension StoryCases {
         openings: ("A check, a closed account, and a store left short.", "A regular and a notice that never arrived."),
         closings: ("The account was closed.", "He never knew."),
         timeline: [(-120, "The bank closes the account."), (0, "{DL} writes the check at the feed store."), (14, "The store turns the check over to the sheriff.")],
-        identified: "The store owner's complaint.")
+        identified: "The store owner's complaint.",
+        genders: ["D": .male])
 
     static let facebookThreat = SmallCases.make(
         key: "story.facebookThreat",
@@ -298,7 +306,8 @@ extension StoryCases {
         openings: ("A threat to burn a truck, posted for all to see.", "A joke that got out of hand."),
         closings: ("A reasonable person would believe it.", "No one meant it."),
         timeline: [(-3, "{V} complains about the dogs."), (0, "{DL} posts the message."), (1, "{V} shows deputies the post.")],
-        identified: "{V}'s screenshot of the post.")
+        identified: "{V}'s screenshot of the post.",
+        genders: ["D": .male])
 
     static let repeatedTexts = SmallCases.make(
         key: "story.repeatedTexts",
@@ -322,7 +331,8 @@ extension StoryCases {
         closings: ("Persistence after being told no is stalking.", "Grief, not menace."),
         timeline: [(-45, "The relationship ends and {V} asks {D} to stop."), (-20, "{DL} starts using other numbers."), (0, "{V} reports the messages to deputies.")],
         identified: "{V}'s screenshots.",
-        mood: .sympathetic)
+        mood: .sympathetic,
+        genders: ["D": .male])
 
     static let drunkPorch = SmallCases.make(
         key: "story.drunkPorch",
@@ -344,7 +354,8 @@ extension StoryCases {
         openings: ("A warned man on a neighbor's porch.", "A wrong house in the dark."),
         closings: ("He was told to stay away.", "He made a drunk's mistake."),
         timeline: [(-7, "{V} warns {D} to stay off the property."), (0, "3:30 a.m.: {DL} climbs the steps."), (0, "4:10 a.m.: {V} calls deputies.")],
-        identified: "{V}'s call to deputies.")
+        identified: "{V}'s call to deputies.",
+        genders: ["D": .male])
 
     static let mailTheft = SmallCases.make(
         key: "story.mailTheft",
@@ -361,12 +372,13 @@ extension StoryCases {
         exam: [.direct("What was in the bag?", "\"Nineteen pieces of mail, opened.\""), .direct("What did {DL} say?", "\"That {D.he} found them and was taking them to the post office.\""), .cross("No one saw {D.him} take them.", "\"No.\""), .cross("{D.He} was cooperative.", "\"Yes.\"")],
         theory: ("{D} took mail from rural boxes and opened it.", "A finder with a bag of mail and good intentions."),
         allocution: "\"I opened a couple to find who they were for. I know how that looks.\"",
-        truths: ("A pharmacy card from {V}'s package was found in {DL}'s wallet.", "A teenager later admitted dropping the bag at the mailboxes after stealing it."),
+        truths: ("A pharmacy card from a resident's package was found in {DL}'s wallet.", "A teenager later admitted dropping the bag at the mailboxes after stealing it."),
         defendant: [.direct("Where did you get the mail?", "\"A bag by the mailboxes.\""), .direct("Why open it?", "\"To find names.\""), .cross("Nineteen pieces opened.", "\"I opened a few.\""), .cross("You didn't take it to the post office.", "\"I was on my way.\"")],
         openings: ("Nineteen pieces of other people's mail.", "A bag found on the ground."),
         closings: ("Opened mail in a grocery bag.", "He was returning it."),
         timeline: [(-14, "The first resident reports missing mail."), (0, "{DL} stopped for a headlight; the bag is found."), (1, "A postal inspector links the reports.")],
-        identified: "A deputy's traffic stop.")
+        identified: "A deputy's traffic stop.",
+        genders: ["D": .male])
 
     static let gasCanSiphon = SmallCases.make(
         key: "story.gasCanSiphon",
@@ -388,7 +400,8 @@ extension StoryCases {
         openings: ("A hose, three cans, and a truck at dawn.", "A neighbor who borrowed gas and was caught."),
         closings: ("Gas is not free for the taking.", "A neighbor's loan, not a theft."),
         timeline: [(0, "5:00 a.m.: {DL} at the truck."), (0, "5:40 a.m.: {V} comes outside."), (0, "6 a.m.: deputies arrive.")],
-        identified: "{V} found {D} at the truck.")
+        identified: "{V} found {D} at the truck.",
+        genders: ["D": .male])
 
     static let tireSlash = SmallCases.make(
         key: "story.tireSlash",
@@ -410,7 +423,8 @@ extension StoryCases {
         openings: ("Four slashed tires and a recent breakup.", "A gray jacket and nothing more."),
         closings: ("The motive and the jacket point to him.", "No one saw his face."),
         timeline: [(-7, "{V} ends the relationship."), (0, "2:10 a.m.: a man slashes four tires."), (0, "Morning: {V} reports the damage.")],
-        identified: "{V}'s guess and a neighbor's camera.")
+        identified: "{V}'s guess and a neighbor's camera.",
+        genders: ["D": .male])
 
     static let tailgateShove = SmallCases.make(
         key: "story.tailgateShove",
@@ -432,7 +446,8 @@ extension StoryCases {
         openings: ("A shove at a football game.", "Two men chest to chest."),
         closings: ("A shove is an assault.", "He pushed back."),
         timeline: [(0, "Friday evening: the dispute over the table."), (0, "The shove."), (0, "A parent calls deputies.")],
-        identified: "A parent's video.")
+        identified: "A parent's video.",
+        genders: ["D": .male])
 
     static let falseNameDeputy = SmallCases.make(
         key: "story.falseNameDeputy",
@@ -454,7 +469,8 @@ extension StoryCases {
         openings: ("A false name on a roadside stop.", "A frightened driver."),
         closings: ("A false name delays an officer.", "He came clean at the jail."),
         timeline: [(0, "Afternoon: speeding stop."), (0, "{DL} gives the false name; a citation is written."), (0, "Fingerprints at the jail reveal {D}'s identity.")],
-        identified: "Jail fingerprints.")
+        identified: "Jail fingerprints.",
+        genders: ["D": .male])
 
     static let scrapGutters = SmallCases.make(
         key: "story.scrapGutters",
@@ -476,7 +492,8 @@ extension StoryCases {
         openings: ("Seventy pounds of aluminum from a bare house.", "A scrap flipper."),
         closings: ("The ticket has his name.", "He bought it cheap."),
         timeline: [(0, "Weekend: the gutters disappear."), (2, "Monday: {DL} sells the scrap."), (5, "{V} finds the bare fascia.")],
-        identified: "The scrap yard's ticket.")
+        identified: "The scrap yard's ticket.",
+        genders: ["D": .male])
 
     static let campusLaptop = SmallCases.make(
         key: "story.campusLaptop",
@@ -498,7 +515,8 @@ extension StoryCases {
         openings: ("A stolen laptop and a pawn ticket.", "A bargain from a stranger."),
         closings: ("A $780 laptop for $100.", "He didn't know."),
         timeline: [(0, "Afternoon: the laptop is taken."), (2, "{DL} pawns it."), (3, "The pawn shop's serial check flags it.")],
-        identified: "The pawn shop's serial check.")
+        identified: "The pawn shop's serial check.",
+        genders: ["D": .male, "V": .female])
 
     static let returnFraud = SmallCases.make(
         key: "story.returnFraud",
@@ -521,7 +539,8 @@ extension StoryCases {
         closings: ("Tags on and the receipt didn't match.", "She didn't know."),
         timeline: [(-21, "The original purchase on the receipt."), (0, "{DL} returns the items for credit."), (0, "Loss prevention stops {DL} at the desk.")],
         identified: "The loss prevention officer's receipt check.",
-        mood: .sympathetic)
+        mood: .sympathetic,
+        genders: ["D": .female])
 
     static let fakeLicense = SmallCases.make(
         key: "story.fakeLicense",
@@ -543,7 +562,8 @@ extension StoryCases {
         openings: ("A forged license to buy beer.", "A novelty ID and a teenager."),
         closings: ("He used it and said it was real.", "A foolish mistake."),
         timeline: [(-14, "{DL} orders the licenses online."), (0, "{DL} presents one at the gas station."), (0, "A deputy finds the second in {D}'s wallet.")],
-        identified: "The clerk's scanner.")
+        identified: "The clerk's scanner.",
+        genders: ["D": .male])
 
     static let paintCans = SmallCases.make(
         key: "story.paintCans",
@@ -566,7 +586,8 @@ extension StoryCases {
         openings: ("Five cans of paint in a backpack.", "A painter and an intention to pay."),
         closings: ("He walked out past the registers.", "He meant to pay."),
         timeline: [(0, "Midday: the paint goes into the backpack."), (0, "{DL} leaves through the garden exit."), (0, "The manager stops {DL} in the lot.")],
-        identified: "The store camera and the manager.")
+        identified: "The store camera and the manager.",
+        genders: ["D": .male])
 
     static let dumpsterFire = SmallCases.make(
         key: "story.dumpsterFire",
@@ -610,7 +631,8 @@ extension StoryCases {
         openings: ("A tip jar and a sprint out the door.", "A jar on the sidewalk."),
         closings: ("The video shows him taking it.", "He found it."),
         timeline: [(0, "3:15 p.m.: the jar is taken."), (0, "3:17 p.m.: a deputy stops {DL} a block away."), (0, "3:30 p.m.: the empty jar is found in a trash can.")],
-        identified: "The shop camera and a deputy's quick stop.")
+        identified: "The shop camera and a deputy's quick stop.",
+        genders: ["D": .male])
 
     static let shedBreakIn = SmallCases.make(
         key: "story.shedBreakIn",
@@ -632,7 +654,8 @@ extension StoryCases {
         openings: ("A shed broken into and a blade next door.", "A yard sale and a paint mark."),
         closings: ("The blade is in his garage.", "No one saw him."),
         timeline: [(0, "2 a.m.: the shed is forced."), (0, "Morning: {V} finds the pried hasp."), (3, "A deputy finds the blade in {DL}'s garage.")],
-        identified: "A deputy's search with {D}'s consent.")
+        identified: "A deputy's search with {D}'s consent.",
+        genders: ["D": .male])
 
     static let scaleAndBags = SmallCases.make(
         key: "story.scaleAndBags",
@@ -677,6 +700,7 @@ extension StoryCases {
         openings: ("A gun pointed at three teens.", "A toy and a thrown bottle."),
         closings: ("It looked real and they believed it.", "A toy and a bad moment."),
         timeline: [(0, "Dusk: the bottle thrown at the car."), (0, "{DL} points the pistol out the window."), (0, "Deputies stop {DL} a mile away.")],
-        identified: "The teens' description and a deputy's stop.")
+        identified: "The teens' description and a deputy's stop.",
+        genders: ["D": .male])
 
 }

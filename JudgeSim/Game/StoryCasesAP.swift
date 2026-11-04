@@ -27,7 +27,8 @@ extension StoryCases {
         closings: ("The camera shows the jar.", "A mix-up of cash."),
         timeline: [(-30, "Short splits begin."), (0, "The camera records three pocketings."), (1, "{V} reviews the footage.")],
         identified: "The owner's jar camera.",
-        impact: "We split tips to keep our cooks. This hurt everyone.")
+        impact: "We split tips to keep our cooks. This hurt everyone.",
+        genders: ["D": .female])
 
     static let texterCrash = SmallCases.make(
         key: "story.texterCrash",
@@ -82,7 +83,7 @@ extension StoryCases {
         spec: "Willfully and wantonly damaged real property of {V}, a mature boxwood hedge, causing damage of $1,750, on {DATE}.",
         ages: 35...72,
         victim: true,
-        summary: "{V}'s hedge of boxwoods, planted in the 1950s, stood along the line between {V}'s lot and {D}'s. On {DATE}, while {V} was away, {D} cut the hedge to stumps with a chainsaw. A survey places the hedge on {V}'s side by about a foot. {DL} says the hedge was over the line and had been blocking {D.his} driveway for years.",
+        summary: "{V}'s hedge of boxwoods, planted in the 1950s, stood along the line between {V}'s lot and {D}'s. On {DATE}, while {V} was away, {D} cut the hedge to stumps with a chainsaw. A survey places the hedge on {V}'s side by about a foot. {DL} says the hedge was over the line and had been blocking {D.his} driveway for years. Damage was put at $1,750.",
         state: [E(.video, 3, "Doorbell Camera", "{D} cutting the hedge with a chainsaw at 8 a.m."), E(.document, 2, "Survey", "The hedge stands about a foot on {V}'s side of the line.")],
         defense: [E(.document, 2, "Old Survey", "An older survey places the line through the hedge.")],
         role: "Sheriff's deputy",
@@ -118,7 +119,8 @@ extension StoryCases {
         closings: ("The pattern is clear.", "He fell behind."),
         timeline: [(0, "Monday: {DL} fails to show."), (7, "The business number is disconnected."), (21, "{V} reports it to deputies.")],
         identified: "{V}'s complaint and three others.",
-        impact: "That was our savings for the wall.")
+        impact: "That was our savings for the wall.",
+        genders: ["D": .male])
 
     static let foundPhoneSold = SmallCases.make(
         key: "story.foundPhoneSold",
@@ -128,7 +130,7 @@ extension StoryCases {
         spec: "Possessed a cellular telephone valued at $540 belonging to {V}, knowing it stolen, on {DATE}.",
         ages: 18...45,
         victim: true,
-        summary: "{V} lost a phone at a park on {DATE} and the owner's messages offered a $50 reward. {D} found it, ignored the messages, and sold it to a pawn shop the next day. {V} tracked it to the shop. {DL} says {D.he} never saw the messages and thought the phone was abandoned.",
+        summary: "{V} lost a phone at a park on {DATE} and the owner's messages offered a $50 reward. {D} found it, ignored the messages, and sold it to a pawn shop the next day. {V} tracked it to the shop. {DL} says {D.he} never saw the messages and thought the phone was abandoned. The phone was worth $540.",
         state: [E(.document, 3, "Pawn Ticket", "{D}'s ID on a ticket for the phone."), E(.digital, 2, "Messages", "Four messages offering a reward, read on the phone.")],
         defense: [E(.statement, 1, "Abandoned", "{DL} says the phone was dead and appeared abandoned.")],
         role: "Pawn shop clerk",
@@ -141,7 +143,8 @@ extension StoryCases {
         closings: ("The messages were read.", "He didn't know."),
         timeline: [(0, "Afternoon: {V} loses the phone."), (1, "{DL} pawns it."), (2, "{V} tracks it to the shop.")],
         identified: "{V}'s phone tracker.",
-        impact: "It had photos of my late mother.")
+        impact: "It had photos of my late mother.",
+        genders: ["D": .male])
 
     static let waterTowerClimb = SmallCases.make(
         key: "story.waterTowerClimb",
@@ -149,7 +152,7 @@ extension StoryCases {
         headlines: ["Teens Climb Town Water Tower for Photos, Charged With Trespass", "Deputies Find Teen at Top of Water Tower"],
         law: "trespass2",
         spec: "Entered and remained on the premises of {V}, a municipal water tower, after being notified not to enter, on {DATE}.",
-        ages: 17...24,
+        ages: 18...24,
         victim: true,
         summary: "A resident called deputies on {DATE} about people at the top of the town's water tower. {D} and two friends had climbed the ladder around the security fence, past a sign saying 'No Trespassing, Violators Prosecuted.' {D} says the gate was open and no one told them to leave.",
         state: [E(.physical, 3, "Sign and Fence", "A posted sign on the fence and on the ladder."), E(.video, 2, "Phone Video", "{D} at the top: 'we're on the tower!'")],
@@ -164,7 +167,8 @@ extension StoryCases {
         closings: ("He saw the sign.", "The gate was unlocked."),
         timeline: [(0, "Dusk: three teens at the fence."), (0, "8 p.m.: they reach the top."), (0, "8:30 p.m.: deputies arrive.")],
         identified: "A resident's call.",
-        impact: "That tower supplies the whole east side of town.")
+        impact: "That tower supplies the whole east side of town.",
+        genders: ["D": .male])
 
     static let selfCheckoutBanana = SmallCases.make(
         key: "story.selfCheckoutBanana",
@@ -186,7 +190,8 @@ extension StoryCases {
         openings: ("Steak scanned as bananas.", "A confusing screen."),
         closings: ("Eleven times.", "A scanner glitch."),
         timeline: [(-90, "The first banana-code visit."), (0, "Loss prevention watches the lane."), (0, "{DL} is stopped at the door.")],
-        identified: "Loss prevention's transaction review.")
+        identified: "Loss prevention's transaction review.",
+        genders: ["D": .male])
 
     static let holidayInflatables = SmallCases.make(
         key: "story.holidayInflatables",
@@ -209,7 +214,8 @@ extension StoryCases {
         closings: ("The camera shows the truck.", "A found display."),
         timeline: [(0, "3 a.m.: the truck stops."), (0, "Morning: {V} finds the empty yard."), (4, "Deputies find the inflatables.")],
         identified: "A neighbor's camera.",
-        impact: "My kids had waited all year to see him.")
+        impact: "My kids had waited all year to see him.",
+        genders: ["D": .male])
 
     static let funeralScene = SmallCases.make(
         key: "story.funeralScene",
@@ -226,13 +232,14 @@ extension StoryCases {
         exam: [.direct("What did {DL} do?", "\"Shouted during the eulogy.\""), .direct("How long?", "\"Six minutes.\""), .cross("{D.He} was grieving.", "\"He told us so.\""), .cross("No one was hurt.", "\"No.\"")],
         theory: ("{D} disrupted a funeral by shouting at the family.", "A grieving man's outburst."),
         allocution: "\"I'm ashamed. I lost control.\"",
-        truths: ("{DL} had been drinking at a bar down the road.", "The funeral home had refused {DL} a refund the week before."),
+        truths: ("{DL} had been drinking at a bar down the road.", "The funeral director had invited {DL} to say a few words and cut {D.him} off mid-sentence."),
         defendant: [.direct("Why did you go?", "\"I was angry.\""), .direct("What did you say?", "\"That he owed me.\""), .cross("During the eulogy.", "\"I know.\""), .cross("Six minutes.", "\"It felt shorter.\"")],
         openings: ("A shout at a funeral.", "A grieving man."),
         closings: ("It was a funeral.", "He was grieving."),
         timeline: [(-60, "{DL}'s brother dies."), (0, "2 p.m.: the shout."), (0, "2:15 p.m.: a deputy arrives.")],
         identified: "The funeral director's call.",
-        mood: .sympathetic)
+        mood: .sympathetic,
+        genders: ["D": .male])
 
     static let diveBarShooting = SmallCases.make(
         key: "story.diveBarShooting",
@@ -261,7 +268,8 @@ extension StoryCases {
         aggravating: ["The offense involved a firearm"],
         mood: .wantsConviction,
         impact: "My brother went out for one beer and never came home.",
-        doctrines: ["burdenOfProof", "lesserIncluded"])
+        doctrines: ["burdenOfProof", "lesserIncluded"],
+        genders: ["D": .male, "V": .male])
 
     static let schoolZoneCrash = SmallCases.make(
         key: "story.schoolZoneCrash",
@@ -311,7 +319,7 @@ extension StoryCases {
         defenseExam: [.direct("Was {DL} with you?", "\"All night.\""), .cross("Did you sleep?", "\"Some.\"")],
         theory: ("{D} broke in while a family hid upstairs.", "A print and a girlfriend's alibi."),
         allocution: "\"I know what that night did to your family. I regret it.\"",
-        truths: ("The safe was found in a creek behind {DL}'s cousin's house.", "The girlfriend's phone showed {DL} left at midnight."),
+        truths: ("The safe was found in a creek behind {DL}'s cousin's house.", "The girlfriend's doorbell camera showed {DL} arrive at 11 p.m. and never leave."),
         defendant: [.direct("Were you at the house?", "\"No.\""), .direct("Where were you?", "\"With my girlfriend.\""), .cross("Your palm is on the window.", "\"I did yard work there last summer.\""), .cross("Your phone is nearby.", "\"The tower is wide.\"")],
         openings: ("A window, a print, a truck.", "A girlfriend and an old yard job."),
         closings: ("A fresh break, a fresh print.", "The tower is wide."),
@@ -340,7 +348,7 @@ extension StoryCases {
         defenseExam: [.direct("Where was {DL}?", "\"At my house until ten.\""), .cross("Until ten?", "\"About then.\"")],
         theory: ("{D} took a car at gunpoint.", "A phone bought from a stranger and a hood."),
         allocution: "\"I'm sorry for the fear I caused.\"",
-        truths: ("The phone's calls went to {DL}'s mother.", "The cousin's clock was wrong."),
+        truths: ("The phone's calls went to {DL}'s mother.", "The phone had been resold twice before {DL} bought it, a pawn record shows."),
         defendant: [.direct("Did you take the car?", "\"No.\""), .direct("The phone?", "\"I bought it.\""), .cross("Calls to your mother.", "\"I used it.\""), .cross("90% sure.", "\"So {V.he} says.\"")],
         openings: ("A gun, a phone, a photo array.", "A stranger's phone."),
         closings: ("The phone ties {DL} to the robbery.", "A hood and a phone."),
@@ -349,7 +357,8 @@ extension StoryCases {
         aggravating: ["The offense involved a firearm"],
         mood: .wantsConviction,
         impact: "I can't pump gas without shaking.",
-        doctrines: ["burdenOfProof"])
+        doctrines: ["burdenOfProof"],
+        genders: ["D": .male])
 
     static let apartmentFire = SmallCases.make(
         key: "story.apartmentFire",
@@ -398,7 +407,7 @@ extension StoryCases {
         defenseExam: [.direct("Did you borrow the van?", "\"No.\""), .cross("Where were you?", "\"Home.\"")],
         theory: ("{D} dragged a woman into a van.", "A coworker with the keys."),
         allocution: "\"I hurt someone and I'm ashamed.\"",
-        truths: ("The coworker had been out of town that day.", "A zip tie was found in the van's door pocket."),
+        truths: ("The coworker had been out of town that day.", "{DL} was on camera at a hardware store across town at the time of the abduction."),
         defendant: [.direct("Did you take {V}?", "\"No.\""), .direct("The van?", "\"I lent it.\""), .cross("Your van.", "\"Yes.\""), .cross("The lineup.", "\"It was unfair.\"")],
         openings: ("A plate, a van, and a lineup.", "A borrowed van."),
         closings: ("The plate leads to {DL}.", "A lineup and a loan."),
@@ -407,7 +416,8 @@ extension StoryCases {
         aggravating: ["The victim was held against their will for a significant period"],
         mood: .wantsConviction,
         impact: "I look at every white van.",
-        doctrines: ["burdenOfProof"])
+        doctrines: ["burdenOfProof"],
+        genders: ["D": .male, "V": .female])
 
     static let festivalOverdose = SmallCases.make(
         key: "story.festivalOverdose",
@@ -427,7 +437,7 @@ extension StoryCases {
         defenseExam: [.direct("What did {DL} tell you?", "\"That they were just pills.\""), .cross("Did {D.he} test them?", "\"No.\"")],
         theory: ("{D} sold a fatal pill.", "A seller who did not know what was in it."),
         allocution: "\"I'm sorry for the loss of your child.\"",
-        truths: ("{DL} had bought 40 pills for $200 from a man at a gas station.", "A test strip at {DL}'s home showed fentanyl a week earlier."),
+        truths: ("A test strip at {DL}'s home showed fentanyl a week earlier.", "The pills carried the markings of a legitimate over-the-counter tablet, which {DL} had no reason to doubt."),
         defendant: [.direct("Did you sell the pill?", "\"Yes.\""), .direct("Did you know it was fentanyl?", "\"No.\""), .cross("40 pills.", "\"For friends.\""), .cross("$20 each.", "\"At cost.\"")],
         openings: ("A text, a transfer, a death.", "A seller who did not know."),
         closings: ("The sale caused the death.", "He did not know."),
@@ -437,7 +447,8 @@ extension StoryCases {
         mitigating: ["The defendant has accepted responsibility"],
         mood: .divided,
         impact: "She was nineteen. She wanted to hear her favorite band.",
-        doctrines: ["burdenOfProof"])
+        doctrines: ["burdenOfProof"],
+        genders: ["D": .male, "V": .female])
 
     static let poisonCoffee = SmallCases.make(
         key: "story.poisonCoffee",
@@ -486,7 +497,7 @@ extension StoryCases {
         defenseExam: [.direct("Who started it?", "\"{V} shoved {D}.\""), .cross("{D} was drunk.", "\"Both were.\"")],
         theory: ("{D} punched a man who then died.", "A shove, one swing, and a call for help."),
         allocution: "\"I wish I could take it back. I'm sorry.\"",
-        truths: ("{D} called 911 and held a towel to {V}'s head.", "{D} had told a friend earlier that {V} owed him."),
+        truths: ("{D} had told a friend earlier that {V} owed {D.him}.", "{D} called 911 and held a towel to {V}'s head."),
         defendant: [.direct("Did you punch {V}?", "\"Once.\""), .direct("Why?", "\"He shoved me.\""), .cross("He fell.", "\"I didn't expect it.\""), .cross("You were drunk.", "\"Yes.\"")],
         openings: ("A punch and a fall.", "A shove first."),
         closings: ("One punch, one death.", "A shove and a swing."),
@@ -495,7 +506,8 @@ extension StoryCases {
         mitigating: ["The defendant acted under strong provocation", "The defendant has accepted responsibility"],
         mood: .divided,
         impact: "We lost our son over a spilled drink.",
-        doctrines: ["lesserIncluded", "selfDefense"])
+        doctrines: ["lesserIncluded", "selfDefense"],
+        genders: ["D": .male, "V": .male])
 
     static let wrenchAssault = SmallCases.make(
         key: "story.wrenchAssault",
@@ -524,6 +536,7 @@ extension StoryCases {
         aggravating: ["The offense involved a victim who suffered serious injury", "The defendant was armed with a deadly weapon at the time of the crime"],
         mood: .divided,
         impact: "I can't work at a shop anymore.",
-        doctrines: ["selfDefense"])
+        doctrines: ["selfDefense"],
+        genders: ["V": .male])
 
 }

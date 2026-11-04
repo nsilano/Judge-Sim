@@ -27,7 +27,8 @@ extension FollowUpCases {
         openings: ("A grill, a sticker, and a repeat offender.", "A self-checkout mistake."),
         closings: ("The same trick twice.", "A scanner glitch."),
         timeline: [(0, "Midday: the sticker is moved."), (0, "{DL} pays $9 at self-checkout.")],
-        identified: "Loss prevention's review of self-checkout video.")
+        identified: "Loss prevention's review of self-checkout video.",
+        genders: ["D": .male])
 
     static let mopedNoLicense = SmallCases.make(
         key: "story.followup.mopedNoLicense",
@@ -49,7 +50,8 @@ extension FollowUpCases {
         openings: ("A revoked license and a moped.", "A bicycle with a motor."),
         closings: ("The statute includes mopeds.", "He was told otherwise."),
         timeline: [(0, "Morning: checkpoint on a county road."), (0, "{DL} is cited for driving revoked.")],
-        identified: "A highway patrol checkpoint.")
+        identified: "A highway patrol checkpoint.",
+        genders: ["D": .male])
 
     static let dwlrAfterDwi = SmallCases.make(
         key: "story.followup.dwlrAfterDwi",
@@ -71,7 +73,8 @@ extension FollowUpCases {
         openings: ("A revoked license, again.", "A clerk's wrong advice."),
         closings: ("The paperwork said twelve months.", "A clerk's mistake."),
         timeline: [(0, "Evening: a speeding stop."), (0, "{DL} is cited for driving revoked.")],
-        identified: "A speeding stop.")
+        identified: "A speeding stop.",
+        genders: ["D": .male])
 
     static let partyResisting = SmallCases.make(
         key: "story.followup.partyResisting",
@@ -94,7 +97,8 @@ extension FollowUpCases {
         closings: ("He resisted.", "The deputy had no right inside."),
         timeline: [(0, "Late night: the third complaint."), (0, "{DL} refuses to give a name.")],
         identified: "The deputy's body camera.",
-        doctrines: ["searchSeizure", "burdenOfProof"])
+        doctrines: ["searchSeizure", "burdenOfProof"],
+        genders: ["D": .male])
 
     static let dirtBikeLawn = SmallCases.make(
         key: "story.followup.dirtBikeLawn",
@@ -102,7 +106,7 @@ extension FollowUpCases {
         headlines: ["Dirt Bike Tore Up Church Lawn", "Property Damage Charge After Dirt Bike Stunts"],
         law: "injuryRealProperty",
         spec: "Willfully and wantonly damaged real property of {V}, a church lawn and sign, causing damage of $1,300, on {DATE}.",
-        ages: 17...30,
+        ages: 18...30,
         victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} rode a dirt bike across the lawn of {V}'s church, leaving deep ruts and snapping the church sign. {D} says the bike's throttle stuck.",
         state: [E(.video, 3, "Church Camera", "A dirt bike circles the lawn three times and hits the sign."), E(.document, 2, "Repair Estimate", "$1,300 for sod and a new sign.")],
@@ -125,7 +129,7 @@ extension FollowUpCases {
         headlines: ["School Wall Tagged Over Weekend", "Same Tag Appears on School Building"],
         law: "injuryRealProperty",
         spec: "Willfully and wantonly damaged real property of {V}, an elementary school wall, causing damage of $900, on {DATE}.",
-        ages: 16...30,
+        ages: 18...30,
         victim: true,
         summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, the same tag appeared on the wall of an elementary school. A custodian found {D} sleeping in a car in the lot with paint on {D.his} hands.",
         state: [E(.physical, 3, "Paint Cans", "Cans matching the tag, in {D}'s car.", .search), E(.video, 2, "School Camera", "A figure at the wall at 3 a.m.")],
@@ -140,7 +144,8 @@ extension FollowUpCases {
         closings: ("The same hand.", "A sleeper."),
         timeline: [(0, "3 a.m.: a figure at the wall."), (0, "6 a.m.: the custodian finds {DL} in a parked car.")],
         identified: "The custodian's discovery.",
-        impact: "Children saw it before the custodian could cover it.")
+        impact: "Children saw it before the custodian could cover it.",
+        genders: ["D": .male])
 
     static let falseAlarmTwo = SmallCases.make(
         key: "story.followup.falseAlarmTwo",
@@ -162,7 +167,8 @@ extension FollowUpCases {
         openings: ("A second burner phone.", "A gift for a friend."),
         closings: ("The same pattern.", "No proof of who spoke."),
         timeline: [(-1, "{DL} buys a prepaid phone with cash."), (0, "The false car fire call.")],
-        identified: "The store camera.")
+        identified: "The store camera.",
+        genders: ["D": .male])
 
     static let badgeObstruction = SmallCases.make(
         key: "story.followup.badgeObstruction",
@@ -184,7 +190,8 @@ extension FollowUpCases {
         openings: ("A false claim to a deputy.", "A joke."),
         closings: ("A claim to an officer is not a joke.", "No harm."),
         timeline: [(0, "Evening: a stop for a taillight."), (0, "{DL} claims to be an officer.")],
-        identified: "The deputy's body camera.")
+        identified: "The deputy's body camera.",
+        genders: ["D": .male])
 
     static let pistolInTruck = SmallCases.make(
         key: "story.followup.pistolInTruck",
@@ -206,7 +213,8 @@ extension FollowUpCases {
         openings: ("A loaded pistol and no permit.", "A pending application."),
         closings: ("Pending is not issued.", "He did what the law asked."),
         timeline: [(-14, "{DL} applies for a permit."), (0, "A stop for a taillight; the pistol is found.")],
-        identified: "A traffic stop.")
+        identified: "A traffic stop.",
+        genders: ["D": .male])
 
     static let secondDogChained = SmallCases.make(
         key: "story.followup.secondDogChained",
@@ -252,7 +260,8 @@ extension FollowUpCases {
         closings: ("The law requires information.", "He tried."),
         timeline: [(0, "Morning: the scrape."), (0, "{V} finds the note.")],
         identified: "The street camera and plate.",
-        impact: "The note told me nothing and my deductible was $500.")
+        impact: "The note told me nothing and my deductible was $500.",
+        genders: ["D": .male])
 
     static let badCheckHardware = SmallCases.make(
         key: "story.followup.badCheckHardware",
@@ -274,7 +283,8 @@ extension FollowUpCases {
         openings: ("A closed account, again.", "A checkbook mix-up."),
         closings: ("He knew.", "He forgot."),
         timeline: [(0, "Afternoon: the check is written."), (10, "The store turns it over to deputies.")],
-        identified: "The store's complaint.")
+        identified: "The store's complaint.",
+        genders: ["D": .male])
 
     static let threatByText = SmallCases.make(
         key: "story.followup.threatByText",
@@ -297,7 +307,8 @@ extension FollowUpCases {
         closings: ("A reasonable person would worry.", "No threat of harm."),
         timeline: [(0, "9:40 p.m.: the text."), (1, "{V} shows deputies.")],
         identified: "{V}'s screenshot.",
-        impact: "I haven't answered an unknown number since.")
+        impact: "I haven't answered an unknown number since.",
+        genders: ["D": .male])
 
     static let stalkingAtWork = SmallCases.make(
         key: "story.followup.stalkingAtWork",
@@ -322,7 +333,8 @@ extension FollowUpCases {
         timeline: [(-14, "The order is entered."), (0, "Three mornings of the car outside.")],
         identified: "The office camera.",
         mood: .sympathetic,
-        impact: "I park in a different lot and walk in with a coworker.")
+        impact: "I park in a different lot and walk in with a coworker.",
+        genders: ["D": .male, "V": .female])
 
     static let drunkPorchTwo = SmallCases.make(
         key: "story.followup.drunkPorchTwo",
@@ -345,7 +357,8 @@ extension FollowUpCases {
         closings: ("The warning was clear.", "A locksmith problem."),
         timeline: [(0, "2 a.m.: {DL} at {V}'s front door."), (0, "{V} calls deputies.")],
         identified: "{V}'s porch camera.",
-        impact: "I sleep with a bat now.")
+        impact: "I sleep with a bat now.",
+        genders: ["D": .male])
 
     static let mailCardOpen = SmallCases.make(
         key: "story.followup.mailCardOpen",
@@ -368,7 +381,8 @@ extension FollowUpCases {
         closings: ("The card came from the mail.", "A friend's gift."),
         timeline: [(0, "Afternoon: the card is used."), (1, "{V} sees the charge.")],
         identified: "The pharmacy camera.",
-        impact: "I lost three days getting my credit straightened out.")
+        impact: "I lost three days getting my credit straightened out.",
+        genders: ["D": .male])
 
     static let siphonTwo = SmallCases.make(
         key: "story.followup.siphonTwo",
@@ -391,7 +405,8 @@ extension FollowUpCases {
         closings: ("The same method.", "A neighbor's permission."),
         timeline: [(0, "5 a.m.: {DL} at the truck."), (0, "{V} calls deputies.")],
         identified: "{V} found {D} at the truck.",
-        impact: "My work truck and my schedule.")
+        impact: "My work truck and my schedule.",
+        genders: ["D": .male])
 
     static let windshieldCrack = SmallCases.make(
         key: "story.followup.windshieldCrack",
@@ -414,7 +429,8 @@ extension FollowUpCases {
         closings: ("The pattern points to him.", "The time clock says no."),
         timeline: [(0, "2 a.m.: the windshield is smashed."), (0, "Morning: {V} reports the damage.")],
         identified: "{V}'s guess and a neighbor's camera.",
-        impact: "Both times I couldn't get to work.")
+        impact: "Both times I couldn't get to work.",
+        genders: ["D": .male, "V": .female])
 
     static let tailgateThreat = SmallCases.make(
         key: "story.followup.tailgateThreat",
@@ -437,7 +453,8 @@ extension FollowUpCases {
         closings: ("A reasonable person would believe it.", "A joke."),
         timeline: [(0, "Friday evening: the next home game."), (0, "The threat in the parking lot.")],
         identified: "A parent and the resource officer.",
-        impact: "I park on the other side of the lot now.")
+        impact: "I park on the other side of the lot now.",
+        genders: ["D": .male])
 
     static let falseNameResisting = SmallCases.make(
         key: "story.followup.falseNameResisting",
@@ -459,7 +476,8 @@ extension FollowUpCases {
         openings: ("A false name again.", "A nickname."),
         closings: ("A false name delays an officer.", "A family name."),
         timeline: [(0, "Afternoon: a traffic stop."), (0, "The jail's fingerprints reveal {D}.")],
-        identified: "Jail fingerprints.")
+        identified: "Jail fingerprints.",
+        genders: ["D": .male])
 
     static let copperScrapYard = SmallCases.make(
         key: "story.followup.copperScrapYard",
@@ -482,7 +500,8 @@ extension FollowUpCases {
         closings: ("The same yard and the same ID.", "A bargain."),
         timeline: [(0, "Weekend: the wiring is stripped."), (2, "Monday: {DL} sells the copper.")],
         identified: "The scrap yard's ticket.",
-        impact: "The house lost $4,000 in wiring.")
+        impact: "The house lost $4,000 in wiring.",
+        genders: ["D": .male])
 
     static let laptopPhoneTwo = SmallCases.make(
         key: "story.followup.laptopPhoneTwo",
@@ -505,7 +524,8 @@ extension FollowUpCases {
         closings: ("The same pawn shop.", "The same story."),
         timeline: [(0, "Afternoon: the phone is pawned."), (1, "The student tracks it to the shop.")],
         identified: "The pawn shop's flag.",
-        impact: "My photos and my two-factor codes were on it.")
+        impact: "My photos and my two-factor codes were on it.",
+        genders: ["D": .male])
 
     static let returnFraudTwo = SmallCases.make(
         key: "story.followup.returnFraudTwo",
@@ -527,7 +547,8 @@ extension FollowUpCases {
         openings: ("Another return, another bad receipt.", "A friend's gift."),
         closings: ("The same method.", "The same friend."),
         timeline: [(0, "Midday: the return."), (0, "Loss prevention stops {DL}.")],
-        identified: "Loss prevention's check.")
+        identified: "Loss prevention's check.",
+        genders: ["D": .female])
 
     static let fakeLicenseBar = SmallCases.make(
         key: "story.followup.fakeLicenseBar",
@@ -549,7 +570,8 @@ extension FollowUpCases {
         openings: ("A forged license at the door.", "A found ID."),
         closings: ("His face is on it.", "A trick."),
         timeline: [(0, "10 p.m.: {DL} at the bar's door."), (0, "The bouncer calls deputies.")],
-        identified: "The bouncer's call.")
+        identified: "The bouncer's call.",
+        genders: ["D": .male])
 
     static let paintCansTwo = SmallCases.make(
         key: "story.followup.paintCansTwo",
@@ -572,7 +594,8 @@ extension FollowUpCases {
         openings: ("Tools in a bag, again.", "A debt owed."),
         closings: ("The same method.", "A debt."),
         timeline: [(0, "Midday: the tools go into the bag."), (0, "The guard stops {DL}.")],
-        identified: "The store's camera.")
+        identified: "The store's camera.",
+        genders: ["D": .male])
 
     static let dumpsterFireTwo = SmallCases.make(
         key: "story.followup.dumpsterFireTwo",
@@ -618,7 +641,8 @@ extension FollowUpCases {
         closings: ("The same man.", "A different story."),
         timeline: [(0, "Afternoon: the cash box is taken."), (0, "The barista recognizes {DL}.")],
         identified: "The shop's camera and a barista's memory.",
-        impact: "I'm shorter staffed now because I can't afford another loss.")
+        impact: "I'm shorter staffed now because I can't afford another loss.",
+        genders: ["D": .male])
 
     static let shedBreakInTwo = SmallCases.make(
         key: "story.followup.shedBreakInTwo",
@@ -641,7 +665,8 @@ extension FollowUpCases {
         closings: ("The same man.", "A coincidence."),
         timeline: [(0, "2 a.m.: the shed is forced."), (3, "A deputy finds the drill.")],
         identified: "A deputy's search.",
-        impact: "The second lock didn't help.")
+        impact: "The second lock didn't help.",
+        genders: ["D": .male])
 
     static let scaleAgain = SmallCases.make(
         key: "story.followup.scaleAgain",
@@ -687,6 +712,7 @@ extension FollowUpCases {
         closings: ("It looked real.", "It was a toy."),
         timeline: [(0, "Afternoon: the parking dispute."), (0, "The pistol is pointed.")],
         identified: "The student's report and the resource officer.",
-        impact: "I don't park in that lot anymore.")
+        impact: "I don't park in that lot anymore.",
+        genders: ["D": .male])
 
 }

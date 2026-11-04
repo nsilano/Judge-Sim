@@ -67,7 +67,7 @@ extension StoryAftermath {
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Landlord Keeps Deposit Again After Judgment",
                  body: "Defendant From Perjury Case Faces New Fraud Claim. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.perjuryDeposit"], sameVictim: true)
+                 followUps: ["story.followup.perjuryDeposit"])
         ],
         "story.trapHouseDwelling": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,

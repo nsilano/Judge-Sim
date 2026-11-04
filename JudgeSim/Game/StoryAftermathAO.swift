@@ -13,7 +13,7 @@ extension StoryAftermath {
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Parent Threatens Bus Driver Weeks After Stop Dispute",
                  body: "Communicating Threats Charge After School Bus Incident. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.busStopThreat"], sameVictim: true)
+                 followUps: ["story.followup.busStopThreat"])
         ],
         "story.junkyardTires": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,

@@ -12,7 +12,7 @@ extension StoryCases {
         headlines: ["Commuter's $900 Bike Cut From Rack at Transit Stop", "Camera Catches Man With Bolt Cutters at Bike Rack"],
         law: "misdLarceny",
         spec: "Stole a bicycle valued at $900 belonging to {V}, on {DATE}.",
-        ages: 17...40,
+        ages: 18...40,
         victim: true,
         summary: "{V} locked a bicycle to a rack at a transit stop at 8 a.m. on {DATE} and returned at 5 p.m. to a cut lock. A stop camera showed {D} cutting the lock and riding away. {DL} says the bike was abandoned and had no lock on it.",
         state: [E(.video, 3, "Stop Camera", "{D} cuts a cable lock and rides off at 11:40 a.m."), E(.document, 2, "Purchase Receipt", "{V}'s receipt shows a $900 bicycle with a serial number.")],
@@ -21,13 +21,14 @@ extension StoryCases {
         exam: [.direct("What did you find?", "\"My cut lock on the ground.\""), .direct("What was the bike worth?", "\"$900.\""), .cross("The bike could have been abandoned.", "\"Not with a lock on it.\""), .cross("You didn't see the cut.", "\"The camera did.\"")],
         theory: ("{D} cut a lock and took a bike.", "An abandoned bike."),
         allocution: "\"I took what wasn't mine.\"",
-        truths: ("{DL} was holding bolt cutters on the video.", "The lock was found cut in {DL}'s trunk."),
+        truths: ("{DL} was holding bolt cutters on the video.", "A neighbor said the bike had sat unlocked at the rack for a week."),
         defendant: [.direct("Did you take the bike?", "\"I found it.\""), .direct("Was it locked?", "\"No.\""), .cross("Bolt cutters on video.", "\"For my own bike.\""), .cross("11:40 a.m.", "\"I was nearby.\"")],
         openings: ("A cut lock and a camera.", "An abandoned bike."),
         closings: ("The camera shows the cut.", "Nobody saw the lock."),
         timeline: [(0, "8 a.m.: {V} locks the bike."), (0, "11:40 a.m.: {D} cuts the lock."), (0, "5 p.m.: {V} finds the cut lock.")],
         identified: "The transit stop's camera.",
-        impact: "It was how I got to work.")
+        impact: "It was how I got to work.",
+        genders: ["D": .male])
 
     static let keyedCarLot = SmallCases.make(
         key: "story.keyedCarLot",
@@ -37,7 +38,7 @@ extension StoryCases {
         spec: "Willfully and wantonly injured personal property of {V}, a car, causing damage of $1,300, on {DATE}.",
         ages: 20...60,
         victim: true,
-        summary: "{V}'s car was keyed down both sides overnight on {DATE}. The week before, {D} had left a note on the windshield about parking in {D.his} space. A lot camera shows a person in a hooded jacket at the car. {DL} says {D.he} was at home.",
+        summary: "{V}'s car was keyed down both sides overnight on {DATE}. The week before, {D} had left a note on the windshield about parking in {D.his} space. A lot camera shows a person in a hooded jacket at the car. {DL} says {D.he} was at home. Damage was put at $1,300.",
         state: [E(.video, 2, "Lot Camera", "A hooded person walks the length of the car at 1:10 a.m."), E(.document, 3, "Note", "'Park elsewhere or else.' signed by {D}.")],
         defense: [E(.statement, 1, "At Home", "{DL} says {D.he} was asleep at home.")],
         role: "Apartment resident",
@@ -73,7 +74,8 @@ extension StoryCases {
         closings: ("Two warnings ignored.", "A party."),
         timeline: [(0, "12:20 a.m.: {DL} shouts from the patio."), (0, "12:30 a.m.: a deputy warns {DL} twice."), (0, "12:40 a.m.: {DL} steps into the road.")],
         identified: "A deputy's patrol.",
-        mood: .indifferent)
+        mood: .indifferent,
+        genders: ["D": .male])
 
     static let gloveboxMarijuana = SmallCases.make(
         key: "story.gloveboxMarijuana",
@@ -104,7 +106,7 @@ extension StoryCases {
         headlines: ["False Report of Armed Man Sends Deputies to Neighbor's House", "Anonymous 911 Call Traced to Teenager's Phone"],
         law: "falseReport",
         spec: "Willfully made a false report to law enforcement, on {DATE}.",
-        ages: 17...30,
+        ages: 18...30,
         victim: false,
         summary: "Dispatchers received a call on {DATE} saying a man with a gun was in a neighbor's yard. Four deputies surrounded the home. No one was armed. The call was traced to a prepaid phone bought by {D}. {DL} says {D.he} lost the phone the day before.",
         state: [E(.digital, 3, "Call Trace", "The call came from a prepaid phone registered to {D}."), E(.document, 2, "Dispatch Log", "Four deputies sent; no weapon found.")],
@@ -113,7 +115,7 @@ extension StoryCases {
         exam: [.direct("What did the caller say?", "\"A man with a gun in the yard.\""), .direct("Where did it come from?", "\"A prepaid phone.\""), .cross("The caller's voice wasn't {DL}'s.", "\"It was disguised.\""), .cross("The phone was lost.", "\"So {D.he} says.\"")],
         theory: ("{D} made a false call.", "A lost phone."),
         allocution: "\"It was supposed to be a joke.\"",
-        truths: ("{DL}'s account shows a 'phone lost' report made after the call.", "{DL} argued with the neighbor that week."),
+        truths: ("{DL}'s account shows a 'phone lost' report made after the call.", "A housemate admitted making the call from {DL}'s lost phone."),
         defendant: [.direct("Did you call?", "\"No.\""), .direct("Where was the phone?", "\"Lost.\""), .cross("You bought it.", "\"Last month.\""), .cross("You argued with the neighbor.", "\"About a fence.\"")],
         openings: ("A call and a phone.", "A lost phone."),
         closings: ("The phone traces to {DL}.", "A lost phone."),
@@ -137,13 +139,14 @@ extension StoryCases {
         exam: [.direct("What was taken?", "\"Three packages worth $380.\""), .direct("What did the camera show?", "\"A man and a gray sedan.\""), .cross("The face isn't clear.", "\"No.\""), .cross("The car could be borrowed.", "\"Possibly.\"")],
         theory: ("{D} took packages from a porch.", "A friend's trip in {D.his} car."),
         allocution: "\"I took the packages. I'm sorry.\"",
-        truths: ("Two of the stolen boxes were found in {DL}'s garage.", "The friend was out of state."),
+        truths: ("Two of the stolen boxes were found in {DL}'s garage.", "The friend who borrowed the sedan had a key and admitted taking the boxes."),
         defendant: [.direct("Did you take them?", "\"No.\""), .direct("Who had the car?", "\"A friend.\""), .cross("Boxes in your garage.", "\"Delivered by mistake.\""), .cross("Your plate.", "\"Yes.\"")],
         openings: ("A sedan and three boxes.", "A borrowed car."),
         closings: ("The plate and the boxes.", "A friend."),
         timeline: [(0, "9 a.m.: packages are delivered."), (0, "10:15 a.m.: a gray sedan stops at the porch."), (0, "12 p.m.: {V} finds the porch empty.")],
         identified: "A doorbell camera and a plate.",
-        impact: "One was a gift for my daughter.")
+        impact: "One was a gift for my daughter.",
+        genders: ["D": .male])
 
     static let forgedPrescription = SmallCases.make(
         key: "story.forgedPrescription",
@@ -163,7 +166,7 @@ extension StoryCases {
         defenseExam: [.direct("When was the pad stolen?", "\"A month earlier.\""), .cross("Was anyone charged?", "\"No.\"")],
         theory: ("{D} presented a forged prescription.", "A friend's paper."),
         allocution: "\"I was in pain and I forged it.\"",
-        truths: ("{DL} had been refused refills at the clinic a month before.", "The friend named by {DL} lives out of state."),
+        truths: ("{DL} had been refused refills at the clinic a month before.", "The friend named by {DL} admitted handing {D.him} the paper."),
         defendant: [.direct("Did you write it?", "\"No.\""), .direct("Why did you present it?", "\"I was told it was real.\""), .cross("Refused refills.", "\"Yes.\""), .cross("90 pills.", "\"For pain.\"")],
         openings: ("A forged pad and 90 pills.", "A friend's paper."),
         closings: ("A refusal then a forgery.", "A friend."),
@@ -190,7 +193,7 @@ extension StoryCases {
         defenseExam: [.direct("Was {D} allowed to withdraw cash?", "\"No. Our policy forbids it.\""), .cross("Did {V} ask for it?", "\"I can't say.\"")],
         theory: ("{D} drained an elderly client's savings.", "Withdrawals {V} requested."),
         allocution: "\"I took advantage. I'm ashamed.\"",
-        truths: ("{DL} bought a $1,900 television the same week.", "{V} had given {D} permission to buy groceries only."),
+        truths: ("{DL} bought a $1,900 television the same week.", "{V}'s own text to {DL} asked {D.him} to pick up cash for a hairdresser and a gift."),
         defendant: [.direct("Did you take the money?", "\"I made withdrawals.\""), .direct("Why?", "\"{V} asked.\""), .cross("A television.", "\"A gift.\""), .cross("Against policy.", "\"I didn't know.\"")],
         openings: ("Eleven withdrawals.", "Groceries and gifts."),
         closings: ("The ATM camera.", "{V} asked."),
@@ -198,7 +201,8 @@ extension StoryCases {
         identified: "Bank statements and an ATM camera.",
         aggravating: ["The defendant took advantage of a position of trust or confidence"],
         mood: .wantsConviction,
-        impact: "She trusted her.")
+        impact: "She trusted her.",
+        genders: ["D": .female, "V": .female])
 
     static let fenderBenderRun = SmallCases.make(
         key: "story.fenderBenderRun",
@@ -239,12 +243,12 @@ extension StoryCases {
         state: [E(.document, 3, "Pawn Ticket", "{D}'s ID on a ticket for a saw with {V}'s engraved initials."), E(.physical, 2, "Serial Numbers", "The saw's serial number matches {V}'s receipt.")],
         defense: [E(.statement, 1, "Flea Market", "{DL} says {D.he} bought them at a flea market.")],
         role: "Contractor",
-        exam: [.direct("What was taken?", "\"A saw, drills, a compressor.\""), .direct("How do you know the saw?", "\"My initials are engraved.\""), .cross("Flea markets sell tools.", "\"Not with initials.\""), .cross("{D} used his own ID.", "\"Yes.\"")],
+        exam: [.direct("What was taken?", "\"A saw, drills, a compressor.\""), .direct("How do you know the saw?", "\"My initials are engraved.\""), .cross("Flea markets sell tools.", "\"Not with initials.\""), .cross("{D.He} used {D.his} own ID.", "\"Yes.\"")],
         defenseRole: "Pawn shop clerk",
         defenseExam: [.direct("Who brought the saw?", "\"{DL}.\""), .cross("Did {D.he} seem nervous?", "\"No.\"")],
         theory: ("{D} sold stolen tools.", "A flea market buyer."),
         allocution: "\"I knew where it came from.\"",
-        truths: ("{DL} had a copy of the truck's key code.", "The flea market vendor was never found."),
+        truths: ("{DL} had a copy of the truck's key code.", "A flea market vendor remembered selling {DL} a saw like it for $120."),
         defendant: [.direct("Did you steal them?", "\"No.\""), .direct("Why use your ID?", "\"I had nothing to hide.\""), .cross("Initials.", "\"I didn't see them.\""), .cross("$7,000.", "\"I paid $300.\"")],
         openings: ("A saw with initials.", "A flea market."),
         closings: ("The initials.", "A flea market."),
@@ -269,7 +273,7 @@ extension StoryCases {
         exam: [.direct("What was found?", "\"A skimmer in the pump.\""), .direct("How many cards?", "\"About 40.\""), .cross("The skimmer isn't {DL}'s.", "\"No.\""), .cross("{D.He} bought gift cards.", "\"With {V}'s number.\"")],
         theory: ("{D} used stolen card numbers.", "A friend's card."),
         allocution: "\"I used the card. I'm sorry.\"",
-        truths: ("{DL}'s phone held a photo of 12 card numbers.", "The friend lives out of state."),
+        truths: ("{DL}'s phone held a photo of 12 card numbers.", "The friend admitted giving {DL} the card and keeping the rest."),
         defendant: [.direct("Did you use the card?", "\"Yes.\""), .direct("Whose was it?", "\"A friend's.\""), .cross("40 cards.", "\"I don't know.\""), .cross("Photo of numbers.", "\"A mistake.\"")],
         openings: ("A skimmer and gift cards.", "A friend's card."),
         closings: ("The video.", "A friend."),
@@ -303,7 +307,8 @@ extension StoryCases {
         identified: "An emergency room exam and a 911 call.",
         aggravating: ["The offense involved a victim in a domestic relationship"],
         mood: .wantsConviction,
-        impact: "I was afraid I would die.")
+        impact: "I was afraid I would die.",
+        genders: ["D": .male, "V": .female])
 
     static let trunkOpioids = SmallCases.make(
         key: "story.trunkOpioids",
@@ -323,7 +328,7 @@ extension StoryCases {
         defenseExam: [.direct("Whose bag was it?", "\"Not mine.\""), .cross("Did you ride with {DL}?", "\"That day.\"")],
         theory: ("{D} carried fentanyl in a trunk.", "A passenger's bag."),
         allocution: "\"I'm sorry. I knew.\"",
-        truths: ("A gas station camera shows {DL} putting the bag in the trunk.", "The coworker was never in the car."),
+        truths: ("{DL}'s fingerprints were on the duffel's zipper.", "A gas station camera showed the coworker loading the duffel into the trunk while {DL} paid inside."),
         defendant: [.direct("Whose bag was it?", "\"The coworker's.\""), .direct("Did you know?", "\"No.\""), .cross("Camera.", "\"I helped.\""), .cross("40 grams.", "\"I didn't look.\"")],
         openings: ("A bag in a trunk.", "A passenger's bag."),
         closings: ("The camera.", "A passenger."),
@@ -358,7 +363,8 @@ extension StoryCases {
         identified: "Shell casings and a neighbor.",
         aggravating: ["The offense involved a firearm"],
         mood: .wantsConviction,
-        impact: "My children sleep in the hallway now.")
+        impact: "My children sleep in the hallway now.",
+        genders: ["D": .male])
 
     static let lakeCrashFatal = SmallCases.make(
         key: "story.lakeCrashFatal",
@@ -382,7 +388,7 @@ extension StoryCases {
         defendant: [.direct("Were you drinking?", "\"Some.\""), .direct("Why did you swerve?", "\"A deer.\""), .cross("61 in a 35.", "\"I didn't see.\""), .cross("A text.", "\"Not mine.\"")],
         openings: ("Speed, alcohol, a text.", "A deer and wet road."),
         closings: ("The numbers.", "The deer."),
-        timeline: [(0, "8 p.m.: {D} and {V} leave a bar."), (0, "11:48 p.m.: a text is open on the phone."), (0, "11:50 p.m.: the truck leaves the road."), (0, "1:50 a.m.: blood is drawn.")],
+        timeline: [(0, "8 p.m.: {D} and {V} leave a bar."), (0, "11:48 p.m.: a text is open on the phone."), (0, "11:50 p.m.: the truck leaves the road."), (1, "1:50 a.m.: blood is drawn.")],
         identified: "A trooper's crash report and a blood test.",
         aggravating: ["The defendant was impaired at the time of the offense"],
         mood: .divided,

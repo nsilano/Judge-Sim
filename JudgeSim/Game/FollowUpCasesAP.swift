@@ -21,13 +21,14 @@ extension FollowUpCases {
         exam: [.direct("What did you see?", "\"{DL} pocketing bills from the jar.\""), .direct("How much?", "\"$260 short.\""), .cross("Change from a table.", "\"The jar isn't a till.\"")],
         theory: ("{D} skimmed the jar again.", "Change from a table."),
         allocution: "\"I did it again and I'm sorry.\"",
-        truths: ("{DL}'s old restaurant had warned the owner.", "The jar had no clear count at open."),
+        truths: ("{DL}'s old restaurant had warned the owner.", "The diner's tip jar was shared with a dozen busers who all reached into it."),
         defendant: [.direct("Did you take it?", "\"Change.\""), .direct("From where?", "\"A table.\""), .cross("After the last case.", "\"I know.\"")],
         openings: ("A second jar.", "Change."),
         closings: ("The camera.", "A mix-up."),
         timeline: [(-14, "{DL} starts at the diner."), (0, "The camera records two pocketings."), (1, "{V} reviews the footage.")],
         identified: "The owner's register camera.",
-        impact: "Once was enough.")
+        impact: "Once was enough.",
+        genders: ["D": .female])
 
     static let texterNoLicense = SmallCases.make(
         key: "story.followup.texterNoLicense",
@@ -67,7 +68,7 @@ extension FollowUpCases {
         exam: [.direct("What was the temperature?", "\"118 inside the car.\""), .direct("How long was {DL} away?", "\"46 minutes.\""), .cross("Windows were cracked.", "\"An inch.\"")],
         theory: ("{D} left a cat in a hot car.", "A short trip."),
         allocution: "\"I lost track of time.\"",
-        truths: ("The store receipt shows a 20-minute checkout line.", "A friend watched the car for ten of the minutes."),
+        truths: ("The store camera showed {DL} browsing aisles for twenty minutes before the line.", "The receipt shows a 20-minute checkout line, and a friend watched the car for ten of the minutes."),
         defendant: [.direct("Did you leave the cat?", "\"Briefly.\""), .direct("How long?", "\"A few minutes.\""), .cross("46 minutes.", "\"The line was slow.\"")],
         openings: ("118 degrees.", "A slow line."),
         closings: ("The camera.", "A long line."),
@@ -83,14 +84,14 @@ extension FollowUpCases {
         spec: "Willfully and wantonly injured the real property of {V}, a fence, causing damage of $850, on {DATE}.",
         ages: 30...65,
         victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {V} found {V.his} fence cut in three places. A doorbell camera showed {D} holding bolt cutters. {DL} says the fence was on {D.his} side of the line.",
+        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {V} found {V.his} fence cut in three places. A doorbell camera showed {D} holding bolt cutters. {DL} says the fence was on {D.his} side of the line. Damage was put at $850.",
         state: [E(.video, 3, "Doorbell Camera", "{D} holds bolt cutters at the fence at 6 a.m."), E(.document, 2, "Survey", "The fence is entirely on {V}'s lot.")],
         defense: [E(.statement, 1, "Property Line", "{DL} says the fence was over the line.")],
         role: "Neighbor",
         exam: [.direct("What did you see?", "\"{DL} cutting my fence.\""), .direct("Whose side?", "\"Mine, per the survey.\""), .cross("The line is disputed.", "\"The survey isn't.\"")],
         theory: ("{D} cut the fence.", "A property line dispute."),
         allocution: "\"I should have gone to court, not to the fence.\"",
-        truths: ("{DL}'s own survey put the fence on {V}'s side.", "The doorbell clock was off by an hour."),
+        truths: ("{DL}'s own survey put the fence on {V}'s side.", "The survey stakes had been moved by a utility crew, an engineer confirmed."),
         defendant: [.direct("Did you cut it?", "\"Yes.\""), .direct("Why?", "\"It was mine.\""), .cross("The survey.", "\"Is wrong.\"")],
         openings: ("Bolt cutters at dawn.", "A line in dispute."),
         closings: ("A survey.", "A dispute."),
@@ -119,7 +120,8 @@ extension FollowUpCases {
         closings: ("A receipt.", "A delay."),
         timeline: [(-30, "{V} signs the contract."), (-28, "{V} pays the deposit."), (0, "{V} reports the scam.")],
         identified: "The contract.",
-        impact: "That was our savings.")
+        impact: "That was our savings.",
+        genders: ["D": .male])
 
     static let foundWalletKept = SmallCases.make(
         key: "story.followup.foundWalletKept",
@@ -136,13 +138,14 @@ extension FollowUpCases {
         exam: [.direct("What was missing?", "\"$48 on my cards.\""), .direct("Where was it?", "\"In {DL}'s pocket.\""), .cross("Did {D.he} offer it back?", "\"Not yet.\"")],
         theory: ("{D} kept a lost wallet and used its cards.", "A finder who meant to return it."),
         allocution: "\"I should've turned it in.\"",
-        truths: ("{DL} used the card twice.", "The wallet had a note with {V}'s phone number."),
+        truths: ("{DL} used the card twice.", "{DL} left a voicemail for the number on the wallet's note the same day."),
         defendant: [.direct("Did you use the card?", "\"Yes.\""), .direct("Why?", "\"Gas.\""), .cross("Two times.", "\"Yes.\"")],
         openings: ("A wallet.", "A finder."),
         closings: ("Two charges.", "A return."),
         timeline: [(0, "{V} loses the wallet."), (0, "Two gas station charges are made."), (1, "A deputy finds {DL} with the wallet.")],
         identified: "A card statement.",
-        impact: "Just return it.")
+        impact: "Just return it.",
+        genders: ["D": .male])
 
     static let radioTowerClimb = SmallCases.make(
         key: "story.followup.radioTowerClimb",
@@ -159,13 +162,14 @@ extension FollowUpCases {
         exam: [.direct("Was there a notice?", "\"Yes, in writing.\""), .direct("Was the gate locked?", "\"It was chained.\""), .cross("The chain was loose.", "\"It was closed.\"")],
         theory: ("{D} climbed past a notice.", "An open gate."),
         allocution: "\"I shouldn't have gone.\"",
-        truths: ("A bolt cutter was found in {DL}'s car.", "The chain was cut."),
+        truths: ("A bolt cutter was found in {DL}'s car.", "The chain was already cut before {DL} arrived, per the station's own report."),
         defendant: [.direct("Did you read the notice?", "\"Yes.\""), .direct("Why climb?", "\"A dare.\""), .cross("The chain.", "\"It was open.\"")],
         openings: ("A notice, a chain.", "An open gate."),
         closings: ("A notice.", "A gate."),
         timeline: [(0, "Night: {DL} climbs the tower."), (0, "Midnight: firefighters answer the call.")],
         identified: "A notice.",
-        impact: "It cost us a rescue.")
+        impact: "It cost us a rescue.",
+        genders: ["D": .male])
 
     static let bananaTwo = SmallCases.make(
         key: "story.followup.bananaTwo",
@@ -188,7 +192,8 @@ extension FollowUpCases {
         closings: ("Camera.", "Hurry."),
         timeline: [(0, "{DL} bags five items."), (0, "Loss prevention stops {DL}.")],
         identified: "Store camera.",
-        impact: "Same thing, different store.")
+        impact: "Same thing, different store.",
+        genders: ["D": .male])
 
     static let inflatablesYard = SmallCases.make(
         key: "story.followup.inflatablesYard",
@@ -205,13 +210,14 @@ extension FollowUpCases {
         exam: [.direct("Where was it?", "\"In my yard.\""), .direct("What was it worth?", "\"$210.\""), .cross("It could have been on the curb.", "\"It was staked down.\"")],
         theory: ("{D} took a display.", "A curb find."),
         allocution: "\"I'm sorry.\"",
-        truths: ("{DL}'s garage had the display's stakes.", "The staked display was pulled from the ground."),
+        truths: ("{DL}'s garage had the display's stakes.", "A neighbor's teenager admitted pulling the display and leaving it by the curb."),
         defendant: [.direct("Did you take it?", "\"I found it.\""), .direct("Where?", "\"A curb.\""), .cross("Stakes.", "\"Left.\"")],
         openings: ("A pickup.", "A curb."),
         closings: ("Video.", "Curb."),
         timeline: [(0, "Night: the display is taken."), (1, "{V} finds the yard empty.")],
         identified: "A neighbor's camera.",
-        impact: "My kids loved it.")
+        impact: "My kids loved it.",
+        genders: ["D": .male])
 
     static let graveyardScene = SmallCases.make(
         key: "story.followup.graveyardScene",
@@ -234,7 +240,8 @@ extension FollowUpCases {
         closings: ("Six minutes.", "Grief."),
         timeline: [(0, "2 p.m.: the service begins."), (0, "2:10 p.m.: the shouting."), (0, "2:20 p.m.: a deputy arrives.")],
         identified: "The officiant.",
-        mood: .sympathetic)
+        mood: .sympathetic,
+        genders: ["D": .male])
 
     static let witnessThreatLetter = SmallCases.make(
         key: "story.followup.witnessThreatLetter",
@@ -251,14 +258,15 @@ extension FollowUpCases {
         exam: [.direct("What did the letter say?", "\"'You'll pay for talking.'\""), .direct("How did you feel?", "\"Afraid.\""), .cross("It wasn't signed.", "\"No.\"")],
         theory: ("{D} had a witness threatened.", "An unsigned letter."),
         allocution: "\"I never wanted to scare anyone.\"",
-        truths: ("A friend of {DL} wrote the letter and posted it.", "The calls were to {DL}'s lawyer."),
+        truths: ("{DL} had given a friend the bartender's address.", "The friend wrote and mailed the letter without {DL}'s knowledge."),
         defendant: [.direct("Did you write it?", "\"No.\""), .direct("Did you call?", "\"My lawyer.\""), .cross("Five calls.", "\"Yes.\"")],
         openings: ("A threat.", "A friend."),
         closings: ("A letter.", "A call."),
         timeline: [(0, "The verdict is read."), (3, "The bartender receives the letter."), (4, "The bartender reports it.")],
         identified: "The bartender.",
         mood: .wantsConviction,
-        impact: "I won't work late shifts now.")
+        impact: "I won't work late shifts now.",
+        genders: ["D": .male, "V": .male])
 
     static let dwlrAfterCrash = SmallCases.make(
         key: "story.followup.dwlrAfterCrash",
@@ -268,14 +276,14 @@ extension FollowUpCases {
         spec: "Operated a motor vehicle on a highway while {D.his} license was revoked, on {DATE}.",
         ages: 20...60,
         victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D}'s license was revoked as a condition of the earlier case. A trooper stopped {D} driving to a store. {DL} says {D.he} thought a limited privilege applied.",
+        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D}'s license had been revoked. A trooper stopped {D} driving to a store. {DL} says {D.he} thought a limited privilege applied.",
         state: [E(.document, 3, "DMV Record", "An active revocation."), E(.statement, 2, "Trooper", "{D} said {D.he} thought a limited privilege applied.")],
         defense: [E(.statement, 1, "Privilege", "{DL} says {D.he} thought a limited privilege applied.")],
         role: "State Highway Patrol trooper",
-        exam: [.direct("What did the record show?", "\"An active revocation, no privilege.\""), .cross("Was a privilege applied for?", "\"No.\"")],
+        exam: [.direct("What did the record show?", "\"An active revocation, no privilege.\""), .cross("Was a privilege applied for?", "\"No.\""), .cross("Was a privilege applied for?", "\"No.\"")],
         theory: ("{D} drove while revoked.", "A mistaken privilege."),
         allocution: "\"I shouldn't have driven.\"",
-        truths: ("{DL} had never filed for a privilege.", "A form was found in {DL}'s glove box."),
+        truths: ("{DL} had never filed for a privilege.", "A clerk's note shows {DL} was told a limited privilege would be granted."),
         defendant: [.direct("Did you know?", "\"I thought so.\""), .direct("Why drive?", "\"A store.\""), .cross("No privilege.", "\"Right.\"")],
         openings: ("A revocation.", "A mistake."),
         closings: ("Record.", "Mistake."),
@@ -298,7 +306,7 @@ extension FollowUpCases {
         exam: [.direct("How do you know it's yours?", "\"My name is on it.\""), .direct("Where was it?", "\"In {DL}'s unit.\""), .cross("The cousin.", "\"Never named.\"")],
         theory: ("{D} kept the stolen safe.", "A cousin's safe."),
         allocution: "\"I'm sorry.\"",
-        truths: ("{DL}'s cousin had no storage record.", "The unit was paid with {DL}'s card."),
+        truths: ("{DL}'s cousin had no storage record.", "The cousin had taken {DL}'s card number and rented the unit online."),
         defendant: [.direct("Whose safe?", "\"My cousin's.\""), .direct("Did you know?", "\"No.\""), .cross("Your name on the lease.", "\"Yes.\"")],
         openings: ("A safe.", "A cousin."),
         closings: ("A name.", "A cousin."),
@@ -322,13 +330,14 @@ extension FollowUpCases {
         exam: [.direct("What did you do?", "\"Activated lights.\""), .direct("What did {DL} do?", "\"Sped away.\""), .cross("The loaner.", "\"Not mine to say.\"")],
         theory: ("{D} fled from deputies.", "A friend's loaner."),
         allocution: "\"I panicked.\"",
-        truths: ("{DL} had no key; the car was hotwired.", "The friend had no loaner."),
+        truths: ("{DL} had no key; the car was hotwired.", "The car's owner texted {DL} 'you can take it tonight'."),
         defendant: [.direct("Did you flee?", "\"Yes.\""), .direct("Why?", "\"Panic.\""), .cross("Stolen car.", "\"Loaner.\"")],
         openings: ("A chase.", "A loaner."),
         closings: ("Video.", "Panic."),
         timeline: [(0, "A deputy sees the car."), (0, "The chase begins."), (0, "The car ends in a ditch.")],
         identified: "Dash camera.",
-        impact: "They could've killed someone.")
+        impact: "They could've killed someone.",
+        genders: ["D": .male])
 
     static let insuranceFireClaim = SmallCases.make(
         key: "story.followup.insuranceFireClaim",
@@ -345,7 +354,7 @@ extension FollowUpCases {
         exam: [.direct("What did the claim list?", "\"A $9,000 television.\""), .direct("What did photos show?", "\"None.\""), .cross("An assistant.", "\"Unnamed.\"")],
         theory: ("{D} inflated a claim.", "An assistant's error."),
         allocution: "\"I'm sorry. I got greedy.\"",
-        truths: ("{DL}'s signature was on every page.", "The assistant never existed."),
+        truths: ("{DL}'s signature was on every page.", "The adjuster's pre-filled list was signed without a close check."),
         defendant: [.direct("Did you sign?", "\"Yes.\""), .direct("Did you check?", "\"No.\""), .cross("No television.", "\"I thought so.\"")],
         openings: ("A false list.", "An error."),
         closings: ("A signature.", "A mistake."),
@@ -368,14 +377,15 @@ extension FollowUpCases {
         exam: [.direct("What did you see?", "\"The van, three times.\""), .direct("Is there an order?", "\"Yes.\""), .cross("It's a main road.", "\"It's not on his route.\"")],
         theory: ("{D} followed the victim.", "A commute."),
         allocution: "\"I won't do it again.\"",
-        truths: ("{DL}'s employer is across town in the opposite direction.", "The van was repainted."),
+        truths: ("{DL}'s employer is across town in the opposite direction.", "The van passing {V}'s workplace was a different white van with a ladder rack, per its plate."),
         defendant: [.direct("Did you drive there?", "\"Yes.\""), .direct("Why?", "\"Commute.\""), .cross("Opposite direction.", "\"A shortcut.\"")],
         openings: ("An order.", "A road."),
         closings: ("Three passes.", "A road."),
         timeline: [(0, "Monday: the first pass."), (2, "Wednesday: the second pass."), (4, "Friday: the third pass.")],
         identified: "Workplace camera.",
         mood: .wantsConviction,
-        impact: "I live in fear.")
+        impact: "I live in fear.",
+        genders: ["D": .male, "V": .female])
 
     static let pillMillAgain = SmallCases.make(
         key: "story.followup.pillMillAgain",
@@ -398,7 +408,8 @@ extension FollowUpCases {
         closings: ("A recording.", "A prescription."),
         timeline: [(0, "The undercover buy."), (5, "The lab tests the pills.")],
         identified: "Undercover recording.",
-        impact: "It wasn't over.")
+        impact: "It wasn't over.",
+        genders: ["D": .male])
 
     static let workplaceThreat = SmallCases.make(
         key: "story.followup.workplaceThreat",
@@ -415,7 +426,7 @@ extension FollowUpCases {
         exam: [.direct("What did {DL} say?", "\"'You don't want to find out what I put in drinks.'\""), .direct("How did you take it?", "\"As a threat.\""), .cross("A joke.", "\"Not funny.\"")],
         theory: ("{D} made a threat.", "A joke."),
         allocution: "\"I'm sorry.\"",
-        truths: ("{DL} has no sense of humor on record.", "{V} knew of the earlier case."),
+        truths: ("{DL} had joked about poisoning a coffee pot at the last job.", "A coworker started the 'what's in the drinks' joke minutes earlier."),
         defendant: [.direct("Did you say it?", "\"Yes.\""), .direct("Why?", "\"A joke.\""), .cross("The case.", "\"I know.\"")],
         openings: ("A threat.", "A joke."),
         closings: ("The words.", "A joke."),
@@ -445,7 +456,8 @@ extension FollowUpCases {
         timeline: [(0, "Intake search begins."), (0, "The swing."), (0, "Officers restrain {DL}.")],
         identified: "Intake camera.",
         aggravating: ["The victim was a law enforcement officer performing official duties"],
-        impact: "I was just doing my job.")
+        impact: "I was just doing my job.",
+        genders: ["D": .male, "V": .male])
 
     static let wrenchAssaultThreat = SmallCases.make(
         key: "story.followup.wrenchAssaultThreat",
@@ -469,6 +481,7 @@ extension FollowUpCases {
         timeline: [(0, "The call is made."), (0, "{V} hears the voicemail."), (1, "{V} reports it.")],
         identified: "Voicemail.",
         mood: .wantsConviction,
-        impact: "I'm scared.")
+        impact: "I'm scared.",
+        genders: ["V": .male])
 
 }

@@ -61,7 +61,7 @@ extension StoryAftermath {
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Man Disrupts Graveside Service, Deputy Called",
                  body: "Defendant From Earlier Funeral Disturbance Back at Cemetery. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.graveyardScene"], sameVictim: true)
+                 followUps: ["story.followup.graveyardScene"])
         ],
         "story.diveBarShooting": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
