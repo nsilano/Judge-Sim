@@ -810,8 +810,7 @@ enum CalendarCalls {
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
                     summary: "The defense moves to continue the trial of \(name) on \(law.title). It would be the \(rng.pick(["third", "fourth", "second"])) continuance.",
-                    stateAsk: rng.pick(["Objects: the victim has missed work three times.", "No objection.", "Objects: a key witness is moving away.",
-                                        "Objects: the case is over a year old.", "No position; make it the last."]),
+                    stateAsk: rng.pick(stateObjections + ["No objection.", "No position; make it the last."]), 
                     defenseAsk: rng.pick(["Lab report just arrived; needs an expert.", "Newly appointed; hasn't met the client.",
                                           "A defense witness is deployed until next month.", "Four hours of new bodycam video to review.",
                                           "Stuck in a murder trial in another county.", "Client is in inpatient treatment for 28 days."]),
@@ -1244,4 +1243,31 @@ struct CalendarRuling: Codable, Hashable, Identifiable {
         default: return .other
         }
     }
+}
+
+
+extension CalendarCalls {
+    /// What the State says when it objects to a continuance. Each reason is different, so the same line doesn't repeat.
+    static let stateObjections: [String] = [
+        "Objects: the victim has missed work three times for this case.",
+        "Objects: the case is over a year old and the victim is tired of waiting.",
+        "Objects: a key witness is leaving the county for a new job.",
+        "Objects: the detective on the case is transferring to another agency next month.",
+        "Objects: the State's lab analyst is on leave until the end of the month.",
+        "Objects: a witness has a medical procedure scheduled and can't be subpoenaed in time.",
+        "Objects: the State's expert is out of the country for three weeks.",
+        "Objects: a civilian witness has moved and the State is still finding them.",
+        "Objects: the defense has had the State's file for months.",
+        "Objects: the officer who made the stop is on a training assignment.",
+        "Objects: the State's photographs haven't come back from the lab.",
+        "Objects: the victim is willing to testify this month and may not be next month.",
+        "Objects: the State's only eyewitness changed phone numbers and hasn't answered.",
+        "Objects: the medical examiner's report is in, but the State hasn't finished reviewing it.",
+        "Objects: a deputy who saw the arrest has been reassigned to the coast.",
+        "Objects: the victim has moved to another state and wants the case over with.",
+        "Objects: the jail transport for the State's witness fell through last time.",
+        "Objects: the defense is stalling, and the State's witnesses have already taken time off work.",
+        "No objection, but the State wants a firm date on the calendar.",
+        "No position; the State will be ready whichever way the court goes.",
+    ]
 }

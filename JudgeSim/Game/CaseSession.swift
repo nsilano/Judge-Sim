@@ -39,9 +39,9 @@ struct HalftimeMotion {
         let dl = c.defendant.lastName
         // The defense moves to dismiss the counts the State's proof is close on; a strong count is
         // challenged only now and then, and often there is no motion at all.
-        let strength = Judgment.properStrength(c)
-        var challenged = Set(c.charges.filter { strength <= $0.threshold || rng.chance(0.1) }.map(\.id))
-        if challenged.isEmpty, let lead = c.charges.first, rng.chance(0.15) { challenged = [lead.id] }
+        // No motion to dismiss at the close of the State's case: the defense's challenges come at the end, and the
+        // judge never decides them mid-trial.
+        let challenged = Set<UUID>()
         let stateWitness = c.witnesses.filter { $0.calledBy == .prosecution }
         // The State argues from evidence the court let in.
         let stateEvidence = c.evidence.filter { $0.side == .prosecution && !excluded.contains($0.id) }.sorted { $0.weight > $1.weight }

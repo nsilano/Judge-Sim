@@ -186,6 +186,8 @@ struct IncidentOption: Identifiable, Codable, Hashable {
     var appealText: String? = nil
     var laterHeadline: String? = nil
     var laterBody: String? = nil
+    /// Follow-up evidence the court orders when this option continues the case (the video the defense asks to review).
+    var requests: [EvidenceRequest]? = nil
 }
 
 struct EthicsEvent: Codable, Hashable {

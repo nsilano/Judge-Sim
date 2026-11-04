@@ -142,8 +142,8 @@ enum Incidents {
                                    proper: true, error: false, effect: .excludeEvidence, evidenceID: e.id,
                                    laterHeadline: "Judge excludes evidence after deputy's video withheld",
                                    laterBody: "In \(c.caption), Judge {JUDGE} kept out a piece of the State's evidence after learning a deputy's body camera video was never turned over to the defense."),
-                    IncidentOption(label: "Recess two days for the defense to review the video", result: "The defense reviews the video; \(e.exhibit) stays in.",
-                                   proper: true, error: false),
+                    IncidentOption(label: "Continue the trial two weeks so the defense can review the video", result: "The trial is continued two weeks. The video is turned over and the defense reviews it before trial resumes.",
+                                   proper: true, error: false, effect: .continueCase, days: 14, requests: [.video]),
                     IncidentOption(label: "Deny any remedy; the State didn't plan to use the video", result: "\(e.exhibit) comes in. The defense never sees the video.",
                                    proper: false, error: true,
                                    appealText: "You denied any remedy after finding the State withheld body camera video bearing on \(e.exhibit) (G.S. 15A-903, 15A-910).")

@@ -173,6 +173,9 @@ struct StandingLedger: Codable, Hashable {
     var covering = false
     /// The last time a quiet month without public complaints was credited.
     var lastQuietCredit: Date? = nil
+    /// Public approval already moved by each decision (keyed by day and defendant). A decision's public effect runs
+    /// one way: the public likes it or it doesn't, and the total stays within a few points.
+    var decisionPublic: [String: Double]? = nil
 
     static let limit = 35.0
     /// The share of the ledger that fades each day: about half in six weeks.
@@ -324,5 +327,35 @@ enum StandingCoverage {
     static func turnaround(judge: String, county: String) -> (headline: String, body: String) {
         ("Complaints about Judge \(judge) ease",
          "After months of criticism, lawyers and community groups in \(county) County say Judge \(judge)'s courtroom has steadied. \"It's been a better stretch,\" one prosecutor said.")
+    }
+}
+
+
+extension StandingLedger {
+    /// The person a decision is about, from a reason written "… — Name, charge" or "… — State v. Name".
+    static func decisionKey(_ reason: String) -> String? {
+        guard let tail = reason.components(separatedBy: " — ").last, tail != reason else { return nil }
+        var name = tail
+        if let r = name.range(of: " v. ") { name = String(name[r.upperBound...]) }
+        if let r = name.range(of: ", ") { name = String(name[..<r.lowerBound]) }
+        return name.isEmpty ? nil : name
+    }
+
+    /// Limits one decision's public effect: a single direction, and at most 4 points in total.
+    mutating func limitPublic(_ delta: Double, key: String, on date: Date) -> Double {
+        let dayKey = "\(Int(CourtCalendar.calendar.startOfDay(for: date).timeIntervalSince1970))|\(key)"
+        var totals = decisionPublic ?? [:]
+        let so = totals[dayKey] ?? 0
+        var applied = delta
+        if so != 0 && delta * so < 0 {
+            applied = 0
+        } else {
+            let next = min(4, max(-4, so + delta))
+            applied = next - so
+            totals[dayKey] = next
+        }
+        if totals.count > 80 { totals = Dictionary(uniqueKeysWithValues: totals.sorted { $0.key > $1.key }.prefix(50).map { ($0.key, $0.value) }) }
+        decisionPublic = totals
+        return applied
     }
 }

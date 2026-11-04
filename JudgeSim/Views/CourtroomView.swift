@@ -152,7 +152,7 @@ struct CourtroomView: View {
                                  // Follow-up investigation is only possible while the evidence is still open.
                                  requestOptions: session.stage.rawValue <= CaseSession.Stage.trial.rawValue
                                     ? EvidenceRequest.options(for: session.courtCase) : [],
-                                 initialRequests: grantingMotion.map { [$0.request] } ?? [],
+                                 initialRequests: grantingMotion.map { [$0.request] } ?? (session.incidentContinuance?.option.requests ?? []),
                                  initialReason: grantingMotion.map { "On the \($0.movant == .prosecution ? "State's" : "defense's") motion: \($0.title.lowercased())." } ?? incidentReason,
                                  initialDays: grantingMotion?.suggestedDays ?? incidentDays,
                                  cost: delayCost) { date, reason, requests in

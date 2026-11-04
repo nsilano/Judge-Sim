@@ -2006,7 +2006,9 @@ final class GameState: ObservableObject {
         if rng.chance(0.08), let index = awaiting.indices.filter({ awaiting[$0].priorityRequested == nil && awaiting[$0].courtCase != nil }).randomElement(using: &rng),
            let c = awaiting[index].courtCase {
             var reasons = ["a witness is about to deploy with the National Guard", "the State's key witness is moving out of state",
-                           "the investigating officer is retiring"]
+                           "the investigating officer is retiring", "the State's expert is leaving for a federal job",
+                           "a deputy who saw the arrest has been transferred to the coast", "the State's lab analyst has a surgery date",
+                           "the civilian witness has no phone and the State is driving out to find them", "the State's photos are still at the lab"]
             if c.victimName != nil { reasons += ["the victim's family is asking every week", "the victim is elderly and in poor health"] }
             if c.background?.isJailed == true { reasons.append("the defendant has been held a long time and the office wants it tried") }
             awaiting[index].priorityRequested = date
@@ -4472,7 +4474,11 @@ final class GameState: ObservableObject {
     /// Moves the judge's standing by one of the rules in StandingRule, and keeps the reason for the Standing card.
     func standing(_ rule: StandingRule, _ reason: String, on date: Date? = nil) {
         var ledger = stats.ledger ?? StandingLedger()
-        ledger.apply(rule.shift(on: date ?? currentDate, reason))
+        var shift = rule.shift(on: date ?? currentDate, reason)
+        if let key = StandingLedger.decisionKey(reason) {
+            shift.publicApproval = ledger.limitPublic(shift.publicApproval, key: key, on: shift.date)
+        }
+        ledger.apply(shift)
         stats.ledger = ledger
     }
 
