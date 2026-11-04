@@ -6,7 +6,7 @@ import Foundation
 struct JournalEntry: Codable, Hashable {
     enum Kind: String, Codable {
         case caseDrawn, verdict, sentence, bondRelease, bondHeld, heldWithoutBond, earlyRelease, continuance, missedCourt
-        case reoffense, jail, delay, appeal, outcome, publicReaction
+        case reoffense, jail, delay, appeal, outcome, publicReaction, callback
     }
     var date: Date
     var kind: Kind

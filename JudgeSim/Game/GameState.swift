@@ -2942,6 +2942,23 @@ final class GameState: ObservableObject {
             if report.fatal.isEmpty && repeats * 4 <= max(4, keys.count) { break }
         }
         guard var newCase = best?.value else { return nil }
+        // Someone this judge ruled on earlier is back before the court: the paper recalls the decision, once.
+        if let person = returning, followUp == nil {
+            let entries = journal.entries(seed: seedBase)
+            let kinds: Set<JournalEntry.Kind> = [.sentence, .bondRelease, .heldWithoutBond, .earlyRelease]
+            if !entries.contains(where: { $0.kind == .callback && $0.name == person.name }),
+               let past = entries.last(where: { $0.name == person.name && kinds.contains($0.kind) }),
+               (CourtCalendar.calendar.dateComponents([.day], from: past.date, to: date).day ?? 0) >= 30 {
+                let decision = past.detail.components(separatedBy: " — ").first ?? past.detail
+                let charge = newCase.charges.first?.law.title.lowercased() ?? "a new charge"
+                post(NewsItem(date: date, kind: .community,
+                              headline: "\(person.name), ruled on in \(past.date.formatted(.dateTime.month(.wide).year())), charged again",
+                              body: "\(person.name) was before Judge \(lastName(judgeName)) on \(SentenceFormat.shortDate(past.date)): \(decision.lowercased()). \(person.name) now faces a charge of \(charge).",
+                              docket: newCase.docket, prominence: 1, section: "Courts"))
+                journal.record(JournalEntry(date: date, kind: .callback, name: person.name, docket: newCase.docket, category: nil,
+                                            detail: decision, flags: ["callback"]), seed: seedBase)
+            }
+        }
         // What the director drew, and why, goes in the journal for the next draw to read.
         let drawnTemplate = StoryCases.byKey[newCase.templateKey]
         journal.record(JournalEntry(date: date, kind: .caseDrawn, name: newCase.defendant.name, docket: newCase.docket,
@@ -3133,11 +3150,17 @@ final class GameState: ObservableObject {
                 && (person.appearances.last?.date ?? .distantPast) < recentCutoff
                 && person.age(on: date) < 75
         }
-        let total = eligible.reduce(0) { $0 + $1.propensity }
-        guard total > 0, rng.chance(min(0.3, total * 0.1)) else { return nil }
+        // People the judge's own lenient rulings put back on the street (a release, a light sentence, probation for a
+        // violent felony) are likelier to come back than others: the playthrough's decisions have consequences.
+        let lenient: Set<String> = ["lenientViolentSentence", "mercyNonviolent", "probationViolent", "releasedViolentNoMoney",
+                                    "releasedViolentOnBond", "releasedViolentMonitored", "releasedLowRisk", "earlyReleaseViolent", "earlyReleaseNonviolent"]
+        let ruledOn = Set(journal.entries(seed: seedBase).filter { $0.flags.contains { lenient.contains($0) } }.map(\.name))
+        func weight(_ p: PersonRecord) -> Double { p.propensity * (ruledOn.contains(p.name) ? 2.5 : 1) }
+        let total = eligible.reduce(0) { $0 + weight($1) }
+        guard total > 0, rng.chance(min(0.3, total * (ruledOn.isEmpty ? 0.1 : 0.13))) else { return nil }
         var target = Double.random(in: 0..<total, using: &rng)
         for person in eligible {
-            target -= person.propensity
+            target -= weight(person)
             if target <= 0 { return person }
         }
         return eligible.last

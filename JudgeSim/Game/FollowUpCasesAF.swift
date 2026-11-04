@@ -11,8 +11,19 @@ extension FollowUpCases {
 
     /// Who fills the investigating witness's role: the county's detective, a deputy, a trooper, or (for an animal
     /// control officer or a fire marshal) someone with their own name.
+    /// A witness who isn't an officer (a clerk, a pharmacist, a bartender, an insurance investigator) gets an ordinary
+    /// name, never the case detective's.
+    static func isCivilianRole(_ role: String) -> Bool {
+        let r = role.lowercased()
+        return ["clerk", "manager", "owner", "pharmacist", "bartender", "waitress", "bus driver", "jogger", "pastor", "principal",
+                "insurance", "librarian", "neighbor", "teacher", "supervisor", "mourner", "walker", "driver", "landlord", "banker",
+                "teller", "cashier", "mechanic", "farmer", "doctor", "nurse", "victim"].contains { r.contains($0) }
+            && !r.contains("deputy") && !r.contains("trooper") && !r.contains("detective") && !r.contains("police")
+    }
+
     static func witnessName(for role: String) -> String? {
         let r = role.lowercased()
+        if isCivilianRole(role) { return nil }
         if r.contains("deputy") { return "{OFF}" }
         if r.contains("trooper") { return "{TROOPER}" }
         if ["animal control", "fire marshal", "marine patrol", "social worker"].contains(where: { r.contains($0) }) { return nil }
@@ -34,7 +45,7 @@ extension FollowUpCases {
             threshold: threshold, lesserThreshold: lesser == nil ? 0 : threshold - 2, specification: spec,
             ageRange: ages, occupations: [], hasVictim: victim, summaries: [summary],
             prosecutionEvidence: state, defenseEvidence: defense,
-            prosecutionWitnesses: [WitnessSeed(name: witnessName(for: witnessRole), role: witnessRole, direct: [], cross: [], weight: 2, lay: false, exam: exam)],
+            prosecutionWitnesses: [WitnessSeed(name: witnessName(for: witnessRole), role: witnessRole, direct: [], cross: [], weight: 2, lay: isCivilianRole(witnessRole), exam: exam)],
             defenseWitnesses: [],
             prosecutionTheory: [theory.0], defenseTheory: [theory.1],
             aggravating: [], mitigating: [], victimImpacts: impact.map { [$0] } ?? [], allocutions: [allocution],

@@ -14,7 +14,7 @@ enum StoryCases {
     private static let batches: [[CaseTemplate]] = [
         batchC, batchD, batchE, batchF, batchG, batchH, batchI, batchJ, batchK, batchL,
         batchM, batchN, batchO, batchP, batchQ, batchR, batchS, batchT, batchU, batchV,
-        batchW, batchX, batchY, batchZ, batchAA, batchAB, batchAC, batchAD, batchAE, batchAF, batchAG, batchAH, batchAI, batchAJ, batchAK, batchAL, batchAM
+        batchW, batchX, batchY, batchZ, batchAA, batchAB, batchAC, batchAD, batchAE, batchAF, batchAG, batchAH, batchAI, batchAJ, batchAK, batchAL, batchAM, batchAN
     ]
 
     // MARK: - 1. A fatal crash after a closing shift
