@@ -721,6 +721,7 @@ private struct JudgeRecordSections: View {
         let custodyRate = sentences == 0 ? nil : Double(s.activeSentences) / Double(sentences)
 
         CrimeRateSection()
+        CaseFlowSection()
         Section {
             row("Active sentences", "\(s.activeSentences)")
             row("Suspended (probation) sentences", "\(s.suspendedSentences)")
@@ -1126,6 +1127,32 @@ private struct CrimeRateRow: View {
             Text(label).font(.subheadline)
             Spacer()
             Text(value).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
+        }
+    }
+}
+
+
+/// The last few cases the story director sent, and why: so the player can see the court's docket follows the playthrough.
+private struct CaseFlowSection: View {
+    @EnvironmentObject private var game: GameState
+
+    private func reason(_ detail: String) -> String {
+        let why = detail.components(separatedBy: " [").first ?? ""
+        return why.isEmpty ? "Drawn from what hasn't come up lately" : why.prefix(1).uppercased() + why.dropFirst()
+    }
+
+    var body: some View {
+        let drawn = Array(game.journalEntries.filter { $0.kind == .caseDrawn }.suffix(8).reversed())
+        if !drawn.isEmpty {
+            Section {
+                ForEach(Array(drawn.enumerated()), id: \.offset) { _, entry in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(entry.category ?? "Case").font(.subheadline.weight(.semibold))
+                        Text(reason(entry.detail)).font(.caption).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            } header: { Text("Why these cases came up") }
         }
     }
 }

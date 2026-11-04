@@ -843,6 +843,9 @@ if args.count > 1 && args[1] == "scan" {
     var mix: [String: Int] = [:]
     for e in drawn { mix[e.category ?? "?", default: 0] += 1 }
     log("DIRECTOR drew \(drawn.count) cases · genre mix: " + mix.sorted { $0.value > $1.value }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
+    var weights: [String: Int] = [:]
+    for e in drawn { weights[e.flags.first { $0.hasPrefix("weight:") } ?? "weight:?", default: 0] += 1 }
+    log("DIRECTOR weight mix: " + weights.sorted { $0.value > $1.value }.map { "\($0.key.dropFirst(7)) \($0.value)" }.joined(separator: ", "))
     var run = 1, maxRun = 1
     for (previous, e) in zip(drawn, drawn.dropFirst()) {
         run = previous.category == e.category ? run + 1 : 1

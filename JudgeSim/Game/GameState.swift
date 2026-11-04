@@ -4514,6 +4514,7 @@ final class GameState: ObservableObject {
             ledger.apply(StandingRule.quietMonth.shift(on: date, "A month with no complaints from the public"))
             ledger.lastQuietCredit = date
         }
+        journalDigest(on: date, ledger: &ledger, rng: &rng)
         stats.ledger = ledger
         guard let county, let judgeName else { return }
         let live = liveSurvey
@@ -4564,6 +4565,40 @@ final class GameState: ObservableObject {
     // MARK: Persistence
 
     // MARK: The career journal and the story director
+
+    /// Every three months or so the paper recaps the judge's record, from the journal: cases decided, people held
+    /// or released, and one named decision with what came of it. The recap only states what the journal holds.
+    private func journalDigest(on date: Date, ledger: inout StandingLedger, rng: inout SeededRNG) {
+        let cal = CourtCalendar.calendar
+        if let last = ledger.lastDigest, (cal.dateComponents([.day], from: last, to: date).day ?? 0) < 91 { return }
+        guard let judgeName else { return }
+        let entries = journal.entries(seed: seedBase)
+        let since = cal.date(byAdding: .day, value: -91, to: date) ?? date
+        let recent = entries.filter { $0.date > since }
+        let verdicts = recent.filter { $0.kind == .verdict }
+        guard verdicts.count >= 4 else { return }
+        let convicted = verdicts.filter { $0.flags.contains("convicted") }.count
+        let held = recent.filter { $0.kind == .heldWithoutBond }
+        let violentReleases = recent.filter { $0.kind == .bondRelease && $0.flags.contains { $0.hasPrefix("releasedViolent") } }
+        let returned = violentReleases.compactMap { release in
+            entries.first { $0.kind == .reoffense && $0.name == release.name && $0.date >= release.date }.map { (release, $0) }
+        }
+        let last = lastName(judgeName)
+        var body = "In the last three months Judge \(last) decided \(verdicts.count) cases: \(convicted) convictions and \(verdicts.count - convicted) acquittals or dismissals."
+        if !held.isEmpty { body += " \(held.count) \(held.count == 1 ? "defendant was" : "defendants were") held without bond." }
+        if !violentReleases.isEmpty {
+            body += " \(violentReleases.count) charged with violent felonies \(violentReleases.count == 1 ? "was" : "were") released before trial; \(returned.count) \(returned.count == 1 ? "has" : "have") been arrested again."
+        }
+        if let (release, again) = returned.first {
+            body += " \(release.name), released on \(SentenceFormat.shortDate(release.date)), was arrested again on \(SentenceFormat.shortDate(again.date))."
+        } else if let example = held.last {
+            body += " \(example.name) was held without bond on \(SentenceFormat.shortDate(example.date))."
+        }
+        let headlines = ["Judge \(last)'s quarter in court, by the numbers", "A look back at Judge \(last)'s recent rulings",
+                         "Courthouse tally: what Judge \(last) decided this season"]
+        ledger.lastDigest = date
+        post(NewsItem(date: date, kind: .community, headline: rng.pick(headlines), body: body, prominence: 1, section: "Courts"))
+    }
 
     /// Every decision of this career, kept in its own file.
     let journal = DecisionJournal()

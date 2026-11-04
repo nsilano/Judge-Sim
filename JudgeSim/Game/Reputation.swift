@@ -176,6 +176,8 @@ struct StandingLedger: Codable, Hashable {
     /// Public approval already moved by each decision (keyed by day and defendant). A decision's public effect runs
     /// one way: the public likes it or it doesn't, and the total stays within a few points.
     var decisionPublic: [String: Double]? = nil
+    /// The last time the paper ran a recap of the judge's recent record, drawn from the career journal.
+    var lastDigest: Date? = nil
 
     static let limit = 35.0
     /// The share of the ledger that fades each day: about half in six weeks.

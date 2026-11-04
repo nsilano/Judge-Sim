@@ -110,6 +110,26 @@ enum CaseTags {
     }
 }
 
+extension CaseTags {
+    /// How common this kind of crime is in a real county's courts: petty theft, fleeing, resisting, trespass and
+    /// driving offenses fill the dockets, and murder is rare. The director multiplies a case's score by this.
+    static func frequency(_ t: CaseTemplate) -> Double {
+        switch LawLibrary.law(t.primaryLaw).ncClass {
+        case .misdA1?, .misd1?, .misd2?, .misd3?: return 2.0
+        case .I?: return 1.8
+        case .H?: return 1.5
+        case .G?: return 1.1
+        case .F?: return 1.0
+        case .E?: return 0.7
+        case .D?: return 0.55
+        case .C?: return 0.4
+        case .B2?, .B1?: return 0.35
+        case .A?: return 0.3
+        case nil: return 1.0
+        }
+    }
+}
+
 extension StoryCases {
     static let byKey: [String: CaseTemplate] = Dictionary(all.map { ($0.key, $0) }, uniquingKeysWith: { a, _ in a })
 }
@@ -137,8 +157,9 @@ struct DirectorSnapshot {
     func score(_ t: CaseTemplate) -> (value: Double, why: [String]) {
         let tags = CaseTags.of(t)
         let myGenre = genre(tags)
-        var s = 1.0
+        var s = CaseTags.frequency(t)
         var why: [String] = []
+        if s >= 1.8 { why.append("a common offense") } else if s <= 0.55 { why.append("a rare, serious case") }
 
         // Genre: never the same kind again and again, and favor what hasn't come up in a while.
         let sameGenre = drawn.prefix(8).filter { genre($0) == myGenre }.count
