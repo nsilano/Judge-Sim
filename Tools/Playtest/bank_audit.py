@@ -81,6 +81,19 @@ def main():
         for s, i in scored:
             r = rows[i]; print(f"{s:.2f}  {r['key']:40} {r['law']:18} {r['head'][:80]}")
         return
+    if "--probe-file" in args:
+        # One idea per line as "key|law|text"; prints the closest existing case for each.
+        n = len(rows)
+        for line in open(args[args.index("--probe-file") + 1], encoding="utf-8"):
+            parts = line.rstrip("\n").split("|")
+            if len(parts) < 3: continue
+            probe = collections.Counter(tokens(parts[2]))
+            v = {w: (1 + math.log(c)) * math.log((n + 1) / (df.get(w, 0) + 1)) for w, c in probe.items()}
+            norm = math.sqrt(sum(x * x for x in v.values())) or 1
+            v = {w: x / norm for w, x in v.items()}
+            best = max(((cos(v, vec), i) for i, vec in enumerate(vecs) if not is_follow(rows[i])), default=(0, 0))
+            print(f"{best[0]:.2f} {parts[0]:24} ~ {rows[best[1]]['key'][6:]:28} {rows[best[1]]['head'][:60]}")
+        return
     only = set(args[args.index("--new") + 1].split(",")) if "--new" in args else None
     threshold = float(args[args.index("--min") + 1]) if "--min" in args else 0.40
     pairs = []
