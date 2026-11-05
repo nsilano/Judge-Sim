@@ -161,7 +161,7 @@ enum DailyNews {
 
         // County life.
         pool += [
-            ("Commissioners debate a bigger jail", "The board heard a plan to add 120 beds. Opponents said the county should spend the money on mental health care instead. A vote is set for next month.", "Government"),
+            ("Commissioners debate a bigger jail", "The board heard a plan to expand the jail. Opponents said the county should spend the money on mental health care instead. A vote is set for next month.", "Government"),
             ("Sheriff \(c.sheriff) swears in nine new deputies", "The class includes two former teachers and a retired Marine. They start on patrol next week.", "Community"),
             ("Cow on Route 17 slows morning traffic", "A deputy and a farmer walked the cow home after twenty minutes. No one was hurt, though the cow did not cooperate.", "Community"),
             ("Alligator spotted in \(town) retention pond", "Wildlife officers say to leave it alone. Neighbors have named it.", "Community"),

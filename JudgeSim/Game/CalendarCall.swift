@@ -810,7 +810,7 @@ enum CalendarCalls {
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
                     summary: "The defense moves to continue the trial of \(name) on \(law.title). It would be the \(rng.pick(["third", "fourth", "second"])) continuance.",
-                    stateAsk: rng.pick(stateObjections + ["No objection.", "No position; make it the last."]), 
+                    stateAsk: rng.pick(fittingStateObjections(for: law) + ["No objection.", "No position; make it the last."]),
                     defenseAsk: rng.pick(["Lab report just arrived; needs an expert.", "Newly appointed; hasn't met the client.",
                                           "A defense witness is deployed until next month.", "Four hours of new bodycam video to review.",
                                           "Stuck in a murder trial in another county.", "Client is in inpatient treatment for 28 days."]),
@@ -1248,6 +1248,23 @@ struct CalendarRuling: Codable, Hashable, Identifiable {
 
 extension CalendarCalls {
     /// What the State says when it objects to a continuance. Each reason is different, so the same line doesn't repeat.
+    /// The State's reasons for objecting to a delay, limited to the ones that make sense for this charge: a ballistics
+    /// report in an assault case, a lab in a drug case, a bank's records in an embezzlement.
+    static func fittingStateObjections(for law: Law) -> [String] {
+        let id = law.id
+        func has(_ line: String, _ words: [String]) -> Bool { words.contains { line.lowercased().contains($0) } }
+        return stateObjections.filter { line in
+            if has(line, ["ballistics", "firearms expert"]) && id != "awdw" { return false }
+            if has(line, ["fingerprint", "dna"]) && !["awdw", "feloniousBE", "felonyLarceny"].contains(id) { return false }
+            if has(line, ["toxicology", "medical examiner", "autopsy"]) && id != "pwisd" { return false }
+            if has(line, ["lineup"]) && !["awdw", "feloniousBE", "felonyLarceny"].contains(id) { return false }
+            if has(line, ["bank records", "handwriting", "forensic accountant", "adjuster", "lost wages", "repair estimate"]) && !["embezzlement", "felonyLarceny"].contains(id) { return false }
+            if has(line, ["victim", "physician who treated"]) && ["pwisd", "fleeing"].contains(id) { return false }
+            if has(line, ["youth witness", "juvenile co-defendant", "gas station", "dash camera"]) && !["awdw", "feloniousBE", "felonyLarceny", "fleeing"].contains(id) { return false }
+            return true
+        }
+    }
+
     static let stateObjections: [String] = [
         "Objects: the victim has missed work three times for this case.",
         "Objects: the case is over a year old and the victim is tired of waiting.",

@@ -401,6 +401,9 @@ var hearingDates: [UUID: Date] = [:]
                 let convict = rng.chance(convictRate)
                 let pick: Verdict? = convict ? (options.contains(.lesser) && rng.chance(0.2) ? .lesser : options.first { $0.isConviction })
                                              : options.first { !$0.isConviction }
+                // A lesser verdict goes through the same step the verdict screen takes: the court names the lesser offense.
+                if pick == .lesser, let current = s.courtCase.charges.first(where: { $0.id == ch.id }),
+                   current.lesserLawID == nil, let first = s.lesserOptions(current).first { s.chooseLesser(current, lawID: first.id) }
                 s.rulings.verdicts[ch.id] = pick ?? options.first
             }
             log("  Verdicts: " + s.courtCase.charges.map { "\($0.law.title): \(s.rulings.verdicts[$0.id].map { "\($0)" } ?? "?")" }.joined(separator: "; "))
@@ -439,7 +442,9 @@ var hearingDates: [UUID: Date] = [:]
             s.rulings.sentences[unit.id] = choice
         }
         // Treatment court for some of those who stay out.
-        if s.courtCase.defendant.background.isEmpty == false && rng.chance(0.15) {
+        let bgText = s.courtCase.defendant.background.lowercased()
+        let substanceLinked = s.courtCase.category == .drugs || ["addict", "substance", "drug", "alcohol", "sober", "relapse"].contains { bgText.contains($0) }
+        if s.courtCase.defendant.background.isEmpty == false && (substanceLinked || TreatmentCourts.isVeteran(s.courtCase.defendant.background)) && rng.chance(0.3) {
             if TreatmentCourts.isVeteran(s.courtCase.defendant.background) { s.rulings.conditions.veteransTreatmentCourt = true; log("  Condition: Veterans Treatment Court") }
             else { s.rulings.conditions.drugTreatmentCourt = true; log("  Condition: Drug Treatment Court") }
         }

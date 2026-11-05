@@ -252,6 +252,8 @@ final class GameState: ObservableObject {
     private var usedSignatures: [String] = []
     /// Names given out this session before their case reaches a calendar (several cases are built in one pass).
     private var namesIssued: Set<String> = []
+    /// Lawyers who took a job with the DA after withdrawing; they stop appearing for the defense.
+    private var departedCounsel: Set<String> = []
     private var seedBase: UInt64 = UInt64.random(in: 1...UInt64.max / 2)
     private let saveKey = "JudgeSim.nc.save.v1"
 
@@ -694,7 +696,7 @@ final class GameState: ObservableObject {
                 publishDailyPaper(on: cursor, rng: &rng)
             }
         }
-        if leaveDays > 0, let judgeName {
+        if leaveDays >= 3, let judgeName {
             var summary = ["Judge \(lastName(judgeName)) returned to the bench after \(leaveDays) court day\(leaveDays == 1 ? "" : "s") away."]
             let released = stats.releasedFromPrison - releasedBefore
             let completed = stats.probationCompleted - completedBefore
@@ -840,9 +842,10 @@ final class GameState: ObservableObject {
         let witnessed = c.witnesses.count > 3
         var pool = ["Stuck in a murder trial in another county.", "Newly appointed; hasn't met the client yet.",
                     "Lead counsel is out on medical leave.", "Still waiting on discovery the State promised a month ago.",
-                    "The defense investigator just found a new witness.", "Needs time to subpoena records from the victim's employer.",
+                    "The defense investigator just found a new witness.",
                     "A defense witness is deployed until next month.", "Counsel has a death in the family.",
                     "Plea talks are close; asks for two weeks to finish them.", "Needs an interpreter for the client's family witnesses."]
+        if c.victimName != nil { pool += ["Needs time to subpoena records from the victim's employer."] }
         if forensic { pool += ["Lab report just arrived; needs an expert.", "Wants its own expert to retest the evidence."] }
         if digital { pool += ["Four hours of new bodycam video to review.", "Phone extraction report just came in; 900 pages."] }
         if witnessed { pool += ["Three State witnesses still haven't been interviewed."] }
@@ -2116,6 +2119,15 @@ final class GameState: ObservableObject {
         for i in scheduled.indices { credit(&scheduled[i].entry) }
     }
 
+    /// Days in custody can't run longer than the days since booking: the number a file was written with is capped by
+    /// the booking on the court's own log.
+    private func clampedCustodyDays(_ days: Int, for c: CourtCase, on date: Date) -> Int {
+        guard let booked = caseLog.last(where: { $0.docket == c.docket && $0.kind == .jailIn }) else { return max(1, days) }
+        let cal = CourtCalendar.calendar
+        let possible = (cal.dateComponents([.day], from: cal.startOfDay(for: booked.date), to: cal.startOfDay(for: date)).day ?? 0) + 1
+        return max(1, min(days, max(1, possible)))
+    }
+
     /// A defendant held in jail earns credit for every day the case waits to be heard (G.S. 15-196.1).
     private func creditJailTime(_ c: inout CourtCase, through date: Date) {
         guard var background = c.background, background.isJailed else { return }
@@ -2337,7 +2349,8 @@ final class GameState: ObservableObject {
                     // A hired lawyer is replaced by another hired one, or by the public defender; an appointed one by
                     // another public defender or a private lawyer Indigent Defense Services appoints.
                     let usePD = retained ? choice == 1 : choice == 0
-                    let pool = (usePD ? county?.assistantPDs : county?.privateCounsel) ?? []
+                    if m.summary.contains("accepted a job with the District Attorney") { departedCounsel.insert(old) }
+                    let pool = ((usePD ? county?.assistantPDs : county?.privateCounsel) ?? []).filter { !departedCounsel.contains($0) }
                     if let next = pool.filter({ $0 != old }).randomElement(using: &rng) {
                         fresh.defenseAttorney = next + (usePD ? ", Assistant Public Defender" : (retained ? ", retained counsel" : ", appointed counsel"))
                     }
@@ -2409,7 +2422,7 @@ final class GameState: ObservableObject {
                     amount = choice >= 3 ? set : 0
                     monitored = choice == 4
                     if choice == 1 { watch = 0.7 }
-                    condition = ["a written promise to appear", "release to the custody of a designated person",
+                    condition = ["a written promise to appear", "the condition that a designated person take custody",
                                  "a $\(set.formatted()) unsecured bond", "a $\(set.formatted()) secured bond",
                                  "a $\(set.formatted()) secured bond with electronic house arrest"][min(choice, 4)]
                 } else {
@@ -2436,7 +2449,7 @@ final class GameState: ObservableObject {
                         bg.canPost = bond.canPost
                         bg.bondsmanRate = bond.feeRate
                         bg.bondsmanWilling = bond.bondsman
-                        bg.custodyDays = max(1, bg.custodyDays)
+                        bg.custodyDays = clampedCustodyDays(bg.custodyDays, for: c, on: call.date)
                         bg.onRelease = false
                         bg.heldOnCourtBond = true
                         bg.bondStatus = "Held without bond since \(heard) under Iryna's Law (G.S. 15A-533(b)): the court found no condition of release would reasonably assure the public's safety. In custody for \(bg.custodyDays) day\(bg.custodyDays == 1 ? "" : "s")."
@@ -2676,7 +2689,7 @@ final class GameState: ObservableObject {
             }
         } else {
             log(.bond, c, on: date, "Bond hearing: \(condition); couldn't post it. Held in the jail.")
-            bg.custodyDays = max(1, bg.custodyDays)
+            bg.custodyDays = clampedCustodyDays(bg.custodyDays, for: c, on: date)
             bg.onRelease = false
             bg.heldOnCourtBond = true
             stats.bondsNotPosted = (stats.bondsNotPosted ?? 0) + 1
@@ -2800,10 +2813,12 @@ final class GameState: ObservableObject {
                                   returningDefendant: false, appealStatus: nil, kind: "calendar"), at: 0)
         let pleas = result.newPeople.count
         if !call.isBondSession {
+        if call.matters.count >= 5 {
         post(NewsItem(date: currentDate, kind: .community,
                       headline: "Judge \(lastName(judgeName)) works through crowded calendar",
                       body: "At an administrative session of Hollis County Superior Court, Judge \(lastName(judgeName)) handled \(call.matters.count) matters" + (pleas > 0 ? ", including \(pleas) guilty plea\(pleas == 1 ? "" : "s")." : "."),
                       prominence: 1))
+        }
         }
         finishEntry(matterID: call.id, outcome: "\(call.matters.count) matters handled")
         save()
@@ -2904,6 +2919,7 @@ final class GameState: ObservableObject {
                                             usedBackgrounds: Set(people.map(\.background)), storySlot: followUp == nil && storySlot,
                                             categories: categories, allowMurder: allowMurder)
         context.generic = generic
+        context.departedCounsel = departedCounsel
         context.incidentDaysAgo = incidentDaysAgo
         context.arrestOn = arrestOn
         // Names the county already knows; new people never share them.
@@ -2950,8 +2966,8 @@ final class GameState: ObservableObject {
                let past = entries.last(where: { $0.name == person.name && ($0.kind == .heldWithoutBond || $0.flags.contains { Self.lenientFlags.contains($0) }) }),
                (CourtCalendar.calendar.dateComponents([.day], from: past.date, to: date).day ?? 0) >= 30 {
                 let decision = past.detail.components(separatedBy: " — ").first ?? past.detail
-                let charge = newCase.charges.first?.law.title.lowercased() ?? "a new charge"
-                post(NewsItem(date: date, kind: .community,
+                let charge = newCase.charges.first?.law.title.lowercasedPhrase ?? "a new charge"
+                post(NewsItem(date: min(date, currentDate), kind: .community,
                               headline: "\(person.name), ruled on in \(past.date.formatted(.dateTime.month(.wide).year())), charged again",
                               body: "\(person.name) was before Judge \(lastName(judgeName)) on \(SentenceFormat.shortDate(past.date)): \(decision.lowercased()). \(person.name) now faces a charge of \(charge).",
                               docket: newCase.docket, prominence: 1, section: "Courts"))
@@ -2984,7 +3000,7 @@ final class GameState: ObservableObject {
             let drop = Set(generated.prefix(generated.count - 1_500))
             usedSignatures.removeAll { drop.contains($0) && !$0.hasPrefix("story.") }
         }
-        if recentTemplates.count > 8 { recentTemplates.removeFirst(recentTemplates.count - 8) }
+        if recentTemplates.count > 160 { recentTemplates.removeFirst(recentTemplates.count - 160) }
 
         // Calendar-call matters and warrant cases aren't trials set before this judge; no "charged again" story for them.
         if let returning, announce {
@@ -3091,6 +3107,7 @@ final class GameState: ObservableObject {
                 if let m = Petitions.expunctionMatter(personID: p.id, name: p.name, age: p.age(on: date), occupation: p.occupation, priors: p.priors,
                                                       year: year, newPerson: false, docketSequence: docketSequence, rng: &rng) {
                     out.append(m); taken.insert(p.id)
+                    docketSequence += 1   // the next criminal file never takes this number
                 }
             } else {
                 let (id, name, age, job) = fresh(age: 24...60)
@@ -3111,6 +3128,7 @@ final class GameState: ObservableObject {
                 if let m = Petitions.expunctionMatter(personID: id, name: name, age: max(age, 18 + (year - priors.map(\.year).min()!)), occupation: job,
                                                       priors: priors, year: year, newPerson: true, docketSequence: docketSequence, rng: &rng) {
                     out.append(m)
+                    docketSequence += 1
                 }
             }
         }
@@ -4009,6 +4027,9 @@ final class GameState: ObservableObject {
 
     private func post(_ item: NewsItem) {
         var item = item
+        // The same filler item doesn't run twice within two months.
+        if item.docket == nil, item.kind == .community,
+           news.contains(where: { $0.docket == nil && $0.headline == item.headline && abs($0.date.timeIntervalSince(item.date)) < 60 * 86_400 }) { return }
         // Every story has a writer and a page.
         if item.byline == nil || item.section == nil {
             let (reporter, section) = NewsDesk.desk(for: item.kind)
@@ -4193,7 +4214,8 @@ final class GameState: ObservableObject {
                                      kind: .pretrial, since: since, releaseDate: nil, bedDate: nil, bond: c.background?.bondStatus,
                                      violent: violent, felony: felony, priors: d.priors.count,
                                      risk: Corrections.risk(violent: violent, felony: felony, priors: d.priors.count, orders: orders, failures: failures),
-                                     flags: flags, releasable: !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false),
+                                     flags: flags, releasable: !(c.background?.bondStatus.hasPrefix("Held without bond") ?? false)
+                                        && !c.charges.contains { charge in charge.law.ncClass.map { [NCClass.A, .B1, .B2, .C].contains($0) } ?? false },
                                      trialDate: scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }?.date,
                                      waitingToPlead: arraignQueue.contains { $0.courtCase.id == c.id },
                                      canPost: c.background?.canPost, reviewSet: bondReviews.contains(c.id),
@@ -4278,7 +4300,9 @@ final class GameState: ObservableObject {
         if jail > state.beds {
             state.daysOver += 1
             state.yearDaysOver += 1
-            stats.crowdingStrain = (stats.crowdingStrain ?? 0) + 1
+            // People waiting on the state for a prison bed are the state's backlog, not the county's: only the rest
+            // of the jail strains the judge's standing.
+            if jail - awaitingBed > state.beds { stats.crowdingStrain = (stats.crowdingStrain ?? 0) + 1 }
             stats.crowdedDays = (stats.crowdedDays ?? 0) + 1
         }
         // An overloaded probation office strains the county too, at half the weight of a full jail.
@@ -4509,8 +4533,8 @@ final class GameState: ObservableObject {
         let last = inmate.name.components(separatedBy: " ").last ?? inmate.name
         let by = byJudge ? "on Judge \(judge)'s order" : "by the sheriff"
         pending.append(PendingEvent(due: incident, news: NewsItem(
-            date: incident, kind: .arrest, headline: "\(last), released early from crowded jail, arrested again",
-            body: "\(inmate.name), released early from the \(county?.name ?? "county") jail on \(shortDate) \(by) to ease crowding, was arrested again this week, according to the \(county?.sheriffsOffice ?? "Sheriff's Office").",
+            date: incident, kind: .arrest, headline: "\(last), released early from crowded jail, charged again",
+            body: "\(inmate.name), released early from the \(county?.name ?? "county") jail on \(shortDate) \(by) to ease crowding, is accused of a new offense committed since the release, according to the \(county?.sheriffsOffice ?? "Sheriff's Office"). A grand jury has not yet acted.",
             docket: inmate.docket, prominence: 2), personID: inmate.personID))
         // Someone already judged here comes back to this court on the new charge.
         guard inmate.kind == .sentenced, let p = person(inmate.personID) else { return }
@@ -4546,7 +4570,7 @@ final class GameState: ObservableObject {
         let cal0 = CourtCalendar.calendar
         var ledger = stats.ledger ?? StandingLedger()
         ledger.fade()
-        if let state = corrections, let day = state.log.last, day.jail > state.beds {
+        if let state = corrections, let day = state.log.last, day.jail - day.awaitingBed > state.beds {
             ledger.apply(StandingRule.jailOverCapacityDay.shift(on: date, "Jail over capacity"), record: false)
         }
         // A month without anything the public held against the court: people notice the quiet.
@@ -4568,7 +4592,7 @@ final class GameState: ObservableObject {
             // The story is about whatever has hurt the court most in recent weeks.
             var byTopic: [StandingTopic: Double] = [:]
             for s in ledger.recent.prefix(20) { byTopic[s.topic, default: 0] += s.publicApproval + s.prosecutors + s.defense + s.overall }
-            if let state = corrections, let day = state.log.last, day.jail > state.beds { byTopic[.crowding, default: 0] -= 6 }
+            if let state = corrections, let day = state.log.last, day.jail - day.awaitingBed > state.beds { byTopic[.crowding, default: 0] -= 6 }
             let topic = byTopic.min { $0.value < $1.value }?.key ?? .release
             let example = ledger.recent.first { $0.topic == topic && $0.reason.contains(" — ") }?.reason.components(separatedBy: " — ").last
             let jail = corrections.flatMap { state in state.log.last.map { (held: $0.jail, beds: state.beds) } }
@@ -4795,7 +4819,8 @@ final class GameState: ObservableObject {
             guard case .trial(var c) = entry.matter, var bg = c.background, bg.isJailed,
                   bg.bondStatus != "Not yet arrested." else { return }
             // Held on a bond the defendant can plainly make: the bond gets posted.
-            if !bg.bondStatus.hasPrefix("Held without bond"), let amount = Corrections.dollars(in: bg.bondStatus), let cash = bg.canPost,
+            // A bond the court already ruled the defendant couldn't post stays unposted; only older files get this fix.
+            if bg.heldOnCourtBond != true, !bg.bondStatus.hasPrefix("Held without bond"), let amount = Corrections.dollars(in: bg.bondStatus), let cash = bg.canPost,
                BailMoney(cash: cash, feeRate: bg.bondsmanRate ?? 0.15, bondsman: bg.bondsmanWilling ?? false).canMake(amount) {
                 bg.onRelease = true
                 bg.heldOnCourtBond = false

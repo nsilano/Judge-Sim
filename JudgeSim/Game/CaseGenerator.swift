@@ -37,6 +37,8 @@ enum CaseGenerator {
         var residentDefendant: ResidentRef? = nil
         /// Everyone the county already knows by name (residents, owners, regulars, officers): a new face never shares a name.
         var reservedNames: Set<String> = []
+        /// Defense lawyers who have left for the District Attorney's office and no longer appear for defendants.
+        var departedCounsel: Set<String> = []
         /// The earlier case a written follow-up refers to.
         var priorOffense: String? = nil
         var priorDate: Date? = nil
@@ -118,8 +120,12 @@ enum CaseGenerator {
             }
             let fewest = all.map { useCounts[$0.key] ?? 0 }.min() ?? 0
             var candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
+            // Once the written cases have all been heard, the ones heard longest ago come back first.
             let notRecentStories = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
             if !notRecentStories.isEmpty { candidates = notRecentStories }
+            else if let oldest = candidates.map({ context.recentTemplateKeys.lastIndex(of: $0.key) ?? -1 }).min() {
+                candidates = candidates.filter { (context.recentTemplateKeys.lastIndex(of: $0.key) ?? -1) == oldest }
+            }
             if !candidates.isEmpty {
                 // Murder trials come up now and then, not every week: most draws go to another kind of case.
                 let others = candidates.filter { !isMurder($0) }
@@ -327,7 +333,8 @@ enum CaseGenerator {
         if let pinned = t.story?.when?.incident(before: context.date, minDays: minDays, using: &rng) { incident = pinned }
         let prosecutor = rng.pick(county.assistantDAs)
         let usePublicDefender = rng.chance(0.6)
-        let defenseLawyer = usePublicDefender ? rng.pick(county.assistantPDs) : rng.pick(county.privateCounsel)
+        let stillDefending: ([String]) -> [String] = { list in let kept = list.filter { !context.departedCounsel.contains($0) }; return kept.isEmpty ? list : kept }
+        let defenseLawyer = usePublicDefender ? rng.pick(stillDefending(county.assistantPDs)) : rng.pick(stillDefending(county.privateCounsel))
 
         // The town comes first, and the street is one of that town's.
         // Towns going through a hard stretch (layoffs, a building boom) see more of the cases that come with it.
@@ -1126,7 +1133,11 @@ enum CaseGenerator {
                 guard let r = detail.range(of: #"(refunded|repaid|paid back) \$[0-9,]+"#, options: .regularExpression) else { return nil }
                 return firstDollarAmount(in: String(detail[r]))
             }.reduce(0, +)
-            let stated: Int? = counts.isEmpty ? nil : max(0, Array(Set(counts)).reduce(0, +) - refunded)
+            // A count that names no amount: the loss is the largest figure the case itself gives.
+            let loose = ([t.summaries.first ?? ""] + t.prosecutionEvidence.map(\.detail)).map { fill($0) }.compactMap { firstDollarAmount(in: $0) }
+            let stated: Int? = counts.isEmpty ? loose.max() : max(0, Array(Set(counts)).reduce(0, +) - refunded)
+            // Without a stated loss, small offenses ask for small sums.
+            let petty: Bool = { switch LawLibrary.law(t.primaryLaw).ncClass { case .misdA1?, .misd1?, .misd2?, .misd3?, .I?, .H?: return true; default: return false } }()
             let died = t.victimDies
             switch t.category {
             case .property:
@@ -1134,7 +1145,7 @@ enum CaseGenerator {
             case .robbery:
                 restitution = stated ?? rng.int(3...25) * 100; basis = rng.pick(["cash and property taken", "the stolen money and a replaced phone", "what was taken and the victim's lost wages"])
             case .whiteCollar, .cyber:
-                restitution = stated ?? rng.int(4...90) * 1_000; basis = rng.pick(["money taken", "documented losses", "the victims' losses, per the bank records"])
+                restitution = stated ?? (petty ? rng.int(3...20) * 100 : rng.int(4...90) * 1_000); basis = rng.pick(["money taken", "documented losses", "the victims' losses, per the bank records"])
             case .violent, .family, .traffic:
                 let contactless = ["stalking", "stalkingCourtOrder", "cyberstalking", "communicatingThreats", "witnessIntimidation",
                                    "dvpoViolation", "assaultPointingGun"].contains(t.primaryLaw)
@@ -1151,6 +1162,8 @@ enum CaseGenerator {
                 break
             }
         }
+        // No victim, no restitution: nobody lost anything to repay.
+        if !t.hasVictim { restitution = 0; basis = nil }
         // A written case that says what the victim lost says it exactly; 0 means nothing to repay.
         if let told = t.story?.victim, let amount = told.restitution {
             restitution = amount; basis = amount > 0 ? told.restitutionBasis : nil

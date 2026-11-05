@@ -30,7 +30,8 @@ enum Reputation {
         let reversed = decided.filter(\.wasReversed).count
         let affirm = decided.isEmpty ? 0.85 : Double(decided.count - reversed) / Double(decided.count)
         let trials = max(1, history.filter { $0.resolvedKind == "trial" }.count)
-        let exonerationRate = Double(stats.exonerations) / Double(trials)
+        // A few reversed convictions dent a reputation; they shouldn't bury it. The rate is capped and the public's share is too.
+        let exonerationRate = min(0.1, Double(stats.exonerations) / Double(trials))
         let active = stats.activeSentences + stats.suspendedSentences
         let activeShare = active == 0 ? 0.5 : Double(stats.activeSentences) / Double(active)
 
@@ -45,7 +46,7 @@ enum Reputation {
         let prosecutors = clamp(ledger.prosecutors + 62 + 40 * (harsh - lenient) + 20 * (activeShare - 0.5) + 25 * (affirm - 0.8) - 1.5 * delays)
         let defense = clamp(ledger.defense + 62 + 40 * (lenient - harsh) - 20 * (activeShare - 0.5) + 25 * (affirm - 0.8) - 120 * exonerationRate - 2.5 * delays)
         let overall = clamp(ledger.overall + 45 + 40 * (affirm - 0.6) + 15 * within - 150 * exonerationRate - 2 * delays - crowding / 25)
-        let publicApproval = clamp(ledger.publicApproval + 55 + 15 * (harsh - lenient) + 10 * (activeShare - 0.5) - 8 * Double(stats.exonerations)
+        let publicApproval = clamp(ledger.publicApproval + 55 + 15 * (harsh - lenient) + 10 * (activeShare - 0.5) - min(12, 5 * Double(stats.exonerations))
                                    + 10 * (affirm - 0.8) - 2 * delays - crowding / 8
                                    // Rulings the public watched: each one it liked or hated moves the poll.
                                    + 1.5 * Double(max(-14, min(14, stats.communityStanding ?? 0))))
