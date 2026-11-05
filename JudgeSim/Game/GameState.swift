@@ -2158,7 +2158,7 @@ final class GameState: ObservableObject {
         guard waited != 0 else { return }
         let before = background.custodyDays
         // A trial moved up to an earlier date than the file was written for takes the credit back with it.
-        background.custodyDays = max(1, background.custodyDays + waited)
+        background.custodyDays = clampedCustodyDays(max(1, background.custodyDays + waited), for: c, on: date)
         let after = background.custodyDays
         background.bondStatus = background.bondStatus.replacingOccurrences(of: "for \(before) days?\\b", with: "for \(after) day\(after == 1 ? "" : "s")",
                                                                            options: .regularExpression)
