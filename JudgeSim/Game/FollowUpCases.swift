@@ -12,7 +12,7 @@ enum FollowUpCases {
         kitchenAgain, hospitalNight, barParkingLot, occupiedHouse, gasStationKnife, secondCrash, overdoseDeath, newMark,
         eludingStop, warehouseTheft, carBreakIns,
         harassAgain, assaultAgain, theftAgain, drugsAgain
-    ], batchAB, batchAC, batchAD, batchAE, batchAF, batchAG, batchAH, batchAI, batchAJ, batchAK, batchAL, batchAM, batchAN, batchAO, batchAP, batchAQ, batchAR, batchAS, batchAT, batchAU, batchAV, batchAW, batchAX, batchAY, batchAZ, batchBA, batchBB, batchBC] as [[CaseTemplate]]).flatMap { $0 }
+    ], batchAB, batchAC, batchAD, batchAE, batchAF, batchAG, batchAH, batchAI, batchAJ, batchAK, batchAL, batchAM, batchAN, batchAO, batchAP, batchAQ, batchAR, batchAS, batchAT, batchAU, batchAV, batchAW, batchAX, batchAY, batchAZ, batchBA, batchBB, batchBC, batchBD] as [[CaseTemplate]]).flatMap { $0 }
 
     /// Stay-away order violations: domestic first, then the rest.
     static let domesticViolations = ["story.followup.workplaceVisit", "story.followup.newNumber"]
