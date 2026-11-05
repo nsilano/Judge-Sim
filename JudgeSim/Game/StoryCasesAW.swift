@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Everyday cases, written with SmallCases: the offenses that fill a real county's docket.
 extension StoryCases {
-    static let batchAW: [CaseTemplate] = [officeLaptopRaid, cabDriverRobbery, inspectorShove, employeeIdentityTheft, trafficStopBribe, videoThreatExtortion, pillDiversion, quadWreckDeath, keyboardSabotage, hatchetDispute, pawnShopKilling, funeralFight, deerStandAccident, exPartnerStabbing, dealerKidnapping, restaurantFireClaim, rentalBatAssault, elderHomeNight, jewelryHoldup, parkingOfficeSafe, classmateMessages, barBrokenBottle, dieselDrainage, lotInvestmentFraud]
+    static let batchAW: [CaseTemplate] = [officeLaptopRaid, cabDriverRobbery, inspectorShove, employeeIdentityTheft, trafficStopBribe, videoThreatExtortion, pillDiversion, quadWreckDeath, keyboardSabotage, hatchetDispute, pawnShopKilling, exPartnerStabbing, restaurantFireClaim, rentalBatAssault, elderHomeNight, parkingOfficeSafe, barBrokenBottle, dieselDrainage, lotInvestmentFraud]
 
     static let officeLaptopRaid = SmallCases.make(
         key: "story.officeLaptopRaid",
@@ -285,56 +285,6 @@ extension StoryCases {
         aggravating: ["The offense involved a firearm"],
         mood: .wantsConviction)
 
-    static let funeralFight = SmallCases.make(
-        key: "story.funeralFight",
-        category: .violent,
-        headlines: ["Fistfight After Funeral Leaves Mourner Dead", "Single Punch Ends Argument Over Seating"],
-        law: "volManslaughter",
-        threshold: 7,
-        spec: "Unlawfully killed {V} without malice upon a sudden heat of passion, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "After a funeral on {DATE}, {D} and {V} argued over seating at the family meal. {D} punched {V} once, and {V} hit {V.his} head on a curb and died. {DL} says {V} shoved first.",
-        state: [E(.statement, 3, "Mourner", "{D} punched {V} once; {V} fell to the curb."), E(.forensic, 3, "Autopsy", "A skull fracture consistent with the curb.")],
-        defense: [E(.statement, 1, "Shove First", "{DL} says {V} shoved first.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What happened?", "\"One punch and a fall.\""), .direct("Cause of death?", "\"A skull fracture.\""), .cross("Who shoved?", "\"Both.\""), .cross("Did {D} call 911?", "\"Yes.\"")],
-        theory: ("{D} punched and killed a mourner.", "A shove and a fall."),
-        allocution: "\"I'll regret this forever.\"",
-        truths: ("{DL} had been drinking at the reception.", "{V} had stepped back toward the curb."),
-        defendant: [.direct("Did you punch?", "\"Once.\""), .direct("Why?", "\"A shove.\""), .cross("Drinking.", "\"Wine.\""), .cross("Curb.", "\"Unseen.\"")],
-        openings: ("A punch and a curb.", "A shove."),
-        closings: ("The autopsy.", "A shove."),
-        timeline: [(0, "1 p.m.: the funeral ends."), (0, "2:30 p.m.: the argument."), (0, "2:35 p.m.: the punch."), (0, "2:40 p.m.: {DL} calls 911.")],
-        identified: "A mourner.",
-        mitigating: ["The defendant acted under strong provocation"],
-        mood: .sympathetic,
-        doctrines: ["lesserIncluded", "selfDefense"])
-
-    static let deerStandAccident = SmallCases.make(
-        key: "story.deerStandAccident",
-        category: .traffic,
-        headlines: ["Hunter Shoots Friend Mistaken for Deer at Dusk", "Orange Vest Found in Truck"],
-        law: "invManslaughter",
-        threshold: 7,
-        spec: "Unlawfully killed {V} without malice by a culpably negligent act, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "{V} was killed by a rifle shot at dusk on {DATE} during a hunt. {D} fired at movement in brush. {V} wore no orange vest. {DL} says it was light enough to see a deer, and {V} stepped out of agreed position.",
-        state: [E(.statement, 3, "Hunting Partner", "{D} fired without confirming the target."), E(.physical, 2, "Vest", "{V}'s orange vest was in the truck.", .search)],
-        defense: [E(.statement, 1, "Agreed Position", "{DL} says {V} left the agreed position.")],
-        role: "Wildlife officer",
-        exam: [.direct("What did {D} do?", "\"Fired at movement.\""), .direct("Did {V} wear orange?", "\"No.\""), .cross("Position?", "\"Agreed earlier.\""), .cross("Light?", "\"Dusk.\"")],
-        theory: ("{D} fired without a clear target.", "A hunt that went wrong."),
-        allocution: "\"I'm so sorry.\"",
-        truths: ("{DL} had hunted that stand for years.", "{V} had moved without radioing."),
-        defendant: [.direct("Did you see {V}?", "\"No.\""), .direct("Why fire?", "\"A deer.\""), .cross("Years.", "\"Yes.\""), .cross("Radio.", "\"Out.\"")],
-        openings: ("A shot without confirming.", "A mistake."),
-        closings: ("The vest.", "A move."),
-        timeline: [(0, "5:40 p.m.: the hunters take positions."), (0, "6:10 p.m.: the shot."), (0, "6:15 p.m.: {DL} finds {V}.")],
-        identified: "A wildlife officer.",
-        mood: .sympathetic)
-
     static let exPartnerStabbing = SmallCases.make(
         key: "story.exPartnerStabbing",
         category: .violent,
@@ -360,31 +310,6 @@ extension StoryCases {
         aggravating: ["The defendant was armed with a deadly weapon at the time of the crime"],
         mood: .wantsConviction,
         impact: "I check my back every day.")
-
-    static let dealerKidnapping = SmallCases.make(
-        key: "story.dealerKidnapping",
-        category: .violent,
-        headlines: ["Person Held in Basement Over Drug Debt for Three Days", "Zip Ties and Photographs Seized"],
-        law: "kidnapping1",
-        threshold: 9,
-        spec: "Unlawfully confined and restrained {V} for ransom and terror, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "{V} was held for three days in a basement on {DATE} over a drug debt. {V}'s family was told to pay $6,000. {D}'s phone sent the demand. {V} escaped through a window. {DL} says {V} was staying voluntarily.",
-        state: [E(.digital, 3, "Demand Text", "'$6,000 or no one leaves.'"), E(.physical, 3, "Zip Ties", "Cut zip ties in the basement.", .search), E(.forensic, 2, "Medical Records", "Wrist injuries.")],
-        defense: [E(.statement, 1, "Voluntary Stay", "{DL} says {V} stayed voluntarily.")],
-        role: "Sheriff's detective",
-        exam: [.direct("What did you find?", "\"Zip ties and a locked door.\""), .direct("Who sent the text?", "\"{DL}'s phone.\""), .cross("Voluntary?", "\"The door locked outside.\""), .cross("A debt?", "\"Yes.\"")],
-        theory: ("{D} held a person for ransom.", "A voluntary stay."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("A padlock on the outside matched a key on {DL}'s ring.", "{V} called family asking for help."),
-        defendant: [.direct("Did you hold {V}?", "\"No.\""), .direct("The text?", "\"A friend.\""), .cross("Padlock.", "\"Common.\""), .cross("Calls.", "\"Drunk.\"")],
-        openings: ("A text, ties and a padlock.", "A guest."),
-        closings: ("The padlock.", "A stay."),
-        timeline: [(0, "Day one: {V} is taken to the basement."), (1, "Day two: the demand text."), (2, "Day three: {V} escapes through a window.")],
-        identified: "A demand text.",
-        aggravating: ["The victim was held against their will for a significant period"],
-        mood: .wantsConviction)
 
     static let restaurantFireClaim = SmallCases.make(
         key: "story.restaurantFireClaim",
@@ -464,31 +389,6 @@ extension StoryCases {
         impact: "I don't sleep in that bedroom now.",
         genders: ["V": .female])
 
-    static let jewelryHoldup = SmallCases.make(
-        key: "story.jewelryHoldup",
-        category: .robbery,
-        headlines: ["Masked Pair Rob Jewelry Store, Fire Shot Into Ceiling", "Clerk Hid Behind Counter"],
-        law: "dangerousRobbery",
-        threshold: 8,
-        spec: "Took jewelry valued at $22,000 from the person and presence of {V}, a store clerk, by endangering {V.his} life with a firearm, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "Two masked people robbed a jewelry store on {DATE}, firing a shot into the ceiling and taking $22,000 in jewelry. A get-away car was linked to {D}. A ring from the store was found in {D}'s apartment. {DL} says {D.he} bought the ring.",
-        state: [E(.physical, 3, "Ring", "A ring from the store in {D}'s apartment.", .search), E(.video, 3, "Store Camera", "Two masked people take jewelry.")],
-        defense: [E(.statement, 1, "Bought Ring", "{DL} says {D.he} bought the ring.")],
-        role: "Store clerk",
-        exam: [.direct("What happened?", "\"A shot and a demand.\""), .direct("What was taken?", "\"$22,000 in jewelry.\""), .cross("Faces?", "\"Masked.\""), .cross("The ring?", "\"One of mine.\"")],
-        theory: ("{D} took part in a jewelry robbery.", "A ring bought elsewhere."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("The ring bore the store's tag number.", "A pawn receipt from three weeks before the robbery shows {DL} bought the ring."),
-        defendant: [.direct("Did you rob?", "\"No.\""), .direct("The ring?", "\"Bought.\""), .cross("The tag.", "\"Didn't notice.\""), .cross("Receipt.", "\"A date mix-up.\"")],
-        openings: ("A ring and a car.", "A purchase."),
-        closings: ("The ring.", "A receipt."),
-        timeline: [(0, "11:05 a.m.: two masked people enter."), (0, "11:07 a.m.: a shot."), (0, "11:10 a.m.: the pair flees.")],
-        identified: "A ring.",
-        aggravating: ["The offense involved a firearm"],
-        mood: .wantsConviction)
-
     static let parkingOfficeSafe = SmallCases.make(
         key: "story.parkingOfficeSafe",
         category: .property,
@@ -512,30 +412,6 @@ extension StoryCases {
         timeline: [(0, "1:30 a.m.: a pickup backs to the dock."), (0, "1:50 a.m.: the safe is loaded."), (0, "7 a.m.: staff find the office open.")],
         identified: "A dock camera.",
         aggravating: ["The offense was committed for pecuniary gain"],
-        mood: .wantsConviction)
-
-    static let classmateMessages = SmallCases.make(
-        key: "story.classmateMessages",
-        category: .cyber,
-        headlines: ["Student Sends 300 Messages After Being Blocked, Complaint Says", "Ex-Classmate Created Fake Accounts"],
-        law: "cyberstalking",
-        threshold: 6,
-        spec: "Willfully harassed {V} by electronic communications, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "Over six weeks ending {DATE}, {V} received more than 300 messages from accounts tied to {D}, a former classmate, after {V} blocked {D}. Some messages named {V}'s workplace. {DL} says the accounts were hacked.",
-        state: [E(.digital, 3, "Account Records", "Accounts tied to {D}'s phone number."), E(.digital, 2, "Messages", "More than 300 messages naming {V}'s workplace.")],
-        defense: [E(.statement, 1, "Hacked", "{DL} says the accounts were hacked.")],
-        role: "Victim",
-        exam: [.direct("What did the messages say?", "\"Where I work.\""), .direct("Did you block?", "\"Twice.\""), .cross("Hacked?", "\"Not likely.\""), .cross("Names used?", "\"Fake.\"")],
-        theory: ("{D} harassed a former classmate online.", "Hacked accounts."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("The accounts were created from {DL}'s home network.", "A security report found {DL}'s router had been compromised by a known exploit."),
-        defendant: [.direct("Did you send them?", "\"No.\""), .direct("Hacked?", "\"Yes.\""), .cross("Home network.", "\"Shared.\""), .cross("New account.", "\"Not me.\"")],
-        openings: ("300 messages.", "Hacked accounts."),
-        closings: ("The records.", "Hacked."),
-        timeline: [(-42, "{V} blocks {D}."), (-30, "New accounts appear."), (0, "{V} reports the messages.")],
-        identified: "Account records.",
         mood: .wantsConviction)
 
     static let barBrokenBottle = SmallCases.make(

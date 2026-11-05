@@ -4,32 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Everyday cases, written with SmallCases: the offenses that fill a real county's docket.
 extension StoryCases {
-    static let batchAT: [CaseTemplate] = [donationJarTheft, parkSwingDamage, guitarPawned, handicapPlacardForge, poolAfterHours, fireworksStreet, usedCarScam, pickupLineSpeeding, rifleAtKids, textbookTheft, golfCartDwi, giftCardSwap, stagedFallClaim, churchTreasurerSkim, liquorStoreHoldup, bakeryRearBreakin, pedestrianHit, packagedMarijuana, neighborStalking, nursingAideNeglect, trafficStopPunch, roommateStabbing, ambushAtHome, armedConvenienceRobbery, fairgroundRiot]
-
-    static let donationJarTheft = SmallCases.make(
-        key: "story.donationJarTheft",
-        category: .property,
-        headlines: ["Man Pockets Charity Jar From Gas Station Counter", "Cashier Chases Customer Who Took Fundraiser Jar"],
-        law: "misdLarceny",
-        spec: "Stole a charity donation jar containing $140 belonging to {V}, a gas station, on {DATE}.",
-        ages: 18...55,
-        victim: true,
-        summary: "A jar collecting money for a child's surgery sat on a gas station counter. On {DATE} a customer took it while the cashier restocked. A counter camera showed {D} lifting the jar into a jacket. {DL} says {D.he} thought it was a free sample jar and meant to ask.",
-        state: [E(.video, 3, "Counter Camera", "{D} lifts the jar into a jacket."), E(.physical, 2, "Jar", "The emptied jar, found behind a dumpster 200 yards away.", .search)],
-        defense: [E(.statement, 1, "Mistake", "{DL} says {D.he} thought it was a free sample jar.")],
-        role: "Gas station cashier",
-        exam: [.direct("What did you see?", "\"{DL} put the jar in a jacket.\""), .direct("What was in it?", "\"About $140.\""), .cross("It had a label.", "\"A sign for the surgery.\""), .cross("{D.He} may have misread it.", "\"I doubt it.\"")],
-        theory: ("{D} took a donation jar.", "A misread jar."),
-        allocution: "\"I'm ashamed. I took it.\"",
-        truths: ("The empty jar was behind a dumpster near {DL}'s car.", "The jar sat beside a bowl of free mints with its label facing the wall, the cashier admitted."),
-        defendant: [.direct("Did you take the jar?", "\"I picked it up.\""), .direct("Why leave?", "\"I forgot to pay.\""), .cross("The sign.", "\"I didn't read it.\""), .cross("A dumpster.", "\"I tossed it.\"")],
-        openings: ("A jar and a camera.", "A mistaken pickup."),
-        closings: ("The video.", "A misread sign."),
-        timeline: [(0, "4:10 p.m.: the cashier restocks."), (0, "4:12 p.m.: {DL} takes the jar."), (0, "4:20 p.m.: the cashier notices.")],
-        identified: "A counter camera.",
-        mood: .wantsConviction,
-        impact: "That money was for a little boy.",
-        genders: ["D": .male])
+    static let batchAT: [CaseTemplate] = [parkSwingDamage, guitarPawned, handicapPlacardForge, poolAfterHours, fireworksStreet, usedCarScam, pickupLineSpeeding, rifleAtKids, textbookTheft, golfCartDwi, giftCardSwap, churchTreasurerSkim, liquorStoreHoldup, bakeryRearBreakin, packagedMarijuana, neighborStalking, nursingAideNeglect, roommateStabbing, ambushAtHome, armedConvenienceRobbery, fairgroundRiot]
 
     static let parkSwingDamage = SmallCases.make(
         key: "story.parkSwingDamage",
@@ -296,29 +271,6 @@ extension StoryCases {
         identified: "A rack camera.",
         mood: .indifferent)
 
-    static let stagedFallClaim = SmallCases.make(
-        key: "story.stagedFallClaim",
-        category: .whiteCollar,
-        headlines: ["Customer Claims Fall at Store, Insurance Finds Staged Pattern", "Video Shows Customer Looking Before Dropping"],
-        law: "insuranceFraud",
-        spec: "Presented a false statement in support of an insurance claim, on {DATE}.",
-        ages: 25...65,
-        victim: false,
-        summary: "{D} filed a $22,000 claim with a store's insurer on {DATE} after a fall near a wet floor sign. Video showed {D} glancing at a camera and sliding to the floor. {DL} says {D.he} slipped and was in shock.",
-        state: [E(.video, 3, "Store Camera", "{D} glances up and slides to the floor."), E(.document, 3, "Claims History", "Three prior fall claims at three stores.")],
-        defense: [E(.statement, 1, "Slipped", "{DL} says {D.he} slipped.")],
-        role: "Insurance adjuster",
-        exam: [.direct("What does the video show?", "\"A controlled slide.\""), .direct("Prior claims?", "\"Three.\""), .cross("A real slip is quick.", "\"True.\""), .cross("There was a wet sign.", "\"Yes.\"")],
-        theory: ("{D} staged a fall.", "A real slip."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL}'s phone showed a search for 'store fall claim amounts'.", "An orthopedist's scan found a torn ligament consistent with a fall."),
-        defendant: [.direct("Did you slip?", "\"Yes.\""), .direct("Why the glance?", "\"I was dizzy.\""), .cross("Three claims.", "\"Bad luck.\""), .cross("The search.", "\"Curious.\"")],
-        openings: ("A slide and three claims.", "A real slip."),
-        closings: ("The video.", "A slip."),
-        timeline: [(0, "The fall."), (2, "{DL} files the claim."), (7, "The adjuster reviews video.")],
-        identified: "A store camera.",
-        mood: .indifferent)
-
     static let churchTreasurerSkim = SmallCases.make(
         key: "story.churchTreasurerSkim",
         category: .whiteCollar,
@@ -399,34 +351,6 @@ extension StoryCases {
         mood: .wantsConviction,
         genders: ["D": .male])
 
-    static let pedestrianHit = SmallCases.make(
-        key: "story.pedestrianHit",
-        category: .traffic,
-        headlines: ["Driver Leaves Man Hurt in Crosswalk", "Witness Chases Truck for Two Blocks"],
-        law: "hitAndRun",
-        threshold: 7,
-        spec: "Operated a motor vehicle that struck a person and failed to stop, causing serious injury, on {DATE}.",
-        ages: 20...60,
-        victim: true,
-        summary: "At dusk on {DATE}, a truck hit {V} in a crosswalk, throwing {V.him} onto the road, and drove on. {V} had a broken leg. A witness chased the truck two blocks and noted the plate. {D} owns it. {DL} says the truck was stolen and returned that night.",
-        state: [E(.statement, 3, "Witness", "The truck hit {V} and did not stop."), E(.document, 3, "Registration", "The truck is registered to {D}.")],
-        defense: [E(.statement, 1, "Stolen Truck", "{DL} says the truck was stolen that evening.")],
-        role: "Pedestrian",
-        exam: [.direct("What happened?", "\"A truck hit me and drove on.\""), .direct("What injuries?", "\"A broken leg.\""), .cross("Did you see the driver?", "\"No.\""), .cross("The truck could be stolen.", "\"I don't know.\"")],
-        defenseRole: "Body shop worker",
-        defenseExam: [.direct("What damage?", "\"A fresh dent.\""), .cross("Was it reported stolen?", "\"Not to us.\"")],
-        theory: ("{D} left an injured man in the road.", "A stolen truck."),
-        allocution: "\"I'm so sorry. I panicked.\"",
-        truths: ("{DL} had never reported a theft.", "A mechanic found the dent predated the crosswalk crash by weeks."),
-        defendant: [.direct("Were you driving?", "\"No.\""), .direct("Stolen?", "\"Yes.\""), .cross("No report.", "\"I forgot.\""), .cross("Dent.", "\"Earlier.\"")],
-        openings: ("A plate and a dent.", "A stolen truck."),
-        closings: ("The plate.", "The theft."),
-        timeline: [(0, "7:50 p.m.: {V} enters the crosswalk."), (0, "7:51 p.m.: the truck hits {V}."), (0, "8 p.m.: a witness gives the plate.")],
-        identified: "A witness and a plate.",
-        mood: .wantsConviction,
-        impact: "I'm in a boot for three months.",
-        genders: ["V": .male])
-
     static let packagedMarijuana = SmallCases.make(
         key: "story.packagedMarijuana",
         category: .drugs,
@@ -505,33 +429,6 @@ extension StoryCases {
         aggravating: ["The victim was particularly vulnerable"],
         mood: .wantsConviction,
         impact: "My mother lay there for hours.")
-
-    static let trafficStopPunch = SmallCases.make(
-        key: "story.trafficStopPunch",
-        category: .violent,
-        headlines: ["Driver Punches Deputy During Traffic Stop", "Body Camera Captures Swing at Door"],
-        law: "assaultLEO",
-        threshold: 6,
-        spec: "Assaulted {V}, a law enforcement officer, while the officer was discharging official duties, on {DATE}.",
-        ages: 19...55,
-        victim: true,
-        summary: "A deputy, {V}, stopped {D} on {DATE} for a broken tail light. {D} refused to show a license, stepped out, and swung at {V}'s face. {V}'s body camera recorded it. {DL} says {D.he} stepped out to hand over the license and tripped into {V}.",
-        state: [E(.video, 3, "Body Camera", "{D} steps out and swings at {V}'s face."), E(.forensic, 2, "Medical Report", "A bruised cheekbone.")],
-        defense: [E(.statement, 1, "Tripped", "{DL} says {D.he} tripped into {V}.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What happened?", "\"{DL} swung at me.\""), .direct("Any injury?", "\"A bruised cheekbone.\""), .cross("A trip.", "\"A swing.\""), .cross("He was upset.", "\"Yes.\"")],
-        theory: ("{D} punched a deputy.", "A trip."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("The video shows a clenched fist.", "The tail light was not broken."),
-        defendant: [.direct("Did you punch?", "\"No.\""), .direct("A trip?", "\"Yes.\""), .cross("A fist.", "\"Open.\""), .cross("Refused license.", "\"Slow.\"")],
-        openings: ("A body camera.", "A trip."),
-        closings: ("The fist.", "The trip."),
-        timeline: [(0, "A stop for a tail light."), (0, "{DL} steps out."), (0, "The swing.")],
-        identified: "Body camera.",
-        aggravating: ["The victim was a law enforcement officer performing official duties"],
-        mood: .divided,
-        doctrines: ["searchSeizure"],
-        genders: ["D": .male])
 
     static let roommateStabbing = SmallCases.make(
         key: "story.roommateStabbing",

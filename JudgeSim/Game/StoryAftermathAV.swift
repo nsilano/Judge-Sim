@@ -9,12 +9,6 @@ extension StoryAftermath {
                  body: "Defendant From Coin Door Case Seen on Camera Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.changeBoxAgain"])
         ],
-        "story.vacuumCoinBox": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Another Car Wash Hit",
-                 body: "Hammer Marks at New Location. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.vacuumAgain"])
-        ],
         "story.libraryReadingRoom": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Library Patron Back at Desk After Warning",
@@ -32,18 +26,6 @@ extension StoryAftermath {
                  headline: "Former Tenant Back Inside Another Apartment",
                  body: "Defendant From Key Case Enters With Old Key. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.keyAgain"])
-        ],
-        "story.walkAwayStop": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Pedestrian Pulls Away From Deputy Again",
-                 body: "Defendant From Jaywalking Stop Resists Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.walkAgain"])
-        ],
-        "story.gateAluminum": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "More Gates Taken, Same Scrap Yard",
-                 body: "Defendant From Gate Case Sells Metal Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.gatesAgain"])
         ],
         "story.petSuppliesBag": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
@@ -92,18 +74,6 @@ extension StoryAftermath {
                  headline: "Another Dock Loses a Kayak",
                  body: "Defendant From Kayak Case Linked by Truck. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.kayakAgain"])
-        ],
-        "story.altereCheckMail": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Altered Check Again",
-                 body: "Defendant From Mail-Theft Check Case Back at Bank. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.checkAgain"])
-        ],
-        "story.dogDisputeShove": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Neighbor Dispute Turns Physical Again",
-                 body: "Defendant From Dog Shove Case Pushes Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.dogShoveAgain"], sameVictim: true)
         ],
         "story.fuelCardMisuse": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,

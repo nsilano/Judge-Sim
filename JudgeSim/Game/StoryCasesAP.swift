@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Everyday cases, written with SmallCases: the offenses that fill a real county's docket.
 extension StoryCases {
-    static let batchAP: [CaseTemplate] = [restaurantTipSkim, texterCrash, dogInHotCar, hedgeCutting, fakeLandscaper, foundPhoneSold, waterTowerClimb, selfCheckoutBanana, holidayInflatables, funeralScene, diveBarShooting, schoolZoneCrash, homeInvasionBurglary, carjackingRobbery, apartmentFire, parkingLotAbduction, festivalOverdose, poisonCoffee, fatalPunchParty, wrenchAssault]
+    static let batchAP: [CaseTemplate] = [restaurantTipSkim, texterCrash, dogInHotCar, fakeLandscaper, foundPhoneSold, waterTowerClimb, selfCheckoutBanana, holidayInflatables, funeralScene, diveBarShooting, schoolZoneCrash, homeInvasionBurglary, carjackingRobbery, apartmentFire, parkingLotAbduction, festivalOverdose, poisonCoffee, fatalPunchParty, wrenchAssault]
 
     static let restaurantTipSkim = SmallCases.make(
         key: "story.restaurantTipSkim",
@@ -74,29 +74,6 @@ extension StoryCases {
         timeline: [(0, "2:05 p.m.: {DL} parks and goes in."), (0, "2:27 p.m.: customers break the window."), (0, "2:40 p.m.: the dog reaches the vet.")],
         identified: "Customers' call and the store camera.",
         mood: .wantsConviction)
-
-    static let hedgeCutting = SmallCases.make(
-        key: "story.hedgeCutting",
-        category: .property,
-        headlines: ["Neighbor Cut Down Century-Old Hedge on Property Line", "Dispute Over Hedge Ends in Property Damage Charge"],
-        law: "injuryRealProperty",
-        spec: "Willfully and wantonly damaged real property of {V}, a mature boxwood hedge, causing damage of $1,750, on {DATE}.",
-        ages: 35...72,
-        victim: true,
-        summary: "{V}'s hedge of boxwoods, planted in the 1950s, stood along the line between {V}'s lot and {D}'s. On {DATE}, while {V} was away, {D} cut the hedge to stumps with a chainsaw. A survey places the hedge on {V}'s side by about a foot. {DL} says the hedge was over the line and had been blocking {D.his} driveway for years. Damage was put at $1,750.",
-        state: [E(.video, 3, "Doorbell Camera", "{D} cutting the hedge with a chainsaw at 8 a.m."), E(.document, 2, "Survey", "The hedge stands about a foot on {V}'s side of the line.")],
-        defense: [E(.document, 2, "Old Survey", "An older survey places the line through the hedge.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What did you see?", "\"The hedge cut to stumps.\""), .direct("Where is the line?", "\"The new survey puts the hedge on {V}'s side.\""), .cross("An older survey disagrees.", "\"It does.\""), .cross("{D.He} warned {V}.", "\"Twice, {D.he} says.\"")],
-        theory: ("{D} destroyed a neighbor's hedge with a chainsaw.", "A line disputed for years."),
-        allocution: "\"I should have gone to court. I'll pay for new hedges.\"",
-        truths: ("{DL} told a friend 'it'll be gone by Saturday.'", "The older survey had been recorded and {V} had a copy that put the line through the hedge."),
-        defendant: [.direct("Why cut it?", "\"It was on my property.\""), .direct("Did you warn {V}?", "\"Twice.\""), .cross("The new survey.", "\"I thought it was wrong.\""), .cross("A chainsaw.", "\"It was quick.\"")],
-        openings: ("A century-old hedge and a chainsaw.", "A line that was never settled."),
-        closings: ("The survey is clear.", "The line was disputed."),
-        timeline: [(-14, "{DL} warns {V} to cut the hedge."), (0, "8 a.m.: the chainsaw."), (0, "{V} returns to the stumps.")],
-        identified: "{V}'s doorbell camera.",
-        impact: "My late husband planted that hedge.")
 
     static let fakeLandscaper = SmallCases.make(
         key: "story.fakeLandscaper",

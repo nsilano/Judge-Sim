@@ -45,12 +45,6 @@ extension StoryAftermath {
                  body: "Second Emergency-Line Interference Complaint. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.interfereAgain"], sameVictim: true)
         ],
-        "story.fakeBlueLights": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Fake Officer Reported Again on Rural Road",
-                 body: "Defendant From Blue Light Case Seen With Vest and Lights. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.vestAgain"])
-        ],
         "story.tillShortage": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "New Employer Reports Cash Missing After Clerk's Hiring",
@@ -93,23 +87,11 @@ extension StoryAftermath {
                  body: "Defendant From Earlier Access Case Charged Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.employeeFilesSecond"])
         ],
-        "story.storageUnitBreakin": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Stolen Furniture Surfaces at Consignment Shop",
-                 body: "Defendant From Storage Break-In Case Linked to Resale. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.storageKeyTheft"], sameVictim: true)
-        ],
         "story.plannedPharmacyRobbery": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Pharmacy Gets Threatening Call",
                  body: "Defendant From Planned Robbery Case Accused of Phoned Threat. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.pharmacyThreatsAgain"])
-        ],
-        "story.neighborWitnessThreat": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Witness Receives Second Threat Before Hearing",
-                 body: "Defendant From Intimidation Case Charged Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.witnessAgain"], sameVictim: true)
         ],
         "story.toddlerLeftHome": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
@@ -135,23 +117,11 @@ extension StoryAftermath {
                  body: "Repeat Impaired Driver Back in Court. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.fifthDwi"])
         ],
-        "story.businessPartnerShot": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Missing Funds Traced to Defendant From Shooting Case",
-                 body: "Audit Finds Hidden Transfers. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.partnerRecordsEmbezzle"])
-        ],
         "story.debtKidnapping": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Threats Sent to Escaped Victim",
                  body: "Defendant From Kidnapping Case Charged With New Threats. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.debtThreatGarage"], sameVictim: true)
-        ],
-        "story.barnFireInsurance": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Insurance Claim Filed After Fire Questioned",
-                 body: "Defendant From Barn Fire Case Charged With Insurance Fraud. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.barnFireClaim"])
         ]
     ]
 }

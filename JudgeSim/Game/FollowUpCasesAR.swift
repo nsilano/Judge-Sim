@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Follow-up trials for the batch AR everyday-crime stories.
 extension FollowUpCases {
-    static let batchAR: [CaseTemplate] = [toolShoplift, mailboxAgain, expiredPermitAgain, raceDwlr, trailheadAgain, porchReturns, interfereAgain, vestAgain, tillAgain, cardAgain, grandmaSecondCheck, breathRefusalAgain, refereeThreat, postsAgain, employeeFilesSecond, storageKeyTheft, pharmacyThreatsAgain, witnessAgain, toddlerAgain, grabAgainParty, batAgain, fifthDwi, partnerRecordsEmbezzle, debtThreatGarage, barnFireClaim]
+    static let batchAR: [CaseTemplate] = [toolShoplift, mailboxAgain, expiredPermitAgain, raceDwlr, trailheadAgain, porchReturns, interfereAgain, tillAgain, cardAgain, grandmaSecondCheck, breathRefusalAgain, refereeThreat, postsAgain, employeeFilesSecond, pharmacyThreatsAgain, toddlerAgain, grabAgainParty, batAgain, fifthDwi, debtThreatGarage]
 
     static let toolShoplift = SmallCases.make(
         key: "story.followup.toolShoplift",
@@ -173,29 +173,6 @@ extension FollowUpCases {
         mood: .wantsConviction,
         impact: "Again.",
         genders: ["D": .male, "V": .female])
-
-    static let vestAgain = SmallCases.make(
-        key: "story.followup.vestAgain",
-        category: .publicOrder,
-        headlines: ["Fake Officer Reported Again on Rural Road", "Defendant From Blue Light Case Seen With Vest and Lights"],
-        law: "impersonatingLEO",
-        spec: "Falsely represented being a sworn law enforcement officer, on {DATE}.",
-        ages: 20...55,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a second motorist was stopped by a sedan with blue lights. {V} called 911. A deputy found {D} with a vest and lights. {DL} says {D.he} was just following a speeder.",
-        state: [E(.physical, 3, "Lights and Vest", "Blue lights and a vest in the car.", .search), E(.statement, 3, "Motorist", "{V} identifies the sedan.")],
-        defense: [E(.statement, 1, "Following", "{DL} says {D.he} was following a speeder.")],
-        role: "Motorist",
-        exam: [.direct("What did {DL} say?", "\"Get out.\""), .direct("Badge?", "\"None.\""), .cross("Following.", "\"Pulled me over.\"")],
-        theory: ("{D} acted as an officer.", "A concerned driver."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} had not removed the lights.", "The motorist's car had no plates and {DL} was trying to stop a hit-and-run."),
-        defendant: [.direct("Did you stop {V}?", "\"Yes.\""), .direct("Why?", "\"Speeding.\""), .cross("Blue lights.", "\"Still there.\"")],
-        openings: ("Lights.", "A speeder."),
-        closings: ("Lights.", "Speeder."),
-        timeline: [(0, "{V} is pulled over."), (0, "{V} calls 911.")],
-        identified: "A motorist.",
-        mood: .wantsConviction)
 
     static let tillAgain = SmallCases.make(
         key: "story.followup.tillAgain",
@@ -366,30 +343,6 @@ extension FollowUpCases {
         mood: .wantsConviction,
         genders: ["D": .male])
 
-    static let storageKeyTheft = SmallCases.make(
-        key: "story.followup.storageKeyTheft",
-        category: .property,
-        headlines: ["Stolen Furniture Surfaces at Consignment Shop", "Defendant From Storage Break-In Case Linked to Resale"],
-        law: "possStolen",
-        spec: "Possessed antique chairs belonging to {V}, knowing them to be stolen, on {DATE}.",
-        ages: 20...50,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a consignment shop took in six antique chairs from {D}. {V} recognized them from a photo. {DL} says an estate sale seller sold them.",
-        state: [E(.document, 3, "Consignment Slip", "{D}'s name on six antique chairs."), E(.physical, 3, "Chairs", "A carved mark matching {V}'s photo.", .search)],
-        defense: [E(.statement, 1, "Estate Sale", "{DL} says {D.he} bought them at an estate sale.")],
-        role: "Chair owner",
-        exam: [.direct("How do you know them?", "\"A carved mark.\""), .direct("Where were they?", "\"A consignment shop.\""), .cross("An estate sale.", "\"No sale was held.\"")],
-        theory: ("{D} sold stolen chairs.", "An estate sale."),
-        allocution: "\"I knew.\"",
-        truths: ("The estate sale {DL} named never happened.", "The slip used {DL}'s real name."),
-        defendant: [.direct("Did you steal them?", "\"No.\""), .direct("Where from?", "\"An estate sale.\""), .cross("Which?", "\"I forget.\"")],
-        openings: ("A carved mark.", "An estate sale."),
-        closings: ("The mark.", "The sale."),
-        timeline: [(0, "The shop takes in the chairs."), (2, "{V} sees the listing.")],
-        identified: "A consignment slip.",
-        mood: .wantsConviction,
-        impact: "They were my grandmother's.")
-
     static let pharmacyThreatsAgain = SmallCases.make(
         key: "story.followup.pharmacyThreatsAgain",
         category: .publicOrder,
@@ -414,30 +367,6 @@ extension FollowUpCases {
         mood: .wantsConviction,
         impact: "We hired a guard.",
         genders: ["D": .male])
-
-    static let witnessAgain = SmallCases.make(
-        key: "story.followup.witnessAgain",
-        category: .publicOrder,
-        headlines: ["Witness Receives Second Threat Before Hearing", "Defendant From Intimidation Case Charged Again"],
-        law: "communicatingThreats",
-        spec: "Willfully threatened to physically injure {V}, a witness, on {DATE}.",
-        ages: 24...60,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {V} found a note on the windshield: 'Last warning.' A camera showed {D} leaving it. {DL} says it was a lost-pet notice.",
-        state: [E(.video, 3, "Driveway Camera", "{D} leaves a note on the windshield."), E(.physical, 3, "Note", "'Last warning.'", .search)],
-        defense: [E(.statement, 1, "Lost Pet", "{DL} says it was a lost-pet notice.")],
-        role: "Witness",
-        exam: [.direct("What did the note say?", "\"'Last warning.'\""), .direct("Who left it?", "\"{DL}.\""), .cross("A lost pet.", "\"No pet.\"")],
-        theory: ("{D} threatened a witness.", "A lost-pet note."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} has no pet.", "A lost-pet flyer in {DL}'s trunk used the same words about a missing cat."),
-        defendant: [.direct("Did you leave it?", "\"Yes.\""), .direct("Why?", "\"A pet.\""), .cross("'Last warning.'", "\"A phrase.\"")],
-        openings: ("A note.", "A pet."),
-        closings: ("Camera.", "Pet."),
-        timeline: [(0, "The note is left."), (0, "{V} reports it.")],
-        identified: "A driveway camera.",
-        mood: .wantsConviction,
-        impact: "I'm afraid to testify.")
 
     static let toddlerAgain = SmallCases.make(
         key: "story.followup.toddlerAgain",
@@ -537,31 +466,6 @@ extension FollowUpCases {
         aggravating: ["The defendant was impaired at the time of the offense"],
         mood: .wantsConviction)
 
-    static let partnerRecordsEmbezzle = SmallCases.make(
-        key: "story.followup.partnerRecordsEmbezzle",
-        category: .whiteCollar,
-        headlines: ["Missing Funds Traced to Defendant From Shooting Case", "Audit Finds Hidden Transfers"],
-        law: "embezzlement100k",
-        spec: "Embezzled over $100,000 entrusted to {D} by the firm, on {DATE}.",
-        ages: 30...62,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, an audit of the firm's books found $140,000 transferred to accounts opened by {D}. {DL} says the transfers were loans.",
-        state: [E(.document, 3, "Audit", "$140,000 transferred to accounts opened by {D}."), E(.document, 3, "Bank Records", "{D}'s signature on each transfer.")],
-        defense: [E(.statement, 1, "Loans", "{DL} says the transfers were loans.")],
-        role: "Forensic accountant",
-        exam: [.direct("What did the audit show?", "\"$140,000 moved.\""), .direct("Who signed?", "\"{DL}.\""), .cross("Loans.", "\"No agreement exists.\"")],
-        theory: ("{D} moved the firm's money.", "Loans."),
-        allocution: "\"I took it.\"",
-        truths: ("No loan agreement exists.", "The late partner approved the transfers in writing months earlier."),
-        defendant: [.direct("Did you move it?", "\"As loans.\""), .direct("Paper?", "\"Verbal.\""), .cross("$140,000.", "\"Business.\"")],
-        openings: ("Transfers.", "Loans."),
-        closings: ("Signatures.", "Loans."),
-        timeline: [(-60, "The first transfer."), (0, "The last transfer."), (14, "The audit is complete.")],
-        identified: "An audit.",
-        aggravating: ["The defendant took advantage of a position of trust or confidence"],
-        mood: .wantsConviction,
-        genders: ["D": .male])
-
     static let debtThreatGarage = SmallCases.make(
         key: "story.followup.debtThreatGarage",
         category: .publicOrder,
@@ -586,29 +490,5 @@ extension FollowUpCases {
         mood: .wantsConviction,
         impact: "I haven't slept.",
         genders: ["V": .male])
-
-    static let barnFireClaim = SmallCases.make(
-        key: "story.followup.barnFireClaim",
-        category: .whiteCollar,
-        headlines: ["Insurance Claim Filed After Fire Questioned", "Defendant From Barn Fire Case Charged With Insurance Fraud"],
-        law: "insuranceFraud",
-        spec: "Presented a false statement in support of an insurance claim, on {DATE}.",
-        ages: 30...65,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, an insurer found {D}'s tenant claim listed $12,000 in equipment that burned. Photos showed none. {DL} says the equipment was stored elsewhere.",
-        state: [E(.document, 3, "Claim", "$12,000 in equipment listed."), E(.document, 3, "Adjuster Photos", "No equipment visible.")],
-        defense: [E(.statement, 1, "Stored Elsewhere", "{DL} says the equipment was stored elsewhere.")],
-        role: "Insurance adjuster",
-        exam: [.direct("What was claimed?", "\"$12,000.\""), .direct("What did photos show?", "\"No equipment.\""), .cross("Elsewhere.", "\"Unnamed.\"")],
-        theory: ("{D} inflated a claim.", "Stored elsewhere."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("The equipment was sold before the fire.", "The equipment was in a friend's barn and was destroyed there."),
-        defendant: [.direct("Was it burned?", "\"Some.\""), .direct("Where?", "\"Elsewhere.\""), .cross("Empty unit.", "\"Moved.\"")],
-        openings: ("A claim.", "Storage."),
-        closings: ("Photos.", "Storage."),
-        timeline: [(0, "The claim is filed."), (7, "The adjuster reviews photos.")],
-        identified: "The claim.",
-        mood: .indifferent,
-        genders: ["D": .male])
 
 }

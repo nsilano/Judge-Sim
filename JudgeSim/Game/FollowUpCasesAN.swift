@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Follow-up trials for the batch AN everyday-crime stories.
 extension FollowUpCases {
-    static let batchAN: [CaseTemplate] = [barcodeSwapTwo, mopedNoLicense, dwlrAfterDwi, partyResisting, dirtBikeLawn, schoolWallPaint, falseAlarmTwo, badgeObstruction, pistolInTruck, secondDogChained, bumperAgain, badCheckHardware, threatByText, stalkingAtWork, drunkPorchTwo, mailCardOpen, siphonTwo, windshieldCrack, tailgateThreat, falseNameResisting, copperScrapYard, laptopPhoneTwo, returnFraudTwo, fakeLicenseBar, paintCansTwo, dumpsterFireTwo, cashBoxCafe, shedBreakInTwo, scaleAgain, airsoftSchoolLot]
+    static let batchAN: [CaseTemplate] = [barcodeSwapTwo, mopedNoLicense, partyResisting, dirtBikeLawn, schoolWallPaint, falseAlarmTwo, badgeObstruction, pistolInTruck, secondDogChained, bumperAgain, badCheckHardware, threatByText, stalkingAtWork, drunkPorchTwo, mailCardOpen, siphonTwo, windshieldCrack, tailgateThreat, falseNameResisting, copperScrapYard, laptopPhoneTwo, returnFraudTwo, fakeLicenseBar, paintCansTwo, dumpsterFireTwo, cashBoxCafe, shedBreakInTwo, scaleAgain, airsoftSchoolLot]
 
     static let barcodeSwapTwo = SmallCases.make(
         key: "story.followup.barcodeSwapTwo",
@@ -51,29 +51,6 @@ extension FollowUpCases {
         closings: ("The statute includes mopeds.", "He was told otherwise."),
         timeline: [(0, "Morning: checkpoint on a county road."), (0, "{DL} is cited for driving revoked.")],
         identified: "A highway patrol checkpoint.",
-        genders: ["D": .male])
-
-    static let dwlrAfterDwi = SmallCases.make(
-        key: "story.followup.dwlrAfterDwi",
-        category: .traffic,
-        headlines: ["Driver Stopped With Revoked License After DWI Case", "Second Driving Charge Follows Parking Lot DWI"],
-        law: "dwlrImpaired",
-        spec: "Drove a motor vehicle on a public highway while {D.his} driver's license was revoked for an impaired driving offense, on {DATE}.",
-        ages: 21...60,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} was stopped for speeding. {D}'s license was revoked for the earlier impaired driving charge. {D} says {D.he} had been told the revocation would end after thirty days.",
-        state: [E(.document, 3, "DMV Record", "License revoked for an impaired driving conviction; no limited privilege."), E(.video, 2, "Dash Camera", "{D} hands over an expired ID.")],
-        defense: [E(.statement, 1, "Thirty Days", "{DL} says a clerk told {D.him} thirty days.")],
-        role: "State Highway Patrol trooper",
-        exam: [.direct("What did the DMV show?", "\"An impaired driving revocation, still in effect.\""), .direct("Did {D.he} have a limited privilege?", "\"No.\""), .cross("{D.He} was told thirty days.", "\"By whom?\"")],
-        theory: ("{D} drove on a revoked impaired driving license.", "A man who misunderstood a clerk."),
-        allocution: "\"I'll get my license back the right way.\"",
-        truths: ("{DL}'s court paperwork said twelve months.", "The clerk's counter had a sign that said thirty days for first offenders, a photo showed."),
-        defendant: [.direct("Did you know?", "\"I thought it was thirty days.\""), .direct("Who told you?", "\"A clerk.\""), .cross("Your paperwork said twelve months.", "\"I didn't read it.\"")],
-        openings: ("A revoked license, again.", "A clerk's wrong advice."),
-        closings: ("The paperwork said twelve months.", "A clerk's mistake."),
-        timeline: [(0, "Evening: a speeding stop."), (0, "{DL} is cited for driving revoked.")],
-        identified: "A speeding stop.",
         genders: ["D": .male])
 
     static let partyResisting = SmallCases.make(

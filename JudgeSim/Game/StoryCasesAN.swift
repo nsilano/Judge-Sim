@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Everyday cases, written with SmallCases: the offenses that fill a real county's docket.
 extension StoryCases {
-    static let batchAN: [CaseTemplate] = [priceTagSwitch, mopedFlee, parkedDwi, loudParty, dirtBikeStreet, underpassPaint, falseAlarmCall, fakeBadgeTrick, concealedPistolPurse, chainedDog, hitAndRunBumper, badCheckFeed, facebookThreat, repeatedTexts, drunkPorch, mailTheft, gasCanSiphon, tireSlash, tailgateShove, falseNameDeputy, scrapGutters, campusLaptop, returnFraud, fakeLicense, paintCans, dumpsterFire, tipJar, shedBreakIn, scaleAndBags, airsoftCar]
+    static let batchAN: [CaseTemplate] = [priceTagSwitch, mopedFlee, loudParty, dirtBikeStreet, underpassPaint, falseAlarmCall, fakeBadgeTrick, concealedPistolPurse, chainedDog, hitAndRunBumper, badCheckFeed, facebookThreat, repeatedTexts, drunkPorch, mailTheft, gasCanSiphon, tireSlash, tailgateShove, falseNameDeputy, scrapGutters, campusLaptop, returnFraud, fakeLicense, paintCans, dumpsterFire, tipJar, shedBreakIn, scaleAndBags, airsoftCar]
 
     static let priceTagSwitch = SmallCases.make(
         key: "story.priceTagSwitch",
@@ -53,30 +53,6 @@ extension StoryCases {
         timeline: [(0, "Evening: blue lights behind the moped."), (0, "The chase through three backyards."), (0, "The moped runs out of gas and {DL} is arrested.")],
         identified: "The deputy's dash camera.",
         mood: .indifferent,
-        genders: ["D": .male])
-
-    static let parkedDwi = SmallCases.make(
-        key: "story.parkedDwi",
-        category: .traffic,
-        headlines: ["Man Found Asleep Behind Wheel in Parking Lot Charged With DWI", "Lawyer Says Client Wasn't Driving, Just Sleeping It Off"],
-        law: "dwi",
-        spec: "Drove a vehicle on a public vehicular area while subject to an impairing substance, on {DATE}.",
-        ages: 21...60,
-        victim: false,
-        summary: "Deputies found {D} asleep in the driver's seat of a running car in a grocery store parking lot at 1:40 a.m. on {DATE}. {D} blew 0.14 at the jail. The car's engine was on and the heater running. {DL} says {D.he} had stopped to sleep it off, never moved the car, and had left the keys in the ignition only for the heat.",
-        state: [E(.document, 3, "Intoxilyzer Result", "0.14 at 2:30 a.m.; the 15-minute observation period logged."), E(.video, 2, "Parking Lot Camera", "The car pulls into a space at 12:55 a.m. and does not move again.")],
-        defense: [E(.document, 2, "Receipt", "A bar tab closed at 12:30 a.m. five blocks away.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("Where was {DL}?", "\"Asleep in the driver's seat, engine running, headlights off.\""), .direct("How did {D.he} get there?", "\"The camera shows the car arriving at 12:55.\""), .cross("The car never moved after that.", "\"Not on camera.\""), .cross("Keys in the ignition for the heater.", "\"That's what {D.he} said.\"")],
-        theory: ("{D} drove drunk to the lot and was in actual control of a running car.", "A man who stopped driving to sleep it off, which is what the law wants."),
-        allocution: "\"I knew I couldn't drive, so I stopped. I'm sorry I was in the driver's seat.\"",
-        truths: ("The bar's camera showed {DL} driving out of its lot at 12:45.", "The bar's camera showed {DL}'s friend driving the car to the grocery store."),
-        defendant: [.direct("Did you drive?", "\"I drove five blocks and stopped.\""), .direct("Why stay in the car?", "\"I was too tired to walk.\""), .cross("You were drunk when you parked.", "\"I know.\""), .cross("The engine was running.", "\"For the heater.\"")],
-        openings: ("A drunk man at the wheel of a running car.", "A man who made a responsible choice."),
-        closings: ("He drove there.", "He stopped, as he should."),
-        timeline: [(0, "12:45 a.m.: {DL} leaves the bar."), (0, "12:55 a.m.: the car parks at the grocery store."), (0, "1:40 a.m.: deputies find {DL} asleep behind the wheel.")],
-        identified: "A deputy's patrol of the lot.",
-        doctrines: ["burdenOfProof", "lesserIncluded"],
         genders: ["D": .male])
 
     static let loudParty = SmallCases.make(

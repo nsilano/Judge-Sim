@@ -27,12 +27,6 @@ extension StoryAftermath {
                  body: "Defendant From Payroll Identity Case Linked by Address. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.identityAgain"])
         ],
-        "story.trafficStopBribe": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Second Offer of Cash to Deputy",
-                 body: "Defendant From Citation Bribe Case Offers Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.bribeAgain"])
-        ],
         "story.videoThreatExtortion": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Second Client Threatened Over Payment",
@@ -69,35 +63,11 @@ extension StoryAftermath {
                  body: "Defendant From Shop Killing Case Sends Message. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.pawnThreat"])
         ],
-        "story.funeralFight": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Mourner in Funeral Death Case Swings Again",
-                 body: "Defendant From Funeral Fight Case Charged With New Assault. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.fightAgain"])
-        ],
-        "story.deerStandAccident": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Hunter Cited for Shooting From a Road",
-                 body: "Defendant From Hunting Death Case Cited Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.huntAgain"])
-        ],
         "story.exPartnerStabbing": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Victim Receives Threat After Stabbing Case",
                  body: "Defendant From Parking Lot Stabbing Case Contacts Victim. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.stabThreat"], sameVictim: true)
-        ],
-        "story.dealerKidnapping": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Victim Threatened Again After Basement Case",
-                 body: "Defendant From Basement Case Sends Message. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.kidnapThreat"], sameVictim: true)
-        ],
-        "story.restaurantFireClaim": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Insurance Claim Filed for Restaurant Fire",
-                 body: "Defendant From Restaurant Fire Case Claims Losses. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.fireClaimRestaurant"])
         ],
         "story.rentalBatAssault": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
@@ -111,29 +81,11 @@ extension StoryAftermath {
                  body: "Defendant From Elderly Burglary Case Seen on Camera. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.elderHomeAgain"])
         ],
-        "story.jewelryHoldup": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Stolen Rings Turn Up at Second Pawn Shop",
-                 body: "Defendant From Jewelry Store Case Linked by Tags. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.jewelryFence"])
-        ],
         "story.parkingOfficeSafe": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Another Municipal Office Safe Taken",
                  body: "Defendant From Parking Office Case Linked by Pickup. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.officeSafeAgain"])
-        ],
-        "story.classmateMessages": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Messages Resume Under New Accounts",
-                 body: "Defendant From Classmate Messages Case Sends More. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.messagesAgain"], sameVictim: true)
-        ],
-        "story.barBrokenBottle": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Patron Threatened After Bar Fight Case",
-                 body: "Defendant From Bottle Case Messages Victim. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.bottleThreat"], sameVictim: true)
         ],
         "story.dieselDrainage": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,

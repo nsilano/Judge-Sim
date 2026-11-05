@@ -922,6 +922,18 @@ if args.count > 3 && args[1] == "dossier" {
     }
     exit(0)
 }
+/// `Playtest bank <path>`: one line per written case (story or follow-up) for the duplicate scanner.
+if args.count > 2 && args[1] == "bank" {
+    var lines: [String] = []
+    func clean(_ s: String) -> String { s.replacingOccurrences(of: "\t", with: " ").replacingOccurrences(of: "\n", with: " ") }
+    for t in StoryCases.all + FollowUpCases.all {
+        lines.append([t.key, t.primaryLaw, "\(t.category)", t.headlines.first ?? "", t.specification, t.summaries.first ?? "",
+                      t.prosecutionWitnesses.first?.role ?? "", t.story?.howIdentified ?? ""].map(clean).joined(separator: "\t"))
+    }
+    try? lines.joined(separator: "\n").write(toFile: args[2], atomically: true, encoding: .utf8)
+    print("Wrote \(lines.count) cases to \(args[2])")
+    exit(0)
+}
 if args.count > 1 && args[1] == "stories" {
     MainActor.assumeIsolated { tryEveryStory() }
     exit(0)

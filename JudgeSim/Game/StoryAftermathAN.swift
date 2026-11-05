@@ -15,12 +15,6 @@ extension StoryAftermath {
                  body: "Driving While Revoked After Moped Chase. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.mopedNoLicense"])
         ],
-        "story.parkedDwi": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Driver Stopped With Revoked License After DWI Case",
-                 body: "Second Driving Charge Follows Parking Lot DWI. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.dwlrAfterDwi"])
-        ],
         "story.loudParty": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Party Host Resists Deputies, Charged Again",

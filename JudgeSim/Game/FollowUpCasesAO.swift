@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Follow-up trials for the batch AO everyday-crime stories.
 extension FollowUpCases {
-    static let batchAO: [CaseTemplate] = [vendingAgain, busStopThreat, tireResale, deerStandAgain, flagBurn, truckNoLicense, collectionPlateTheft, skateboardEscape, fireAlarmAgain, clotheslineTheft, softballThreat, ticketScalperTwo, cameraSmashAssault, rideshareRunnerTwo, parkingLotDispute, burglaryReceiving, robberyGetaway, knifeThreatLetter, pwisdAgain, pillRefill, dvpoViolationText, snatchCardUse, forgedCheckUttering, refundIdentity, dwellingRaid, atvChopShop, deputyResist, felonFirearmPossession, cokeMotelAgain, robberyIntimidation]
+    static let batchAO: [CaseTemplate] = [vendingAgain, busStopThreat, tireResale, deerStandAgain, flagBurn, collectionPlateTheft, skateboardEscape, fireAlarmAgain, clotheslineTheft, softballThreat, ticketScalperTwo, cameraSmashAssault, rideshareRunnerTwo, parkingLotDispute, burglaryReceiving, pwisdAgain, dvpoViolationText, snatchCardUse, forgedCheckUttering, dwellingRaid, atvChopShop, deputyResist, felonFirearmPossession, cokeMotelAgain, robberyIntimidation]
 
     static let vendingAgain = SmallCases.make(
         key: "story.followup.vendingAgain",
@@ -126,29 +126,6 @@ extension FollowUpCases {
         mood: .wantsConviction,
         impact: "I flew it for forty years.",
         genders: ["V": .male])
-
-    static let truckNoLicense = SmallCases.make(
-        key: "story.followup.truckNoLicense",
-        category: .traffic,
-        headlines: ["Man Driving Borrowed Truck Had No License", "Driving While Revoked Follows Truck Case"],
-        law: "dwlr",
-        spec: "Drove a motor vehicle on a public highway while {D.his} driver's license was revoked, on {DATE}.",
-        ages: 22...58,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} was stopped driving a different friend's truck. {D}'s license was revoked. {D} says the friend had a spare key and said it was fine.",
-        state: [E(.document, 3, "DMV Record", "License revoked."), E(.video, 2, "Dash Camera", "{D} behind the wheel.")],
-        defense: [E(.statement, 1, "Friend", "The truck's owner says {D.he} lent it.")],
-        role: "State Highway Patrol trooper",
-        exam: [.direct("What did you find?", "\"A revoked license.\""), .direct("Whose truck?", "\"A friend's.\""), .cross("The friend agreed.", "\"To the loan.\"")],
-        theory: ("{D} drove on a revoked license.", "A friend's loan."),
-        allocution: "\"I'll stop driving.\"",
-        truths: ("{DL} had been told about the revocation.", "The friend never knew."),
-        defendant: [.direct("Did you know?", "\"Yes.\""), .direct("Why drive?", "\"Work.\""), .cross("After the truck case.", "\"I know.\"")],
-        openings: ("A revoked license.", "A friend's truck."),
-        closings: ("He knew.", "A loan."),
-        timeline: [(0, "Evening: a stop for a taillight.")],
-        identified: "A traffic stop.",
-        genders: ["D": .male])
 
     static let collectionPlateTheft = SmallCases.make(
         key: "story.followup.collectionPlateTheft",
@@ -386,54 +363,6 @@ extension FollowUpCases {
         impact: "My work was on it.",
         genders: ["D": .male])
 
-    static let robberyGetaway = SmallCases.make(
-        key: "story.followup.robberyGetaway",
-        category: .traffic,
-        headlines: ["Man Leads Deputies on Chase After Bank Case", "Fleeing Charge Follows Robbery Case"],
-        law: "fleeing",
-        threshold: 6,
-        spec: "Operated a motor vehicle on a street while fleeing from a law enforcement officer, on {DATE}.",
-        ages: 22...55,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} drove away at 80 mph when a deputy turned on lights, ran two red lights, and ditched the car.",
-        state: [E(.video, 3, "Dash Camera", "{D} fleeing at 80."), E(.document, 2, "Log", "Four minutes.")],
-        defense: [E(.statement, 1, "Panic", "{DL} says {D.he} panicked.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What happened?", "\"{DL} fled.\""), .direct("How fast?", "\"80.\""), .cross("He stopped.", "\"On foot.\"")],
-        theory: ("{D} fled in a car.", "A panicked driver."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} had a bag of cash.", "The cash was his paycheck."),
-        defendant: [.direct("Why flee?", "\"I panicked.\""), .direct("How fast?", "\"Fast.\""), .cross("After the bank case.", "\"I know.\"")],
-        openings: ("An 80 mph chase.", "A panic."),
-        closings: ("Four minutes.", "Fear."),
-        timeline: [(0, "Afternoon: blue lights.")],
-        identified: "The dash camera.",
-        genders: ["D": .male])
-
-    static let knifeThreatLetter = SmallCases.make(
-        key: "story.followup.knifeThreatLetter",
-        category: .publicOrder,
-        headlines: ["Letter Threatens Man Cut in Bar Fight", "Communicating Threats After Knife Case"],
-        law: "communicatingThreats",
-        spec: "Willfully threatened to physically injure {V}, on {DATE}.",
-        ages: 22...50,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {V} received a note under the wiper: 'Next time I'll finish it.' A camera showed {D}'s car.",
-        state: [E(.physical, 3, "The Note", "'Next time I'll finish it.'"), E(.video, 2, "Camera", "{D}'s car at {V}'s home.")],
-        defense: [E(.statement, 1, "No Knowledge", "{DL} says {D.he} didn't write it.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What did the note say?", "\"'Next time I'll finish it.'\""), .direct("Whose handwriting?", "\"Unknown.\""), .cross("Camera shows his car.", "\"Passing.\"")],
-        theory: ("{D} threatened {V} again.", "A note anyone could write."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL}'s handwriting.", "A friend wrote it."),
-        defendant: [.direct("Did you write it?", "\"No.\""), .direct("Why there?", "\"Driving.\""), .cross("After the knife case.", "\"I know.\"")],
-        openings: ("A note.", "Handwriting."),
-        closings: ("The same man.", "No proof."),
-        timeline: [(0, "Night: the note.")],
-        identified: "{V}'s note.",
-        impact: "I carry pepper spray.",
-        genders: ["D": .male, "V": .male])
-
     static let pwisdAgain = SmallCases.make(
         key: "story.followup.pwisdAgain",
         category: .drugs,
@@ -456,30 +385,6 @@ extension FollowUpCases {
         timeline: [(0, "Evening: the stop.")],
         identified: "A traffic stop.",
         doctrines: ["searchSeizure", "burdenOfProof"],
-        genders: ["D": .male])
-
-    static let pillRefill = SmallCases.make(
-        key: "story.followup.pillRefill",
-        category: .drugs,
-        headlines: ["Pharmacist Spots Altered Prescription From Warehouse Worker", "Prescription Fraud After Pill Delivery Case"],
-        law: "prescriptionFraud",
-        threshold: 6,
-        spec: "Obtained a controlled substance by altering a prescription, on {DATE}.",
-        ages: 24...58,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} presented a prescription whose quantity had been changed. The pharmacist called the doctor.",
-        state: [E(.document, 3, "Prescription", "A '3' changed to an '8.'"), E(.statement, 2, "Doctor", "The doctor wrote 30.")],
-        defense: [E(.statement, 1, "Pain", "{DL} says {D.he} is in pain.")],
-        role: "Pharmacist",
-        exam: [.direct("What did you see?", "\"An altered quantity.\""), .direct("What did the doctor say?", "\"30.\""), .cross("Pain.", "\"Possibly.\"")],
-        theory: ("{D} altered a prescription.", "A man in pain."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL}'s pen matched.", "A receptionist wrote it."),
-        defendant: [.direct("Did you alter it?", "\"No.\""), .direct("Where from?", "\"The doctor.\""), .cross("After the pill case.", "\"I know.\"")],
-        openings: ("A changed number.", "Pain."),
-        closings: ("Pen match.", "A receptionist."),
-        timeline: [(0, "Afternoon: the prescription is presented.")],
-        identified: "The pharmacist's call.",
         genders: ["D": .male])
 
     static let dvpoViolationText = SmallCases.make(
@@ -552,31 +457,6 @@ extension FollowUpCases {
         timeline: [(0, "Morning: the deposit.")],
         identified: "The bank's flag.",
         impact: "It happened again.")
-
-    static let refundIdentity = SmallCases.make(
-        key: "story.followup.refundIdentity",
-        category: .whiteCollar,
-        headlines: ["Another Client's Refund Taken by Tax Preparer", "Second Identity Theft Charge"],
-        law: "identityTheft",
-        threshold: 6,
-        spec: "Knowingly obtained and used the identifying information of {V} to fraudulently obtain a tax refund of $2,400, on {DATE}.",
-        ages: 26...58,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, another client received an IRS letter about a refund {D} had filed without permission.",
-        state: [E(.document, 3, "Deposit", "$2,400 to {D}'s account."), E(.document, 2, "IRS", "Filed from {D}'s office.")],
-        defense: [E(.statement, 1, "Asked", "{DL} says the client asked.")],
-        role: "Sheriff's financial crimes detective",
-        exam: [.direct("How routed?", "\"To {DL}'s account.\""), .direct("Authorized?", "\"No.\""), .cross("A request?", "\"The client says no.\"")],
-        theory: ("{D} did it again.", "A request."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL}'s files.", "An engagement letter."),
-        defendant: [.direct("Did you file?", "\"Yes.\""), .direct("Asked?", "\"Yes.\""), .cross("After the first case.", "\"I know.\"")],
-        openings: ("Another refund.", "A request."),
-        closings: ("Again.", "Asked."),
-        timeline: [(0, "Spring: the refund.")],
-        identified: "The IRS letter.",
-        impact: "Again I had to prove I hadn't filed.",
-        genders: ["D": .male])
 
     static let dwellingRaid = SmallCases.make(
         key: "story.followup.dwellingRaid",

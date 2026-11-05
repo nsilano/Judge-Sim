@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Everyday cases, written with SmallCases: the offenses that fill a real county's docket.
 extension StoryCases {
-    static let batchAR: [CaseTemplate] = [hardwareShoplift, mailboxBaseball, ballgamePistol, streetRaceWreck, laptopCarBreakin, exTrespassPorch, phoneKnockedAway, fakeBlueLights, tillShortage, roommateCreditCard, checkFromGrandma, checkpointDwi, coachShoveRef, exPostingCampaign, formerEmployeeFiles, storageUnitBreakin, plannedPharmacyRobbery, neighborWitnessThreat, toddlerLeftHome, partyGrab, roadRageBat, fourthDwi, businessPartnerShot, debtKidnapping, barnFireInsurance]
+    static let batchAR: [CaseTemplate] = [hardwareShoplift, mailboxBaseball, ballgamePistol, streetRaceWreck, laptopCarBreakin, exTrespassPorch, phoneKnockedAway, tillShortage, roommateCreditCard, checkFromGrandma, checkpointDwi, coachShoveRef, exPostingCampaign, formerEmployeeFiles, plannedPharmacyRobbery, toddlerLeftHome, partyGrab, roadRageBat, fourthDwi, debtKidnapping]
 
     static let hardwareShoplift = SmallCases.make(
         key: "story.hardwareShoplift",
@@ -174,31 +174,6 @@ extension StoryCases {
         mood: .wantsConviction,
         impact: "I couldn't get help.",
         genders: ["D": .male, "V": .female])
-
-    static let fakeBlueLights = SmallCases.make(
-        key: "story.fakeBlueLights",
-        category: .publicOrder,
-        headlines: ["Driver With Blue Dash Lights Pulls Over Motorist on Back Road", "Motorist Says 'Officer' Had No Badge or Marked Car"],
-        law: "impersonatingLEO",
-        spec: "Falsely represented being a sworn law enforcement officer by using blue lights, on {DATE}.",
-        ages: 20...55,
-        victim: true,
-        summary: "{V} was pulled over at night on {DATE} by a plain sedan with flashing blue dash lights. The driver walked up in a vest, asked for {V}'s license, and told {V.him} to get out. {V} drove off and called 911. Deputies later stopped {D} with blue lights in the dash. {DL} says {D.he} was a volunteer fire police officer.",
-        state: [E(.physical, 3, "Blue Lights", "Blue dash lights and a vest in {D}'s sedan.", .search), E(.statement, 3, "Motorist", "{V} identifies {D}'s sedan.")],
-        defense: [E(.statement, 1, "Volunteer", "{DL} says {D.he} is a volunteer fire police officer.")],
-        role: "Motorist",
-        exam: [.direct("What did the driver say?", "\"To get out of the car.\""), .direct("Was there a badge?", "\"No.\""), .cross("A vest.", "\"It said 'Security'.\""), .cross("You left.", "\"I was afraid.\"")],
-        theory: ("{D} pretended to be an officer.", "A volunteer with lights."),
-        allocution: "\"I used the lights. I'm sorry.\"",
-        truths: ("The volunteer department had no record of {DL}.", "The volunteer fire police chief confirmed {DL} had been sworn in the month before."),
-        defendant: [.direct("Did you pull {V} over?", "\"Yes.\""), .direct("Why?", "\"He was speeding.\""), .cross("Blue lights.", "\"I'm a volunteer.\""), .cross("No record.", "\"I joined recently.\"")],
-        openings: ("Blue lights and a vest.", "A volunteer."),
-        closings: ("Blue lights.", "A volunteer."),
-        timeline: [(-14, "{DL} buys blue lights online."), (0, "10:30 p.m.: {V} is pulled over."), (0, "10:40 p.m.: {V} calls 911."), (0, "11:15 p.m.: deputies stop {DL}.")],
-        identified: "A motorist and blue dash lights.",
-        mood: .wantsConviction,
-        impact: "I'll never pull over on a back road again.",
-        genders: ["V": .male])
 
     static let tillShortage = SmallCases.make(
         key: "story.tillShortage",
@@ -376,34 +351,6 @@ extension StoryCases {
         impact: "Three weeks of work.",
         genders: ["D": .male])
 
-    static let storageUnitBreakin = SmallCases.make(
-        key: "story.storageUnitBreakin",
-        category: .property,
-        headlines: ["Self-Storage Units Cut Open Overnight, Tools and Furniture Gone", "Gate Log Puts Defendant's Code at Facility"],
-        law: "feloniousBE",
-        threshold: 6,
-        spec: "Broke and entered a storage unit of {V} with intent to commit larceny therein, on {DATE}.",
-        ages: 20...50,
-        victim: true,
-        summary: "Five storage units were cut open overnight on {DATE}. {V} lost a table saw and a set of antique chairs. The gate log showed {D}'s access code entering at 1:10 a.m. and leaving at 3:40. {DL} says {D.he} was moving {D.his} own unit and never touched {V}'s.",
-        state: [E(.digital, 3, "Gate Log", "{D}'s code enters at 1:10 a.m. and leaves at 3:40 a.m."), E(.video, 2, "Facility Camera", "A box truck backs to the units at 2 a.m.")],
-        defense: [E(.statement, 1, "Own Unit", "{DL} says {D.he} was moving {D.his} own things.")],
-        role: "Storage facility owner",
-        exam: [.direct("How were the units opened?", "\"Locks cut with bolt cutters.\""), .direct("Whose code was used?", "\"{DL}'s.\""), .cross("The truck isn't identified.", "\"No plate visible.\""), .cross("Codes can be shared.", "\"They can.\"")],
-        defenseRole: "Defendant's friend",
-        defenseExam: [.direct("Were you helping move?", "\"I was there for an hour.\""), .cross("Which unit?", "\"{DL}'s.\"")],
-        theory: ("{D} cut locks and emptied units.", "A late move from {D.his} own unit."),
-        allocution: "\"I did it, and I'm sorry for the harm.\"",
-        truths: ("{DL}'s unit was empty before the night and had been for a month.", "The friend left at 1:45, long before the units were opened."),
-        defendant: [.direct("Did you cut locks?", "\"No.\""), .direct("Why at 1 a.m.?", "\"I work days.\""), .cross("Empty unit.", "\"I was moving out.\""), .cross("A truck.", "\"Rented.\"")],
-        openings: ("A code and a box truck.", "A move in the night."),
-        closings: ("The log and the truck.", "Codes get shared."),
-        timeline: [(-30, "{DL} empties {D.his} own unit."), (0, "1:10 a.m.: {DL}'s code opens the gate."), (0, "2 a.m.: a box truck backs to the units."), (0, "3:40 a.m.: {DL}'s code exits."), (0, "8 a.m.: {V} finds the cut locks.")],
-        identified: "A gate log and a camera.",
-        aggravating: ["The offense was committed for pecuniary gain"],
-        mood: .wantsConviction,
-        impact: "The chairs were my grandmother's.")
-
     static let plannedPharmacyRobbery = SmallCases.make(
         key: "story.plannedPharmacyRobbery",
         category: .robbery,
@@ -432,31 +379,6 @@ extension StoryCases {
         mood: .divided,
         doctrines: ["burdenOfProof", "hearsay"],
         genders: ["D": .male])
-
-    static let neighborWitnessThreat = SmallCases.make(
-        key: "story.neighborWitnessThreat",
-        category: .publicOrder,
-        headlines: ["Neighbor Told Witness 'You Won't Testify'", "Defendant Confronts Witness in Driveway Days Before Hearing"],
-        law: "witnessIntimidation",
-        threshold: 6,
-        spec: "Threatened {V}, a witness in a pending case, to deter {V.him} from testifying, on {DATE}.",
-        ages: 24...60,
-        victim: true,
-        summary: "{V} had agreed to testify against {D}'s brother in a pending assault case. On {DATE}, three days before the hearing, {D} stood in {V}'s driveway and said 'You won't be needing to testify, if you know what's good for you.' A doorbell camera recorded the audio. {DL} says it was advice, not a threat.",
-        state: [E(.video, 3, "Doorbell Audio", "'You won't be needing to testify, if you know what's good for you.'"), E(.document, 2, "Subpoena", "{V} subpoenaed three days later.")],
-        defense: [E(.statement, 1, "Advice", "{DL} says it was friendly advice.")],
-        role: "Witness",
-        exam: [.direct("What did {DL} say?", "\"'You won't be needing to testify.'\""), .direct("How did you feel?", "\"Threatened.\""), .cross("No weapon.", "\"No.\""), .cross("{D.He} didn't touch you.", "\"No.\"")],
-        theory: ("{D} tried to scare a witness.", "Friendly advice."),
-        allocution: "\"I said it and I'm sorry.\"",
-        truths: ("{DL}'s brother's trial was set for the next week.", "A neighbor heard {DL} say the words as a warning about a rumor, not a threat."),
-        defendant: [.direct("Did you say it?", "\"Yes.\""), .direct("What did you mean?", "\"To stay out of it.\""), .cross("If you know what's good for you.", "\"A phrase.\""), .cross("Your brother's case.", "\"Family.\"")],
-        openings: ("Words on audio.", "Advice."),
-        closings: ("The audio.", "Advice."),
-        timeline: [(-4, "{V} agrees to testify."), (0, "5:20 p.m.: {DL} walks up the driveway."), (0, "5:25 p.m.: {V} calls deputies."), (3, "The hearing is set.")],
-        identified: "A doorbell camera.",
-        mood: .wantsConviction,
-        impact: "I fear for my kids.")
 
     static let toddlerLeftHome = SmallCases.make(
         key: "story.toddlerLeftHome",
@@ -561,36 +483,6 @@ extension StoryCases {
         mood: .wantsConviction,
         doctrines: ["priorRecord"])
 
-    static let businessPartnerShot = SmallCases.make(
-        key: "story.businessPartnerShot",
-        category: .violent,
-        headlines: ["Business Partner Found Shot in Office After Dispute Over Books", "Camera Catches Man Leaving Building at Night"],
-        law: "murder1",
-        threshold: 9,
-        spec: "Unlawfully killed {V} with malice, premeditation, and deliberation, on {DATE}.",
-        ages: 30...62,
-        victim: true,
-        summary: "{V}, co-owner of a small contracting firm, was found shot twice in {V.his} office on {DATE}. The books showed $90,000 missing. A building camera recorded {D}, {V}'s partner, entering with a duffel at 7:40 p.m. and leaving at 8:15 p.m. A pistol bought by {D} was never found. {DL} says {D.he} was at the office to talk and {V} was alive when {D.he} left.",
-        state: [E(.video, 3, "Building Camera", "{D} enters at 7:40 p.m. with a duffel and leaves at 8:15 p.m."), E(.document, 3, "Books", "$90,000 missing; transfers approved by {D}."), E(.forensic, 3, "Ballistics", "Two .380 rounds; {D} purchased a .380 in the spring.")],
-        defense: [E(.statement, 1, "Alive", "{DL} says {V} was alive when {D.he} left."), E(.statement, 2, "Cleaner", "A cleaner heard a gunshot after 8:30 p.m.")],
-        role: "Sheriff's detective",
-        exam: [.direct("What did you find?", "\"{V} shot twice at the desk.\""), .direct("What did the books show?", "\"$90,000 missing.\""), .direct("What about the pistol?", "\"{DL} bought one; never found.\""), .cross("The cleaner heard a shot later.", "\"After 8:30.\""), .cross("No gun found.", "\"No.\"")],
-        defenseRole: "Office cleaner",
-        defenseExam: [.direct("What did you hear?", "\"A shot around 8:40.\""), .cross("Could it be a car?", "\"It sounded like a shot.\"")],
-        theory: ("{D} killed a partner who found the missing money.", "A partner who left a living man."),
-        allocution: "\"I will carry this forever.\"",
-        truths: ("{DL}'s pistol was thrown in the river, a witness says.", "The cleaner's clock was twenty minutes fast."),
-        defendant: [.direct("Did you kill {V}?", "\"No.\""), .direct("The money?", "\"Business expenses.\""), .cross("The pistol.", "\"Sold.\""), .cross("The duffel.", "\"Paperwork.\"")],
-        openings: ("Money, a pistol, a camera.", "A cleaner and a living man."),
-        closings: ("The money trail.", "A shot after he left."),
-        timeline: [(-30, "{V} questions the books."), (0, "7:40 p.m.: {DL} enters the office."), (0, "8:15 p.m.: {DL} leaves."), (0, "8:40 p.m.: the cleaner hears a shot."), (1, "{V} is found in the office.")],
-        identified: "A building camera and the books.",
-        aggravating: ["The offense involved a firearm"],
-        mood: .wantsConviction,
-        impact: "He built that company with his hands.",
-        doctrines: ["burdenOfProof", "lesserIncluded"],
-        genders: ["D": .male, "V": .male])
-
     static let debtKidnapping = SmallCases.make(
         key: "story.debtKidnapping",
         category: .violent,
@@ -620,34 +512,5 @@ extension StoryCases {
         impact: "I thought I would die in there.",
         doctrines: ["duress"],
         genders: ["V": .male])
-
-    static let barnFireInsurance = SmallCases.make(
-        key: "story.barnFireInsurance",
-        category: .property,
-        headlines: ["Barn Burns Hours After Insurance Increase, Farm Owner Says", "Fire Investigators Find Accelerant Pour Pattern"],
-        law: "burningBuildings",
-        threshold: 7,
-        spec: "Willfully and maliciously burned a barn of {V}, an insured farm, on {DATE}.",
-        ages: 30...65,
-        victim: true,
-        summary: "A barn on {V}'s farm burned to the ground on {DATE}. A fire investigator found an accelerant pour pattern near the doors. {D}, {V}'s tenant, had been told to vacate a week earlier. {DL} says {D.he} was in town and had no reason to burn the barn.",
-        state: [E(.forensic, 3, "Fire Investigator", "Accelerant pour pattern near the barn doors."), E(.digital, 3, "Phone Records", "{D}'s phone connected to the tower serving the farm at 1 a.m."), E(.document, 2, "Eviction Notice", "Notice to vacate served a week earlier.")],
-        defense: [E(.statement, 1, "In Town", "{DL} says {D.he} was in town all night.")],
-        role: "Fire investigator",
-        exam: [.direct("Where did it start?", "\"By the doors.\""), .direct("What accelerant?", "\"Gasoline.\""), .cross("A tower covers a wide area.", "\"Yes.\""), .cross("The wiring was old.", "\"It was inspected.\"")],
-        defenseRole: "Defendant's friend",
-        defenseExam: [.direct("Was {DL} with you?", "\"Until midnight.\""), .cross("After midnight?", "\"I don't know.\"")],
-        theory: ("{D} burned a barn after an eviction notice.", "A man in town."),
-        allocution: "\"I'm sorry. I was angry.\"",
-        truths: ("A gas can from the barn was in {DL}'s truck bed.", "The tower covers two miles."),
-        defendant: [.direct("Did you burn the barn?", "\"No.\""), .direct("Where were you?", "\"Town.\""), .cross("A gas can.", "\"From fencing work.\""), .cross("Notice to vacate.", "\"Not angry.\"")],
-        openings: ("A pour pattern and a notice.", "A man in town."),
-        closings: ("Accelerant.", "A wide tower."),
-        timeline: [(-7, "{DL} is served notice to vacate."), (0, "12 a.m.: {DL}'s friend leaves."), (0, "1 a.m.: {DL}'s phone hits the farm tower."), (0, "2:20 a.m.: the barn is on fire.")],
-        identified: "A fire investigator and tower records.",
-        aggravating: ["The offense endangered the lives of many people"],
-        mood: .wantsConviction,
-        impact: "Four generations of work.",
-        genders: ["D": .male])
 
 }

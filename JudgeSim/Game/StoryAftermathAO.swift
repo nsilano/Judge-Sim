@@ -33,12 +33,6 @@ extension StoryAftermath {
                  body: "Property Damage Charge After Flag Theft Case. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.flagBurn"], sameVictim: true)
         ],
-        "story.borrowedTruck": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Man Driving Borrowed Truck Had No License",
-                 body: "Driving While Revoked Follows Truck Case. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.truckNoLicense"])
-        ],
         "story.donationBox": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Collection Plate Taken During Church Service",
@@ -99,29 +93,11 @@ extension StoryAftermath {
                  body: "Receiving Charge After Daytime Break-In. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.burglaryReceiving"], sameVictim: true)
         ],
-        "story.bankNoteRobbery": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Man Leads Deputies on Chase After Bank Case",
-                 body: "Fleeing Charge Follows Robbery Case. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.robberyGetaway"])
-        ],
-        "story.barParkingKnife": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Letter Threatens Man Cut in Bar Fight",
-                 body: "Communicating Threats After Knife Case. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.knifeThreatLetter"], sameVictim: true)
-        ],
         "story.cocaineBagStop": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Drugs Found in Car at Traffic Stop Weeks After Earlier Case",
                  body: "Second Schedule II Charge. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.pwisdAgain"])
-        ],
-        "story.sellPillsAtWork": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Pharmacist Spots Altered Prescription From Warehouse Worker",
-                 body: "Prescription Fraud After Pill Delivery Case. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.pillRefill"])
         ],
         "story.domesticChoke": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
@@ -140,12 +116,6 @@ extension StoryAftermath {
                  headline: "Bookkeeper Passes Forged Check at New Job",
                  body: "Uttering Charge After Payroll Case. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.forgedCheckUttering"], sameVictim: true)
-        ],
-        "story.taxRefundTheft": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Another Client's Refund Taken by Tax Preparer",
-                 body: "Second Identity Theft Charge. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.refundIdentity"])
         ],
         "story.dopeHouseTrailer": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,

@@ -3,29 +3,11 @@ import Foundation
 /// What follows the batch AU everyday-crime stories. Tokens: {D} and {DL} for the defendant, {JUDGE}.
 extension StoryAftermath {
     static let beatsAU: [String: [Beat]] = [
-        "story.fakeTicketResale": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Second Ticket Sale Collapses",
-                 body: "Defendant From Ticket Case Lists Sports Tickets. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.ticketsAgain"])
-        ],
-        "story.mowerShedTheft": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Another Yard Tool Taken From a Shed",
-                 body: "Defendant From Mower Case Seen at Neighbor's Shed. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.mowerAgain"], sameVictim: true)
-        ],
         "story.constructionDumping": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Debris Dumped on Another Property",
                  body: "Defendant From Pasture Dumping Case Linked by Slip. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.dumpingAgain"])
-        ],
-        "story.copperWireStripping": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Copper Stripped From Another Empty House",
-                 body: "Scrap Yard Flags Defendant From Earlier Case. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.copperAgain"])
         ],
         "story.scratchOffTheft": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
@@ -38,12 +20,6 @@ extension StoryAftermath {
                  headline: "Neighbor's Cat Found Wounded",
                  body: "Defendant From Dog Case Accused Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.dogAgain"], sameVictim: true)
-        ],
-        "story.weddingDriveImpaired": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Driver With Revoked License Stopped Again",
-                 body: "Defendant From Reception Case Caught After Dinner. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.impairedAgain"])
         ],
         "story.busPhoneSnatch": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
@@ -81,12 +57,6 @@ extension StoryAftermath {
                  body: "Defendant From Courthouse Case Stopped With Blade. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.knifeAgain"])
         ],
-        "story.motorcycleFlee": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Motorcycle Flees Deputy Again",
-                 body: "Defendant From Highway Chase Rides Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.bikeFleeAgain"])
-        ],
         "story.occupiedHouseNight": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Another Home Entered at Night",
@@ -122,12 +92,6 @@ extension StoryAftermath {
                  headline: "Second Employer Finds Missing Pay",
                  body: "Defendant From Payroll Case Hired Again. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.payrollAgain"])
-        ],
-        "story.deceasedParentCards": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Cards Opened in Another Relative's Name",
-                 body: "Defendant From Estate Case Faces New Credit Charge. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.estateCardsAgain"])
         ],
         "story.contractKillingPlot": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,

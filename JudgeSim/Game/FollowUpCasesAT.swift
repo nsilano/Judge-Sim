@@ -4,31 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Follow-up trials for the batch AT everyday-crime stories.
 extension FollowUpCases {
-    static let batchAT: [CaseTemplate] = [jarAgain, swingSetAgain, guitarShopAgain, placardAgain, poolAgain, fireworksAgain, carScamAgain, pickupLineRepeat, rifleAgain, textbookAgain, cartDwiAgain, giftCardAgain, stagedAgain, treasurerAgain, liquorAgain, bakeryAgain, walkerDwlr, packagedAgain, stalkNeighborOrder, aideCharted, deputySecond, roommateThreat, ambushWitness, convenienceAgain, riotThreat]
-
-    static let jarAgain = SmallCases.make(
-        key: "story.followup.jarAgain",
-        category: .property,
-        headlines: ["Collection Jar Missing From Another Store", "Defendant From Charity Jar Case Seen at Counter"],
-        law: "misdLarceny",
-        spec: "Stole a charity donation jar containing $95 belonging to {V}, a convenience store, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a collection jar for a food pantry vanished from a convenience store counter. A camera showed {D} leaving with it. {DL} says {D.he} meant to donate.",
-        state: [E(.video, 3, "Counter Camera", "{D} walks out with the jar."), E(.physical, 2, "Jar", "The emptied jar behind the store.", .search)],
-        defense: [E(.statement, 1, "Donate", "{DL} says {D.he} meant to donate.")],
-        role: "Convenience store clerk",
-        exam: [.direct("What did you see?", "\"{DL} left with the jar.\""), .direct("What was in it?", "\"About $95.\""), .cross("To donate.", "\"The jar was already a donation.\"")],
-        theory: ("{D} took a jar.", "A donor."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} left no money.", "The jar was already empty and sitting by the trash."),
-        defendant: [.direct("Did you take it?", "\"To donate.\""), .direct("Why not pay?", "\"Forgot.\""), .cross("Empty.", "\"Yes.\"")],
-        openings: ("A jar.", "A donor."),
-        closings: ("Video.", "Donor."),
-        timeline: [(0, "{DL} takes the jar."), (0, "The clerk notices.")],
-        identified: "A camera.",
-        mood: .wantsConviction,
-        genders: ["D": .male])
+    static let batchAT: [CaseTemplate] = [swingSetAgain, guitarShopAgain, placardAgain, poolAgain, fireworksAgain, carScamAgain, rifleAgain, textbookAgain, cartDwiAgain, giftCardAgain, treasurerAgain, liquorAgain, bakeryAgain, packagedAgain, stalkNeighborOrder, aideCharted, roommateThreat, ambushWitness, riotThreat]
 
     static let swingSetAgain = SmallCases.make(
         key: "story.followup.swingSetAgain",
@@ -170,30 +146,6 @@ extension FollowUpCases {
         mood: .wantsConviction,
         genders: ["D": .male])
 
-    static let pickupLineRepeat = SmallCases.make(
-        key: "story.followup.pickupLineRepeat",
-        category: .traffic,
-        headlines: ["Speeding Near School Again", "Defendant From Pickup Line Case Cited Near Crosswalk"],
-        law: "recklessDriving",
-        spec: "Drove carelessly and heedlessly in willful disregard of the rights and safety of others, in a school zone, on {DATE}.",
-        ages: 18...60,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} sped through a school zone again. A crossing guard jumped back. {DL} says the speedometer was wrong.",
-        state: [E(.statement, 3, "Crossing Guard", "The truck sped past."), E(.video, 2, "Camera", "Speed over 40.")],
-        defense: [E(.statement, 1, "Speedometer", "{DL} says the speedometer was wrong.")],
-        role: "Crossing guard",
-        exam: [.direct("What did you see?", "\"A truck at speed.\""), .direct("How close?", "\"Close.\""), .cross("Speedometer.", "\"Radar says 41.\"")],
-        theory: ("{D} sped again.", "Speedometer."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("Radar showed 41 in a 15.", "A police radar sign showed 14 mph at the time."),
-        defendant: [.direct("Speeding?", "\"No.\""), .direct("Why?", "\"Gauge.\""), .cross("Radar.", "\"Wrong.\"")],
-        openings: ("Speed.", "Gauge."),
-        closings: ("Radar.", "Gauge."),
-        timeline: [(0, "The truck passes.")],
-        identified: "Radar.",
-        mood: .indifferent,
-        genders: ["D": .male])
-
     static let rifleAgain = SmallCases.make(
         key: "story.followup.rifleAgain",
         category: .violent,
@@ -289,29 +241,6 @@ extension FollowUpCases {
         identified: "A rack camera.",
         mood: .indifferent)
 
-    static let stagedAgain = SmallCases.make(
-        key: "story.followup.stagedAgain",
-        category: .whiteCollar,
-        headlines: ["Fall Claim Questioned Again", "Defendant From Staged Fall Case Files New Claim"],
-        law: "insuranceFraud",
-        spec: "Presented a false statement in support of an insurance claim, on {DATE}.",
-        ages: 18...60,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, an insurer found {D} had again filed a fall claim, this time at a restaurant. Video showed a controlled slide. {DL} says it was real.",
-        state: [E(.video, 3, "Camera", "A controlled slide."), E(.document, 3, "Claims History", "Four claims.")],
-        defense: [E(.statement, 1, "Real", "{DL} says the fall was real.")],
-        role: "Insurance adjuster",
-        exam: [.direct("What does the video show?", "\"A slide.\""), .direct("Claims?", "\"Four.\""), .cross("Real.", "\"No injury.\"")],
-        theory: ("{D} staged a fall.", "A real fall."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("A medical exam found nothing.", "An orthopedist found a sprain consistent with a slip."),
-        defendant: [.direct("Was it real?", "\"Yes.\""), .direct("Injury?", "\"Pain.\""), .cross("Four claims.", "\"Bad luck.\"")],
-        openings: ("A slide.", "Real."),
-        closings: ("Video.", "Real."),
-        timeline: [(0, "The fall."), (3, "The claim.")],
-        identified: "A camera.",
-        mood: .indifferent)
-
     static let treasurerAgain = SmallCases.make(
         key: "story.followup.treasurerAgain",
         category: .whiteCollar,
@@ -385,29 +314,6 @@ extension FollowUpCases {
         mood: .wantsConviction,
         genders: ["D": .male])
 
-    static let walkerDwlr = SmallCases.make(
-        key: "story.followup.walkerDwlr",
-        category: .traffic,
-        headlines: ["Driver From Crosswalk Case Stopped With Revoked License", "Defendant Caught Driving a Week After Plea"],
-        law: "dwlr",
-        spec: "Operated a motor vehicle on a highway while {D.his} license was revoked, on {DATE}.",
-        ages: 18...60,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a trooper stopped {D} at a light. The license was revoked after the crosswalk crash. {DL} says {D.he} thought a limited privilege applied.",
-        state: [E(.document, 3, "DMV", "Active revocation."), E(.statement, 2, "Trooper", "{D} said privilege applied.")],
-        defense: [E(.statement, 1, "Privilege", "{DL} says a privilege applied.")],
-        role: "State Highway Patrol trooper",
-        exam: [.direct("Record?", "\"Revoked.\""), .direct("Privilege?", "\"None filed.\""), .cross("Thought.", "\"Not filed.\"")],
-        theory: ("{D} drove revoked.", "A privilege."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("No privilege was filed.", "{DL}'s lawyer had told {D.him} a limited privilege had been granted."),
-        defendant: [.direct("Did you drive?", "\"Yes.\""), .direct("Why?", "\"Work.\""), .cross("Signed.", "\"Yes.\"")],
-        openings: ("A revocation.", "Privilege."),
-        closings: ("DMV.", "Privilege."),
-        timeline: [(0, "The stop."), (0, "The check.")],
-        identified: "A trooper.",
-        mood: .indifferent)
-
     static let packagedAgain = SmallCases.make(
         key: "story.followup.packagedAgain",
         category: .drugs,
@@ -479,30 +385,6 @@ extension FollowUpCases {
         identified: "A care log.",
         mood: .wantsConviction)
 
-    static let deputySecond = SmallCases.make(
-        key: "story.followup.deputySecond",
-        category: .violent,
-        headlines: ["Driver Resists Deputy Again", "Defendant From Traffic Stop Case Pulls Away"],
-        law: "resisting",
-        spec: "Resisted, delayed, and obstructed a public officer, on {DATE}.",
-        ages: 18...60,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} pulled from a deputy's grip during a stop. Body camera recorded it. {DL} says {D.he} flinched.",
-        state: [E(.video, 3, "Body Camera", "{D} pulls away."), E(.statement, 2, "Deputy", "{D} refused orders.")],
-        defense: [E(.statement, 1, "Flinch", "{DL} says {D.he} flinched.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What happened?", "\"{DL} pulled away.\""), .direct("Orders?", "\"Ignored.\""), .cross("Flinch.", "\"Pull.\"")],
-        theory: ("{D} resisted.", "A flinch."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("The video shows a turn.", "{DL} has a documented startle reflex."),
-        defendant: [.direct("Did you resist?", "\"Flinch.\""), .direct("Orders?", "\"Slow.\""), .cross("Warned.", "\"Yes.\"")],
-        openings: ("A pull.", "A flinch."),
-        closings: ("Video.", "Flinch."),
-        timeline: [(0, "The stop."), (0, "The pull.")],
-        identified: "Body camera.",
-        mood: .divided,
-        genders: ["D": .male])
-
     static let roommateThreat = SmallCases.make(
         key: "story.followup.roommateThreat",
         category: .violent,
@@ -548,30 +430,6 @@ extension FollowUpCases {
         closings: ("Exam.", "Copied."),
         timeline: [(0, "The note arrives.")],
         identified: "A handwriting exam.",
-        mood: .wantsConviction,
-        genders: ["D": .male])
-
-    static let convenienceAgain = SmallCases.make(
-        key: "story.followup.convenienceAgain",
-        category: .robbery,
-        headlines: ["Second Store Robbed After Earlier Case", "Defendant From Convenience Robbery Case Linked by Mask"],
-        law: "commonLawRobbery",
-        spec: "Took $410 from the person and presence of {V}, a clerk, by threatening {V.him}, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a masked man demanded cash at another store, hand in a pocket. A mask matching one from the earlier case was found in {D}'s car. {DL} says masks are common.",
-        state: [E(.video, 3, "Camera", "A masked man."), E(.physical, 3, "Mask", "A matching mask.", .search)],
-        defense: [E(.statement, 1, "Common Mask", "{DL} says masks are common.")],
-        role: "Store clerk",
-        exam: [.direct("What happened?", "\"A demand.\""), .direct("How much?", "\"$410.\""), .cross("Masked.", "\"Yes.\"")],
-        theory: ("{D} robbed again.", "Common masks."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("The mask had a patch.", "{DL} was at a restaurant across town, per a receipt."),
-        defendant: [.direct("Did you rob?", "\"No.\""), .direct("Mask?", "\"Common.\""), .cross("Patch.", "\"Sold in packs.\"")],
-        openings: ("A mask.", "Common."),
-        closings: ("Mask.", "Common."),
-        timeline: [(0, "The demand."), (0, "The flight.")],
-        identified: "A camera.",
         mood: .wantsConviction,
         genders: ["D": .male])
 

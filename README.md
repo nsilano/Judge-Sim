@@ -101,3 +101,18 @@ JudgeSim/
     GameState.swift            Calendar, people, news, scheduled events, save/load
   Views/                       SwiftUI screens
 ```
+
+
+## Writing new cases without duplicates
+
+Before writing a batch of written cases, scan the bank for scenes that already exist:
+
+```
+cd Tools/Playtest && python3 sync.py && swift build        # (or the Docker build used in CI)
+.build/debug/Playtest bank /tmp/bank.tsv                    # dump every story and follow-up
+python3 bank_audit.py /tmp/bank.tsv --probe "restaurant owner skims the tip jar"   # nearest existing cases to an idea
+python3 bank_audit.py /tmp/bank.tsv --new keyA,keyB,...     # after writing: flag any new case that repeats an old one
+python3 bank_audit.py /tmp/bank.tsv                         # whole-bank audit
+```
+
+The same law is fine. The same scene is not: same kind of place, same kind of act, same kind of trigger.

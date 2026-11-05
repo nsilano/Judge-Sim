@@ -4,54 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Everyday cases, written with SmallCases: the offenses that fill a real county's docket.
 extension StoryCases {
-    static let batchAU: [CaseTemplate] = [fakeTicketResale, mowerShedTheft, constructionDumping, copperWireStripping, scratchOffTheft, neighborDogShot, weddingDriveImpaired, busPhoneSnatch, seniorPhoneScam, badRentCheck, skateparkScuffle, campusThreat, courthouseKnife, motorcycleFlee, occupiedHouseNight, tireIronAssault, photoExtortion, inspectorBribe, investmentClub, payrollClerkTheft, deceasedParentCards, contractKillingPlot, boatCrashFatal, fentanylStash, unlockedGunToddler]
-
-    static let fakeTicketResale = SmallCases.make(
-        key: "story.fakeTicketResale",
-        category: .whiteCollar,
-        headlines: ["Fans Pay $1,200 for Concert Tickets That Don't Scan", "Seller Vanishes After Online Sale"],
-        law: "falsePretenses",
-        spec: "Obtained $1,200 from {V} by false pretenses, on {DATE}.",
-        ages: 19...45,
-        victim: true,
-        summary: "{V} paid {D} $1,200 for four concert tickets listed online on {DATE}. At the gate the codes were rejected as duplicates. {D} stopped answering messages. A bank record showed the money went to {D}'s account. {DL} says the tickets were real and the venue made a mistake.",
-        state: [E(.digital, 3, "Messages", "{D} promises four verified tickets."), E(.document, 3, "Bank Record", "$1,200 deposited in {D}'s account.")],
-        defense: [E(.statement, 1, "Venue Mistake", "{DL} says the tickets were real.")],
-        role: "Ticket buyer",
-        exam: [.direct("What did you pay?", "\"$1,200.\""), .direct("What happened at the gate?", "\"Codes rejected as duplicates.\""), .cross("The venue errs.", "\"Not on all four.\""), .cross("{D.He} stopped replying.", "\"Yes.\"")],
-        theory: ("{D} sold fake tickets.", "A venue mistake."),
-        allocution: "\"I'll refund every dollar.\"",
-        truths: ("{DL} sold the same four codes to three buyers.", "The venue's ticketing vendor admitted duplicate-code glitches that weekend."),
-        defendant: [.direct("Did you sell fakes?", "\"They were real.\""), .direct("Why stop replying?", "\"Busy.\""), .cross("Three buyers.", "\"Resale.\""), .cross("Editor.", "\"Hobby.\"")],
-        openings: ("Four dead codes.", "A venue error."),
-        closings: ("Duplicates and an editor.", "A mistake."),
-        timeline: [(-5, "{V} buys the tickets."), (0, "Gate: codes are rejected."), (1, "{V} reports the sale.")],
-        identified: "Messages and bank records.",
-        mood: .wantsConviction,
-        impact: "My daughter cried at the gate.")
-
-    static let mowerShedTheft = SmallCases.make(
-        key: "story.mowerShedTheft",
-        category: .property,
-        headlines: ["Riding Mower Rolled Out of Unlocked Shed", "Tire Tracks Lead to Neighbor's Yard"],
-        law: "misdLarceny",
-        spec: "Stole a riding mower valued at $1,400 belonging to {V}, on {DATE}.",
-        ages: 25...65,
-        victim: true,
-        summary: "{V}'s riding mower disappeared from an unlocked shed on {DATE}. Fresh tire tracks led through a gap in the hedge to {D}'s yard, where a similar mower sat under a tarp. {DL} says {D.he} bought the mower used last year. The loss was put at $1,400.",
-        state: [E(.physical, 3, "Mower", "A mower with {V}'s serial number under a tarp.", .search), E(.physical, 2, "Tire Tracks", "Tracks through the hedge gap.")],
-        defense: [E(.statement, 1, "Bought Used", "{DL} says {D.he} bought the mower used last year.")],
-        role: "Mower owner",
-        exam: [.direct("What was taken?", "\"My mower.\""), .direct("How do you know?", "\"The serial number.\""), .cross("{D.He} bought one.", "\"Not this one.\""), .cross("The shed was unlocked.", "\"Yes.\"")],
-        theory: ("{D} took a neighbor's mower.", "A used purchase."),
-        allocution: "\"I took it. I'm sorry.\"",
-        truths: ("A repainted deck covered the original color.", "A neighbor recalled seeing {DL} buy a mower at a yard sale last spring."),
-        defendant: [.direct("Did you take it?", "\"No.\""), .direct("Where did you buy it?", "\"Used.\""), .cross("Serial.", "\"Coincidence.\""), .cross("Repainted.", "\"Faded.\"")],
-        openings: ("A serial number and tracks.", "A used mower."),
-        closings: ("The serial number.", "A purchase."),
-        timeline: [(0, "Overnight: the mower leaves the shed."), (1, "{V} finds the tracks."), (1, "A deputy checks the neighbor's yard.")],
-        identified: "A serial number.",
-        mood: .indifferent)
+    static let batchAU: [CaseTemplate] = [constructionDumping, copperWireStripping, scratchOffTheft, neighborDogShot, weddingDriveImpaired, busPhoneSnatch, seniorPhoneScam, badRentCheck, skateparkScuffle, campusThreat, courthouseKnife, occupiedHouseNight, tireIronAssault, photoExtortion, inspectorBribe, investmentClub, payrollClerkTheft, contractKillingPlot, boatCrashFatal, fentanylStash, unlockedGunToddler]
 
     static let constructionDumping = SmallCases.make(
         key: "story.constructionDumping",
@@ -321,29 +274,6 @@ extension StoryCases {
         mood: .indifferent,
         genders: ["D": .male])
 
-    static let motorcycleFlee = SmallCases.make(
-        key: "story.motorcycleFlee",
-        category: .traffic,
-        headlines: ["Motorcyclist Weaves Through Traffic to Escape Deputy", "Chase Ends After Rider Lays Bike Down"],
-        law: "fleeing",
-        spec: "Operated a motorcycle on a highway while fleeing a law enforcement officer, on {DATE}.",
-        ages: 20...45,
-        victim: false,
-        summary: "A deputy clocked a motorcycle at 88 mph on {DATE} and turned on lights. The rider weaved through traffic and laid the bike down at an exit ramp. {D} was found limping away. {DL} says another rider took the bike while {D.he} was at a store.",
-        state: [E(.video, 3, "Dash Camera", "A motorcycle weaves through traffic at speed."), E(.statement, 3, "Deputy", "{D} found limping from the crash.")],
-        defense: [E(.statement, 1, "Another Rider", "{DL} says another rider took the bike.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What speed?", "\"88.\""), .direct("Who was found?", "\"{DL}.\""), .cross("Helmeted.", "\"Yes.\""), .cross("Another rider.", "\"None seen.\"")],
-        theory: ("{D} fled from a deputy.", "Another rider."),
-        allocution: "\"I panicked.\"",
-        truths: ("The bike's key was in {DL}'s pocket.", "A witness said a rider in a red jacket ran the bike into the ramp; {DL} wore blue."),
-        defendant: [.direct("Were you riding?", "\"No.\""), .direct("Whose?", "\"Mine, taken.\""), .cross("Key in pocket.", "\"Spare.\""), .cross("Scrapes.", "\"Fell.\"")],
-        openings: ("A chase and a key.", "A taken bike."),
-        closings: ("The key.", "Taken."),
-        timeline: [(0, "7 p.m.: the deputy clocks the bike."), (0, "7:03 p.m.: the chase."), (0, "7:08 p.m.: the crash.")],
-        identified: "A dash camera.",
-        mood: .indifferent)
-
     static let occupiedHouseNight = SmallCases.make(
         key: "story.occupiedHouseNight",
         category: .property,
@@ -506,31 +436,6 @@ extension StoryCases {
         identified: "An audit and system logs.",
         aggravating: ["The defendant took advantage of a position of trust or confidence"],
         mood: .wantsConviction)
-
-    static let deceasedParentCards = SmallCases.make(
-        key: "story.deceasedParentCards",
-        category: .cyber,
-        headlines: ["Credit Cards Opened in Dead Mother's Name After Funeral", "Mail Forwarding Request Points to Son"],
-        law: "identityTheft",
-        threshold: 6,
-        spec: "Knowingly obtained and used the identifying information of {V}, a deceased person, to obtain credit, on {DATE}.",
-        ages: 28...60,
-        victim: true,
-        summary: "Three credit cards were opened in the name of a woman, {V}, a month after {V.his} death. The statements were forwarded to a post office box. A store camera showed {D}, {V}'s son, using one. {DL} says {D.he} was settling the estate and thought cards could be opened by family.",
-        state: [E(.document, 3, "Applications", "Three applications in {V}'s name after death."), E(.video, 3, "Store Camera", "{D} uses one of the cards.")],
-        defense: [E(.statement, 1, "Estate", "{DL} says {D.he} was settling the estate.")],
-        role: "Estate attorney",
-        exam: [.direct("When did {V} die?", "\"A month before.\""), .direct("Who was executor?", "\"A sister.\""), .cross("The son helped.", "\"He was not named.\""), .cross("Estates have debts.", "\"Cards were new.\"")],
-        theory: ("{D} opened cards in a dead parent's name.", "An estate cleanup."),
-        allocution: "\"I'm sorry. I should have asked.\"",
-        truths: ("The P.O. box was rented by {DL}.", "The executor's email asked {DL} to 'sort out the cards' before probate closed."),
-        defendant: [.direct("Did you open cards?", "\"To settle debts.\""), .direct("Why not tell the executor?", "\"I was going to.\""), .cross("P.O. box.", "\"Mail.\""), .cross("Store purchases.", "\"Funeral costs.\"")],
-        openings: ("Cards and a box.", "An estate."),
-        closings: ("Applications.", "Estate."),
-        timeline: [(-30, "{V} dies."), (0, "The cards are opened."), (14, "The executor sees the statements.")],
-        identified: "Applications and a store camera.",
-        mood: .divided,
-        genders: ["D": .male, "V": .female])
 
     static let contractKillingPlot = SmallCases.make(
         key: "story.contractKillingPlot",

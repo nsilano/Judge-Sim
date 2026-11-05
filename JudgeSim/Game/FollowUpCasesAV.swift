@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Follow-up trials for the batch AV everyday-crime stories.
 extension FollowUpCases {
-    static let batchAV: [CaseTemplate] = [changeBoxAgain, vacuumAgain, libraryAgain, treasurerSecond, keyAgain, walkAgain, gatesAgain, petSuppliesAgain, binAgain, jobAdvanceAgain, mallAgain, couponAgain, dwiAgainSchool, tagAgain, kayakAgain, checkAgain, dogShoveAgain, fuelCardAgain, hotelAgain, giftBoxAgain, busAgain, lockerAgain, ediblesAgain, landlordAgain, boardAgain, campAgain]
+    static let batchAV: [CaseTemplate] = [changeBoxAgain, libraryAgain, treasurerSecond, keyAgain, petSuppliesAgain, binAgain, jobAdvanceAgain, mallAgain, couponAgain, dwiAgainSchool, tagAgain, kayakAgain, fuelCardAgain, hotelAgain, giftBoxAgain, busAgain, lockerAgain, ediblesAgain, landlordAgain, boardAgain, campAgain]
 
     static let changeBoxAgain = SmallCases.make(
         key: "story.followup.changeBoxAgain",
@@ -26,29 +26,6 @@ extension FollowUpCases {
         openings: ("A bar.", "Laundry."),
         closings: ("Camera.", "Laundry."),
         timeline: [(0, "The coin door is pried."), (0, "The owner counts coins.")],
-        identified: "A camera.",
-        mood: .indifferent)
-
-    static let vacuumAgain = SmallCases.make(
-        key: "story.followup.vacuumAgain",
-        category: .property,
-        headlines: ["Another Car Wash Hit", "Hammer Marks at New Location"],
-        law: "injuryPersonalProperty",
-        spec: "Willfully and wantonly injured personal property of {V}, a car wash, causing damage of $780, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, two vacuum boxes at another car wash were hammered open. A camera showed {D}. {DL} says {D.he} was cleaning a car.",
-        state: [E(.video, 3, "Camera", "{D} swings a hammer."), E(.document, 2, "Estimate", "$780.")],
-        defense: [E(.statement, 1, "Cleaning", "{DL} says {D.he} was cleaning a car.")],
-        role: "Car wash owner",
-        exam: [.direct("What was hit?", "\"Two boxes.\""), .direct("Cost?", "\"$780.\""), .cross("Cleaning?", "\"At 1 a.m.?\"")],
-        theory: ("{D} hammered coin boxes.", "Cleaning."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} had been warned off the lot.", "The owner had hired {DL} to open the boxes for emptying."),
-        defendant: [.direct("Did you hit the boxes?", "\"No.\""), .direct("Why there?", "\"Cleaning.\""), .cross("Warned.", "\"Yes.\"")],
-        openings: ("A hammer.", "Cleaning."),
-        closings: ("Video.", "Cleaning."),
-        timeline: [(0, "1 a.m.: the boxes are hit.")],
         identified: "A camera.",
         mood: .indifferent)
 
@@ -120,52 +97,6 @@ extension FollowUpCases {
         closings: ("Notice.", "Mail."),
         timeline: [(0, "The key turns."), (0, "The tenant calls deputies.")],
         identified: "The tenant.",
-        mood: .indifferent)
-
-    static let walkAgain = SmallCases.make(
-        key: "story.followup.walkAgain",
-        category: .publicOrder,
-        headlines: ["Pedestrian Pulls Away From Deputy Again", "Defendant From Jaywalking Stop Resists Again"],
-        law: "resisting",
-        spec: "Resisted, delayed, and obstructed a public officer, on {DATE}.",
-        ages: 18...60,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a deputy told {D} to stop for a violation. {D} pulled away. {DL} says {D.he} was late for work.",
-        state: [E(.video, 3, "Body Camera", "{D} pulls away."), E(.statement, 2, "Deputy", "Told twice to stop.")],
-        defense: [E(.statement, 1, "Late", "{DL} says {D.he} was late for work.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What did you say?", "\"Stop.\""), .direct("What did {DL} do?", "\"Pulled away.\""), .cross("Late?", "\"Yes.\"")],
-        theory: ("{D} resisted.", "A worker late."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("The deputy was in uniform.", "The deputy's body camera shows no spoken order before the grab."),
-        defendant: [.direct("Did you pull away?", "\"Yes.\""), .direct("Why?", "\"Late.\""), .cross("Uniform.", "\"Yes.\"")],
-        openings: ("A pull.", "Lateness."),
-        closings: ("Video.", "Late."),
-        timeline: [(0, "The order."), (0, "The pull.")],
-        identified: "Body camera.",
-        mood: .indifferent)
-
-    static let gatesAgain = SmallCases.make(
-        key: "story.followup.gatesAgain",
-        category: .property,
-        headlines: ["More Gates Taken, Same Scrap Yard", "Defendant From Gate Case Sells Metal Again"],
-        law: "misdLarceny",
-        spec: "Stole aluminum fence panels valued at $620 belonging to {V}, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, aluminum fence panels were taken. The same scrap yard bought panels from {D}. {DL} says the panels came from a demolition.",
-        state: [E(.document, 3, "Scrap Slip", "{D} sells panels."), E(.physical, 2, "Panels", "Panels with a weld mark.")],
-        defense: [E(.statement, 1, "Demolition", "{DL} says the panels came from a demolition.")],
-        role: "Landowner",
-        exam: [.direct("What was taken?", "\"Panels.\""), .direct("Value?", "\"$620.\""), .cross("Demolition?", "\"None nearby.\"")],
-        theory: ("{D} sold stolen panels.", "A demolition."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("No demolition permit existed.", "The panels were bought at a farm sale advertised in the paper."),
-        defendant: [.direct("Did you take them?", "\"No.\""), .direct("Where from?", "\"Demolition.\""), .cross("Weld mark.", "\"Common.\"")],
-        openings: ("A slip.", "Demolition."),
-        closings: ("Slip.", "Demolition."),
-        timeline: [(0, "The panels vanish."), (1, "{DL} sells panels.")],
-        identified: "A scrap slip.",
         mood: .indifferent)
 
     static let petSuppliesAgain = SmallCases.make(
@@ -351,52 +282,6 @@ extension FollowUpCases {
         closings: ("Video.", "Adrift."),
         timeline: [(0, "The dock is cut."), (0, "The owner reports it.")],
         identified: "A camera.",
-        mood: .indifferent)
-
-    static let checkAgain = SmallCases.make(
-        key: "story.followup.checkAgain",
-        category: .whiteCollar,
-        headlines: ["Altered Check Again", "Defendant From Mail-Theft Check Case Back at Bank"],
-        law: "uttering",
-        spec: "Offered a forged check for $540 to a bank, knowing it to be forged, on {DATE}.",
-        ages: 18...60,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} cashed an altered check stolen from the mail. {DL} says a friend paid with it. The altered amount was $540.",
-        state: [E(.document, 3, "Check", "Altered amount."), E(.video, 3, "Bank Camera", "{D} cashes it.")],
-        defense: [E(.statement, 1, "Friend", "{DL} says a friend paid with it.")],
-        role: "Bank teller",
-        exam: [.direct("What was altered?", "\"Amount.\""), .direct("Who cashed it?", "\"{DL}.\""), .cross("A friend?", "\"Unnamed.\"")],
-        theory: ("{D} cashed an altered check.", "A friend's check."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("Pens were in {DL}'s bag.", "The friend later confirmed paying with the check."),
-        defendant: [.direct("Did you alter it?", "\"No.\""), .direct("Why cash it?", "\"Payment.\""), .cross("Pens.", "\"Work.\"")],
-        openings: ("Altered ink.", "A friend."),
-        closings: ("Camera.", "Friend."),
-        timeline: [(0, "The check is cashed.")],
-        identified: "A bank camera.",
-        mood: .wantsConviction)
-
-    static let dogShoveAgain = SmallCases.make(
-        key: "story.followup.dogShoveAgain",
-        category: .violent,
-        headlines: ["Neighbor Dispute Turns Physical Again", "Defendant From Dog Shove Case Pushes Again"],
-        law: "simpleAssault",
-        spec: "Assaulted {V} by pushing {V.him}, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} pushed a neighbor during an argument. A neighbor filmed it. {DL} says the neighbor stepped close.",
-        state: [E(.video, 3, "Video", "{D} pushes {V}."), E(.forensic, 2, "Photos", "A bruise.")],
-        defense: [E(.statement, 1, "Stepped Close", "{DL} says {V} stepped close.")],
-        role: "Neighbor",
-        exam: [.direct("What happened?", "\"{DL} pushed me.\""), .direct("Injury?", "\"A bruise.\""), .cross("Stepped close?", "\"I stood still.\"")],
-        theory: ("{D} pushed a neighbor.", "A push for space."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} pushed with both hands.", "A neighbor's video shows {V} stepping into {DL}'s path first."),
-        defendant: [.direct("Did you push?", "\"Yes.\""), .direct("Why?", "\"Space.\""), .cross("Backing away.", "\"No.\"")],
-        openings: ("A push.", "Space."),
-        closings: ("Video.", "Space."),
-        timeline: [(0, "The argument."), (0, "The push.")],
-        identified: "A neighbor's video.",
         mood: .indifferent)
 
     static let fuelCardAgain = SmallCases.make(

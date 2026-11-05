@@ -4,55 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Everyday cases, written with SmallCases: the offenses that fill a real county's docket.
 extension StoryCases {
-    static let batchAS: [CaseTemplate] = [starvedHorses, huntingPostedLand, overpassGraffiti, benefitsOverreport, converterThefts, receiptReturnScam, erScuffle, mopedChaseNight, pillsInPurse, falseNameStop, smallClaimsLie, trapHouseDwelling, dentistOfficeBreakin, garageBurglary, shotgunFromTruck, felonInPossession, barGlassInjury, stalkerCoworker, repeatBarAssault, streetPillSale, parkingKnifeIntent, vanCocaine, firefighterBurned, scaldChildAbuse, schoolThreatPost]
-
-    static let starvedHorses = SmallCases.make(
-        key: "story.starvedHorses",
-        category: .publicOrder,
-        headlines: ["Three Horses Found Starving in Pasture, Neighbors Called Animal Control", "Farm Owner Charged After Vet Says Animals Were Months Underfed"],
-        law: "animalCruelty",
-        spec: "Maliciously and unreasonably deprived animals of necessary sustenance, on {DATE}.",
-        ages: 30...70,
-        victim: false,
-        summary: "Neighbors reported three thin horses with no hay in a pasture on {DATE}. An animal control officer found empty troughs and a dry pond. A veterinarian scored the horses at the lowest body condition. {D}, the owner, says a hay supplier failed to deliver and money was tight.",
-        state: [E(.forensic, 3, "Veterinary Exam", "All three horses at the lowest body-condition score."), E(.physical, 2, "Troughs", "Empty troughs and a dry pond.", .search)],
-        defense: [E(.statement, 1, "Supplier", "{DL} says the hay supplier failed to deliver.")],
-        role: "Animal control officer",
-        exam: [.direct("What did you see?", "\"Thin horses, empty troughs.\""), .direct("Was there hay?", "\"None.\""), .cross("A supplier failed.", "\"I saw no calls.\""), .cross("Money was tight.", "\"So {D.he} said.\"")],
-        theory: ("{D} let three horses starve.", "A supplier failure and tight money."),
-        allocution: "\"I let them down. I'm sorry.\"",
-        truths: ("{DL} bought a new truck two weeks earlier.", "Hay prices doubled that winter and {DL} had borrowed against the farm to buy what {D.he} could."),
-        defendant: [.direct("Did you feed them?", "\"As I could.\""), .direct("Why so thin?", "\"No hay.\""), .cross("A new truck.", "\"Used.\""), .cross("Free hay.", "\"I didn't take charity.\"")],
-        openings: ("Empty troughs.", "A failed supplier."),
-        closings: ("Months of neglect.", "Money."),
-        timeline: [(-60, "The hay supply runs out."), (0, "A neighbor calls animal control."), (0, "A veterinarian examines the horses.")],
-        identified: "A neighbor and a veterinarian.",
-        mood: .divided,
-        impact: "Those horses trusted us.")
-
-    static let huntingPostedLand = SmallCases.make(
-        key: "story.huntingPostedLand",
-        category: .property,
-        headlines: ["Hunter Found on Posted Farmland With Rifle", "Landowner Says Signs Were Clear"],
-        law: "trespass2",
-        spec: "Entered and remained on the premises of {V}, a farm, after being notified not to, on {DATE}.",
-        ages: 20...65,
-        victim: true,
-        summary: "{V} found {D} in a tree stand on posted land on {DATE} with a rifle. Three 'No Trespassing' signs hung at the field edge. {DL} says {D.he} thought the land belonged to a friend who allowed hunting.",
-        state: [E(.statement, 3, "Landowner", "{D} was in a tree stand on posted land."), E(.physical, 2, "Signs", "Three signs at the field edge.")],
-        defense: [E(.statement, 1, "Friend's Land", "{DL} says {D.he} thought it was a friend's land.")],
-        role: "Landowner",
-        exam: [.direct("What did you see?", "\"{DL} in a tree stand.\""), .direct("Were signs posted?", "\"Three.\""), .cross("A friend's land.", "\"The neighbor's.\""), .cross("{D.He} left peacefully.", "\"Yes.\"")],
-        theory: ("{D} hunted on posted land.", "A mistaken boundary."),
-        allocution: "\"I should have checked the signs.\"",
-        truths: ("The signs faced the road, not the field.", "{DL}'s friend owns the next parcel."),
-        defendant: [.direct("Did you see signs?", "\"None.\""), .direct("Whose land?", "\"My friend's.\""), .cross("Three signs.", "\"Facing the road.\""), .cross("A rifle.", "\"Hunting.\"")],
-        openings: ("A stand and three signs.", "A boundary mix-up."),
-        closings: ("Signs.", "A mistake."),
-        timeline: [(0, "Dawn: {DL} climbs into the tree stand."), (0, "7 a.m.: {V} finds {DL}."), (0, "8 a.m.: deputies arrive.")],
-        identified: "The landowner.",
-        mood: .indifferent,
-        doctrines: ["mistakeOfFact"])
+    static let batchAS: [CaseTemplate] = [overpassGraffiti, benefitsOverreport, receiptReturnScam, erScuffle, smallClaimsLie, dentistOfficeBreakin, garageBurglary, shotgunFromTruck, barGlassInjury, stalkerCoworker, repeatBarAssault, streetPillSale, parkingKnifeIntent, vanCocaine, firefighterBurned, scaldChildAbuse]
 
     static let overpassGraffiti = SmallCases.make(
         key: "story.overpassGraffiti",
@@ -101,33 +53,6 @@ extension StoryCases {
         mood: .sympathetic,
         genders: ["D": .female])
 
-    static let converterThefts = SmallCases.make(
-        key: "story.converterThefts",
-        category: .property,
-        headlines: ["Catalytic Converters Cut From Eight Trucks at Delivery Depot", "Saw Blades and a Van Link Defendant to Thefts"],
-        law: "felonyLarceny",
-        threshold: 6,
-        spec: "Stole catalytic converters valued at $6,800 belonging to {V}, a delivery company, on {DATE}.",
-        ages: 19...45,
-        victim: true,
-        summary: "Eight catalytic converters were cut from delivery trucks at a depot overnight on {DATE}, worth $6,800. A camera showed a van and two figures. The van was registered to {D}. A scrap yard had bought converters from {D} that morning. {DL} says {D.he} scrapped converters from {D.his} own old cars.",
-        state: [E(.video, 3, "Depot Camera", "A van and two figures under the trucks."), E(.document, 3, "Scrap Receipt", "{D} sold eight converters that morning.")],
-        defense: [E(.statement, 1, "Own Cars", "{DL} says the converters came from {D.his} own cars.")],
-        role: "Depot manager",
-        exam: [.direct("What was damaged?", "\"Eight trucks.\""), .direct("What did the camera show?", "\"A van.\""), .cross("Faces aren't clear.", "\"No.\""), .cross("Scrap yards buy many.", "\"Yes.\"")],
-        defenseRole: "Scrap yard clerk",
-        defenseExam: [.direct("What did {DL} sell?", "\"Eight converters.\""), .cross("Did {D.he} have a title?", "\"No.\"")],
-        theory: ("{D} cut converters from trucks.", "Converters from {D.his} own cars."),
-        allocution: "\"I took them. I'm sorry.\"",
-        truths: ("The converters had the depot's fleet stickers.", "A scrap-yard book showed {DL} sold converters from junked cars every week for a year."),
-        defendant: [.direct("Did you cut them?", "\"No.\""), .direct("Where did you get them?", "\"My cars.\""), .cross("Fleet stickers.", "\"Odd.\""), .cross("Eight.", "\"Over time.\"")],
-        openings: ("A van and a scrap receipt.", "Old cars."),
-        closings: ("The receipt.", "Old cars."),
-        timeline: [(0, "2 a.m.: a van backs into the depot."), (0, "4 a.m.: eight converters are cut."), (0, "10 a.m.: {DL} sells eight converters.")],
-        identified: "A depot camera and a scrap receipt.",
-        aggravating: ["The offense was committed for pecuniary gain"],
-        mood: .indifferent)
-
     static let receiptReturnScam = SmallCases.make(
         key: "story.receiptReturnScam",
         category: .property,
@@ -174,77 +99,6 @@ extension StoryCases {
         identified: "A deputy and a hospital camera.",
         mood: .sympathetic)
 
-    static let mopedChaseNight = SmallCases.make(
-        key: "story.mopedChaseNight",
-        category: .traffic,
-        headlines: ["Moped Rider Speeds From Deputy Through Neighborhood", "Chase Ends at a Fence"],
-        law: "fleeing",
-        spec: "Operated a moped on a street while fleeing a law enforcement officer, on {DATE}.",
-        ages: 18...35,
-        victim: false,
-        summary: "A deputy turned on blue lights behind a moped with no plate on {DATE}. The rider sped through two stop signs and crashed into a fence. {D} was found hiding in a shed. {DL} says the rider was a friend who ran off.",
-        state: [E(.video, 3, "Dash Camera", "A moped runs two stop signs."), E(.statement, 3, "Deputy", "{D} was found in a shed with grass on {D.his} clothes.")],
-        defense: [E(.statement, 1, "A Friend", "{DL} says a friend rode the moped.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What did the rider do?", "\"Ran two stop signs.\""), .direct("Where was {DL} found?", "\"In a shed.\""), .cross("Rider's face?", "\"Helmeted.\""), .cross("A friend.", "\"Unnamed.\"")],
-        theory: ("{D} fled from a deputy.", "A friend rode the moped."),
-        allocution: "\"I panicked.\"",
-        truths: ("The moped was in {DL}'s driveway.", "A neighbor said a different rider in a green helmet ran from the moped."),
-        defendant: [.direct("Did you ride?", "\"No.\""), .direct("Why hide?", "\"Scared.\""), .cross("Your moped.", "\"Lent.\""), .cross("Grass.", "\"I ran.\"")],
-        openings: ("A chase.", "A friend."),
-        closings: ("Grass and a shed.", "A friend."),
-        timeline: [(0, "6 p.m.: the deputy sees the moped."), (0, "6:03 p.m.: the crash at the fence."), (0, "6:20 p.m.: {DL} is found in a shed.")],
-        identified: "A dash camera.",
-        mood: .indifferent)
-
-    static let pillsInPurse = SmallCases.make(
-        key: "story.pillsInPurse",
-        category: .drugs,
-        headlines: ["Concert Security Finds Oxycodone Pills in Woman's Purse", "Search at Gate Turns Up Unlabeled Pills"],
-        law: "possSchedII",
-        spec: "Possessed a Schedule II controlled substance, oxycodone, on {DATE}.",
-        ages: 20...55,
-        victim: false,
-        summary: "Security at a concert gate on {DATE} found ten unlabeled pills in {D}'s purse. A lab later identified oxycodone. {DL} says a friend asked {D.him} to hold the bag.",
-        state: [E(.physical, 3, "Pills", "Ten unlabeled pills in a purse.", .search), E(.forensic, 3, "Lab Report", "The pills are oxycodone.")],
-        defense: [E(.statement, 1, "Held for Friend", "{DL} says a friend asked {D.him} to hold the bag.")],
-        role: "Security supervisor",
-        exam: [.direct("What did you find?", "\"Ten unlabeled pills.\""), .direct("Whose purse?", "\"{DL}'s.\""), .cross("A friend.", "\"Unnamed.\""), .cross("No prescription.", "\"None.\"")],
-        theory: ("{D} had oxycodone.", "A friend's bag."),
-        allocution: "\"They were mine.\"",
-        truths: ("The pills were in a pocket only {DL} used.", "The friend told deputies the bag was hers and she had asked {DL} to hold it."),
-        defendant: [.direct("Were they yours?", "\"No.\""), .direct("Whose?", "\"A friend's.\""), .cross("Your purse.", "\"Held.\""), .cross("Pocket.", "\"I don't know.\"")],
-        openings: ("Ten pills.", "A friend."),
-        closings: ("Lab.", "Friend."),
-        timeline: [(0, "6 p.m.: {DL} arrives at the gate."), (0, "6:05 p.m.: security finds the pills."), (0, "6:30 p.m.: deputies arrive.")],
-        identified: "Security search.",
-        mood: .indifferent,
-        doctrines: ["burdenOfProof"],
-        genders: ["D": .female])
-
-    static let falseNameStop = SmallCases.make(
-        key: "story.falseNameStop",
-        category: .publicOrder,
-        headlines: ["Passenger Gives Deputy False Name, Warrant Check Finds Real One", "Obstruction Charge After Traffic Stop"],
-        law: "obstruction",
-        spec: "Willfully obstructed a public officer by giving a false name, on {DATE}.",
-        ages: 18...50,
-        victim: false,
-        summary: "During a traffic stop on {DATE}, a passenger, {D}, gave a deputy a false name and birth date. A fingerprint scan showed {D}'s real name and an active warrant. {DL} says {D.he} panicked and did not mean to hinder anything.",
-        state: [E(.statement, 3, "Deputy", "{D} gave a false name and date of birth."), E(.forensic, 3, "Fingerprint Scan", "Matches {D}'s real identity and a warrant.")],
-        defense: [E(.statement, 1, "Panic", "{DL} says {D.he} panicked.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What did {DL} say?", "\"A false name.\""), .direct("How was it found out?", "\"A fingerprint scan.\""), .cross("Panic.", "\"Perhaps.\""), .cross("{D.He} corrected it.", "\"Only after the scan.\"")],
-        theory: ("{D} lied to hide a warrant.", "A panic."),
-        allocution: "\"I lied. I'm sorry.\"",
-        truths: ("{DL} gave the name of a cousin.", "{DL} had a head injury that week and could not recall the proper birth date, a doctor's note shows."),
-        defendant: [.direct("Did you lie?", "\"Yes.\""), .direct("Why?", "\"Panic.\""), .cross("A cousin's name.", "\"Yes.\""), .cross("Warrant.", "\"I knew.\"")],
-        openings: ("A false name.", "A panic."),
-        closings: ("A lie.", "A panic."),
-        timeline: [(0, "A deputy stops the car."), (0, "{DL} gives a false name."), (0, "A fingerprint scan shows the truth.")],
-        identified: "A deputy's fingerprint scan.",
-        mood: .indifferent)
-
     static let smallClaimsLie = SmallCases.make(
         key: "story.smallClaimsLie",
         category: .publicOrder,
@@ -268,32 +122,6 @@ extension StoryCases {
         identified: "A transcript and bank records.",
         mood: .indifferent,
         doctrines: ["mistakeOfFact"])
-
-    static let trapHouseDwelling = SmallCases.make(
-        key: "story.trapHouseDwelling",
-        category: .drugs,
-        headlines: ["House Used for Drug Sales, Deputies Say", "Neighbors Log Dozens of Short Visits"],
-        law: "maintainingDwelling",
-        threshold: 6,
-        spec: "Knowingly kept and maintained a dwelling used for the keeping and selling of controlled substances, on {DATE}.",
-        ages: 22...55,
-        victim: false,
-        summary: "Neighbors logged dozens of short visits at {D}'s home over six weeks ending {DATE}. A deputy's search warrant found scales, baggies, and cash. {DL} says {D.he} let a cousin stay and did not know what the cousin did.",
-        state: [E(.physical, 3, "Scales and Baggies", "Scales, baggies, and $1,400 in small bills.", .search), E(.statement, 2, "Neighbors", "Dozens of short visits over six weeks.")],
-        defense: [E(.statement, 1, "Cousin", "{DL} says a cousin used the house.")],
-        role: "Sheriff's detective",
-        exam: [.direct("What did you find?", "\"Scales, baggies, cash.\""), .direct("Whose house?", "\"{DL}'s.\""), .cross("The cousin.", "\"Not present.\""), .cross("Visits.", "\"Many.\"")],
-        theory: ("{D} ran a drug house.", "A cousin's activity."),
-        allocution: "\"It was my house. I'm responsible.\"",
-        truths: ("{DL}'s name was on the utility bills and the lease.", "The cousin lived there only two weeks."),
-        defendant: [.direct("Did you sell?", "\"No.\""), .direct("Your house.", "\"My cousin's guest.\""), .cross("Cash.", "\"Rent.\""), .cross("Visits.", "\"Friends.\"")],
-        openings: ("A house of visits.", "A cousin."),
-        closings: ("Bills and scales.", "A cousin."),
-        timeline: [(-42, "Neighbors begin logging visits."), (0, "The search warrant is served."), (0, "A detective inventories the scales.")],
-        identified: "Neighbors and a warrant.",
-        aggravating: ["The offense involved sale or delivery"],
-        mood: .wantsConviction,
-        doctrines: ["searchSeizure"])
 
     static let dentistOfficeBreakin = SmallCases.make(
         key: "story.dentistOfficeBreakin",
@@ -374,34 +202,6 @@ extension StoryCases {
         identified: "A pawn ticket and serial number.",
         aggravating: ["The offense involved a firearm"],
         mood: .wantsConviction)
-
-    static let felonInPossession = SmallCases.make(
-        key: "story.felonInPossession",
-        category: .violent,
-        headlines: ["Felon Stopped With Pistol Under Seat", "Probation Officer's Tip Leads to Traffic Stop"],
-        law: "felonFirearm",
-        threshold: 6,
-        spec: "Possessed a firearm after having been convicted of a felony, on {DATE}.",
-        ages: 22...55,
-        victim: false,
-        summary: "A deputy stopped {D} on {DATE} on a tip and found a loaded pistol under the driver's seat. {D} has a prior felony. {DL} says the car was borrowed and the pistol belonged to the owner.",
-        state: [E(.physical, 3, "Pistol", "A loaded pistol under the driver's seat.", .search), E(.document, 3, "Prior Record", "A prior felony conviction.")],
-        defense: [E(.statement, 1, "Borrowed Car", "{DL} says the car was borrowed.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("Where was the pistol?", "\"Under the driver's seat.\""), .direct("Who drove?", "\"{DL}.\""), .cross("Borrowed.", "\"The owner says so.\""), .cross("No fingerprints.", "\"None found.\"")],
-        defenseRole: "Car's owner",
-        defenseExam: [.direct("Is it your pistol?", "\"No.\""), .cross("Did you know of it?", "\"No.\"")],
-        theory: ("{D} had a pistol as a felon.", "A borrowed car."),
-        allocution: "\"I knew it was there. I'm sorry.\"",
-        truths: ("{DL} had adjusted the seat for the pistol's position.", "The owner never carried a pistol."),
-        defendant: [.direct("Was it yours?", "\"No.\""), .direct("Did you know?", "\"No.\""), .cross("Under your seat.", "\"Borrowed.\""), .cross("A prior felony.", "\"Yes.\"")],
-        openings: ("A pistol and a record.", "A borrowed car."),
-        closings: ("The pistol.", "The owner."),
-        timeline: [(0, "A tip arrives."), (0, "A deputy stops {DL}."), (0, "The pistol is found.")],
-        identified: "A deputy's stop.",
-        aggravating: ["The offense involved a firearm"],
-        mood: .wantsConviction,
-        doctrines: ["searchSeizure", "burdenOfProof"])
 
     static let barGlassInjury = SmallCases.make(
         key: "story.barGlassInjury",
@@ -622,29 +422,5 @@ extension StoryCases {
         aggravating: ["The victim was a young child"],
         mood: .wantsConviction,
         impact: "My child will have scars.")
-
-    static let schoolThreatPost = SmallCases.make(
-        key: "story.schoolThreatPost",
-        category: .publicOrder,
-        headlines: ["Student's Online Post Threatened 'Shooting Up' School", "Deputies Trace Anonymous Post to Teen's Account"],
-        law: "massViolenceThreat",
-        threshold: 7,
-        spec: "Threatened to commit mass violence on educational property, on {DATE}.",
-        ages: 18...19,
-        victim: false,
-        summary: "An anonymous post on {DATE} said 'tomorrow is the last day at Central High.' The school locked down. Platform records tied the post to {D}'s account. {DL} says someone else used the account.",
-        state: [E(.digital, 3, "Platform Records", "The post came from {D}'s account on {D}'s phone."), E(.document, 2, "Lockdown Report", "The school was locked down for two hours.")],
-        defense: [E(.statement, 1, "Someone Else", "{DL} says someone else used the account.")],
-        role: "School resource officer",
-        exam: [.direct("What did the post say?", "\"'Tomorrow is the last day at Central High.'\""), .direct("How was {DL} found?", "\"Platform records.\""), .cross("The account was shared.", "\"Not on that device.\""), .cross("No weapon.", "\"None.\"")],
-        theory: ("{D} threatened a school.", "A shared account."),
-        allocution: "\"It was a stupid joke. I'm sorry.\"",
-        truths: ("{DL} had been suspended the week before.", "A classmate's phone showed the same account logged in at a lunch table full of students."),
-        defendant: [.direct("Did you post?", "\"No.\""), .direct("Whose account?", "\"Shared.\""), .cross("Your phone.", "\"Lent.\""), .cross("Suspended.", "\"Yes.\"")],
-        openings: ("A post and a lockdown.", "A shared account."),
-        closings: ("The phone.", "Share."),
-        timeline: [(-7, "{DL} is suspended."), (0, "6 a.m.: the post appears."), (0, "8 a.m.: the school locks down."), (0, "2 p.m.: deputies trace the account.")],
-        identified: "Platform records.",
-        mood: .divided)
 
 }

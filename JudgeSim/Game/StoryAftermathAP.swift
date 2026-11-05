@@ -21,12 +21,6 @@ extension StoryAftermath {
                  body: "Second Animal-in-Car Complaint for Defendant From Earlier Case. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.catInHotCar"])
         ],
-        "story.hedgeCutting": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Neighbor's Fence Cut to Pieces After Earlier Hedge Dispute",
-                 body: "Second Property Complaint in Feud Between Neighbors. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.hedgeFence"], sameVictim: true)
-        ],
         "story.fakeLandscaper": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Contractor Takes $3,000 Deposit, Never Starts Roof",
@@ -80,12 +74,6 @@ extension StoryAftermath {
                  headline: "Safe From Home Invasion Resurfaces at Pawn Shop",
                  body: "Stolen Safe Traced to Defendant From Burglary Case. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.stolenSafeResale"], sameVictim: true)
-        ],
-        "story.carjackingRobbery": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Stolen Car Leads Deputies on Chase",
-                 body: "Defendant From Carjacking Case Flees Traffic Stop. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
-                 followUps: ["story.followup.stolenCarChase"])
         ],
         "story.apartmentFire": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,

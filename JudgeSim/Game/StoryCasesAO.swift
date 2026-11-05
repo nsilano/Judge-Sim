@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Everyday cases, written with SmallCases: the offenses that fill a real county's docket.
 extension StoryCases {
-    static let batchAO: [CaseTemplate] = [vendingMachinePry, busDriverYell, junkyardTires, deerStandTrespass, flagTheft, borrowedTruck, donationBox, skateboardRefuse, fireAlarmPull, dryerClothes, softballFieldFight, ticketScalper, cameraSmash, rideshareRunner, wheelBootCut, noonBurglary, bankNoteRobbery, barParkingKnife, cocaineBagStop, sellPillsAtWork, domesticChoke, phoneSnatch, payrollCheckForge, taxRefundTheft, dopeHouseTrailer, atvTheft, deputyShove, pistolFromTruck, trafficCocaineMotel, deliveryRobbery]
+    static let batchAO: [CaseTemplate] = [vendingMachinePry, busDriverYell, junkyardTires, deerStandTrespass, flagTheft, borrowedTruck, donationBox, skateboardRefuse, fireAlarmPull, dryerClothes, softballFieldFight, ticketScalper, cameraSmash, rideshareRunner, wheelBootCut, noonBurglary, bankNoteRobbery, cocaineBagStop, sellPillsAtWork, domesticChoke, phoneSnatch, payrollCheckForge, dopeHouseTrailer, atvTheft, deputyShove, pistolFromTruck, trafficCocaineMotel, deliveryRobbery]
 
     static let vendingMachinePry = SmallCases.make(
         key: "story.vendingMachinePry",
@@ -422,36 +422,6 @@ extension StoryCases {
         impact: "I still feel my heartbeat when someone hands me a folded paper.",
         genders: ["D": .male, "V": .female])
 
-    static let barParkingKnife = SmallCases.make(
-        key: "story.barParkingKnife",
-        category: .violent,
-        headlines: ["Man Pulled Knife in Bar Parking Lot Argument", "Customer Cut on Arm in Fight Over Spilled Drink"],
-        law: "awdw",
-        threshold: 7,
-        spec: "Assaulted {V} with a deadly weapon, a folding knife, on {DATE}.",
-        ages: 22...50,
-        victim: true,
-        summary: "After a spilled drink led to an argument inside a bar on {DATE}, {D} and {V} went to the parking lot. A bouncer saw {D} pull a folding knife and slash {V}'s forearm for eleven stitches. {D} was arrested at the scene with the knife in {D.his} pocket. {DL} says {V} had a bottle and swung first.",
-        state: [E(.physical, 3, "The Knife", "A 3-inch folding knife with blood on the blade, in {D}'s pocket.", .search), E(.document, 2, "Medical Records", "A four-inch forearm laceration, eleven stitches.")],
-        defense: [E(.statement, 2, "Bottle", "A second customer says {V} had a bottle and swung it first.")],
-        role: "Bar bouncer",
-        exam: [.direct("What did you see?", "\"{DL} pull a knife and cut {V}'s arm.\""), .direct("Did {V} have a bottle?", "\"I saw a bottle on the ground.\""), .direct("Where was {DL} afterward?", "\"He stayed and told me to call the police.\""), .cross("The bottle was in {V}'s hand?", "\"I didn't see that.\""), .cross("{D.He} stayed.", "\"He did.\"")],
-        defenseRole: "Second customer",
-        defenseExam: [.direct("What did you see?", "\"{V} swung a bottle at {D} before the knife came out.\""), .cross("Did you see the cut?", "\"Only after.\"")],
-        theory: ("{D} slashed {V}'s forearm with a knife in a parking lot.", "A man defending himself from a swinging bottle."),
-        allocution: "\"I was afraid. I never meant to hurt anyone that badly.\"",
-        truths: ("The bar's lot camera showed {DL} waiting by {V}'s car with the knife already open.", "A second camera showed {V} swinging the bottle first and {DL} backing up."),
-        defendant: [.direct("Why a knife?", "\"I carry it for work.\""), .direct("What did {V} do?", "\"Swung a bottle.\""), .cross("Eleven stitches.", "\"I'm sorry.\""), .cross("You waited by his car.", "\"I was leaving.\"")],
-        openings: ("A knife, a parking lot, and eleven stitches.", "A bottle swung first."),
-        closings: ("The knife was open before the fight.", "He defended himself."),
-        timeline: [(0, "Late evening: the spilled drink."), (0, "11:30 p.m.: the fight in the lot."), (0, "11:40 p.m.: deputies arrest {DL} at the scene.")],
-        identified: "The bouncer's call and a deputy at the scene.",
-        aggravating: ["The defendant was armed with a deadly weapon at the time of the crime"],
-        mitigating: ["The defendant acted under strong provocation", "The defendant has accepted responsibility"],
-        mood: .divided,
-        impact: "I can't hold a pencil the way I used to.",
-        genders: ["D": .male])
-
     static let cocaineBagStop = SmallCases.make(
         key: "story.cocaineBagStop",
         category: .drugs,
@@ -594,35 +564,6 @@ extension StoryCases {
         aggravating: ["The defendant took advantage of a position of trust or confidence"],
         mitigating: ["The defendant has made substantial or full restitution"],
         impact: "That was our payroll for the next two employees.")
-
-    static let taxRefundTheft = SmallCases.make(
-        key: "story.taxRefundTheft",
-        category: .whiteCollar,
-        headlines: ["Tax Preparer Filed Returns in Clients' Names Without Permission", "IRS Letters Reach Retirees Who Never Filed"],
-        law: "identityTheft",
-        threshold: 6,
-        spec: "Knowingly obtained and used the identifying information of {V} with intent to fraudulently obtain a tax refund of $3,200, on {DATE}.",
-        ages: 26...58,
-        victim: true,
-        summary: "{V}, a retiree, received an IRS letter on {DATE} saying {V.his} 2025 refund of $3,200 had been issued. {V} had never filed. The refund was deposited in an account in {D}'s name. {D} had prepared {V}'s taxes two years earlier. {DL} says {V} asked {D.him} to file and the money was {D.his} fee.",
-        state: [E(.document, 3, "Bank Deposit", "The $3,200 refund deposited in {D}'s account five days after filing."), E(.document, 3, "IRS Record", "The return was filed from {D}'s office IP address.")],
-        defense: [E(.statement, 2, "Fee", "{DL} says {V} asked {D.him} to file and agreed to a $400 fee.")],
-        role: "Sheriff's financial crimes detective",
-        exam: [.direct("How was the refund routed?", "\"To an account in {DL}'s name.\""), .direct("Whose IP?", "\"{DL}'s office.\""), .direct("Did {V} authorize it?", "\"{V} says no.\""), .cross("{V} says {D.he} asked.", "\"{V} told us the opposite.\""), .cross("A $400 fee.", "\"Not $3,200.\"")],
-        defenseRole: "Defendant's receptionist",
-        defenseExam: [.direct("Did {V} come to the office that spring?", "\"I think so.\""), .cross("Do you have a record?", "\"No.\"")],
-        theory: ("{D} used a client's information to file for a refund and kept it.", "A fee owed and a client who asked."),
-        allocution: "\"I'll repay every cent.\"",
-        truths: ("{DL}'s files held returns for six other clients who never asked.", "{V}'s signature on an engagement letter, found later in the office, authorized the filing."),
-        defendant: [.direct("Did {V} ask you to file?", "\"Yes.\""), .direct("Why keep the refund?", "\"It was my fee.\""), .cross("$3,200 for a $400 fee.", "\"I rounded up.\""), .cross("Six others.", "\"I don't know about them.\"")],
-        openings: ("A refund in the preparer's account.", "A fee and a client's request."),
-        closings: ("The money went to his account.", "She asked him to file."),
-        timeline: [(-30, "The return is filed from {DL}'s office."), (0, "The refund is deposited."), (10, "{V} receives the IRS letter.")],
-        identified: "{V}'s IRS letter.",
-        aggravating: ["The defendant took advantage of a position of trust or confidence"],
-        mitigating: ["The defendant has made substantial or full restitution"],
-        impact: "I was on a fixed income and the IRS wanted proof I hadn't filed.",
-        genders: ["D": .male, "V": .female])
 
     static let dopeHouseTrailer = SmallCases.make(
         key: "story.dopeHouseTrailer",

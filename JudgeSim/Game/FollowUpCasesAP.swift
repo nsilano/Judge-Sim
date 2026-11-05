@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Follow-up trials for the batch AP everyday-crime stories.
 extension FollowUpCases {
-    static let batchAP: [CaseTemplate] = [tipSkimTwo, texterNoLicense, catInHotCar, hedgeFence, fakeRoofer, foundWalletKept, radioTowerClimb, bananaTwo, inflatablesYard, graveyardScene, witnessThreatLetter, dwlrAfterCrash, stolenSafeResale, stolenCarChase, insuranceFireClaim, stalkingCourtOrderAbduction, pillMillAgain, workplaceThreat, jailAssault, wrenchAssaultThreat]
+    static let batchAP: [CaseTemplate] = [tipSkimTwo, texterNoLicense, catInHotCar, fakeRoofer, foundWalletKept, radioTowerClimb, bananaTwo, inflatablesYard, graveyardScene, witnessThreatLetter, dwlrAfterCrash, stolenSafeResale, insuranceFireClaim, stalkingCourtOrderAbduction, pillMillAgain, workplaceThreat, jailAssault, wrenchAssaultThreat]
 
     static let tipSkimTwo = SmallCases.make(
         key: "story.followup.tipSkimTwo",
@@ -75,29 +75,6 @@ extension FollowUpCases {
         timeline: [(0, "1:05 p.m.: {DL} enters the store."), (0, "1:30 p.m.: a shopper calls police."), (0, "1:51 p.m.: {DL} leaves the store.")],
         identified: "A store camera.",
         impact: "The cat nearly died.")
-
-    static let hedgeFence = SmallCases.make(
-        key: "story.followup.hedgeFence",
-        category: .property,
-        headlines: ["Neighbor's Fence Cut to Pieces After Earlier Hedge Dispute", "Second Property Complaint in Feud Between Neighbors"],
-        law: "injuryRealProperty",
-        spec: "Willfully and wantonly injured the real property of {V}, a fence, causing damage of $850, on {DATE}.",
-        ages: 30...65,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {V} found {V.his} fence cut in three places. A doorbell camera showed {D} holding bolt cutters. {DL} says the fence was on {D.his} side of the line. Damage was put at $850.",
-        state: [E(.video, 3, "Doorbell Camera", "{D} holds bolt cutters at the fence at 6 a.m."), E(.document, 2, "Survey", "The fence is entirely on {V}'s lot.")],
-        defense: [E(.statement, 1, "Property Line", "{DL} says the fence was over the line.")],
-        role: "Neighbor",
-        exam: [.direct("What did you see?", "\"{DL} cutting my fence.\""), .direct("Whose side?", "\"Mine, per the survey.\""), .cross("The line is disputed.", "\"The survey isn't.\"")],
-        theory: ("{D} cut the fence.", "A property line dispute."),
-        allocution: "\"I should have gone to court, not to the fence.\"",
-        truths: ("{DL}'s own survey put the fence on {V}'s side.", "The survey stakes had been moved by a utility crew, an engineer confirmed."),
-        defendant: [.direct("Did you cut it?", "\"Yes.\""), .direct("Why?", "\"It was mine.\""), .cross("The survey.", "\"Is wrong.\"")],
-        openings: ("Bolt cutters at dawn.", "A line in dispute."),
-        closings: ("A survey.", "A dispute."),
-        timeline: [(-20, "The hedge case ends."), (0, "6 a.m.: {DL} cuts the fence."), (0, "7 a.m.: {V} finds the fence cut.")],
-        identified: "A doorbell camera.",
-        impact: "This feud will not end.")
 
     static let fakeRoofer = SmallCases.make(
         key: "story.followup.fakeRoofer",
@@ -314,30 +291,6 @@ extension FollowUpCases {
         identified: "Storage unit.",
         mood: .wantsConviction,
         impact: "I want my things back.")
-
-    static let stolenCarChase = SmallCases.make(
-        key: "story.followup.stolenCarChase",
-        category: .traffic,
-        headlines: ["Stolen Car Leads Deputies on Chase", "Defendant From Carjacking Case Flees Traffic Stop"],
-        law: "fleeing",
-        spec: "Operated a motor vehicle on a highway while fleeing or attempting to elude a law enforcement officer, on {DATE}.",
-        ages: 18...40,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a deputy tried to stop a car matching a stolen-car report. {D} sped away and the chase ended in a ditch. {DL} says the car was a friend's loaner.",
-        state: [E(.video, 3, "Dash Camera", "{D} accelerates past a stop sign with lights on."), E(.document, 2, "Stolen Report", "The car matches a stolen-car report.")],
-        defense: [E(.statement, 1, "Loaner", "{DL} says it was a friend's loaner.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What did you do?", "\"Activated lights.\""), .direct("What did {DL} do?", "\"Sped away.\""), .cross("The loaner.", "\"Not mine to say.\"")],
-        theory: ("{D} fled from deputies.", "A friend's loaner."),
-        allocution: "\"I panicked.\"",
-        truths: ("{DL} had no key; the car was hotwired.", "The car's owner texted {DL} 'you can take it tonight'."),
-        defendant: [.direct("Did you flee?", "\"Yes.\""), .direct("Why?", "\"Panic.\""), .cross("Stolen car.", "\"Loaner.\"")],
-        openings: ("A chase.", "A loaner."),
-        closings: ("Video.", "Panic."),
-        timeline: [(0, "A deputy sees the car."), (0, "The chase begins."), (0, "The car ends in a ditch.")],
-        identified: "Dash camera.",
-        impact: "They could've killed someone.",
-        genders: ["D": .male])
 
     static let insuranceFireClaim = SmallCases.make(
         key: "story.followup.insuranceFireClaim",
