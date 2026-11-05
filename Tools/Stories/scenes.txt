@@ -537,3 +537,103 @@ witnessIntimidation | Man Threatens Witness at Diner Days Before Trial
 massViolenceThreat | Student Posts Threat of Shooting at Rival High School
 assaultLEO | Man Strikes Deputy Trying to Talk Him Down From Bridge Rail
 felonyLarceny | Man Takes Parked Ambulance for a Midnight Drive
+injuryPersonalProperty | Patron Smashes Library Computer After Session Timer Ends
+injuryPersonalProperty | Firework Blows Up Neighbor's Mailbox at Dusk
+trespass2 | Man Returns to Store Dumpster After Being Told Not To
+injuryRealProperty | Bus Shelter Glass Smashed With Rock After Missed Bus
+falsePretenses | Driveway Crew Takes Deposit, Sprays Watered-Down Coating
+embezzlement | Booster Club Volunteer Pockets Raffle Cash
+trespass2 | Man Uses Closed Hotel Hot Tub After Hours
+dwi | Boater Arrested for Impaired Operation on Lake
+simpleAssault | Scooter Rider Shoves Pedestrian on Sidewalk
+misdLarceny | Purse Taken From Yoga Studio Cubby During Class
+forgery | Man Forges Airport Long-Term Parking Pass
+uttering | Employee Hands Boss Forged Doctor's Note
+misdLarceny | Cash Box From School Bake Sale Taken
+misdLarceny | Guest Walks Out of Motel With Room TV and Lamp
+disorderly | Man Throws Microphone and Screams at Karaoke Night
+injuryRealProperty | Man Opens Fire Hydrant and Floods Street
+trespass2 | Skaters Ignore Closure Signs and Break Park Ramp
+trespass2 | Man Loiters at Elementary School After Warning
+simpleAssault | Shopper Shoves Man in Checkout Line Over Cut
+misdLarceny | Man Takes Work-Zone Cones for His Yard
+falsePretenses | Seller Ships Brick Instead of E-Bike
+larcenyMerchant | Woman Wears Three Layers Out of Fitting Room
+injuryPersonalProperty | Driver Plows Through Parking Gate Arm Without Paying
+accessingComputers | Man Uses Former Roommate's Wi-Fi After Password Change
+misdLarceny | Man Takes Couch From Curb That Was Not Free
+disorderly | Man Burns Trash in Barrel and Refuses to Put It Out
+disorderly | Man Runs Onto Parade Route and Blocks a Float
+trespass2 | Uninvited Man Crashes Private Wedding and Refuses to Leave
+misdLarceny | Rider Takes Rental E-Scooter Home Instead of Returning It
+falsePretenses | Man Cashes Fake Chips at Casino Cage
+misdLarceny | Man Takes Cash From Church Offering Plate After Service
+forgery | Man Makes and Mounts Fake Dealer Plate
+possSchedII | Man With Unlabeled Oxycodone Pills Arrested in Pharmacy Lot
+larcenyMerchant | Customer Wears New Shoes Out of Store
+forgery | Driver Displays Forged Inspection Sticker
+injuryPersonalProperty | Man Throws City Bike-Share Bike Into River
+injuryRealProperty | Neighbor Cuts Down Tree Over Property Line
+misdLarceny | Man Forwards Ex-Roommate's Packages to His New Address
+misdLarceny | Man Keeps Cash From Found Wallet and Uses Its Cards
+simpleAssault | Dog Owners Fight at Park After Bite
+falsePretenses | Tattoo Artist Takes Booking Deposits Then Closes Shop
+misdLarceny | Man Takes Hens From Backyard Coop
+falsePretenses | DJ Takes Wedding Deposit and Never Shows
+simpleAssault | Neighbor Strikes Man With Snow Shovel Over Cleared Parking Spot
+falsePretenses | Customer Claims Delivery Never Arrived to Collect Refunds
+larcenyMerchant | Teens Grab Sneakers at Mall and Run
+assaultGovOfficial | Rider Spits on City Bus Driver
+recklessDriving | Dirt Bike Rider Tears Through County Park Trail
+falsePretenses | Man Demands Reward for Dog He Took From Yard
+misdLarceny | Man Siphons Diesel From Parked Work Truck
+awdwik | Cowboy Stabbed in Rodeo Arena Parking Lot After Lost Bet
+dangerousRobbery | Masked Men Rob Gravel Plant Payroll Clerk at Gunpoint
+commonLawRobbery | Gas Station Clerk Robbed With Box Cutter at Closing
+burglary2 | Window Smashed at Jewelry Store; Trays Grabbed in Seconds
+arson1 | Day Care Burns Overnight; Ex-Employee Charged
+prescriptionFraud | Nurse Replaced Patients' Opioids With Saline, Records Show
+maintainingDwelling | Motel Room Used as Methamphetamine Lab, Deputies Say
+prescriptionFraud | Doctor Wrote Hundreds of Opioid Prescriptions After Brief Visits
+animalCruelty | Deputies Raid Barn Cockfight, Find 40 Birds and Blood-Stained Pit
+strangulation | Man Chokes Partner Unconscious in Parked Car After Leaving Bar
+stalking | Man Hid GPS Tracker on Ex's Car and Showed Up Wherever She Went
+cyberstalking | Woman Made Fake Profiles to Harass Ex's New Partner
+accessingComputers | Man Hacked Home Doorbell Cameras and Watched Families
+damagingComputers | School District Computers Locked by Ransomware
+identityTheft | Bank Employee Sold Customer Files to Scammers
+falsePretenses100k | Woman Ran Fake Medical Fundraiser and Collected $90,000
+securitiesFraud | Pastor Ran Investment Scheme Among Church Members
+falsePretenses100k | Contractor Took Deposits for Dozens of Homes and Built None
+embezzlement100k | Real Estate Agent Took Client Escrow Money
+possStolen | Deputies Find Chop Shop Stripping Stolen Pickups
+hitAndRun | Cyclist Killed at Dawn; Driver Left the Scene
+dvpoViolation | Man Violated Protective Order by Showing Up at Ex's Workplace With Flowers
+kidnapping1 | Teen Held for Ransom in Lake Cabin, Deputies Say
+murder2 | Driver Shot After Highway Merge Dispute
+volManslaughter | Man Dies After Shove Down Church Stairs in Seat Dispute
+awdwik | Ranch Hand Struck With Pipe Over Unpaid Wages
+riot | Crowd Brawl at Stock Car Race Injures Six
+bribery | School Board Member Took Cash for Bus Contract
+perjury | Witness Charged With Perjury After Video Contradicts Testimony
+obstruction | Man Hid Friend's Gun Before Deputies Arrived
+extortion | Hacker Locked Restaurant Ordering System and Demanded Payment
+burningBuildings | Church Burned at Night by Former Member, Investigators Say
+traffickingOpioid | Traffic Stop Finds Fentanyl Pills Packed in Spare Tire
+felonFirearm | Woman Bought Guns for Felon Boyfriend at Pawn Shop
+forgery | Man Forged Deed to Sell Neighbor's Vacant Lot
+insuranceFraud | Cafe Owner Burned Own Restaurant for Insurance, Investigators Say
+patientNeglect | Resident Froze After Wandering From Group Home Overnight
+exploitationElder | Roofing Crew Charged Widow for Repairs Never Needed
+extortion | Lender Threatened Borrower Over Triple-Interest Debt
+bribery | Bail Bondsman Paid Jailer for Names of New Arrests
+burningBuildings | Farmer's Barn Burned in Feud Over Land
+insuranceFraud | Law Office Runner Paid People to File Staged Injury Claims
+felonyDBV | Child Dies When Drunk Driver's Tractor Overturns Hayride Wagon
+assaultGovOfficial | Parent Attacks Teacher in School Hallway Over Grade
+firefighterInjury | Illegal Firework Warehouse Explodes, Injuring Firefighters
+assaultGovOfficial | Patient Bites Paramedic During Transport
+embezzlement | County Clerk's Office Employee Pocketed Filing Fees
+assaultPointingGun | Neighbor Aimed Crossbow at Man Over Property Line
+invManslaughter | Passenger Dies When Speedboat Hits Dock at Night
+falsePretenses | Bank Customers Kited Checks Across Three Banks for Months
