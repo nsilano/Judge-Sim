@@ -275,6 +275,12 @@ final class GameState: ObservableObject {
 
     /// After losing an election, a former judge can keep hearing cases on emergency assignment (G.S. 7A-52).
     var emergencyJudge: Bool { reputation.contains { $0.comments.contains(Self.unseatedMarker) } && !unseated }
+    /// A judge who lost a race may run again four years later, from emergency assignment.
+    func onBallot(in year: Int) -> Bool {
+        if !emergencyJudge { return true }
+        guard let lost = reputation.first(where: { $0.comments.contains(Self.unseatedMarker) })?.year else { return false }
+        return year >= lost + 4
+    }
     private static let unseatedMarker = "Lost reelection."
 
     /// The judge keeps sitting, on emergency assignment, after losing an election.
@@ -340,7 +346,7 @@ final class GameState: ObservableObject {
         let electionDay = CourtCalendar.electionDay(in: newYear)
         let crossedElection = previous < electionDay && electionDay <= next
         // An emergency judge isn't on the ballot.
-        if crossedElection, !unseated, !emergencyJudge, Reputation.isElectionYear(newYear, careerStartYear: startYear) {
+        if crossedElection, !unseated, onBallot(in: newYear), Reputation.isElectionYear(newYear, careerStartYear: startYear) {
             var survey = Reputation.survey(year: newYear, stats: stats, appeals: appeals, history: history)
             var rng = SeededRNG(seed: seedBase ^ UInt64(newYear))
             let share = Reputation.voteShare(survey, rng: &rng)
@@ -357,6 +363,11 @@ final class GameState: ObservableObject {
                 survey.comments.append(Self.unseatedMarker)
                 reputation.insert(survey, at: 0)
                 unseated = true
+            } else if emergencyJudge {
+                // Back on the bench by the voters' choice: the emergency assignment ends.
+                for i in reputation.indices { reputation[i].comments.removeAll { $0 == Self.unseatedMarker } }
+                post(NewsItem(date: electionDay, kind: .community, headline: "Judge \(last) returns to the Superior Court bench",
+                              body: "Four years after losing the seat, Judge \(last) won it back, ending the emergency assignment.", prominence: 2))
             }
         }
 
@@ -1553,6 +1564,9 @@ final class GameState: ObservableObject {
         }
         investigations.forEach { add($0.courtCase) }
         bondQueue.forEach { add($0.courtCase) }
+        heldCases.forEach { add($0.courtCase) }
+        retrials.forEach { add($0) }
+        if let call = currentCalendar { for m in call.matters { names.insert(m.personName); if let c = m.pendingCase { add(c) } } }
         return names.union(namesIssued)
     }
 
@@ -2509,8 +2523,11 @@ final class GameState: ObservableObject {
                     var retrial = relief.retrial
                     retrial.sessionDate = call.date
                     if var bg = retrial.background {
+                        // Only someone who was in custody on the vacated judgment is "released"; a probationer stays out.
+                        let wasInCustody = bg.isJailed
                         bg.onRelease = true
-                        bg.bondStatus = "Released when the conviction was vacated on \(heard); awaiting the new trial."
+                        bg.bondStatus = wasInCustody ? "Released when the conviction was vacated on \(heard); awaiting the new trial."
+                                                     : "Out of custody when the conviction was vacated on \(heard); awaiting the new trial."
                         retrial.background = bg
                     }
                     creditVacatedTime(&retrial, through: call.date)
@@ -5128,7 +5145,7 @@ extension GameState {
                 events.append(CalendarEvent(date: date, kind: .holiday, title: name, detail: "State court holiday. The courthouse is closed."))
             }
             let election = CourtCalendar.electionDay(in: year)
-            if inRange(election), !unseated, !emergencyJudge,
+            if inRange(election), !unseated, onBallot(in: year),
                Reputation.isElectionYear(year, careerStartYear: cal.component(.year, from: careerStart)) {
                 events.append(CalendarEvent(date: election, kind: .election, title: "Election Day",
                                             detail: "Your seat on the Superior Court bench is on the ballot."))
