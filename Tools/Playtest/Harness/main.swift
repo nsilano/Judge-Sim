@@ -710,6 +710,7 @@ if args.count > 1 && args[1] == "scan" {
         let c = CaseGenerator.build(t, seed: UInt64(i) &+ 1, band: rng.chance(0.5) ? .strong : .close, context: ctx, rng: &trng)
         log("")
         log("=== \(t.key) ===")
+        FileHandle.standardError.write(Data("\(i) \(t.key)\n".utf8))
         playTrial(c, resume: nil)
         tried += 1
     }
