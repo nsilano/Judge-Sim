@@ -81,7 +81,9 @@ enum Aftermath {
         var broughtCase = false
 
         // Written beats for this case.
-        for beat in StoryAftermath.beats[c.templateKey] ?? [] where beat.triggers.contains(trigger) {
+        // A retrial of the same case doesn't bring the written follow-up back a second time.
+        let writtenBeats = c.headline.hasPrefix("New trial:") ? [] : (StoryAftermath.beats[c.templateKey] ?? [])
+        for beat in writtenBeats where beat.triggers.contains(trigger) {
             guard rng.chance(beat.chance) else { continue }
             if !beat.followUps.isEmpty && (broughtCase || !beat.followUps.contains(where: { FollowUpCases.fits($0, age: d.age) })) { continue }
             let when = later(beat.days)

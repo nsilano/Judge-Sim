@@ -458,6 +458,13 @@ final class GameState: ObservableObject {
         retrials = []
         reliefQueue = []
         pending = []
+        // The county's crimes didn't begin on the judge's first day: arrests made in the weeks before are already
+        // moving toward bond hearings and trial dates, so the first trial comes in a few weeks, not a quarter.
+        var carried = peopleInPlay()
+        for back in stride(from: 63, through: 9, by: -6) {
+            let when = CourtCalendar.calendar.date(byAdding: .day, value: -back, to: currentDate) ?? currentDate
+            openCrime(on: when, story: true, allowMurder: false, knownDefendant: nil, rng: &rng, excluding: &carried)
+        }
         // Day one starts with an empty docket.
         today = CourtDay(date: currentDate, clock: CourtCalendar.opening(on: currentDate, minutesAfterMidnight: openingMinutes),
                          kind: .trial, entries: [], sessionDay: 1)
@@ -1935,7 +1942,8 @@ final class GameState: ObservableObject {
             let probationers = candidates.filter { $0.status == .probation }
             let person = rng.pick(overload > 1 && !probationers.isEmpty && rng.chance(0.5) ? probationers : candidates)
             if let prior = person.priors.last(where: { $0.fromThisCourt && $0.docket != nil && !($0.docket ?? "").hasSuffix("(PV)") }),
-               let entered = person.appearances.last(where: { $0.docket == prior.docket }) {
+               let entered = person.appearances.last(where: { $0.docket == prior.docket && !$0.charges.lowercased().contains("violation") })
+                   ?? person.appearances.last(where: { $0.docket == prior.docket }) {
                 let incident = cal.date(byAdding: .day, value: -rng.int(30...70), to: date) ?? date
                 stats.chargedAgainAfterRelease = (stats.chargedAgainAfterRelease ?? 0) + 1
                 standing(.reoffendedAfterRuling, "Charged again after your sentence — \(person.name)", on: date)
@@ -4027,6 +4035,9 @@ final class GameState: ObservableObject {
 
     private func post(_ item: NewsItem) {
         var item = item
+        // The paper began with this judge's first week; earlier investigations are reported from then.
+        if item.date < careerStart { item.date = careerStart }
+        if let first = item.headline.first, first.isLowercase { item.headline = item.headline.prefix(1).uppercased() + item.headline.dropFirst() }
         // The same filler item doesn't run twice within two months.
         if item.docket == nil, item.kind == .community,
            news.contains(where: { $0.docket == nil && $0.headline == item.headline && abs($0.date.timeIntervalSince(item.date)) < 60 * 86_400 }) { return }

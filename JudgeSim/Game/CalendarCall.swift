@@ -446,7 +446,8 @@ enum CalendarCalls {
         let base = bondBase(cls)
         let factor = (1.0 + 0.25 * Double(min(felonies, 6)) + 0.5 * Double(min(ftas, 3))) * (violent ? 1.25 : 1.0)
         let jitter = Double.random(in: 0.85...1.2, using: &rng)
-        let secured = roundBond(Double(base) * factor * jitter)
+        // Even a homicide with a long record is set at no more than $1,000,000 here.
+        let secured = roundBond(min(1_000_000, Double(base) * factor * jitter))
         let unsecured = roundBond(Double(min(base, 15_000)) * Double.random(in: 0.2...0.8, using: &rng))
         let severity = cls?.severity ?? NCClass.H.severity
         let why = ftas > 0 ? " Missed court before." : felonies >= 2 ? " \(felonies) prior felonies." : violent ? " Violent charge." : ""

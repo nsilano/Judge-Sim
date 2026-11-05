@@ -84,12 +84,12 @@ enum Consequences {
         var lead = ""
         var note = ""
         if !convicted && c.truth.actuallyGuilty {
-            chance = 0.4
+            chance = 0.25
             if dismissed {
-                lead = "\(d.name), whose \(offense) charge Judge \(judgeLast) dismissed for a speedy-trial violation in \(monthYear), was arrested again this week"
+                lead = "\(d.name), whose \(offense) charge Judge \(judgeLast) dismissed for a speedy-trial violation in \(monthYear), is accused of a new offense"
                 note = "You dismissed \(d.lastName)'s \(offense) charge for a speedy-trial violation on \(SentenceFormat.shortDate(date))."
             } else {
-                lead = "\(d.name), whom Judge \(judgeLast) found not guilty of \(offense) in \(monthYear), was arrested again this week"
+                lead = "\(d.name), whom Judge \(judgeLast) found not guilty of \(offense) in \(monthYear), is accused of a new offense"
                 note = "You acquitted \(d.lastName) of \(offense) on \(SentenceFormat.shortDate(date))."
                 // When the State's proof fell short, the law required the verdict; the record should say so.
                 if let principal = c.charges.first, Judgment.properStrength(c) < principal.threshold {
@@ -99,13 +99,13 @@ enum Consequences {
         } else if convicted && !active && c.truth.actuallyGuilty && c.victimName != nil
                     && [LawCategory.violent, .family, .robbery].contains(c.category) {
             chance = sameVictim ? 0.18 : 0.1
-            lead = "\(d.name), sentenced to probation by Judge \(judgeLast) in \(monthYear) for \(offense), was arrested again this week"
+            lead = "\(d.name), sentenced to probation by Judge \(judgeLast) in \(monthYear) for \(offense), is accused of a new offense"
             note = "You sentenced \(d.lastName) to probation for \(offense) on \(SentenceFormat.shortDate(date))."
         }
         guard chance > 0, rng.chance(chance) else { return [] }
         let incident = Calendar.current.date(byAdding: .day, value: rng.int(120...420), to: date) ?? date
         let toCourt = Calendar.current.date(byAdding: .day, value: rng.int(56...100), to: incident) ?? incident
-        var body = lead + ", according to the Sheriff's Office."
+        var body = lead + ", according to the Sheriff's Office. A grand jury has not yet acted."
         if let victim {
             body += " Investigators say the victim is \(victim), the same person at the center of the earlier case."
             note += " The victim in the new case is \(victim) again."
@@ -113,7 +113,7 @@ enum Consequences {
         let arrest = PendingEvent(due: incident,
                                   news: NewsItem(date: incident, kind: .arrest,
                                                  headline: victim != nil ? "\(d.name) charged again; same victim, police say"
-                                                                         : "\(d.lastName), let go by Hollis court, arrested again",
+                                                                         : "\(d.lastName), let go by Hollis court, charged again",
                                                  body: body, docket: c.docket, prominence: 2),
                                   personID: d.personID)
         let indicted = PendingEvent(due: toCourt,

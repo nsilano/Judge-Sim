@@ -254,7 +254,9 @@ enum CaseGenerator {
             let name = known ?? drawn
             if known != nil { used.insert(name); used.insert(lastName(name)) }
             let age = rng.int(t.ageRange)
-            let occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
+            var occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
+            // A college student is young; an older defendant works for a living.
+            if t.occupations.isEmpty, age > 30, occupation.lowercased().contains("student") { occupation = rng.pick(NameBank.occupations.filter { !$0.lowercased().contains("student") }) }
             // Written cases describe the defendant's record themselves; most say there is none. A serving officer
             // has none at all: a criminal record bars certification (12 NCAC 09B .0101).
             let officer = CaseComplexity.isLawEnforcement(occupation)

@@ -576,7 +576,7 @@ extension StoryCases {
         spec: "Forged eleven checks totaling $9,400, falsely making the signature of {V}, with intent to defraud, on {DATE}.",
         ages: 28...62,
         victim: true,
-        summary: "{V} noticed in {DATE} that {V.his} payroll account was $9,400 short. Eleven checks had been written to {D}, the part-time bookkeeper, over four months, each with {V}'s signature. A handwriting examiner said {V}'s signature was forged. {DL} says {V} had authorized a signature stamp and told {D.him} to pay {D.himself} 'what we owe you.'",
+        summary: "{V} noticed on {DATE} that {V.his} payroll account was $9,400 short. Eleven checks had been written to {D}, the part-time bookkeeper, over four months, each with {V}'s signature. A handwriting examiner said {V}'s signature was forged. {DL} says {V} had authorized a signature stamp and told {D.him} to pay {D.himself} 'what we owe you.'",
         state: [E(.document, 3, "The Checks", "Eleven checks to {D}, signed 'ML,' totaling $9,400."), E(.forensic, 3, "Handwriting Exam", "'Probably written by' {D}; {V}'s signature is not genuine.")],
         defense: [E(.statement, 2, "Stamp", "{DL} says {V} had a signature stamp and told {D.him} to use it.")],
         role: "Forensic document examiner",

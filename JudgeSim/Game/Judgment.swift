@@ -1981,7 +1981,7 @@ enum Judgment {
             if rng.chance(0.25) {
                 pending.append(PendingEvent(due: later(120...700),
                                             news: NewsItem(date: date, kind: .revelation,
-                                                           headline: "Update in the \(d.lastName) case",
+                                                           headline: "New detail surfaces in \(principalTitle.lowercasedPhrase) case against \(d.lastName)",
                                                            body: c.truth.revelation, docket: c.docket)))
             }
         case (false, false):
