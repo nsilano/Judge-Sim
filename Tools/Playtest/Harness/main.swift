@@ -316,7 +316,7 @@ var sameNameFlagged = Set<String>()
 var contemptHeard = 0
 var petitionsHeard: [String: Int] = [:]
 var incidentsSeen: [String: Int] = [:]
-var continuedIDs = Set<String>()
+var continuedIDs: [String: Date] = [:]
 var hearingDates: [UUID: Date] = [:]
 
 // MARK: - Trials
@@ -337,7 +337,7 @@ var hearingDates: [UUID: Date] = [:]
     if let pending = s.incidentContinuance {
         let to = CourtCalendar.calendar.date(byAdding: .day, value: pending.option.days ?? 28, to: game.currentDate) ?? game.currentDate
         log("  Continued for the incident to about \(short(to))")
-        continuedIDs.insert(c.docket)
+        continuedIDs[c.docket] = to
         game.continueMatter(c.id, to: to, reason: "\(pending.incident.title): \(pending.option.label.lowercased()).",
                             snapshot: pending.option.effect == .mistrial ? nil : s.snapshot)
         return true
@@ -366,7 +366,7 @@ var hearingDates: [UUID: Date] = [:]
         flag("\(c.docket): \(c.defendant.name) is \(c.defendant.age) in the case but \(person.age(on: c.sessionDate)) by the record")
     }
     if resume != nil { log("  (resumed after a continuance)") }
-    continuedIDs.remove(c.docket)
+    continuedIDs[c.docket] = nil
     log("TRIAL \(c.docket) · \(c.caption)")
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
     log("  Defendant: \(d.name), \(d.age), \(d.occupation); priors: \(d.priors.count); \(c.background?.bondStatus ?? "")")
@@ -414,7 +414,7 @@ var hearingDates: [UUID: Date] = [:]
     if resume == nil && s.stage == .sentencing && rng.chance(0.06) {
         let to = CourtCalendar.calendar.date(byAdding: .day, value: 21, to: game.currentDate) ?? game.currentDate
         log("  Continued mid-trial to about \(short(to))")
-        continuedIDs.insert(c.docket)
+        continuedIDs[c.docket] = to
         game.continueMatter(c.id, to: to, reason: "A witness is unavailable", snapshot: s.snapshot)
         return
     }
@@ -803,7 +803,9 @@ if args.count > 1 && args[1] == "scan" {
     let stories = Set(StoryCases.all.map(\.key))
     log("WRITTEN CASES HEARD: \(heardKeys.intersection(stories).count) of \(stories.count)")
     log("  never came up: " + stories.subtracting(heardKeys).sorted().joined(separator: ", "))
-    if !continuedIDs.isEmpty { flag("\(continuedIDs.count) trial(s) continued mid-trial never came back") }
+    // A trial continued to a date the run never reached hasn't failed to come back.
+    let lost = continuedIDs.filter { $0.value.addingTimeInterval(21 * 86_400) < game.currentDate }
+    if !lost.isEmpty { flag("\(lost.count) trial(s) continued mid-trial never came back: " + lost.keys.sorted().joined(separator: ", ")) }
     let orders = game.people.flatMap { $0.stayAwayOrders ?? [] }
     log("COMMUNITY: standing \(game.stats.communityStanding ?? 0) | " + Community.townTalk(standing: game.stats.communityStanding ?? 0))
     let ao = game.arrestOrders

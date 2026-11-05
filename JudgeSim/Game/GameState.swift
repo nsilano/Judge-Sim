@@ -1538,6 +1538,27 @@ final class GameState: ObservableObject {
                         kind: kind, entries: entries, sessionDay: sessionDay)
     }
 
+    /// Names of people who are defendants somewhere in the county right now: on a docket, in a queue, or on record.
+    func defendantNamesInPlay() -> Set<String> {
+        var names = Set(people.map(\.name))
+        arraignQueue.forEach { names.insert($0.courtCase.defendant.name) }
+        bondQueue.forEach { names.insert($0.courtCase.defendant.name) }
+        investigations.forEach { names.insert($0.courtCase.defendant.name) }
+        heldCases.forEach { names.insert($0.courtCase.defendant.name) }
+        for entry in (today?.entries ?? []) + scheduled.map(\.entry) + awaiting.map(\.entry) {
+            switch entry.matter {
+            case .trial(let c): names.insert(c.defendant.name)
+            case .hearing(let h): names.insert(h.personName)
+            case .calendar(let call):
+                for m in call.matters {
+                    names.insert(m.personName)
+                    if let c = m.pendingCase { names.insert(c.defendant.name) }
+                }
+            }
+        }
+        return names
+    }
+
     /// Everyone with a matter on a calendar or waiting for a trial date.
     /// Every name already given to someone in this county: no new person ever gets one of them. Shared last names
     /// or first names are fine; two different people never have the same full name.
@@ -2954,7 +2975,10 @@ final class GameState: ObservableObject {
         // (A returning defendant or a former witness charged later keeps their own name; that's the same person.)
         reserved.formUnion(namesInPlay())
         context.reservedNames = reserved
-        context.residentDefendant = residentDefendant.map { ResidentRef(name: $0.name, town: $0.town, occupation: $0.occupation, lastCaption: nil) }
+        // A resident charged now must not already be a defendant elsewhere in the county (two arrests the same week could
+        // both pick the same resident, or the resident may already be on the docket as someone else's case).
+        let defendantsInPlay = defendantNamesInPlay()
+        context.residentDefendant = residentDefendant.flatMap { defendantsInPlay.contains($0.name) ? nil : $0 }.map { ResidentRef(name: $0.name, town: $0.town, occupation: $0.occupation, lastCaption: nil) }
         context.residents = residents.filter { !$0.deceased }.map { r in
             ResidentRef(name: r.name, town: r.town, occupation: r.occupation,
                         lastCaption: r.roles.last(where: { $0.part != "Victim" })?.caption)
