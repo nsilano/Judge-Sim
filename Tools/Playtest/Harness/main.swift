@@ -700,7 +700,9 @@ if args.count > 1 && args[1] == "scan" {
     game.startCareer(name: "Morgan Hale", start: Date())
     guard let county = game.county else { return }
     var tried = 0
-    for (i, t) in StoryCases.all.enumerated() {
+    // Every alternate telling is the same case as its story, and plays through the same checks.
+    for v in StoryVariants.all { for p in StoryVariants.problems(v, base: CaseTemplates.byKey[v.key]) { flag(p) } }
+    for (i, t) in (StoryCases.all + StoryVariants.all).enumerated() {
         var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 5000 + i * 10,
                                         recentTemplateKeys: [])
         ctx.reservedNames = game.namesInPlay()
@@ -934,6 +936,32 @@ if args.count > 2 && args[1] == "bank" {
     }
     try? lines.joined(separator: "\n").write(toFile: args[2], atomically: true, encoding: .utf8)
     print("Wrote \(lines.count) cases to \(args[2])")
+    exit(0)
+}
+/// `Playtest tellings`: draws a story that has variants as if it had been heard 0, 1, 2 times, and prints which telling each draw gets.
+if args.count > 1 && args[1] == "tellings" {
+    MainActor.assumeIsolated {
+        game = GameState()
+        game.resetCareer()
+        game.startCareer(name: "Morgan Hale", start: Date())
+        guard let county = game.county else { return }
+        var ok = true
+        for (key, variants) in StoryVariants.byKey.sorted(by: { $0.key < $1.key }).prefix(3) {
+            for heard in 0...(variants.count + 1) {
+                var used = Set<String>()
+                for t in StoryCases.all + FollowUpCases.all where t.key != key { used.insert("\(t.key)|x"); used.insert("\(t.key)|y"); used.insert("\(t.key)|z") }
+                for n in 0..<heard { used.insert("\(key)|\(n)") }
+                var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 9000,
+                                                recentTemplateKeys: [], usedSignatures: used)
+                ctx.allowMurder = true
+                ctx.reservedNames = game.namesInPlay()
+                let c = CaseGenerator.generate(seed: UInt64(heard) &+ 99, context: ctx)
+                print("\(key) heard \(heard): drew \(c.templateKey) · \(c.headline)")
+                if c.templateKey != key { ok = false }
+            }
+        }
+        print(ok ? "tellings ok" : "tellings: the wrong story was drawn")
+    }
     exit(0)
 }
 if args.count > 1 && args[1] == "stories" {

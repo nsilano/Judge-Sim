@@ -72,6 +72,11 @@ enum CaseGenerator {
     static func generate(seed: UInt64, context: Context) -> CourtCase {
         var rng = SeededRNG(seed: seed)
         var pool = CaseTemplates.all
+        // How many times each template has been heard, counted once rather than per template.
+        var useCounts: [String: Int] = [:]
+        for signature in context.usedSignatures {
+            if let bar = signature.firstIndex(of: "|") { useCounts[String(signature[..<bar]), default: 0] += 1 }
+        }
         // Written cases come up first, until each has been heard once.
         // A follow-up to an earlier case: one of the kinds named, fitted to the person.
         if let keys = context.forcedTemplateKeys {
@@ -86,13 +91,8 @@ enum CaseGenerator {
             }
             let fitting = keepsVictim.isEmpty ? named : keepsVictim
             if let template = fitting.first(where: { _ in rng.chance(0.6) }) ?? fitting.first {
-                return build(template, seed: seed, band: rng.chance(0.6) ? .strong : .close, context: context, rng: &rng)
+                return build(StoryVariants.telling(of: template, heard: useCounts[template.key] ?? 0), seed: seed, band: rng.chance(0.6) ? .strong : .close, context: context, rng: &rng)
             }
-        }
-        // How many times each template has been heard, counted once rather than per template.
-        var useCounts: [String: Int] = [:]
-        for signature in context.usedSignatures {
-            if let bar = signature.firstIndex(of: "|") { useCounts[String(signature[..<bar]), default: 0] += 1 }
         }
         var unheardStories = StoryCases.all.filter { useCounts[$0.key] == nil }
         if !context.allowMurder { unheardStories.removeAll(where: isMurder) }
@@ -136,7 +136,7 @@ enum CaseGenerator {
                     let alternatives = candidates.filter { !isEmbezzlement($0) && !isMurder($0) }
                     if !alternatives.isEmpty { story = rng.pick(alternatives) }
                 }
-                return build(story, seed: seed, band: .close, context: storyContext, rng: &rng)
+                return build(StoryVariants.telling(of: story, heard: useCounts[story.key] ?? 0), seed: seed, band: .close, context: storyContext, rng: &rng)
             }
         }
         // A written case is heard once per career, and only with a new defendant, whose history it describes.
@@ -186,6 +186,7 @@ enum CaseGenerator {
             let alternatives = choices.filter { !isEmbezzlement($0) }
             if !alternatives.isEmpty { template = rng.pick(alternatives) }
         }
+        template = StoryVariants.telling(of: template, heard: uses(template))
 
         let roll = Double.random(in: 0..<1, using: &rng)
         // Some cases are clear one way or the other; about half sit on the line.

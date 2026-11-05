@@ -9,3 +9,6 @@ Files: `TEMPLATE_MAJOR.md`, `TEMPLATE_SMALL.md` (each has the prompt, schema, fo
 4. Paste the clean JSON back to Claude. Claude converts it, builds, registers the batch, re-scans, and commits.
 
 After each batch is added, run `./refresh.sh` so the snapshot and scenes.txt include it (Claude does this when registering a batch).
+
+## Variants (alternate tellings)
+Each story can have 1-2 variants. The first hearing in a career uses the story as written; later hearings switch to an unseen variant. See `TEMPLATE_VARIANT.md` for the schema and prompt, `python3 ingest.py base KEY ...` for the story briefs to paste in, and `python3 ingest.py check variants.json [--small]` to validate. Claude converts clean variants and registers them in `JudgeSim/Game/StoryVariants*.swift`.

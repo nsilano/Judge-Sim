@@ -4,6 +4,7 @@
   python3 ingest.py check   file.json [--small]       validate only
   python3 ingest.py convert file.json out.py [--small]  validate + write Python data (list named STORIES)
   python3 ingest.py scenes   > scenes.txt  (compact list of every existing story, for the prompt)
+  python3 ingest.py base KEY [KEY...]   (briefs of stories to retell, for the variant prompt)
   python3 ingest.py used [law]                          list existing headlines (paste into the prompt's 'already used')
 """
 import json, re, sys, glob, os
@@ -35,13 +36,24 @@ def strings(d, path=""):
 
 def check(d, small, L, taken):
     e = []
+    variant = d.get("variant_of")
+    if variant:
+        d["key"] = variant          # a retelling keeps the story's key
     k = d.get("key", "?")
     need = (["key","category","headline","law","spec","has_victim","summary","state_evidence","defense_evidence","witness_role","witness_exam","theory","truth_guilty","truth_innocent","defendant_exam","timeline"] if small else
             ["key","category","headlines","law","spec","has_victim","summary","state_evidence","defense_evidence","witness_role","witness_exam","theory","allocution","truth_guilty","truth_innocent","defendant_exam","opening","closing","timeline","how_identified","mood","threshold"])
     for f in need:
         if f not in d: e.append(f"missing {f}")
     if e: return k, e
-    if k in taken: e.append("key already exists")
+    if variant:
+        base = BANK.get(variant)
+        if base is None: e.append(f"variant_of {variant}: no such story or follow-up")
+        else:
+            if d["law"] != base["law"]: e.append(f"charge must match the story ({base['law']}), not {d['law']}")
+            if d["category"] != base["cat"]: e.append(f"category must match the story ({base['cat']})")
+            heads = [d["headline"]] if small else d["headlines"]
+            if base["head"] in heads: e.append("headline must differ from the story's")
+    elif k in taken: e.append("key already exists")
     if not re.fullmatch(r"[a-z][A-Za-z0-9]+", k): e.append("key must be camelCase letters/digits")
     if d["category"] not in CATS: e.append(f"bad category {d['category']}")
     if d["law"] not in L: e.append(f"unknown law id {d['law']}")
@@ -101,6 +113,7 @@ def convert(d, small):
         if d.get("defense_witness"): out["drole"] = d["defense_witness"]["role"]; out["dex"] = ex(d["defense_witness"]["exam"])
         if d.get("legal_topics"): out["doc"] = d["legal_topics"]
     if "source" in d: out["s"] = d["source"]
+    if d.get("variant_of"): out["k"] = d["variant_of"]
     return out
 
 def used(law=None):
@@ -108,6 +121,16 @@ def used(law=None):
         t = open(f).read()
         for m in re.finditer(r'key: "(?:\w+\.)?(\w+)".*?headlines: \["([^"]+)"', t, re.S):
             print(f"{m.group(1)}: {m.group(2)}")
+
+def load_bank():
+    import os
+    out = {}
+    path = os.path.join(os.path.dirname(__file__), "bank_snapshot.tsv")
+    for line in open(path, encoding="utf-8"):
+        p = line.rstrip("\n").split("\t")
+        if len(p) > 3: out[p[0].replace("story.followup.", "").replace("story.", "")] = dict(law=p[1], cat=p[2], head=p[3])
+    return out
+BANK = load_bank()
 
 def scenes(d, small):
     h = d["headline"] if small else " ".join(d["headlines"])
@@ -119,6 +142,7 @@ def dups(data, small, bar=0.36):
     sys.path.insert(0, f"{ROOT}/Tools/Playtest")
     import bank_audit as B
     bank = B.load(os.path.join(os.path.dirname(__file__), "bank_snapshot.tsv"))
+    data = [d for d in data if not d.get('variant_of')]
     new = [scenes(d, small) for d in data]
     follow = ["source" in d for d in data]
     for r, f in zip(new, follow): r["key"] = ("story.followup." if f else "story.") + r["key"]
@@ -138,6 +162,18 @@ def dups(data, small, bar=0.36):
 def main():
     a = sys.argv[1:]
     if not a: print(__doc__); return
+    if a[0] == "base":
+        # briefs of stories to retell: python3 ingest.py base key1 key2 ...  (paste into the variant prompt)
+        rows = {}
+        for line in open(os.path.join(os.path.dirname(__file__), "bank_snapshot.tsv"), encoding="utf-8"):
+            p = line.rstrip("\n").split("\t")
+            if len(p) > 5: rows[p[0].replace("story.followup.", "").replace("story.", "")] = p
+        for k in a[1:]:
+            p = rows.get(k)
+            if not p: print(f"{k}: NOT FOUND"); continue
+            victim = "{V" in (p[4] + p[5])
+            print(f"- variant_of: {k}\n  law: {p[1]}   category: {p[2]}   has_victim: {str(victim).lower()}   witness_role: {p[6] if len(p) > 6 else ''}\n  original headline: {p[3]}\n  original charge: {p[4]}\n  original summary: {p[5]}\n")
+        return
     if a[0] == "used": used(); return
     if a[0] == "scenes":
         # compact catalog for the prompt: "law | headline" for every story, follow-ups listed as 'again' cases omitted
