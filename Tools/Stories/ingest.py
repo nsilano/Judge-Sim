@@ -3,6 +3,7 @@
 
   python3 ingest.py check   file.json [--small]       validate only
   python3 ingest.py convert file.json out.py [--small]  validate + write Python data (list named STORIES)
+  python3 ingest.py scenes   > scenes.txt  (compact list of every existing story, for the prompt)
   python3 ingest.py used [law]                          list existing headlines (paste into the prompt's 'already used')
 """
 import json, re, sys, glob, os
@@ -108,10 +109,43 @@ def used(law=None):
         for m in re.finditer(r'key: "(?:\w+\.)?(\w+)".*?headlines: \["([^"]+)"', t, re.S):
             print(f"{m.group(1)}: {m.group(2)}")
 
+def scenes(d, small):
+    h = d["headline"] if small else " ".join(d["headlines"])
+    ident = d["state_evidence"]["title"] if small else d.get("how_identified", "")
+    return dict(key=d["key"], law=d["law"], cat=d["category"], head=h, spec=d["spec"], summ=d["summary"], role=d["witness_role"], ident=ident)
+
+def dups(data, small, bar=0.36):
+    """Compare each candidate with the whole bank (and with each other) using the Tools/Playtest scanner."""
+    sys.path.insert(0, f"{ROOT}/Tools/Playtest")
+    import bank_audit as B
+    bank = B.load(os.path.join(os.path.dirname(__file__), "bank_snapshot.tsv"))
+    new = [scenes(d, small) for d in data]
+    follow = ["source" in d for d in data]
+    for r, f in zip(new, follow): r["key"] = ("story.followup." if f else "story.") + r["key"]
+    rows = bank + new
+    vecs, df = B.vectors(rows)
+    out = []
+    for i in range(len(bank), len(rows)):
+        for j in range(len(rows)):
+            if j == i or (j >= len(bank) and j < i): continue
+            a, b = rows[i], rows[j]
+            if B.is_follow(a) != B.is_follow(b): continue
+            s = B.cos(vecs[i], vecs[j])
+            if s >= (bar if a["law"] == b["law"] else bar + 0.12):
+                out.append((s, a["key"].split(".")[-1], b["key"].split(".")[-1], b["head"][:70]))
+    return sorted(out, reverse=True)
+
 def main():
     a = sys.argv[1:]
     if not a: print(__doc__); return
     if a[0] == "used": used(); return
+    if a[0] == "scenes":
+        # compact catalog for the prompt: "law | headline" for every story, follow-ups listed as 'again' cases omitted
+        import sys as _s
+        for line in open(os.path.join(os.path.dirname(__file__), "bank_snapshot.tsv"), encoding="utf-8"):
+            p = line.rstrip("\n").split("\t")
+            if len(p) > 3 and ".followup." not in p[0]: print(f"{p[1]} | {p[3]}")
+        return
     small = "--small" in a
     path = a[1]
     data = json.load(open(path))
@@ -122,6 +156,8 @@ def main():
         k, e = check(d, small, L, taken | seen)
         seen.add(k)
         for x in e: print(f"{k}: {x}"); bad += 1
+    for s_, a_, b_, h_ in dups(data, small):
+        print(f"{a_}: DUPLICATE SCENE ({s_:.2f}) of existing/other case {b_}: {h_}"); bad += 1
     print(f"{len(data)} cases, {bad} problems")
     if a[0] == "convert" and bad == 0:
         out = a[2]

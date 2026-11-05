@@ -5,7 +5,8 @@ For felonies and serious cases. Full-depth trial: 3 State exhibits, 1-2 defense 
 ## Prompt to give another model (copy everything in the box)
 
 ```
-You are writing cases for "Judge Sim", a North Carolina trial-judge game. Write {N} MAJOR criminal cases (felonies or serious misdemeanors) as a JSON array that matches the schema below exactly. Read RULES.md and LAW_IDS.md rules first (pasted below). Each case is a realistic, contested trial with a plausible defense. Every case needs a different scene (place + act). Do NOT reuse any scene on this "already used" list: {PASTE LIST OR "none"}.
+You are writing cases for "Judge Sim", a North Carolina trial-judge game. Write {N} MAJOR criminal cases (felonies or serious misdemeanors) as a JSON array that matches the schema below exactly. Read RULES.md and LAW_IDS.md rules first (pasted below). Each case is a realistic, contested trial with a plausible defense. Every case needs a different scene (place + act). Below is scenes.txt, every case already in the game (law | headline). Your cases must NOT repeat any of those scenes (same place + same act). Choose fresh settings, and also make sure none of your own cases repeat each other.
+[paste scenes.txt here]
 Rules: use only name tokens ({D} {DL} {V} {D.he} {D.his} {D.him} ...), never real names or raw he/she/his/her. truth_innocent must favor the defendant, truth_guilty must hurt them. Use only the listed evidence kinds and law ids. Output ONLY the JSON array.
 Topics to cover: {LIST N IDEAS, e.g. "pharmacy burglary; staged crash insurance fraud; ..."}
 [paste RULES.md here]

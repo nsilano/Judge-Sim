@@ -115,4 +115,5 @@ def main():
         print(f"   B: {b['head'][:100]}")
         print("   shared: " + ", ".join(shared(vecs[i], vecs[j], df)))
 
-main()
+if __name__ == "__main__":
+    main()

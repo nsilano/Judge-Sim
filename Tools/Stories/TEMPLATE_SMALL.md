@@ -5,7 +5,8 @@ Short "filler episode" cases: misdemeanors and minor felonies. One State exhibit
 ## Prompt to give another model (copy everything in the box)
 
 ```
-You are writing cases for "Judge Sim", a North Carolina trial-judge game. Write {N} SMALL, quick-trial criminal cases (petty theft, shoplifting, vandalism, small fraud, noise, minor traffic, trespass, false reports, misdemeanor drugs, neighbor disputes) as a JSON array matching the schema below exactly. They are short filler episodes: one State exhibit, one defense exhibit, two witness questions, two defendant questions, a 2-3 line timeline. Everything must be consistent and logical. Each case needs a different scene (place + act). Do NOT reuse any scene on this "already used" list: {PASTE LIST OR "none"}.
+You are writing cases for "Judge Sim", a North Carolina trial-judge game. Write {N} SMALL, quick-trial criminal cases (petty theft, shoplifting, vandalism, small fraud, noise, minor traffic, trespass, false reports, misdemeanor drugs, neighbor disputes) as a JSON array matching the schema below exactly. They are short filler episodes: one State exhibit, one defense exhibit, two witness questions, two defendant questions, a 2-3 line timeline. Everything must be consistent and logical. Each case needs a different scene (place + act). Below is scenes.txt, every case already in the game (law | headline). Your cases must NOT repeat any of those scenes (same place + same act). Choose fresh settings, and also make sure none of your own cases repeat each other.
+[paste scenes.txt here]
 Rules: use only name tokens ({D} {DL} {V} {D.he} {D.his} {D.him} ...), never real names or raw he/she/his/her. truth_innocent must favor the defendant, truth_guilty must hurt them. Use only the listed evidence kinds and law ids. Output ONLY the JSON array.
 Topics: {LIST N IDEAS}
 [paste RULES.md here]
