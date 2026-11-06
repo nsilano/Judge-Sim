@@ -136,7 +136,7 @@ enum TreatmentCourts {
             return Ruling(update: { person in
                 person.status = .incarcerated
                 person.releaseDate = due(2)
-                person.releaseNote = "\(r.program) sanction: a weekend in the county jail. The program resumes on release."
+                person.releaseNote = "\(r.program) sanction: two days in the county jail (a quick dip). The program resumes on release."
                 person.probation?.courtStrikes = r.strikes + 1
                 person.probation?.courtReviewDue = due(28)
                 person.propensity = max(0.03, person.propensity - (r.report == .slip ? 0.04 : 0.02))

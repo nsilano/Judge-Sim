@@ -30,7 +30,7 @@ extension StoryAftermath {
         "story.lotteryClerkInsider": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
                  headline: "Clerk Linked to Prior Lottery Fraud Redeems Another Unclaimed Ticket",
-                 body: "Same Store, Same Scheme, New Clerk. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
+                 body: "Same Scheme, Same Clerk, Another Ticket. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.lotteryAgainBf"])
         ],
         "story.mugshotRemovalFees": [
@@ -59,8 +59,8 @@ extension StoryAftermath {
         ],
         "story.phantomPatientClaims": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Therapist Again Bills for Patients Who Never Came",
-                 body: "Second Practice Bills for Imaginary Sessions. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
+                 headline: "Billing Company Owner Again Sends Claims for Patients Who Do Not Exist",
+                 body: "Reused Numbers Appear in a Second Insurer's Files. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.phantomAgainBf"])
         ],
         "story.tornadoReliefKept": [
@@ -71,8 +71,8 @@ extension StoryAftermath {
         ],
         "story.slowCarHoodClaims": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Body Shop Owner Again Bills for Hail Damage That Wasn't There",
-                 body: "Prior Staged-Damage Case Returns With New Shop. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
+                 headline: "Claimant Again Steps in Front of Slow Cars, Files New Injury Claims",
+                 body: "Prior Staged-Accident Case Returns With a Tenth Claim. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.hoodAgainBf"])
         ],
         "story.localCelebrityTracker": [
@@ -281,8 +281,8 @@ extension StoryAftermath {
         ],
         "story.oysterBedPoach": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...180,
-                 headline: "Boat Crew Cited for Harvesting Clams From a Closed Flat",
-                 body: "Boat Crew Cited for Harvesting Clams From a Closed Flat. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
+                 headline: "Boater Cited for Harvesting Clams From a Closed Flat",
+                 body: "Boater Cited for Harvesting Clams From a Closed Flat. Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is facing the new charge.",
                  followUps: ["story.followup.oysterAgainBf"])
         ],
         "story.rodeoClownShove": [

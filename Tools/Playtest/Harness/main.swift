@@ -367,13 +367,24 @@ var hearingDates: [UUID: Date] = [:]
     }
     if resume != nil { log("  (resumed after a continuance)") }
     continuedIDs[c.docket] = nil
+    for e in c.evidence where e.supplemental != nil { log("  NEW EVIDENCE: \(e.exhibit) \(e.title) (weight \(e.weight)): \(e.detail)") }
     log("TRIAL \(c.docket) · \(c.caption)")
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
     log("  Defendant: \(d.name), \(d.age), \(d.occupation); priors: \(d.priors.count); \(c.background?.bondStatus ?? "")")
     log("  TEMPLATE \(c.templateKey)")
     log("  Summary: \(c.summary)")
     checkText(c.summary + " " + c.charges.map { $0.law.title + ": " + $0.specification }.joined(separator: " "), where: "trial \(c.docket)")
-    if s.continuanceMotionPending { s.denyContinuanceMotion(); log("  Continuance motion: denied") }
+    if s.continuanceMotionPending, let motion = s.continuanceMotion {
+        // Half the time the motion is granted: the case goes over with the evidence the motion asked for.
+        if rng.chance(0.5) && style != "reckless" {
+            let to = CourtCalendar.calendar.date(byAdding: .day, value: motion.suggestedDays, to: game.currentDate) ?? game.currentDate
+            log("  Continuance motion granted (\(motion.title)); evidence ordered: \(motion.request.label)")
+            continuedIDs[c.docket] = to
+            game.continueMatter(c.id, to: to, reason: motion.title, snapshot: nil, requests: [motion.request])
+            return
+        }
+        s.denyContinuanceMotion(); log("  Continuance motion: denied")
+    }
     if ruleOnIncidents(s, .beforeTrial, c) { return }
     if s.pleaPresented && rng.chance(0.6) {
         log("  Plea arrangement accepted: \(c.background?.arrangementTerms ?? "")")

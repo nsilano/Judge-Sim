@@ -139,6 +139,8 @@ private struct SaveData: Codable {
     var bondReviews: [UUID]? = nil
     var heldCases: [HeldCase]? = nil
     var pendingRearrests: [PendingRearrest]? = nil
+    /// Written cases that ended in a plea the judge accepted, by template key: each can be told again (optional for older saves).
+    var pleaCredits: [String: Int]? = nil
 }
 
 /// The judge's world: one county, a calendar, everyone who has come through the courtroom, and the local news.
@@ -198,6 +200,7 @@ final class GameState: ObservableObject {
     @Published private(set) var heldCases: [HeldCase] = []
     /// Defendants out on release who will be back in the jail on a set date.
     @Published private(set) var pendingRearrests: [PendingRearrest] = []
+    private var pleaCredits: [String: Int] = [:]
     /// What became of each defendant at judgment, and whether the person was arrested again once free.
     @Published private(set) var dispositions: [DispositionRecord] = []
     /// The judge's standing schedule: court days, daily limits, one-day changes and time off.
@@ -440,6 +443,7 @@ final class GameState: ObservableObject {
         bondReviews = []
         heldCases = []
         pendingRearrests = []
+        pleaCredits = [:]
         // Every career's county starts a little different.
         living = CountyLife.begin(seed: seedBase)
         Gazetteer.living = living
@@ -900,7 +904,7 @@ final class GameState: ObservableObject {
         let daysAgo = cal.dateComponents([.day], from: incident, to: ready).day ?? 40
         guard var c = generateCase(date: ready, rng: &rng, excluding: &used, storySlot: story, allowMurder: allowMurder, announce: false,
                                    generic: !story, incidentDaysAgo: daysAgo, arrestOn: arrest, residentDefendant: knownDefendant) else { return }
-        if story && c.background?.arrangementPresented != true && rng.chance(0.25) {
+        if story && c.background?.arrangementPresented != true && rng.chance(0.15) {
             c.continuanceMotion = ContinuanceMotions.make(for: c, rng: &rng)
         }
         // A written case with dates of its own keeps them; it is never booked more than a day before it reaches the court.
@@ -993,17 +997,15 @@ final class GameState: ObservableObject {
         let start = max(cal.startOfDay(for: date), cal.startOfDay(for: c.sessionDate))
         // After the bond hearing the case joins the list waiting for a trial date; the State needs a few weeks for
         // discovery before it can be tried. (Only a smaller case from an older save still comes back to plead.)
-        if c.templateKey.hasPrefix("story.") {
-            var held = c
-            held.background?.arraigned = true
-            let investigationReady = (c.investigation?.facts?.arrest).flatMap { cal.date(byAdding: .day, value: 35, to: cal.startOfDay(for: $0)) }
-            let ready = max(investigationReady ?? start, cal.date(byAdding: .day, value: 21, to: start) ?? start)
-            awaitCase(held, note: note, on: date, earliest: ready, reason: "Discovery is still being exchanged")
-            return
-        }
         let due = cal.date(byAdding: .day, value: 6 + Int(c.seed % 8), to: start) ?? start
         arraignQueue.removeAll { $0.courtCase.id == c.id }
         arraignQueue.append(PendingArraignment(courtCase: c, since: date, due: due, note: note))
+    }
+
+    /// A written case where a plea bargain is plausible: not a homicide, and not one the State would never offer.
+    private func pleaFits(_ c: CourtCase) -> Bool {
+        guard let law = c.charges.first?.law, let cls = law.ncClass else { return false }
+        return ![NCClass.A, .B1, .B2].contains(cls) && c.category != .family
     }
 
     /// A case built around an arrest the court already knows the date of: the incident comes before it, and the
@@ -1313,9 +1315,7 @@ final class GameState: ObservableObject {
                 docketSequence += 200
                 // Leave room on the calendar for the new arrest, a relief motion, and most weeks a warrant and an arraignment.
                 // Fewer new matters while the new judge's courtroom is still filling up.
-                // Search warrant applications concern crimes no one has been charged with yet, not cases assigned to this
-                // court, so they don't come to the calendar call.
-                let wantsWarrant = false
+                let wantsWarrant = rng.chance(0.7 * max(0.3, caseloadRamp) * intakeFactor)
                 // Defendants who had their first appearance come back to be arraigned or to plead.
                 let dueArraignments = arraignQueue.filter { cal.startOfDay(for: $0.due) <= cal.startOfDay(for: date) }
                     .sorted { $0.due < $1.due }
@@ -1447,7 +1447,10 @@ final class GameState: ObservableObject {
                         c.background = bg
                         c.sessionDate = cal.startOfDay(for: date)
                     }
-                    var matter = c.templateKey.hasPrefix("story.") ? CalendarCalls.arraignmentMatter(for: c) : CalendarCalls.pleaMatter(for: c)
+                    // Some defendants in written cases plead instead: a bargain the judge accepts or rejects. A plea the
+                    // judge accepts frees that story to be told again, with new people and perhaps another telling.
+                    let offersPlea = c.templateKey.hasPrefix("story.") && pleaFits(c) && rng.chance(0.28)
+                    var matter = c.templateKey.hasPrefix("story.") && !offersPlea ? CalendarCalls.arraignmentMatter(for: c) : CalendarCalls.pleaMatter(for: c)
                     if matter.kind == .quickPlea, let status = c.background?.bondStatus { matter.summary += " " + status }
                     call.matters.append(matter)
                     usedPeople.insert(c.defendant.personID)
@@ -1484,7 +1487,7 @@ final class GameState: ObservableObject {
                 if let m = counselWithdrawal(on: date, excluding: onThisCall, rng: &rng) { call.matters.append(m) }
                 call.matters.forEach { usedPeople.insert($0.personID) }
                 HolidayAsks.apply(&call)
-                entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
+                if !call.matters.isEmpty { entries.insert(DocketEntry(matter: .calendar(call)), at: 0) }
             }
         }
 
@@ -1868,6 +1871,8 @@ final class GameState: ObservableObject {
     // MARK: Schedule changes
 
     func setCourtDay(_ weekday: Int, sits: Bool) {
+        // The court always sits at least one day a week.
+        if !sits && schedule.courtDays.subtracting([weekday]).isEmpty { return }
         if sits { schedule.courtDays.insert(weekday) } else { schedule.courtDays.remove(weekday) }
         reflow()
         happened(.scheduleChanged(weeklyTrials: schedule.weeklyTrials))
@@ -1875,7 +1880,14 @@ final class GameState: ObservableObject {
     }
 
     func setWeekdayLimit(_ weekday: Int, _ limit: DayLimit) {
-        schedule.limits[weekday] = DayLimit(trials: max(0, min(4, limit.trials)), hearings: max(0, min(4, limit.hearings)))
+        var trials = max(0, min(4, limit.trials)), hearings = max(0, min(4, limit.hearings))
+        // The court always takes at least one trial and one hearing a week.
+        let others = schedule.courtDays.subtracting([weekday]).map { schedule.limits[$0] ?? .closed }
+        if schedule.courtDays.contains(weekday) {
+            if trials == 0 && others.allSatisfy({ $0.trials == 0 }) { trials = 1 }
+            if hearings == 0 && others.allSatisfy({ $0.hearings == 0 }) { hearings = 1 }
+        }
+        schedule.limits[weekday] = DayLimit(trials: trials, hearings: hearings)
         happened(.scheduleChanged(weeklyTrials: schedule.weeklyTrials))
         save()
     }
@@ -1904,9 +1916,17 @@ final class GameState: ObservableObject {
         let cal = CourtCalendar.calendar
         let todayDate = cal.startOfDay(for: today?.date ?? currentDate)
         var day = max(cal.startOfDay(for: start), cal.date(byAdding: .day, value: 1, to: todayDate) ?? todayDate)
-        let last = cal.startOfDay(for: end)
+        var last = cal.startOfDay(for: end)
         guard day <= last else { return }
+        // Court days of leave can't go past the year's allowance; days the court doesn't sit cost nothing.
+        var remaining = leaveLeft
         while day <= last {
+            let counts = CourtCalendar.isCourtDay(day) && schedule.courtDays.contains(CourtSchedule.weekday(day))
+                && !schedule.timeOff.contains(CourtSchedule.key(day))
+            if counts {
+                if remaining <= 0 { last = cal.date(byAdding: .day, value: -1, to: day) ?? last; break }
+                remaining -= 1
+            }
             schedule.timeOff.insert(CourtSchedule.key(day))
             day = cal.date(byAdding: .day, value: 1, to: day) ?? last
         }
@@ -2330,7 +2350,8 @@ final class GameState: ObservableObject {
             }
         }
         for m in call.matters {
-            guard let c = m.pendingCase else { continue }
+            // A matter carried over from an earlier day is dropped when its case has since been tried.
+            guard let c = m.pendingCase, !history.contains(where: { $0.docket == c.docket && ($0.kind == nil || $0.kind == "trial" || $0.kind == "reassigned") }) else { continue }
             let choice = choices[m.id] ?? 0
             // A case already set for trial, or waiting for a date, is taken off its old setting; the ruling sets the new one,
             // keeping the judge's date when it still works.
@@ -2358,10 +2379,15 @@ final class GameState: ObservableObject {
                 }
             }
             switch m.kind {
+            case .quickPlea where choice != 3 && c.templateKey.hasPrefix("story."):
+                // The plea ends this written case without a trial; the story can be told again with new people.
+                pleaCredits[c.templateKey, default: 0] += 1
             case .quickPlea where choice == 3:
                 // Only written cases are tried before you; a rejected calendar-call plea goes to another session.
                 if c.templateKey.hasPrefix("story.") {
-                    setFor(c, weeks: 2, note: "Plea rejected at the calendar call on \(heard); set for trial.")
+                    var tried = c
+                    tried.background?.arraigned = true
+                    setFor(tried, weeks: 2, note: "Plea rejected at the calendar call on \(heard); set for trial.")
                 }
             case .continuance:
                 // The motion says which continuance it would be: the "third" means two came before.
@@ -2775,7 +2801,7 @@ final class GameState: ObservableObject {
         for m in call.matters {
             let choice = choices[m.id] ?? 0
             var ruling = m.options.indices.contains(choice) ? m.options[choice] : "Ruled on"
-            if let amount = amounts[m.id] {
+            if let amount = amounts[m.id] ?? m.suggested(for: choice) {
                 ruling = ruling.replacingOccurrences(of: "an amount you set", with: "$\(amount.formatted())")
             }
             calendarLog.insert(CalendarRuling(date: call.date, kind: m.kind, personName: m.personName, docket: m.docket,
@@ -2965,6 +2991,12 @@ final class GameState: ObservableObject {
                                             usedBackgrounds: Set(people.map(\.background)), storySlot: followUp == nil && storySlot,
                                             categories: categories, allowMurder: allowMurder)
         context.generic = generic
+        var heard: [String: Int] = [:]
+        for signature in usedSignatures { if let bar = signature.firstIndex(of: "|") { heard[String(signature[..<bar]), default: 0] += 1 } }
+        context.tellingCounts = heard
+        // A story that ended in an accepted plea counts as unheard again; its next telling is still the next one.
+        for (key, credit) in pleaCredits { if let n = heard[key] { heard[key] = max(0, n - credit) } }
+        context.heardCounts = heard
         context.departedCounsel = departedCounsel
         context.incidentDaysAgo = incidentDaysAgo
         context.arrestOn = arrestOn
@@ -4757,7 +4789,7 @@ final class GameState: ObservableObject {
                             freshAppeals: freshAppeals, arrestOrders: arrestOrders, calendarLog: calendarLog, schedule: schedule, awaiting: awaiting,
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
                             officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
-                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog, bondReviews: bondReviews, heldCases: heldCases, pendingRearrests: pendingRearrests)
+                            showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog, bondReviews: bondReviews, heldCases: heldCases, pendingRearrests: pendingRearrests, pleaCredits: pleaCredits)
         if let encoded = try? JSONEncoder().encode(data) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
         }
@@ -4865,6 +4897,7 @@ final class GameState: ObservableObject {
             today = day
         }
         pendingRearrests = data.pendingRearrests ?? []
+        pleaCredits = data.pleaCredits ?? [:]
         // Everyone held in the jail on a case waiting in this court is on the roster and the bed count, whatever path
         // put them there (older saves only marked the bonds set at a hearing).
         func markHeld(_ entry: inout DocketEntry) {
@@ -4889,11 +4922,6 @@ final class GameState: ObservableObject {
         }
         for i in scheduled.indices { markHeld(&scheduled[i].entry) }
         for i in awaiting.indices { markHeld(&awaiting[i].entry) }
-        // Cases that go to trial no longer wait for an arraignment: they join the list waiting for a trial date.
-        for item in arraignQueue where item.courtCase.templateKey.hasPrefix("story.") {
-            arraignQueue.removeAll { $0.id == item.id }
-            queueArraignment(item.courtCase, note: item.note, on: item.since)
-        }
         ensureCorrections(on: currentDate)
         placeHistory = data.placeHistory ?? [:]
         residents = data.residents ?? []

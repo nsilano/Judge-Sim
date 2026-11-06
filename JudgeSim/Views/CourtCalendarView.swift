@@ -446,6 +446,7 @@ private struct DayControls: View {
 }
 
 private struct MatterRow: View {
+    @State private var confirmReassign: UUID?
     @EnvironmentObject private var game: GameState
     let matter: PlannedMatter
     let onContinue: (PlannedMatter) -> Void
@@ -495,7 +496,7 @@ private struct MatterRow: View {
                     if matter.kind == .trial, case .scheduled(let id) = matter.source {
                         Menu {
                             Button { Haptics.tap(); game.unschedule(id) } label: { Label("Back to the waiting list", systemImage: "tray.and.arrow.up") }
-                            Button(role: .destructive) { Haptics.tap(); game.reassign(scheduledID: id) } label: {
+                            Button(role: .destructive) { confirmReassign = id } label: {
                                 Label("Reassign to another judge", systemImage: "person.2.badge.gearshape")
                             }
                         } label: {
@@ -510,6 +511,17 @@ private struct MatterRow: View {
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 10).fill(Theme.raised.opacity(matter.carriesOver ? 0.4 : 0.7)))
+        .confirmationDialog("Reassign this case to another judge?",
+                            isPresented: Binding(get: { confirmReassign != nil }, set: { if !$0 { confirmReassign = nil } }),
+                            titleVisibility: .visible) {
+            Button("Reassign the case", role: .destructive) {
+                if let id = confirmReassign { Haptics.tap(); game.reassign(scheduledID: id) }
+                confirmReassign = nil
+            }
+            Button("Keep it", role: .cancel) { confirmReassign = nil }
+        } message: {
+            Text("Another judge tries it, and you'll read how it came out in the paper. You can't take it back.")
+        }
     }
 }
 

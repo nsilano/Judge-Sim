@@ -32,16 +32,13 @@ enum EvidenceRequest: String, Codable, CaseIterable, Identifiable {
 
     /// Requests that make sense for this kind of case.
     static func options(for c: CourtCase) -> [EvidenceRequest] {
-        // A written case's record is complete as written; generic follow-up results wouldn't fit its story.
-        // The one exception is an alibi, which the case itself says how to check.
-        if c.templateKey.hasPrefix("story.") {
-            return CaseTemplates.byKey[c.templateKey]?.story?.alibiCheck == nil ? [] : [.alibi]
-        }
         let paper = c.category == .whiteCollar || c.category == .cyber
         var list: [EvidenceRequest] = paper ? [.financialRecords, .phoneRecords, .witnessFollowUp, .expertReview]
                                             : [.video, .phoneRecords, .witnessFollowUp]
         if c.evidence.contains(where: { $0.kind == .forensic }) && !paper { list += [.labTesting, .expertReview] }
         else if !paper { list.append(.labTesting) }
+        // A written case can also say how its alibi is checked.
+        if c.templateKey.hasPrefix("story."), CaseTemplates.byKey[c.templateKey]?.story?.alibiCheck != nil { list.append(.alibi) }
         return list
     }
 }
@@ -54,11 +51,15 @@ enum SupplementalEvidence {
 
     static func gather(for c: inout CourtCase, requests: [EvidenceRequest], rng: inout SeededRNG) -> [String] {
         guard !requests.isEmpty else { return [] }
-        if c.templateKey.hasPrefix("story.") { return checkAlibi(&c, requests: requests) }
+        let written = c.templateKey.hasPrefix("story.")
+        // A written case's alibi is checked as the case itself says; anything else the court asks for comes back as new
+        // evidence that follows what really happened.
+        var notes: [String] = written ? checkAlibi(&c, requests: requests) : []
+        let asked = written ? requests.filter { $0 != .alibi } : requests
+        guard !asked.isEmpty else { return notes }
         let dl = c.defendant.lastName
         var used = Set([c.defendant.name])
-        var notes: [String] = []
-        for request in requests {
+        for request in asked {
             let roll = Double.random(in: 0..<1, using: &rng)
             let direction: Direction = roll < 0.65 ? (c.truth.actuallyGuilty ? .guilt : .innocence)
                 : (roll < 0.8 ? (c.truth.actuallyGuilty ? .innocence : .guilt) : .inconclusive)
@@ -72,7 +73,7 @@ enum SupplementalEvidence {
         }
         if var report = c.investigation {
             report.timeline.append(.init(when: "During the continuance",
-                                         what: "Follow-up ordered by the court: " + requests.map { $0.label.lowercased() }.joined(separator: "; ") + "."))
+                                         what: "Follow-up ordered by the court: " + asked.map { $0.label.lowercased() }.joined(separator: "; ") + "."))
             c.investigation = report
         }
         return notes

@@ -920,7 +920,7 @@ enum CalendarCalls {
 
         for m in call.matters {
             let choice = choices[m.id] ?? 0
-            let option = m.optionText(choice, amount: amounts[m.id] ?? m.suggestedAmount)
+            let option = m.optionText(choice, amount: amounts[m.id] ?? m.suggested(for: choice) ?? m.suggestedAmount)
             lines.append("\(m.docket) · \(m.personName) · \(m.kind.label): \(option).")
             switch m.kind {
             case .quickPlea:
