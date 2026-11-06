@@ -196,7 +196,7 @@ extension StoryVariants {
     static let bikeLockCutterV1 = SmallCases.make(
         key: "story.bikeLockCutter",
         category: .property,
-        headlines: ["Man in Safety Vest Cuts Bike Chains on Sidewalk"],
+        headlines: ["Worker in Safety Vest Cuts Bike Chains on Sidewalk"],
         law: "misdLarceny",
         spec: "Stole property of {V}, valued at $380, on {DATE}.",
         ages: 18...60,
@@ -1487,7 +1487,7 @@ extension StoryVariants {
     static let dogParkBrawlV1 = SmallCases.make(
         key: "story.dogParkBrawl",
         category: .violent,
-        headlines: ["Hiker Slaps Man Who Let Dog Chase a Toddler"],
+        headlines: ["Hiker Slaps Owner Whose Dog Chased a Toddler"],
         law: "simpleAssault",
         spec: "Assaulted {V} by striking {V.him}, on {DATE}.",
         ages: 18...60,
@@ -1581,7 +1581,7 @@ extension StoryVariants {
     static let shovelSpotV1 = SmallCases.make(
         key: "story.shovelSpot",
         category: .violent,
-        headlines: ["Neighbor Swings Ice Scraper at Man Who Took His Cleared Spot"],
+        headlines: ["Neighbor Swings Ice Scraper at Driver Who Took a Cleared Spot"],
         law: "simpleAssault",
         spec: "Assaulted {V} by striking {V.him}, on {DATE}.",
         ages: 18...60,
@@ -1794,7 +1794,7 @@ extension StoryVariants {
     static let fakeCharityDoorV1 = SmallCases.make(
         key: "story.fakeCharityDoor",
         category: .property,
-        headlines: ["Man Collects Cash for a 'Veterans Memorial' Bench"],
+        headlines: ["Door Knocker Collects Cash for a 'Veterans Memorial' Bench"],
         law: "falsePretenses",
         spec: "Obtained property of {V} by deception, $80, on {DATE}.",
         ages: 18...60,
@@ -2054,7 +2054,7 @@ extension StoryVariants {
     static let fakeRobberyReportV1 = SmallCases.make(
         key: "story.fakeRobberyReport",
         category: .publicOrder,
-        headlines: ["Man Reports Gas Station Hold-Up After Gambling Losses"],
+        headlines: ["Caller Reports Gas Station Hold-Up After Gambling Losses"],
         law: "falseReport",
         spec: "Gave a false report of a crime to a law enforcement officer, on {DATE}.",
         ages: 18...60,
@@ -2126,7 +2126,7 @@ extension StoryVariants {
     static let givenFalseDOBV1 = SmallCases.make(
         key: "story.givenFalseDOB",
         category: .publicOrder,
-        headlines: ["Woman Gives Deputy Her Sister's Name at a Stop"],
+        headlines: ["Driver Gives Deputy a Sister's Name at a Stop"],
         law: "obstruction",
         spec: "Gave a false name to a law enforcement officer, on {DATE}.",
         ages: 18...60,

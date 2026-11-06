@@ -815,7 +815,8 @@ extension FollowUpCases {
         timeline: [(0, "4 p.m.: buy."), (1, "Arrest.")],
         identified: "Buy Video",
         aggravating: ["The offense was committed for pecuniary gain"],
-        mood: .wantsConviction)
+        mood: .wantsConviction,
+        genders: ["D": .male])
 
     static let overdoseAgain = SmallCases.make(
         key: "story.followup.overdoseAgain",
@@ -862,7 +863,8 @@ extension FollowUpCases {
         closings: ("Altered scripts.", "The doctor."),
         timeline: [(0, "Week 1."), (1, "Arrest.")],
         identified: "Altered Scripts",
-        mood: .wantsConviction)
+        mood: .wantsConviction,
+        genders: ["D": .female])
 
     static let fakeRangerAgain = SmallCases.make(
         key: "story.followup.fakeRangerAgain",

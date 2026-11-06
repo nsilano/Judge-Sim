@@ -990,7 +990,8 @@ extension StoryCases {
         identified: "A buy video.",
         aggravating: ["The offense was committed for pecuniary gain"],
         mood: .wantsConviction,
-        doctrines: ["mistakeOfFact", "entrapment"])
+        doctrines: ["mistakeOfFact", "entrapment"],
+        genders: ["D": .male])
 
     static let twoOverdoseDealer = SmallCases.make(
         key: "story.twoOverdoseDealer",
@@ -1046,7 +1047,8 @@ extension StoryCases {
         timeline: [(0, "Week 1: store one."), (0, "Week 2: store two."), (0, "Week 4: the pharmacists compare."), (1, "{DL} is arrested.")],
         identified: "Handwriting.",
         mood: .wantsConviction,
-        doctrines: ["burdenOfProof"])
+        doctrines: ["burdenOfProof"],
+        genders: ["D": .female])
 
     static let fakeGameWarden = SmallCases.make(
         key: "story.fakeGameWarden",

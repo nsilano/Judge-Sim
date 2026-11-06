@@ -56,7 +56,7 @@ extension StoryVariants {
     static let dogTagScamV1 = SmallCases.make(
         key: "story.dogTagScam",
         category: .whiteCollar,
-        headlines: ["Retiree Pays $40 to Man With a Clipboard for a 'Required' Dog Tag"],
+        headlines: ["Retiree Pays $40 to Door Knocker With a Clipboard for a 'Required' Dog Tag"],
         law: "falsePretenses",
         spec: "Obtained property of {V} by deception, $40, on {DATE}.",
         ages: 18...60,
