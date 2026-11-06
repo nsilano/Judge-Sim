@@ -473,14 +473,8 @@ final class GameState: ObservableObject {
         retrials = []
         reliefQueue = []
         pending = []
-        // A new judge learns the game slowly: the first arrests come one at a time (one before the first bond hearing,
-        // then about one a week), so the first trial is a few weeks out and the caseload ramps up over the first
-        // seven or eight weeks.
-        var carried = peopleInPlay()
-        for ahead in [1, 5, 12, 19] {
-            let when = CourtCalendar.calendar.date(byAdding: .day, value: ahead, to: currentDate) ?? currentDate
-            openCrime(on: when, story: true, allowMurder: false, knownDefendant: nil, rng: &rng, excluding: &carried, forcedDelay: 0)
-        }
+        // A new career starts completely empty: no backlog, no arrests. Crimes happen, arrests follow, and the first bond
+        // hearings trickle in over the first month; intake reaches its full pace by week eight.
         // Day one starts with an empty docket.
         today = CourtDay(date: currentDate, clock: CourtCalendar.opening(on: currentDate, minutesAfterMidnight: openingMinutes),
                          kind: .trial, entries: [], sessionDay: 1)
@@ -1634,7 +1628,7 @@ final class GameState: ObservableObject {
     /// How many trials the court keeps in the pipeline: about two weeks of the judge's own schedule.
     /// A new judge's courtroom starts quiet and fills over the first couple of months: a quarter of the full
     /// caseload the first week, rising each week to all of it by week ten.
-    var caseloadRamp: Double { min(1, 0.4 + Double(calendarWeekNumber - 1) * 0.1) }
+    var caseloadRamp: Double { min(1, 0.3 + Double(calendarWeekNumber - 1) * 0.1) }
 
     var pipelineTarget: Int { max(3, Int((Double(max(6, 3 * schedule.weeklyTrials + 3)) * caseloadRamp * caseloadPressure).rounded())) }
 

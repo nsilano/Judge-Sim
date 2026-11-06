@@ -1,5 +1,5 @@
-# 2026-11-06 — Slower first weeks
+# 2026-11-06 — Empty start, slow ramp
 
-- A new career no longer opens with a pile of bond hearings. The county's starting backlog is four arrests spread over the first three weeks (one before the first bond hearing, then roughly one a week) instead of ten landing at once.
-- New cases in the first weeks arrive more slowly; the caseload still ramps up to full over the first seven or eight weeks.
-- Checked over three 10-week runs: the first day has one bond hearing, and most court days after that have one.
+- A new career starts completely empty again: no backlog, no arrests, nothing waiting on day one. (A starting backlog of backdated arrests had crept in and put a pile of bond hearings on day one.)
+- The first bond hearings trickle in over the first weeks; intake ramps up and reaches its full pace in week 8 (it used to reach it in week 7).
+- Checked over three 10-week runs: the first bond hearing came in week 1 or 2, the first trial in week 6, and most court days had one or two bond hearings.
