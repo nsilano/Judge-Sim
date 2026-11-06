@@ -798,3 +798,53 @@ murder2 | Man Shot in Pool Hall Over Gambling Debt
 dischargingOccupied | Drive-By Shots Hit Occupied House With Family Inside
 firearmStorage | Student Brings Gun to School in Backpack
 awdwisi | Teen Takes Father's Gun and Shoots Classmate in Parking Lot
+bribery | College Coach Took Cash to List Non-Athletes as Recruits
+falsePretenses100k | Promoter Sold 2,000 Tickets to a Luxury Beach Festival That Was Never Built
+falseReport | Student Falsely Reported Being Attacked at Team Party
+kidnapping2 | Delivery Driver Forced Into Bank Robbery With Fake Device Strapped On
+falsePretenses100k | Lottery Security Employee Bought the Unclaimed Winning Ticket He Located by Code
+extortion | Website Owner Posted Mugshots and Charged $400 to Take Them Down
+obstruction | Town Aide Ordered Bridge Lanes Closed to Punish a Mayor
+awdwikisi | Man Stabbed in Apartment Lot While Neighbors Watched and Did Not Call
+insuranceFraud | Surgeon Billed Insurers for Operations Patients Did Not Need
+insuranceFraud | Billing Company Sent Claims for Patients Who Never Existed
+falsePretenses100k | Charity Collected for Tornado Victims and Kept Most of It
+insuranceFraud | Man Threw Himself Onto Slow-Moving Cars to Collect Injury Claims
+stalking | Man Posted Local Chef's Location Online and Followed Her Between Events
+felonyLarceny | Trucker Hauled Off a Tanker of Maple Syrup Stored for Farmers
+animalCruelty | Breeder Kept Dozens of Exotic Reptiles in Unheated Sheds
+identityTheft | Man Lived Two Decades Under His Late Brother's Name
+deliverSchedII | Drone Flew Pills Over a Prison Fence
+falsePretenses | Carnival Operator Weighted Bottles So Prizes Could Not Be Won
+burglary2 | Man in a Santa Suit Walked Into a Home During a Holiday Party
+commonLawRobbery | Robber Handed Teller a Note Written on His Own Deposit Slip
+feloniousBE | Storm Shelter Volunteers Caught Looting Flooded Homes
+falsePretenses | Host Rented a Beach House He Did Not Own to 40 Families
+invManslaughter | Ride Seat Broke Free at a County Fair, Hurting Six Riders
+aisi | Bluegrass Festival Campers Fight Over a Parking Spot, Banjo Used as a Club
+embezzlement100k | County Treasurer Siphoned Public Funds to Pay for Show Horses
+fleeing | Driver Fled Deputies on Back Roads With a Truck Full of Jars
+awdwisi | Homeowner Fired Through a Door at a Neighbor Who Came to the Wrong House
+patientNeglect | Night Shift Left a Nursing Home Resident Unchecked for Hours
+burglary2 | Pair Hit Nine Homes by Posing as Pet Sitters
+exploitationElder | Caller Posed as a Grandson in Jail to Get Bail Money From Seniors
+burningBuildings | Bakery Owner Accused of Setting a Fire After Missed Payments
+prescriptionFraud | Nurse Replaced Painkillers With Saline for Months
+falsePretenses | Man Ran a 'Wellness Clinic' With No Medical Training
+falsePretenses | Online Fundraiser for a Made-Up Illness Raised Thousands
+securitiesFraud | Golf Partner Traded on Tips From an Executive Over Coffee
+misdDBV | Driver Steers a Riding Mower Down the Bypass After a Night of Drinking
+injuryRealProperty | Treasure Hunter Dug Holes in a Farmer's Field
+falseReport | Man Posts a Fake Sea Monster Video, Triggers a Rescue Search
+felonyLarceny | Trailer of Aged Cheese Disappears From a Truck Stop
+injuryRealProperty | Prankster Lets Goats Loose in a Church Sanctuary
+misdLarceny | Man Steals Forty Garden Gnomes From a Yard Sale
+simpleAssault | Diner Throws a Pie in a Town Councilman's Face
+misdLarceny | Fan Takes a Stadium Mascot Costume
+injuryPersonalProperty | Contest Favorite's Giant Pumpkin Found Smashed
+misdLarceny | Hunters Shine Spotlights at Deer From a Truck at Night
+injuryPersonalProperty | Driver Cuts Down Dozens of Campaign Signs
+misdLarceny | Boat Crew Cited for Harvesting Oysters From a Closed Bed
+simpleAssault | Rodeo Clown Shoves a Heckler in the Stands
+recklessDriving | Snowplow Driver Chases a Car Through a Parking Lot
+falseReport | Man Calls in a Runaway Balloon With a 'Child' Aboard
