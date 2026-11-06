@@ -449,6 +449,11 @@ var hearingDates: [UUID: Date] = [:]
             else { s.rulings.conditions.drugTreatmentCourt = true; log("  Condition: Drug Treatment Court") }
         }
     }
+    // Now and then the judge splits a suspended sentence with jail time up front (special probation).
+    if s.stage == .sentencing, rng.chance(0.25), s.rulings.sentences.values.contains(where: { $0.disposition == .intermediate }) {
+        s.rulings.conditions.specialProbationDays = 30
+        log("  Condition: special probation, 30 days in jail")
+    }
     for _ in 0..<8 where s.stage != .judgment {
         if s.pendingPleaDeparture != nil { s.informDefendantOfDeparture() }
         s.advance()
@@ -456,6 +461,13 @@ var hearingDates: [UUID: Date] = [:]
     guard let outcome = s.outcome else {
         flag("\(c.docket): trial never reached a judgment (stuck at \(s.stage))")
         return
+    }
+    if s.rulings.conditions.specialProbationDays > 0 && outcome.convicted {
+        let credit = s.courtCase.background?.custodyDays ?? 0
+        let onProbation = outcome.judgments.contains { $0.lines.contains { $0.contains("Special probation") } }
+        if onProbation && credit < 30 && outcome.personStatus != .incarcerated {
+            flag("\(c.docket): special probation of 30 days ordered (credit \(credit)), but the defendant is not in custody")
+        }
     }
     for j in outcome.judgments { log("  [\(j.title)] " + j.lines.joined(separator: " | ")) }
     for r in outcome.reactions { log("  Reaction: \(r)") }
@@ -961,6 +973,24 @@ if args.count > 1 && args[1] == "tellings" {
                 if c.templateKey != key { ok = false }
             }
         }
+        // Late in a career: every story heard once, so only stories with an unseen telling come up, each told a new way.
+        var allUsed = Set<String>()
+        for t in StoryCases.all + FollowUpCases.all { allUsed.insert("\(t.key)|x") }
+        var late = 0, withVariant = 0, newTelling = 0
+        for n in 0..<30 {
+            var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 9100,
+                                            recentTemplateKeys: [], usedSignatures: allUsed)
+            ctx.allowMurder = true
+            ctx.reservedNames = game.namesInPlay()
+            let c = CaseGenerator.generate(seed: UInt64(n) &+ 500, context: ctx)
+            late += 1
+            if let base = StoryCases.byKey[c.templateKey], let v = StoryVariants.byKey[c.templateKey], !v.isEmpty {
+                withVariant += 1
+                if !base.headlines.contains(c.headline) { newTelling += 1 }
+            }
+        }
+        print("late game: \(withVariant) of \(late) draws had a variant; \(newTelling) were told a new way")
+        if withVariant != late || newTelling != late { ok = false }
         print(ok ? "tellings ok" : "tellings: the wrong story was drawn")
     }
     exit(0)

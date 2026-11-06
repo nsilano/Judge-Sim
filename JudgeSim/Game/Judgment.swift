@@ -1518,6 +1518,16 @@ enum Judgment {
         }
         let projection = special == .none ? custodyProjection(c, r, units: sentencingUnits, from: date) : nil
         var releaseOn = projection?.earliest ?? date
+        // Special probation: the days ordered in jail are served first, as a condition of the suspended sentence
+        // (G.S. 15A-1351(a)); pretrial confinement counts toward them. Release onto probation comes after.
+        var splitServed = 0
+        if special == .none && !life && (!suspendedTerms.isEmpty || !afterActiveTerms.isEmpty) && r.conditions.specialProbationDays > 0 {
+            let credit = max(0, c.background?.custodyDays ?? 0)
+            splitServed = max(0, r.conditions.specialProbationDays - credit)
+            if splitServed > 0, let splitEnd = Calendar.current.date(byAdding: .day, value: splitServed, to: date), splitEnd > releaseOn {
+                releaseOn = splitEnd
+            }
+        }
         var custodyMonths = monthsBetween(date, releaseOn)
         if projection != nil && releaseOn <= date, let index = judgments.firstIndex(where: { $0.title == "Commitment" }) {
             judgments[index] = JudgmentEntry(title: "Commitment",
@@ -1743,6 +1753,11 @@ enum Judgment {
             }
             if revokedMonths > 0 { parts.append("Includes \(revokedText) activated on probation revocation" + (r.revocationConsecutive ? ", consecutive." : ", concurrent.")) }
             if postReleaseMonths > 0 { parts.append("Includes \(postReleaseMonths) months on the post-release supervision violation" + (r.revocationConsecutive ? ", consecutive." : ", concurrent.")) }
+            if splitServed > 0 && projection == nil {
+                parts.append("Special probation: \(r.conditions.specialProbationDays) day\(r.conditions.specialProbationDays == 1 ? "" : "s") in the county jail as a condition of probation"
+                             + ((c.background?.custodyDays ?? 0) > 0 ? ", with pretrial confinement credited" : "")
+                             + "; released onto supervised probation on \(SentenceFormat.shortDate(releaseOn)).")
+            }
             if parts.isEmpty { parts.append("Confinement in response to violation, ordered with the judgment on the probation violation.") }
             releaseBasis = parts.joined(separator: " ")
         }

@@ -120,6 +120,20 @@ enum CaseGenerator {
             }
             let fewest = all.map { useCounts[$0.key] ?? 0 }.min() ?? 0
             var candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
+            // Late in a career, cases that can be told another way come first: a story already heard that still has a
+            // telling this judge hasn't seen. Once every written case has been heard, only those come up; before that,
+            // half the draws go to them after the first 300 cases are behind the judge.
+            func hasUnseenTelling(_ t: CaseTemplate) -> Bool {
+                let heard = useCounts[t.key] ?? 0
+                return heard > 0 && heard <= (StoryVariants.byKey[t.key]?.count ?? 0)
+            }
+            if fewest >= 1 {
+                let retellable = candidates.filter(hasUnseenTelling)
+                if !retellable.isEmpty { candidates = retellable }
+            } else if all.filter({ (useCounts[$0.key] ?? 0) > 0 }).count >= 300 && rng.chance(0.5) {
+                let retellable = all.filter(hasUnseenTelling)
+                if !retellable.isEmpty { candidates = retellable }
+            }
             // Once the written cases have all been heard, the ones heard longest ago come back first.
             let notRecentStories = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
             if !notRecentStories.isEmpty { candidates = notRecentStories }
