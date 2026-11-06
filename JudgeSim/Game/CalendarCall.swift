@@ -446,7 +446,8 @@ enum CalendarCalls {
         let base = bondBase(cls)
         let factor = (1.0 + 0.25 * Double(min(felonies, 6)) + 0.5 * Double(min(ftas, 3))) * (violent ? 1.25 : 1.0)
         let jitter = Double.random(in: 0.85...1.2, using: &rng)
-        let secured = roundBond(Double(base) * factor * jitter)
+        // Even a homicide with a long record is set at no more than $1,000,000 here.
+        let secured = roundBond(min(1_000_000, Double(base) * factor * jitter))
         let unsecured = roundBond(Double(min(base, 15_000)) * Double.random(in: 0.2...0.8, using: &rng))
         let severity = cls?.severity ?? NCClass.H.severity
         let why = ftas > 0 ? " Missed court before." : felonies >= 2 ? " \(felonies) prior felonies." : violent ? " Violent charge." : ""
@@ -810,8 +811,7 @@ enum CalendarCalls {
                 matters.append(CalendarMatter(
                     kind: kind, personID: UUID(), personName: name, personAge: age, occupation: occupation, docket: d,
                     summary: "The defense moves to continue the trial of \(name) on \(law.title). It would be the \(rng.pick(["third", "fourth", "second"])) continuance.",
-                    stateAsk: rng.pick(["Objects: the victim has missed work three times.", "No objection.", "Objects: a key witness is moving away.",
-                                        "Objects: the case is over a year old.", "No position; make it the last."]),
+                    stateAsk: rng.pick(fittingStateObjections(for: law) + ["No objection.", "No position; make it the last."]),
                     defenseAsk: rng.pick(["Lab report just arrived; needs an expert.", "Newly appointed; hasn't met the client.",
                                           "A defense witness is deployed until next month.", "Four hours of new bodycam video to review.",
                                           "Stuck in a murder trial in another county.", "Client is in inpatient treatment for 28 days."]),
@@ -1244,4 +1244,79 @@ struct CalendarRuling: Codable, Hashable, Identifiable {
         default: return .other
         }
     }
+}
+
+
+extension CalendarCalls {
+    /// What the State says when it objects to a continuance. Each reason is different, so the same line doesn't repeat.
+    /// The State's reasons for objecting to a delay, limited to the ones that make sense for this charge: a ballistics
+    /// report in an assault case, a lab in a drug case, a bank's records in an embezzlement.
+    static func fittingStateObjections(for law: Law) -> [String] {
+        let id = law.id
+        func has(_ line: String, _ words: [String]) -> Bool { words.contains { line.lowercased().contains($0) } }
+        return stateObjections.filter { line in
+            if has(line, ["ballistics", "firearms expert"]) && id != "awdw" { return false }
+            if has(line, ["fingerprint", "dna"]) && !["awdw", "feloniousBE", "felonyLarceny"].contains(id) { return false }
+            if has(line, ["toxicology", "medical examiner", "autopsy"]) && id != "pwisd" { return false }
+            if has(line, ["lineup"]) && !["awdw", "feloniousBE", "felonyLarceny"].contains(id) { return false }
+            if has(line, ["bank records", "handwriting", "forensic accountant", "adjuster", "lost wages", "repair estimate"]) && !["embezzlement", "felonyLarceny"].contains(id) { return false }
+            if has(line, ["victim", "physician who treated"]) && ["pwisd", "fleeing"].contains(id) { return false }
+            if has(line, ["youth witness", "juvenile co-defendant", "gas station", "dash camera"]) && !["awdw", "feloniousBE", "felonyLarceny", "fleeing"].contains(id) { return false }
+            return true
+        }
+    }
+
+    static let stateObjections: [String] = [
+        "Objects: the victim has missed work three times for this case.",
+        "Objects: the case is over a year old and the victim is tired of waiting.",
+        "Objects: a key witness is leaving the county for a new job.",
+        "Objects: the detective on the case is transferring to another agency next month.",
+        "Objects: the State's lab analyst is on leave until the end of the month.",
+        "Objects: a witness has a medical procedure scheduled and can't be subpoenaed in time.",
+        "Objects: the State's expert is out of the country for three weeks.",
+        "Objects: a civilian witness has moved and the State is still finding them.",
+        "Objects: the defense has had the State's file for months.",
+        "Objects: the officer who made the stop is on a training assignment.",
+        "Objects: the State's photographs haven't come back from the lab.",
+        "Objects: the victim is willing to testify this month and may not be next month.",
+        "Objects: the State's only eyewitness changed phone numbers and hasn't answered.",
+        "Objects: the medical examiner's report is in, but the State hasn't finished reviewing it.",
+        "Objects: a deputy who saw the arrest has been reassigned to the coast.",
+        "Objects: the victim has moved to another state and wants the case over with.",
+        "Objects: the jail transport for the State's witness fell through last time.",
+        "Objects: the defense is stalling, and the State's witnesses have already taken time off work.",
+        "No objection, but the State wants a firm date on the calendar.",
+        "No position; the State will be ready whichever way the court goes.",
+        "Objects: the trooper who wrote the citation starts a two-week leave on the 15th.",
+        "Objects: the State's medical records custodian is retiring and the file has to be re-certified.",
+        "Objects: a fingerprint examiner is out with a broken wrist and the State's report is unsigned.",
+        "Objects: the 911 recordings were sent to the wrong agency and must be requested again.",
+        "Objects: the victim's mother is in the hospital and the State wants her on the stand.",
+        "Objects: the State's ballistics comparison is waiting on a second test firing.",
+        "Objects: the youth witness's school schedule conflicts with every date the court offered.",
+        "Objects: the State's bank records subpoena came back with half the pages missing.",
+        "Objects: the investigating deputy has been called to a federal grand jury in another district.",
+        "Objects: the State's toxicology report is still pending at the state lab.",
+        "Objects: the video from the gas station was overwritten and the State is reconstructing it from a phone.",
+        "Objects: the detective's notes are in a box at the old sheriff's annex and haven't been pulled.",
+        "Objects: the State's cooperating witness has been moved to another facility.",
+        "Objects: the victim wants a lawyer of her own to advise her before she testifies.",
+        "Objects: the physician who treated the victim is abroad until the spring.",
+        "Objects: the State needs an interpreter for two witnesses and the court has none this month.",
+        "Objects: the State's handwriting examiner needs the original document, which the bank still holds.",
+        "Objects: the State's DNA results are due back next Tuesday.",
+        "Objects: a juvenile co-defendant's case has to be resolved first.",
+        "Objects: the victim's insurance adjuster has the only copy of the repair estimate.",
+        "Objects: the arresting officer's dash camera was pulled for a repair, and the State must re-request it.",
+        "Objects: the State's photo lineup administrator is in training until the end of the quarter.",
+        "Objects: the autopsy photographs were redacted and the State is waiting on the redacted set.",
+        "Objects: two of the State's witnesses are on a fishing trip that they'll be back from next week.",
+        "Objects: a forensic accountant the State retained has resigned from the firm.",
+        "Objects: the phone carrier's records took six weeks and the State only received the first half.",
+        "Objects: the victim's employer has to confirm the lost wages and hasn't returned the State's calls.",
+        "Objects: the State just found a second witness and needs time to interview them.",
+        "Objects: the county's surveillance system was upgraded and the State can't pull the old footage yet.",
+        "Objects: the victim's family moved out of state and the State is arranging remote testimony.",
+        "Objects: the State's firearms expert is testifying in another county on the same date.",
+    ]
 }

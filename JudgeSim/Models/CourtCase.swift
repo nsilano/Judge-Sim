@@ -159,7 +159,7 @@ struct EthicsOption: Identifiable, Codable, Hashable {
 /// Something that happens in the courtroom and needs a ruling on the spot: a defendant who wants to represent
 /// themself, an interpreter who isn't there, evidence the State never turned over, an outburst.
 struct CourtIncident: Identifiable, Codable, Hashable {
-    enum Kind: String, Codable { case selfRepresentation, interpreter, discovery, outburst }
+    enum Kind: String, Codable { case selfRepresentation, interpreter, discovery, outburst, witnessAbsent }
     enum Moment: String, Codable { case beforeTrial, trial, sentencing }
     var id = UUID()
     var kind: Kind
@@ -186,6 +186,8 @@ struct IncidentOption: Identifiable, Codable, Hashable {
     var appealText: String? = nil
     var laterHeadline: String? = nil
     var laterBody: String? = nil
+    /// Follow-up evidence the court orders when this option continues the case (the video the defense asks to review).
+    var requests: [EvidenceRequest]? = nil
 }
 
 struct EthicsEvent: Codable, Hashable {

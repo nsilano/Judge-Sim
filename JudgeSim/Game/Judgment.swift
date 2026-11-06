@@ -1518,6 +1518,16 @@ enum Judgment {
         }
         let projection = special == .none ? custodyProjection(c, r, units: sentencingUnits, from: date) : nil
         var releaseOn = projection?.earliest ?? date
+        // Special probation: the days ordered in jail are served first, as a condition of the suspended sentence
+        // (G.S. 15A-1351(a)); pretrial confinement counts toward them. Release onto probation comes after.
+        var splitServed = 0
+        if special == .none && !life && (!suspendedTerms.isEmpty || !afterActiveTerms.isEmpty) && r.conditions.specialProbationDays > 0 {
+            let credit = max(0, c.background?.custodyDays ?? 0)
+            splitServed = max(0, r.conditions.specialProbationDays - credit)
+            if splitServed > 0, let splitEnd = Calendar.current.date(byAdding: .day, value: splitServed, to: date), splitEnd > releaseOn {
+                releaseOn = splitEnd
+            }
+        }
         var custodyMonths = monthsBetween(date, releaseOn)
         if projection != nil && releaseOn <= date, let index = judgments.firstIndex(where: { $0.title == "Commitment" }) {
             judgments[index] = JudgmentEntry(title: "Commitment",
@@ -1743,6 +1753,11 @@ enum Judgment {
             }
             if revokedMonths > 0 { parts.append("Includes \(revokedText) activated on probation revocation" + (r.revocationConsecutive ? ", consecutive." : ", concurrent.")) }
             if postReleaseMonths > 0 { parts.append("Includes \(postReleaseMonths) months on the post-release supervision violation" + (r.revocationConsecutive ? ", consecutive." : ", concurrent.")) }
+            if splitServed > 0 && projection == nil {
+                parts.append("Special probation: \(r.conditions.specialProbationDays) day\(r.conditions.specialProbationDays == 1 ? "" : "s") in the county jail as a condition of probation"
+                             + ((c.background?.custodyDays ?? 0) > 0 ? ", with pretrial confinement credited" : "")
+                             + "; released onto supervised probation on \(SentenceFormat.shortDate(releaseOn)).")
+            }
             if parts.isEmpty { parts.append("Confinement in response to violation, ordered with the judgment on the probation violation.") }
             releaseBasis = parts.joined(separator: " ")
         }
@@ -1919,7 +1934,8 @@ enum Judgment {
             }
         }
         // A motion for appropriate relief on newly discovered evidence, heard by this court (G.S. 15A-1415(c)).
-        if convicted && !plea && rng.chance(truthGuilty ? 0.1 : 0.6) {
+        // Motions for appropriate relief are rare, and a retrial isn't followed by another one.
+        if convicted && !plea && !c.headline.hasPrefix("New trial:") && rng.chance(truthGuilty ? 0.03 : 0.2) {
             var retrial = retrialCase(c, r, relief: true)
             let evidence = truthGuilty
                 ? "\(rng.pick(["A State witness", "The State's main eyewitness", "A co-defendant"])) has signed an affidavit recanting \(rng.pick(["their", "the"])) trial testimony and saying \(d.lastName) wasn't involved."
@@ -1933,7 +1949,7 @@ enum Judgment {
             pending.append(PendingEvent(due: later(45...170),
                                         news: NewsItem(date: date, kind: .revelation,
                                                        headline: "\(d.name) asks for a new trial, citing new evidence",
-                                                       body: "Lawyers for \(d.name), convicted in Hollis County Superior Court of \(principalTitle.lowercased()), filed a motion for appropriate relief claiming newly discovered evidence. Judge \(judgeLast), who presided at trial, will hear it.",
+                                                       body: "Lawyers for \(d.name), convicted in Hollis County Superior Court of \(principalTitle.lowercasedPhrase), filed a motion for appropriate relief claiming newly discovered evidence. Judge \(judgeLast), who presided at trial, will hear it.",
                                                        docket: c.docket),
                                         personID: d.personID, reliefMotion: motion))
         }
@@ -1958,8 +1974,9 @@ enum Judgment {
         // Things that may surface about what really happened
         switch (convicted, truthGuilty) {
         case (true, false):
-            if rng.chance(0.55) {
-                pending.append(PendingEvent(due: later(240...900),
+            // The Innocence Inquiry Commission clears only a handful of people a year anywhere in the state.
+            if rng.chance(0.12) {
+                pending.append(PendingEvent(due: later(400...1200),
                                             news: NewsItem(date: date, kind: .exoneration,
                                                            headline: "New evidence in \(d.name) case",
                                                            body: c.truth.revelation + " The North Carolina Innocence Inquiry Commission has referred the case to a three-judge panel, which declared \(d.name) innocent.",
@@ -1970,7 +1987,7 @@ enum Judgment {
             if rng.chance(0.35) {
                 pending.append(PendingEvent(due: later(60...400),
                                             news: NewsItem(date: date, kind: .revelation,
-                                                           headline: "Questions resurface in \(dismissed ? "dismissed" : "acquitted") \(principalTitle.lowercased()) case",
+                                                           headline: "Questions resurface in \(dismissed ? "dismissed" : "acquitted") \(principalTitle.lowercasedPhrase) case",
                                                            body: c.truth.revelation,
                                                            docket: c.docket),
                                             personID: d.personID, effect: .raisePropensity))
@@ -1979,14 +1996,14 @@ enum Judgment {
             if rng.chance(0.25) {
                 pending.append(PendingEvent(due: later(120...700),
                                             news: NewsItem(date: date, kind: .revelation,
-                                                           headline: "Update in the \(d.lastName) case",
+                                                           headline: "New detail surfaces in \(principalTitle.lowercasedPhrase) case against \(d.lastName)",
                                                            body: c.truth.revelation, docket: c.docket)))
             }
         case (false, false):
             if rng.chance(0.3) {
                 pending.append(PendingEvent(due: later(60...500),
                                             news: NewsItem(date: date, kind: .revelation,
-                                                           headline: "Another name emerges in \(principalTitle.lowercased()) case",
+                                                           headline: "Another name emerges in \(principalTitle.lowercasedPhrase) case",
                                                            body: c.truth.revelation, docket: c.docket)))
             }
         }
@@ -2425,7 +2442,7 @@ enum Judgment {
         if let victim = c.victimName {
             let family = victim.components(separatedBy: " ").last ?? victim
             let stance = c.background?.victimStance ?? .wantsAccountability
-            let speaker = rng.pick(["A member of the \(family) family", "\(victim)'s sister", "A relative of \(victim)", "\(victim)'s father", "A family friend of the \(family)s"])
+            let speaker = rng.pick(["A member of the \(family) family", "\(victim)'s sister", "A relative of \(victim)", "\(victim)'s father", "A family friend of the \(family) family"])
             // Grief and loss only when someone died; otherwise the words fit what the victim lived through.
             let died = Consequences.victimDied(c)
             var line: String?
@@ -2437,9 +2454,11 @@ enum Judgment {
                                  "\"We sat through every day of this. I don't know what else we could have done.\"",
                                  "\"The judge didn't hear what we heard that night.\""])
             case (true, true, .wantsLeniency):
-                line = rng.pick(["\"We didn't want this. Prison won't fix anything.\"", "\"We asked for mercy. I hope \(dl) gets help in there.\""])
+                line = rng.pick(["\"We didn't want this. Prison won't fix anything.\"", "\"We asked for mercy. I hope \(dl) gets help in there.\"",
+                                 "\"I told the court what I wanted. I'm sorry it came to this.\"", "\"I hope there's real help for \(dl) where \(dl) is going.\""])
             case (true, false, .wantsLeniency):
-                line = rng.pick(["\"We asked for mercy, and the judge listened. That's what we wanted.\"", "\"This is the right outcome. Everybody gets a second chance.\""])
+                line = rng.pick(["\"We asked for mercy, and the judge listened. That's what we wanted.\"", "\"This is the right outcome. Everybody gets a second chance.\"",
+                                 "\"The judge heard what we said. We're grateful for that.\"", "\"I hope \(dl) takes this chance and does something with it.\""])
             case (true, true, .wantsMaximum):
                 line = severity > 0
                     ? rng.pick(["\"Finally someone listened to us.\"", died ? "\"It won't bring back what we lost, but the judge got it right.\"" : "\"The judge got it right. Now we can stop looking over our shoulders.\""])
@@ -2481,7 +2500,10 @@ enum Judgment {
             let words: String
             switch (convicted, active) {
             case (false, _):
-                words = rng.pick(["\"I knew it. I knew the truth would come out.\"", "\"I'm taking my baby home.\"", "\"Thank God. Thank God.\""])
+                words = rng.pick(["\"I knew it. I knew the truth would come out.\"", "\"Thank God. It's over.\"", "\"We can finally breathe. Thank you for listening.\"",
+                                  "\"Nobody gets that time back, but it's over.\""]
+                                 + (support.contains("mother") ? ["\"I'm taking my baby home.\""] : [])
+                                 + (support.contains("employer") ? ["\"There's a place for \(dl) on Monday morning.\""] : []))
             case (true, true):
                 words = severity > 0 && years
                     ? rng.pick(["\"Years? For this? I don't understand.\"", (c.defendant.profile?.childCount ?? 0) > 0 && c.defendant.profile?.familyIsVictim != true ? "\"The kids won't know their parent when this is over.\"" : "\"Years. I'll be old when this is over.\"", "\"We'll be there every visiting day. Every one.\""])
@@ -2516,7 +2538,7 @@ enum Judgment {
         var rng = SeededRNG(seed: c.seed ^ 0x5EED_AB1E)
         // A conviction story leads with the most serious count the defendant was actually convicted of.
         let title = (convicted ? lead?.title : nil) ?? c.charges.first?.law.title ?? "charges"
-        let facts = NewsDesk.VerdictFacts(name: d.name, last: d.lastName, age: d.age, judge: judgeLast, offense: title.lowercased(),
+        let facts = NewsDesk.VerdictFacts(name: d.name, last: d.lastName, age: d.age, judge: judgeLast, offense: title.lowercasedPhrase,
                                           headline: c.headline, place: c.investigation?.facts?.town, countsTotal: c.charges.count,
                                           countsConvicted: countsConvicted, sentence: sentence, active: active, returning: d.isReturning,
                                           custodyDays: c.background?.custodyDays ?? 0, victim: c.victimName, mediaAttention: c.mediaAttention,

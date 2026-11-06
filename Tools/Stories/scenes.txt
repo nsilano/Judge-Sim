@@ -1,0 +1,800 @@
+felonyDBV | Head-On Crash on Old Mill Road
+embezzlement100k | Church Treasurer Charged in Missing Building Fund
+burglary1 | Intruder in the Hallway on {STREET}
+strangulation | Domestic Call on {STREET} Ends in Strangulation Charge
+pwisd | Cocaine Found in Shared Apartment
+exploitationElder | Caregiver Accused of Draining Client's Savings
+awdwikisi | Driver Shot in {LOT} Parking Lot
+falsePretenses | Six Families, Six Deposits, No Kitchens
+murder1 | Business Partner Shot Dead at {LAKE} Cabin
+dangerousRobbery | Couple Tied Up in {HOOD} Home Invasion
+awdwisi | Ex-Partner Cut During Visit Under Protective Order
+rape2 | Rape Charge After Off-Campus Party
+arson1 | Landlord Charged After Fire Guts Rental with Tenants Inside
+murder1 | Parent Charged in Deaths of Two Children
+murder2 | Deputy Found Dead in Snow After Party
+murder1 | Car Dealer Charged in Spouse's Shooting
+murder1 | Parent Charged After Child Missing 19 Days
+murder2 | Teen Guarding Store Shoots Two After Hurricane
+murder1 | Pregnant Spouse Vanishes on Thanksgiving Morning
+securitiesFraud | Startup Founder Charged in Heart-Monitor Fraud
+invManslaughter | Teen Charged After Messages Urged Partner's Suicide
+murder2 | Jail Officer Charged in Inmate's Death
+falseReport | Council Candidate Charged With Faking Assault
+dangerousRobbery | Pharmacy Robbed of Painkillers at Gunpoint
+felonyChildAbuse | Babysitter Charged After Infant's Brain Injury
+embezzlement | Bank Teller Charged With $38,000 Theft
+hitAndRun | Cyclist Killed; Driver Says It Looked Like a Deer
+traffickingOpioid28 | Fentanyl Pills Found in Rental Car on I-40
+invManslaughter | One Punch Outside {CLUB} Leaves One Dead
+privateImages | Private Images Posted After Breakup
+felonFirearm | Felon Charged After Gun Found Under Car Seat
+insuranceFraud | Stolen Car Found Burned; Owner Charged With Fraud
+massViolenceThreat | Senior Charged After 'Don't Come Friday' Post
+kidnapping2 | Ex-Partner Charged With Kidnapping After Five-Hour Drive
+identityTheft | Neighbor Charged in Identity Theft of Retiree
+awdwikisi | Homeowner Shoots Officer During Late-Night Raid
+deathByDistribution | Friend Charged in Fentanyl Death
+perjury | Alibi Witness Charged With Perjury
+extortion | Former Employee Charged With Extorting Executive
+murder2 | Neighbor Shot Over Fence Dispute
+bribery | County Inspector Charged With Taking Bribes
+habitualDWI | Driver Found Asleep in Running Car Charged With Habitual DWI
+falsePretenses100k | Local Charged in $140,000 Romance Scam
+awdwikisi | Coworker Charged With Poisoning Supervisor's Coffee
+embezzlement | Deputy Charged With Stealing Seized Cash
+stalking | Tracker Found Hidden in Ex's Car
+awdwisi | Driver Plows Through Protesters, Injuring One
+deliverSchedII | Nurse Practitioner Charged With Selling Prescriptions
+commonLawRobbery | Woman, 74, Shoved to Ground in Bus Stop Purse Snatching
+assaultLEO | Bar Patron Charged With Breaking Officer's Nose
+awdw | Road Rage on {STREET}: Driver Swings Tire Iron
+murder2 | Spouse Charged in Kitchen Stabbing After Argument
+animalCruelty | 43 Dogs Seized From {HOOD} Home
+burningBuildings | Fire Destroys {REST} After Hours
+damagingComputers | Fired IT Manager Accused of Wiping Company Servers
+witnessIntimidation | Witness Says Defendant's Brother Threatened Her at Gas Station
+communicatingThreats | Neighbor Charged Over Voicemail: 'You'll Be Sorry'
+feloniousBE | Nine Storage Units Broken Into Overnight
+felonyLarceny | Catalytic Converters Cut From Church Vans
+possStolen | Pawn Shop Owner Charged After Stolen Tools Found on Shelves
+uttering | Sibling Charged With Cashing Late Parent's $22,000 Check
+invManslaughter | Child, 6, Dies After Finding Gun in Nightstand
+cyberstalking | Woman Says Fake Accounts Harassed Her for Months
+sexualBattery | Massage Therapist Charged With Sexual Battery
+dischargingOccupied | Shots Fired Into {HOOD} Home With Children Inside
+murder2 | Man Stabbed to Death in Bar Parking Lot
+aisi | Parent Charged After Youth Soccer Referee's Jaw Broken
+impersonatingLEO | Driver Says Fake Officer Pulled Her Over on Route 17
+saleSchedII | Undercover Buy Leads to Cocaine Sale Charge
+maintainingDwelling | Grandparent Charged After Drug Raid on Family Home
+fleeing | Motorcycle Flees Trooper at 130 MPH on I-40
+obstruction | Officer Charged With Deleting Body Camera Video
+burglary2 | Ex-Partner Charged With Burglary After Late-Night Entry
+murder1 | Nurse Charged With Killing Three Patients
+murder1 | Architect Charged in Highway 17 Killings
+murder1 | Arrest in 1980s Double Murder After Genealogy Match
+murder1 | Long-Haul Trucker Charged in Two Truck Stop Killings
+murder1 | Four Hollis State Students Killed in Off-Campus House
+murder2 | Jogger Shot After Neighbors Chase Him Through {HOOD}
+murder2 | Off-Duty Officer Shoots Neighbor in His Own Apartment
+invManslaughter | Officer Says She Meant to Use Taser in Fatal Traffic Stop
+invManslaughter | Cinematographer Killed by Prop Gun on Film Set
+murder1 | Toddler Dies in Hot Car Outside Parent's Office
+felonyDBV | Four Killed by Drunk Teen Driver on Old Mill Road
+murder1 | SUV Plows Through {CITY} Christmas Parade; Three Dead
+murder1 | Wife Charged With Poisoning Husband With Eye Drops
+invManslaughter | Fake Hostage Call Leads Police to Kill Innocent Man
+murder1 | Man Found Stabbed 27 Times, Shot in His Shower
+murder1 | Wealthy Couple Shot to Death in {HOOD} Home
+falsePretenses100k | Trusted {CITY} Advisor's 'Guaranteed' Fund Was a Ponzi Scheme
+murder2 | Unarmed Teen Shot by Neighborhood Watch Captain
+murder1 | Teen Confesses to Killing Teacher's Husband, Says She Asked Him To
+murder1 | Two Girls Found Dead Near Creek Trail in {HOOD}
+possStolen | Police Raid {HOOD} Body Shop, Find Parts From 30 Stolen Trucks
+embezzlement | PTA Treasurer Charged With Taking $68,000 From Elementary School
+deathByDistribution | Inmate Dies of Overdose in Hollis County Jail
+murder2 | Woman Mauled to Death by Neighbor's Dogs in Apartment Hallway
+falsePretenses | {CITY} Used Car Dealer Accused of Rolling Back Odometers
+murder1 | Novelist's Wife Found Dead at Foot of Stairs
+murder1 | Minister Survives Arsenic Poisoning; Wife Charged
+murder1 | Third Woman Found Strangled in Her Apartment
+invManslaughter | Boy, 11, Dies in Same Motel Room Where Couple Died Weeks Earlier
+murder1 | Missing Lottery Winner Found Buried Under Concrete Slab
+murder1 | Prominent Lawyer's Wife and Son Found Shot at Family Estate
+invManslaughter | Teen Charged After Texts Urged Boyfriend to Take His Own Life
+invManslaughter | Pledge Dies After Fraternity 'Gauntlet' Night
+falseReport | Missing Mother Found on Highway After Three Weeks; Describes Abduction
+murder2 | Driver Shot Dead After Brake-Check on I-40
+burningBuildings | Third Rural Church Burns in Six Weeks
+murder1 | Husband, 84, Charged After Shooting Wife With Dementia
+invManslaughter | Barn Explosion Kills Teen Helper at Illegal Still
+falsePretenses100k | After the Hurricane, a 'Relief Coordinator' Took Their Money
+invManslaughter | Nursing Home Resident Dies of Untreated Sores
+commonLawRobbery | 'Polite Bandit' Hits Fourth Bank With a Handwritten Note
+assaultLEO | Driver Claiming 'Sovereign' Status Drags Deputy at Traffic Stop
+invManslaughter | Hunter Kills Man Walking His Dog, Says He Thought It Was a Deer
+awdwisi | 'Doctor' at Wellness Clinic Had No Medical License
+falsePretenses100k | Local 'War Hero' Never Served, Records Show
+murder2 | Wrong-Way Driver Kills Mother and Daughter on I-95
+felonyLarceny | Man Electrocuted Stealing Copper From Substation; Partner Charged
+felonyChildAbuse | Parent App Video Shows Daycare Teacher Striking Toddlers
+embezzlement100k | Audit: $214,000 Missing From Sheriff's Seized Cash Account
+kidnapping1 | Man Lured by Fake Dating Profile, Robbed and Held for Hours
+embezzlement | $74,000 in Bingo Money Missing From Veterans' Post
+burningBuildings | Fire Destroys Century-Old Feed Store
+awdwisi | Fight at Boat Ramp Leaves Fisherman With Fractured Skull
+prescriptionFraud | Nurse Charged With Stealing Fentanyl Meant for Patients
+dangerousRobbery | Store Clerk Shoots Armed Robber
+falsePretenses | Out-of-State Owner Finds Her Land Sold Without Her
+assaultPointingGun | Homeowner Points Shotgun at Teens on Halloween
+dwi | Farmer Charged With DWI on Tractor
+traffickingOpioid28 | Pill Press Seized in Rented Garage; 4,000 Counterfeit Pills Found
+concealingDeath | Woman's Body Found in Home Months After Death; Pension Kept Coming
+transportChild | Parent Takes Child to Florida in Violation of Custody Order
+riot | Brawl After Rivalry Game Spills Into Parking Lot
+invManslaughter | Street Race on Industrial Boulevard Kills Driver
+felonFirearm | Felon Charged With Rifle at Hunting Camp
+cyberstalking | Parent Charged With Cyberstalking Youth Baseball Coach
+feloniousBE | Pharmacy Burglarized Overnight; Oxycodone Taken
+animalCruelty | Three Horses Found Starving in Muddy Pasture
+insuranceFraud | Grocery Store Fall Claim Was Staged, Insurer Says
+kidnapping1 | Woman Forced Into Car at Gas Station, Found Hours Later
+burglary2 | Vacation Rental Burglarized; Owner's Doorbell Camera Catches Entry
+identityTheft | Tax Preparer Charged With Using Clients' Identities
+commonLawRobbery | Payroll Bag Snatched at Poultry Plant
+childAbuseMisd | Toddler Revived With Narcan After Swallowing Fentanyl
+assaultGovOfficial | DMV Examiner Assaulted Over Failed Road Test
+attemptedMurder1 | Business Partner Charged With Cutting Brake Lines
+larcenyMerchant | Shopper Charged With 'Returning' Tools Never Bought
+embezzlement | County Road Crew Leader Charged in Fuel Card Scheme
+possStolen | Stolen Mower and Trailer Found in a Front Yard
+insuranceFraud | Homeowner Charged After Hail Claim: Insurer Says Damage Was Hammered
+embezzlement | Consignment Shop Owner Charged After Store Closes Owing $11,300
+dwi | Parent Charged With DWI in Elementary School Pickup Line
+assaultFemale | Man Charged After Girlfriend's 911 Call Cut Off Mid-Sentence
+awdwisi | Bar Stool Swing Leaves Patron With Shattered Cheekbone
+fleeing | Driver Says Fear of Fake Cop Led to 96 MPH Run From Deputy
+hitAndRun | Pedestrian Struck, Left on Pruitt Mill Road; Pickup Owner Charged
+saleSchedII | Vape Shop Clerk Charged With Selling Meth Across the Counter
+felonFirearm | Landlord's Inspection Turns Up 3D-Printed Pistol
+accessingComputers | Ex-Partner Charged After Private Messages Posted From Victim's Own Account
+dischargingOccupied | Four Shots Fired Into Home Overnight; No One Hurt
+murder1 | Teen Shot Dead Selling Sneakers in Apartment Parking Lot
+felonyLarceny | Shopper Arrested at Harbor Mart Exit Says the TV Was Paid For
+felonyLarceny | Two Outboards Vanish From Port Hollis Marina Overnight
+embezzlement | Harbor Mart Cashier Charged With Loading $11,300 in Unpaid Gift Cards
+falsePretenses | Fans Turned Away at Stadium Gate Say Local Seller Sold Fake Tickets
+cardFraud | Skimmer Found Inside Pump 6; 212 Cards Compromised
+feloniousBE | Man Posing as Power Company Worker Takes Jewelry From 81-Year-Old
+awdwisi | Rec-League Softball Fight Ends With Player Hospitalized
+dischargingOccupied | Farmer Charged After Shots Fired Into Truck at Gate
+feloniousBE | Tenant Charged With Breaking Into Own Apartment After Lockout
+awdwikisi | Bar Security Guard Shoots Ejected Patron Outside Door
+dangerousRobbery | Nurse Robbed at Knifepoint in Hospital Parking Deck
+traffickingOpioid | Postal Inspectors Intercept Fentanyl Pills Bound for Hollis County
+hitAndRun | School Crossing Guard Killed; Driver Didn't Stop
+falsePretenses | Family Paid $18,500 Cash for Mobile Home the Seller Didn't Own
+falsePretenses | Fire Victims Say They Never Saw Money Raised in Their Name
+prescriptionFraud | Dental Assistant Charged With Forging Painkiller Prescriptions
+felonyChildAbuse | Foster Parent Charged After Toddler's Arm Broken
+animalCruelty | Fourteen Scarred Dogs Seized From Shiloh Road Property
+felonyLarceny | Waterman Says His Crab Pots Were Pulled and Repainted
+deathByDistribution | Twenty-Year-Old Dies After Motel Party; Friend Charged
+exploitationElder | Grandson Charged With Pawning Grandmother's Wedding Ring
+dangerousRobbery | Clerk Robbed at Gunpoint in Sweepstakes Parlor
+burningBuildings | Century-Old Tobacco Barn Burns on Family Farm
+embezzlement | Volunteer Fire Department Treasurer Charged in $63,000 Theft
+falsePretenses | Neighbor's Cattle Sold at Livestock Auction, Farmer Says
+awdwisi | Bar Patron's Skull Fractured in Fight With Bouncer
+possStolen | Landscaper's Stolen Trailer and Mowers Found for Sale Online
+exploitationElder | Nephew With Power of Attorney Charged in Aunt's Lost Savings
+felonyDBV | Woman Killed When Golf Cart Overturns on Beach Road
+stalkingCourtOrder | Man Under Protective Order Shows Up at Daughter's Birthday Party
+identityTheft | Man Took Out Loans in Dead Brother's Name, Prosecutors Say
+misdLarceny | Woman Caught Walking Out of Grocery With Unpaid Items Again
+resisting | Man Runs From Deputies, Climbs Fence, Gets Stuck
+disorderly | Customer Screams at Cashier, Blocks Parking Lot Lane
+trespass2 | Fisherman Charged With Trespass at Private Pond
+dwlr | Man Stopped for Taillight Was Driving on Revoked License
+possMarijuana | Deputies Find Marijuana in Glove Box During Traffic Stop
+simpleAssault | Argument Over Parking Space Ends With a Shove
+breakingVehicle | Unlocked Trucks Hit Overnight in Contractor Subdivision
+possSchedII | Student Charged After Pills Found in Backpack at Traffic Stop
+misdLarceny | Stolen Bicycles Turn Up in Pawn Shop; Seller Charged
+misdLarceny | Driver Filled Tank and Drove Off Without Paying
+injuryPersonalProperty | Bar Window Smashed After Closing; Customer Charged
+trespass2 | Man Banned From Library Returns, Charged With Trespass
+misdLarceny | Neighbor's Riding Mower Missing From Shed, Found Next Door
+simpleAssault | Dog Walk Argument Ends in Shove and a Charge
+falseReport | Man Reported Car Stolen, Deputies Find It at Girlfriend's House
+misdLarceny | Doorbell Camera Catches Porch Package Thief
+misdLarceny | Teens Take Golf Cart for a Midnight Ride Through Subdivision
+resisting | Man Refuses to Give Name to Deputy, Charged With Resisting
+possSchedII | Woman Carried Mother's Pain Pills in Her Purse, Deputies Say
+misdLarceny | Customers Skip Out on $74 Diner Bill
+injuryRealProperty | Neighbor Dispute Over Property Line Ends With Broken Fence
+cardFraud | Man Used Found Credit Card at Gas Pumps, Prosecutors Say
+misdLarceny | Shopper Swapped Price Stickers at Hardware Store
+fleeing | Moped Rider Leads Deputy on Chase Through Backyards
+disorderly | Late-Night Party Ends With Disorderly Conduct Charge
+recklessDriving | Teen Popped Wheelies on County Road Near School
+injuryRealProperty | Graffiti Covers Highway Underpass Wall
+falseReport | Prank 911 Call Sent Fire Trucks to Ex's House
+impersonatingLEO | Man Flashed Toy Badge at Convenience Store
+concealedWeapon | Woman Carried Pistol in Purse at County Fair
+animalCruelty | Dog Left Chained Without Water in August Heat
+hitAndRun | Driver Backed Into Parked Car and Left
+uttering | Farmer Wrote $380 Check on Closed Account
+communicatingThreats | Man Posted Threat to Burn Neighbor's Truck
+stalking | Man Sent 200 Texts to Ex After Being Blocked
+trespass2 | Man Found Asleep on Neighbor's Porch Swing at 4 A.M.
+misdLarceny | Mail From Six Boxes Found in Man's Car
+misdLarceny | Man Caught Siphoning Gas From Neighbor's Truck
+injuryPersonalProperty | All Four Tires Slashed After Breakup
+simpleAssault | Football Tailgate Argument Ends in a Shove
+obstruction | Driver Gave His Brother's Name at Traffic Stop
+misdLarceny | Aluminum Gutters Stripped From Vacant House
+possStolen | Laptop Taken From Library Table Found at Pawn Shop
+falsePretenses | Woman Returned Stolen Goods for Store Credit
+forgery | Underage Man Used Fake License to Buy Beer
+larcenyMerchant | Man Walked Out With $400 in Paint
+injuryPersonalProperty | Dumpster Fire Behind Restaurant Called Arson Attempt
+misdLarceny | Man Took Tip Jar From Coffee Shop Counter
+feloniousBE | Backyard Shed Broken Into, Tools Gone
+possParaphernalia | Digital Scale and Baggies Found in Car at Traffic Stop
+assaultPointingGun | Teens Say Man Pointed Pistol at Them From Car
+injuryPersonalProperty | Man Caught Prying Open Vending Machine Behind Car Wash
+disorderly | Parent Screams at School Bus Driver in Front of Children
+possStolen | Four Tires and Rims Missing From Customer's Car at Junkyard
+trespass2 | Hunter's Stand Found on Posted Land
+misdLarceny | Flag and Pole Taken From Veteran's Front Yard
+misdLarceny | Man Kept Friend's Truck for Three Weeks
+misdLarceny | Church Donation Box Emptied
+resisting | Teen on Skateboard Ignored Deputy's Order to Stop
+falseReport | Tenant Pulled Apartment Fire Alarm After Argument
+misdLarceny | Woman Took Clothes From Laundromat Dryer
+simpleAssault | Rec League Softball Dispute Ends in a Punch
+falsePretenses | Facebook Seller Sold Fake Concert Tickets
+injuryPersonalProperty | Neighbor's Doorbell Camera Smashed, Man Charged
+misdLarceny | Passenger Ran From Rideshare Without Paying $38 Fare
+injuryPersonalProperty | Man Cut Off Wheel Boot With Bolt Cutters
+feloniousBE | Daytime Break-In Empties Jewelry Box While Family Was at Work
+commonLawRobbery | Man Slides Demand Note to Teller, Leaves With $2,100
+pwisd | Deputies Find Packaged Cocaine in Driver's Console
+deliverSchedII | Warehouse Worker Sold Oxycodone to Coworkers
+strangulation | Woman Says Boyfriend Choked Her During Argument
+commonLawRobbery | Man Snatched Phone From Woman's Hand at Bus Stop
+forgery | Bookkeeper Forged Boss's Signature on Eleven Checks
+maintainingDwelling | Neighbors Complain About Trailer With Constant Traffic
+felonyLarceny | Four-Wheeler Taken From Farm Shed, Found Repainted
+assaultLEO | Man Shoved Deputy During Traffic Stop
+larcenyFirearm | Handgun Stolen From Unlocked Truck Turns Up at Traffic Stop
+traffickingCocaine | Motel Room Search Finds Cocaine, Cash, and a Scale
+dangerousRobbery | Food Delivery Driver Robbed at Knifepoint at Apartment
+misdLarceny | Server Accused of Pocketing Shared Tip Jar Cash
+recklessDriving | Driver Looking at Phone Drifted Into Ditch, Hit Mailbox
+animalCruelty | Dog Left in Parked Car on 94-Degree Afternoon
+falsePretenses | Landscaper Took $1,800 Deposit and Never Showed
+possStolen | Man Sold Phone Found at Park, Owner Tracked It
+trespass2 | Teens Climb Town Water Tower for Photos, Charged With Trespass
+misdLarceny | Shopper Scanned Cheap Produce Code for Steak at Self-Checkout
+misdLarceny | Lawn Inflatables Vanish From Three Yards Before Christmas
+disorderly | Man Screamed at Family During Funeral Service
+murder2 | Man Shot Outside Dive Bar After Closing-Time Argument
+felonyDBV | Speeding Driver Hits Crossing Guard Near Elementary School
+burglary1 | Family Held in Bedroom During Night Break-In
+dangerousRobbery | Driver Forced Out of Car at Gas Station at Gunpoint
+arson1 | Fire at Apartment Building Forces Evacuation of 18 Residents
+kidnapping2 | Woman Forced Into Van in Grocery Parking Lot, Escapes
+deathByDistribution | Concertgoer Dies After Taking Pill Bought in Parking Lot
+attemptedMurder1 | Office Worker Hospitalized After Coffee Laced With Antifreeze
+volManslaughter | One Punch at House Party Leaves Man Dead
+awdwisi | Mechanic Struck With Wrench in Shop Dispute Over Bill
+misdLarceny | Commuter's $900 Bike Cut From Rack at Transit Stop
+injuryPersonalProperty | Car Keyed Along Both Sides in Apartment Lot
+disorderly | Bar Patio Argument Spills Into Street, Deputy Called
+falseReport | False Report of Armed Man Sends Deputies to Neighbor's House
+misdLarceny | Delivery Packages Vanish From Porches on Maple Street
+felonyLarceny | $7,000 in Tools Stolen From Contractor's Locked Truck
+invManslaughter | Passenger Killed When Truck Leaves Lake Road
+larcenyMerchant | Man Walks Out of Hardware Store With Power Drill Under Jacket
+injuryPersonalProperty | Teens Seen Swinging Bat at Mailboxes on Quiet Road
+concealedWeapon | Fan's Pistol Spotted in Waistband at Youth Ballgame
+recklessDriving | Two Cars Race on County Road, One Ends in Cornfield
+breakingVehicle | Laptop Taken From Locked Car at Trailhead
+trespass2 | Ex-Boyfriend Keeps Returning to Woman's Porch After Being Told to Leave
+interferingEmergency | Man Knocks Phone From Woman's Hand During 911 Call
+embezzlement | Gas Station Clerk Accused of Pocketing Till Cash
+identityTheft | Roommate's Credit Card in His Name Runs Up $6,000
+uttering | Grandson Cashes Check Made Out to Cash
+dwi | Driver Blows 0.10 at Sobriety Checkpoint
+simpleAssault | Coach Shoves Youth League Referee After Call
+cyberstalking | Woman Says Ex Posted Dozens of Messages About Her Online
+accessingComputers | Fired Employee Logs Into Company Server After Termination
+conspiracyRobbery | Two Men Plotted Pharmacy Robbery in Texts, Deputies Say
+childAbuseMisd | Toddler Found Alone in Apartment While Mother Worked Late Shift
+assaultFemale | Woman Says Boyfriend Grabbed and Shoved Her at House Party
+awdw | Driver Gets Out With Baseball Bat After Highway Cut-Off
+habitualDWI | Driver With Three Prior DWIs Stopped After Weaving
+kidnapping1 | Man Held in Garage Over $4,000 Debt, Family Says
+injuryRealProperty | Overpass Painted Over Night, City Public Works Cleans Up
+falsePretenses | Mother Collected Food Assistance While Working Second Job, Agency Says
+larcenyMerchant | Shopper Returns Items Without Buying Them, Store Says
+resisting | Patient's Relative Struggles With Deputy at Hospital
+perjury | Landlord Charged With Lying Under Oath at Small Claims Hearing
+feloniousBE | Dental Office Broken Into After Hours, Drug Cabinet Emptied
+burglary2 | Garage Burglary While Family Was at Church
+larcenyFirearm | Shotgun Stolen From Unlocked Truck, Later Found in Pawn Shop
+aisi | Man Struck With Beer Mug at Bar, Needs Surgery
+stalking | Coworker Says Colleague Followed Her Home for Months
+habitualMisdAssault | Man With Prior Assault Convictions Charged Again After Parking Lot Fight
+saleSchedII | Undercover Officer Buys Oxycodone on Street Corner
+awdwikisi | Man Stabbed Outside Nightclub, Surgeons Save His Life
+traffickingCocaine | Cargo Van Stopped With Two Kilos of Cocaine Behind Panel
+firefighterInjury | Firefighter Burned Battling House Fire Set After Eviction
+felonyChildAbuse | Toddler Scalded in Bath, Hospital Reports Possible Abuse
+injuryRealProperty | Swing Set and Bench Wrecked at Neighborhood Park
+possStolen | Roommate's Prized Guitar Pawned While He Was on Tour
+forgery | Man Parks in Accessible Space With Altered Placard
+trespass2 | Teens Swim in Closed Community Pool After Dark
+disorderly | Fireworks Set Off in Neighborhood Street at 1 A.M.
+falsePretenses | Seller Takes $4,500 for Car That Isn't His
+recklessDriving | Driver Speeds Through School Pickup Line
+assaultPointingGun | Landowner Points Rifle at Teens Cutting Through Field
+larcenyMerchant | College Bookstore Loses $1,100 in Textbooks to Walkouts
+dwi | Man Drives Golf Cart Down County Road After Cookout
+cardFraud | Shopper Swaps Gift Card Barcodes at Store Rack
+embezzlement | Church Treasurer Accused of Skimming Offering Cash
+commonLawRobbery | Clerk Handed Over $640 After Man Threatened Him at Liquor Store
+feloniousBE | Bakery's Rear Door Forced, Register and Ovens Tampered
+pwisd | Bags and Scale Found in Apartment During Welfare Check
+stalking | Man Watches Neighbor's Windows Nightly, Records Say
+patientNeglect | Nursing Home Aide Left Resident on Floor for Hours
+murder2 | Man Found Dead in Shared Apartment After Fight Over Rent
+attemptedMurder1 | Man Shot at Through Window of Ex's House
+dangerousRobbery | Masked Man Fires Shot Into Ceiling at Convenience Store
+riot | Fight at County Fair Spreads Across Midway
+injuryRealProperty | Roofing Debris Dumped on Farmland Overnight
+felonyLarceny | Copper Wiring and Pipes Ripped From Vacant House
+larcenyMerchant | Man Pulls Roll of Lottery Tickets From Counter Dispenser
+animalCruelty | Neighbor's Beagle Shot With Air Rifle, Vet Says
+dwlrImpaired | Driver Stopped With Revoked License After Wedding Reception
+misdLarceny | Passenger's Phone Lifted While She Slept on Bus
+exploitationElder | Caller Convinces Widow Grandson Needs $2,400 Bail
+uttering | Tenant's Rent Checks Bounce Three Months Running
+simpleAssault | Teens Fight at Skate Park Over Dropped Board
+communicatingThreats | Student Emails Professor 'You Will Regret This Grade'
+concealedWeapon | Man Carries Hunting Knife Through Courthouse Metal Detector
+burglary1 | Intruder Takes Purse From Kitchen While Family Sleeps Upstairs
+awdwisi | Man Struck With Tire Iron During Parking Dispute
+extortion | Man Demands $3,000 or Photos Go to Boss and Family
+bribery | Contractor Hands Building Inspector Envelope With $1,500
+securitiesFraud | Investment Club Founder Accused of Using Members' Money for Home
+embezzlement100k | Payroll Clerk Redirected Pay Into Own Account for Two Years
+attemptedMurder1 | Husband Offered Hitman $5,000 to Kill Wife, Undercover Says
+invManslaughter | Passenger Dies After Boat Hits Dock at Night
+traffickingOpioid28 | Search Finds 30 Grams of Fentanyl and Scales in Storage Unit
+firearmStorage | Four-Year-Old Fires Pistol Left Under Couch Cushion
+misdLarceny | Laundromat Change Machine Emptied Twice in One Week
+disorderly | Library Patron Screams at Staff Over Printing Fees
+embezzlement | Little League Treasurer Accused of Pocketing Registration Fees
+trespass2 | Former Tenant Uses Old Key to Enter Apartment
+larcenyMerchant | Pet Store Loses $240 in Dog Supplies to Walkout
+misdLarceny | Donation Bin Emptied by Driver With a Van
+falsePretenses | Job Seekers Pay 'Training Fees' for Remote Work That Never Starts
+trespass2 | Shopper Banned From Mall Returns to Food Court
+falsePretenses | Shopper Uses Copied Coupons Across Three Stores
+dwi | Parent Stopped at School Drop-Off With 0.09 Reading
+fleeing | Driver With Expired Tag Speeds Away, Ditches Car
+misdLarceny | Kayak Cut From Dock Cable at Lakeside Rental
+uttering | Altered Check Cashed After Mail Theft
+misdLarceny | Company Fuel Card Used for Weekend Trips, Landscaper Says
+injuryRealProperty | Hotel Room Left With Holes in Wall and Ripped Curtains
+misdLarceny | Gift Card Box Taken From Wedding Reception Table
+recklessDriving | Driver Passes School Bus With Stop Arm Out
+misdLarceny | Wallet Taken From Gym Locker With Cut Lock
+possMarijuana | Festival Security Finds Edibles in Bag at Gate
+falsePretenses | Renter Pays Deposit on Apartment Listed by Fake Landlord
+communicatingThreats | Neighborhood Post Warns 'I Know Where You Park'
+injuryRealProperty | Picnic Tables Burned at County Campground
+feloniousBE | Offices Entered Overnight, Eleven Laptops Gone
+dangerousRobbery | Taxi Driver Held Up With Pistol, $310 Taken
+assaultGovOfficial | Code Inspector Shoved During Property Visit
+identityTheft | Employee Opened Credit in Coworker's Name Using Payroll File
+bribery | Driver Offers Deputy $200 to Tear Up Citation
+extortion | Contractor Threatens to Post Video Unless Homeowner Pays $5,000
+possSchedII | Pharmacy Technician Pockets Oxycodone From Inventory
+misdDBV | Teen Passenger Dies After ATV Hits Culvert at Dusk
+damagingComputers | Fired IT Worker Wipes Company Files Remotely
+murder2 | Neighbor Dispute Over Tree Ends With Fatal Wound on Driveway
+murder1 | Pawn Shop Owner Shot During Robbery
+attemptedMurder1 | Former Partner Stabbed in Parking Lot
+arson1 | Restaurant Fire Linked to Owner's Insurance Increase
+awdwisi | Landlord Struck With Bat During Rent Dispute
+burglary1 | Resident, 84, Awakened by Intruder in Bedroom
+feloniousBE | Parking Authority Office Broken Into, Safe Carried Out
+awdw | Patron Slashed With Broken Bottle in Bar Fight
+felonyLarceny | Diesel Drained From Eight Trucks at Contractor's Yard
+falsePretenses100k | Investor Group Loses $140,000 on Lots That Weren't For Sale
+falsePretenses | Vendor's Rigged Scale Shorts Customers at Farmers Market
+misdLarceny | Customer Drives Off From Drive-Thru Window With $64 Order
+misdLarceny | Patron Walks Out of County Library With Rare Local History Books
+injuryRealProperty | Church Steps and Bell Tower Painted Overnight
+injuryPersonalProperty | Plow Driver Knocks Down Three Mailboxes and Keeps Going
+misdLarceny | Candidate Yard Signs Pulled Up Overnight and Loaded Into a Truck
+injuryPersonalProperty | Teens Egg Parked Cars on Halloween Night, Damaging Paint
+misdLarceny | Man Loads Dozens of Pumpkins From Farm Stand Without Paying
+misdLarceny | Flower Arrangements Taken From Graves at County Cemetery
+misdLarceny | Stacked Firewood Taken From Roadside Seller at Night
+misdLarceny | Bait Shop Till Emptied While Clerk Stepped to the Dock
+injuryPersonalProperty | Shopping Carts Pushed Into Retention Pond Behind Grocery Store
+disorderly | League Bowlers Shout and Throw Balls After Score Dispute
+misdLarceny | Patron Leaves Bar Through Side Door Without Paying $90 Tab
+falsePretenses | Mobile Seller Takes Cash for New Tires, Installs Used Ones
+falsePretenses | Lawn Crew Takes Season Prepayment and Never Mows
+larcenyMerchant | Shopper Stuffs Infant Formula Into Coat at Pharmacy
+larcenyMerchant | Customer Pockets Perfume Bottles From Department Store Counter
+falsePretenses | Caller Places Big Catering Order With Stolen Card Number
+falsePretenses | Caller Tells Resident Power Will Be Cut Unless Gift Cards Are Bought
+falsePretenses | Seller Sells Used Phones That Are Carrier-Locked and Reported Lost
+falsePretenses | Tow Operator Charges Fees Not on Posted Rate Sheet
+disorderly | Car Stereo Bass Shakes Apartment Windows at 2 A.M.
+disorderly | Landscaper Runs Leaf Blower at 5 A.M. After Complaints
+simpleAssault | Shoppers Fight in Parking Lot After Cart Hits a Parked Car
+disorderly | Driver Follows Motorist and Shouts Through Window at Stoplight
+injuryRealProperty | Teens Spray Paint Obscene Words on Elderly Neighbor's Shed
+simpleAssault | Guest Sprays Pepper Spray Into Crowd at Backyard Party
+possMarijuana | Marijuana Cigarette Found in Car in School Lot After Hours
+misdLarceny | Neighbor Borrows Mountain Bike and Sells It at Flea Market
+trespass2 | Scavenger Climbs Landfill Fence at Night to Pull Scrap Metal
+trespass2 | Trespasser Climbs Fenced Cell Tower Compound for Photos
+trespass2 | Adult Found on Elementary Playground After Hours With Cooler
+recklessDriving | Pickup Tailgates a Minivan for Three Miles, Flashing Lights
+dwlr | Driver Stopped With License Expired for a Year
+concealedWeapon | Man Carries Stun Gun in Jacket Pocket at Crowded County Fair
+communicatingThreats | Fired Cashier Leaves Voicemail Threatening to Burn Down the Store
+possStolen | Man Tows Stolen Utility Trailer to Scrap Yard With Plates Removed
+forgery | Man Prints Fake Parking Citations and Leaves Them on Windshields
+forgery | Student Forges Parent Signature on Parking Permit Application
+breakingVehicle | Truck Window Smashed Outside Gym, Duffel Bag Taken
+fleeing | Cyclist Pedals Away From Deputy Who Ordered Him to Stop at Night
+cardFraud | Man Swaps Cloned Card at Gas Pump for $100 Fill-Up
+accessingComputers | Woman Logs Into Ex's Streaming Account and Changes the Password
+falsePretenses | Man Sells Fake Food Truck Permit Help to Three Vendors
+misdLarceny | Hospital Visitor Takes Phone Charger and Tablet From Waiting Room
+misdLarceny | Resident Opens Apartment Package Locker With a Stolen Code
+misdLarceny | Customer Keeps Rented Trailer for Three Weeks After Contract Ended
+misdLarceny | Camper Hooks Up to County Electric Box for Weeks Without Paying
+misdLarceny | Hay Bales Taken From Field by Man With Flatbed
+misdLarceny | Metal Storm Drain Covers Lifted and Sold to Scrap Yard
+misdLarceny | Street Signs Removed From Road, Found in Dorm Room
+misdLarceny | House Sitter Wears Owner's Jewelry and Sells a Watch
+misdLarceny | Babysitter Takes Cash From Kitchen Drawer Over Several Visits
+embezzlement | Swim Team Treasurer Pays Personal Bills With Team Fee Money
+misdLarceny | Student's E-Bike Cut From Campus Rack and Found for Sale Online
+misdLarceny | Customer Pockets Waitress's Phone Left on Restaurant Table
+larcenyMerchant | Man Steals Work Gloves and Boots From Farm Supply Store
+larcenyMerchant | Customer Fills Pastry Box and Leaves Through Back Door
+larcenyMerchant | Teen Steals Liquor Bottle From Convenience Store
+injuryPersonalProperty | Customer Smashes Smoke Shop Display Case After Refusal of Sale
+injuryPersonalProperty | Man Smashes ATM Screen With Hammer After Card Is Swallowed
+recklessDriving | Driver Speeds the Wrong Way Down a One-Way Street Through Town Square
+trespass2 | Man Sleeps in Hotel Lobby and Ignores Two Orders to Leave
+trespass2 | Patron Returns to Bar After Owner Banned Him for Fighting
+recklessDriving | Driver Does Burnouts in Church Parking Lot After Sunday Service
+disorderly | Neighbor Runs Loud Generator All Night During a Storm
+simpleAssault | Teens Shoot Paintball Guns at Pedestrians From Slow-Moving Car
+injuryPersonalProperty | Teen Packs Ice in Snowball and Breaks Windshield of Passing Car
+simpleAssault | Neighbors Fight When Sprinkler Soaks Mail Carrier Route
+simpleAssault | Cyclist Shoves Jogger on Greenway After Near Collision
+uttering | Man Passes Counterfeit Bills at Three Flea Market Stalls
+uttering | Man Writes Worthless Check for Four Tires
+uttering | Man Cashes Checks From Checkbook Found in Rental Car
+misdLarceny | Rider Uses Cloned Transit Pass for Months
+falsePretenses | Man Collects Radio Contest Prize Under a Fake Name
+falsePretenses | Player Alters Bingo Cards at Church Hall to Win Jackpot
+falsePretenses | Seller Takes Deposit for Horse That Does Not Exist
+falsePretenses | Landlord Keeps Deposit With Invented Damage Charges
+possMarijuana | Six Marijuana Plants Found Behind Tomato Stakes
+falsePretenses | Pet Sitter Takes Deposits for Weekends She Never Worked
+misdLarceny | Man Takes Neighbor's Rooftop Christmas Lights
+falsePretenses | Door Knocker Collects Cash for a Charity That Does Not Exist
+injuryRealProperty | Teen Sprays Tag on County Bridge Rail
+injuryPersonalProperty | Man Paints Initials on Parked Freight Car
+injuryPersonalProperty | Man Dents Car Hood During Parking Dispute
+injuryPersonalProperty | Man Lets Air Out of Neighbor's Tires Over Parking Spot
+injuryPersonalProperty | Teens Egg House and Break Storm Window
+injuryPersonalProperty | Tenant Kicks In Neighbor's Apartment Door After Argument
+injuryPersonalProperty | Man Rips Shutters Off Neighbor's House in Boundary Fight
+injuryPersonalProperty | Driver Backs Into Fence and Drives Off
+disorderly | Drunk Man Rings Neighbor's Doorbell Twenty Times at Midnight
+disorderly | Man Makes Dozens of Prank Calls to Pizza Shop
+falseReport | Woman Reports a Robbery That Never Happened
+falseReport | Man Calls 911 Claiming a Roommate Overdosed to Get a Ride
+falseReport | Owner Reports His Own Car Stolen After Hiding It
+obstruction | Man Gives Deputy a False Name and Birth Date at Traffic Stop
+resisting | Man Hides in Bushes From Deputies and Refuses to Come Out
+possParaphernalia | Driver Has Used Needles on Floor at Traffic Stop
+dwi | Driver Asleep at Green Light Fails Breath Test
+awdwikisi | Passenger Stabbed on Ferry Deck During Crossing
+traffickingCocaine | Cocaine Found Packed in Fishing Boat Hull at Marina
+awdwisi | Hunter Shoots at Rival's Tree Stand and Wounds Him
+invManslaughter | Boy Drowns at Backyard Pool Party
+felonyLarceny | Three Tractors Stolen From Rural Farms in One Month
+felonFirearm | Convicted Felon Builds Untraceable Rifle From Kit
+deathByDistribution | Teen Dies After Pill Bought on Prom Night
+extortion | Landlord Threatens Tenant With Deportation Unless Rent Is Raised
+exploitationElder | Caretaker Moves Elderly Man's Savings Into Own Account
+kidnapping2 | Father Drives Off With Toddler at Custody Exchange
+burglary2 | Thieves Cut Through Pharmacy Roof and Take Opioids
+identityTheft | Hospital Billing Clerk Opens Credit Cards in Patients' Names
+dischargingOccupied | Shots Fired Into Occupied Tavern From Passing Pickup
+embezzlement100k | Plant Payroll Manager Pays Employees Who Do Not Exist
+felonyLarceny | County Fuel Depot Loses Thousands of Gallons Over Months
+insuranceFraud | Insurer Says Crash With Parked Truck Was Staged
+witnessIntimidation | Man Threatens Witness at Diner Days Before Trial
+massViolenceThreat | Student Posts Threat of Shooting at Rival High School
+assaultLEO | Man Strikes Deputy Trying to Talk Him Down From Bridge Rail
+felonyLarceny | Man Takes Parked Ambulance for a Midnight Drive
+injuryPersonalProperty | Patron Smashes Library Computer After Session Timer Ends
+injuryPersonalProperty | Firework Blows Up Neighbor's Mailbox at Dusk
+trespass2 | Man Returns to Store Dumpster After Being Told Not To
+injuryRealProperty | Bus Shelter Glass Smashed With Rock After Missed Bus
+falsePretenses | Driveway Crew Takes Deposit, Sprays Watered-Down Coating
+embezzlement | Booster Club Volunteer Pockets Raffle Cash
+trespass2 | Man Uses Closed Hotel Hot Tub After Hours
+dwi | Boater Arrested for Impaired Operation on Lake
+simpleAssault | Scooter Rider Shoves Pedestrian on Sidewalk
+misdLarceny | Purse Taken From Yoga Studio Cubby During Class
+forgery | Man Forges Airport Long-Term Parking Pass
+uttering | Employee Hands Boss Forged Doctor's Note
+misdLarceny | Cash Box From School Bake Sale Taken
+misdLarceny | Guest Walks Out of Motel With Room TV and Lamp
+disorderly | Man Throws Microphone and Screams at Karaoke Night
+injuryRealProperty | Man Opens Fire Hydrant and Floods Street
+trespass2 | Skaters Ignore Closure Signs and Break Park Ramp
+trespass2 | Man Loiters at Elementary School After Warning
+simpleAssault | Shopper Shoves Man in Checkout Line Over Cut
+misdLarceny | Man Takes Work-Zone Cones for His Yard
+falsePretenses | Seller Ships Brick Instead of E-Bike
+larcenyMerchant | Woman Wears Three Layers Out of Fitting Room
+injuryPersonalProperty | Driver Plows Through Parking Gate Arm Without Paying
+accessingComputers | Man Uses Former Roommate's Wi-Fi After Password Change
+misdLarceny | Man Takes Couch From Curb That Was Not Free
+disorderly | Man Burns Trash in Barrel and Refuses to Put It Out
+disorderly | Man Runs Onto Parade Route and Blocks a Float
+trespass2 | Uninvited Man Crashes Private Wedding and Refuses to Leave
+misdLarceny | Rider Takes Rental E-Scooter Home Instead of Returning It
+falsePretenses | Man Cashes Fake Chips at Casino Cage
+misdLarceny | Man Takes Cash From Church Offering Plate After Service
+forgery | Man Makes and Mounts Fake Dealer Plate
+possSchedII | Man With Unlabeled Oxycodone Pills Arrested in Pharmacy Lot
+larcenyMerchant | Customer Wears New Shoes Out of Store
+forgery | Driver Displays Forged Inspection Sticker
+injuryPersonalProperty | Man Throws City Bike-Share Bike Into River
+injuryRealProperty | Neighbor Cuts Down Tree Over Property Line
+misdLarceny | Man Forwards Ex-Roommate's Packages to His New Address
+misdLarceny | Man Keeps Cash From Found Wallet and Uses Its Cards
+simpleAssault | Dog Owners Fight at Park After Bite
+falsePretenses | Tattoo Artist Takes Booking Deposits Then Closes Shop
+misdLarceny | Man Takes Hens From Backyard Coop
+falsePretenses | DJ Takes Wedding Deposit and Never Shows
+simpleAssault | Neighbor Strikes Man With Snow Shovel Over Cleared Parking Spot
+falsePretenses | Customer Claims Delivery Never Arrived to Collect Refunds
+larcenyMerchant | Teens Grab Sneakers at Mall and Run
+assaultGovOfficial | Rider Spits on City Bus Driver
+recklessDriving | Dirt Bike Rider Tears Through County Park Trail
+falsePretenses | Man Demands Reward for Dog He Took From Yard
+misdLarceny | Man Siphons Diesel From Parked Work Truck
+awdwik | Cowboy Stabbed in Rodeo Arena Parking Lot After Lost Bet
+dangerousRobbery | Masked Men Rob Gravel Plant Payroll Clerk at Gunpoint
+commonLawRobbery | Gas Station Clerk Robbed With Box Cutter at Closing
+burglary2 | Window Smashed at Jewelry Store; Trays Grabbed in Seconds
+arson1 | Day Care Burns Overnight; Ex-Employee Charged
+prescriptionFraud | Nurse Replaced Patients' Opioids With Saline, Records Show
+maintainingDwelling | Motel Room Used as Methamphetamine Lab, Deputies Say
+prescriptionFraud | Doctor Wrote Hundreds of Opioid Prescriptions After Brief Visits
+animalCruelty | Deputies Raid Barn Cockfight, Find 40 Birds and Blood-Stained Pit
+strangulation | Man Chokes Partner Unconscious in Parked Car After Leaving Bar
+stalking | Man Hid GPS Tracker on Ex's Car and Showed Up Wherever She Went
+cyberstalking | Woman Made Fake Profiles to Harass Ex's New Partner
+accessingComputers | Man Hacked Home Doorbell Cameras and Watched Families
+damagingComputers | School District Computers Locked by Ransomware
+identityTheft | Bank Employee Sold Customer Files to Scammers
+falsePretenses100k | Woman Ran Fake Medical Fundraiser and Collected $90,000
+securitiesFraud | Pastor Ran Investment Scheme Among Church Members
+falsePretenses100k | Contractor Took Deposits for Dozens of Homes and Built None
+embezzlement100k | Real Estate Agent Took Client Escrow Money
+possStolen | Deputies Find Chop Shop Stripping Stolen Pickups
+hitAndRun | Cyclist Killed at Dawn; Driver Left the Scene
+dvpoViolation | Man Violated Protective Order by Showing Up at Ex's Workplace With Flowers
+kidnapping1 | Teen Held for Ransom in Lake Cabin, Deputies Say
+murder2 | Driver Shot After Highway Merge Dispute
+volManslaughter | Man Dies After Shove Down Church Stairs in Seat Dispute
+awdwik | Ranch Hand Struck With Pipe Over Unpaid Wages
+riot | Crowd Brawl at Stock Car Race Injures Six
+bribery | School Board Member Took Cash for Bus Contract
+perjury | Witness Charged With Perjury After Video Contradicts Testimony
+obstruction | Man Hid Friend's Gun Before Deputies Arrived
+extortion | Hacker Locked Restaurant Ordering System and Demanded Payment
+burningBuildings | Church Burned at Night by Former Member, Investigators Say
+traffickingOpioid | Traffic Stop Finds Fentanyl Pills Packed in Spare Tire
+felonFirearm | Woman Bought Guns for Felon Boyfriend at Pawn Shop
+forgery | Man Forged Deed to Sell Neighbor's Vacant Lot
+insuranceFraud | Cafe Owner Burned Own Restaurant for Insurance, Investigators Say
+patientNeglect | Resident Froze After Wandering From Group Home Overnight
+exploitationElder | Roofing Crew Charged Widow for Repairs Never Needed
+extortion | Lender Threatened Borrower Over Triple-Interest Debt
+bribery | Bail Bondsman Paid Jailer for Names of New Arrests
+burningBuildings | Farmer's Barn Burned in Feud Over Land
+insuranceFraud | Law Office Runner Paid People to File Staged Injury Claims
+felonyDBV | Child Dies When Drunk Driver's Tractor Overturns Hayride Wagon
+assaultGovOfficial | Parent Attacks Teacher in School Hallway Over Grade
+firefighterInjury | Illegal Firework Warehouse Explodes, Injuring Firefighters
+assaultGovOfficial | Patient Bites Paramedic During Transport
+embezzlement | County Clerk's Office Employee Pocketed Filing Fees
+assaultPointingGun | Neighbor Aimed Crossbow at Man Over Property Line
+invManslaughter | Passenger Dies When Speedboat Hits Dock at Night
+falsePretenses | Bank Customers Kited Checks Across Three Banks for Months
+misdLarceny | Man Fills Truck Bed With Corn From Farmer's Field at Night
+misdLarceny | Worker Takes Extension Ladder From Truck at Job Site
+falsePretenses | Woman Sells Fake Dog License Tags Door to Door
+disorderly | Man Sprays Weed Killer on Neighbor's Lawn in Feud
+simpleAssault | Congregant Shoves Usher Over Seat Dispute
+misdLarceny | Customers Carry Food Out of Buffet in Bags
+misdLarceny | Customer Walks Out of Salon Without Paying $180
+falsePretenses | Movers Hold Belongings Until Customer Pays Double
+misdLarceny | Valet Takes Cash From Customer's Glove Box
+falsePretenses | Customer Returns Rental Car With Swapped Tires
+misdLarceny | Man Takes Pool Chemicals From Store Lot
+injuryPersonalProperty | Customer Wrecks Rental Bike and Walks Away
+simpleAssault | Anglers Fight at Boat Ramp Over Launch Line
+uttering | Man Sells Copied Race Tickets at the Gate
+larcenyMerchant | Woman Hides Souvenirs in Stroller Basket
+misdLarceny | Man Cuts and Takes Electric Charger Cable
+disorderly | Man Tears Up Parking Ticket and Screams at Officer
+simpleAssault | Man Slaps Owner of Loose Dog That Bit Him
+trespass2 | Man Returns to Bar He Was Banned From and Sings
+disorderly | Parent Berates Lifeguard and Throws Pool Chair
+injuryRealProperty | Teen Smashes City Bus Bench With a Bat
+falsePretenses | Caller Collects Gift Cards Claiming Power Will Be Cut
+uttering | Man Cashes Stolen Payroll Check at a Check-Cashing Store
+recklessDriving | Teens on Mopeds Ride Wrong Way Down Main Street
+recklessDriving | Rental Car Drivers Race Down Beach Road
+disorderly | Man Refuses to Put Out Fire Pit and Threatens Neighbor
+trespass2 | Man Climbs Into Neighbor's Tree House
+larcenyMerchant | Man Takes Beer Cases From Bodega Cooler
+misdLarceny | Cashier Takes Twenties From Register Over a Month
+animalCruelty | Groomer Leaves Dog in Cage Dryer, Dog Overheats
+misdLarceny | Drum Kit Taken From Church Van
+simpleAssault | Street Performers Fight Over Busking Spot
+misdLarceny | Student Cuts Bike Locks Across Campus
+falsePretenses | Photographer Takes Payment and Never Delivers Prints
+injuryRealProperty | Teen Cuts Chains on Playground Swings
+trespass2 | Landlord Changes Locks and Keeps Tenant's Belongings
+injuryPersonalProperty | Plow Driver Smashes Parked Cars on Purpose
+injuryRealProperty | Teen Sets Trash Can Fire Against Building Wall
+misdLarceny | Aide Takes Cash From Nursing Home Resident's Drawer
+larcenyMerchant | Teen Grabs Vape Pens From Counter and Runs
+misdLarceny | Man Takes Canned Goods From Church Food Drive Bin
+injuryPersonalProperty | Man Cuts Valve Stems on a Row of Cars
+disorderly | Man Lies on Sidewalk Shouting Outside a Bar
+misdLarceny | Guest Takes Robes and Towels From Resort
+falsePretenses | Gym Owner Sells Year Memberships Then Closes
+injuryRealProperty | Neighbor Throws Rocks Through Greenhouse Panels
+falsePretenses | Man Lies on Application to Get Free Lunch Benefits
+falsePretenses | Seller Fills Propane Tanks Short and Charges Full
+awdwikisi | Deckhand Stabbed by Shipmate on Shrimp Trawler Over Catch Shares
+assaultFemale | Security Guard Beats Patient in Hospital Stairwell
+massViolenceThreat | Patient Threatens to Shoot Staff at Dialysis Center
+awdwik | Trucker Hit With Wrench at Rest Area Over Parking Spot
+volManslaughter | Foreman Shoves Worker Into Rock Crusher Hopper
+dwi | Ferry Pilot Tests Over Limit Before Morning Crossing
+awdwik | Hunters Fight Over Deer; One Shot in Leg
+arson1 | Volunteer Firefighter Set Fires to Be the Hero, Investigators Say
+falsePretenses100k | Traveling Preacher Sold 'Miracle Cure' at Tent Revivals
+exploitationElder | Home Aide Convinced Widower to Rewrite His Will
+falsePretenses | Man Impersonated Singer Online to Collect Gift Cards
+embezzlement100k | Payroll Company Owner Kept Clients' Withheld Taxes
+prescriptionFraud | Hospice Nurse Took Morphine Meant for Dying Patients
+dangerousRobbery | Armed Men Rob Courier at Bank Drive-Up
+commonLawRobbery | Teen Robs Car Wash Attendant With Toy Gun
+commonLawRobbery | Man Robs Laundromat Attendant at Closing With Knife
+dangerousRobbery | Man With Revolver Robs Bakery at Dawn
+conspiracyRobbery | Guards and Driver Plotted Cash Theft From Armored Route, Texts Show
+burglary1 | Intruder Takes Shotgun Collection From Occupied Farmhouse
+burglary2 | Thieves Break Into Funeral Home and Take Jewelry From the Deceased
+burglary2 | Thieves Take Band Instruments From High School
+burglary2 | Thieves Cut Church Office Safe and Take Tithes
+felonyLarceny | Van Stolen With Sleeping Child Inside, Returned Unharmed
+felonyLarceny | Eighteen Rental Kayaks Taken From Lake Outfitter
+felonyLarceny | Catalytic Converters Cut From School Buses at District Depot
+felonyLarceny | Semi Tractor and Trailer of Appliances Stolen From Truck Stop
+felonyLarceny | Twelve Calves Stolen From Livestock Barn
+felonyLarceny | Stacked Lumber Hauled Off From Building Site
+felonyLarceny | Thirty Beehives Stolen During Pollination Season
+possMarijuana | Greenhouse Grow Found Behind Hardware Store
+pwisd | Deputies Find Meth and Scales at Pool Hall Owner's House
+traffickingOpioid | Nurse Aide Caught With Large Stash of Fentanyl Patches
+traffickingCocaine | Cooler of Cocaine Found at Boat Ramp
+saleSchedII | Man Sells Bath Salts to Neighbors From Porch
+deathByDistribution | Dealer Who Sold to Two Who Died of Overdose Charged
+prescriptionFraud | Woman Altered Prescription Quantities at Several Pharmacies
+impersonatingLEO | Man Poses as Game Warden to Seize Hunters' Deer
+impersonatingLEO | Man With Blue Lights Pulls Over Drivers on Rural Road
+stalking | Neighbor Filmed Woman Through Windows and Followed Her to Work
+communicatingThreats | Fired Worker Sends Threatening Texts to Former Boss
+massViolenceThreat | Caller Claims Bomb at Hospital, Forcing Evacuation
+felonyChildAbuse | Parents Leave Toddler in Trailer Without Food for Days
+felonyChildAbuse | Babysitter Charged After Infant Suffers Skull Fracture
+childAbuseMisd | Mother Leaves Two Children Alone at Public Pool
+transportChild | Man Drove Runaway Teen Across State Lines, Deputies Say
+falsePretenses | Store Owner Swapped Benefit Cards for Cash at Half Value
+insuranceFraud | Therapy Clinic Billed Medicaid for Sessions Never Held
+insuranceFraud | Worker Lifts Weights on Video While Claiming Back Injury
+falsePretenses100k | Contractor Took Hurricane Repair Advances and Left Town
+falsePretenses | Breeder Sold Sick Puppies With Fake Papers
+embezzlement | Executor Sold Estate Items and Kept the Cash
+embezzlement | School Bookkeeper Paid Personal Bills With Tuition Checks
+embezzlement100k | Union Treasurer Wrote Himself Checks From Dues Account
+embezzlement | Campaign Treasurer Bought Car With Donations
+embezzlement100k | Food Bank Director Charged Personal Vacations to Charity Cards
+embezzlement | Vending Route Driver Reported Less Coin Than Collected
+embezzlement | Fire Department Auxiliary Treasurer Covered Personal Debts From the Fund
+forgery | Man Washed Stolen Checks and Rewrote Them for Thousands
+forgery | Man Printed Prescription Pads From a Stolen Template
+uttering | Applicant Presents Forged Nursing Diploma to Hospital
+uttering | Man Passed Counterfeit Twenties in Five Towns
+forgery | Heir Presents Forged Will After Father's Death
+cardFraud | Bartender Copies Customers' Cards With Pocket Skimmer
+cardFraud | Cashier Cloned Loyalty and Gift Cards at the Register
+cardFraud | Group Bought Electronics With Cloned Gift Cards
+identityTheft | Man Took Over Dead Woman's Accounts and Spent $53,000
+identityTheft | Caller Collected Fees for a Fake Student Loan Forgiveness Program
+extortion | Caller Posing as Tax Agent Collected Gift Cards From Elderly
+injuryRealProperty | Contractor Dumped Fill Into Protected Wetland
+injuryRealProperty | Crew Painted Over Town Mural and Sprayed School Wall
+injuryRealProperty | Teens Destroy Downtown Fountain With Crowbars
+injuryPersonalProperty | Students Slash Seats on Parked School Buses
+riot | Inmates Riot at County Jail After Lockdown
+disorderly | Families Brawl in Courthouse Hallway After Verdict
+disorderly | Protesters Block Hospital Ambulance Entrance
+felonyLarceny | Paramedic Takes Cash From Unconscious Patients
+felonyLarceny | Funeral Home Worker Took Rings From the Deceased
+bribery | Police Sergeant Took Cash to Drop Tickets
+bribery | Court Clerk Took Cash to Dismiss Traffic Tickets
+perjury | Mother Lied Under Oath to Give Son an Alibi
+witnessIntimidation | Defendant's Friend Paid Witness to Leave Town Before Trial
+obstruction | Man Approaches Juror in Parking Lot Seeking to Talk About Case
+obstruction | Detective Altered Evidence Log to Hide Missing Drugs
+falseReport | Teen Reports Own Kidnapping to Avoid Trouble at Home
+interferingEmergency | Teen Calls Fake Gun Threat on Rival's Home, Sending SWAT
+interferingEmergency | Man Jams 911 Line With Dozens of Calls About Neighbors
+resisting | Driver Drove Off With Deputy Hanging From Door
+fleeing | Driver Tased at Stop Flees on Foot Through Backyards
+fleeing | Driver Flees Deputies at 120 mph With Two Children in the Car
+felonyDBV | Drunk Truck Driver Kills Motorist on Interstate
+felonyDBV | Street Racers Crash, Killing Bystander on Sidewalk
+hitAndRun | Driver Hits Pedestrian in Crosswalk and Flees
+felonyDBV | Drunk Driver Kills Child in Minivan at Intersection
+habitualDWI | Man With Six Prior DWIs Arrested After Rolling Truck
+dwlrImpaired | Revoked Driver Causes Crash Injuring Family of Four
+invManslaughter | Fleet Manager Ignored Brake Warnings and a Worker Died
+invManslaughter | Contractor Skipped Safety Gear and Worker Fell From Scaffold
+invManslaughter | Owner Kept Vicious Dogs That Killed a Neighbor's Child
+burningBuildings | Kennel Burned With Animals Inside, Owner Charged
+burningBuildings | Warehouse Burned for Inventory Insurance, Investigators Say
+burningBuildings | Man Burns Neighbor's Car and Garage Over Fence Dispute
+possStolen | Deputies Find Moonshine Still and Stolen Generators on Farm
+possStolen | Scrap Yard Bought Stolen Power Company Copper
+animalCruelty | Man Poisons Neighbor's Dogs Over Barking
+animalCruelty | Breeder Kept Forty Dogs in Filthy Crates Without Water
+animalCruelty | Men Tortured Bear Cub for Online Videos
+murder2 | Ejected Patron Returns and Shoots Bouncer
+murder2 | Man Shoots Roommate in Trailer Over Unpaid Rent
+murder1 | Biker Club Member Killed in Planned Ambush at Clubhouse Road
+murder2 | Man Shot in Pool Hall Over Gambling Debt
+dischargingOccupied | Drive-By Shots Hit Occupied House With Family Inside
+firearmStorage | Student Brings Gun to School in Backpack
+awdwisi | Teen Takes Father's Gun and Shoots Classmate in Parking Lot

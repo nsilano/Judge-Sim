@@ -316,7 +316,7 @@ var sameNameFlagged = Set<String>()
 var contemptHeard = 0
 var petitionsHeard: [String: Int] = [:]
 var incidentsSeen: [String: Int] = [:]
-var continuedIDs = Set<String>()
+var continuedIDs: [String: Date] = [:]
 var hearingDates: [UUID: Date] = [:]
 
 // MARK: - Trials
@@ -337,7 +337,7 @@ var hearingDates: [UUID: Date] = [:]
     if let pending = s.incidentContinuance {
         let to = CourtCalendar.calendar.date(byAdding: .day, value: pending.option.days ?? 28, to: game.currentDate) ?? game.currentDate
         log("  Continued for the incident to about \(short(to))")
-        continuedIDs.insert(c.docket)
+        continuedIDs[c.docket] = to
         game.continueMatter(c.id, to: to, reason: "\(pending.incident.title): \(pending.option.label.lowercased()).",
                             snapshot: pending.option.effect == .mistrial ? nil : s.snapshot)
         return true
@@ -366,7 +366,7 @@ var hearingDates: [UUID: Date] = [:]
         flag("\(c.docket): \(c.defendant.name) is \(c.defendant.age) in the case but \(person.age(on: c.sessionDate)) by the record")
     }
     if resume != nil { log("  (resumed after a continuance)") }
-    continuedIDs.remove(c.docket)
+    continuedIDs[c.docket] = nil
     log("TRIAL \(c.docket) · \(c.caption)")
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
     log("  Defendant: \(d.name), \(d.age), \(d.occupation); priors: \(d.priors.count); \(c.background?.bondStatus ?? "")")
@@ -401,6 +401,9 @@ var hearingDates: [UUID: Date] = [:]
                 let convict = rng.chance(convictRate)
                 let pick: Verdict? = convict ? (options.contains(.lesser) && rng.chance(0.2) ? .lesser : options.first { $0.isConviction })
                                              : options.first { !$0.isConviction }
+                // A lesser verdict goes through the same step the verdict screen takes: the court names the lesser offense.
+                if pick == .lesser, let current = s.courtCase.charges.first(where: { $0.id == ch.id }),
+                   current.lesserLawID == nil, let first = s.lesserOptions(current).first { s.chooseLesser(current, lawID: first.id) }
                 s.rulings.verdicts[ch.id] = pick ?? options.first
             }
             log("  Verdicts: " + s.courtCase.charges.map { "\($0.law.title): \(s.rulings.verdicts[$0.id].map { "\($0)" } ?? "?")" }.joined(separator: "; "))
@@ -411,7 +414,7 @@ var hearingDates: [UUID: Date] = [:]
     if resume == nil && s.stage == .sentencing && rng.chance(0.06) {
         let to = CourtCalendar.calendar.date(byAdding: .day, value: 21, to: game.currentDate) ?? game.currentDate
         log("  Continued mid-trial to about \(short(to))")
-        continuedIDs.insert(c.docket)
+        continuedIDs[c.docket] = to
         game.continueMatter(c.id, to: to, reason: "A witness is unavailable", snapshot: s.snapshot)
         return
     }
@@ -439,10 +442,17 @@ var hearingDates: [UUID: Date] = [:]
             s.rulings.sentences[unit.id] = choice
         }
         // Treatment court for some of those who stay out.
-        if s.courtCase.defendant.background.isEmpty == false && rng.chance(0.15) {
+        let bgText = s.courtCase.defendant.background.lowercased()
+        let substanceLinked = s.courtCase.category == .drugs || ["addict", "substance", "drug", "alcohol", "sober", "relapse"].contains { bgText.contains($0) }
+        if s.courtCase.defendant.background.isEmpty == false && (substanceLinked || TreatmentCourts.isVeteran(s.courtCase.defendant.background)) && rng.chance(0.3) {
             if TreatmentCourts.isVeteran(s.courtCase.defendant.background) { s.rulings.conditions.veteransTreatmentCourt = true; log("  Condition: Veterans Treatment Court") }
             else { s.rulings.conditions.drugTreatmentCourt = true; log("  Condition: Drug Treatment Court") }
         }
+    }
+    // Now and then the judge splits a suspended sentence with jail time up front (special probation).
+    if s.stage == .sentencing, rng.chance(0.25), s.rulings.sentences.values.contains(where: { $0.disposition == .intermediate }) {
+        s.rulings.conditions.specialProbationDays = 30
+        log("  Condition: special probation, 30 days in jail")
     }
     for _ in 0..<8 where s.stage != .judgment {
         if s.pendingPleaDeparture != nil { s.informDefendantOfDeparture() }
@@ -451,6 +461,13 @@ var hearingDates: [UUID: Date] = [:]
     guard let outcome = s.outcome else {
         flag("\(c.docket): trial never reached a judgment (stuck at \(s.stage))")
         return
+    }
+    if s.rulings.conditions.specialProbationDays > 0 && outcome.convicted {
+        let credit = s.courtCase.background?.custodyDays ?? 0
+        let onProbation = outcome.judgments.contains { $0.lines.contains { $0.contains("Special probation") } }
+        if onProbation && credit < 30 && outcome.personStatus != .incarcerated {
+            flag("\(c.docket): special probation of 30 days ordered (credit \(credit)), but the defendant is not in custody")
+        }
     }
     for j in outcome.judgments { log("  [\(j.title)] " + j.lines.joined(separator: " | ")) }
     for r in outcome.reactions { log("  Reaction: \(r)") }
@@ -695,7 +712,9 @@ if args.count > 1 && args[1] == "scan" {
     game.startCareer(name: "Morgan Hale", start: Date())
     guard let county = game.county else { return }
     var tried = 0
-    for (i, t) in StoryCases.all.enumerated() {
+    // Every alternate telling is the same case as its story, and plays through the same checks.
+    for v in StoryVariants.all { for p in StoryVariants.problems(v, base: CaseTemplates.byKey[v.key]) { flag(p) } }
+    for (i, t) in (StoryCases.all + StoryVariants.all).enumerated() {
         var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 5000 + i * 10,
                                         recentTemplateKeys: [])
         ctx.reservedNames = game.namesInPlay()
@@ -703,6 +722,7 @@ if args.count > 1 && args[1] == "scan" {
         let c = CaseGenerator.build(t, seed: UInt64(i) &+ 1, band: rng.chance(0.5) ? .strong : .close, context: ctx, rng: &trng)
         log("")
         log("=== \(t.key) ===")
+        FileHandle.standardError.write(Data("\(i) \(t.key)\n".utf8))
         playTrial(c, resume: nil)
         tried += 1
     }
@@ -798,7 +818,9 @@ if args.count > 1 && args[1] == "scan" {
     let stories = Set(StoryCases.all.map(\.key))
     log("WRITTEN CASES HEARD: \(heardKeys.intersection(stories).count) of \(stories.count)")
     log("  never came up: " + stories.subtracting(heardKeys).sorted().joined(separator: ", "))
-    if !continuedIDs.isEmpty { flag("\(continuedIDs.count) trial(s) continued mid-trial never came back") }
+    // A trial continued to a date the run never reached hasn't failed to come back.
+    let lost = continuedIDs.filter { $0.value.addingTimeInterval(21 * 86_400) < game.currentDate }
+    if !lost.isEmpty { flag("\(lost.count) trial(s) continued mid-trial never came back: " + lost.keys.sorted().joined(separator: ", ")) }
     let orders = game.people.flatMap { $0.stayAwayOrders ?? [] }
     log("COMMUNITY: standing \(game.stats.communityStanding ?? 0) | " + Community.townTalk(standing: game.stats.communityStanding ?? 0))
     let ao = game.arrestOrders
@@ -838,6 +860,23 @@ if args.count > 1 && args[1] == "scan" {
 }
 
 @MainActor func finish() {
+    // What the story director drew and why, newest last, with the genre mix.
+    let drawn = game.journalEntries.filter { $0.kind == .caseDrawn }
+    var mix: [String: Int] = [:]
+    for e in drawn { mix[e.category ?? "?", default: 0] += 1 }
+    log("DIRECTOR drew \(drawn.count) cases · genre mix: " + mix.sorted { $0.value > $1.value }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
+    var weights: [String: Int] = [:]
+    for e in drawn { weights[e.flags.first { $0.hasPrefix("weight:") } ?? "weight:?", default: 0] += 1 }
+    log("DIRECTOR weight mix: " + weights.sorted { $0.value > $1.value }.map { "\($0.key.dropFirst(7)) \($0.value)" }.joined(separator: ", "))
+    var run = 1, maxRun = 1
+    for (previous, e) in zip(drawn, drawn.dropFirst()) {
+        run = previous.category == e.category ? run + 1 : 1
+        maxRun = max(maxRun, run)
+    }
+    let keys = drawn.compactMap { $0.detail.components(separatedBy: "[").last }
+    log("DIRECTOR longest run of one genre: \(maxRun) · repeated stories: \(keys.count - Set(keys).count)")
+    for e in drawn.suffix(12) { log("  DIRECTOR \(e.category ?? "?") · \(e.detail)") }
+
     // A few case timelines as the Records screen shows them (newest first), with clock times; flag any out of order.
     let dockets = Array(Set(game.caseLog.map(\.docket)).filter { !$0.isEmpty }).sorted().prefix(6)
     for docket in dockets {
@@ -897,6 +936,62 @@ if args.count > 3 && args[1] == "dossier" {
             out.append("IMPACT: \(c.victimImpact ?? "-")")
             print(out.joined(separator: "\n"))
         }
+    }
+    exit(0)
+}
+/// `Playtest bank <path>`: one line per written case (story or follow-up) for the duplicate scanner.
+if args.count > 2 && args[1] == "bank" {
+    var lines: [String] = []
+    func clean(_ s: String) -> String { s.replacingOccurrences(of: "\t", with: " ").replacingOccurrences(of: "\n", with: " ") }
+    for t in StoryCases.all + FollowUpCases.all {
+        lines.append([t.key, t.primaryLaw, "\(t.category)", t.headlines.first ?? "", t.specification, t.summaries.first ?? "",
+                      t.prosecutionWitnesses.first?.role ?? "", t.story?.howIdentified ?? ""].map(clean).joined(separator: "\t"))
+    }
+    try? lines.joined(separator: "\n").write(toFile: args[2], atomically: true, encoding: .utf8)
+    print("Wrote \(lines.count) cases to \(args[2])")
+    exit(0)
+}
+/// `Playtest tellings`: draws a story that has variants as if it had been heard 0, 1, 2 times, and prints which telling each draw gets.
+if args.count > 1 && args[1] == "tellings" {
+    MainActor.assumeIsolated {
+        game = GameState()
+        game.resetCareer()
+        game.startCareer(name: "Morgan Hale", start: Date())
+        guard let county = game.county else { return }
+        var ok = true
+        for (key, variants) in StoryVariants.byKey.sorted(by: { $0.key < $1.key }).prefix(3) {
+            for heard in 0...(variants.count + 1) {
+                var used = Set<String>()
+                for t in StoryCases.all + FollowUpCases.all where t.key != key { used.insert("\(t.key)|x"); used.insert("\(t.key)|y"); used.insert("\(t.key)|z") }
+                for n in 0..<heard { used.insert("\(key)|\(n)") }
+                var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 9000,
+                                                recentTemplateKeys: [], usedSignatures: used)
+                ctx.allowMurder = true
+                ctx.reservedNames = game.namesInPlay()
+                let c = CaseGenerator.generate(seed: UInt64(heard) &+ 99, context: ctx)
+                print("\(key) heard \(heard): drew \(c.templateKey) · \(c.headline)")
+                if c.templateKey != key { ok = false }
+            }
+        }
+        // Late in a career: every story heard once, so only stories with an unseen telling come up, each told a new way.
+        var allUsed = Set<String>()
+        for t in StoryCases.all + FollowUpCases.all { allUsed.insert("\(t.key)|x") }
+        var late = 0, withVariant = 0, newTelling = 0
+        for n in 0..<30 {
+            var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 9100,
+                                            recentTemplateKeys: [], usedSignatures: allUsed)
+            ctx.allowMurder = true
+            ctx.reservedNames = game.namesInPlay()
+            let c = CaseGenerator.generate(seed: UInt64(n) &+ 500, context: ctx)
+            late += 1
+            if let base = StoryCases.byKey[c.templateKey], let v = StoryVariants.byKey[c.templateKey], !v.isEmpty {
+                withVariant += 1
+                if !base.headlines.contains(c.headline) { newTelling += 1 }
+            }
+        }
+        print("late game: \(withVariant) of \(late) draws had a variant; \(newTelling) were told a new way")
+        if withVariant != late || newTelling != late { ok = false }
+        print(ok ? "tellings ok" : "tellings: the wrong story was drawn")
     }
     exit(0)
 }

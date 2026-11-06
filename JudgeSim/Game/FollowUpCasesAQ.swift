@@ -1,0 +1,128 @@
+import Foundation
+
+private typealias E = EvidenceSeed
+
+/// Follow-up trials for the batch AQ everyday-crime stories.
+extension FollowUpCases {
+    static let batchAQ: [CaseTemplate] = [scooterTheft, streetShoutingAgain, prankAgain, porchPackagesTwo, contractorToolsTwo]
+
+    static let scooterTheft = SmallCases.make(
+        key: "story.followup.scooterTheft",
+        category: .property,
+        headlines: ["Electric Scooter Cut From Rack Near Campus", "Second Rack Theft Traced to Defendant From Earlier Case"],
+        law: "misdLarceny",
+        spec: "Stole an electric scooter valued at $750 belonging to {V}, on {DATE}.",
+        ages: 18...40,
+        victim: true,
+        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, an electric scooter was cut from a campus rack. A camera showed {D} loading it into a van. {DL} says {D.he} was moving a friend's scooter.",
+        state: [E(.video, 3, "Campus Camera", "{D} cuts a lock and loads a scooter into a van."), E(.document, 2, "Receipt", "The scooter cost $750.")],
+        defense: [E(.statement, 1, "Friend's Scooter", "{DL} says it was a friend's scooter.")],
+        role: "Student",
+        exam: [.direct("What was taken?", "\"My scooter.\""), .direct("What did the camera show?", "\"{DL} cutting the lock.\""), .cross("A friend's.", "\"No.\"")],
+        theory: ("{D} took a scooter.", "A friend's scooter."),
+        allocution: "\"I'm sorry.\"",
+        truths: ("The scooter was in {DL}'s van.", "A classmate said the scooter belonged to {DL}'s friend and was left in {DL}'s care."),
+        defendant: [.direct("Did you cut the lock?", "\"Yes.\""), .direct("Whose scooter?", "\"A friend's.\""), .cross("Your van.", "\"Yes.\"")],
+        openings: ("A cut lock.", "A friend."),
+        closings: ("Video.", "A friend."),
+        timeline: [(0, "A rack lock is cut."), (1, "{V} reports the scooter.")],
+        identified: "A campus camera.",
+        impact: "Again a stolen ride.",
+        genders: ["D": .male])
+
+    static let streetShoutingAgain = SmallCases.make(
+        key: "story.followup.streetShoutingAgain",
+        category: .publicOrder,
+        headlines: ["Man Shouting at Cars Again After Earlier Citation", "Deputy Finds Defendant From Patio Case in the Road"],
+        law: "disorderly",
+        spec: "Disturbed the peace by loud and abusive language in a public place, on {DATE}.",
+        ages: 19...55,
+        victim: false,
+        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a deputy found {D} shouting at drivers from a median outside a different bar. {D} refused to leave. {DL} says {D.he} was waiting for a ride.",
+        state: [E(.statement, 3, "Deputy", "{D} shouted at cars and refused to leave."), E(.video, 2, "Bar Camera", "{D} on the median waving arms.")],
+        defense: [E(.statement, 1, "Waiting", "{DL} says {D.he} was waiting for a ride.")],
+        role: "Sheriff's deputy",
+        exam: [.direct("What was {DL} doing?", "\"Shouting at cars.\""), .direct("Did {D.he} leave?", "\"Not when told.\""), .cross("A ride.", "\"No ride came.\"")],
+        theory: ("{D} shouted at traffic.", "A man waiting for a ride."),
+        allocution: "\"I'm sorry.\"",
+        truths: ("{DL} never called for a ride.", "A friend was beside {DL} and also shouting."),
+        defendant: [.direct("Did you shout?", "\"Yes.\""), .direct("Why?", "\"A friend.\""), .cross("Refused to leave.", "\"I did soon.\"")],
+        openings: ("A median.", "A ride."),
+        closings: ("Warnings.", "Waiting."),
+        timeline: [(0, "12:30 a.m.: {DL} shouts from the median."), (0, "12:40 a.m.: a deputy tells {DL} to leave.")],
+        identified: "A deputy's patrol.",
+        mood: .indifferent,
+        genders: ["D": .male])
+
+    static let prankAgain = SmallCases.make(
+        key: "story.followup.prankAgain",
+        category: .publicOrder,
+        headlines: ["Another False Emergency Call Traced to Defendant", "Hoax Call Brings Deputies to Neighbor's House Again"],
+        law: "falseReport",
+        spec: "Willfully made a false report to law enforcement, on {DATE}.",
+        ages: 18...30,
+        victim: false,
+        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, another call reported a break-in at the same neighbor's home. Deputies found nothing. The call traced to a phone used by {D}. {DL} says someone stole {D.his} phone.",
+        state: [E(.digital, 3, "Call Trace", "The call came from {D}'s phone."), E(.document, 2, "Dispatch Log", "Deputies found no break-in.")],
+        defense: [E(.statement, 1, "Stolen Phone", "{DL} says the phone was stolen.")],
+        role: "911 dispatcher",
+        exam: [.direct("What was reported?", "\"A break-in.\""), .direct("Where was the call from?", "\"{DL}'s phone.\""), .cross("It was stolen.", "\"Not reported.\"")],
+        theory: ("{D} made another false call.", "A stolen phone."),
+        allocution: "\"I'm sorry.\"",
+        truths: ("No theft was reported.", "{DL}'s phone was found at home."),
+        defendant: [.direct("Did you call?", "\"No.\""), .direct("The phone?", "\"Stolen.\""), .cross("Not reported.", "\"I forgot.\"")],
+        openings: ("A trace.", "A theft."),
+        closings: ("Trace.", "Theft."),
+        timeline: [(0, "The call is made."), (0, "Deputies find no break-in.")],
+        identified: "A call trace.",
+        mood: .wantsConviction,
+        impact: "Not again.")
+
+    static let porchPackagesTwo = SmallCases.make(
+        key: "story.followup.porchPackagesTwo",
+        category: .property,
+        headlines: ["More Packages Stolen After Earlier Case", "Doorbell Camera Shows Defendant Taking Boxes Again"],
+        law: "misdLarceny",
+        spec: "Stole packages valued at $270 belonging to {V}, on {DATE}.",
+        ages: 18...45,
+        victim: true,
+        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, packages left at a different porch were taken. A doorbell camera showed {D} walking to the porch and leaving with boxes. {DL} says {D.he} thought they were {D.his}. The loss was put at $270.",
+        state: [E(.video, 3, "Doorbell Camera", "{D} takes two boxes."), E(.document, 2, "Order Records", "Packages addressed to the resident.")],
+        defense: [E(.statement, 1, "Mistake", "{DL} says {D.he} thought the boxes were {D.his}.")],
+        role: "Resident",
+        exam: [.direct("What was taken?", "\"Two boxes.\""), .direct("Whose?", "\"Mine.\""), .cross("A mistake.", "\"Not likely.\"")],
+        theory: ("{D} took packages.", "A mistake."),
+        allocution: "\"I'm sorry.\"",
+        truths: ("The labels bore a different name.", "{DL} had an order that day."),
+        defendant: [.direct("Did you take them?", "\"By mistake.\""), .direct("Labels?", "\"I didn't read.\""), .cross("Two boxes.", "\"Yes.\"")],
+        openings: ("Two boxes.", "A mistake."),
+        closings: ("Labels.", "Mistake."),
+        timeline: [(0, "A delivery lands on the porch."), (0, "{DL} takes two boxes.")],
+        identified: "A doorbell camera.",
+        impact: "Again.",
+        genders: ["D": .male])
+
+    static let contractorToolsTwo = SmallCases.make(
+        key: "story.followup.contractorToolsTwo",
+        category: .property,
+        headlines: ["Another Contractor's Tools Pawned", "Pawn Records Name Defendant From Earlier Larceny Case"],
+        law: "possStolen",
+        spec: "Possessed a drill set and compressor belonging to {V}, knowing them to be stolen, on {DATE}.",
+        ages: 19...50,
+        victim: true,
+        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, pawn records show {D} sold a drill set and compressor stolen from a truck. {DL} says a cousin gave {D.him} the tools to sell.",
+        state: [E(.document, 3, "Pawn Ticket", "{D}'s ID on the ticket."), E(.physical, 2, "Serial Numbers", "The serials match {V}'s receipt.")],
+        defense: [E(.statement, 1, "Cousin", "{DL} says a cousin gave {D.him} the tools.")],
+        role: "Contractor",
+        exam: [.direct("What was taken?", "\"A drill set and compressor.\""), .direct("How do you know?", "\"Serial numbers.\""), .cross("A cousin.", "\"Unnamed.\"")],
+        theory: ("{D} sold stolen tools.", "A cousin's tools."),
+        allocution: "\"I knew.\"",
+        truths: ("{DL} pawned the tools within two days of the theft.", "The cousin texted {DL} 'sell these and send me half'."),
+        defendant: [.direct("Did you steal them?", "\"No.\""), .direct("Why pawn?", "\"The cousin asked.\""), .cross("Your ID.", "\"Yes.\"")],
+        openings: ("A ticket.", "A cousin."),
+        closings: ("Serials.", "A cousin."),
+        timeline: [(0, "The truck is burgled."), (4, "{DL} pawns the tools.")],
+        identified: "A pawn ticket.",
+        impact: "Again.")
+
+}

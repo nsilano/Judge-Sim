@@ -123,6 +123,8 @@ struct CaseTemplate {
 
     var requiredGenders: [String: Gender] {
         var result = genders.merging(story?.genders ?? [:]) { a, _ in a }
+        // The story's own words settle sex too: "{V}, the defendant's husband" makes {V} a man, "{V}'s wife" a man's wife.
+        for (token, gender) in KinshipGender.inferred(for: self) where result[token] == nil { result[token] = gender }
         let laws = [primaryLaw] + [lesserLaw].compactMap { $0 } + secondary.map(\.lawID)
         if laws.contains("assaultFemale") {
             result["D"] = result["D"] ?? .male
@@ -432,4 +434,54 @@ struct CaseFacts {
     var money: Bool { mentions(["$", "money", "payroll", "invoice", "deposit", "transfer", "account", "wallet", "check"]) }
     /// Who did it is in dispute: descriptions, lineups, footage.
     var identity: Bool { mentions(["description", "lineup", "identif", "mask", "hoodie", "matching", "unknown", "footage"]) }
+}
+
+
+/// Reads the sex of the people a written case names through a relationship word, so the name matches the pronouns the
+/// testimony uses: "{V}, the defendant's husband" is a man; "{V}'s husband" is a woman.
+enum KinshipGender {
+    static let male = ["husband", "boyfriend", "son", "brother", "father", "uncle", "nephew", "grandfather", "grandson", "stepfather", "stepson"]
+    static let female = ["wife", "girlfriend", "daughter", "sister", "mother", "aunt", "niece", "grandmother", "granddaughter", "stepmother", "stepdaughter"]
+    /// A spouse or partner named by possession: "{V}'s husband" means {V} is a woman.
+    static let possessiveMale = ["husband", "boyfriend", "fiancé"]
+    static let possessiveFemale = ["wife", "girlfriend", "fiancée"]
+
+    nonisolated(unsafe) static var cache: [String: [String: Gender]] = [:]
+
+    static func inferred(for template: CaseTemplate) -> [String: Gender] {
+        if let hit = cache[template.key] { return hit }
+        var parts: [String] = template.summaries + template.prosecutionTheory + template.defenseTheory + template.victimImpacts + template.allocutions
+        for seed in template.prosecutionWitnesses + template.defenseWitnesses {
+            parts += seed.direct + seed.cross
+            for line in seed.exam { parts += line.questions + line.answers }
+        }
+        if let story = template.story {
+            for line in story.defendantExam { parts += line.questions + line.answers }
+        }
+        let found = infer(parts.joined(separator: " "))
+        cache[template.key] = found
+        return found
+    }
+
+    static func infer(_ text: String) -> [String: Gender] {
+        var out: [String: Gender] = [:]
+        var conflicting = Set<String>()
+        func note(_ token: String, _ gender: Gender) {
+            if let existing = out[token], existing != gender { conflicting.insert(token) } else { out[token] = gender }
+        }
+        for token in ["D", "V", "ALT"] {
+            for word in male {
+                if text.range(of: "\\{\(token)\\}, [^,.]{0,25}\\b\(word)\\b", options: .regularExpression) != nil
+                    || text.range(of: "\\b\(word),? \\{\(token)\\}", options: .regularExpression) != nil { note(token, .male) }
+            }
+            for word in female {
+                if text.range(of: "\\{\(token)\\}, [^,.]{0,25}\\b\(word)\\b", options: .regularExpression) != nil
+                    || text.range(of: "\\b\(word),? \\{\(token)\\}", options: .regularExpression) != nil { note(token, .female) }
+            }
+            for word in possessiveMale where text.range(of: "\\{\(token)\\}'s \(word)\\b", options: .regularExpression) != nil { note(token, .female) }
+            for word in possessiveFemale where text.range(of: "\\{\(token)\\}'s \(word)\\b", options: .regularExpression) != nil { note(token, .male) }
+        }
+        for token in conflicting { out[token] = nil }
+        return out
+    }
 }

@@ -9,7 +9,34 @@ enum Incidents {
         // Only moments whose ruling changes the case: evidence out, a witness lost, a new date, a defendant without a
         // lawyer. Ones that would only add words to the record don't come up.
         if roll < 0.15, let i = discovery(c, rng: &rng) { return [i] }
+        if roll < 0.18, let i = witnessAbsent(c, rng: &rng) { return [i] }
+        if roll < 0.20 { return [outburst(c, rng: &rng)] }
         return []
+    }
+
+    // MARK: - A State witness who was subpoenaed and isn't here (G.S. 15A-801; G.S. 15A-805)
+
+    static func witnessAbsent(_ c: CourtCase, rng: inout SeededRNG) -> CourtIncident? {
+        let lawEnforcement = ["detective", "officer", "deputy", "trooper", "analyst", "examiner", "agent", "chemist", "investigator"]
+        guard let w = c.witnesses.first(where: { witness in
+            witness.calledBy == .prosecution && witness.isDefendant != true && witness.lay != false
+                && !lawEnforcement.contains { witness.role.lowercased().contains($0) } }) else { return nil }
+        let d = c.defendant.lastName
+        let reasons = ["says on the phone the car won't start and the next ride is hours away",
+                       "was served the subpoena but hasn't answered the clerk's calls this morning",
+                       "had a child sick at school and left a message that \(w.name) can come tomorrow"]
+        return CourtIncident(
+            kind: .witnessAbsent, moment: .beforeTrial, title: "\(w.name) isn't in the courtroom",
+            body: "The State calls its first witness, \(w.name) (\(w.role.lowercased())). The clerk reports \(w.name) \(rng.pick(reasons)). The State asks for time. Defense counsel says \(d) is ready and has been waiting for this trial, and objects to any delay.",
+            lawID: "speedyTrial",
+            options: [
+                IncidentOption(label: "Recess for an hour and have a deputy reach \(w.name)", result: "\(w.name) arrives after the recess and the trial goes on.",
+                               proper: true, error: false),
+                IncidentOption(label: "Continue the trial two weeks and have the subpoena served again", result: "The case goes to another date, two weeks out.",
+                               proper: true, error: false, effect: .continueCase, days: 14),
+                IncidentOption(label: "Proceed without \(w.name)'s testimony", result: "The State goes forward without \(w.name).",
+                               proper: false, error: false, effect: .removeWitness, witnessID: w.id)
+            ])
     }
 
     // MARK: - A defendant who wants to represent themself (G.S. 15A-1242; Faretta v. California)
@@ -142,8 +169,8 @@ enum Incidents {
                                    proper: true, error: false, effect: .excludeEvidence, evidenceID: e.id,
                                    laterHeadline: "Judge excludes evidence after deputy's video withheld",
                                    laterBody: "In \(c.caption), Judge {JUDGE} kept out a piece of the State's evidence after learning a deputy's body camera video was never turned over to the defense."),
-                    IncidentOption(label: "Recess two days for the defense to review the video", result: "The defense reviews the video; \(e.exhibit) stays in.",
-                                   proper: true, error: false),
+                    IncidentOption(label: "Continue the trial two weeks so the defense can review the video", result: "The trial is continued two weeks. The video is turned over and the defense reviews it before trial resumes.",
+                                   proper: true, error: false, effect: .continueCase, days: 14, requests: [.video]),
                     IncidentOption(label: "Deny any remedy; the State didn't plan to use the video", result: "\(e.exhibit) comes in. The defense never sees the video.",
                                    proper: false, error: true,
                                    appealText: "You denied any remedy after finding the State withheld body camera video bearing on \(e.exhibit) (G.S. 15A-903, 15A-910).")

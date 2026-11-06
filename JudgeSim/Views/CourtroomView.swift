@@ -29,6 +29,21 @@ struct CourtroomView: View {
         return parts.isEmpty ? nil : parts.joined(separator: " ")
     }
 
+    /// How long the defendant has been in jail on this case, so the judge can account for it at every stage.
+    private var custodyNote: String? {
+        guard let bg = session.courtCase.background else { return nil }
+        let name = session.courtCase.defendant.lastName
+        let days = bg.custodyDays
+        let unit = "day\(days == 1 ? "" : "s")"
+        if bg.isJailed {
+            return "\(name) has been in jail \(days) \(unit) on this case. That time counts as credit if there is a sentence; remember it when you rule."
+        }
+        if days > 0 {
+            return "\(name) spent \(days) \(unit) in jail before making bond. That time still counts as credit."
+        }
+        return nil
+    }
+
     init(courtCase: CourtCase, judgeName: String, county: County, resume: CaseSnapshot? = nil) {
         _session = StateObject(wrappedValue: CaseSession(courtCase: courtCase, judgeName: judgeName, county: county, resume: resume))
     }
@@ -52,6 +67,17 @@ struct CourtroomView: View {
                             Text("State v. \(session.courtCase.defendant.lastName)")
                                 .font(.system(.title, design: .serif).weight(.semibold))
                                 .foregroundStyle(Theme.text)
+                            if let note = custodyNote {
+                                HStack(alignment: .top, spacing: 8) {
+                                    Image(systemName: "clock.fill")
+                                        .font(.footnote)
+                                        .foregroundStyle(Theme.gold)
+                                    Text(note)
+                                        .font(.footnote)
+                                        .foregroundStyle(Theme.text)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
                             StageTracker(stages: session.visibleStages, current: session.stage) { tapped in
                                 reviewSection = section(for: tapped)
                             }
@@ -152,7 +178,7 @@ struct CourtroomView: View {
                                  // Follow-up investigation is only possible while the evidence is still open.
                                  requestOptions: session.stage.rawValue <= CaseSession.Stage.trial.rawValue
                                     ? EvidenceRequest.options(for: session.courtCase) : [],
-                                 initialRequests: grantingMotion.map { [$0.request] } ?? [],
+                                 initialRequests: grantingMotion.map { [$0.request] } ?? (session.incidentContinuance?.option.requests ?? []),
                                  initialReason: grantingMotion.map { "On the \($0.movant == .prosecution ? "State's" : "defense's") motion: \($0.title.lowercased())." } ?? incidentReason,
                                  initialDays: grantingMotion?.suggestedDays ?? incidentDays,
                                  cost: delayCost) { date, reason, requests in

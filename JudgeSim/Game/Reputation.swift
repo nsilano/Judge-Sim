@@ -30,7 +30,8 @@ enum Reputation {
         let reversed = decided.filter(\.wasReversed).count
         let affirm = decided.isEmpty ? 0.85 : Double(decided.count - reversed) / Double(decided.count)
         let trials = max(1, history.filter { $0.resolvedKind == "trial" }.count)
-        let exonerationRate = Double(stats.exonerations) / Double(trials)
+        // A few reversed convictions dent a reputation; they shouldn't bury it. The rate is capped and the public's share is too.
+        let exonerationRate = min(0.1, Double(stats.exonerations) / Double(trials))
         let active = stats.activeSentences + stats.suspendedSentences
         let activeShare = active == 0 ? 0.5 : Double(stats.activeSentences) / Double(active)
 
@@ -45,7 +46,7 @@ enum Reputation {
         let prosecutors = clamp(ledger.prosecutors + 62 + 40 * (harsh - lenient) + 20 * (activeShare - 0.5) + 25 * (affirm - 0.8) - 1.5 * delays)
         let defense = clamp(ledger.defense + 62 + 40 * (lenient - harsh) - 20 * (activeShare - 0.5) + 25 * (affirm - 0.8) - 120 * exonerationRate - 2.5 * delays)
         let overall = clamp(ledger.overall + 45 + 40 * (affirm - 0.6) + 15 * within - 150 * exonerationRate - 2 * delays - crowding / 25)
-        let publicApproval = clamp(ledger.publicApproval + 55 + 15 * (harsh - lenient) + 10 * (activeShare - 0.5) - 8 * Double(stats.exonerations)
+        let publicApproval = clamp(ledger.publicApproval + 55 + 15 * (harsh - lenient) + 10 * (activeShare - 0.5) - min(12, 5 * Double(stats.exonerations))
                                    + 10 * (affirm - 0.8) - 2 * delays - crowding / 8
                                    // Rulings the public watched: each one it liked or hated moves the poll.
                                    + 1.5 * Double(max(-14, min(14, stats.communityStanding ?? 0))))
@@ -173,6 +174,11 @@ struct StandingLedger: Codable, Hashable {
     var covering = false
     /// The last time a quiet month without public complaints was credited.
     var lastQuietCredit: Date? = nil
+    /// Public approval already moved by each decision (keyed by day and defendant). A decision's public effect runs
+    /// one way: the public likes it or it doesn't, and the total stays within a few points.
+    var decisionPublic: [String: Double]? = nil
+    /// The last time the paper ran a recap of the judge's recent record, drawn from the career journal.
+    var lastDigest: Date? = nil
 
     static let limit = 35.0
     /// The share of the ledger that fades each day: about half in six weeks.
@@ -261,6 +267,25 @@ enum StandingRule {
         }
     }
 
+    /// What kind of decision this is, for the career journal the story director reads.
+    var journalKind: JournalEntry.Kind {
+        switch self {
+        case .releasedViolentNoMoney, .releasedViolentOnBond, .releasedViolentMonitored, .releasedLowRisk: return .bondRelease
+        case .heldViolent, .heldOnUnaffordableBond: return .bondHeld
+        case .heldWithoutBond: return .heldWithoutBond
+        case .rearrestedOnRelease, .reoffendedAfterRuling, .rearrestedAfterEarlyRelease: return .reoffense
+        case .jailNotice, .sheriffReleased, .jailOverCapacityDay, .jailRecovered: return .jail
+        case .earlyReleaseViolent, .earlyReleaseNonviolent: return .earlyRelease
+        case .lenientViolentSentence, .mercyNonviolent, .harshNonviolent, .toughViolent, .byTheBook, .probationViolent: return .sentence
+        case .repeatedContinuance, .continuanceDenied: return .continuance
+        case .ftaOrderForArrest, .ftaExcused: return .missedCourt
+        case .caseDelayed: return .delay
+        case .reversed, .affirmed, .exoneration: return .appeal
+        case .publicReaction: return .publicReaction
+        default: return .outcome
+        }
+    }
+
     func shift(on date: Date, _ reason: String) -> StandingShift {
         let e = effect
         return StandingShift(date: date, reason: reason, topic: e.4, prosecutors: e.0, defense: e.1, overall: e.2, publicApproval: e.3)
@@ -324,5 +349,35 @@ enum StandingCoverage {
     static func turnaround(judge: String, county: String) -> (headline: String, body: String) {
         ("Complaints about Judge \(judge) ease",
          "After months of criticism, lawyers and community groups in \(county) County say Judge \(judge)'s courtroom has steadied. \"It's been a better stretch,\" one prosecutor said.")
+    }
+}
+
+
+extension StandingLedger {
+    /// The person a decision is about, from a reason written "… — Name, charge" or "… — State v. Name".
+    static func decisionKey(_ reason: String) -> String? {
+        guard let tail = reason.components(separatedBy: " — ").last, tail != reason else { return nil }
+        var name = tail
+        if let r = name.range(of: " v. ") { name = String(name[r.upperBound...]) }
+        if let r = name.range(of: ", ") { name = String(name[..<r.lowerBound]) }
+        return name.isEmpty ? nil : name
+    }
+
+    /// Limits one decision's public effect: a single direction, and at most 4 points in total.
+    mutating func limitPublic(_ delta: Double, key: String, on date: Date) -> Double {
+        let dayKey = "\(Int(CourtCalendar.calendar.startOfDay(for: date).timeIntervalSince1970))|\(key)"
+        var totals = decisionPublic ?? [:]
+        let so = totals[dayKey] ?? 0
+        var applied = delta
+        if so != 0 && delta * so < 0 {
+            applied = 0
+        } else {
+            let next = min(4, max(-4, so + delta))
+            applied = next - so
+            totals[dayKey] = next
+        }
+        if totals.count > 80 { totals = Dictionary(uniqueKeysWithValues: totals.sorted { $0.key > $1.key }.prefix(50).map { ($0.key, $0.value) }) }
+        decisionPublic = totals
+        return applied
     }
 }
