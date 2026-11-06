@@ -11,6 +11,9 @@ enum CaseGenerator {
         let recentTemplateKeys: [String]
         /// Scenario signatures already heard in this career, so no exact scenario repeats.
         var usedSignatures: Set<String> = []
+        /// How many times each template has been heard, counted from every signature ever used (a set would merge two
+        /// tellings that share a headline and extras).
+        var heardCounts: [String: Int]? = nil
         var returning: PersonRecord?
         /// Backgrounds already given to people in this career, so each new defendant gets a fresh one.
         var usedBackgrounds: Set<String> = []
@@ -74,8 +77,12 @@ enum CaseGenerator {
         var pool = CaseTemplates.all
         // How many times each template has been heard, counted once rather than per template.
         var useCounts: [String: Int] = [:]
-        for signature in context.usedSignatures {
-            if let bar = signature.firstIndex(of: "|") { useCounts[String(signature[..<bar]), default: 0] += 1 }
+        if let counts = context.heardCounts {
+            useCounts = counts
+        } else {
+            for signature in context.usedSignatures {
+                if let bar = signature.firstIndex(of: "|") { useCounts[String(signature[..<bar]), default: 0] += 1 }
+            }
         }
         // Written cases come up first, until each has been heard once.
         // A follow-up to an earlier case: one of the kinds named, fitted to the person.
@@ -89,7 +96,11 @@ enum CaseGenerator {
             let keepsVictim = named.filter { t in
                 context.victimOverride.map { v in t.hasVictim && (t.requiredGenders["V"].map { $0 == NameBank.gender(of: v) } ?? true) } ?? true
             }
-            let fitting = keepsVictim.isEmpty ? named : keepsVictim
+            var fitting = keepsVictim.isEmpty ? named : keepsVictim
+            // Not one heard lately, and the ones heard least first, so the same follow-up doesn't come twice in a row.
+            let notLately = fitting.filter { !context.recentTemplateKeys.contains($0.key) }
+            if !notLately.isEmpty { fitting = notLately }
+            if let leastHeard = fitting.map({ useCounts[$0.key] ?? 0 }).min() { fitting = fitting.filter { (useCounts[$0.key] ?? 0) == leastHeard } }
             if let template = fitting.first(where: { _ in rng.chance(0.6) }) ?? fitting.first {
                 return build(StoryVariants.telling(of: template, heard: useCounts[template.key] ?? 0), seed: seed, band: rng.chance(0.6) ? .strong : .close, context: context, rng: &rng)
             }
@@ -143,7 +154,12 @@ enum CaseGenerator {
             if !candidates.isEmpty {
                 // Murder trials come up now and then, not every week: most draws go to another kind of case.
                 let others = candidates.filter { !isMurder($0) }
-                let pool = !others.isEmpty && rng.chance(0.65) ? others : candidates
+                var pool = !others.isEmpty && rng.chance(0.65) ? others : candidates
+                // Early in a career a random slice of the bank is on offer, so a restart doesn't open with the same
+                // cases: the director only chooses among the slice.
+                if useCounts.values.reduce(0, +) < 150 && pool.count > 60 {
+                    pool = rng.pick(pool, count: max(60, pool.count * 2 / 5))
+                }
                 var story = context.director?.pick(from: pool, using: &rng) ?? rng.pick(pool)
                 // Embezzlement comes up about a third as often as other cases: there are many of them.
                 if isEmbezzlement(story) && rng.chance(0.65) {

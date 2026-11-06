@@ -1083,7 +1083,7 @@ struct UnitSentenceCard: View {
                                 ? "The other \(choice.suspendedBalance) \(unitName)s are suspended; a violation can send the defendant back to serve them."
                                 : "The whole term is served before probation begins.",
                               value: Binding(get: { choice.servedTerm }, set: { choice.servedBeforeProbation = $0 }),
-                              range: 0...max(0, choice.minimum),
+                              range: (choice.minimum > 0 ? 1 : 0)...max(0, choice.minimum),
                               fine: 1, coarse: unit.isFelony ? 6 : 30, fineLabel: unit.isFelony ? "± 1 month" : "± 1 day", coarseLabel: unit.isFelony ? "± 6 months" : "± 30 days")
                 AmountStepper(title: "Probation after release: \(choice.probationMonths) months",
                               caption: "Any length you choose. Conditions are set in the probation section below.",

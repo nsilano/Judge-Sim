@@ -1484,7 +1484,7 @@ final class GameState: ObservableObject {
                 if let m = counselWithdrawal(on: date, excluding: onThisCall, rng: &rng) { call.matters.append(m) }
                 call.matters.forEach { usedPeople.insert($0.personID) }
                 HolidayAsks.apply(&call)
-                entries.insert(DocketEntry(matter: .calendar(call)), at: 0)
+                if !call.matters.isEmpty { entries.insert(DocketEntry(matter: .calendar(call)), at: 0) }
             }
         }
 
@@ -1868,6 +1868,8 @@ final class GameState: ObservableObject {
     // MARK: Schedule changes
 
     func setCourtDay(_ weekday: Int, sits: Bool) {
+        // The court always sits at least one day a week.
+        if !sits && schedule.courtDays.subtracting([weekday]).isEmpty { return }
         if sits { schedule.courtDays.insert(weekday) } else { schedule.courtDays.remove(weekday) }
         reflow()
         happened(.scheduleChanged(weeklyTrials: schedule.weeklyTrials))
@@ -1875,7 +1877,14 @@ final class GameState: ObservableObject {
     }
 
     func setWeekdayLimit(_ weekday: Int, _ limit: DayLimit) {
-        schedule.limits[weekday] = DayLimit(trials: max(0, min(4, limit.trials)), hearings: max(0, min(4, limit.hearings)))
+        var trials = max(0, min(4, limit.trials)), hearings = max(0, min(4, limit.hearings))
+        // The court always takes at least one trial and one hearing a week.
+        let others = schedule.courtDays.subtracting([weekday]).map { schedule.limits[$0] ?? .closed }
+        if schedule.courtDays.contains(weekday) {
+            if trials == 0 && others.allSatisfy({ $0.trials == 0 }) { trials = 1 }
+            if hearings == 0 && others.allSatisfy({ $0.hearings == 0 }) { hearings = 1 }
+        }
+        schedule.limits[weekday] = DayLimit(trials: trials, hearings: hearings)
         happened(.scheduleChanged(weeklyTrials: schedule.weeklyTrials))
         save()
     }
@@ -1904,9 +1913,17 @@ final class GameState: ObservableObject {
         let cal = CourtCalendar.calendar
         let todayDate = cal.startOfDay(for: today?.date ?? currentDate)
         var day = max(cal.startOfDay(for: start), cal.date(byAdding: .day, value: 1, to: todayDate) ?? todayDate)
-        let last = cal.startOfDay(for: end)
+        var last = cal.startOfDay(for: end)
         guard day <= last else { return }
+        // Court days of leave can't go past the year's allowance; days the court doesn't sit cost nothing.
+        var remaining = leaveLeft
         while day <= last {
+            let counts = CourtCalendar.isCourtDay(day) && schedule.courtDays.contains(CourtSchedule.weekday(day))
+                && !schedule.timeOff.contains(CourtSchedule.key(day))
+            if counts {
+                if remaining <= 0 { last = cal.date(byAdding: .day, value: -1, to: day) ?? last; break }
+                remaining -= 1
+            }
             schedule.timeOff.insert(CourtSchedule.key(day))
             day = cal.date(byAdding: .day, value: 1, to: day) ?? last
         }
@@ -2330,7 +2347,8 @@ final class GameState: ObservableObject {
             }
         }
         for m in call.matters {
-            guard let c = m.pendingCase else { continue }
+            // A matter carried over from an earlier day is dropped when its case has since been tried.
+            guard let c = m.pendingCase, !history.contains(where: { $0.docket == c.docket }) else { continue }
             let choice = choices[m.id] ?? 0
             // A case already set for trial, or waiting for a date, is taken off its old setting; the ruling sets the new one,
             // keeping the judge's date when it still works.
@@ -2775,7 +2793,7 @@ final class GameState: ObservableObject {
         for m in call.matters {
             let choice = choices[m.id] ?? 0
             var ruling = m.options.indices.contains(choice) ? m.options[choice] : "Ruled on"
-            if let amount = amounts[m.id] {
+            if let amount = amounts[m.id] ?? m.suggested(for: choice) {
                 ruling = ruling.replacingOccurrences(of: "an amount you set", with: "$\(amount.formatted())")
             }
             calendarLog.insert(CalendarRuling(date: call.date, kind: m.kind, personName: m.personName, docket: m.docket,
@@ -2965,6 +2983,9 @@ final class GameState: ObservableObject {
                                             usedBackgrounds: Set(people.map(\.background)), storySlot: followUp == nil && storySlot,
                                             categories: categories, allowMurder: allowMurder)
         context.generic = generic
+        var heard: [String: Int] = [:]
+        for signature in usedSignatures { if let bar = signature.firstIndex(of: "|") { heard[String(signature[..<bar]), default: 0] += 1 } }
+        context.heardCounts = heard
         context.departedCounsel = departedCounsel
         context.incidentDaysAgo = incidentDaysAgo
         context.arrestOn = arrestOn
