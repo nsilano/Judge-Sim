@@ -288,9 +288,10 @@ enum ContinuanceMotions {
 
     /// A motion with a concrete, case-specific reason, or nil if the follow-up it would need doesn't fit this case.
     static func make(for c: CourtCase, rng: inout SeededRNG) -> ContinuanceMotion? {
-        // Written cases carry only what was written for them.
-        guard !c.templateKey.hasPrefix("story.") else { return nil }
-        let options = EvidenceRequest.options(for: c)
+        // A missing witness is not raised in a written case (its witnesses are part of the story); the other requests are:
+        // denied, the evidence stays out; granted, what comes back follows what really happened and can change the case.
+        let written = c.templateKey.hasPrefix("story.")
+        let options = EvidenceRequest.options(for: c).filter { !written || ($0 != .witnessFollowUp && $0 != .alibi) }
         guard !options.isEmpty else { return nil }
         let request = rng.pick(options)
         let dl = c.defendant.lastName

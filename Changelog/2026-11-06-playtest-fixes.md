@@ -20,3 +20,10 @@ Calendar and court
 - "1 month" and "1 day" now read correctly; reassigning a trial from the calendar asks first.
 
 Not changed (design decisions): arraignment, plea and search-warrant matters stay off because every case is a written story; sentenced misdemeanants remain releasable under jail crowding; the misdemeanor prior-level count is unchanged.
+
+## Plea, arraignment, warrants and evidence continuances
+
+- Search warrant applications are back on the calendar call.
+- Story defendants are arraigned after the bond hearing; some offer a plea instead. An accepted plea frees that story to be told again with new people, continuing from its next telling (a variant when one exists). A rejected plea sets the case for trial.
+- Story cases get evidence-based motions to continue. Denied: the evidence stays out. Granted: new evidence arrives (footage, location records, lab testing, bank records, expert review) and follows what really happened. Missing-witness motions are not raised in story cases.
+- Playtest harness grants half of these motions and logs the new evidence.

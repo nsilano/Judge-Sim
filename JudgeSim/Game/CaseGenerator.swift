@@ -14,6 +14,8 @@ enum CaseGenerator {
         /// How many times each template has been heard, counted from every signature ever used (a set would merge two
         /// tellings that share a headline and extras).
         var heardCounts: [String: Int]? = nil
+        /// Every time each template has been told, pleas included: the next telling is chosen from this.
+        var tellingCounts: [String: Int]? = nil
         var returning: PersonRecord?
         /// Backgrounds already given to people in this career, so each new defendant gets a fresh one.
         var usedBackgrounds: Set<String> = []
@@ -102,7 +104,7 @@ enum CaseGenerator {
             if !notLately.isEmpty { fitting = notLately }
             if let leastHeard = fitting.map({ useCounts[$0.key] ?? 0 }).min() { fitting = fitting.filter { (useCounts[$0.key] ?? 0) == leastHeard } }
             if let template = fitting.first(where: { _ in rng.chance(0.6) }) ?? fitting.first {
-                return build(StoryVariants.telling(of: template, heard: useCounts[template.key] ?? 0), seed: seed, band: rng.chance(0.6) ? .strong : .close, context: context, rng: &rng)
+                return build(StoryVariants.telling(of: template, heard: context.tellingCounts?[template.key] ?? useCounts[template.key] ?? 0), seed: seed, band: rng.chance(0.6) ? .strong : .close, context: context, rng: &rng)
             }
         }
         var unheardStories = StoryCases.all.filter { useCounts[$0.key] == nil }
@@ -166,7 +168,7 @@ enum CaseGenerator {
                     let alternatives = candidates.filter { !isEmbezzlement($0) && !isMurder($0) }
                     if !alternatives.isEmpty { story = rng.pick(alternatives) }
                 }
-                return build(StoryVariants.telling(of: story, heard: useCounts[story.key] ?? 0), seed: seed, band: .close, context: storyContext, rng: &rng)
+                return build(StoryVariants.telling(of: story, heard: context.tellingCounts?[story.key] ?? useCounts[story.key] ?? 0), seed: seed, band: .close, context: storyContext, rng: &rng)
             }
         }
         // A written case is heard once per career, and only with a new defendant, whose history it describes.
