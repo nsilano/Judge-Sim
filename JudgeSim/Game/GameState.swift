@@ -473,12 +473,13 @@ final class GameState: ObservableObject {
         retrials = []
         reliefQueue = []
         pending = []
-        // The county's crimes didn't begin on the judge's first day: arrests made in the weeks before are already
-        // moving toward bond hearings and trial dates, so the first trial comes in a few weeks, not a quarter.
+        // A new judge learns the game slowly: the first arrests come one at a time (one before the first bond hearing,
+        // then about one a week), so the first trial is a few weeks out and the caseload ramps up over the first
+        // seven or eight weeks.
         var carried = peopleInPlay()
-        for back in stride(from: 63, through: 9, by: -6) {
-            let when = CourtCalendar.calendar.date(byAdding: .day, value: -back, to: currentDate) ?? currentDate
-            openCrime(on: when, story: true, allowMurder: false, knownDefendant: nil, rng: &rng, excluding: &carried)
+        for ahead in [1, 5, 12, 19] {
+            let when = CourtCalendar.calendar.date(byAdding: .day, value: ahead, to: currentDate) ?? currentDate
+            openCrime(on: when, story: true, allowMurder: false, knownDefendant: nil, rng: &rng, excluding: &carried, forcedDelay: 0)
         }
         // Day one starts with an empty docket.
         today = CourtDay(date: currentDate, clock: CourtCalendar.opening(on: currentDate, minutesAfterMidnight: openingMinutes),
@@ -885,7 +886,7 @@ final class GameState: ObservableObject {
     /// weeks later. The defendant is booked into the jail and comes before the court at the next bond hearing.
     /// Every new case reaches the court this way.
     private func openCrime(on date: Date, story: Bool, allowMurder: Bool, knownDefendant: Resident?, rng: inout SeededRNG,
-                           excluding used: inout Set<UUID>) {
+                           excluding used: inout Set<UUID>, forcedDelay: Int? = nil) {
         let cal = CourtCalendar.calendar
         let today = cal.startOfDay(for: date)
         let incident = cal.date(byAdding: .day, value: -1, to: today) ?? today
@@ -894,7 +895,8 @@ final class GameState: ObservableObject {
         // investigation file keeps those.)
         let roll = rng.int(1...100)
         let delay: Int
-        if roll <= (story ? 15 : 20) { delay = 0 }
+        if let forcedDelay { delay = forcedDelay }
+        else if roll <= (story ? 15 : 20) { delay = 0 }
         else if roll <= 45 { delay = rng.int(1...7) }
         else if roll <= 75 { delay = rng.int(8...30) }
         else { delay = rng.int(31...120) }
@@ -2059,7 +2061,7 @@ final class GameState: ObservableObject {
         // cases a week by the end of the first year, enough that the list outruns the calendar.
         let overflow = caseloadPressure > 1.05 ? min(0.85, 0.25 + 0.5 * (caseloadPressure - 1)) : 0
         if trialsInPipeline < pipelineTarget * 4, rng.chance(intakeFactor),
-           (underTarget && rng.chance(0.75 * max(0.5, caseloadRamp))) || (!underTarget && rng.chance(overflow)) {
+           (underTarget && rng.chance(0.75 * max(0.3, caseloadRamp))) || (!underTarget && rng.chance(overflow)) {
             let murderWaiting = (awaiting.map(\.entry) + scheduled.map(\.entry)).contains { entry in
                 if case .trial(let c) = entry.matter { return Self.isMurder(c) } else { return false }
             }
