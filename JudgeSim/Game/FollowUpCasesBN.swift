@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Follow-up trials for the batch BN stories: the same defendant, back in this court.
 extension FollowUpCases {
-    static let batchBN: [CaseTemplate] = [pickupLineThreatsBack, shoulderPassBack, closedStoreLotBack, flowersNoteBack, mysteryBoxBack, alteredScriptBack, soccerSidelineBack, cabinClaimBack, jobsiteToolboxBack, waistbandGunBack, gradePortalBack, boatRampDwiBack]
+    static let batchBN: [CaseTemplate] = [pickupLineThreatsBack, shoulderPassBack, closedStoreLotBack, flowersNoteBack, mysteryBoxBack, stolenTruckReportBack, soccerSidelineBack, cabinClaimBack, jobsiteToolboxBack, waistbandGunBack, gradePortalBack, boatRampDwiBack]
 
     static let pickupLineThreatsBack = SmallCases.make(
         key: "story.followup.pickupLineThreatsBack",
@@ -121,27 +121,27 @@ extension FollowUpCases {
         identified: "The online listing.",
         mood: .wantsConviction)
 
-    static let alteredScriptBack = SmallCases.make(
-        key: "story.followup.alteredScriptBack",
-        category: .drugs,
-        headlines: ["Pharmacist Spots Altered Quantity on Painkiller Prescription", "Defendant From Robbery Case Charged With Prescription Fraud"],
-        law: "prescriptionFraud",
-        spec: "Obtained a controlled substance by fraud or forgery by altering a prescription, on {DATE}.",
+    static let stolenTruckReportBack = SmallCases.make(
+        key: "story.followup.stolenTruckReportBack",
+        category: .publicOrder,
+        headlines: ["Truck Reported Stolen Turns Up in Relative's Barn", "Defendant From Robbery Case Charged With Making a False Police Report"],
+        law: "falseReport",
+        spec: "Willfully made a false report to a law enforcement officer that a crime had been committed, on {DATE}.",
         ages: 22...55,
         victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a pharmacist noticed on {DATE} that a '30' on a prescription presented by {D} had been written over a '10.' The prescriber's office confirmed the original quantity. {DL} says the doctor's handwriting was unclear.",
-        state: [E(.document, 3, "Prescription", "A '30' written over a '10.'"), E(.statement, 2, "Prescriber's Office", "The order was for ten.")],
-        defense: [E(.statement, 1, "Handwriting", "{DL} says the number was unclear.")],
-        role: "Pharmacist",
-        exam: [.direct("What did you notice?", "\"A changed number.\""), .direct("What did the office say?", "\"Ten tablets.\""), .cross("Can handwriting be unclear?", "\"Sometimes.\"")],
-        theory: ("{D} changed a number to get more pills.", "A misread number."),
-        allocution: "\"I changed it. I needed the medicine.\"",
-        truths: ("{DL} had a prior case in this court and a pen with matching ink in a pocket.", "{DL} had asked the prescriber's office for a refill the same morning and was refused."),
-        defendant: [.direct("Did you alter it?", "\"I didn't.\""), .direct("The refill?", "\"I asked.\""), .cross("The pen?", "\"I had one.\"")],
-        openings: ("A number and a pharmacy.", "A misread note."),
-        closings: ("Call the office.", "Look at the ink."),
-        timeline: [(0, "Morning: the refill is refused."), (0, "Noon: the prescription is presented."), (0, "The pharmacist calls the office.")],
-        identified: "The pharmacist's notice.",
+        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} told a deputy on {DATE} that {D.his} pickup had been stolen from a grocery store lot overnight. Two days later a deputy found the truck in a relative's barn with the plates removed. {DL} says {D.he} believed the truck had been taken and that a relative moved it without telling {D.him}.",
+        state: [E(.physical, 3, "Truck", "Found in a relative's barn with the plates removed."), E(.document, 2, "Report", "{D}'s signed report that the truck was stolen.")],
+        defense: [E(.statement, 1, "Relative", "{DL} says a relative moved the truck without asking.")],
+        role: "Sheriff's deputy",
+        exam: [.direct("What did {D} report?", "\"A stolen pickup.\""), .direct("Where was it found?", "\"In a barn.\""), .cross("Were plates on it?", "\"No.\""), .cross("Who moved it?", "\"A relative says it was {DL}.\"")],
+        theory: ("{D} reported a truck stolen when it was hidden.", "A mix-up with a relative."),
+        allocution: "\"I should have checked first. I am sorry.\"",
+        truths: ("{DL} had a prior case in this court and owed three payments on the truck.", "The relative says {DL} asked for the barn the night before the report."),
+        defendant: [.direct("Did you hide it?", "\"I thought it was taken.\""), .direct("The payments?", "\"Behind.\""), .cross("The plates?", "\"Not me.\"")],
+        openings: ("A report and a hidden truck.", "A confusion."),
+        closings: ("Follow the barn.", "Follow the relative."),
+        timeline: [(-1, "The truck is parked in the lot."), (0, "The report."), (2, "The barn.")],
+        identified: "The deputy's search.",
         mood: .indifferent)
 
     static let soccerSidelineBack = SmallCases.make(

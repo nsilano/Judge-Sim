@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Alternate tellings, batch P: the same cases, played out another way.
 extension StoryVariants {
-    static let variantsP: [CaseTemplate] = [sixthDwiRolloverV1, textingSuicideV1, fakeDoctorV1, packagedMarijuanaV1, toddlerLeftHomeV1, exHouseKeyV1, fakeKidnappingV1, cabDriverRobberyV1, interstateTruckDeathV1, lowcountryLawyerV1, hurricaneFraudV1, vanCocaineV1, exTrespassPorchV1, pawnToolsV1, deletedFootageV1, armedConvenienceRobberyV1, kidsInBackChaseV1, motelCarbonMonoxideV1, ptaTreasurerV1, streetPillSaleV1, fosterChildInjuryV1, catalyticConvertersV1, stagedAttackV1, liquorStoreHoldupV1, taserFootChaseV1, arsenicWidowV1, ponziAdvisorV1, festivalOverdoseV1, storageUnitsV1, alibiWitnessV1, plannedPharmacyRobberyV1, mopedWrongWayV1, staircaseDeathV1, forgedCheckV1, trafficCocaineMotelV1, restaurantFireV1, gunUnderSeatV1, carjackingRobberyV1]
+    static let variantsP: [CaseTemplate] = [sixthDwiRolloverV1, textingSuicideV1, fakeDoctorV1, packagedMarijuanaV1, toddlerLeftHomeV1, exHouseKeyV1, fakeKidnappingV1, cabDriverRobberyV1, interstateTruckDeathV1, lowcountryLawyerV1, hurricaneFraudV1, exTrespassPorchV1, pawnToolsV1, deletedFootageV1, armedConvenienceRobberyV1, kidsInBackChaseV1, motelCarbonMonoxideV1, ptaTreasurerV1, fosterChildInjuryV1, catalyticConvertersV1, stagedAttackV1, liquorStoreHoldupV1, taserFootChaseV1, arsenicWidowV1, ponziAdvisorV1, festivalOverdoseV1, storageUnitsV1, alibiWitnessV1, plannedPharmacyRobberyV1, mopedWrongWayV1, staircaseDeathV1, forgedCheckV1, trafficCocaineMotelV1, restaurantFireV1, gunUnderSeatV1, carjackingRobberyV1, vanCocaineV1, streetPillSaleV1]
 
     static let sixthDwiRolloverV1 = SmallCases.make(
         key: "story.sixthDwiRollover",
@@ -289,31 +289,6 @@ extension StoryVariants {
         doctrines: ["burdenOfProof"],
         genders: ["D": .male, "V": .female])
 
-    static let vanCocaineV1 = SmallCases.make(
-        key: "story.vanCocaine",
-        category: .drugs,
-        headlines: ["Weigh Station Dog Alert on Cargo Van Leads to Two Kilos Behind Panel", "Rental Van Stopped for Inspection With Hidden Compartment"],
-        law: "traffickingCocaine",
-        threshold: 8,
-        spec: "Trafficked in cocaine by transporting more than 400 grams, on {DATE}.",
-        ages: 24...55,
-        victim: false,
-        summary: "A trooper stopped a cargo van at a weigh station on {DATE}. A dog alerted and two kilos of cocaine were found behind a side panel. {D}, the driver, says the van was a rental and the panel had been tampered with before {D.he} rented it.",
-        state: [E(.forensic, 3, "Lab Report", "Two kilos of cocaine."), E(.physical, 3, "Hidden Compartment", "A side panel with a fresh seal."), E(.document, 2, "Rental Agreement", "Signed by {D} two days earlier.")],
-        defense: [E(.statement, 1, "Tampered Panel", "{DL} says the panel was tampered with before the rental.")],
-        role: "State Highway Patrol trooper",
-        exam: [.direct("What did the dog do?", "\"Alerted.\""), .direct("What was found?", "\"Two kilos.\""), .cross("Whose fingerprints?", "\"None.\""), .cross("Other renters?", "\"A few.\"")],
-        theory: ("{D} drove a van carrying cocaine.", "A rental with a prior secret."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} had been paid to drive the van without a stop.", "The seal on the panel was fresh."),
-        defendant: [.direct("Did you know?", "\"No.\""), .direct("Why drive it?", "\"A delivery job.\""), .cross("You were paid.", "\"Normal pay.\""), .cross("A fresh seal.", "\"Not mine.\"")],
-        openings: ("A compartment and cocaine.", "A rental van."),
-        closings: ("The lab and the compartment.", "A van with a history."),
-        timeline: [(-2, "The rental."), (0, "The weigh station."), (0, "The dog alert."), (1, "Lab result.")],
-        identified: "A K-9 and a search.",
-        mood: .indifferent,
-        doctrines: ["searchSeizure", "burdenOfProof"])
-
     static let exTrespassPorchV1 = SmallCases.make(
         key: "story.exTrespassPorch",
         category: .family,
@@ -489,31 +464,6 @@ extension StoryVariants {
         timeline: [(-730, "Transfers begin."), (-60, "The president asks."), (0, "The bank statements."), (14, "The charge.")],
         identified: "Bank statements.",
         mood: .wantsConviction,
-        doctrines: ["burdenOfProof"])
-
-    static let streetPillSaleV1 = SmallCases.make(
-        key: "story.streetPillSale",
-        category: .drugs,
-        headlines: ["Undercover Officer Buys Three Pills for $60 From Corner Seller", "Marked Bills Found in Pocket Minutes Later"],
-        law: "saleSchedII",
-        threshold: 6,
-        spec: "Sold a Schedule II controlled substance, oxycodone, on {DATE}.",
-        ages: 20...50,
-        victim: false,
-        summary: "An undercover officer bought three oxycodone pills for $60 from {D} on a street corner on {DATE}. Marked bills were found in {D}'s pocket minutes later. {DL} says {D.he} was selling a friend's pills at cost and did not know what they were.",
-        state: [E(.forensic, 3, "Lab Report", "Oxycodone, three pills."), E(.document, 3, "Marked Bills", "Found in {D}'s pocket."), E(.video, 1, "Undercover Recording", "The exchange.")],
-        defense: [E(.statement, 2, "Friend's Pills", "{DL} says the pills were a friend's.")],
-        role: "Undercover officer",
-        exam: [.direct("What did you buy?", "\"Three pills.\""), .direct("How much?", "\"$60.\""), .cross("Was a name given?", "\"No.\""), .cross("Marked bills?", "\"Found later.\"")],
-        theory: ("{D} sold oxycodone to an officer.", "A messenger for a friend."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} had sold to the officer once before.", "{DL} named a price per pill."),
-        defendant: [.direct("Did you sell?", "\"I passed them.\""), .direct("Did you know?", "\"No.\""), .cross("A price per pill.", "\"At cost.\""), .cross("The bills.", "\"A friend paid me.\"")],
-        openings: ("A buy on camera.", "A messenger."),
-        closings: ("The lab and the bills.", "A favor."),
-        timeline: [(-7, "A first contact."), (0, "The meet."), (0, "The exchange."), (0, "The stop.")],
-        identified: "An undercover buy.",
-        mood: .indifferent,
         doctrines: ["burdenOfProof"])
 
     static let fosterChildInjuryV1 = SmallCases.make(
@@ -973,4 +923,54 @@ extension StoryVariants {
         mood: .wantsConviction,
         doctrines: ["burdenOfProof"],
         genders: ["D": .male])
+
+    static let vanCocaineV1 = SmallCases.make(
+        key: "story.vanCocaine",
+        category: .drugs,
+        headlines: ["Inspection Bay Dog Sits at Rear Door of Rented Cargo Van; Brick Packages Behind Wall Liner", "Driver Hauling Appliances Says the Panel Was Never Opened"],
+        law: "traffickingCocaine",
+        threshold: 8,
+        spec: "Trafficked in cocaine by transporting more than 400 grams, on {DATE}.",
+        ages: 24...55,
+        victim: false,
+        summary: "A trooper pulled {D} into an inspection bay on {DATE} while {D} hauled a load of appliances in a rented cargo van. A dog sat at the rear door. Behind a plywood wall liner, troopers found two kilos of cocaine in plastic-wrapped bricks. {DL} says {D.he} rented the van the day before and had never taken the liner off.",
+        state: [E(.forensic, 3, "Lab Report", "Two kilos of cocaine in wrapped bricks."), E(.physical, 3, "Wall Liner", "Fresh screws holding a plywood liner."), E(.document, 2, "Rental Contract", "Signed by {D} the day before.")],
+        defense: [E(.statement, 1, "Never Opened", "{DL} says {D.he} never opened the liner.")],
+        role: "State Highway Patrol trooper",
+        exam: [.direct("How was the cocaine hidden?", "\"Behind a plywood liner.\""), .direct("How many bricks?", "\"Two.\""), .cross("Were prints on the liner?", "\"None.\""), .cross("Who rented before {D}?", "\"A few drivers.\"")],
+        theory: ("{D} carried cocaine in a rented cargo van.", "A rental driver who never opened the liner."),
+        allocution: "\"I'm sorry.\"",
+        truths: ("{DL} was to be paid $2,000 for a one-day haul.", "The screws holding the liner were new."),
+        defendant: [.direct("Did you know?", "\"No.\""), .direct("Why drive that load?", "\"A friend offered the pay.\""), .cross("$2,000 for a day.", "\"It was a long run.\""), .cross("New screws.", "\"Not mine.\"")],
+        openings: ("Bricks behind a wall.", "A rental and a short job."),
+        closings: ("The lab and the liner.", "A van with other drivers."),
+        timeline: [(-1, "{D} picks up the rental."), (0, "The inspection bay."), (0, "The dog sits."), (2, "The lab confirms.")],
+        identified: "A dog at an inspection bay.",
+        mood: .indifferent,
+        doctrines: ["searchSeizure", "burdenOfProof"])
+
+    static let streetPillSaleV1 = SmallCases.make(
+        key: "story.streetPillSale",
+        category: .drugs,
+        headlines: ["Plainclothes Officer Hands $60 to Seller on Corner, Gets Three Pills; Cash Traced", "Corner Seller Says Pills Came From a Friend"],
+        law: "saleSchedII",
+        threshold: 6,
+        spec: "Sold a Schedule II controlled substance, oxycodone, on {DATE}.",
+        ages: 20...50,
+        victim: false,
+        summary: "A plainclothes officer, wearing a wire, bought three pills for $60 from {D} outside a laundromat on {DATE}. The officer's team arrested {D} two blocks away and found the recorded bills in a shoe. A lab said the pills were oxycodone. {DL} says {D.he} was handing over pills a friend asked {D.him} to sell at cost.",
+        state: [E(.forensic, 3, "Lab Report", "Three tablets of oxycodone."), E(.document, 3, "Bill Serial List", "Recorded bills found in {D}'s shoe."), E(.video, 2, "Body Wire Audio", "The exchange of money for pills.")],
+        defense: [E(.statement, 1, "At Cost", "{DL} says {D.he} only passed on a friend's pills.")],
+        role: "Undercover narcotics officer",
+        exam: [.direct("What did {D} hand you?", "\"Three pills.\""), .direct("What did you pay?", "\"$60.\""), .cross("Did {D} say what they were?", "\"Called them 'blues'.\""), .cross("Was a profit made?", "\"Not clear.\"")],
+        theory: ("{D} sold oxycodone on a street corner.", "A friend's favor at cost."),
+        allocution: "\"I'm sorry.\"",
+        truths: ("{DL} had four more pills in a pocket.", "{DL} had texted a buyer earlier that day."),
+        defendant: [.direct("Did you sell?", "\"I handed them over.\""), .direct("What were they?", "\"I never asked.\""), .cross("Four more.", "\"Not for sale.\""), .cross("The text.", "\"A joke.\"")],
+        openings: ("A wire and recorded bills.", "A favor."),
+        closings: ("The audio and the bills.", "A friend's pills."),
+        timeline: [(0, "Noon: the text."), (0, "1 p.m.: the buy."), (0, "1:10 p.m.: the arrest."), (3, "The lab report.")],
+        identified: "A body wire recording.",
+        mood: .indifferent,
+        doctrines: ["burdenOfProof"])
 }

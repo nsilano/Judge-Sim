@@ -28,6 +28,7 @@ enum StoryVariants {
         // the victim's fate and the charges stay the same case.
         var telling = variants[index - 1]
         if telling.secondary.isEmpty { telling.secondary = template.secondary }
+        telling.victimDiedFlag = template.victimDies
         return telling
     }
 
@@ -36,6 +37,7 @@ enum StoryVariants {
         guard let base else { return ["\(variant.key): no story with this key"] }
         var variant = variant
         if variant.secondary.isEmpty { variant.secondary = base.secondary }
+        variant.victimDiedFlag = base.victimDies
         var out: [String] = []
         if variant.primaryLaw != base.primaryLaw { out.append("\(variant.key): charge differs (\(variant.primaryLaw) vs \(base.primaryLaw))") }
         if variant.category != base.category { out.append("\(variant.key): category differs") }

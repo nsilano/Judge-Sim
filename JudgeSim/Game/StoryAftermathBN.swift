@@ -35,9 +35,9 @@ extension StoryAftermath {
         ],
         "story.pharmacyRobbery": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...240,
-                 headline: "Pharmacist Spots Altered Quantity on Painkiller Prescription",
-                 body: "Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is accused of changing a prescription.",
-                 followUps: ["story.followup.alteredScriptBack"])
+                 headline: "Truck Reported Stolen Turns Up in Relative's Barn",
+                 body: "Deputies say {D}, whose earlier case was heard by Judge {JUDGE}, is accused of making a false police report.",
+                 followUps: ["story.followup.stolenTruckReportBack"])
         ],
         "story.protectiveOrder": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.3, days: 30...240,

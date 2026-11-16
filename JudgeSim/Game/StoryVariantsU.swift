@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Alternate tellings, batch U: the same cases, played out another way.
 extension StoryVariants {
-    static let variantsU: [CaseTemplate] = [stolenCarReportV1, roadBlockadeV1, usedCarScamV1, garageBurglaryV1, parkingLotScreamV1, breakRoomCoffeeV1, handicapPlacardForgeV1, dentistOfficeBreakinV1, footChaseV1, fenceLineV1, benefitsOverreportV1, receiptReturnScamV1, printedPistolV1, wrongDoorV1, checkFromGrandmaV1, overpassGraffitiV1, onePunchV1, tillShortageV1, laptopCarBreakinV1, fathersGunShootingV1, fakeLandscaperV1, mailboxBaseballV1, backpackGunSchoolV1, payrollCheckForgeV1, hardwareShopliftV1, houseDriveByShotsV1, ticketScalperV1, contractorToolsV1, poolHallDebtKillingV1, fakeLicenseV1, porchPackagesV1, rentTrailerShootingV1, returnFraudV1, bikeRackTheftV1, barEjectedShootingV1, badCheckFeedV1, apartmentFireV1, bearCubVideosV1]
+    static let variantsU: [CaseTemplate] = [stolenCarReportV1, roadBlockadeV1, usedCarScamV1, garageBurglaryV1, parkingLotScreamV1, breakRoomCoffeeV1, handicapPlacardForgeV1, dentistOfficeBreakinV1, footChaseV1, fenceLineV1, receiptReturnScamV1, printedPistolV1, wrongDoorV1, checkFromGrandmaV1, onePunchV1, tillShortageV1, laptopCarBreakinV1, fathersGunShootingV1, fakeLandscaperV1, mailboxBaseballV1, backpackGunSchoolV1, payrollCheckForgeV1, hardwareShopliftV1, houseDriveByShotsV1, ticketScalperV1, contractorToolsV1, poolHallDebtKillingV1, fakeLicenseV1, porchPackagesV1, rentTrailerShootingV1, returnFraudV1, bikeRackTheftV1, badCheckFeedV1, apartmentFireV1, bearCubVideosV1, benefitsOverreportV1, overpassGraffitiV1, barEjectedShootingV1]
 
     static let stolenCarReportV1 = SmallCases.make(
         key: "story.stolenCarReport",
@@ -258,31 +258,6 @@ extension StoryVariants {
         mood: .divided,
         doctrines: ["selfDefense", "imperfectSelfDefense"])
 
-    static let benefitsOverreportV1 = SmallCases.make(
-        key: "story.benefitsOverreport",
-        category: .whiteCollar,
-        headlines: ["Parent Reported No Wages for Eleven Months While Working Restaurant Shifts, County Says", "Caseworker Advice at Center of Benefits Dispute"],
-        law: "falsePretenses",
-        spec: "Obtained $3,400 in food assistance benefits from {V}, a county agency, by false pretenses, on {DATE}.",
-        ages: 22...55,
-        victim: true,
-        summary: "A county agency found that {D} reported no income for eleven months while earning wages at a restaurant, resulting in $3,400 in benefits {D} should not have received. {DL} says a caseworker told {D.him} the wages did not need reporting.",
-        state: [E(.document, 3, "Payroll Records", "Eleven months of restaurant wages."), E(.document, 3, "Benefit Forms", "Each form lists no income."), E(.document, 1, "Agency Audit", "$3,400 overpaid.")],
-        defense: [E(.statement, 2, "Caseworker Advice", "{DL} says the caseworker said not to report.")],
-        role: "Agency investigator",
-        exam: [.direct("What did the forms say?", "\"No income.\""), .direct("What did payroll show?", "\"Steady wages.\""), .cross("Was advice recorded?", "\"No.\""), .cross("Did {DL} repay?", "\"Some.\"")],
-        theory: ("{D} hid wages to keep benefits.", "A parent following a caseworker's advice."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} signed every form under penalty.", "The caseworker has no memory of that advice."),
-        defendant: [.direct("Did you hide the wages?", "\"No.\""), .direct("Why not report?", "\"I was told.\""), .cross("You signed.", "\"I trusted.\""), .cross("Eleven months.", "\"I didn't know.\"")],
-        openings: ("Forms and pay stubs.", "Bad advice."),
-        closings: ("The forms and payroll.", "A caseworker."),
-        timeline: [(-330, "The job starts."), (-300, "The first form."), (0, "The audit."), (30, "The referral.")],
-        identified: "Payroll records and benefit forms.",
-        mood: .divided,
-        doctrines: ["burdenOfProof"],
-        genders: ["D": .female])
-
     static let receiptReturnScamV1 = SmallCases.make(
         key: "story.receiptReturnScam",
         category: .property,
@@ -382,30 +357,6 @@ extension StoryVariants {
         mood: .sympathetic,
         doctrines: ["burdenOfProof"],
         genders: ["V": .female])
-
-    static let overpassGraffitiV1 = SmallCases.make(
-        key: "story.overpassGraffiti",
-        category: .property,
-        headlines: ["Traffic Camera Catches Hooded Figure Spray-Painting Highway Overpass at 2 a.m.", "Paint Cans in Car Match Bridge Mural"],
-        law: "injuryRealProperty",
-        spec: "Willfully and wantonly injured the real property of {V}, a city bridge, causing damage of $1,100, on {DATE}.",
-        ages: 18...25,
-        victim: true,
-        summary: "A highway overpass was painted with large letters overnight on {DATE}. A traffic camera showed a hooded figure with spray cans at 2 a.m. Cans in {D}'s car matched the paint. {DL} says {D.he} was nearby painting a legal mural.",
-        state: [E(.video, 3, "Traffic Camera", "A hooded figure paints at 2 a.m."), E(.physical, 3, "Paint Cans", "The paint matches the overpass."), E(.document, 1, "Cleanup Invoice", "$1,100 to clean the overpass.")],
-        defense: [E(.statement, 2, "Legal Mural", "{DL} says {D.he} painted a permitted wall nearby.")],
-        role: "Public works supervisor",
-        exam: [.direct("What was painted?", "\"Large letters.\""), .direct("How long to clean?", "\"Two days.\""), .cross("Was a mural nearby?", "\"Yes.\""), .cross("Was it permitted?", "\"Maybe.\"")],
-        theory: ("{D} painted a public bridge.", "An artist at a permitted wall."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} had been cited before for tagging.", "The permit was dated the day after."),
-        defendant: [.direct("Did you paint it?", "\"No.\""), .direct("Why the paint?", "\"A mural.\""), .cross("A prior citation.", "\"Old.\""), .cross("The permit.", "\"Late paperwork.\"")],
-        openings: ("Paint and a camera.", "A mural."),
-        closings: ("The camera and the cans.", "A permitted wall."),
-        timeline: [(0, "2 a.m.: the painting."), (0, "6 a.m.: commuters see it."), (1, "Public works cleans."), (3, "Paint matching.")],
-        identified: "A traffic camera and paint.",
-        mood: .divided,
-        doctrines: ["burdenOfProof"])
 
     static let onePunchV1 = SmallCases.make(
         key: "story.onePunch",
@@ -858,32 +809,6 @@ extension StoryVariants {
         doctrines: ["burdenOfProof"],
         genders: ["D": .male])
 
-    static let barEjectedShootingV1 = SmallCases.make(
-        key: "story.barEjectedShooting",
-        category: .violent,
-        headlines: ["Patron Thrown Out of Bar Returns With Pistol and Shoots Doorman at Closing", "Hour-Long Gap Between Ejection and Shots"],
-        law: "murder2",
-        threshold: 9,
-        spec: "Unlawfully killed {V} with malice, on {DATE}.",
-        ages: 18...60,
-        victim: true,
-        summary: "{V}, a bouncer, was shot at closing on {DATE} after ejecting {D} an hour earlier. {D} returned with a pistol. {DL} says {V} reached for a weapon.",
-        state: [E(.video, 3, "Bar Camera", "{D} returns and fires at the door."), E(.forensic, 3, "Medical Examiner", "A gunshot wound to the chest."), E(.physical, 3, "Pistol", "Found in {D}'s truck."), E(.statement, 2, "Bartender", "{D} threatened to come back.")],
-        defense: [E(.statement, 2, "Reach", "{DL} says {V} reached for something.")],
-        role: "Bartender",
-        exam: [.direct("What did {DL} say leaving?", "\"I'll be back.\""), .direct("What happened at closing?", "\"A shot.\""), .cross("Did {V} reach?", "\"A hand moved.\""), .cross("Was a weapon found?", "\"No.\"")],
-        theory: ("{D} came back armed and killed {V}.", "A shot after {V} reached."),
-        allocution: "\"I'm sorry.\"",
-        truths: ("{DL} left, went to a truck and returned an hour later.", "{V} had nothing in {V.his} hands."),
-        defendant: [.direct("Did you shoot?", "\"Yes.\""), .direct("Why return?", "\"My jacket.\""), .cross("An hour.", "\"I was angry.\""), .cross("No weapon.", "\"I thought so.\"")],
-        openings: ("A threat and a return.", "A reach."),
-        closings: ("The camera and the wound.", "A hand moving."),
-        timeline: [(0, "12:30 a.m.: the ejection."), (0, "1:20 a.m.: {D} returns."), (0, "1:21 a.m.: the shot."), (1, "Arrest.")],
-        identified: "A bar camera.",
-        mood: .wantsConviction,
-        doctrines: ["selfDefense", "imperfectSelfDefense", "lesserIncluded"],
-        genders: ["D": .male, "V": .male])
-
     static let badCheckFeedV1 = SmallCases.make(
         key: "story.badCheckFeed",
         category: .whiteCollar,
@@ -959,4 +884,79 @@ extension StoryVariants {
         mood: .wantsConviction,
         doctrines: ["lesserIncluded"],
         genders: ["D": .male])
+
+    static let benefitsOverreportV1 = SmallCases.make(
+        key: "story.benefitsOverreport",
+        category: .whiteCollar,
+        headlines: ["Food Assistance Recipient Earned Restaurant Wages Never Reported, Agency Alleges", "Caseworker Says No One Said to Skip Reporting Wages"],
+        law: "falsePretenses",
+        spec: "Obtained $3,400 in food assistance benefits from {V}, a county agency, by false pretenses, on {DATE}.",
+        ages: 22...55,
+        victim: true,
+        summary: "A county agency's fraud unit matched payroll data to benefit applications and found {D} had stated no income at eleven monthly renewals while working weekend shifts at a diner, which brought $3,400 in benefits that {D} would not otherwise have received. {DL} says a front desk clerk said wages from a tip-based job did not count.",
+        state: [E(.document, 3, "Payroll Match", "Eleven months of diner pay stubs."), E(.document, 3, "Renewal Forms", "Each form says no income, signed by {D}.")],
+        defense: [E(.statement, 1, "Front Desk Advice", "{DL} says a clerk said tips did not count.")],
+        role: "County fraud investigator",
+        exam: [.direct("What did the forms say?", "\"No income.\""), .direct("What did payroll show?", "\"Weekly pay.\""), .cross("Is advice recorded?", "\"No.\""), .cross("Do tips count?", "\"Yes, as income.\"")],
+        theory: ("{D} signed forms hiding wages.", "An applicant who followed a clerk's advice."),
+        allocution: "\"I'm sorry.\"",
+        truths: ("{DL} had been given a handout that listed tips as income.", "The clerk named by {DL} left the agency months ago."),
+        defendant: [.direct("Did you sign?", "\"Yes.\""), .direct("Why no income?", "\"I was told tips didn't count.\""), .cross("The handout.", "\"I did not read it.\""), .cross("The clerk.", "\"I don't know the name.\"")],
+        openings: ("Forms and pay stubs.", "A clerk's bad advice."),
+        closings: ("The match and the forms.", "A misunderstanding."),
+        timeline: [(-330, "The first renewal."), (-30, "The data match runs."), (0, "The fraud unit opens a file."), (10, "{D} is interviewed.")],
+        identified: "A payroll data match.",
+        mood: .indifferent,
+        doctrines: ["burdenOfProof"],
+        genders: ["D": .female])
+
+    static let overpassGraffitiV1 = SmallCases.make(
+        key: "story.overpassGraffiti",
+        category: .property,
+        headlines: ["Public Works Crew Scrubs Giant Lettering From Interstate Bridge", "Spray Paint Cans in Trunk Match Colors on the Concrete"],
+        law: "injuryRealProperty",
+        spec: "Willfully and wantonly injured the real property of {V}, a city bridge, causing damage of $1,100, on {DATE}.",
+        ages: 18...25,
+        victim: true,
+        summary: "Public works found a bridge covered in large block letters on {DATE}. Cleanup cost $1,100. A highway camera showed a hooded figure on the walkway at 2 a.m. and a car parked on the ramp. A deputy found cans of matching paint in {D}'s trunk and a stencil on the back seat. {DL} says {D.he} was painting a permitted mural nearby and the cans were left from that job.",
+        state: [E(.video, 3, "Highway Camera", "Hooded figure on the walkway at 2 a.m."), E(.physical, 3, "Spray Cans", "Paint matches the bridge, found in {D}'s trunk."), E(.document, 2, "Cleanup Invoice", "$1,100.")],
+        defense: [E(.statement, 1, "Permitted Mural", "{DL} says the cans were from a mural job.")],
+        role: "City public works supervisor",
+        exam: [.direct("What was painted?", "\"Block letters across both rails.\""), .direct("Cost?", "\"$1,100.\""), .cross("Is a mural permit on file for this bridge?", "\"No.\""), .cross("Was a permit shown for elsewhere?", "\"A different wall.\"")],
+        theory: ("{D} painted a bridge at night.", "An artist with permission elsewhere."),
+        allocution: "\"I'm sorry.\"",
+        truths: ("{DL} had a stencil that matches the lettering.", "The permitted wall was six miles away."),
+        defendant: [.direct("Did you paint it?", "\"No.\""), .direct("The stencil?", "\"For my mural.\""), .cross("Six miles.", "\"I got lost.\""), .cross("2 a.m.", "\"I paint at night.\"")],
+        openings: ("Paint, a stencil and a camera.", "A mural painter."),
+        closings: ("The cans and the stencil.", "A permit elsewhere."),
+        timeline: [(-1, "{D} buys paint."), (0, "2 a.m.: the walkway."), (0, "6 a.m.: the crew arrives."), (1, "A deputy checks the car.")],
+        identified: "A highway camera.",
+        mood: .indifferent,
+        doctrines: ["burdenOfProof"])
+
+    static let barEjectedShootingV1 = SmallCases.make(
+        key: "story.barEjectedShooting",
+        category: .violent,
+        headlines: ["Doorman Dies After Ejected Patron Comes Back With Pistol Before Last Call", "Surveillance Shows Hour-Long Gap Between Ejection and Return"],
+        law: "murder2",
+        threshold: 9,
+        spec: "Unlawfully killed {V} with malice, on {DATE}.",
+        ages: 18...60,
+        victim: true,
+        summary: "{V} was working the door at a bar on {DATE} when {D}, ejected an hour earlier after a shoving match, walked back across the lot and fired. {V} died at the scene. A parking lot camera showed {D} leaving, going to a truck, and returning with a pistol. {DL} says {V} reached under {V.his} jacket first.",
+        state: [E(.video, 3, "Parking Lot Camera", "{D} fetches a pistol and returns."), E(.forensic, 3, "Medical Examiner", "Fatal gunshot wounds to the chest."), E(.physical, 3, "Pistol and Casings", "The pistol found in {D}'s truck matches the casings.")],
+        defense: [E(.statement, 1, "Reached First", "{DL} says {V} reached under a jacket.")],
+        role: "Sheriff's detective",
+        exam: [.direct("What did the camera show?", "\"{DL} going to a truck and returning.\""), .direct("What was recovered?", "\"A pistol and casings.\""), .cross("Was {V} armed?", "\"Nothing was found.\""), .cross("What was under the jacket?", "\"A radio.\"")],
+        theory: ("{D} came back and shot the doorman.", "A frightened patron."),
+        allocution: "\"I'm sorry.\"",
+        truths: ("{DL} sat in the truck for forty minutes after the ejection.", "{DL} told a friend by text, 'I'm going to settle this.'"),
+        defendant: [.direct("Did you shoot?", "\"Yes.\""), .direct("Why return?", "\"To get my jacket.\""), .cross("Forty minutes.", "\"I was cooling off.\""), .cross("The text.", "\"Just talk.\"")],
+        openings: ("A pistol and an hour to think.", "A confrontation."),
+        closings: ("The camera and the casings.", "A fear of a weapon."),
+        timeline: [(-1, "The ejection."), (0, "The walk to the truck."), (0, "The shots."), (1, "The truck is searched.")],
+        identified: "A parking lot camera.",
+        mood: .wantsConviction,
+        doctrines: ["selfDefense", "imperfectSelfDefense", "lesserIncluded"],
+        genders: ["D": .male, "V": .male])
 }
