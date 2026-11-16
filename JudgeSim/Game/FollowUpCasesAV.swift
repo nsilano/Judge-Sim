@@ -24,7 +24,7 @@ extension FollowUpCases {
         truths: ("{DL} had no laundry in the cart.", "The owner of that laundromat had asked {DL} to inspect the machine."),
         defendant: [.direct("Did you take coins?", "\"No.\""), .direct("Why there?", "\"Laundry.\""), .cross("Flat bar.", "\"Mine.\"")],
         openings: ("A bar.", "Laundry."),
-        closings: ("Camera.", "Laundry."),
+        closings: ("The camera shows the machine emptied.", "The coins were laundry money, taken legitimately."),
         timeline: [(0, "The coin door is pried."), (0, "The owner counts coins.")],
         identified: "A camera.",
         mood: .indifferent)
@@ -94,7 +94,7 @@ extension FollowUpCases {
         truths: ("The locks had been changed twice.", "The new tenant had invited {DL} by text to collect old mail."),
         defendant: [.direct("Did you enter?", "\"For mail.\""), .direct("Key?", "\"Old.\""), .cross("Notice.", "\"Missed.\"")],
         openings: ("A key.", "Mail."),
-        closings: ("Notice.", "Mail."),
+        closings: ("The tenant's notice shows entry without leave.", "A mail error explains why the key was used."),
         timeline: [(0, "The key turns."), (0, "The tenant calls deputies.")],
         identified: "The tenant.",
         mood: .indifferent)
@@ -279,7 +279,7 @@ extension FollowUpCases {
         truths: ("A cut cable was in the truck.", "The kayak's owner had left it loose with a note 'free to a good home'."),
         defendant: [.direct("Did you cut it?", "\"No.\""), .direct("Found?", "\"Adrift.\""), .cross("Cable.", "\"Garage.\"")],
         openings: ("A kayak.", "Adrift."),
-        closings: ("Video.", "Adrift."),
+        closings: ("The video shows {D} taking the kayak.", "The kayak was adrift, and {D} only retrieved it."),
         timeline: [(0, "The dock is cut."), (0, "The owner reports it.")],
         identified: "A camera.",
         mood: .indifferent)
@@ -325,7 +325,7 @@ extension FollowUpCases {
         truths: ("The hallway camera showed one guest.", "Keycard logs show nine different cards opened the room."),
         defendant: [.direct("Did you damage it?", "\"No.\""), .direct("Who?", "\"Guests.\""), .cross("One guest.", "\"Missed.\"")],
         openings: ("A folio.", "Guests."),
-        closings: ("Report.", "Guests."),
+        closings: ("The folio and damage report match.", "Other guests were in that room too."),
         timeline: [(0, "The check-in."), (1, "Housekeeping reports damage.")],
         identified: "Hotel records.",
         mood: .indifferent)
@@ -394,7 +394,7 @@ extension FollowUpCases {
         truths: ("A bolt cutter was in the bag.", "A different person used the card at a store."),
         defendant: [.direct("Did you cut it?", "\"No.\""), .direct("Wallet?", "\"Found.\""), .cross("Bolt cutter.", "\"Work.\"")],
         openings: ("A card.", "Found."),
-        closings: ("Log.", "Found."),
+        closings: ("The guest log and card charge tie {D} to the locker.", "The wallet was found, not taken from a locker."),
         timeline: [(0, "The guest signs in."), (0, "The wallet is gone.")],
         identified: "A guest log.",
         mood: .indifferent)
@@ -417,7 +417,7 @@ extension FollowUpCases {
         truths: ("The label listed THC.", "The package said 'hemp-derived, federally legal' with no THC warning."),
         defendant: [.direct("Yours?", "\"Yes.\""), .direct("Hemp?", "\"I thought.\""), .cross("Label.", "\"Faded.\"")],
         openings: ("A lab.", "Hemp."),
-        closings: ("Lab.", "Hemp."),
+        closings: ("The lab confirms the gummies were not hemp.", "The hemp label was in good faith."),
         timeline: [(0, "The gate."), (0, "The search.")],
         identified: "A lab report.",
         mood: .indifferent,
@@ -464,7 +464,7 @@ extension FollowUpCases {
         truths: ("The post named {V}'s street.", "The post went on to complain about trash cans, which {DL} meant."),
         defendant: [.direct("Did you post?", "\"Yes.\""), .direct("About?", "\"Weather.\""), .cross("Street.", "\"Coincidence.\"")],
         openings: ("A post.", "Weather."),
-        closings: ("Post.", "Weather."),
+        closings: ("The post was a threat tied to {DL}'s account.", "Weather, not menace, was the topic."),
         timeline: [(0, "The post."), (0, "{V} reads it.")],
         identified: "A post.",
         mood: .wantsConviction)

@@ -1,8 +1,17 @@
 # 2026-11-16 — Variants, bondsman underwriting, State positions, and a round of fixes
 
 ## New content
-- 150 more story variants: all 50 real-case-inspired stories plus 100 older stories (spread across every category). 471 stories now have an alternate telling.
-- 50 more follow-ups (a second follow-up for 50 older stories), each with its own aftermath news.
+- 378 more story variants (50 real-case stories, 100 older stories, and 228 more older stories). 698 of the 850 stories now have an alternate telling. 152 stories still have none.
+- 152 more follow-ups: a second follow-up for 50 older stories, and a first follow-up (with aftermath news) for 102 stories that had none. 889 follow-ups in all.
+- A variant that writes no extra counts keeps the original story's (for example the death count in a hit-and-run), so the victim's fate and charges stay the same case.
+
+## Returning defendants and pacing
+- Follow-ups that were queued for someone still serving a sentence are no longer lost: they come back after release. A follow-up that can't be built one day waits for the next.
+- Written follow-ups come a little sooner and more often (higher chance, shorter delays and indictment lag); the random reoffense roll is a little higher.
+- General follow-ups now match what the person was convicted of before (a theft follows a theft, a drug charge a drug charge).
+- The "prefer an unseen telling" rule starts after 40 different stories instead of 300.
+- Murder-level stories are drawn a bit more often (the one-murder-at-a-time rule is unchanged), and the director reacts more strongly to runs of verdicts and reoffenses.
+- Smaller fixes: restitution on minor offenses is scaled down; appointed-attorney fees aren't billed to someone who could put thousands toward bond; the sheriff's crowding notices and the crowding strain use the same jail count; probation-violation jail stays are logged as bookings; follow-up closing arguments no longer repeat their openings.
 
 ## New engines
 - **Bondsman underwriting:** whether a bail bondsman writes a bond now depends on charge severity, record, repeat offenses, missed court dates, ties and income, the size of the bond and the fee money on hand. It also sets the fee (10, 12 or 15 percent) and the most a bondsman will write. When one refuses, the bond card says why.

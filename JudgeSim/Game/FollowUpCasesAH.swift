@@ -170,7 +170,7 @@ extension FollowUpCases {
                     .direct("What about the monthly statements?", "\"I was going to fix it.\""),
                     .cross("You showed a trust balance that didn't exist.", "\"I know.\""),
                     .cross("Six months and five tenants.", "\"Yes.\"")],
-        openings: ("Tenants' money, a trust account that never existed.", "A fee dispute."),
+        openings: ("Tenants' money, a trust account that never existed.", "A lawyer owed fees and a client who later settled."),
         closings: ("The statements show {DL} knew exactly what {D.he} was doing.", "A fee dispute belongs in civil court."),
         timeline: [(-180, "{DL} hired to manage four houses."), (0, "A tenant asks for a deposit back; {V} finds no trust account.")],
         identified: "{V} reviewed the bank records after a tenant moved out.",

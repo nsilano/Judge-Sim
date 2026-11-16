@@ -524,7 +524,7 @@ extension FollowUpCases {
         truths: ("{DL} had a warrant.", "The stop was unlawful."),
         defendant: [.direct("Did you pull?", "\"I flinched.\""), .direct("Why?", "\"Scared.\""), .cross("After the first case.", "\"I know.\"")],
         openings: ("A pull.", "A flinch."),
-        closings: ("Again.", "A flinch."),
+        closings: ("The video shows a deliberate pull away.", "A flinch is not resisting."),
         timeline: [(0, "Evening: the stop.")],
         identified: "The body camera.",
         genders: ["D": .male])
@@ -597,7 +597,7 @@ extension FollowUpCases {
         truths: ("{DL} was outside {V}'s house.", "The account was hacked."),
         defendant: [.direct("Did you send it?", "\"No.\""), .direct("Hacked?", "\"Yes.\""), .cross("After the robbery case.", "\"I know.\"")],
         openings: ("A message to a victim.", "A hack."),
-        closings: ("The account.", "A hack."),
+        closings: ("The message was sent to the victim, so it was a threat.", "A hacked account sent it, not {D}."),
         timeline: [(0, "Evening: the message.")],
         identified: "{V}'s report.",
         mood: .wantsConviction,

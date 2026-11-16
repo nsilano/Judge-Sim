@@ -2028,7 +2028,7 @@ final class GameState: ObservableObject {
         }
         // Thin supervision on an overloaded probation office lets more people drift back into trouble.
         let overload = probationOverload
-        if rng.chance(0.04 + (overload > 1 ? min(0.04, (overload - 1) * 0.05) : 0)), !candidates.isEmpty {
+        if rng.chance(0.06 + (overload > 1 ? min(0.04, (overload - 1) * 0.05) : 0)), !candidates.isEmpty {
             let probationers = candidates.filter { $0.status == .probation }
             let person = rng.pick(overload > 1 && !probationers.isEmpty && rng.chance(0.5) ? probationers : candidates)
             if let prior = person.priors.last(where: { $0.fromThisCourt && $0.docket != nil && !($0.docket ?? "").hasSuffix("(PV)") }),
@@ -2038,20 +2038,24 @@ final class GameState: ObservableObject {
                 stats.chargedAgainAfterRelease = (stats.chargedAgainAfterRelease ?? 0) + 1
                 standing(.reoffendedAfterRuling, "Charged again after your sentence — \(person.name)", on: date)
                 noteRearrest(person.id, on: incident)
-                let fitting = FollowUpCases.newCharges.filter { FollowUpCases.fits($0, age: person.age(on: date)) }
-                reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: (fitting.isEmpty ? FollowUpCases.newCharges : fitting).shuffled(using: &rng),
+                let fitting = FollowUpCases.newCharges(forPrior: prior.offense).filter { FollowUpCases.fits($0, age: person.age(on: date)) }
+                reoffenseQueue.append(Reoffense(personID: person.id, templateKeys: (fitting.isEmpty ? FollowUpCases.newCharges(forPrior: prior.offense) : fitting).shuffled(using: &rng),
                                                 victimName: nil, incident: incident,
                                                 note: "Back in your court: you sentenced \(person.name) for \(prior.offense.lowercasedPhrase) on \(SentenceFormat.shortDate(entered.date)).",
                                                 priorOffense: prior.offense, priorDate: entered.date))
             }
         }
         // Cases that come back because of what this court decided.
+        var couldNotBuild: [Reoffense] = []
         while let index = reoffenseQueue.firstIndex(where: { !used.contains($0.personID) }) {
             let followUp = reoffenseQueue.remove(at: index)
             // Everything in the queue follows an arrest that already happened, so a later stint in custody doesn't
             // make the charge go away; the case is heard with the defendant brought over from the jail.
             guard let person = person(followUp.personID) else { continue }
-            if var c = generateCase(date: date, rng: &rng, excluding: &used, storySlot: false, followUp: followUp) {
+            // A follow-up that couldn't be built today waits for another day instead of being lost.
+            let regenerated = generateCase(date: date, rng: &rng, excluding: &used, storySlot: false, followUp: followUp)
+            if regenerated == nil { couldNotBuild.append(followUp); continue }
+            if var c = regenerated {
                 if person.status == .incarcerated, var bg = c.background {
                     bg.onRelease = false
                     c.background = bg
@@ -2087,6 +2091,7 @@ final class GameState: ObservableObject {
                 }
             }
         }
+        reoffenseQueue.append(contentsOf: couldNotBuild)
         // New indictments, when the court's docket has room for them.
         // Cases keep coming even when the court is full; a backed-up court just has more of them waiting.
         let underTarget = trialsInPipeline < pipelineTarget
@@ -3006,6 +3011,11 @@ final class GameState: ObservableObject {
             people[index].priors.append(contentsOf: outcome.newPriors)
             if let prs = outcome.pendingPostRelease { people[index].pendingPostRelease = prs }
             people[index].appearances.append(appearance)
+            // Someone sent to jail by the hearing is booked in: the case timeline shows the stay begin as well as end.
+            if outcome.status == .incarcerated {
+                log(.jailIn, personID: hearing.personID, name: hearing.personName, docket: appearance.docket, on: currentDate,
+                    "Booked into the \(county?.name ?? "county") jail on the order from the probation violation hearing.")
+            }
         }
         history.insert(CaseRecord(docket: hearing.probation.docket + " (PV)", caption: "Probation violation: \(hearing.personName)",
                                   headline: "Probation violation hearing", category: .procedure, date: currentDate,
@@ -3719,6 +3729,12 @@ final class GameState: ObservableObject {
                 // The indictment that would follow an arrest that never happened goes too.
                 if event.reoffense == nil {
                     pending.removeAll { $0.personID == personID && $0.reoffense.map { CourtCalendar.isSameDay($0.incident, event.due) } == true }
+                }
+                // A written follow-up for someone still serving a sentence isn't lost: it comes up after the release.
+                if event.reoffense != nil, let release = person(personID)?.releaseDate, release != .distantFuture {
+                    var later = event
+                    later.due = CourtCalendar.calendar.date(byAdding: .day, value: 45, to: max(release, currentDate)) ?? release
+                    pending.append(later)
                 }
                 continue
             }
@@ -4461,6 +4477,9 @@ final class GameState: ObservableObject {
     /// the people the judge hasn't already let go.
     private func sheriffNotices(jail: Int, on date: Date, rng: inout SeededRNG) {
         guard let county, let state = corrections else { return }
+        // People waiting on the state for a prison bed are the state's backlog, not the county's: the jail the sheriff
+        // counts against its beds leaves them out, the same as the crowding strain does.
+        let awaitingBed = people.filter { $0.inCountyJail(on: date) && $0.awaitingStateBed(on: date) }.count
         let cal = CourtCalendar.calendar
         let beds = state.beds
         let ratio = Double(jail) / Double(max(1, beds))
@@ -4470,7 +4489,7 @@ final class GameState: ObservableObject {
             let notice = state.notices[index]
             switch notice.kind {
             case .nearCapacity:
-                if jail > beds {
+                if jail - awaitingBed > beds {
                     corrections?.notices[index].closed = date
                     corrections?.notices[index].outcome = "The jail went over capacity on \(shortDate)."
                 } else if ratio < Corrections.warnAt - 0.08 {
@@ -4482,7 +4501,7 @@ final class GameState: ObservableObject {
                 let floor = Int(Double(beds) * Corrections.releaseFloor)
                 let due = notice.deadline.map { date >= $0 } ?? true
                 // The notice stands until the jail has some room again, or until the deadline finds it within capacity.
-                if jail <= floor || (due && jail <= beds) {
+                if jail - awaitingBed <= floor || (due && jail - awaitingBed <= beds) {
                     standing(.jailRecovered, "The jail is back under capacity without early releases", on: date)
                     corrections?.notices[index].closed = date
                     corrections?.notices[index].outcome = ordered > 0
@@ -4505,7 +4524,7 @@ final class GameState: ObservableObject {
         guard corrections?.openNotice == nil else { return }
         let lastRelease = state.notices.last { $0.kind == .releases }
         let recentRelease = lastRelease.map { date.timeIntervalSince($0.closed ?? $0.issued) < 7 * 86_400 } ?? false
-        if jail > beds && !recentRelease {
+        if jail - awaitingBed > beds && !recentRelease {
             let deadline = cal.date(byAdding: .day, value: Corrections.noticeDays, to: date) ?? date
             corrections?.notices.append(SheriffNotice(kind: .releases, issued: date, deadline: deadline, population: jail, beds: beds,
                 message: "Judge, the jail is holding \(jail) of your defendants in space for \(beds). Unless the count comes down, I'll begin releasing inmates on \(SentenceFormat.shortDate(deadline)), starting with those whose charges and records concern me least. You may choose who goes first from the jail roster. No one held for the State's prisons can be released."))

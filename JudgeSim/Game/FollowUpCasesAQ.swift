@@ -24,7 +24,7 @@ extension FollowUpCases {
         truths: ("The scooter was in {DL}'s van.", "A classmate said the scooter belonged to {DL}'s friend and was left in {DL}'s care."),
         defendant: [.direct("Did you cut the lock?", "\"Yes.\""), .direct("Whose scooter?", "\"A friend's.\""), .cross("Your van.", "\"Yes.\"")],
         openings: ("A cut lock.", "A friend."),
-        closings: ("Video.", "A friend."),
+        closings: ("The video shows the lock cut and the scooter taken.", "It was a friend's scooter, borrowed with permission."),
         timeline: [(0, "A rack lock is cut."), (1, "{V} reports the scooter.")],
         identified: "A campus camera.",
         impact: "Again a stolen ride.",
@@ -120,7 +120,7 @@ extension FollowUpCases {
         truths: ("{DL} pawned the tools within two days of the theft.", "The cousin texted {DL} 'sell these and send me half'."),
         defendant: [.direct("Did you steal them?", "\"No.\""), .direct("Why pawn?", "\"The cousin asked.\""), .cross("Your ID.", "\"Yes.\"")],
         openings: ("A ticket.", "A cousin."),
-        closings: ("Serials.", "A cousin."),
+        closings: ("The serial numbers match the stolen tools on the pawn ticket.", "The cousin brought the tools, and {D} never knew."),
         timeline: [(0, "The truck is burgled."), (4, "{DL} pawns the tools.")],
         identified: "A pawn ticket.",
         impact: "Again.")

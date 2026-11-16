@@ -12,7 +12,7 @@ enum FollowUpCases {
         kitchenAgain, hospitalNight, barParkingLot, occupiedHouse, gasStationKnife, secondCrash, overdoseDeath, newMark,
         eludingStop, warehouseTheft, carBreakIns,
         harassAgain, assaultAgain, theftAgain, drugsAgain
-    ], batchAB, batchAC, batchAD, batchAE, batchAF, batchAG, batchAH, batchAI, batchAJ, batchAK, batchAL, batchAM, batchAN, batchAO, batchAP, batchAQ, batchAR, batchAS, batchAT, batchAU, batchAV, batchAW, batchAX, batchAY, batchAZ, batchBA, batchBB, batchBC, batchBD, batchBE, batchBF, batchBG, batchBH, batchBI] as [[CaseTemplate]]).flatMap { $0 }
+    ], batchAB, batchAC, batchAD, batchAE, batchAF, batchAG, batchAH, batchAI, batchAJ, batchAK, batchAL, batchAM, batchAN, batchAO, batchAP, batchAQ, batchAR, batchAS, batchAT, batchAU, batchAV, batchAW, batchAX, batchAY, batchAZ, batchBA, batchBB, batchBC, batchBD, batchBE, batchBF, batchBG, batchBH, batchBI, batchBJ, batchBK, batchBL, batchBM] as [[CaseTemplate]]).flatMap { $0 }
 
     /// Stay-away order violations: domestic first, then the rest.
     static let domesticViolations = ["story.followup.workplaceVisit", "story.followup.newNumber"]
@@ -26,6 +26,23 @@ enum FollowUpCases {
     /// New arrests unrelated to the earlier case.
     static let newCharges = ["story.followup.eludingStop", "story.followup.warehouseTheft", "story.followup.carBreakIns",
                              "story.followup.theftAgain", "story.followup.drugsAgain"]
+
+    /// The general new arrests that suit what the person was convicted of before: a theft follows a theft, a drug
+    /// charge a drug charge, a traffic stop a driving offense; anything else draws from all of them.
+    static func newCharges(forPrior offense: String?) -> [String] {
+        let text = (offense ?? "").lowercased()
+        func has(_ words: [String]) -> Bool { words.contains { text.contains($0) } }
+        if has(["controlled", "cocaine", "heroin", "marijuana", "drug", "trafficking", "paraphernalia", "fentanyl", "opioid", "opium"]) {
+            return ["story.followup.drugsAgain"]
+        }
+        if has(["driving", "dwi", "fleeing", "reckless", "speed", "hit and run", "license", "vehicle"]) {
+            return ["story.followup.eludingStop"]
+        }
+        if has(["larceny", "theft", "burglary", "breaking", "stolen", "robbery", "arson", "trespass", "property", "fraud", "forgery", "embezzle"]) {
+            return ["story.followup.warehouseTheft", "story.followup.carBreakIns", "story.followup.theftAgain"]
+        }
+        return newCharges
+    }
 
     // MARK: - Stay-away violations
 

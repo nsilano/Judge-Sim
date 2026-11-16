@@ -2,13 +2,14 @@
 
 Remaining from the playtest agents (Nov 2026). Items are removed as they are fixed.
 
+## Content still to write
+- 152 stories have no variant yet (batches O, P, U and V were never written).
+
 ## Design or tuning calls (left as they are)
 - Murder trials are rare (0 to 2 per 120 weeks) because of the murder limit and pacing rules; raising it is a pacing decision.
 - The director's county-state weighting changes little compared with the frequency table and genre rotation.
 - Each story has at most one variant, so the original returns on the third hearing (more variants would fix it). About 40% of draws end in a plea at calendar call.
-- About 133 older stories have no aftermath news beats.
-- 342 older follow-ups (not the batches written this month) share the same opening and closing arguments.
-- Five generic follow-ups serve any defendant and can mismatch.
+- About 14 older stories still have no aftermath news beat (their new follow-ups duplicated existing scenes and were removed).
 - Class 3 misdemeanor "0 days" is correct (fine only, G.S. 15A-1340.23(d)); probation on it shows as a departure.
 
 ## Not fixed

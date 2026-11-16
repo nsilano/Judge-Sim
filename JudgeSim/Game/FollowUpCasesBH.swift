@@ -4,7 +4,7 @@ private typealias E = EvidenceSeed
 
 /// Follow-up trials, batch BH: the same defendant comes back to this court.
 extension FollowUpCases {
-    static let batchBH: [CaseTemplate] = [scaldChildAbuseAgain2, privateImagesPostAgain2, clubAmbushKillingAgain2, constructionDumpingAgain2, payrollClerkTheftAgain2, prankNineOneOneAgain2, revokedFamilyCrashAgain2, painClinicAgain2, homeInvasionAgain2, formerRoommateKeyAgain2, formerEmployeeFilesAgain2, heatOfPassionAgain2, postedPondAgain2, loyaltyCardClonesAgain2, jailLockdownRiotAgain2, lakeCrashFatalAgain2, pillPressAgain2]
+    static let batchBH: [CaseTemplate] = [scaldChildAbuseAgain2, privateImagesPostAgain2, clubAmbushKillingAgain2, constructionDumpingAgain2, payrollClerkTheftAgain2, prankNineOneOneAgain2, painClinicAgain2, homeInvasionAgain2, formerRoommateKeyAgain2, formerEmployeeFilesAgain2, heatOfPassionAgain2, loyaltyCardClonesAgain2, jailLockdownRiotAgain2, lakeCrashFatalAgain2, pillPressAgain2]
 
     static let scaldChildAbuseAgain2 = SmallCases.make(
         key: "story.followup.scaldChildAbuseAgain2",
@@ -153,30 +153,6 @@ extension FollowUpCases {
         mood: .wantsConviction,
         impact: "They broke down our door while we were away.")
 
-    static let revokedFamilyCrashAgain2 = SmallCases.make(
-        key: "story.followup.revokedFamilyCrashAgain2",
-        category: .traffic,
-        headlines: ["Revoked Driver Hits Parked Car at Car Wash Vacuum Bay"],
-        law: "dwlrImpaired",
-        spec: "Operated a motor vehicle while license revoked for an impaired driving offense, on {DATE}.",
-        ages: 18...60,
-        victim: false,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, {D} backed into a parked car at a car wash vacuum bay on {DATE}. A deputy found the license still revoked and {D} blew .09. {DL} says mouthwash caused the reading.",
-        state: [E(.forensic, 3, "Breath Result", "A result of .09."), E(.document, 2, "DMV Record", "License still revoked.")],
-        defense: [E(.statement, 1, "Mouthwash", "{DL} says mouthwash caused the reading.")],
-        role: "Sheriff's deputy",
-        exam: [.direct("What did you see?", "\"A car backing into a parked one.\""), .direct("The license?", "\"Revoked.\""), .cross("Mouthwash?", "\"There was a bottle.\"")],
-        theory: ("{D} drove revoked and impaired again.", "Mouthwash."),
-        allocution: "\"I should not have driven.\"",
-        truths: ("{DL} had been at a bar an hour earlier.", "A fifteen-minute wait was not observed before the test."),
-        defendant: [.direct("Drinking?", "\"No.\""), .direct("Why drive?", "\"The car needed cleaning.\""), .cross("Revoked.", "\"Yes.\"")],
-        openings: ("A revoked license and a .09.", "Mouthwash."),
-        closings: ("The result.", "The missed wait."),
-        timeline: [(0, "4 p.m.: {DL} leaves a bar."), (0, "5 p.m.: the crash."), (0, "5:30 p.m.: the breath test.")],
-        identified: "A deputy at the scene.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
-        mood: .wantsConviction)
-
     static let painClinicAgain2 = SmallCases.make(
         key: "story.followup.painClinicAgain2",
         category: .drugs,
@@ -297,30 +273,6 @@ extension FollowUpCases {
         identified: "A restaurant camera.",
         mood: .divided,
         impact: "I have a scar down my arm.")
-
-    static let postedPondAgain2 = SmallCases.make(
-        key: "story.followup.postedPondAgain2",
-        category: .property,
-        headlines: ["Hunter Found in Deer Stand on Posted Timberland"],
-        law: "trespass2",
-        spec: "Entered and remained on premises of {V}, a timber tract, after being notified not to enter, on {DATE}.",
-        ages: 24...62,
-        victim: true,
-        summary: "After {DL}'s case in this court in {PRIORDATE} for {PRIOR}, a trail camera on {DATE} showed {D} climbing into a deer stand on {V}'s posted timber tract at dawn. {DL} says a hunting club lease covered the land.",
-        state: [E(.video, 3, "Trail Camera", "{D} climbs into a stand at 6:05 a.m."), E(.physical, 2, "Posted Signs", "Signs every 200 feet along the road.")],
-        defense: [E(.document, 1, "Club Lease Map", "A club map that includes the tract.")],
-        role: "Landowner",
-        exam: [.direct("What did the camera show?", "\"{DL} in the stand at dawn.\""), .direct("Was the land leased?", "\"The lease ended in July.\""), .cross("The club's map?", "\"It was out of date.\"")],
-        theory: ("{D} hunted on posted land after notice.", "A lease map that included the tract."),
-        allocution: "\"I should have checked.\"",
-        truths: ("The club president told {DL} the lease ended in July.", "The club president handed {DL} the old map and said the tract was in."),
-        defendant: [.direct("Did you see the signs?", "\"On the road, but the map said I could.\""), .direct("Who gave you the map?", "\"The club president.\""), .cross("Lease ended in July.", "\"I was not told.\"")],
-        openings: ("A stand on posted land.", "A club map."),
-        closings: ("The signs.", "The map."),
-        timeline: [(-90, "The lease ends."), (0, "6:05 a.m.: {DL} climbs into the stand."), (0, "8 a.m.: {V} checks the camera.")],
-        identified: "A trail camera.",
-        mood: .indifferent,
-        doctrines: ["burdenOfProof", "mistakeOfFact"])
 
     static let loyaltyCardClonesAgain2 = SmallCases.make(
         key: "story.followup.loyaltyCardClonesAgain2",

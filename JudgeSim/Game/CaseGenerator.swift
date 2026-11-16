@@ -135,7 +135,7 @@ enum CaseGenerator {
             var candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
             // Late in a career, cases that can be told another way come first: a story already heard that still has a
             // telling this judge hasn't seen. Once every written case has been heard, only those come up; before that,
-            // half the draws go to them after the first 300 cases are behind the judge.
+            // half the draws go to them once 40 different cases are behind the judge.
             func hasUnseenTelling(_ t: CaseTemplate) -> Bool {
                 let heard = useCounts[t.key] ?? 0
                 return heard > 0 && heard <= (StoryVariants.byKey[t.key]?.count ?? 0)
@@ -143,7 +143,7 @@ enum CaseGenerator {
             if fewest >= 1 {
                 let retellable = candidates.filter(hasUnseenTelling)
                 if !retellable.isEmpty { candidates = retellable }
-            } else if all.filter({ (useCounts[$0.key] ?? 0) > 0 }).count >= 300 && rng.chance(0.5) {
+            } else if all.filter({ (useCounts[$0.key] ?? 0) > 0 }).count >= 40 && rng.chance(0.5) {
                 let retellable = all.filter(hasUnseenTelling)
                 if !retellable.isEmpty { candidates = retellable }
             }
@@ -156,7 +156,7 @@ enum CaseGenerator {
             if !candidates.isEmpty {
                 // Murder trials come up now and then, not every week: most draws go to another kind of case.
                 let others = candidates.filter { !isMurder($0) }
-                var pool = !others.isEmpty && rng.chance(0.65) ? others : candidates
+                var pool = !others.isEmpty && rng.chance(0.8) ? others : candidates
                 // Early in a career a random slice of the bank is on offer, so a restart doesn't open with the same
                 // cases: the director only chooses among the slice.
                 if useCounts.values.reduce(0, +) < 150 && pool.count > 60 {
@@ -1194,7 +1194,8 @@ enum CaseGenerator {
                 } else if contactless {
                     if rng.chance(0.5) { restitution = rng.int(3...20) * 100; basis = rng.pick(["counseling costs", "new locks and a security camera", "counseling and a changed phone number"]) }
                 } else if t.hasVictim {
-                    restitution = rng.int(8...90) * 100 * (t.category == .traffic ? 4 : 1)
+                    // A minor offense asks for a minor sum: an irritated eye is not a $5,000 medical bill.
+                    restitution = (petty ? rng.int(3...15) : rng.int(8...90)) * 100 * (t.category == .traffic ? 4 : 1)
                     basis = t.category == .traffic ? rng.pick(["medical bills and vehicle damage", "the victim's medical bills"])
                         : rng.pick(["medical bills", "emergency room and follow-up care", "medical bills and lost wages", "counseling and medical costs"])
                 }

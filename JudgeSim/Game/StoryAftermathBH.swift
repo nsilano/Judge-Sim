@@ -39,12 +39,6 @@ extension StoryAftermath {
                  body: "Deputies forced a door and found an empty house. Authorities say {D}, whose earlier case was heard by Judge {JUDGE}, is facing a new charge.",
                  followUps: ["story.followup.prankNineOneOneAgain2"])
         ],
-        "story.revokedFamilyCrash": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.25, days: 30...240,
-                 headline: "Revoked Driver Hits Parked Car at Car Wash Vacuum Bay",
-                 body: "A deputy at the scene checked the license and ran a breath test. Authorities say {D}, whose earlier case was heard by Judge {JUDGE}, is facing a new charge.",
-                 followUps: ["story.followup.revokedFamilyCrashAgain2"])
-        ],
         "story.painClinic": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.25, days: 30...240,
                  headline: "Weight-Loss Telehealth Clinic Prescribed Amphetamine After Video Visits",
@@ -74,12 +68,6 @@ extension StoryAftermath {
                  headline: "Restaurant Argument Ends With Shove Through Glass Door",
                  body: "An injured customer needed forty stitches. Authorities say {D}, whose earlier case was heard by Judge {JUDGE}, is facing a new charge.",
                  followUps: ["story.followup.heatOfPassionAgain2"])
-        ],
-        "story.postedPond": [
-            Beat(triggers: [.freed, .probation, .cleared], chance: 0.25, days: 30...240,
-                 headline: "Hunter Found in Deer Stand on Posted Timberland",
-                 body: "A trail camera caught the climb at dawn. Authorities say {D}, whose earlier case was heard by Judge {JUDGE}, is facing a new charge.",
-                 followUps: ["story.followup.postedPondAgain2"])
         ],
         "story.loyaltyCardClones": [
             Beat(triggers: [.freed, .probation, .cleared], chance: 0.25, days: 30...240,

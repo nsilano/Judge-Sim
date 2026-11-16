@@ -1075,7 +1075,9 @@ enum Judgment {
         if r.money.fine > 0 { items.append(("Fine", r.money.fine)) }
         if r.money.courtCosts { items.append(("Court costs", FinancialOrders.courtCosts)) }
         if r.money.restitution > 0 { items.append(("Restitution", r.money.restitution)) }
-        if r.money.attorneyFees && appointedCounsel(c) {
+        // Appointed-counsel fees are billed only to someone the court treats as indigent: not a defendant who could put up
+        // thousands toward a bond.
+        if r.money.attorneyFees && appointedCounsel(c) && (c.background?.canPost ?? 0) < 5_000 {
             items.append(("Appointed attorney fees", c.background?.attorneyFeeEstimate ?? 1_500))
             items.append(("Attorney appointment fee", FinancialOrders.appointmentFee))
         }

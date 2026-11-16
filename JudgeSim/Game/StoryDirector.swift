@@ -122,9 +122,9 @@ extension CaseTags {
         case .F?: return 1.0
         case .E?: return 0.7
         case .D?: return 0.55
-        case .C?: return 0.4
-        case .B2?, .B1?: return 0.35
-        case .A?: return 0.3
+        case .C?: return 0.6
+        case .B2?, .B1?: return 0.55
+        case .A?: return 0.5
         case nil: return 1.0
         }
     }
@@ -185,14 +185,14 @@ struct DirectorSnapshot {
         if verdicts.count >= 6 {
             let recent = verdicts.prefix(6)
             let convicted = recent.filter { $0 }.count
-            if 6 - convicted >= 4 && tags.contains("mood:wantsConviction") { s *= 1.5; why.append("a run of acquittals") }
-            if convicted >= 5 && tags.contains("mood:sympathetic") { s *= 1.5; why.append("a run of convictions") }
+            if 6 - convicted >= 4 && tags.contains("mood:wantsConviction") { s *= 2.5; why.append("a run of acquittals") }
+            if convicted >= 5 && tags.contains("mood:sympathetic") { s *= 2.5; why.append("a run of convictions") }
         }
         if let activeShare, activeShare > 0.75, tags.contains("mood:sympathetic") { s *= 1.2 }
 
         // What the court's releases did: people who came back put victims in the story.
-        if reoffenses90 >= 2 && tags.contains("victim") { s *= 1.3; why.append("recent reoffenses") }
-        if violentReleases90 >= 2 && tags.contains("theme:weapon") { s *= 1.3 }
+        if reoffenses90 >= 2 && tags.contains("victim") { s *= 2.2; why.append("recent reoffenses") }
+        if violentReleases90 >= 2 && tags.contains("theme:weapon") { s *= 2.2 }
         return (s, why)
     }
 
