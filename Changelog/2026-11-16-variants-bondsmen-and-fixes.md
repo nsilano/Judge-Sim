@@ -1,8 +1,8 @@
 # 2026-11-16 — Variants, bondsman underwriting, State positions, and a round of fixes
 
 ## New content
-- 378 more story variants (50 real-case stories, 100 older stories, and 228 more older stories). 698 of the 850 stories now have an alternate telling. 152 stories still have none.
-- 152 more follow-ups: a second follow-up for 50 older stories, and a first follow-up (with aftermath news) for 102 stories that had none. 889 follow-ups in all.
+- 530 more story variants. All 850 stories now have an alternate telling.
+- 152 more follow-ups: a second follow-up for 50 older stories, and a first follow-up (with aftermath news) for 102 stories that had none. 901 follow-ups in all; every story has a follow-up.
 - A variant that writes no extra counts keeps the original story's (for example the death count in a hit-and-run), so the victim's fate and charges stay the same case.
 
 ## Returning defendants and pacing
