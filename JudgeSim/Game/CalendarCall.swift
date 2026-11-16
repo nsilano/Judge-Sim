@@ -157,8 +157,13 @@ struct BondFacts: Codable, Hashable {
     /// those bonds had to be posted in cash).
     var feeRate: Double? = nil
     var bondsman: Bool? = nil
+    /// What a bondsman will write at most, and the reason one won't (optional for older saves).
+    var ceiling: Int? = nil
+    var reason: String? = nil
+    /// What the State asked for at the first appearance (optional for older saves).
+    var stateAsk: Int? = nil
 
-    var money: BailMoney { BailMoney(cash: canPost, feeRate: feeRate ?? 0.15, bondsman: bondsman ?? false) }
+    var money: BailMoney { BailMoney(cash: canPost, feeRate: feeRate ?? 0.15, bondsman: bondsman ?? false, ceiling: ceiling ?? 250_000, reason: reason) }
 }
 
 /// What a defendant can come up with for bail: cash on hand, and whether a bail bondsman will write the bond for a fee.
@@ -168,12 +173,15 @@ struct BailMoney: Hashable {
     var cash: Int
     var feeRate: Double
     var bondsman: Bool
+    /// The most a bondsman will write for this defendant, and why one won't when none will.
+    var ceiling: Int = 250_000
+    var reason: String? = nil
 
     /// The largest secured bond the defendant can make: in cash, or through a bondsman who will write up to $250,000.
     var reach: Int {
         guard bondsman, cash > 0 else { return cash }
         let viaBondsman = Int((Double(cash) / feeRate / 500).rounded(.down)) * 500
-        return max(cash, min(250_000, viaBondsman))
+        return max(cash, min(ceiling, viaBondsman))
     }
 
     func canMake(_ amount: Int) -> Bool { amount <= reach }
@@ -187,7 +195,7 @@ struct BailMoney: Hashable {
     func short(against ask: Int?) -> String {
         if cash == 0 { return "Can't pay anything." }
         if let ask, ask > 0, cash >= ask { return "Can post the State's $\(ask.formatted()) in cash." }
-        if !bondsman { return "Has ~$\(cash.formatted()); no bondsman will take it." }
+        if !bondsman { return "Has ~$\(cash.formatted()); no bondsman will take it" + (reason.map { " (\($0))." } ?? ".") }
         return "Can pay ~$\(cash.formatted()); a bondsman would cover up to $\(reach.formatted())."
     }
 
@@ -208,7 +216,7 @@ struct BailMoney: Hashable {
     /// "can pay about $2,500, enough for a bondsman's fee on a bond up to about $16,500"
     var plain: String {
         if cash == 0 { return "can't pay anything toward a bond" }
-        if !bondsman { return "has about $\(cash.formatted()), but no bail bondsman will take the case, so any secured bond has to be paid in full out of pocket" }
+        if !bondsman { return "has about $\(cash.formatted()), but no bail bondsman will take the case" + (reason.map { " (\($0))" } ?? "") + ", so any secured bond has to be paid in full out of pocket" }
         return "can pay about $\(cash.formatted()), enough for a bondsman's \(Int((feeRate * 100).rounded()))% fee on a bond up to about $\(reach.formatted())"
     }
 
@@ -553,7 +561,15 @@ enum CalendarCalls {
         let scale = bondScale(worst, violent: violent, felonies: felonies, ftas: ftas, rng: &rng)
         let moderate = scale.unsecured
         let high = scale.secured
-        let money = BailMoney.draw(employed: employed, local: local, ftas: ftas, rng: &rng)
+        var money = BailMoney.draw(employed: employed, local: local, ftas: ftas, rng: &rng)
+        // Whether a bondsman will write this bond is underwriting: the charge, the record, the State's ask, and the
+        // defendant's ties and means decide it, not a coin flip.
+        let underwriting = BondsmanUnderwriting.assess(
+            BondsmanUnderwriting.inputs(for: c, local: local, employed: employed, ftas: ftas, ask: high, cash: money.cash), seed: c.seed)
+        money.bondsman = underwriting.willing
+        money.feeRate = underwriting.feeRate
+        money.ceiling = underwriting.ceiling
+        money.reason = underwriting.reason
         let canPost = money.cash
         let law = c.charges.first?.law
         // Iryna's Law (S.L. 2025-93): a felony charge involving violence. Only a judge sets conditions, the law presumes
@@ -619,7 +635,9 @@ enum CalendarCalls {
                               options: options,
                               lawNote: lawNote,
                               pendingCase: c, bond: BondFacts(moderate: moderate, high: high, canPost: canPost, flightRisk: flightRisk, danger: danger,
-                                                              feeRate: money.feeRate, bondsman: money.bondsman),
+                                                              feeRate: money.feeRate, bondsman: money.bondsman,
+                                                              ceiling: money.ceiling, reason: money.reason,
+                                                              stateAsk: scale.wantsSecured || violentOffense ? high : moderate),
                               amountOptions: [2, 3, 4], amountRange: floor...max(500_000, high * 2, floor * 2), suggestedAmount: suggested,
                               suggestedAmounts: [2: moderate], unavailableOptions: unavailable)
     }
@@ -654,8 +672,14 @@ enum CalendarCalls {
         // What the defendant told the court at the first hearing, when the court heard it.
         let ftas = missedCourtDates(c)
         let drawn = BailMoney.draw(employed: employed, local: true, ftas: ftas, rng: &rng)
-        let money = BailMoney(cash: c.background?.canPost ?? drawn.cash, feeRate: c.background?.bondsmanRate ?? drawn.feeRate,
-                              bondsman: c.background?.bondsmanWilling ?? drawn.bondsman)
+        let cashOnHand = c.background?.canPost ?? drawn.cash
+        // The same underwriting as at the first hearing, against the bond the defendant is held on now.
+        let reUnderwriting = BondsmanUnderwriting.assess(
+            BondsmanUnderwriting.inputs(for: c, local: true, employed: employed, ftas: ftas, ask: current, cash: cashOnHand), seed: c.seed)
+        let money = BailMoney(cash: cashOnHand, feeRate: c.background?.bondsmanRate ?? reUnderwriting.feeRate,
+                              bondsman: c.background?.bondsmanWilling ?? reUnderwriting.willing,
+                              ceiling: c.background?.bondsmanCeiling ?? reUnderwriting.ceiling,
+                              reason: c.background?.bondsmanReason ?? reUnderwriting.reason)
         let canPost = money.cash
         let felonies = d.priors.filter { $0.ncClass.isFelony }.count
         let flight = min(0.6, 0.06 + 0.12 * Double(ftas) + (employed ? 0 : 0.06) + 0.02 * Double(d.priors.count))
@@ -672,11 +696,9 @@ enum CalendarCalls {
         let opening = courtOrdered
             ? "Your bond review: \(d.name), \(heldText) on \(law)."
             : "\(d.name), \(heldText) on \(law), asks for \(noBond ? "conditions of release" : "a lower bond")."
-        let stateAsk: String
-        if noBond { stateAsk = "Keep holding without bond." }
-        else if ftas > 0 { stateAsk = "Opposes: missed court before." }
-        else if violent { stateAsk = "Opposes: violent charge." }
-        else { stateAsk = "Would agree to a modest cut with a monitor." }
+        let wanted = money.canMake(current) ? nil : roundBond(Double(max(money.reach, 500)) * 0.8)
+        let stateAsk = PartyPositions.stateOnReduction(PartyPositions.facts(for: c, ftas: ftas, noBond: noBond),
+                                                       current: current, requested: wanted).line
         let defenseAsk: String
         if !noBond && money.canMake(current) {
             defenseAsk = "Can post the $\(current.formatted()) as it stands; asks to leave it."
@@ -698,7 +720,7 @@ enum CalendarCalls {
                               lawNote: violentOffense ? "Iryna's Law: release only on " + (priorViolent ? "house arrest (earlier violent conviction)." : "a secured bond or house arrest.") : nil,
                               pendingCase: jailed,
                               bond: BondFacts(moderate: current, high: current, canPost: canPost, flightRisk: flight, danger: danger,
-                                              feeRate: money.feeRate, bondsman: money.bondsman),
+                                              feeRate: money.feeRate, bondsman: money.bondsman, ceiling: money.ceiling, reason: money.reason),
                               amountOptions: [0, 2, 3], amountRange: 500...max(500_000, current * 2), suggestedAmount: max(500, min(current / 2, max(500, money.reach))),
                               suggestedAmounts: [3: max(500, current / 2)], unavailableOptions: unavailable)
     }

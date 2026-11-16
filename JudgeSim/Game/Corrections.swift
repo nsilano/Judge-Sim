@@ -168,9 +168,11 @@ struct JailInmate: Identifiable, Hashable {
     var reviewSet = false
     var bondsmanRate: Double? = nil
     var bondsmanWilling: Bool? = nil
+    var bondsmanCeiling: Int? = nil
+    var bondsmanReason: String? = nil
 
     /// Cash on hand and what a bondsman would write, when the bond hearing learned it.
-    var money: BailMoney? { canPost.map { BailMoney(cash: $0, feeRate: bondsmanRate ?? 0.15, bondsman: bondsmanWilling ?? false) } }
+    var money: BailMoney? { canPost.map { BailMoney(cash: $0, feeRate: bondsmanRate ?? 0.15, bondsman: bondsmanWilling ?? false, ceiling: bondsmanCeiling ?? 250_000, reason: bondsmanReason) } }
 
     var noBond: Bool { (bond ?? "").hasPrefix("Held without bond") }
 

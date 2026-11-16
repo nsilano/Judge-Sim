@@ -941,7 +941,7 @@ final class GameState: ObservableObject {
                 guard case .trial(var c) = entry.matter, c.id == r.caseID, var bg = c.background, !bg.isJailed else { return }
                 // Someone who can make the doubled bond posts it and is out again the same day.
                 if let bond = r.bond, let cash = bg.canPost,
-                   BailMoney(cash: cash, feeRate: bg.bondsmanRate ?? 0.15, bondsman: bg.bondsmanWilling ?? false).canMake(bond) {
+                   BailMoney(cash: cash, feeRate: bg.bondsmanRate ?? 0.15, bondsman: bg.bondsmanWilling ?? false, ceiling: bg.bondsmanCeiling ?? 250_000).canMake(bond) {
                     bg.bondStatus = r.status + " Posted the doubled bond the same day."
                     c.background = bg
                     entry.matter = .trial(c)
@@ -1001,7 +1001,8 @@ final class GameState: ObservableObject {
     /// A written case where a plea bargain is plausible: not a homicide, and not one the State would never offer.
     private func pleaFits(_ c: CourtCase) -> Bool {
         guard let law = c.charges.first?.law, let cls = law.ncClass else { return false }
-        return ![NCClass.A, .B1, .B2].contains(cls) && c.category != .family
+        // A small case (a misdemeanor) goes to a bench trial; it isn't pled out at the arraignment.
+        return cls.isFelony && ![NCClass.A, .B1, .B2].contains(cls) && c.category != .family
     }
 
     /// A case built around an arrest the court already knows the date of: the incident comes before it, and the
@@ -2514,6 +2515,10 @@ final class GameState: ObservableObject {
                         bg.canPost = bond.canPost
                         bg.bondsmanRate = bond.feeRate
                         bg.bondsmanWilling = bond.bondsman
+                        bg.bondsmanCeiling = bond.ceiling
+                        bg.bondsmanReason = bond.reason
+                        bg.stateBondAsk = bond.stateAsk ?? bg.stateBondAsk
+                        bg.lastBondMotion = call.date
                         bg.custodyDays = clampedCustodyDays(bg.custodyDays, for: c, on: call.date)
                         bg.onRelease = false
                         bg.heldOnCourtBond = true
@@ -2696,6 +2701,11 @@ final class GameState: ObservableObject {
         bg.canPost = bond.canPost
         bg.bondsmanRate = bond.feeRate
         bg.bondsmanWilling = bond.bondsman
+        bg.bondsmanCeiling = bond.ceiling
+        bg.bondsmanReason = bond.reason
+        bg.stateBondAsk = bond.stateAsk ?? bg.stateBondAsk
+        // A bond motion has now been heard; the next one isn't filed for six weeks.
+        bg.lastBondMotion = date
         let kind = condition.contains("promise") ? "Written promise" : condition.contains("custody of") ? "Custody release"
             : condition.contains("unsecured") ? "Unsecured bond" : condition.contains("house arrest") ? "Secured bond with house arrest" : "Secured bond"
         var kinds = stats.bondKinds ?? [:]
@@ -4299,7 +4309,8 @@ final class GameState: ObservableObject {
                                      trialDate: scheduled.first { if case .trial(let t) = $0.entry.matter { return t.id == c.id } else { return false } }?.date,
                                      waitingToPlead: arraignQueue.contains { $0.courtCase.id == c.id },
                                      canPost: c.background?.canPost, reviewSet: bondReviews.contains(c.id),
-                                     bondsmanRate: c.background?.bondsmanRate, bondsmanWilling: c.background?.bondsmanWilling))
+                                     bondsmanRate: c.background?.bondsmanRate, bondsmanWilling: c.background?.bondsmanWilling,
+                                     bondsmanCeiling: c.background?.bondsmanCeiling, bondsmanReason: c.background?.bondsmanReason))
         }
         return roster
     }
@@ -4902,7 +4913,7 @@ final class GameState: ObservableObject {
             // Held on a bond the defendant can plainly make: the bond gets posted.
             // A bond the court already ruled the defendant couldn't post stays unposted; only older files get this fix.
             if bg.heldOnCourtBond != true, !bg.bondStatus.hasPrefix("Held without bond"), let amount = Corrections.dollars(in: bg.bondStatus), let cash = bg.canPost,
-               BailMoney(cash: cash, feeRate: bg.bondsmanRate ?? 0.15, bondsman: bg.bondsmanWilling ?? false).canMake(amount) {
+               BailMoney(cash: cash, feeRate: bg.bondsmanRate ?? 0.15, bondsman: bg.bondsmanWilling ?? false, ceiling: bg.bondsmanCeiling ?? 250_000).canMake(amount) {
                 bg.onRelease = true
                 bg.heldOnCourtBond = false
                 bg.bondStatus += " Posted the $\(amount.formatted()) bond."
