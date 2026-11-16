@@ -15,7 +15,7 @@ enum StoryVariants {
     static let all: [CaseTemplate] = batches.flatMap { $0 }
 
     private static let batches: [[CaseTemplate]] = [
-        variantsA, variantsB, variantsC, variantsD, variantsE, variantsF, variantsG, variantsH, variantsI,
+        variantsA, variantsB, variantsC, variantsD, variantsE, variantsF, variantsG, variantsH, variantsI, variantsJ, variantsK, variantsL, variantsM, variantsN,
         // More batches: variantsB, variantsC, ...
     ]
 
