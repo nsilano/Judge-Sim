@@ -66,7 +66,7 @@ enum BondsmanUnderwriting {
 
         let title = i.chargeTitle.lowercased()
         if i.category == .violent || i.category == .robbery { add(-10, "a violent charge") }
-        if ["rape", "sexual", "child", "kidnap"].contains(where: title.contains) { add(-12, "the nature of the offense") }
+        if ["rape", "sexual", "child abuse", "child sex", "kidnap", "minor"].contains(where: title.contains) { add(-12, "the nature of the offense") }
         if ["weapon", "firearm", "gun", "discharg"].contains(where: title.contains) { add(-5, "a weapon involved") }
         if title.contains("trafficking") { add(-10, "a trafficking charge") }
         if i.otherCharges > 0 { add(-3 * min(3, i.otherCharges), "additional counts") }
@@ -123,7 +123,7 @@ enum BondsmanUnderwriting {
         let x = a.lowercased(), y = b.lowercased()
         if x == y { return true }
         let families = ["larceny", "theft", "assault", "burglary", "breaking", "robbery", "fraud", "forgery", "embezzle",
-                        "possession", "sale of", "delivery", "trafficking", "driving while impaired", "dwi", "weapon", "stalking",
+                        "possession of", "sale of", "delivery", "trafficking", "driving while impaired", "dwi", "stalking",
                         "arson", "trespass", "false pretense", "uttering", "identity"]
         return families.contains { x.contains($0) && y.contains($0) }
     }

@@ -24,12 +24,29 @@ enum InvestigationArc {
         switch c.category {
         case .violent: return Consequences.victimDied(c) ? "a death" : "an assault"
         case .robbery: return "a robbery"
-        case .property: return title.contains("arson") || title.contains("burn") ? "a fire" : "a break-in"
-        case .drugs: return Consequences.victimDied(c) ? "an overdose death" : "drug sales"
-        case .whiteCollar: return "missing money"
+        case .property:
+            if title.contains("arson") || title.contains("burn") { return "a fire" }
+            if title.contains("burglary") || title.contains("breaking") { return "a break-in" }
+            if title.contains("larceny") || title.contains("stolen") { return "a theft" }
+            if title.contains("trespass") { return "a trespassing complaint" }
+            if title.contains("injury to") { return "vandalism" }
+            return "a property crime"
+        case .drugs:
+            if Consequences.victimDied(c) { return "an overdose death" }
+            if title.contains("sale") || title.contains("deliver") || title.contains("intent") || title.contains("trafficking") { return "drug sales" }
+            if title.contains("possession") || title.contains("paraphernalia") { return "a drug complaint" }
+            return "a drug investigation"
+        case .whiteCollar:
+            if title.contains("false pretenses") || title.contains("fraud") || title.contains("forgery") { return "suspected fraud" }
+            return "missing money"
         case .cyber: return "online harassment"
         case .family: return "a case involving a child"
-        case .traffic: return Consequences.victimDied(c) ? "a fatal crash" : "a crash"
+        case .traffic:
+            if Consequences.victimDied(c) { return "a fatal crash" }
+            if title.contains("hit and run") || title.contains("death by vehicle") { return "a crash" }
+            if title.contains("impaired") && !title.contains("revoked") { return "a drunk-driving incident" }
+            if title.contains("elude") { return "a police chase" }
+            return "a traffic stop"
         default: return title
         }
     }
@@ -81,10 +98,12 @@ enum InvestigationArc {
         let d = c.defendant
         let held = c.background?.isJailed == true
         let offense = c.charges.first?.law.title.lowercased() ?? "the charges"
-        return NewsItem(date: date, kind: .arrest, headline: followed ? "Arrest made in \(town) investigation: \(d.name) charged" : "\(d.name) arrested after search in \(town)",
+        // Only a case that came through a signed search warrant is described as the result of a search.
+        let warrant = c.proceduralNotes.contains { $0.localizedCaseInsensitiveContains("search warrant") }
+        return NewsItem(date: date, kind: .arrest, headline: followed ? "Arrest made in \(town) investigation: \(d.name) charged" : (warrant ? "\(d.name) arrested after search in \(town)" : "\(d.name) arrested in \(town)"),
                         body: (followed
                             ? "\(agency) investigators arrested \(d.name), \(d.age), on a charge of \(offense), in the case the paper has followed since it began in \(town). "
-                            : "\(agency) investigators arrested \(d.name), \(d.age), on a charge of \(offense) after executing a search warrant in \(town). ")
+                            : "\(agency) investigators arrested \(d.name), \(d.age), on a charge of \(offense) \(warrant ? "after executing a search warrant in" : "in") \(town). ")
                             + (bondHearing
                                 ? "\(d.lastName) is being held in the \(county.name) Detention Center until a bond hearing before Judge \(judge), who will also set a trial date."
                                 : (held ? "\(d.lastName) is being held in the \(county.name) Detention Center." : "\(d.lastName) was released on bond.")

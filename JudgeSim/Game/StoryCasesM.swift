@@ -50,7 +50,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("How did {DL} become a suspect?", "\"The hospital's pharmacist flagged insulin pulled for patients who had no order. Every pull came from {DL}'s badge, and {DL} was on every shift where a patient crashed.\""),
-                            .direct("What about the charting?", "\"After two of the deaths, someone logged in as {DL} and edited the medication records to remove the insulin pulls. The edits were made at 6:40 a.m., near the end of {D.his} shift.\""),
+                            .direct("What about the charting?", "\"After two of the deaths, someone logged in as {DL} and edited the medication records to remove the insulin pulls. The edits were made in the early morning hours, near the end of {D.his} shift.\""),
                             .cross("The hospital's own audit found badge sharing on that unit?", "\"It did.\""),
                             .cross("Did anyone see {DL} inject insulin into any patient?", "\"No one saw it.\""),
                             .cross("You searched {DL}'s home and car?", "\"We found nothing related.\"")

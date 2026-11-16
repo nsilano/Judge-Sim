@@ -81,10 +81,14 @@ extension ProbationTerm {
     var suspendedDays: Int { activeDays ?? activeMonths * 30 }
     /// Days already served on CRV; older saves assume 90 days for each CRV.
     var crvCreditDays: Int { crvDaysServed ?? (crvCount ?? 0) * 90 }
-    /// Misdemeanor days still suspended after CRV credit.
-    var remainingDays: Int { max(0, suspendedDays - crvCreditDays) }
-    /// Felony months still to serve on revocation after CRV credit.
-    var remainingFelonyMonths: Int { max(0, activeMonths - crvCreditDays / 30) }
+    /// Days served on a split sentence (special probation) before probation began.
+    var splitCreditDays: Int { splitDaysServed ?? 0 }
+    /// Everything credited against the suspended sentence on revocation: CRV confinement and special-probation jail time.
+    var totalCreditDays: Int { crvCreditDays + splitCreditDays }
+    /// Misdemeanor days still suspended after credit.
+    var remainingDays: Int { max(0, suspendedDays - totalCreditDays) }
+    /// Felony months still to serve on revocation after credit.
+    var remainingFelonyMonths: Int { max(0, activeMonths - totalCreditDays / 30) }
     var isConditionalDischarge: Bool { conditionalDischarge == true }
 }
 
@@ -182,8 +186,13 @@ enum ViolationHearings {
         let cls = term.offenseClass ?? (term.isFelony ? .H : .misd1)
         let months = term.isFelony ? term.remainingFelonyMonths : 0
         let days = term.isFelony ? 0 : term.remainingDays
-        let credit = term.crvCreditDays
-        let creditText = credit > 0 ? ", with credit for \(credit) day\(credit == 1 ? "" : "s") already served in confinement in response to violation" : ""
+        let credit = term.totalCreditDays
+        let creditText: String = {
+            guard credit > 0 else { return "" }
+            let what = term.splitCreditDays > 0 && term.crvCreditDays > 0 ? "in special probation and confinement in response to violation"
+                : term.splitCreditDays > 0 ? "in the county jail as special probation" : "in confinement in response to violation"
+            return ", with credit for \(credit) day\(credit == 1 ? "" : "s") already served \(what)"
+        }()
         var result: Activation
         if term.isConditionalDischarge {
             let sentence = term.isFelony

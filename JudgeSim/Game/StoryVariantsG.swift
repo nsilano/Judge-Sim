@@ -475,7 +475,7 @@ extension StoryVariants {
     static let aideWillChangeV1 = SmallCases.make(
         key: "story.aideWillChange",
         category: .whiteCollar,
-        headlines: ["Church Friend Convinced Elderly Widower to Be Added to Deed", "Deed Deed Signed Weeks Before Death"],
+        headlines: ["Church Friend Convinced Elderly Widower to Be Added to Deed", "Deed Signed Weeks Before Death"],
         law: "exploitationElder",
         threshold: 8,
         spec: "Exploited an elder adult by deception, obtaining property valued at $190,000, on or about {DATE}.",

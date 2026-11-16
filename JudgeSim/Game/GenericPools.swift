@@ -11,7 +11,6 @@ enum GenericPools {
         Impeachment(text: "Concedes they were roughly 70 feet away, at night, under a flickering streetlight.", penalty: 1),
         Impeachment(text: "Acknowledges a long-running feud with {DL} over a $2,000 debt.", penalty: 2),
         Impeachment(text: "Admits their first statement to police described someone \"shorter, maybe heavier.\"", penalty: 2, victimSafe: false),
-        Impeachment(text: "Admits they came forward only after a $5,000 reward was announced.", penalty: 2, victimSafe: false),
         Impeachment(text: "Has no connection to either party and called 911 within a minute. Cross-examination doesn't shake the account.", penalty: -1, victimSafe: false)
     ]
 
@@ -409,7 +408,7 @@ enum GenericPools {
                         options: [
                             EthicsOption(label: "Report the call to the Judicial Standards Commission and disclose it to the parties",
                                          result: "You put the call on the record. Neither side knows what to make of it.",
-                                         laterHeadline: "Mayor's office acknowledges call to judge's chambers during pending trial"),
+                                         laterHeadline: "Mayor's office acknowledges call to judge's chambers during an earlier trial"),
                             EthicsOption(label: "End the call and do nothing further",
                                          result: "You hang up. The case goes on as if it never happened."),
                             EthicsOption(label: "\"I'll keep that in mind.\"",

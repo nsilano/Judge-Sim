@@ -265,7 +265,7 @@ enum CalendarCalls {
     }
 
     static func pleaPositions(_ law: Law, priors: [PriorConviction], rangeText: String, notes: [String], name: String,
-                              rng: inout SeededRNG) -> PleaPositions {
+                              activeTerm: Int = 0, rng: inout SeededRNG) -> PleaPositions {
         let cls = law.ncClass ?? .misd1
         let last = name.components(separatedBy: " ").last ?? name
         let felonies = priors.filter { $0.ncClass.isFelony }.count
@@ -287,11 +287,16 @@ enum CalendarCalls {
         let roll = Double.random(in: 0..<1, using: &rng)
         // 0 probation, 1 split sentence, 2 active time, 3 prayer for judgment, 4 no position.
         var stance = chartActive || roll < push - 0.45 ? 2 : (roll < push ? 1 : 0)
+        // Special probation may not exceed one-fourth of the maximum term (G.S. 15A-1351(a)); a term too short to split
+        // gets no split offer.
+        let splitCap = activeTerm <= 0 ? Int.max
+            : (cls.isFelony ? StructuredSentencing.maximum(forMinimum: activeTerm, cls: cls) * 30 / 4 : activeTerm / 4)
+        if stance == 1 && splitCap < 1 { stance = 0 }
         if !chartActive {
             if !cls.isFelony && priors.isEmpty && !violent && rng.chance(0.3) { stance = 3 }
             else if stance != 2 && rng.chance(0.12) { stance = 4 }
         }
-        let jailDays = cls.isFelony ? rng.pick([30, 45, 60, 90]) : rng.pick([10, 14, 30])
+        let jailDays = max(1, min(cls.isFelony ? rng.pick([30, 45, 60, 90]) : rng.pick([10, 14, 30]), splitCap))
 
         var reasons: [String] = []
         if felonies >= 2 { reasons.append("\(last) has \(felonies) prior felonies. Probation has been tried.") }
@@ -334,9 +339,12 @@ enum CalendarCalls {
                                    "We'd ask for probation with treatment. \(last) started going to meetings the week after the arrest.",
                                    "A suspended sentence, Judge. \(last) has already lost a lot over this."])
         default:
+            let recordLines = priors.isEmpty
+                ? ["\(last) has no real record and took responsibility early.", "It's a fair resolution for a first offense of this kind."]
+                : ["\(last) took responsibility early.", "It's a fair resolution given \(last)'s record and what the State can prove."]
             stateAsk = "The State and defense jointly recommend \(rangeText), suspended, \(months) months of \(supervision) probation\(condition), and costs. "
-                + rng.pick(["\(last) has no real record and took responsibility early.", "The victim was consulted and agrees.",
-                            "It's a fair resolution for a first offense of this kind.", "Our office has more cases than it can try; this one resolves fairly.",
+                + rng.pick(recordLines + ["The victim was consulted and agrees.",
+                            "Our office has more cases than it can try; this one resolves fairly.",
                             "The evidence had a problem we'd rather not litigate, and this is a sound result.",
                             "\(last) gave a full statement and returned what was taken."])
             defenseAsk = rng.pick(["My client has a job and wants to keep it.", "My client has been sober since the arrest.", "This is about one bad night, Judge.",
@@ -425,7 +433,7 @@ enum CalendarCalls {
                 + ". Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
             var rng = SeededRNG(seed: c.seed ^ 0x9EA)
             let positions = pleaPositions(law, priors: c.defendant.priors, rangeText: terms.rangeText, notes: terms.notes,
-                                          name: c.defendant.name, rng: &rng)
+                                          name: c.defendant.name, activeTerm: terms.active, rng: &rng)
             bound.stateAsk = positions.stateAsk
             bound.defenseAsk = positions.defenseAsk
             bound.options = positions.options
@@ -995,19 +1003,24 @@ enum CalendarCalls {
                     sentence = "Prayer for judgment continued"
                 case 4:
                     // Special probation (G.S. 15A-1351): jail first, then supervised probation on the suspended term.
-                    let days = splitDays(m.options.indices.contains(4) ? m.options[4] : "")
+                    // Special probation may not exceed one-fourth of the maximum term (G.S. 15A-1351(a)).
+                    let limit = m.isFelony ? StructuredSentencing.maximum(forMinimum: m.activeTerm, cls: cls) * 30 / 4 : m.activeTerm / 4
+                    let days = max(1, min(splitDays(m.options.indices.contains(4) ? m.options[4] : ""), max(1, limit)))
+                    // Probation begins when the defendant leaves the jail, and runs its 18 months from then.
+                    let releaseOnSplit = Calendar.current.date(byAdding: .day, value: max(0, days - credit), to: date) ?? date
                     sentence = "\(termText) suspended; special probation with \(days) day\(days == 1 ? "" : "s") active, then 18 months supervised probation"
                     person.probation = ProbationTerm(docket: m.docket, offense: law.title, isFelony: m.isFelony,
                                                      suspendedSentence: termText,
                                                      activeMonths: m.isFelony ? m.activeTerm : max(1, m.activeTerm / 30),
-                                                     ends: Calendar.current.date(byAdding: .month, value: 18, to: date) ?? date,
+                                                     ends: Calendar.current.date(byAdding: .month, value: 18, to: releaseOnSplit) ?? releaseOnSplit,
                                                      imposedInThisCourt: true, supervised: true, conditions: ["Special probation: \(days) day\(days == 1 ? "" : "s") in the county jail."],
                                                      monthlyObligation: 60, violationRisk: rng.chance(0.5) ? 0.18 : 0.1,
                                                      crvCount: 0, treatmentNeed: TreatmentNeed.none)
                     person.probation?.activeDays = m.isFelony ? nil : m.activeTerm
                     person.probation?.offenseClass = cls
-                    person.probation?.starts = date
-                    let out = Calendar.current.date(byAdding: .day, value: max(0, days - credit), to: date) ?? date
+                    person.probation?.starts = releaseOnSplit
+                    person.probation?.splitDaysServed = days
+                    let out = releaseOnSplit
                     if out > date {
                         person.status = .incarcerated
                         person.releaseDate = out
@@ -1071,7 +1084,8 @@ enum CalendarCalls {
                 updates.append((m.personID, { person in
                     guard let term = person.probation else { return }
                     person.probation = nil
-                    person.status = .free
+                    // Someone mid-confinement (a quick dip or CRV) stays in custody until released; only the supervision ends.
+                    if person.status != .incarcerated { person.status = .free }
                     person.propensity = max(0.03, person.propensity * 0.85)
                     person.appearances.append(PersonRecord.Appearance(docket: term.docket, date: date, charges: "Motion to terminate probation early",
                                                                       outcome: choice == 1 ? "Granted; nothing is owed: probation ended early"
@@ -1284,6 +1298,35 @@ extension CalendarCalls {
             if has(line, ["bank records", "handwriting", "forensic accountant", "adjuster", "lost wages", "repair estimate"]) && !["embezzlement", "felonyLarceny"].contains(id) { return false }
             if has(line, ["victim", "physician who treated"]) && ["pwisd", "fleeing"].contains(id) { return false }
             if has(line, ["youth witness", "juvenile co-defendant", "gas station", "dash camera"]) && !["awdw", "feloniousBE", "felonyLarceny", "fleeing"].contains(id) { return false }
+            return true
+        }
+    }
+
+    /// The State's objection to a continuance, drawn only from reasons that could be true of this case: a victim line only
+    /// when there is a victim, lab and records lines only when the file has that kind of evidence, and so on.
+    static func fittingStateObjections(for c: CourtCase) -> [String] {
+        guard let law = c.charges.first?.law else { return ["No objection, but the State wants a firm date on the calendar."] }
+        let hasVictim = c.victimName != nil
+        let kinds = Set(c.evidence.filter { $0.side == .prosecution }.map(\.kind))
+        let forensic = kinds.contains(.forensic)
+        let documents = kinds.contains(.document)
+        let recorded = kinds.contains(.video) || kinds.contains(.digital)
+        let roles = c.witnesses.map { $0.role.lowercased() }.joined(separator: " ")
+        let titles = c.evidence.map { $0.title.lowercased() }.joined(separator: " ")
+        let armed = ["weapon", "firearm", "gun", "discharg", "shoot"].contains { law.title.lowercased().contains($0) }
+        let traffic = c.category == .traffic || ["fleeing", "recklessDriving", "dwi", "habitualDWI", "hitAndRun"].contains(law.id)
+        func has(_ line: String, _ words: [String]) -> Bool { words.contains { line.lowercased().contains($0) } }
+        return fittingStateObjections(for: law).filter { line in
+            if has(line, ["victim", "her own", "victim's"]) && !hasVictim { return false }
+            if has(line, ["medical examiner", "autopsy"]) && !(roles.contains("medical examiner") || titles.contains("autopsy")) { return false }
+            if has(line, ["physician who treated", "medical records custodian"]) && !(hasVictim && (roles.contains("physician") || roles.contains("doctor") || roles.contains("nurse") || titles.contains("medical"))) { return false }
+            if has(line, ["lab analyst", "dna", "fingerprint", "toxicology", "photographs haven't come back", "photo lineup"]) && !forensic { return false }
+            if has(line, ["ballistics"]) && !(armed && forensic) { return false }
+            if has(line, ["bank records", "handwriting", "adjuster", "repair estimate"]) && !documents { return false }
+            if has(line, ["video", "dash camera", "911 recordings"]) && !recorded { return false }
+            if has(line, ["youth witness", "juvenile co-defendant"]) { return false }
+            if has(line, ["trooper who wrote the citation", "officer who made the stop"]) && !traffic { return false }
+            if has(line, ["cooperating witness"]) && ![.drugs, .robbery].contains(c.category) { return false }
             return true
         }
     }

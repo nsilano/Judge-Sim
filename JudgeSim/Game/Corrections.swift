@@ -18,6 +18,13 @@ extension PersonRecord {
         // jails (longer terms through the Statewide Misdemeanant Confinement Program, still a county jail). A quick
         // dip is always local; a CRV follows the probation it came from.
         if lower.contains("quick dip") { return .jail }
+        // Special probation (a split sentence) is served in the county jail as a condition of probation, even on a felony
+        // (G.S. 15A-1351(a)): it is not a prison commitment and does not wait for a state bed.
+        if lower.contains("special probation") { return .jail }
+        // A short criminal-contempt term for violating a stay-away order is served in the county jail, whatever the docket.
+        if lower.contains("criminal contempt") { return .jail }
+        if let term = probation, custodyDocket?.hasPrefix(term.docket) == true, !lower.contains("revok"),
+           (term.conditions ?? []).contains(where: { $0.lowercased().hasPrefix("special probation") }) { return .jail }
         let crv = lower.hasPrefix("confinement in response to violation") || lower.contains("period of confinement in response to violation")
         if crv { return (probation?.isFelony ?? false) ? .prison : .jail }
         // Any felony count in the case means prison: the sentences run together, and the felony controls.

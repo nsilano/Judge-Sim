@@ -268,7 +268,7 @@ extension StoryCases {
         guiltyTruths: ["A practice sheet with repeated signatures of {PARENT} was later found in {DL}'s desk."],
         innocentTruths: ["A bank teller later remembered {PARENT} asking, weeks before the coma, how to write a check \"for a big gift.\""],
         moods: [.divided], doctrines: ["burdenOfProof", "expertTestimony"],
-        extras: ["PARENT": ["Loretta {DL}", "Walter {DL}", "Gladys {DL}"]],
+        extras: ["PARENT": ["Loretta", "Walter", "Gladys"]],
         story: StoryExtras(
             timeline: [(-30, "Neighbor hears {PARENT} talk about 'taking care of' {DL}."),
                        (-12, "{PARENT} on a ventilator, unresponsive."),

@@ -9,25 +9,33 @@ extension FollowUpCases {
         trailerTheft, dockCopper, fakeReturns, drawerShort, concertTickets, rentalListing, atmSkimmer, washedChecks, roofDeposit, pawnedRing
     ]
 
-    /// Who fills the investigating witness's role: the county's detective, a deputy, a trooper, or (for an animal
-    /// control officer or a fire marshal) someone with their own name.
-    /// A witness who isn't an officer (a clerk, a pharmacist, a bartender, an insurance investigator) gets an ordinary
-    /// name, never the case detective's.
-    static func isCivilianRole(_ role: String) -> Bool {
+    /// Roles that get no case-detective name but aren't ordinary lay witnesses either: lab and medical staff (the county's
+    /// regulars fill them), and officials with their own names.
+    private static func isOfficialRole(_ role: String) -> Bool {
         let r = role.lowercased()
-        return ["clerk", "manager", "owner", "pharmacist", "bartender", "waitress", "bus driver", "jogger", "pastor", "principal",
-                "insurance", "librarian", "neighbor", "teacher", "supervisor", "mourner", "walker", "driver", "landlord", "banker",
-                "teller", "cashier", "mechanic", "farmer", "doctor", "nurse", "victim"].contains { r.contains($0) }
-            && !r.contains("deputy") && !r.contains("trooper") && !r.contains("detective") && !r.contains("police")
+        return ["animal control", "fire marshal", "fire investigator", "marine patrol", "social worker", "probation", "parole",
+                "crime lab", "laborator", "forensic", "analyst", "examiner", "chemist", "toxicolog", "dna", "latent", "firearms",
+                "medical examiner", "coroner"].contains { r.contains($0) }
+    }
+
+    /// The token for a law enforcement role (detective, deputy, trooper, officer), or nil for anyone else.
+    private static func officerToken(_ role: String) -> String? {
+        let r = role.lowercased()
+        if ["insurance", "bank", "loss prevention", "private", "security", "store", "real estate", "travel", "talent"].contains(where: { r.contains($0) }) { return nil }
+        if r.contains("trooper") { return "{TROOPER}" }
+        if r.contains("deputy") || r.contains("officer") || r.contains("corrections") || r.contains("jailer") { return "{OFF}" }
+        if ["detective", "investigator", "agent", "sbi", "sheriff", "police", "task force", "lieutenant", "sergeant"].contains(where: { r.contains($0) }) { return "{DET}" }
+        return nil
+    }
+
+    /// An ordinary witness (a clerk, a dentist, a tenant, a dispatcher) is named like any other civilian; only
+    /// law enforcement roles use the case's officers.
+    static func isCivilianRole(_ role: String) -> Bool {
+        officerToken(role) == nil && !isOfficialRole(role)
     }
 
     static func witnessName(for role: String) -> String? {
-        let r = role.lowercased()
-        if isCivilianRole(role) { return nil }
-        if r.contains("deputy") { return "{OFF}" }
-        if r.contains("trooper") { return "{TROOPER}" }
-        if ["animal control", "fire marshal", "marine patrol", "social worker"].contains(where: { r.contains($0) }) { return nil }
-        return "{DET}"
+        officerToken(role)
     }
 
     /// A short follow-up: one investigating witness, two exhibits for the State, one for the defense.

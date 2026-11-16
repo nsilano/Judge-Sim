@@ -32,6 +32,20 @@ enum EvidenceRequest: String, Codable, CaseIterable, Identifiable {
 
     /// Requests that make sense for this kind of case.
     static func options(for c: CourtCase) -> [EvidenceRequest] {
+        // A written case only gets follow-up that fits its story: camera and location records need a scene to put
+        // someone at, bank records need a money trail, lab and expert review need forensic evidence already in the file.
+        if c.templateKey.hasPrefix("story.") {
+            let forensic = c.evidence.contains { $0.kind == .forensic }
+            var list: [EvidenceRequest]
+            switch c.category {
+            case .property, .violent, .robbery, .publicOrder, .family: list = [.video, .phoneRecords]
+            case .whiteCollar: list = [.financialRecords]
+            default: list = []
+            }
+            if forensic { list += [.labTesting, .expertReview] }
+            if CaseTemplates.byKey[c.templateKey]?.story?.alibiCheck != nil { list.append(.alibi) }
+            return list
+        }
         let paper = c.category == .whiteCollar || c.category == .cyber
         var list: [EvidenceRequest] = paper ? [.financialRecords, .phoneRecords, .witnessFollowUp, .expertReview]
                                             : [.video, .phoneRecords, .witnessFollowUp]

@@ -49,7 +49,7 @@ extension StoryCases {
                         cross: ["\"We have no cause of death and no crime scene.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("What did {DL} tell you on day one?", "\"That {DL} left at 7:30 a.m. to try a new kayak on {LAKE}, forty miles away, and came home around 2 to find the house empty and the dog in the yard with the leash on.\""),
+                            .direct("What did {DL} tell you on day one?", "\"That {DL} left around 8:30 a.m. to try a new kayak on {LAKE}, forty miles away, and came home around 2 to find the house empty and the dog in the yard with the leash on.\""),
                             .direct("Why does the cove matter?", "\"Of every body of water in three counties, {VL} came to the surface a mile from the ramp {DL} told us about on day one. {DL} named that ramp and bought a boat and anchor kit six days before.\""),
                             .direct("What about the airport?", "\"The week the remains surfaced, {DL} had a nine-day-old passport, nine thousand in cash, and a one-way ticket.\""),
                             .cross("No blood, no cause of death, no crime scene?", "\"None of the three. We built it from the disappearance and what came after.\""),

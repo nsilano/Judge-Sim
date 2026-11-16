@@ -125,7 +125,13 @@ struct PersonRecord: Identifiable, Codable, Hashable {
 
     /// Stay-away orders still in force on a date.
     func activeOrders(on date: Date) -> [StayAwayOrder] {
-        (stayAwayOrders ?? []).filter { $0.issued <= date && $0.expires > date }
+        // A no-contact condition of probation ends with the probation: it is not in force once probation has ended,
+        // been terminated, or been revoked.
+        (stayAwayOrders ?? []).filter { order in
+            guard order.issued <= date && order.expires > date else { return false }
+            if order.fromProbation == true { return probation.map { $0.docket == order.docket || $0.suspendedSentence.contains(order.docket) } ?? false }
+            return true
+        }
     }
 
     func age(on date: Date) -> Int {
@@ -197,6 +203,8 @@ struct ProbationTerm: Codable, Hashable {
     var activeDays: Int?
     /// Days actually served on CRV so far (nil: 90 per CRV).
     var crvDaysServed: Int?
+    /// Days served in the county jail as special probation (a split sentence): credited if probation is revoked.
+    var splitDaysServed: Int?
     /// When probation began (nil: unknown; the sentencing appearance is used).
     var starts: Date?
     /// Class of the offense, for post-release supervision after revocation and for a deferred judgment.
@@ -336,6 +344,21 @@ struct PendingEvent: Codable, Hashable {
     var reliefMotion: ReliefMotion?
     /// A new case against someone this court already judged, which reaches the calendar when this event arrives.
     var reoffense: Reoffense?
+    /// How a case reassigned to another judge came out, entered on the person's record when this event arrives (optional for older saves).
+    var reassigned: ReassignedOutcome?
+}
+
+/// A case this judge reassigned, as the other judge decided it.
+struct ReassignedOutcome: Codable, Hashable {
+    var docket: String
+    var name: String
+    var age: Int
+    var occupation: String
+    var offense: String
+    var ncClass: NCClass?
+    var convicted: Bool
+    var outcome: String
+    var judge: String
 }
 
 /// An order entered with a judgment: no contact with the victim, and stay away from their home, work, and school.
