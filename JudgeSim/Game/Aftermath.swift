@@ -84,15 +84,19 @@ enum Aftermath {
         // A retrial of the same case doesn't bring the written follow-up back a second time.
         let writtenBeats = c.headline.hasPrefix("New trial:") ? [] : (StoryAftermath.beats[c.templateKey] ?? [])
         for beat in writtenBeats where beat.triggers.contains(trigger) {
-            guard rng.chance(beat.chance) else { continue }
+            // Written follow-ups come a little more often and sooner than the first draft of the numbers, so the early
+            // years of a career aren't thin on returning defendants.
+            guard rng.chance(beat.followUps.isEmpty ? beat.chance : min(0.6, beat.chance * 1.5)) else { continue }
             if !beat.followUps.isEmpty && (broughtCase || !beat.followUps.contains(where: { FollowUpCases.fits($0, age: d.age) })) { continue }
-            let when = later(beat.days)
+            let lowDays = max(30, beat.days.lowerBound * 3 / 4)
+            let days = beat.followUps.isEmpty ? beat.days : lowDays...max(lowDays, max(60, beat.days.upperBound * 2 / 3))
+            let when = later(days)
             var event = PendingEvent(due: when, news: NewsItem(date: when, kind: beat.followUps.isEmpty ? .community : .arrest,
                                                                headline: fill(beat.headline), body: fill(beat.body),
                                                                docket: c.docket, prominence: beat.followUps.isEmpty ? 1 : 2),
                                      personID: d.personID)
             if !beat.followUps.isEmpty {
-                let toCourt = cal.date(byAdding: .day, value: rng.int(50...90), to: when) ?? when
+                let toCourt = cal.date(byAdding: .day, value: rng.int(30...60), to: when) ?? when
                 out.append(event)
                 event = PendingEvent(due: toCourt,
                                      news: NewsItem(date: toCourt, kind: .arrest, headline: "\(d.name) indicted; case returns to Judge \(judgeLast)",

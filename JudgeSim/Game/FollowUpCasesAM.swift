@@ -72,7 +72,7 @@ extension FollowUpCases {
         allocution: "\"I shouldn't have sold it.\"", truths: ("{DL} was seen carrying a mower from {V}'s shed.", "{V}'s son had set the mower out for trash."),
         defendant: [.direct("Where did you get it?", "\"The curb.\""), .direct("Why say it was yours?", "\"To get a better price.\""),
                     .cross("After your last case.", "\"I know.\""), .cross("The serial matches.", "\"I didn't look.\"")],
-        openings: ("A mower with the neighbor's number.", "A curbside find."), closings: ("Twice with the same neighbor.", "A bargain at a flea market."),
+        openings: ("A mower with the neighbor's number.", "A curbside find."), closings: ("Twice with the same neighbor.", "A mower off the curb, sold at a flea market. Nothing was taken from a shed."),
         timeline: [(0, "Weekend: mower for sale at the flea market.")], identified: "The buyer's call.", impact: "\"It's the second time something of mine ended up at a flea market.\"")
 
     static let leashThreat = followUp(
@@ -123,7 +123,7 @@ extension FollowUpCases {
         truths: ("The envelope was found in {DL}'s trash.", "The envelope had been dropped on a sidewalk by a mail carrier."),
         defendant: [.direct("Where did you get the card?", "\"The sidewalk.\""), .direct("Why use it?", "\"I thought it was a gift card.\""),
                     .cross("After your last case.", "\"I know.\""), .cross("Three swipes.", "\"I was shopping.\"")],
-        openings: ("A card from a stolen package.", "A card on the sidewalk."), closings: ("Three swipes, one thief.", "A found card."),
+        openings: ("A card from a stolen package.", "A card on the sidewalk."), closings: ("Three swipes, one thief.", "A card found on a sidewalk, used by someone who thought it was a gift card. Not a thief."),
         timeline: [(0, "Afternoon: card used three times.")], identified: "The dollar store's camera.", impact: "\"My new card, stolen from my mailbox, used within a day.\"")
 
     static let golfCartTrespass = followUp(

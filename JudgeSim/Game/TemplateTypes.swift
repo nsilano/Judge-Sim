@@ -106,6 +106,8 @@ struct CaseTemplate {
     var extras: [String: [String]] = [:]
     /// A fully written case: every witness, objection, and argument is authored, and nothing generic is mixed in.
     var story: StoryExtras? = nil
+    /// Set on an alternate telling so the victim's fate stays what the original story says.
+    var victimDiedFlag: Bool? = nil
     /// People whose sex the case fixes, keyed "D", "V", or "ALT".
     var genders: [String: Gender] = [:]
 
@@ -113,7 +115,7 @@ struct CaseTemplate {
     /// (assault on a female is committed by a male on a female, G.S. 14-33(c)(2)).
     /// Whether the victim named {V} died, by the story's word or by a homicide count that names {V}.
     var victimDies: Bool {
-        if let died = story?.victimDied { return died }
+        if let died = story?.victimDied ?? victimDiedFlag { return died }
         let deathLaws = ["murder1", "murder2", "volManslaughter", "invManslaughter", "felonyDBV", "misdDBV",
                          "deathByDistribution", "patientNeglect", "concealingDeath"]
         func namesV(_ text: String) -> Bool { text.contains("{V}") || text.contains("{VL}") }

@@ -444,8 +444,8 @@ enum CaseTemplates {
         ageRange: 38...66, occupations: ["volunteer treasurer and accountant", "retired bank manager"],
         hasVictim: false,
         summaries: [
-            "{D} served as treasurer of {CHARITY} for nine years. An audit found {AMT} missing. The State says {DL} funneled it into personal accounts through fake invoices.",
-            "When {CHARITY} couldn't make payroll, the board called in auditors. The money trail led to the longtime treasurer, {D}, a pillar of the community."
+            "{D} served as treasurer of {CHARITY} for nine years. An audit found {AMT} missing. The State says {DL} funneled it into personal accounts through fake invoices. Every check also carried a second signature from the board president, {ALT}.",
+            "When {CHARITY} couldn't make payroll, the board called in auditors. The money trail led to the longtime treasurer, {D}, a pillar of the community. Every check also carried a second signature from the board president, {ALT}."
         ],
         prosecutionEvidence: [
             E(.document, 5, "Bank Records", "Transfers totaling {AMT} from charity accounts to an account controlled by {DL}."),

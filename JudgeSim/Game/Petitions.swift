@@ -157,8 +157,8 @@ enum Petitions {
         case .expunction:
             let granted = choice == 0
             if granted && !p.eligible {
-                events.append(later(20...50, "DA asks judge to undo expunction granted in error",
-                                    "The district attorney's office has asked Judge \(judgeLast) to set aside an expunction order entered at a recent calendar call, saying the petition didn't qualify: \(p.reason.prefix(1).lowercased() + p.reason.dropFirst()) The petitioner's lawyer says the order should stand."))
+                events.append(later(20...50, "DA asks judge to undo \(name)'s expunction",
+                                    "The district attorney's office has asked Judge \(judgeLast) to set aside the expunction order entered for \(name) (\(m.docket)) at a recent calendar call, saying the petition didn't qualify: \(p.reason.prefix(1).lowercased() + p.reason.dropFirst()) \(last)'s lawyer says the order should stand."))
             }
             let priorID = p.priorID
             return Ruling(update: { person in
@@ -186,17 +186,9 @@ enum Petitions {
         default:
             let granted = choice < 2
             let interlock = choice == 1
-            if granted && !p.eligible {
-                events.append(later(15...40, "Driving privilege for DWI defendant was not allowed, DA says",
-                                    "Prosecutors have asked Judge \(judgeLast) to revoke a limited driving privilege granted to \(name) after an impaired-driving conviction: \(p.reason.prefix(1).lowercased() + p.reason.dropFirst())"))
-            } else if granted && p.interlockRequired == true && !interlock {
+            if granted && p.interlockRequired == true && !interlock {
                 events.append(later(15...40, "Privilege issued without required interlock",
-                                    "A limited driving privilege granted to \(name) by Judge \(judgeLast) left out the ignition interlock the law requires when the alcohol concentration is 0.15 or more, prosecutors said in asking the court to correct it."))
-            }
-            if granted, rng.chance((p.risk ?? 0.1) * (interlock ? 0.25 : 1)) {
-                events.append(later(40...200, "\(name) charged with DWI while driving on limited privilege",
-                                    "A trooper says \(name) was stopped at 11:40 p.m., outside the hours of the limited privilege Judge \(judgeLast) granted after \(last)'s earlier impaired-driving conviction, and blew over the legal limit.",
-                                    kind: .arrest))
+                                    "A limited driving privilege granted to \(name) by Judge \(judgeLast) left out the ignition interlock the law requires when the alcohol concentration is 0.15 or more, prosecutors told the paper."))
             }
             return Ruling(update: { person in
                 person.appearances.append(.init(docket: m.docket, date: date, charges: "Petition for limited driving privilege",

@@ -15,7 +15,7 @@ enum StoryVariants {
     static let all: [CaseTemplate] = batches.flatMap { $0 }
 
     private static let batches: [[CaseTemplate]] = [
-        variantsA, variantsB, variantsC, variantsD, variantsE, variantsF, variantsG, variantsH, variantsI,
+        variantsA, variantsB, variantsC, variantsD, variantsE, variantsF, variantsG, variantsH, variantsI, variantsJ, variantsK, variantsL, variantsM, variantsN, variantsO, variantsP, variantsQ, variantsR, variantsS, variantsT, variantsU, variantsV, variantsW, variantsX,
         // More batches: variantsB, variantsC, ...
     ]
 
@@ -23,12 +23,21 @@ enum StoryVariants {
     static func telling(of template: CaseTemplate, heard: Int) -> CaseTemplate {
         guard let variants = byKey[template.key], !variants.isEmpty else { return template }
         let index = heard % (variants.count + 1)
-        return index == 0 ? template : variants[index - 1]
+        guard index > 0 else { return template }
+        // A retelling that writes no secondary counts keeps the story's own (the death count in a hit-and-run, say), so
+        // the victim's fate and the charges stay the same case.
+        var telling = variants[index - 1]
+        if telling.secondary.isEmpty { telling.secondary = template.secondary }
+        telling.victimDiedFlag = template.victimDies
+        return telling
     }
 
     /// Problems with a variant: it must be the same case as the story it retells.
     static func problems(_ variant: CaseTemplate, base: CaseTemplate?) -> [String] {
         guard let base else { return ["\(variant.key): no story with this key"] }
+        var variant = variant
+        if variant.secondary.isEmpty { variant.secondary = base.secondary }
+        variant.victimDiedFlag = base.victimDies
         var out: [String] = []
         if variant.primaryLaw != base.primaryLaw { out.append("\(variant.key): charge differs (\(variant.primaryLaw) vs \(base.primaryLaw))") }
         if variant.category != base.category { out.append("\(variant.key): category differs") }

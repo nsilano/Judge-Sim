@@ -165,7 +165,7 @@ extension FollowUpCases {
         truths: ("The vehicle was an ATV.", "The vehicle was a utility vehicle exempt from the road statute."),
         defendant: [.direct("Were you speeding?", "\"No.\""), .direct("Road?", "\"Crossing.\""), .cross("Warned.", "\"Yes.\"")],
         openings: ("Speed.", "Crossing."),
-        closings: ("Camera.", "Crossing."),
+        closings: ("The camera shows {D} speeding on the road.", "The road crossing was brief and in a utility vehicle."),
         timeline: [(0, "The stop.")],
         identified: "A deputy.",
         mood: .wantsConviction)
@@ -188,7 +188,7 @@ extension FollowUpCases {
         truths: ("The command was typed by hand.", "The password had been posted in a shared wiki."),
         defendant: [.direct("Did you delete?", "\"No.\""), .direct("Script?", "\"Yes.\""), .cross("By hand.", "\"Maybe.\"")],
         openings: ("Logs.", "A script."),
-        closings: ("Logs.", "Script."),
+        closings: ("The logs show {D} deleted the data.", "A faulty script, not {D}, wiped the files."),
         timeline: [(-1, "The reprimand."), (0, "The deletion.")],
         identified: "Server logs.",
         mood: .wantsConviction)
@@ -211,7 +211,7 @@ extension FollowUpCases {
         truths: ("{DL} stood at the property line.", "{DL} was telling a friend about the tree, not threatening {V}."),
         defendant: [.direct("Did you say it?", "\"Yes.\""), .direct("Why?", "\"Grief.\""), .cross("Line.", "\"Walking.\"")],
         openings: ("A threat.", "Grief."),
-        closings: ("Witness.", "Grief."),
+        closings: ("The witness and the report prove the threat.", "Grief, not menace, prompted the words."),
         timeline: [(0, "The words."), (0, "The report.")],
         identified: "A witness.",
         mood: .wantsConviction)
@@ -257,7 +257,7 @@ extension FollowUpCases {
         truths: ("{DL} had no bag.", "The workplace had moved and {V} never told {DL} the new address."),
         defendant: [.direct("Were you there?", "\"Yes.\""), .direct("Why?", "\"Belongings.\""), .cross("No bag.", "\"Left it.\"")],
         openings: ("An order.", "Belongings."),
-        closings: ("Camera.", "Belongings."),
+        closings: ("The camera shows {D} breaking the order.", "{D} was only fetching belongings."),
         timeline: [(0, "{DL} arrives."), (0, "{V} calls 911.")],
         identified: "A camera.",
         mood: .wantsConviction)

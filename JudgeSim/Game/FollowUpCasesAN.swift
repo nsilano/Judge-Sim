@@ -305,13 +305,13 @@ extension FollowUpCases {
         allocution: "\"I'll find another route.\"",
         truths: ("{DL} had changed jobs and picked a route past {V}'s work.", "{DL} bought coffee each morning, receipts showed."),
         defendant: [.direct("Why park there?", "\"The coffee shop.\""), .direct("Did you see {V}?", "\"No.\""), .cross("After the order.", "\"I know.\"")],
-        openings: ("An order and a car outside her work.", "A coffee shop on a route."),
+        openings: ("An order and a car outside {V.his} work.", "A coffee shop on a route."),
         closings: ("Three mornings.", "A coffee run."),
         timeline: [(-14, "The order is entered."), (0, "Three mornings of the car outside.")],
         identified: "The office camera.",
         mood: .sympathetic,
         impact: "I park in a different lot and walk in with a coworker.",
-        genders: ["D": .male, "V": .female])
+        genders: ["D": .male])
 
     static let drunkPorchTwo = SmallCases.make(
         key: "story.followup.drunkPorchTwo",
@@ -388,7 +388,7 @@ extension FollowUpCases {
     static let windshieldCrack = SmallCases.make(
         key: "story.followup.windshieldCrack",
         category: .property,
-        headlines: ["Windshield Smashed on Same Woman's Car", "Second Property Damage Case After Slashed Tires"],
+        headlines: ["Windshield Smashed on the Same Car", "Second Property Damage Case After Slashed Tires"],
         law: "injuryPersonalProperty",
         spec: "Willfully and wantonly injured personal property of {V}, a car, by smashing the windshield, causing damage of $520, on {DATE}.",
         ages: 21...52,
@@ -407,7 +407,7 @@ extension FollowUpCases {
         timeline: [(0, "2 a.m.: the windshield is smashed."), (0, "Morning: {V} reports the damage.")],
         identified: "{V}'s guess and a neighbor's camera.",
         impact: "Both times I couldn't get to work.",
-        genders: ["D": .male, "V": .female])
+        genders: ["D": .male])
 
     static let tailgateThreat = SmallCases.make(
         key: "story.followup.tailgateThreat",

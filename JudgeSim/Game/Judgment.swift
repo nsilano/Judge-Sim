@@ -1075,7 +1075,9 @@ enum Judgment {
         if r.money.fine > 0 { items.append(("Fine", r.money.fine)) }
         if r.money.courtCosts { items.append(("Court costs", FinancialOrders.courtCosts)) }
         if r.money.restitution > 0 { items.append(("Restitution", r.money.restitution)) }
-        if r.money.attorneyFees && appointedCounsel(c) {
+        // Appointed-counsel fees are billed only to someone the court treats as indigent: not a defendant who could put up
+        // thousands toward a bond.
+        if r.money.attorneyFees && appointedCounsel(c) && (c.background?.canPost ?? 0) < 5_000 {
             items.append(("Appointed attorney fees", c.background?.attorneyFeeEstimate ?? 1_500))
             items.append(("Attorney appointment fee", FinancialOrders.appointmentFee))
         }
@@ -1721,6 +1723,7 @@ enum Judgment {
                 term.activeDays = discharge ? dischargeDays : max(combine(suspendedDays), combine(afterActiveDays))
             }
             term.crvDaysServed = 0
+            if r.conditions.specialProbationDays > 0 { term.splitDaysServed = r.conditions.specialProbationDays }
             term.starts = start
             term.offenseClass = lead?.offenseClass
             if discharge { term.conditionalDischarge = true }
@@ -1948,7 +1951,8 @@ enum Judgment {
                                              kind: .document, weight: truthGuilty ? 1 : 4, supplemental: "Found after the first trial"))
             retrial.headline = "New trial: " + c.headline
             let motion = ReliefMotion(docket: c.docket, personID: d.personID, personName: d.name, offense: principalTitle,
-                                      newEvidence: evidence, meritorious: !truthGuilty, retrial: retrial)
+                                      newEvidence: truthGuilty ? evidence : "newly found material that points the other way, namely "
+                                          + evidence.prefix(1).lowercased() + evidence.dropFirst(), meritorious: !truthGuilty, retrial: retrial)
             pending.append(PendingEvent(due: later(45...170),
                                         news: NewsItem(date: date, kind: .revelation,
                                                        headline: "\(d.name) asks for a new trial, citing new evidence",
@@ -1964,7 +1968,7 @@ enum Judgment {
         let goingIn = life || releaseOn > date
         let timeServed = activeImposed && !goingIn
         if !insanityAcquittal {
-            let aftermath = Aftermath.events(for: c, convicted: convicted, active: goingIn,
+            let aftermath = Aftermath.events(for: c, convicted: convicted, active: goingIn || activeImposed,
                                              judgeLast: judgeLast, date: date, dismissed: dismissed, rng: &rng)
             pending.append(contentsOf: aftermath.events)
             broughtCase = aftermath.broughtCase
@@ -2430,7 +2434,7 @@ enum Judgment {
             case (false, _) where timeServed:
                 lines.append("\(defenseName): " + rng.pick([
                     "\"\(dl) has already served this sentence in the county jail. It's time to go home.\"",
-                    "\"The months in jail were punishment enough, and the court recognized that.\"",
+                    "\"The time in jail was punishment enough, and the court recognized that.\"",
                     "\"\(dl) walks out today with the time already done. Now comes the hard part: staying out.\""]))
             case (false, _):
                 lines.append("\(defenseName): " + rng.pick([
@@ -2584,7 +2588,7 @@ enum Judgment {
         switch (c.mood, convicted) {
         case (.wantsConviction, false):
             body += " " + rng.pick(["The verdict drew angry reactions from the gallery.", "Someone in the back row shouted as the verdict was read.", "Several people walked out before the judge finished."])
-        case (.wantsConviction, true) where !active:
+        case (.wantsConviction, true) where !active && !timeServed:
             body += " " + rng.pick(["Some in the community questioned whether the sentence was enough.", "Outside, a small group said probation wasn't justice."])
         case (.sympathetic, true) where active:
             body += " " + rng.pick(["Several supporters wept as deputies led the defendant away.", "A row of supporters in matching T-shirts sat silent."])

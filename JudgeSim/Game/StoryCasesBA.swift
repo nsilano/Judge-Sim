@@ -885,7 +885,7 @@ extension StoryCases {
         spec: "Threatened to continue damage to computers of {V} unless paid $4,000, on {DATE}.",
         ages: 18...60,
         victim: true,
-        summary: "A restaurant's ordering system was locked during a Friday rush on {DATE} with a $4,000 demand. The demand traced to {D}, a former server. {DL} says someone used {D.his} old login.",
+        summary: "A restaurant's ordering system was locked during the dinner rush on {DATE} with a $4,000 demand. The demand traced to {D}, a former server. {DL} says someone used {D.his} old login.",
         state: [E(.digital, 3, "Demand Message", "Sent from {D}'s account."), E(.digital, 3, "Access Log", "{D}'s old login used at 6 p.m."), E(.document, 2, "Termination Notice", "{D} was fired a month earlier.")],
         defense: [E(.statement, 1, "Old Login", "{DL} says anyone could use the old login.")],
         role: "Restaurant owner",

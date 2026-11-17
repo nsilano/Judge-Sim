@@ -96,7 +96,7 @@ enum CaseGenerator {
             }.filter { t in age.map { FollowUpCases.fits(t.key, age: $0) } ?? true }
             // Keep the same victim when the case allows that person; otherwise any of the kinds named.
             let keepsVictim = named.filter { t in
-                context.victimOverride.map { v in t.hasVictim && (t.requiredGenders["V"].map { $0 == NameBank.gender(of: v) } ?? true) } ?? true
+                context.victimOverride.map { _ in t.hasVictim } ?? true
             }
             var fitting = keepsVictim.isEmpty ? named : keepsVictim
             // Not one heard lately, and the ones heard least first, so the same follow-up doesn't come twice in a row.
@@ -135,7 +135,7 @@ enum CaseGenerator {
             var candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
             // Late in a career, cases that can be told another way come first: a story already heard that still has a
             // telling this judge hasn't seen. Once every written case has been heard, only those come up; before that,
-            // half the draws go to them after the first 300 cases are behind the judge.
+            // half the draws go to them once 40 different cases are behind the judge.
             func hasUnseenTelling(_ t: CaseTemplate) -> Bool {
                 let heard = useCounts[t.key] ?? 0
                 return heard > 0 && heard <= (StoryVariants.byKey[t.key]?.count ?? 0)
@@ -143,7 +143,7 @@ enum CaseGenerator {
             if fewest >= 1 {
                 let retellable = candidates.filter(hasUnseenTelling)
                 if !retellable.isEmpty { candidates = retellable }
-            } else if all.filter({ (useCounts[$0.key] ?? 0) > 0 }).count >= 300 && rng.chance(0.5) {
+            } else if all.filter({ (useCounts[$0.key] ?? 0) > 0 }).count >= 40 && rng.chance(0.5) {
                 let retellable = all.filter(hasUnseenTelling)
                 if !retellable.isEmpty { candidates = retellable }
             }
@@ -156,7 +156,7 @@ enum CaseGenerator {
             if !candidates.isEmpty {
                 // Murder trials come up now and then, not every week: most draws go to another kind of case.
                 let others = candidates.filter { !isMurder($0) }
-                var pool = !others.isEmpty && rng.chance(0.65) ? others : candidates
+                var pool = !others.isEmpty && rng.chance(0.8) ? others : candidates
                 // Early in a career a random slice of the bank is on offer, so a restart doesn't open with the same
                 // cases: the director only chooses among the slice.
                 if useCounts.values.reduce(0, +) < 150 && pool.count > 60 {
@@ -330,8 +330,9 @@ enum CaseGenerator {
         }
 
         // A follow-up case can involve the same victim, if the story allows that person.
+        // (A follow-up keeps the earlier victim whatever sex the template's own draw would have asked for; the pronouns follow the victim.)
         let sameVictim = context.victimOverride.flatMap { name in
-            t.requiredGenders["V"].map { $0 == NameBank.gender(of: name) } ?? true ? name : nil
+            t.key.hasPrefix("story.followup.") || (t.requiredGenders["V"].map { $0 == NameBank.gender(of: name) } ?? true) ? name : nil
         }
         let knownNames = Set(context.residents.map(\.name)).union(context.reservedNames)
         let drawnVictim = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["V"], avoiding: knownNames)
@@ -666,7 +667,9 @@ enum CaseGenerator {
             added.append(Testimony.leadInvestigator(name: detective.display, agency: detective.agency, ctx: testimonyContext,
                                                     madeTheStop: facts.origin == .stop && rng.chance(0.5), rng: &rng))
         }
-        if t.story == nil && setting != .paper && !roles.contains(where: { $0.contains("officer") || $0.contains("deputy") }) && rng.chance(0.65) {
+        // A follow-up's file names the first officer, so that officer is always seated as a witness.
+        let isFollowUp = t.key.hasPrefix("story.followup.")
+        if (t.story == nil || isFollowUp) && setting != .paper && !roles.contains(where: { $0.contains("officer") || $0.contains("deputy") }) && (isFollowUp || rng.chance(0.65)) {
             added.append(Testimony.firstOfficer(name: officer.display, agency: officer.agency, ctx: testimonyContext, rng: &rng))
         }
         if t.story == nil && !roles.contains(where: { $0.contains("analyst") || $0.contains("examiner") || $0.contains("scientist") || $0.contains("chemist") }) {
@@ -888,7 +891,9 @@ enum CaseGenerator {
         let addOnSignature = addOns.map(\.lawID).joined(separator: ",") + (seriesCount > 0 ? ",x\(seriesCount)" : "")
         let signature = "\(t.key)|s\(summaryIndex)|h\(headlineIndex)|\(extrasSignature)" + (addOnSignature.isEmpty ? "" : "|+\(addOnSignature)")
 
-        let yy = String(format: "%02d", currentYear % 100)
+        // A docket number takes its year from the arrest (the filing), not from the day the case is first ready for trial.
+        let docketYear = context.arrestOn.map { Calendar.current.component(.year, from: $0) } ?? currentYear
+        let yy = String(format: "%02d", docketYear % 100)
         let docket = "\(yy) \(isFelonyCase ? "CRS" : "CR") \(String(format: "%06d", context.docketSequence))"
 
         // What the defendant would say on the stand
@@ -1189,7 +1194,8 @@ enum CaseGenerator {
                 } else if contactless {
                     if rng.chance(0.5) { restitution = rng.int(3...20) * 100; basis = rng.pick(["counseling costs", "new locks and a security camera", "counseling and a changed phone number"]) }
                 } else if t.hasVictim {
-                    restitution = rng.int(8...90) * 100 * (t.category == .traffic ? 4 : 1)
+                    // A minor offense asks for a minor sum: an irritated eye is not a $5,000 medical bill.
+                    restitution = (petty ? rng.int(3...15) : rng.int(8...90)) * 100 * (t.category == .traffic ? 4 : 1)
                     basis = t.category == .traffic ? rng.pick(["medical bills and vehicle damage", "the victim's medical bills"])
                         : rng.pick(["medical bills", "emergency room and follow-up care", "medical bills and lost wages", "counseling and medical costs"])
                 }

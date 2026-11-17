@@ -20,7 +20,7 @@ struct WarrantApplication: Codable, Hashable {
             switch self {
             case .residenceDrugs: return [.drugs]
             case .storageStolen: return [.property]
-            case .phoneRecords: return [.robbery, .violent]
+            case .phoneRecords: return [.robbery, .violent, .whiteCollar, .cyber]
             }
         }
     }
@@ -69,6 +69,38 @@ struct WarrantApplication: Codable, Hashable {
 
 enum SearchWarrants {
 
+    /// Whether the charge is one a storage-unit search for stolen goods makes sense for: theft and break-ins.
+    private static func isTheft(_ c: CourtCase) -> Bool {
+        guard let id = c.charges.first?.lawID else { return false }
+        return ["larcenyFirearm", "larcenyMerchant", "felonyLarceny", "misdLarceny", "possStolen", "burglary1", "burglary2", "feloniousBE", "breakingVehicle"].contains(id)
+    }
+
+    private static func isBreakIn(_ c: CourtCase) -> Bool {
+        guard let id = c.charges.first?.lawID else { return false }
+        return ["burglary1", "burglary2", "feloniousBE", "breakingVehicle"].contains(id)
+    }
+
+    /// The warrant kinds that fit the offense charged: drugs get a residence search, theft and break-ins a storage-unit
+    /// search, and everything else (trespass, vandalism, fraud, violence) phone and location records.
+    static func fittingKinds(for c: CourtCase) -> [WarrantApplication.Kind] {
+        switch c.category {
+        case .drugs: return [.residenceDrugs]
+        case .property: return isTheft(c) ? [.storageStolen] : [.phoneRecords]
+        default: return [.phoneRecords]
+        }
+    }
+
+    /// What the officer's experience is in, fitted to the crime.
+    private static func crimeField(_ c: CourtCase) -> String {
+        switch c.category {
+        case .robbery, .violent: return "robbery and violent crime"
+        case .whiteCollar: return "financial crimes and fraud"
+        case .cyber: return "cyber crime"
+        case .property: return "property crimes"
+        default: return "criminal offenses"
+        }
+    }
+
     static func application(for c: CourtCase, date: Date, rng: inout SeededRNG) -> WarrantApplication {
         let facts = c.investigation?.facts
         let affiant = facts?.lead ?? "Detective \(rng.pick(NameBank.lastNames))"
@@ -77,17 +109,15 @@ enum SearchWarrants {
         let street = facts?.street ?? Gazetteer.street(in: town, rng: &rng)
         let name = c.defendant.name
         let last = c.defendant.lastName
-        let kind: WarrantApplication.Kind
-        switch c.category {
-        case .drugs: kind = .residenceDrugs
-        case .property: kind = .storageStolen
-        default: kind = .phoneRecords
-        }
+        let kind: WarrantApplication.Kind = fittingKinds(for: c).first ?? .phoneRecords
+        let breakIn = isBreakIn(c)
+        let violent = c.category == .robbery || c.category == .violent
+        let stolenWord = breakIn ? "burglaries" : "thefts"
         let roll = rng.int(1...100)
         let flaw: WarrantApplication.Flaw = roll <= 50 ? .none : (roll <= 65 ? .overbroad : rng.pick([.anonymousTip, .stale, .noNexus]))
         let years = rng.int(4...17)
         let monthsAgo = rng.int(5...9)
-        var affidavit = ["Your affiant, \(affiant), has been a sworn law enforcement officer with the \(agency) for \(years) years and has training and experience in the investigation of \(kind == .residenceDrugs ? "narcotics distribution" : (kind == .storageStolen ? "property crimes and the fencing of stolen goods" : "robbery and violent crime")), including the execution of more than \(rng.int(20...140)) search warrants."]
+        var affidavit = ["Your affiant, \(affiant), has been a sworn law enforcement officer with the \(agency) for \(years) years and has training and experience in the investigation of \(kind == .residenceDrugs ? "narcotics distribution" : (kind == .storageStolen ? "property crimes and the fencing of stolen goods" : crimeField(c))), including the execution of more than \(rng.int(20...140)) search warrants."]
         let place: String
         var items: [String]
         switch kind {
@@ -111,20 +141,20 @@ enum SearchWarrants {
             }
         case .storageStolen:
             place = "Unit \(rng.int(10...240)) at \(rng.pick(["Coastal Self Storage", "Hollis Mini-Warehouse", "Route 17 Storage"])), \(town), rented to \(name)"
-            items = ["Power tools, generators, and other property reported stolen in recent burglaries", "Documents showing the rental, use, or control of the unit",
+            items = ["Power tools, generators, and other property reported stolen in recent \(stolenWord)", "Documents showing the rental, use, or control of the unit",
                      "Receipts, pawn tickets, and records of sales of the property"]
             switch flaw {
             case .none, .overbroad:
-                affidavit.append("Between the dates in the attached list, \(rng.int(5...14)) construction sites and garages in \(town) were burglarized and power tools and generators were taken. Two of the stolen items, identified by serial number, were pawned within the past week by \(name).")
+                affidavit.append("Between the dates in the attached list, \(rng.int(5...14)) construction sites and garages in \(town) were \(breakIn ? "burglarized" : "hit by thieves") and power tools and generators were taken. Two of the stolen items, identified by serial number, were pawned within the past week by \(name).")
                 affidavit.append("The storage facility's gate log shows \(last)'s access code used \(rng.int(6...15)) times in the past two weeks, late at night. A facility employee saw \(last) unloading generators from a truck into the unit three days ago.")
             case .anonymousTip:
-                affidavit.append("An anonymous note left at the police department stated that \"the guy in unit \(rng.int(10...240)) has all the stuff from the break-ins.\" The note was unsigned.")
+                affidavit.append("An anonymous note left at the police department stated that \"the guy in unit \(rng.int(10...240)) has all the stuff from the \(breakIn ? "break-ins" : "thefts").\" The note was unsigned.")
                 affidavit.append("Facility records show the unit is rented to \(name).")
             case .stale:
                 affidavit.append("About \(monthsAgo) months ago, an acquaintance of \(name) told officers that \(last) once kept \"some tools that might have been hot\" in a storage unit.")
                 affidavit.append("\(last) has a prior conviction for possession of stolen goods.")
             case .noNexus:
-                affidavit.append("\(name) pawned two power tools reported stolen in a burglary last month. The pawn shop has the items.")
+                affidavit.append("\(name) pawned two power tools reported stolen in a \(breakIn ? "burglary" : "theft") last month. The pawn shop has the items.")
                 affidavit.append("\(last) rents a storage unit at the facility. Nothing in the investigation indicates any property was taken to the unit.")
             }
         case .phoneRecords:
@@ -133,16 +163,18 @@ enum SearchWarrants {
                      "Call logs and text messages for the same period"]
             switch flaw {
             case .none, .overbroad:
-                affidavit.append("The victim identified \(name) from a photo lineup administered by an officer who did not know which photo was the suspect. Surveillance video shows a person matching \(last)'s description at the scene.")
+                affidavit.append(violent
+                    ? "The victim identified \(name) from a photo lineup administered by an officer who did not know which photo was the suspect. Surveillance video shows a person matching \(last)'s description at the scene."
+                    : "Messages and account records obtained earlier in the investigation connect \(name) to the offense, and a witness places \(last) near the scene.")
                 affidavit.append("\(last)'s phone number appears in the victim's call log twenty minutes before the offense. Location data would show whether the phone was near the scene at that time (Carpenter v. United States requires a warrant for it).")
             case .anonymousTip:
                 affidavit.append("An anonymous caller said the person responsible \"goes by \(last) and hangs out on \(street).\"")
                 affidavit.append("Officers found that a person named \(name) lives near \(street) and obtained the phone number from a prior arrest record.")
             case .stale:
-                affidavit.append("\(name) was a suspect in a similar robbery about \(monthsAgo) months ago; that case was closed without charges.")
+                affidavit.append("\(name) was a suspect in a similar \(violent ? "robbery" : "case") about \(monthsAgo) months ago; that case was closed without charges.")
                 affidavit.append("Officers believe the same person may be responsible for the current offense because of the similar method.")
             case .noNexus:
-                affidavit.append("\(name) has two prior robbery convictions and lives about a mile from the scene.")
+                affidavit.append("\(name) has \(violent ? "two prior robbery convictions and lives" : "a prior record and lives") about a mile from the scene.")
                 affidavit.append("No witness, video, or other evidence links \(last) or \(last)'s phone to the current offense.")
             }
         }
@@ -158,10 +190,11 @@ enum SearchWarrants {
     /// `limited`: the judge struck the catch-all before signing.
     static func executed(_ w: WarrantApplication, on c: CourtCase, limited: Bool, signedBy judge: String, byThisJudge: Bool = true) -> CourtCase {
         var c = c
+        var rng = SeededRNG(seed: c.seed ^ 0x5EA2_C4A1)
         let found: String
         switch w.kind {
-        case .residenceDrugs: found = "Officers executing the warrant found cocaine packaged for sale in a kitchen cabinet, two digital scales, and $\(Int.random(in: 18...64) * 100) in a bedroom closet."
-        case .storageStolen: found = "Officers executing the warrant found \(Int.random(in: 9...31)) power tools and three generators; serial numbers on eleven match burglary reports."
+        case .residenceDrugs: found = "Officers executing the warrant found cocaine packaged for sale in a kitchen cabinet, two digital scales, and $\(rng.int(18...64) * 100) in a bedroom closet."
+        case .storageStolen: found = "Officers executing the warrant found \(rng.int(9...31)) power tools and three generators; serial numbers on eleven match \(isBreakIn(c) ? "burglary" : "theft") reports."
         case .phoneRecords: found = "Carrier records place \(c.defendant.lastName)'s phone on the tower sector covering the scene from fifteen minutes before to ten minutes after the offense."
         }
         let evidence = Evidence(exhibit: "State's Exhibit \(c.evidence.filter { $0.side == .prosecution }.count + 1)",
