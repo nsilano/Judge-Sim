@@ -1469,7 +1469,7 @@ final class GameState: ObservableObject {
                 }
                 // Most weeks an officer brings a search warrant application.
                 if wantsWarrant && roomForNew {
-                    let kind = rng.pick([WarrantApplication.Kind.residenceDrugs, .storageStolen, .phoneRecords])
+                    let kind = rng.pick([WarrantApplication.Kind.residenceDrugs, .storageStolen, .phoneRecords, .bloodDraw, .bankRecords, .digitalAccounts, .dnaSample, .residenceWeapons])
                     // Nobody is arrested yet: the crime is under investigation, and the warrant, if signed, is executed in a day or three.
                     let execution = cal.date(byAdding: .day, value: rng.int(1...3), to: date) ?? date
                     if var c = freshCase(on: date, arrest: execution, incidentBefore: 5...30, categories: kind.categories, rng: &rng, excluding: &usedPeople) {
@@ -1481,7 +1481,7 @@ final class GameState: ObservableObject {
                             bg.bondStatus = "Not yet arrested."
                             c.background = bg
                         }
-                        let w = SearchWarrants.application(for: c, date: date, rng: &rng)
+                        let w = SearchWarrants.application(for: c, date: date, kind: kind, rng: &rng)
                         call.matters.insert(CalendarCalls.warrantMatter(w, for: c), at: min(1, call.matters.count))
                     }
                 }

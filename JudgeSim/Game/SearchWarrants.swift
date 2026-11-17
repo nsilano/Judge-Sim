@@ -5,13 +5,18 @@ import Foundation
 /// affidavit shows probable cause under the totality of the circumstances (Illinois v. Gates; State v. Arrington).
 struct WarrantApplication: Codable, Hashable {
     enum Kind: String, Codable {
-        case residenceDrugs, storageStolen, phoneRecords
+        case residenceDrugs, storageStolen, phoneRecords, bloodDraw, bankRecords, digitalAccounts, dnaSample, residenceWeapons
 
         var label: String {
             switch self {
             case .residenceDrugs: return "Residence: controlled substances"
             case .storageStolen: return "Storage unit: stolen property"
             case .phoneRecords: return "Cell phone and location records"
+            case .bloodDraw: return "Blood sample: impaired driving"
+            case .bankRecords: return "Bank and financial records"
+            case .digitalAccounts: return "Email, social media, and device contents"
+            case .dnaSample: return "DNA sample (cheek swab)"
+            case .residenceWeapons: return "Residence: firearm and clothing"
             }
         }
 
@@ -21,6 +26,10 @@ struct WarrantApplication: Codable, Hashable {
             case .residenceDrugs: return [.drugs]
             case .storageStolen: return [.property]
             case .phoneRecords: return [.robbery, .violent, .whiteCollar, .cyber]
+            case .bloodDraw: return [.traffic]
+            case .bankRecords: return [.whiteCollar]
+            case .digitalAccounts: return [.cyber]
+            case .dnaSample, .residenceWeapons: return [.violent, .robbery]
             }
         }
     }
@@ -86,8 +95,17 @@ enum SearchWarrants {
         switch c.category {
         case .drugs: return [.residenceDrugs]
         case .property: return isTheft(c) ? [.storageStolen] : [.phoneRecords]
+        case .traffic: return isImpaired(c) ? [.bloodDraw] : [.phoneRecords]
+        case .whiteCollar: return [.bankRecords, .phoneRecords]
+        case .cyber: return [.digitalAccounts, .phoneRecords]
+        case .violent, .robbery: return [.dnaSample, .residenceWeapons, .phoneRecords]
         default: return [.phoneRecords]
         }
+    }
+
+    private static func isImpaired(_ c: CourtCase) -> Bool {
+        guard let id = c.charges.first?.lawID else { return false }
+        return ["dwi", "dwlrImpaired", "felonyDBV", "misdDBV", "habitualDWI"].contains(id)
     }
 
     /// What the officer's experience is in, fitted to the crime.
@@ -101,7 +119,7 @@ enum SearchWarrants {
         }
     }
 
-    static func application(for c: CourtCase, date: Date, rng: inout SeededRNG) -> WarrantApplication {
+    static func application(for c: CourtCase, date: Date, kind requested: WarrantApplication.Kind? = nil, rng: inout SeededRNG) -> WarrantApplication {
         let facts = c.investigation?.facts
         let affiant = facts?.lead ?? "Detective \(rng.pick(NameBank.lastNames))"
         let agency = facts?.agency ?? c.investigatingAgency
@@ -109,15 +127,18 @@ enum SearchWarrants {
         let street = facts?.street ?? Gazetteer.street(in: town, rng: &rng)
         let name = c.defendant.name
         let last = c.defendant.lastName
-        let kind: WarrantApplication.Kind = fittingKinds(for: c).first ?? .phoneRecords
+        let fitting = fittingKinds(for: c)
+        let kind: WarrantApplication.Kind = requested.flatMap { fitting.contains($0) ? $0 : nil } ?? rng.pick(fitting)
         let breakIn = isBreakIn(c)
         let violent = c.category == .robbery || c.category == .violent
         let stolenWord = breakIn ? "burglaries" : "thefts"
         let roll = rng.int(1...100)
-        let flaw: WarrantApplication.Flaw = roll <= 50 ? .none : (roll <= 65 ? .overbroad : rng.pick([.anonymousTip, .stale, .noNexus]))
+        var flaw: WarrantApplication.Flaw = roll <= 50 ? .none : (roll <= 65 ? .overbroad : rng.pick([.anonymousTip, .stale, .noNexus]))
+        // A blood sample or cheek swab has no 'any and all papers' clause to be too broad.
+        if flaw == .overbroad && (kind == .bloodDraw || kind == .dnaSample) { flaw = .none }
         let years = rng.int(4...17)
         let monthsAgo = rng.int(5...9)
-        var affidavit = ["Your affiant, \(affiant), has been a sworn law enforcement officer with the \(agency) for \(years) years and has training and experience in the investigation of \(kind == .residenceDrugs ? "narcotics distribution" : (kind == .storageStolen ? "property crimes and the fencing of stolen goods" : crimeField(c))), including the execution of more than \(rng.int(20...140)) search warrants."]
+        var affidavit = ["Your affiant, \(affiant), has been a sworn law enforcement officer with the \(agency) for \(years) years and has training and experience in the investigation of \(kind == .residenceDrugs ? "narcotics distribution" : (kind == .storageStolen ? "property crimes and the fencing of stolen goods" : (kind == .bloodDraw ? "impaired driving enforcement" : crimeField(c)))), including the execution of more than \(rng.int(20...140)) search warrants."]
         let place: String
         var items: [String]
         switch kind {
@@ -157,6 +178,92 @@ enum SearchWarrants {
                 affidavit.append("\(name) pawned two power tools reported stolen in a \(breakIn ? "burglary" : "theft") last month. The pawn shop has the items.")
                 affidavit.append("\(last) rents a storage unit at the facility. Nothing in the investigation indicates any property was taken to the unit.")
             }
+        case .bloodDraw:
+            place = "The person of \(name), for a sample of blood to be drawn by a licensed medical professional at \(rng.pick(["the county hospital emergency department", "the detention center medical unit"]))"
+            items = ["A sample of blood sufficient to test for alcohol concentration and the presence of impairing substances"]
+            switch flaw {
+            case .none, .overbroad:
+                affidavit.append("At about \(rng.int(1...2)):\(rng.pick(["10", "25", "40"])) a.m. your affiant stopped \(name) after watching the vehicle cross the center line three times. \(last) had a strong odor of alcohol, red and glassy eyes, and slurred speech, and admitted to \"a few\" drinks. \(last) showed six of six clues on the horizontal gaze nystagmus test and could not complete the walk-and-turn.")
+                affidavit.append("\(last) refused a breath test at the roadside and at the station. Alcohol leaves the blood over time, and less than two hours have passed since the driving, so a sample is needed now (Missouri v. McNeely requires a warrant absent exigency).")
+            case .anonymousTip:
+                affidavit.append("A caller who would not give a name told dispatch that \"the driver of the gray truck is drunk.\" The caller did not say what the caller saw.")
+                affidavit.append("Your affiant found \(name) asleep in a parked truck matching that description. Your affiant did not see the truck being driven and did not note an odor or any sign of impairment.")
+            case .stale:
+                affidavit.append("\(name) was convicted of impaired driving about \(monthsAgo) months ago and, according to a records check, completed a substance abuse assessment.")
+                affidavit.append("Your affiant believes \(last) may be a repeat offender and asks for a blood sample.")
+            case .noNexus:
+                affidavit.append("A restaurant receipt shows \(name) bought two beers about three hours before the stop. \(last) was stopped for an expired registration.")
+                affidavit.append("Your affiant noted no odor, no driving violation, and no sign of impairment.")
+            }
+        case .bankRecords:
+            let bank = rng.pick(["First Coastal Bank", "Tidewater Credit Union", "Carolina Trust"])
+            place = "Records held by \(bank) for accounts in the name of \(name) and any business accounts controlled by \(last)"
+            items = ["Account statements, signature cards, and deposit items for the period of the alleged offense", "Records of wire and electronic transfers into and out of the accounts"]
+            switch flaw {
+            case .none, .overbroad:
+                affidavit.append("The victim's audit found \(rng.int(6...19)) transfers totaling $\(rng.int(14...96) * 1_000) to an account ending in \(rng.int(1000...9999)), opened by \(name) four months before the first transfer. The transfers began the week \(last) was given control of the victim's books.")
+                affidavit.append("Your affiant interviewed two employees, who said that only \(last) had the password used for the transfers. A subpoena confirmed that the receiving account is held by \(name).")
+            case .anonymousTip:
+                affidavit.append("An anonymous letter to the victim's office said \"\(name) is stealing from the company.\" The letter was unsigned and gave no amounts or dates.")
+                affidavit.append("Your affiant confirmed that \(last) works at the company and has access to its books.")
+            case .stale:
+                affidavit.append("An audit about \(monthsAgo) months ago questioned several entries made by \(name). The matter was closed after \(last) explained them as data entry errors.")
+                affidavit.append("Your affiant believes the entries may have been theft.")
+            case .noNexus:
+                affidavit.append("\(name) has access to the victim's funds and drives a newer car than the salary suggests.")
+                affidavit.append("Your affiant has no information that funds were moved to any account at this bank.")
+            }
+        case .digitalAccounts:
+            place = "The email and social media accounts registered to \(name), held by the providers, and the laptop and phone seized from \(last)'s residence"
+            items = ["Messages, posts, and attachments sent from or received by the accounts during the period of the offense", "Subscriber, login, and IP address records for the accounts"]
+            switch flaw {
+            case .none, .overbroad:
+                affidavit.append("The victim received \(rng.int(12...60)) threatening or harassing messages from an account whose username matches a name \(name) has used online. A prior preservation request to the provider showed the account was created from an internet address assigned to \(last)'s home service.")
+                affidavit.append("The victim identified \(last)'s writing style and a nickname only \(last) uses. The messages stopped the night officers spoke with \(last).")
+            case .anonymousTip:
+                affidavit.append("An anonymous tip said \"it's \(name)'s account, everyone knows.\" The tipster gave no reason for the belief.")
+                affidavit.append("Your affiant found a social media profile in \(last)'s name. It has not posted anything to the victim.")
+            case .stale:
+                affidavit.append("\(name) was warned about harassing messages \(monthsAgo) months ago in an unrelated dispute.")
+                affidavit.append("The current messages appear to come from a different account that your affiant has not connected to \(last).")
+            case .noNexus:
+                affidavit.append("\(name) is a former acquaintance of the victim and uses social media.")
+                affidavit.append("The only information linking \(last) to the messages is that the victim believes \(last) sent them.")
+            }
+        case .dnaSample:
+            place = "The person of \(name), for a buccal (cheek) swab to obtain a DNA sample"
+            items = ["Two buccal swabs", "A DNA profile for comparison with evidence recovered at the scene"]
+            switch flaw {
+            case .none, .overbroad:
+                affidavit.append("A swab of blood found on the broken window at the scene produced a partial DNA profile that does not match anyone known to live there. The victim and a neighbor described the person who fled, and each identified \(name) separately in a photo lineup administered by an officer who did not know the suspect.")
+                affidavit.append("A comparison sample from \(last) will show whether the profile from the scene belongs to \(last) (G.S. 15A-271 to 15A-282).")
+            case .anonymousTip:
+                affidavit.append("An anonymous caller said \"\(name) did it.\" The caller declined to say how the caller knew.")
+                affidavit.append("Your affiant confirmed that \(last) lives in \(town) and was identified in no other way.")
+            case .stale:
+                affidavit.append("\(name) was a suspect in an unrelated case about \(monthsAgo) months ago and gave no sample.")
+                affidavit.append("The DNA profile from the current scene has not been compared to anyone.")
+            case .noNexus:
+                affidavit.append("\(name) has a prior record and lives about a mile from the scene.")
+                affidavit.append("No witness or other evidence ties \(last) to the scene, and the profile from the scene has not been compared to \(last).")
+            }
+        case .residenceWeapons:
+            place = "The residence at \(rng.int(100...4_899)) \(street), \(town), and any vehicles on the curtilage"
+            items = ["A handgun of the make and caliber used in the offense and ammunition", "Clothing matching the description given by witnesses", "Cartridge casings, holsters, and gun-cleaning supplies"]
+            switch flaw {
+            case .none, .overbroad:
+                affidavit.append("Two witnesses described a person in a dark hooded jacket and a gray cap, and one identified \(name) from a photo lineup. Casings from the scene match a 9mm handgun. A neighbor saw \(last) return to the residence about ten minutes after the offense carrying a bag.")
+                affidavit.append("Surveillance video from a store near the scene shows a person matching \(last)'s description leaving in a car registered to \(last) at the time of the offense. The car was parked at the residence the next morning.")
+            case .anonymousTip:
+                affidavit.append("An anonymous caller said \"\(name) has the gun, it's in the house.\" The caller did not give a name or say how the caller knew.")
+                affidavit.append("Officers confirmed that \(last) lives at the address.")
+            case .stale:
+                affidavit.append("A witness told officers about \(monthsAgo) months ago that \(name) once showed off a pistol at the residence.")
+                affidavit.append("\(last) has a prior conviction for a firearm offense. Nothing indicates a gun is in the residence now.")
+            case .noNexus:
+                affidavit.append("Surveillance video shows a person of \(last)'s general build leaving the scene on foot. Casings at the scene match a 9mm handgun.")
+                affidavit.append("\(last) lives across town. Officers have no information that \(last) has a gun or that anything related to the offense is at the residence.")
+            }
         case .phoneRecords:
             place = "Records held by the wireless carrier for the cell phone number assigned to \(name), and the phone itself, now in the property room of the \(agency)"
             items = ["Historical cell-site location information for the 48 hours around the offense",
@@ -186,6 +293,26 @@ enum SearchWarrants {
                                   items: items, affidavit: affidavit, flaw: flaw)
     }
 
+    private static func warrantTitle(_ k: WarrantApplication.Kind) -> String {
+        switch k {
+        case .phoneRecords: return "Phone Location Records"
+        case .bloodDraw: return "Blood Test Results"
+        case .bankRecords: return "Bank Records"
+        case .digitalAccounts: return "Account and Device Records"
+        case .dnaSample: return "DNA Comparison Results"
+        default: return "Items Seized Under Search Warrant"
+        }
+    }
+
+    private static func warrantEvidenceKind(_ k: WarrantApplication.Kind) -> EvidenceKind {
+        switch k {
+        case .phoneRecords, .digitalAccounts: return .digital
+        case .bloodDraw, .dnaSample: return .forensic
+        case .bankRecords: return .document
+        default: return .physical
+        }
+    }
+
     /// The case once the warrant is executed: the seizure is an exhibit, and the defense moves to suppress it.
     /// `limited`: the judge struck the catch-all before signing.
     static func executed(_ w: WarrantApplication, on c: CourtCase, limited: Bool, signedBy judge: String, byThisJudge: Bool = true) -> CourtCase {
@@ -195,11 +322,16 @@ enum SearchWarrants {
         switch w.kind {
         case .residenceDrugs: found = "Officers executing the warrant found cocaine packaged for sale in a kitchen cabinet, two digital scales, and $\(rng.int(18...64) * 100) in a bedroom closet."
         case .storageStolen: found = "Officers executing the warrant found \(rng.int(9...31)) power tools and three generators; serial numbers on eleven match \(isBreakIn(c) ? "burglary" : "theft") reports."
+        case .bloodDraw: found = "A blood sample drawn under the warrant was analyzed by the State Crime Laboratory; the result was an alcohol concentration of 0.\(rng.int(9...19))."
+        case .bankRecords: found = "Bank records show \(rng.int(6...19)) transfers totaling $\(rng.int(14...96) * 1_000) from the victim's accounts into an account held by \(c.defendant.name)."
+        case .digitalAccounts: found = "Provider records show the account was created and logged into from an internet address assigned to \(c.defendant.lastName)'s home service, and the seized laptop holds copies of the messages."
+        case .dnaSample: found = "The State Crime Laboratory reported that the swab profile matches the DNA recovered at the scene; the chance of a random match is about 1 in \(rng.int(8...900)) million."
+        case .residenceWeapons: found = "Officers executing the warrant found a 9mm handgun, a box of ammunition, and a dark hooded jacket in a bedroom closet; the handgun test-fired casings match those from the scene."
         case .phoneRecords: found = "Carrier records place \(c.defendant.lastName)'s phone on the tower sector covering the scene from fifteen minutes before to ten minutes after the offense."
         }
         let evidence = Evidence(exhibit: "State's Exhibit \(c.evidence.filter { $0.side == .prosecution }.count + 1)",
-                                title: w.kind == .phoneRecords ? "Phone Location Records" : "Items Seized Under Search Warrant",
-                                detail: found, side: .prosecution, kind: w.kind == .phoneRecords ? .digital : .physical, weight: 3)
+                                title: warrantTitle(w.kind),
+                                detail: found, side: .prosecution, kind: warrantEvidenceKind(w.kind), weight: 3)
         c.evidence.append(evidence)
         c.motions.removeAll { $0.kind == .suppressSearch }
         let shouldGrant = !w.probableCause
