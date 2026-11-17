@@ -313,6 +313,33 @@ enum SearchWarrants {
         }
     }
 
+    /// What can be wrong with what a search turned up, by kind: it comes back less conclusive than the State hoped, and the
+    /// defense has something specific to point to. About four in ten searches have one.
+    private static func wrinkle(for kind: WarrantApplication.Kind, rng: inout SeededRNG) -> (state: String, weight: Int, title: String, detail: String, defense: String, kind: EvidenceKind)? {
+        guard rng.chance(0.4) else { return nil }
+        switch kind {
+        case .bloodDraw:
+            return rng.pick([
+                ("The draw was made nearly three hours after the stop.", 2, "Delay Before the Draw", "", "The sample was drawn almost three hours after the stop; the alcohol concentration at the time of driving is a matter of estimation.", EvidenceKind.document),
+                ("The log shows the vial was out of the evidence refrigerator for several hours before it was logged in.", 2, "Chain of Custody Gap", "", "The custody log has an unexplained gap of several hours between the draw and the laboratory intake.", EvidenceKind.document)
+            ])
+        case .bankRecords:
+            return ("Several of the transfers carry an approval code.", 2, "Approval Codes on Transfers", "", "Some transfers show an approval code from a supervisor, which the defense says authorized them.", EvidenceKind.document)
+        case .digitalAccounts:
+            return ("The internet address is shared by every device in the household.", 2, "Shared Internet Connection", "", "The home connection is used by four people; the records do not show which device or person sent the messages.", EvidenceKind.digital)
+        case .dnaSample:
+            return ("The sample at the scene was a mixture of at least two people.", 2, "Mixed DNA Sample", "", "The laboratory reports the profile from the scene is a mixture, and the comparison cannot rule out other contributors.", EvidenceKind.forensic)
+        case .residenceWeapons:
+            return ("The handgun is registered to a relative who lives in the house.", 2, "Registered to Another", "", "The handgun is registered to another person in the household, who says it was kept in the closet for years.", EvidenceKind.document)
+        case .phoneRecords:
+            return ("The tower sector covers about two square miles.", 2, "Wide Tower Coverage", "", "The sector the phone connected to covers about two square miles, including the defendant's home.", EvidenceKind.digital)
+        case .residenceDrugs:
+            return ("Three other people have keys to the house.", 2, "Other Occupants", "", "Several other people live in or come and go from the house, and nothing ties the items to one person.", EvidenceKind.statement)
+        case .storageStolen:
+            return ("The unit is shared with a business partner who also has the gate code.", 2, "Shared Unit", "", "A business partner shares the unit and the gate code, and says the equipment is the partner's.", EvidenceKind.statement)
+        }
+    }
+
     /// The case once the warrant is executed: the seizure is an exhibit, and the defense moves to suppress it.
     /// `limited`: the judge struck the catch-all before signing.
     static func executed(_ w: WarrantApplication, on c: CourtCase, limited: Bool, signedBy judge: String, byThisJudge: Bool = true) -> CourtCase {
@@ -329,10 +356,20 @@ enum SearchWarrants {
         case .residenceWeapons: found = "Officers executing the warrant found a 9mm handgun, a box of ammunition, and a dark hooded jacket in a bedroom closet; the handgun test-fired casings match those from the scene."
         case .phoneRecords: found = "Carrier records place \(c.defendant.lastName)'s phone on the tower sector covering the scene from fifteen minutes before to ten minutes after the offense."
         }
-        let evidence = Evidence(exhibit: "State's Exhibit \(c.evidence.filter { $0.side == .prosecution }.count + 1)",
+        var evidence = Evidence(exhibit: "State's Exhibit \(c.evidence.filter { $0.side == .prosecution }.count + 1)",
                                 title: warrantTitle(w.kind),
                                 detail: found, side: .prosecution, kind: warrantEvidenceKind(w.kind), weight: 3)
+        // Some seizures come back with a wrinkle that cuts against the State's reading of them.
+        let twist = wrinkle(for: w.kind, rng: &rng)
+        if let twist {
+            evidence.detail += " " + twist.state
+            evidence.weight = twist.weight
+        }
         c.evidence.append(evidence)
+        if let twist {
+            c.evidence.append(Evidence(exhibit: "Defendant's Exhibit \(c.evidence.filter { $0.side == .defense }.count + 1)", title: twist.title,
+                                       detail: twist.defense, side: .defense, kind: twist.kind, weight: 1))
+        }
         c.motions.removeAll { $0.kind == .suppressSearch }
         let shouldGrant = !w.probableCause
         let defense: String

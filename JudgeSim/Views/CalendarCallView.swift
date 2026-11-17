@@ -8,6 +8,7 @@ struct CalendarCallView: View {
     @State private var choices: [UUID: Int] = [:]
     @State private var amounts: [UUID: Int] = [:]
     @State private var dates: [UUID: Date] = [:]
+    @State private var pleaTerms: [UUID: PleaTerms] = [:]
     @State private var showLibrary = false
     @State private var confirmLeave = false
     @State private var showResults = false
@@ -46,14 +47,15 @@ struct CalendarCallView: View {
                         MatterCard(matter: matter, choice: Binding(get: { choices[matter.id] }, set: { choices[matter.id] = $0 }),
                                    amount: Binding(get: { amounts[matter.id] ?? matter.suggested(for: choices[matter.id]) ?? 0 },
                                                    set: { amounts[matter.id] = $0 }),
-                                   date: Binding(get: { dates[matter.id] }, set: { dates[matter.id] = $0 }))
+                                   date: Binding(get: { dates[matter.id] }, set: { dates[matter.id] = $0 }),
+                                   terms: Binding(get: { pleaTerms[matter.id] ?? matter.suggestedTerms ?? PleaTerms() }, set: { pleaTerms[matter.id] = $0 }))
                     }
 
                     PrimaryButton(title: call.isBondSession ? "Close the Session" : "Close the Calendar Call", icon: "hammer.fill",
                                   enabled: call.matters.allSatisfy { choices[$0.id] != nil && !(needsDate($0) && dates[$0.id] == nil) },
                                   hint: "Rule on every matter on the calendar.") {
                         Haptics.gavel()
-                        game.completeCalendar(call, choices: choices, amounts: amounts, dates: dates)
+                        game.completeCalendar(call, choices: choices, amounts: amounts, dates: dates, pleaTerms: pleaTerms)
                         withAnimation { showResults = true }
                     }
                 }
@@ -97,6 +99,7 @@ private struct MatterCard: View {
     @Binding var choice: Int?
     @Binding var amount: Int
     @Binding var date: Date?
+    @Binding var terms: PleaTerms
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -124,6 +127,9 @@ private struct MatterCard: View {
             }
             if let choice, matter.amountOptions?.contains(choice) == true, let range = matter.amountRange {
                 BondAmountPicker(amount: $amount, range: range)
+            }
+            if matter.kind == .quickPlea && choice == 0 {
+                PleaTermsEditor(terms: $terms)
             }
             if matter.kind == .arraignment && choice == 0 {
                 Text("Pick the trial day. Each side has said how much time it wants; too soon and the defense will ask for more time.")
@@ -457,5 +463,33 @@ private struct NewCounselDatePicker: View {
             .font(.caption).foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
         DayPickerList(kind: .trial, earliest: earliest, count: 30, choice: $date)
+    }
+}
+
+
+/// The judge's own terms for a plea that ends in probation: any length, any mix of conditions.
+private struct PleaTermsEditor: View {
+    @Binding var terms: PleaTerms
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Probation terms").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            Stepper("Probation: \(terms.months) months", value: $terms.months, in: 6...36, step: 6)
+            Toggle("Supervised", isOn: $terms.supervised)
+            Stepper("Community service: \(terms.communityHours == 0 ? "none" : "\(terms.communityHours) hours")", value: $terms.communityHours, in: 0...300, step: 25)
+            Stepper("House arrest (monitored): \(terms.houseArrestDays == 0 ? "none" : "\(terms.houseArrestDays) days")", value: $terms.houseArrestDays, in: 0...180, step: 15)
+            Stepper("Curfew: \(terms.curfewDays == 0 ? "none" : "\(terms.curfewDays) days")", value: $terms.curfewDays, in: 0...365, step: 30)
+            Picker("Class", selection: $terms.treatment) {
+                Text("No class").tag(0)
+                Text("Anger management").tag(1)
+                Text("Substance abuse treatment").tag(2)
+            }
+            Toggle("Restitution within 60 days", isOn: $terms.restitution)
+            Toggle("Stay away from the complaining witness", isOn: $terms.stayAway)
+            Toggle("Fine and costs", isOn: $terms.fine)
+        }
+        .font(.subheadline)
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.secondary.opacity(0.12)))
     }
 }

@@ -37,7 +37,7 @@ extension StoryCases {
         spec: "Obtained $3,400 in food assistance benefits from {V}, a county agency, by false pretenses, on {DATE}.",
         ages: 22...55,
         victim: true,
-        summary: "A county agency found that {D} reported no income for eleven months while earning wages at a restaurant, resulting in $3,400 in benefits {D} should not have received. {DL} says a caseworker told {D.him} the wages did not need reporting.",
+        summary: "A county agency found that {D} reported no income for eleven months while earning wages at a restaurant, resulting in $3,400 in benefits {D} should not have received. {DL} says a caseworker told {D.him} the wages did not need reporting. The agency says {D} earned about $1,400 a month and signed each renewal form stating no income, and its caseworker's notes show no such advice.",
         state: [E(.document, 3, "Payroll Records", "Eleven months of wages at a restaurant."), E(.document, 3, "Applications", "Signed forms stating no income.")],
         defense: [E(.statement, 1, "Caseworker Advice", "{DL} says a caseworker said the wages need not be reported.")],
         role: "Agency investigator",

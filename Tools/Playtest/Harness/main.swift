@@ -476,8 +476,11 @@ var hearingDates: [UUID: Date] = [:]
     if s.rulings.conditions.specialProbationDays > 0 && outcome.convicted {
         let credit = s.courtCase.background?.custodyDays ?? 0
         let onProbation = outcome.judgments.contains { $0.lines.contains { $0.contains("Special probation") } }
-        if onProbation && credit < 30 && outcome.personStatus != .incarcerated {
-            flag("\(c.docket): special probation of 30 days ordered (credit \(credit)), but the defendant is not in custody")
+        // The days only bind when a suspended sentence was actually imposed on a conviction; if the count they were set for
+        // ended in an acquittal, nothing is suspended and no custody follows.
+        let suspendedImposed = outcome.judgments.contains { $0.lines.contains { $0.lowercased().contains("suspended") } }
+        if onProbation && suspendedImposed && credit < 30 && outcome.personStatus != .incarcerated {
+            flag("\(c.docket): special probation of 30 days ordered (credit \(credit)), but the defendant is not in custody (status \(outcome.personStatus); judgments: " + outcome.judgments.flatMap { $0.lines }.joined(separator: " / ").prefix(700) + ")")
         }
     }
     for j in outcome.judgments { log("  [\(j.title)] " + j.lines.joined(separator: " | ")) }
@@ -596,7 +599,7 @@ var hearingDates: [UUID: Date] = [:]
 /// Words repeated back to back ("Serious Injury with Intent to Kill Inflicting Serious Injury with Intent to Kill"),
 /// unfilled tokens, and empty sentences.
 func checkText(_ text: String, where place: String) {
-    if text.contains("{") && text.contains("}") { flag("\(place): unfilled token in \"\(text.prefix(120))\"") }
+    if text.contains("{") && text.contains("}") { flag("\(place): unfilled token \(text.components(separatedBy: "{").dropFirst().map { "{" + ($0.components(separatedBy: "}").first ?? "") + "}" }) in \"\(text.prefix(120))\"") }
     let words = text.split(separator: " ").map(String.init)
     if words.count >= 10 {
         // Three capitalized words in a row repeated ("Inflicting Serious Injury Inflicting Serious Injury") is a doubled title.
@@ -829,9 +832,19 @@ if args.count > 1 && args[1] == "scan" {
     let stories = Set(StoryCases.all.map(\.key))
     log("WRITTEN CASES HEARD: \(heardKeys.intersection(stories).count) of \(stories.count)")
     log("  never came up: " + stories.subtracting(heardKeys).sorted().joined(separator: ", "))
-    // A trial continued to a date the run never reached hasn't failed to come back.
+    // A trial continued to a date the run never reached hasn't failed to come back, and one reassigned to another
+    // judge since the continuance is being tried elsewhere.
     let lost = continuedIDs.filter { $0.value.addingTimeInterval(21 * 86_400) < game.currentDate }
-    if !lost.isEmpty { flag("\(lost.count) trial(s) continued mid-trial never came back: " + lost.keys.sorted().joined(separator: ", ")) }
+        .filter { item in !game.history.contains { $0.docket == item.key && $0.kind == "reassigned" } }
+    if !lost.isEmpty {
+        let where_ = lost.keys.sorted().map { docket -> String in
+            let sched = game.scheduled.first { if case .trial(let c) = $0.entry.matter { return c.docket == docket } else { return false } }
+            let wait = game.awaiting.first { $0.courtCase?.docket == docket }
+            let hist = game.history.filter { $0.docket == docket }.map { "\($0.kind ?? "trial"):\($0.outcome)" }.joined(separator: " | ")
+            return "\(docket) due \(short(lost[docket]!)); scheduled: \(sched.map { short($0.date) } ?? "no"); waiting: \(wait != nil); history: \(hist)"
+        }
+        flag("\(lost.count) trial(s) continued mid-trial never came back: " + where_.joined(separator: "; "))
+    }
     let orders = game.people.flatMap { $0.stayAwayOrders ?? [] }
     log("COMMUNITY: standing \(game.stats.communityStanding ?? 0) | " + Community.townTalk(standing: game.stats.communityStanding ?? 0))
     let ao = game.arrestOrders

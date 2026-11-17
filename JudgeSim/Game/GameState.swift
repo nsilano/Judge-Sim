@@ -622,6 +622,24 @@ final class GameState: ObservableObject {
         save()
     }
 
+    /// How this judge has sentenced the same offense before, from the people sentenced in this court: a plea or a sentencing
+    /// is easier to rule on consistently with the record in front of you. Nil until there are at least two.
+    func sentencingHistory(for law: Law) -> String? {
+        let sentences = people.flatMap { $0.priors }.filter { $0.fromThisCourt && $0.offense == law.title }.map { $0.sentence.lowercased() }
+        guard sentences.count >= 2 else { return nil }
+        let pjc = sentences.filter { $0.contains("prayer for judgment") }.count
+        let split = sentences.filter { $0.contains("special probation") }.count
+        let active = sentences.filter { ($0.contains("active") || $0.contains("committed")) && !$0.contains("suspended") && !$0.contains("special probation") }.count
+        let probation = sentences.filter { $0.contains("suspended") && !$0.contains("special probation") && !$0.contains("prayer for judgment") }.count
+        var parts: [String] = []
+        if probation > 0 { parts.append("\(probation) probation") }
+        if split > 0 { parts.append("\(split) split with jail first") }
+        if active > 0 { parts.append("\(active) active") }
+        if pjc > 0 { parts.append("\(pjc) prayer for judgment") }
+        guard !parts.isEmpty else { return nil }
+        return "Your record on \(law.title.lowercased()): \(sentences.count) sentenced in your court (" + parts.joined(separator: ", ") + ")."
+    }
+
     /// The next day the judge sits after today.
     var nextCourtDate: Date { nextSittingDay(after: today?.date ?? currentDate) }
 
@@ -1461,6 +1479,7 @@ final class GameState: ObservableObject {
                     let offersPlea = c.templateKey.hasPrefix("story.") && pleaFits(c) && rng.chance(smallCase ? 0.6 : 0.28)
                     var matter = c.templateKey.hasPrefix("story.") && !offersPlea ? CalendarCalls.arraignmentMatter(for: c) : CalendarCalls.pleaMatter(for: c)
                     if matter.kind == .quickPlea, let status = c.background?.bondStatus { matter.summary += " " + status }
+                    if matter.kind == .quickPlea, let law = c.charges.first?.law, let record = sentencingHistory(for: law) { matter.summary += " " + record }
                     call.matters.append(matter)
                     usedPeople.insert(c.defendant.personID)
                     arraignQueue.removeAll { $0.id == item.id }
@@ -2031,7 +2050,7 @@ final class GameState: ObservableObject {
         }
         // Thin supervision on an overloaded probation office lets more people drift back into trouble.
         let overload = probationOverload
-        if rng.chance(0.06 + (overload > 1 ? min(0.04, (overload - 1) * 0.05) : 0)), !candidates.isEmpty {
+        if rng.chance(0.08 + (overload > 1 ? min(0.04, (overload - 1) * 0.05) : 0)), !candidates.isEmpty {
             let probationers = candidates.filter { $0.status == .probation }
             let person = rng.pick(overload > 1 && !probationers.isEmpty && rng.chance(0.5) ? probationers : candidates)
             if let prior = person.priors.last(where: { $0.fromThisCourt && $0.docket != nil && !($0.docket ?? "").hasSuffix("(PV)") }),
@@ -2306,7 +2325,7 @@ final class GameState: ObservableObject {
 
     /// Puts the cases behind the calendar call's rulings on a real calendar: this week, a later week, or (after an
     /// order for arrest or a capacity evaluation) whenever the defendant can be brought to court.
-    private func scheduleCalendarCases(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int], dates: [UUID: Date] = [:]) {
+    private func scheduleCalendarCases(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int], dates: [UUID: Date] = [:], pleaTerms: [UUID: PleaTerms] = [:]) {
         var rng = SeededRNG(seed: seedBase ^ SeededRNG.stableHash(call.id.uuidString))
         let heard = SentenceFormat.shortDate(call.date)
         func later(weeks: Int) -> Date {
@@ -2430,7 +2449,7 @@ final class GameState: ObservableObject {
             case .quickPlea where choice != 3 && c.templateKey.hasPrefix("story."):
                 // The plea ends this written case without a trial; the story can be told again with new people.
                 pleaCredits[c.templateKey, default: 0] += 1
-                log(.court, c, on: call.date, "Pleaded guilty at the calendar call; judgment entered: " + (m.options.indices.contains(choice) ? m.options[choice] : "sentence imposed") + ".")
+                log(.court, c, on: call.date, "Pleaded guilty at the calendar call; judgment entered: " + (choice == 0 ? "suspended sentence, " + (pleaTerms[m.id] ?? m.suggestedTerms ?? PleaTerms()).summary : (m.options.indices.contains(choice) ? m.options[choice] : "sentence imposed")) + ".")
             case .quickPlea where choice == 3:
                 // Only written cases are tried before you; a rejected calendar-call plea goes to another session.
                 if c.templateKey.hasPrefix("story.") {
@@ -2599,8 +2618,13 @@ final class GameState: ObservableObject {
                             setCase.incidents = (setCase.incidents ?? []) + [Incidents.unpreparedCounsel(setCase, had: max(1, days), needed: defenseDays,
                                 reason: "You set this \(c.charges.count)-count case for trial \(days) day\(days == 1 ? "" : "s") after the arraignment.")]
                         } else {
-                            setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)
+                            setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, preferring: .defense, rng: &rng)
                         }
+                    }
+                    // Too little time for the State's own lab work, records, or witnesses: it asks for more time.
+                    let stateDays = CalendarCalls.prepWeeks(for: c).state * 7
+                    if setCase.continuanceMotion == nil, days < Int(Double(stateDays) * 0.6), rng.chance(0.6) {
+                        setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, preferring: .prosecution, rng: &rng)
                     }
                     awaitCase(setCase, note: "Arraigned on \(heard); pleaded not guilty.", on: call.date)
                     if let id = awaiting.last?.id { setTrialDate(id, to: picked) }
@@ -2855,7 +2879,7 @@ final class GameState: ObservableObject {
         c.defendant.age = person.age(on: c.sessionDate)
     }
 
-    func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], dates: [UUID: Date] = [:]) {
+    func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], dates: [UUID: Date] = [:], pleaTerms: [UUID: PleaTerms] = [:]) {
         // The record of what was decided, for the Calendar tab in Records.
         for m in call.matters {
             let choice = choices[m.id] ?? 0
@@ -2863,12 +2887,13 @@ final class GameState: ObservableObject {
             if let amount = amounts[m.id] ?? m.suggested(for: choice) {
                 ruling = ruling.replacingOccurrences(of: "an amount you set", with: "$\(amount.formatted())")
             }
+            if m.kind == .quickPlea, choice == 0 { ruling = "Accept the plea; suspended sentence, " + (pleaTerms[m.id] ?? m.suggestedTerms ?? PleaTerms()).summary }
             calendarLog.insert(CalendarRuling(date: call.date, kind: m.kind, personName: m.personName, docket: m.docket,
                                               summary: m.summary, ruling: ruling), at: 0)
         }
         if calendarLog.count > 600 { calendarLog.removeLast(calendarLog.count - 600) }
         guard let county, let judgeName, stillOpen(call.id) else { return }
-        let result = CalendarCalls.resolve(call, choices: choices, amounts: amounts, judgeName: judgeName, county: county)
+        let result = CalendarCalls.resolve(call, choices: choices, amounts: amounts, pleaTerms: pleaTerms, judgeName: judgeName, county: county)
         if !call.isBondSession { happened(.calendarCall(matters: call.matters.count)) }
         for newcomer in result.newPeople {
             // A returning defendant who pleads keeps one record.
@@ -2919,7 +2944,7 @@ final class GameState: ObservableObject {
             }
         }
         pending.append(contentsOf: result.pending)
-        scheduleCalendarCases(call, choices: choices, amounts: amounts, dates: dates)
+        scheduleCalendarCases(call, choices: choices, amounts: amounts, dates: dates, pleaTerms: pleaTerms)
         stats.activeSentences += result.activeSentences
         stats.suspendedSentences += result.suspendedSentences
         stats.probationCompleted += result.probationCompleted
@@ -3337,9 +3362,9 @@ final class GameState: ObservableObject {
         // violent felony) are likelier to come back than others: the playthrough's decisions have consequences.
         let lenient = Self.lenientFlags
         let ruledOn = Set(journal.entries(seed: seedBase).filter { $0.flags.contains { lenient.contains($0) } }.map(\.name))
-        func weight(_ p: PersonRecord) -> Double { p.propensity * (ruledOn.contains(p.name) ? 2.5 : 1) }
+        func weight(_ p: PersonRecord) -> Double { p.propensity * (ruledOn.contains(p.name) ? 2.5 : 1) * (1 + 0.4 * Double(min(3, p.appearances.count))) }
         let total = eligible.reduce(0) { $0 + weight($1) }
-        guard total > 0, rng.chance(min(0.3, total * (ruledOn.isEmpty ? 0.1 : 0.13))) else { return nil }
+        guard total > 0, rng.chance(min(0.4, total * (ruledOn.isEmpty ? 0.1 : 0.13))) else { return nil }
         var target = Double.random(in: 0..<total, using: &rng)
         for person in eligible {
             target -= weight(person)

@@ -131,7 +131,7 @@ extension StoryCases {
         spec: "Entered and remained on the premises of {V}, a municipal water tower, after being notified not to enter, on {DATE}.",
         ages: 18...24,
         victim: true,
-        summary: "A resident called deputies on {DATE} about people at the top of the town's water tower. {D} and two friends had climbed the ladder around the security fence, past a sign saying 'No Trespassing, Violators Prosecuted.' {D} says the gate was open and no one told them to leave.",
+        summary: "A resident called deputies on {DATE} about people at the top of the town's water tower. {D} and two friends had climbed the ladder around the security fence, past a sign saying 'No Trespassing, Violators Prosecuted.' {D} says the gate was open and no one told them to leave. The group reached the top at about 8 p.m., and a phone video from the top shows {D}. The tower's gate is kept closed with a chain and a padlock, and deputies arrived at about 8:30 p.m.",
         state: [E(.physical, 3, "Sign and Fence", "A posted sign on the fence and on the ladder."), E(.video, 2, "Phone Video", "{D} at the top: 'we're on the tower!'")],
         defense: [E(.statement, 1, "Open Gate", "{DL} says the gate was open.")],
         role: "Town public works director",

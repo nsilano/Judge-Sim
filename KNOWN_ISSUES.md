@@ -2,6 +2,9 @@
 
 Remaining from the playtest agents (Nov 2026). Items are removed as they are fixed.
 
+## Content still to fix
+- 212 variants (batches A, B, C, 15 in K, 2 in R) are thinner than their originals and need rebuilding as full cases. The list and the standard are in Tools/Stories/VARIANTS_TO_BEEF_UP.md.
+
 ## Design or tuning calls (left as they are)
 - Murder trials are rare (0 to 2 per 120 weeks) because of the murder limit and pacing rules; raising it is a pacing decision.
 - The director's county-state weighting changes little compared with the frequency table and genre rotation.

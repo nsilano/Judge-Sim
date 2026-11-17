@@ -289,7 +289,19 @@ enum CourtCalendar {
 enum ContinuanceMotions {
 
     /// A motion with a concrete, case-specific reason, or nil if the follow-up it would need doesn't fit this case.
-    static func make(for c: CourtCase, rng: inout SeededRNG) -> ContinuanceMotion? {
+    static func make(for c: CourtCase, preferring side: Side? = nil, rng: inout SeededRNG) -> ContinuanceMotion? {
+        // When one side is the one short of time, its motion is the one that comes up, if the case has one for it.
+        guard let side else { return makeAny(for: c, rng: &rng) }
+        var fallback: ContinuanceMotion?
+        for _ in 0..<8 {
+            guard let motion = makeAny(for: c, rng: &rng) else { continue }
+            if motion.movant == side { return motion }
+            fallback = fallback ?? motion
+        }
+        return fallback
+    }
+
+    private static func makeAny(for c: CourtCase, rng: inout SeededRNG) -> ContinuanceMotion? {
         // A missing witness is not raised in a written case (its witnesses are part of the story); the other requests are:
         // denied, the evidence stays out; granted, what comes back follows what really happened and can change the case.
         let written = c.templateKey.hasPrefix("story.")

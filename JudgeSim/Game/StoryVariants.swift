@@ -15,7 +15,7 @@ enum StoryVariants {
     static let all: [CaseTemplate] = batches.flatMap { $0 }
 
     private static let batches: [[CaseTemplate]] = [
-        variantsA, variantsB, variantsC, variantsD, variantsE, variantsF, variantsG, variantsH, variantsI, variantsJ, variantsK, variantsL, variantsM, variantsN, variantsO, variantsP, variantsQ, variantsR, variantsS, variantsT, variantsU, variantsV, variantsW, variantsX,
+        variantsA, variantsB, variantsC, variantsD, variantsE, variantsF, variantsG, variantsH, variantsI, variantsJ, variantsK, variantsL, variantsM, variantsN, variantsO, variantsP, variantsQ, variantsR, variantsS, variantsT, variantsU, variantsV, variantsW, variantsX, variantsY,
         // More batches: variantsB, variantsC, ...
     ]
 
@@ -28,6 +28,8 @@ enum StoryVariants {
         // the victim's fate and the charges stay the same case.
         var telling = variants[index - 1]
         if telling.secondary.isEmpty { telling.secondary = template.secondary }
+        // The story's own places and people (a storage facility, other victims) fill in the charges it keeps.
+        if telling.extras.isEmpty { telling.extras = template.extras }
         telling.victimDiedFlag = template.victimDies
         return telling
     }

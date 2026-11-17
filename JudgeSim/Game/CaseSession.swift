@@ -782,6 +782,20 @@ final class CaseSession: ObservableObject {
             }.map(\.id)
             courtCase.evidence[index].weight = 0
             courtCase.evidence[index].detail += note
+        case .phoneRecords where motion.movant == .prosecution:
+            // The extraction wasn't finished, so the State has no phone results to offer.
+            let note = " The extraction was not finished before trial, so these results are not before the court."
+            if let index = courtCase.evidence.firstIndex(where: { $0.side == .prosecution && $0.kind == .digital && $0.weight > 0 && !$0.detail.hasSuffix(note) }) {
+                courtCase.evidence[index].weight = 0
+                courtCase.evidence[index].detail += note
+            }
+        case .financialRecords where motion.movant == .prosecution:
+            // The subpoenaed records never came back, so the State's tracing has nothing behind it.
+            let note = " The subpoenaed records were not returned before trial, so this exhibit carries no weight."
+            if let index = courtCase.evidence.firstIndex(where: { $0.side == .prosecution && ($0.kind == .document || $0.kind == .digital) && $0.weight > 0 && !$0.detail.hasSuffix(note) }) {
+                courtCase.evidence[index].weight = 0
+                courtCase.evidence[index].detail += note
+            }
         case .video, .phoneRecords, .financialRecords, .expertReview, .alibi:
             break
         }
