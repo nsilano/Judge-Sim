@@ -1002,8 +1002,8 @@ final class GameState: ObservableObject {
     /// A written case where a plea bargain is plausible: not a homicide, and not one the State would never offer.
     private func pleaFits(_ c: CourtCase) -> Bool {
         guard let law = c.charges.first?.law, let cls = law.ncClass else { return false }
-        // A small case (a misdemeanor) goes to a bench trial; it isn't pled out at the arraignment.
-        return cls.isFelony && ![NCClass.A, .B1, .B2].contains(cls) && c.category != .family
+        // A small case (a misdemeanor) is often pled out at the arraignment for community service or special conditions.
+        return ![NCClass.A, .B1, .B2].contains(cls) && c.category != .family
     }
 
     /// A case built around an arrest the court already knows the date of: the incident comes before it, and the
@@ -1457,7 +1457,8 @@ final class GameState: ObservableObject {
                     }
                     // Some defendants in written cases plead instead: a bargain the judge accepts or rejects. A plea the
                     // judge accepts frees that story to be told again, with new people and perhaps another telling.
-                    let offersPlea = c.templateKey.hasPrefix("story.") && pleaFits(c) && rng.chance(0.28)
+                    let smallCase = !(c.charges.first?.law.ncClass?.isFelony ?? true)
+                    let offersPlea = c.templateKey.hasPrefix("story.") && pleaFits(c) && rng.chance(smallCase ? 0.6 : 0.28)
                     var matter = c.templateKey.hasPrefix("story.") && !offersPlea ? CalendarCalls.arraignmentMatter(for: c) : CalendarCalls.pleaMatter(for: c)
                     if matter.kind == .quickPlea, let status = c.background?.bondStatus { matter.summary += " " + status }
                     call.matters.append(matter)
