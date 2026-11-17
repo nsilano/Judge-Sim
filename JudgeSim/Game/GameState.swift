@@ -2592,9 +2592,10 @@ final class GameState: ObservableObject {
                     var setCase = c
                     setCase.background?.arraigned = true
                     let days = CourtCalendar.calendar.dateComponents([.day], from: call.date, to: picked).day ?? 35
-                    if days < 21 && c.charges.count > 1 && rng.chance(0.6) {
+                    let defenseDays = CalendarCalls.prepWeeks(for: c).defense * 7
+                    if days < Int(Double(defenseDays) * 0.6) && rng.chance(0.6) {
                         if c.templateKey.hasPrefix("story.") {
-                            setCase.incidents = (setCase.incidents ?? []) + [Incidents.unpreparedCounsel(setCase, had: max(1, days), needed: 35,
+                            setCase.incidents = (setCase.incidents ?? []) + [Incidents.unpreparedCounsel(setCase, had: max(1, days), needed: defenseDays,
                                 reason: "You set this \(c.charges.count)-count case for trial \(days) day\(days == 1 ? "" : "s") after the arraignment.")]
                         } else {
                             setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)

@@ -758,19 +758,37 @@ enum CalendarCalls {
         return bind(m, to: c)
     }
 
+    /// How many weeks each side says it needs to get this case ready: a disorderly conduct charge needs a week or two,
+    /// a mid-level felony a month or two, and the worst cases up to six months. More counts take longer.
+    static func prepWeeks(for c: CourtCase) -> (state: Int, defense: Int) {
+        var rng = SeededRNG(seed: c.seed ^ 0xA77A_1E55)
+        let worst = c.charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
+        let (state, defense): (ClosedRange<Int>, ClosedRange<Int>)
+        switch worst {
+        case .A?, .B1?, .B2?: (state, defense) = (12...22, 16...26)
+        case .C?: (state, defense) = (8...16, 10...20)
+        case .D?, .E?: (state, defense) = (6...12, 8...14)
+        case .F?, .G?: (state, defense) = (4...9, 6...11)
+        case .H?, .I?: (state, defense) = (3...7, 4...9)
+        case .misdA1?: (state, defense) = (2...5, 3...6)
+        default: (state, defense) = (1...3, 2...4)
+        }
+        let extra = c.charges.count > 2 ? 1.25 : 1.0
+        let s = Int((Double(rng.int(state)) * extra).rounded())
+        let d = Int((Double(rng.int(defense)) * extra).rounded())
+        return (s, d)
+    }
+
     static func arraignmentMatter(for c: CourtCase) -> CalendarMatter {
         let d = c.defendant
         let jailed = c.background?.isJailed ?? false
         let counts = c.charges.count
-        // Each case asks for its own time: the State is ready sooner or later, and the defense wants more with more counts.
-        var rng = SeededRNG(seed: c.seed ^ 0xA77A_1E55)
-        let stateWeeks = rng.int(2...8)
-        let defenseWeeks = counts > 2 ? rng.int(6...12) : rng.int(3...9)
+        let (stateWeeks, defenseWeeks) = prepWeeks(for: c)
         return CalendarMatter(kind: .arraignment, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
                               summary: "\(d.name) pleads not guilty to \(counts) count\(counts == 1 ? "" : "s") (\(c.charges.first?.law.title.lowercased() ?? "the indictment")). \(jailed ? "In custody." : "Out on bond.")",
-                              stateAsk: "Ready in about \(stateWeeks) weeks.",
-                              defenseAsk: "Wants \(defenseWeeks) weeks for discovery.",
+                              stateAsk: "Ready in about \(stateWeeks) week\(stateWeeks == 1 ? "" : "s").",
+                              defenseAsk: "Wants \(defenseWeeks) week\(defenseWeeks == 1 ? "" : "s") for discovery.",
                               options: ["Set the trial date now", "Put it on the waiting list; set the date later"],
                               pendingCase: c)
     }
