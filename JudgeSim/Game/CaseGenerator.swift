@@ -49,6 +49,45 @@ enum CaseGenerator {
         var priorDate: Date? = nil
     }
 
+    /// A person charged again is likelier to be charged with something like their last offense than with something far
+    /// worse: a reckless driver comes back for driving, a thief for theft, and murder is for people with a violent record.
+    static func narrowedForReoffense(_ templates: [CaseTemplate], person: PersonRecord, rng: inout SeededRNG) -> [CaseTemplate] {
+        let text = (person.priors.last?.offense ?? "").lowercased()
+        func has(_ words: [String]) -> Bool { words.contains { text.contains($0) } }
+        var category: LawCategory?
+        if has(["controlled", "cocaine", "heroin", "marijuana", "drug", "trafficking", "paraphernalia", "fentanyl", "opioid", "opium"]) { category = .drugs }
+        else if has(["driving", "dwi", "fleeing", "reckless", "speed", "hit and run", "license", "vehicle"]) { category = .traffic }
+        else if has(["larceny", "theft", "burglary", "breaking", "stolen", "arson", "trespass", "injury to"]) { category = .property }
+        else if has(["fraud", "forgery", "embezzle", "false pretense"]) { category = .whiteCollar }
+        else if has(["assault", "battery", "murder", "manslaughter", "threat"]) { category = .violent }
+        var out = templates
+        if category != .violent && !has(["robbery", "kidnap", "stalking", "weapon", "firearm"]) {
+            let gentler = out.filter { !isMurder($0) }
+            if !gentler.isEmpty { out = gentler }
+        }
+        if let category, rng.chance(0.7) {
+            let related = out.filter { $0.category == category }
+            if !related.isEmpty { out = related }
+        }
+        // Some people keep doing the same thing; some drift toward worse. How far a new charge may rise above the
+        // person's worst conviction depends on who they are (fixed per person) and, for the drifters, how long the record is.
+        let worst = person.priors.map { $0.ncClass.severity }.min()
+        if let worst {
+            let roll = person.id.uuidString.utf8.reduce(0) { ($0 &* 31 &+ Int($1)) & 0xffff } % 100
+            let steps = roll < 45 ? 1 : roll < 80 ? 3 : 5
+            let reach = steps == 1 ? 1 : steps + min(3, max(0, person.priors.count - 1)) / 2
+            func severity(_ t: CaseTemplate) -> Int? { LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass?.severity }
+            let notFarWorse = out.filter { (severity($0) ?? worst) >= worst - reach }
+            if !notFarWorse.isEmpty { out = notFarWorse }
+            // The escalators sometimes come back for something at least as serious as before.
+            if steps == 5, rng.chance(0.4 + 0.1 * Double(min(3, person.priors.count))) {
+                let atLeast = out.filter { (severity($0) ?? worst) <= worst }
+                if !atLeast.isEmpty { out = atLeast }
+            }
+        }
+        return out
+    }
+
     static func isMurder(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("murder") }
     /// Embezzlement, with or without a dollar threshold in the name of the charge.
     static func isEmbezzlement(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("embezzlement") }
@@ -87,6 +126,13 @@ enum CaseGenerator {
             }
         }
         // Written cases come up first, until each has been heard once.
+        // Alternate tellings wait until every written case has been heard in this career: until then each story is told
+        // as written, and only after all of them are used up do the retellings start.
+        let originalsUsed = StoryCases.all.filter { context.allowMurder || !isMurder($0) }.allSatisfy { (useCounts[$0.key] ?? 0) >= 1 }
+        // Now and then, about one draw in twenty, a story that has been heard before may come back told another way even
+        // early on; it stays rare until the whole bank is used up.
+        let earlyRetelling = rng.chance(0.05)
+        func tellingCount(_ key: String) -> Int { originalsUsed || earlyRetelling ? (context.tellingCounts?[key] ?? useCounts[key] ?? 0) : 0 }
         // A follow-up to an earlier case: one of the kinds named, fitted to the person.
         if let keys = context.forcedTemplateKeys {
             let sex = context.returning.map { NameBank.gender(of: $0.name) }
@@ -104,7 +150,7 @@ enum CaseGenerator {
             if !notLately.isEmpty { fitting = notLately }
             if let leastHeard = fitting.map({ useCounts[$0.key] ?? 0 }).min() { fitting = fitting.filter { (useCounts[$0.key] ?? 0) == leastHeard } }
             if let template = fitting.first(where: { _ in rng.chance(0.6) }) ?? fitting.first {
-                return build(StoryVariants.telling(of: template, heard: context.tellingCounts?[template.key] ?? useCounts[template.key] ?? 0), seed: seed, band: rng.chance(0.6) ? .strong : .close, context: context, rng: &rng)
+                return build(StoryVariants.telling(of: template, heard: tellingCount(template.key)), seed: seed, band: rng.chance(0.6) ? .strong : .close, context: context, rng: &rng)
             }
         }
         var unheardStories = StoryCases.all.filter { useCounts[$0.key] == nil }
@@ -129,22 +175,25 @@ enum CaseGenerator {
                         && (!template.requiresFelonyPrior || hasFelony) && template.forcedPriorOffenses.isEmpty
                         && age >= template.ageRange.lowerBound - 3 && age <= template.ageRange.upperBound + 8
                 }
-                if fitting.isEmpty { storyContext.returning = nil } else { all = fitting }
+                if fitting.isEmpty { storyContext.returning = nil } else { all = Self.narrowedForReoffense(fitting, person: person, rng: &rng) }
+            }
+            // A kind of case or a returning defendant narrows the choice only while it has an unheard story: once the narrowed
+            // list is used up, an unheard story of any kind comes before one is told twice.
+            if !originalsUsed && (all.map { useCounts[$0.key] ?? 0 }.min() ?? 0) >= 1 {
+                var unheardAnywhere = StoryCases.all.filter { (useCounts[$0.key] ?? 0) == 0 }
+                if !context.allowMurder { unheardAnywhere.removeAll(where: isMurder) }
+                if context.returning == nil || storyContext.returning == nil, !unheardAnywhere.isEmpty { all = unheardAnywhere }
             }
             let fewest = all.map { useCounts[$0.key] ?? 0 }.min() ?? 0
             var candidates = all.filter { (useCounts[$0.key] ?? 0) == fewest }
-            // Late in a career, cases that can be told another way come first: a story already heard that still has a
-            // telling this judge hasn't seen. Once every written case has been heard, only those come up; before that,
-            // half the draws go to them once 40 different cases are behind the judge.
+            // Once every written case has been heard, the ones that still have a telling this judge hasn't seen come first.
+            // Before that, no story is retold: the unheard ones always come first.
             func hasUnseenTelling(_ t: CaseTemplate) -> Bool {
                 let heard = useCounts[t.key] ?? 0
                 return heard > 0 && heard <= (StoryVariants.byKey[t.key]?.count ?? 0)
             }
             if fewest >= 1 {
                 let retellable = candidates.filter(hasUnseenTelling)
-                if !retellable.isEmpty { candidates = retellable }
-            } else if all.filter({ (useCounts[$0.key] ?? 0) > 0 }).count >= 40 && rng.chance(0.5) {
-                let retellable = all.filter(hasUnseenTelling)
                 if !retellable.isEmpty { candidates = retellable }
             }
             // Once the written cases have all been heard, the ones heard longest ago come back first.
@@ -168,7 +217,7 @@ enum CaseGenerator {
                     let alternatives = candidates.filter { !isEmbezzlement($0) && !isMurder($0) }
                     if !alternatives.isEmpty { story = rng.pick(alternatives) }
                 }
-                return build(StoryVariants.telling(of: story, heard: context.tellingCounts?[story.key] ?? useCounts[story.key] ?? 0), seed: seed, band: .close, context: storyContext, rng: &rng)
+                return build(StoryVariants.telling(of: story, heard: tellingCount(story.key)), seed: seed, band: .close, context: storyContext, rng: &rng)
             }
         }
         // A written case is heard once per career, and only with a new defendant, whose history it describes.
@@ -184,7 +233,7 @@ enum CaseGenerator {
                     && template.forcedPriorOffenses.isEmpty
                     && age >= template.ageRange.lowerBound - 3 && age <= template.ageRange.upperBound + 8
             }
-            if !fitting.isEmpty { pool = fitting }
+            if !fitting.isEmpty { pool = Self.narrowedForReoffense(fitting, person: person, rng: &rng) }
         }
 
         if !context.allowMurder {
@@ -218,7 +267,7 @@ enum CaseGenerator {
             let alternatives = choices.filter { !isEmbezzlement($0) }
             if !alternatives.isEmpty { template = rng.pick(alternatives) }
         }
-        template = StoryVariants.telling(of: template, heard: uses(template))
+        template = StoryVariants.telling(of: template, heard: tellingCount(template.key))
 
         let roll = Double.random(in: 0..<1, using: &rng)
         // Some cases are clear one way or the other; about half sit on the line.

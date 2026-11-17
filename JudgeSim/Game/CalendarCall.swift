@@ -1,6 +1,39 @@
 import Foundation
 
 /// One short matter handled at an administrative calendar call.
+/// The terms the judge sets on a plea that ends in a suspended sentence: how long, how closely supervised, and which conditions.
+struct PleaTerms: Codable, Hashable {
+    var months = 12
+    var supervised = false
+    var communityHours = 0
+    var houseArrestDays = 0
+    var curfewDays = 0
+    /// 0 none, 1 anger management course, 2 substance abuse assessment and treatment.
+    var treatment = 0
+    var restitution = false
+    var stayAway = false
+    var fine = false
+
+    var conditions: [String] {
+        var out: [String] = []
+        if communityHours > 0 { out.append("Complete \(communityHours) hours of community service.") }
+        if houseArrestDays > 0 { out.append("House arrest with electronic monitoring for \(houseArrestDays) days.") }
+        if curfewDays > 0 { out.append("Observe a curfew for \(curfewDays) days.") }
+        if treatment == 1 { out.append("Complete an anger management course.") }
+        if treatment == 2 { out.append("Obtain a substance abuse assessment and complete recommended treatment.") }
+        if restitution { out.append("Pay restitution within 60 days.") }
+        if stayAway { out.append("Stay away from the complaining witness.") }
+        if fine { out.append("Pay a fine and costs.") }
+        return out
+    }
+
+    /// The terms in a sentence, for the record.
+    var summary: String {
+        "\(months) months \(supervised ? "supervised" : "unsupervised") probation"
+            + (conditions.isEmpty ? "" : "; " + conditions.map { String($0.dropLast()).lowercased() }.joined(separator: "; "))
+    }
+}
+
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
         case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief, firstAppearance, arraignment, contempt
@@ -88,6 +121,8 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var suggestedAmount: Int? = nil
     /// A different starting figure for some amount options (an unsecured bond starts lower than a secured one).
     var suggestedAmounts: [Int: Int]? = nil
+    /// For a plea: the terms the State and defense propose, where the judge starts.
+    var suggestedTerms: PleaTerms? = nil
 
     /// The amount the picker starts at for this option.
     func suggested(for choice: Int?) -> Int? {
@@ -262,6 +297,7 @@ enum CalendarCalls {
         var stateAsk: String
         var defenseAsk: String
         var options: [String]
+        var terms = PleaTerms()
     }
 
     static func pleaPositions(_ law: Law, priors: [PriorConviction], rangeText: String, notes: [String], name: String,
@@ -312,10 +348,29 @@ enum CalendarCalls {
         let months = rng.pick([12, 18, 24])
         let supervision = !cls.isFelony && priors.isEmpty && rng.chance(0.4) ? "unsupervised" : "supervised"
         let hours = rng.pick([24, 50, 75, 100])
-        let smallCondition = rng.pick(["unsupervised probation for six months", "a stay-away condition and unsupervised probation", "an agreement to complete an anger management or substance abuse class", "restitution paid within 60 days"])
-        let houseArrestDays = rng.pick([30, 45, 60, 90])
-        let condition = rng.pick(["", " and \(hours) hours of community service", " and a substance abuse assessment with any treatment recommended",
-                                  " and an anger management course", " and a curfew for the first six months"])
+        // The terms a joint recommendation names: a curfew, a class, hours of community service, or nothing extra.
+        let conditionKind = rng.int(0...4)
+        var terms = PleaTerms()
+        terms.months = months
+        terms.supervised = supervision == "supervised"
+        var condition = ""
+        switch conditionKind {
+        case 1: condition = " and \(hours) hours of community service"; terms.communityHours = hours
+        case 2: condition = " and a substance abuse assessment with any treatment recommended"; terms.treatment = 2
+        case 3: condition = " and an anger management course"; terms.treatment = 1
+        case 4: condition = " and a curfew for the first six months"; terms.curfewDays = 180
+        default: break
+        }
+        // A small case's deal: community service and one other condition, unsupervised.
+        let smallKind = rng.int(0...3)
+        let smallCondition = ["unsupervised probation for six months", "a stay-away condition and unsupervised probation",
+                              "an anger management or substance abuse class", "restitution paid within 60 days"][smallKind]
+        var smallTerms = PleaTerms()
+        smallTerms.months = 6
+        smallTerms.communityHours = hours
+        smallTerms.stayAway = smallKind == 1
+        smallTerms.treatment = smallKind == 2 ? 1 : 0
+        smallTerms.restitution = smallKind == 3
         let stateAsk: String
         let defenseAsk: String
         switch stance {
@@ -357,21 +412,19 @@ enum CalendarCalls {
             defenseAsk = rng.pick(["My client has a job and wants to keep it.", "My client has been sober since the arrest.", "This is about one bad night, Judge.",
                                    "My client is ready to start today.", "We agree with the State, Judge."])
         }
-        var options = [
-            stance == 5 ? "Accept the plea; \(hours) hours of community service within 90 days, \(smallCondition), and costs (joint recommendation)" :
-            stance == 0 ? "Accept the plea; suspended sentence, \(months) months \(supervision) probation\(condition) (joint recommendation)"
-                : "Accept the plea; suspended sentence, 12 months supervised probation" + (stance == 3 ? "" : " (defense's ask)"),
+        // Where the judge starts when setting the probation terms: what the parties proposed.
+        var startTerms = PleaTerms()
+        startTerms.months = 12
+        startTerms.supervised = true
+        if stance == 0 { startTerms = terms } else if stance == 5 { startTerms = smallTerms }
+        let options = [
+            "Accept the plea; suspended sentence and probation, on terms you set" + (stance == 0 || stance == 5 ? " (joint recommendation)" : (stance == 3 ? "" : " (defense's ask)")),
             "Accept the plea; continue prayer for judgment on costs" + (stance == 3 ? " (State's ask)" : ""),
             "Accept the plea; impose \(rangeText) active" + (stance == 2 ? " (State's ask)" : ""),
             "Reject the plea; set the case for trial",
             "Accept the plea; split sentence: \(jailDays) day\(jailDays == 1 ? "" : "s") in jail, then probation" + (stance == 1 ? " (State's ask)" : "")
         ]
-        // A small case can also be resolved with conditions fitted to the offense instead of time in jail.
-        if !cls.isFelony {
-            options.append("Accept the plea; \(houseArrestDays) days of house arrest with electronic monitoring, then unsupervised probation")
-            options.append("Accept the plea; \(hours) hours of community service, a fine, and a curfew for 60 days")
-        }
-        return PleaPositions(stateAsk: stateAsk, defenseAsk: defenseAsk, options: options)
+        return PleaPositions(stateAsk: stateAsk, defenseAsk: defenseAsk, options: options, terms: startTerms)
     }
 
     /// The days in jail a split sentence's option names.
@@ -447,6 +500,7 @@ enum CalendarCalls {
             var rng = SeededRNG(seed: c.seed ^ 0x9EA)
             let positions = pleaPositions(law, priors: c.defendant.priors, rangeText: terms.rangeText, notes: terms.notes,
                                           name: c.defendant.name, activeTerm: terms.active, rng: &rng)
+            bound.suggestedTerms = positions.terms
             bound.stateAsk = positions.stateAsk
             bound.defenseAsk = positions.defenseAsk
             bound.options = positions.options
@@ -972,7 +1026,7 @@ enum CalendarCalls {
         var probationCompleted = 0
     }
 
-    static func resolve(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], judgeName: String, county: County) -> Result {
+    static func resolve(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], pleaTerms: [UUID: PleaTerms] = [:], judgeName: String, county: County) -> Result {
         var rng = SeededRNG(seed: UInt64(truncatingIfNeeded: call.date.timeIntervalSince1970.bitPattern) ^ UInt64(call.matters.count))
         var lines: [String] = []
         var newPeople: [PersonRecord] = []
@@ -1010,21 +1064,12 @@ enum CalendarCalls {
                 let credit = m.pendingCase?.background?.custodyDays ?? 0
                 switch choice {
                 case 0:
-                    // The terms named in the option the judge chose: length, supervision, and any special condition.
-                    let text = m.options.first ?? ""
-                    let months = text.range(of: #"\d+(?= months)"#, options: .regularExpression).flatMap { Int(text[$0]) } ?? (text.contains("six months") ? 6 : 12)
-                    let supervised = !text.contains("unsupervised")
-                    var conditions: [String] = []
-                    if let r = text.range(of: #"\d+(?= hours of community service)"#, options: .regularExpression) {
-                        conditions.append("Complete \(text[r]) hours of community service.")
-                    }
-                    if text.contains("substance abuse") { conditions.append("Obtain a substance abuse assessment and complete recommended treatment.") }
-                    if text.contains("anger management") { conditions.append("Complete an anger management course.") }
-                    if text.contains("curfew") { conditions.append("Observe a curfew for the first six months.") }
-                    if text.contains("stay-away") { conditions.append("Stay away from the complaining witness.") }
-                    if text.contains("restitution") { conditions.append("Pay restitution within 60 days.") }
-                    sentence = "\(termText) suspended, \(months) months \(supervised ? "supervised" : "unsupervised") probation"
-                        + (conditions.isEmpty ? "" : "; " + conditions.map { $0.dropLast().lowercased() }.joined(separator: "; "))
+                    // The terms the judge set: length, supervision, and each condition.
+                    let chosen = pleaTerms[m.id] ?? m.suggestedTerms ?? PleaTerms()
+                    let months = chosen.months
+                    let supervised = chosen.supervised
+                    let conditions = chosen.conditions
+                    sentence = "\(termText) suspended, " + chosen.summary
                     person.status = .probation
                     person.probation = ProbationTerm(docket: m.docket, offense: law.title, isFelony: m.isFelony,
                                                      suspendedSentence: termText,
@@ -1038,26 +1083,6 @@ enum CalendarCalls {
                     person.probation?.starts = date
                 case 1:
                     sentence = "Prayer for judgment continued"
-                case 5, 6:
-                    // A small case resolved with conditions instead of jail: house arrest, or community service with a fine and curfew.
-                    let text = m.options.indices.contains(choice) ? m.options[choice] : ""
-                    let number = text.range(of: #"\d+(?= (days|hours))"#, options: .regularExpression).flatMap { Int(text[$0]) } ?? 50
-                    let conditions = choice == 5
-                        ? ["House arrest with electronic monitoring for \(number) days."]
-                        : ["Complete \(number) hours of community service.", "Pay a fine and costs.", "Observe a curfew for 60 days."]
-                    let months = choice == 5 ? 12 : 6
-                    sentence = "\(termText) suspended, \(months) months unsupervised probation; " + conditions.map { $0.dropLast().lowercased() }.joined(separator: "; ")
-                    person.status = .probation
-                    person.probation = ProbationTerm(docket: m.docket, offense: law.title, isFelony: m.isFelony,
-                                                     suspendedSentence: termText,
-                                                     activeMonths: m.isFelony ? m.activeTerm : max(1, m.activeTerm / 30),
-                                                     ends: Calendar.current.date(byAdding: .month, value: months, to: date) ?? date,
-                                                     imposedInThisCourt: true, supervised: false, conditions: conditions,
-                                                     monthlyObligation: 60, violationRisk: rng.chance(0.5) ? 0.2 : 0.12,
-                                                     crvCount: 0, treatmentNeed: TreatmentNeed.none)
-                    person.probation?.activeDays = m.isFelony ? nil : m.activeTerm
-                    person.probation?.offenseClass = cls
-                    person.probation?.starts = date
                 case 4:
                     // Special probation (G.S. 15A-1351): jail first, then supervised probation on the suspended term.
                     // Special probation may not exceed one-fourth of the maximum term (G.S. 15A-1351(a)).
@@ -1108,7 +1133,7 @@ enum CalendarCalls {
                         if person.status == .incarcerated { person.pendingPostRelease = prs } else { person.postRelease = prs }
                     }
                 }
-                if choice == 0 || choice == 4 || choice >= 5 { suspendedSentences += 1 } else if choice != 1 { activeSentences += 1 }
+                if choice == 0 || choice == 4 { suspendedSentences += 1 } else if choice != 1 { activeSentences += 1 }
                 person.priors.append(PriorConviction(offense: law.title, ncClass: cls, year: year, county: county.name,
                                                      sentence: sentence, fromThisCourt: true, docket: m.docket,
                                                      sessionKey: Judgment.sessionKey(county: county, date: date)))
@@ -1253,6 +1278,7 @@ extension CalendarMatter {
         petition = try c.decodeIfPresent(PetitionFacts.self, forKey: .petition)
         review = try c.decodeIfPresent(TreatmentReviewFacts.self, forKey: .review)
         suggestedAmounts = try c.decodeIfPresent([Int: Int].self, forKey: .suggestedAmounts)
+        suggestedTerms = try c.decodeIfPresent(PleaTerms.self, forKey: .suggestedTerms)
     }
 }
 
