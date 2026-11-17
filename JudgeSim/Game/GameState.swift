@@ -604,6 +604,7 @@ final class GameState: ObservableObject {
         }
         entry.continuances += 1
         entry.requests = requests.isEmpty ? nil : requests
+        entry.requestDays = requests.isEmpty ? nil : max(1, CourtCalendar.calendar.dateComponents([.day], from: CourtCalendar.calendar.startOfDay(for: currentDate), to: CourtCalendar.calendar.startOfDay(for: target)).day ?? 1)
         entry.note = "Continued from \(SentenceFormat.shortDate(currentDate)): \(reason)"
             + (requests.isEmpty ? "" : " Follow-up ordered: \(requests.count) request\(requests.count == 1 ? "" : "s").")
         scheduled.append(ScheduledMatter(date: target, entry: entry))
@@ -1294,9 +1295,10 @@ final class GameState: ObservableObject {
                 c.sessionDate = date
                 refreshDefendant(&c)
                 if let requests = entry.requests, !requests.isEmpty {
-                    let added = SupplementalEvidence.gather(for: &c, requests: requests, rng: &rng)
-                    entry.note = (entry.note ?? "") + " New evidence is in: " + added.joined(separator: "; ") + "."
+                    let added = SupplementalEvidence.gather(for: &c, requests: requests, days: entry.requestDays, rng: &rng)
+                    entry.note = (entry.note ?? "") + (added.isEmpty ? "" : " Follow-up results: " + added.joined(separator: "; ") + ".")
                     entry.requests = nil
+                    entry.requestDays = nil
                 }
                 entry.matter = .trial(c)
             }

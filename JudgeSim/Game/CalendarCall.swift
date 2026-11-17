@@ -762,11 +762,15 @@ enum CalendarCalls {
         let d = c.defendant
         let jailed = c.background?.isJailed ?? false
         let counts = c.charges.count
+        // Each case asks for its own time: the State is ready sooner or later, and the defense wants more with more counts.
+        var rng = SeededRNG(seed: c.seed ^ 0xA77A_1E55)
+        let stateWeeks = rng.int(2...8)
+        let defenseWeeks = counts > 2 ? rng.int(6...12) : rng.int(3...9)
         return CalendarMatter(kind: .arraignment, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
                               summary: "\(d.name) pleads not guilty to \(counts) count\(counts == 1 ? "" : "s") (\(c.charges.first?.law.title.lowercased() ?? "the indictment")). \(jailed ? "In custody." : "Out on bond.")",
-                              stateAsk: "Ready in about five weeks.",
-                              defenseAsk: counts > 2 ? "Wants ten weeks for discovery." : "Wants five weeks for discovery.",
+                              stateAsk: "Ready in about \(stateWeeks) weeks.",
+                              defenseAsk: "Wants \(defenseWeeks) weeks for discovery.",
                               options: ["Set the trial date now", "Put it on the waiting list; set the date later"],
                               pendingCase: c)
     }

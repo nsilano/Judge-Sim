@@ -63,12 +63,65 @@ enum SupplementalEvidence {
 
     private enum Direction { case guilt, innocence, inconclusive }
 
-    static func gather(for c: inout CourtCase, requests: [EvidenceRequest], rng: inout SeededRNG) -> [String] {
+    /// How long each kind of follow-up realistically takes. Given the full time it comes back; given about half or more
+    /// it comes back partly done; less than that and nothing is back when the case is called.
+    static func daysNeeded(_ r: EvidenceRequest) -> Int {
+        switch r {
+        case .video, .witnessFollowUp, .alibi: return 14
+        case .phoneRecords, .expertReview: return 21
+        case .financialRecords: return 28
+        case .labTesting: return 35
+        }
+    }
+
+    private static func partialItem(_ r: EvidenceRequest, days: Int) -> (title: String, detail: String) {
+        let weeksLeft = max(1, Int((Double(daysNeeded(r) - days) / 7).rounded(.up)))
+        let more = "about \(weeksLeft) more week\(weeksLeft == 1 ? "" : "s")"
+        switch r {
+        case .video: return ("Camera Search Incomplete", "Investigators located two cameras but the owners had not produced footage by the time the case was called; they need \(more).")
+        case .phoneRecords: return ("Records Partly Returned", "The carrier returned call logs but not the location data; the rest needs \(more).")
+        case .labTesting: return ("Preliminary Lab Findings", "The laboratory gave a preliminary finding that is inconclusive; the final report needs \(more).")
+        case .witnessFollowUp: return ("Follow-Up Interviews Incomplete", "Detectives reached some witnesses; the rest need \(more).")
+        case .financialRecords: return ("Records Partly Returned", "The bank produced some statements, but not the account the tracing depends on; the rest needs \(more).")
+        case .expertReview: return ("Expert Review Incomplete", "The expert has seen only part of the file and cannot give an opinion yet; the review needs \(more).")
+        case .alibi: return ("Alibi Check Incomplete", "Some of the records were checked; the rest need \(more).")
+        }
+    }
+
+    static func gather(for c: inout CourtCase, requests: [EvidenceRequest], days: Int? = nil, rng: inout SeededRNG) -> [String] {
         guard !requests.isEmpty else { return [] }
         let written = c.templateKey.hasPrefix("story.")
         // A written case's alibi is checked as the case itself says; anything else the court asks for comes back as new
         // evidence that follows what really happened.
-        var notes: [String] = written ? checkAlibi(&c, requests: requests) : []
+        var notes: [String] = []
+        var requests = requests
+        // Not enough time: some follow-up isn't back, some is partly back, and what is ready follows what happened.
+        if let days {
+            var partial: [EvidenceRequest] = []
+            var none: [EvidenceRequest] = []
+            for r in requests {
+                let need = daysNeeded(r)
+                if days >= need { continue }
+                if days * 2 >= need { partial.append(r) } else { none.append(r) }
+            }
+            for r in partial {
+                let p = partialItem(r, days: days)
+                let side: Side = rng.chance(0.5) ? .prosecution : .defense
+                let number = c.evidence.filter { $0.side == side }.count + 1
+                let label = side == .prosecution ? "State's Exhibit \(number)" : "Defendant's Exhibit \(number)"
+                c.evidence.append(Evidence(exhibit: label, title: p.title, detail: p.detail, side: side, kind: .document, weight: 0,
+                                           supplemental: "New: only partly back after the continuance"))
+                notes.append("\(label): \(p.title)")
+            }
+            if !none.isEmpty {
+                let names = none.map { $0.label.lowercased() }.joined(separator: "; ")
+                c.proceduralNotes.append("The continuance was too short for this follow-up to come back: \(names). The case proceeds without it.")
+                notes.append("Not back in time: " + names)
+            }
+            let late = Set(partial + none)
+            requests = requests.filter { !late.contains($0) }
+        }
+        if written { notes += checkAlibi(&c, requests: requests) }
         let asked = written ? requests.filter { $0 != .alibi } : requests
         guard !asked.isEmpty else { return notes }
         let dl = c.defendant.lastName

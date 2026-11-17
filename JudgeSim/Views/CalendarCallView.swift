@@ -126,7 +126,7 @@ private struct MatterCard: View {
                 BondAmountPicker(amount: $amount, range: range)
             }
             if matter.kind == .arraignment && choice == 0 {
-                Text("Pick the trial day. The State says about five weeks; too soon and the defense will ask for more time.")
+                Text("Pick the trial day. Each side has said how much time it wants; too soon and the defense will ask for more time.")
                     .font(.caption).foregroundStyle(.secondary)
                 DayPickerList(kind: .trial, count: 30, choice: $date)
             }
