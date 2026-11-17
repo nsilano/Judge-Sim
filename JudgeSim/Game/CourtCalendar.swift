@@ -21,6 +21,8 @@ struct DocketEntry: Identifiable, Codable {
     var continuances = 0
     /// Follow-up work the judge asked for before the case resumes.
     var requests: [EvidenceRequest]? = nil
+    /// How many days the continuance gave that follow-up to come back (optional for older saves).
+    var requestDays: Int? = nil
     var note: String?
     var outcome: String?
     /// Moved to a later week because the trial calendar was full, not by any party's request (optional for older saves).

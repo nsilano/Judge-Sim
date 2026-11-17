@@ -604,6 +604,7 @@ final class GameState: ObservableObject {
         }
         entry.continuances += 1
         entry.requests = requests.isEmpty ? nil : requests
+        entry.requestDays = requests.isEmpty ? nil : max(1, CourtCalendar.calendar.dateComponents([.day], from: CourtCalendar.calendar.startOfDay(for: currentDate), to: CourtCalendar.calendar.startOfDay(for: target)).day ?? 1)
         entry.note = "Continued from \(SentenceFormat.shortDate(currentDate)): \(reason)"
             + (requests.isEmpty ? "" : " Follow-up ordered: \(requests.count) request\(requests.count == 1 ? "" : "s").")
         scheduled.append(ScheduledMatter(date: target, entry: entry))
@@ -1001,8 +1002,8 @@ final class GameState: ObservableObject {
     /// A written case where a plea bargain is plausible: not a homicide, and not one the State would never offer.
     private func pleaFits(_ c: CourtCase) -> Bool {
         guard let law = c.charges.first?.law, let cls = law.ncClass else { return false }
-        // A small case (a misdemeanor) goes to a bench trial; it isn't pled out at the arraignment.
-        return cls.isFelony && ![NCClass.A, .B1, .B2].contains(cls) && c.category != .family
+        // A small case (a misdemeanor) is often pled out at the arraignment for community service or special conditions.
+        return ![NCClass.A, .B1, .B2].contains(cls) && c.category != .family
     }
 
     /// A case built around an arrest the court already knows the date of: the incident comes before it, and the
@@ -1294,9 +1295,10 @@ final class GameState: ObservableObject {
                 c.sessionDate = date
                 refreshDefendant(&c)
                 if let requests = entry.requests, !requests.isEmpty {
-                    let added = SupplementalEvidence.gather(for: &c, requests: requests, rng: &rng)
-                    entry.note = (entry.note ?? "") + " New evidence is in: " + added.joined(separator: "; ") + "."
+                    let added = SupplementalEvidence.gather(for: &c, requests: requests, days: entry.requestDays, rng: &rng)
+                    entry.note = (entry.note ?? "") + (added.isEmpty ? "" : " Follow-up results: " + added.joined(separator: "; ") + ".")
                     entry.requests = nil
+                    entry.requestDays = nil
                 }
                 entry.matter = .trial(c)
             }
@@ -1455,7 +1457,8 @@ final class GameState: ObservableObject {
                     }
                     // Some defendants in written cases plead instead: a bargain the judge accepts or rejects. A plea the
                     // judge accepts frees that story to be told again, with new people and perhaps another telling.
-                    let offersPlea = c.templateKey.hasPrefix("story.") && pleaFits(c) && rng.chance(0.28)
+                    let smallCase = !(c.charges.first?.law.ncClass?.isFelony ?? true)
+                    let offersPlea = c.templateKey.hasPrefix("story.") && pleaFits(c) && rng.chance(smallCase ? 0.6 : 0.28)
                     var matter = c.templateKey.hasPrefix("story.") && !offersPlea ? CalendarCalls.arraignmentMatter(for: c) : CalendarCalls.pleaMatter(for: c)
                     if matter.kind == .quickPlea, let status = c.background?.bondStatus { matter.summary += " " + status }
                     call.matters.append(matter)
@@ -1469,7 +1472,7 @@ final class GameState: ObservableObject {
                 }
                 // Most weeks an officer brings a search warrant application.
                 if wantsWarrant && roomForNew {
-                    let kind = rng.pick([WarrantApplication.Kind.residenceDrugs, .storageStolen, .phoneRecords])
+                    let kind = rng.pick([WarrantApplication.Kind.residenceDrugs, .storageStolen, .phoneRecords, .bloodDraw, .bankRecords, .digitalAccounts, .dnaSample, .residenceWeapons])
                     // Nobody is arrested yet: the crime is under investigation, and the warrant, if signed, is executed in a day or three.
                     let execution = cal.date(byAdding: .day, value: rng.int(1...3), to: date) ?? date
                     if var c = freshCase(on: date, arrest: execution, incidentBefore: 5...30, categories: kind.categories, rng: &rng, excluding: &usedPeople) {
@@ -1481,7 +1484,7 @@ final class GameState: ObservableObject {
                             bg.bondStatus = "Not yet arrested."
                             c.background = bg
                         }
-                        let w = SearchWarrants.application(for: c, date: date, rng: &rng)
+                        let w = SearchWarrants.application(for: c, date: date, kind: kind, rng: &rng)
                         call.matters.insert(CalendarCalls.warrantMatter(w, for: c), at: min(1, call.matters.count))
                     }
                 }
@@ -2590,9 +2593,10 @@ final class GameState: ObservableObject {
                     var setCase = c
                     setCase.background?.arraigned = true
                     let days = CourtCalendar.calendar.dateComponents([.day], from: call.date, to: picked).day ?? 35
-                    if days < 21 && c.charges.count > 1 && rng.chance(0.6) {
+                    let defenseDays = CalendarCalls.prepWeeks(for: c).defense * 7
+                    if days < Int(Double(defenseDays) * 0.6) && rng.chance(0.6) {
                         if c.templateKey.hasPrefix("story.") {
-                            setCase.incidents = (setCase.incidents ?? []) + [Incidents.unpreparedCounsel(setCase, had: max(1, days), needed: 35,
+                            setCase.incidents = (setCase.incidents ?? []) + [Incidents.unpreparedCounsel(setCase, had: max(1, days), needed: defenseDays,
                                 reason: "You set this \(c.charges.count)-count case for trial \(days) day\(days == 1 ? "" : "s") after the arraignment.")]
                         } else {
                             setCase.continuanceMotion = ContinuanceMotions.make(for: setCase, rng: &rng)

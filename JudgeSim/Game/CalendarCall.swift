@@ -294,6 +294,7 @@ enum CalendarCalls {
         if stance == 1 && splitCap < 1 { stance = 0 }
         if !chartActive {
             if !cls.isFelony && priors.isEmpty && !violent && rng.chance(0.3) { stance = 3 }
+            else if !cls.isFelony && !violent && stance != 2 && rng.chance(0.4) { stance = 5 }
             else if stance != 2 && rng.chance(0.12) { stance = 4 }
         }
         let jailDays = max(1, min(cls.isFelony ? rng.pick([30, 45, 60, 90]) : rng.pick([10, 14, 30]), splitCap))
@@ -311,6 +312,8 @@ enum CalendarCalls {
         let months = rng.pick([12, 18, 24])
         let supervision = !cls.isFelony && priors.isEmpty && rng.chance(0.4) ? "unsupervised" : "supervised"
         let hours = rng.pick([24, 50, 75, 100])
+        let smallCondition = rng.pick(["unsupervised probation for six months", "a stay-away condition and unsupervised probation", "an agreement to complete an anger management or substance abuse class", "restitution paid within 60 days"])
+        let houseArrestDays = rng.pick([30, 45, 60, 90])
         let condition = rng.pick(["", " and \(hours) hours of community service", " and a substance abuse assessment with any treatment recommended",
                                   " and an anger management course", " and a curfew for the first six months"])
         let stateAsk: String
@@ -331,6 +334,10 @@ enum CalendarCalls {
                                  "The State is satisfied with a PJC and costs. \(last) has done everything asked since the arrest.",
                                  "Given \(last)'s clean record, the State asks for a prayer for judgment continued. The conviction stays on the books; that's enough."])
             defenseAsk = rng.pick(["We join the State, Judge. My client has learned from this.", "We agree, Judge. My client paid the costs this morning."])
+        case 5:
+            stateAsk = "The State and defense jointly recommend \(hours) hours of community service within 90 days, \(smallCondition), and costs, with the charge reduced to a plea of guilty. "
+                + rng.pick(["No one was hurt, and this resolves it fairly.", "\(last) has cooperated since the arrest.", "A trial would cost more than the case is worth."])
+            defenseAsk = rng.pick(["My client will start the hours this week.", "My client accepts responsibility and wants this behind them.", "We agree with the State, Judge."])
         case 4:
             stateAsk = rng.pick(["The State takes no position on the sentence, Judge. We'll leave it to the court.",
                                  "The plea is to the charge; the State makes no recommendation on punishment.",
@@ -350,7 +357,8 @@ enum CalendarCalls {
             defenseAsk = rng.pick(["My client has a job and wants to keep it.", "My client has been sober since the arrest.", "This is about one bad night, Judge.",
                                    "My client is ready to start today.", "We agree with the State, Judge."])
         }
-        let options = [
+        var options = [
+            stance == 5 ? "Accept the plea; \(hours) hours of community service within 90 days, \(smallCondition), and costs (joint recommendation)" :
             stance == 0 ? "Accept the plea; suspended sentence, \(months) months \(supervision) probation\(condition) (joint recommendation)"
                 : "Accept the plea; suspended sentence, 12 months supervised probation" + (stance == 3 ? "" : " (defense's ask)"),
             "Accept the plea; continue prayer for judgment on costs" + (stance == 3 ? " (State's ask)" : ""),
@@ -358,6 +366,11 @@ enum CalendarCalls {
             "Reject the plea; set the case for trial",
             "Accept the plea; split sentence: \(jailDays) day\(jailDays == 1 ? "" : "s") in jail, then probation" + (stance == 1 ? " (State's ask)" : "")
         ]
+        // A small case can also be resolved with conditions fitted to the offense instead of time in jail.
+        if !cls.isFelony {
+            options.append("Accept the plea; \(houseArrestDays) days of house arrest with electronic monitoring, then unsupervised probation")
+            options.append("Accept the plea; \(hours) hours of community service, a fine, and a curfew for 60 days")
+        }
         return PleaPositions(stateAsk: stateAsk, defenseAsk: defenseAsk, options: options)
     }
 
@@ -758,15 +771,37 @@ enum CalendarCalls {
         return bind(m, to: c)
     }
 
+    /// How many weeks each side says it needs to get this case ready: a disorderly conduct charge needs a week or two,
+    /// a mid-level felony a month or two, and the worst cases up to six months. More counts take longer.
+    static func prepWeeks(for c: CourtCase) -> (state: Int, defense: Int) {
+        var rng = SeededRNG(seed: c.seed ^ 0xA77A_1E55)
+        let worst = c.charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
+        let (state, defense): (ClosedRange<Int>, ClosedRange<Int>)
+        switch worst {
+        case .A?, .B1?, .B2?: (state, defense) = (12...22, 16...26)
+        case .C?: (state, defense) = (8...16, 10...20)
+        case .D?, .E?: (state, defense) = (6...12, 8...14)
+        case .F?, .G?: (state, defense) = (4...9, 6...11)
+        case .H?, .I?: (state, defense) = (3...7, 4...9)
+        case .misdA1?: (state, defense) = (2...5, 3...6)
+        default: (state, defense) = (1...3, 2...4)
+        }
+        let extra = c.charges.count > 2 ? 1.25 : 1.0
+        let s = Int((Double(rng.int(state)) * extra).rounded())
+        let d = Int((Double(rng.int(defense)) * extra).rounded())
+        return (s, d)
+    }
+
     static func arraignmentMatter(for c: CourtCase) -> CalendarMatter {
         let d = c.defendant
         let jailed = c.background?.isJailed ?? false
         let counts = c.charges.count
+        let (stateWeeks, defenseWeeks) = prepWeeks(for: c)
         return CalendarMatter(kind: .arraignment, personID: d.personID, personName: d.name, personAge: d.age, occupation: d.occupation,
                               docket: c.docket,
                               summary: "\(d.name) pleads not guilty to \(counts) count\(counts == 1 ? "" : "s") (\(c.charges.first?.law.title.lowercased() ?? "the indictment")). \(jailed ? "In custody." : "Out on bond.")",
-                              stateAsk: "Ready in about five weeks.",
-                              defenseAsk: counts > 2 ? "Wants ten weeks for discovery." : "Wants five weeks for discovery.",
+                              stateAsk: "Ready in about \(stateWeeks) week\(stateWeeks == 1 ? "" : "s").",
+                              defenseAsk: "Wants \(defenseWeeks) week\(defenseWeeks == 1 ? "" : "s") for discovery.",
                               options: ["Set the trial date now", "Put it on the waiting list; set the date later"],
                               pendingCase: c)
     }
@@ -977,7 +1012,7 @@ enum CalendarCalls {
                 case 0:
                     // The terms named in the option the judge chose: length, supervision, and any special condition.
                     let text = m.options.first ?? ""
-                    let months = text.range(of: #"\d+(?= months)"#, options: .regularExpression).flatMap { Int(text[$0]) } ?? 12
+                    let months = text.range(of: #"\d+(?= months)"#, options: .regularExpression).flatMap { Int(text[$0]) } ?? (text.contains("six months") ? 6 : 12)
                     let supervised = !text.contains("unsupervised")
                     var conditions: [String] = []
                     if let r = text.range(of: #"\d+(?= hours of community service)"#, options: .regularExpression) {
@@ -986,6 +1021,8 @@ enum CalendarCalls {
                     if text.contains("substance abuse") { conditions.append("Obtain a substance abuse assessment and complete recommended treatment.") }
                     if text.contains("anger management") { conditions.append("Complete an anger management course.") }
                     if text.contains("curfew") { conditions.append("Observe a curfew for the first six months.") }
+                    if text.contains("stay-away") { conditions.append("Stay away from the complaining witness.") }
+                    if text.contains("restitution") { conditions.append("Pay restitution within 60 days.") }
                     sentence = "\(termText) suspended, \(months) months \(supervised ? "supervised" : "unsupervised") probation"
                         + (conditions.isEmpty ? "" : "; " + conditions.map { $0.dropLast().lowercased() }.joined(separator: "; "))
                     person.status = .probation
@@ -1001,6 +1038,26 @@ enum CalendarCalls {
                     person.probation?.starts = date
                 case 1:
                     sentence = "Prayer for judgment continued"
+                case 5, 6:
+                    // A small case resolved with conditions instead of jail: house arrest, or community service with a fine and curfew.
+                    let text = m.options.indices.contains(choice) ? m.options[choice] : ""
+                    let number = text.range(of: #"\d+(?= (days|hours))"#, options: .regularExpression).flatMap { Int(text[$0]) } ?? 50
+                    let conditions = choice == 5
+                        ? ["House arrest with electronic monitoring for \(number) days."]
+                        : ["Complete \(number) hours of community service.", "Pay a fine and costs.", "Observe a curfew for 60 days."]
+                    let months = choice == 5 ? 12 : 6
+                    sentence = "\(termText) suspended, \(months) months unsupervised probation; " + conditions.map { $0.dropLast().lowercased() }.joined(separator: "; ")
+                    person.status = .probation
+                    person.probation = ProbationTerm(docket: m.docket, offense: law.title, isFelony: m.isFelony,
+                                                     suspendedSentence: termText,
+                                                     activeMonths: m.isFelony ? m.activeTerm : max(1, m.activeTerm / 30),
+                                                     ends: Calendar.current.date(byAdding: .month, value: months, to: date) ?? date,
+                                                     imposedInThisCourt: true, supervised: false, conditions: conditions,
+                                                     monthlyObligation: 60, violationRisk: rng.chance(0.5) ? 0.2 : 0.12,
+                                                     crvCount: 0, treatmentNeed: TreatmentNeed.none)
+                    person.probation?.activeDays = m.isFelony ? nil : m.activeTerm
+                    person.probation?.offenseClass = cls
+                    person.probation?.starts = date
                 case 4:
                     // Special probation (G.S. 15A-1351): jail first, then supervised probation on the suspended term.
                     // Special probation may not exceed one-fourth of the maximum term (G.S. 15A-1351(a)).
@@ -1051,7 +1108,7 @@ enum CalendarCalls {
                         if person.status == .incarcerated { person.pendingPostRelease = prs } else { person.postRelease = prs }
                     }
                 }
-                if choice == 0 || choice == 4 { suspendedSentences += 1 } else if choice != 1 { activeSentences += 1 }
+                if choice == 0 || choice == 4 || choice >= 5 { suspendedSentences += 1 } else if choice != 1 { activeSentences += 1 }
                 person.priors.append(PriorConviction(offense: law.title, ncClass: cls, year: year, county: county.name,
                                                      sentence: sentence, fromThisCourt: true, docket: m.docket,
                                                      sessionKey: Judgment.sessionKey(county: county, date: date)))
