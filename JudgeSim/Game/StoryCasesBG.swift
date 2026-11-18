@@ -29,7 +29,7 @@ extension StoryCases {
             E(.document, 2, "Damage Estimates", "Four cars on the front row: $15,900. Fence and gate: $3,900. Light pole: $1,600. Total: $21,400.")
         ],
         defenseEvidence: [
-            E(.video, 2, "Fan Phone Videos", "Three clips from the crowd show at least a dozen silver or gray cars in the intersection, including a silver Mustang that spins repeatedly. None shows the slide into the lot or a plate on the Mustang."),
+            E(.video, 2, "Fan Phone Videos", "Three clips from the crowd show at least a dozen silver or gray cars in the intersection, including a silver Audi that spins repeatedly. None shows the slide into the lot or a plate on the Audi."),
             E(.statement, 1, "Left Early", "{DL} says {D.he} left the intersection about 11:20 p.m. and drove toward the highway."),
             E(.document, 1, "Lot Post Note", "{DL}'s manager wrote that {DL} backed the Charger into a post in the work lot the Tuesday before.")
         ],
@@ -48,8 +48,8 @@ extension StoryCases {
                             .direct("What did {DL}'s car look like when you saw it?", "\"Two days after, outside {D.his} apartment. A silver Charger, cracked right headlight cover, scuffed right front fender.\""),
                             .cross("You didn't see the slide yourself?", "\"No. I got there seven minutes after it.\""),
                             .cross("The plate isn't readable on the lot video?", "\"Correct.\""),
-                            .cross("There was a silver Mustang in that intersection too, wasn't there?", "\"On the fan videos, yes. I count at least a dozen silver or gray cars. One of them is a Mustang.\""),
-                            .cross("You never found the Mustang's owner?", "\"No. None of the videos shows its plate.\"")
+                            .cross("There was a silver Audi in that intersection too, wasn't there?", "\"On the fan videos, yes. I count at least a dozen silver or gray cars. One of them is a Audi.\""),
+                            .cross("You never found the Audi's owner?", "\"No. None of the videos shows its plate.\"")
                         ]),
             WitnessSeed(name: "{V}", role: "Owner of Dunmore Auto Sales",
                         direct: ["\"Four cars I couldn't afford to lose, and a fence I'd just put up.\""],
@@ -87,7 +87,7 @@ extension StoryCases {
                             .direct("What did you find?", "\"The smears are silver metallic over gray primer with a clear coat, four layers. The fender has the same four layers, in the same order, with the same pigments.\""),
                             .direct("How much does that tell you?", "\"It's a factory silver used on several models. The Camry's paint is consistent with having come from {DL}'s fender. It is not unique. There are thousands of silver cars with that structure in the state.\""),
                             .cross("You can't say it came from {DL}'s car and no other?", "\"Correct. Consistent with, not identical to.\""),
-                            .cross("A silver Mustang of a similar year could leave a similar smear?", "\"The color family is similar. Layer structure differs a little by maker, but nobody gave me a Mustang to compare, so I can't say.\""),
+                            .cross("A silver Audi of a similar year could leave a similar smear?", "\"The color family is similar. Layer structure differs a little by maker, but nobody gave me a Audi to compare, so I can't say.\""),
                             .cross("You found no white paint from the Camry on the Charger?", "\"I examined the scuff on the fender. I didn't find white paint.\""),
                             .cross("The scuff and cracked cover could come from a post?", "\"I'm a paint examiner. I can tell you the paint under the scuff is intact. I can't say what caused it.\"")
                         ])
@@ -101,7 +101,7 @@ extension StoryCases {
                             .direct("How do you know {DL}?", "\"We've been friends since high school. I was one of the blockers that night, parked across Tanner Lane.\""),
                             .direct("What did {DL} do that night?", "\"{D.He} ran it. Collected from drivers, told people when to go. {D.He} did donuts early, ten minutes or so.\""),
                             .direct("When did {DL} leave?", "\"Around 11:20. {D.He} said {D.he} was done and heading home, and the Charger pulled out onto Dunmore toward the highway.\""),
-                            .direct("What happened at 11:26?", "\"I was looking down Tanner, waving cars off. I heard the crash and turned around. Afterward I saw the Mustang that had been running all night take off down Tanner.\""),
+                            .direct("What happened at 11:26?", "\"I was looking down Tanner, waving cars off. I heard the crash and turned around. Afterward I saw the Audi that had been running all night take off down Tanner.\""),
                             .direct("What did {DL} tell you about the Charger?", "\"That {D.he} backed into a post at work. {D.He} said it the Tuesday before, before any of this.\""),
                             .cross("You helped set up the blockade?", "\"Yes.\""),
                             .cross("You didn't see the slide itself?", "\"No. I heard it.\""),
@@ -116,7 +116,7 @@ extension StoryCases {
         victimImpacts: ["{VL}: \"I've run that lot for nineteen years. Nobody drives through my cars and keeps going. Everyone there went home and posted about it, and I spent two months paying for it.\""],
         allocutions: ["\"I put people in that intersection, and I'm sorry for what it cost you. I should have known somebody would get hurt.\""],
         guiltyTruths: ["{DL} texted a friend at 11:40 p.m., 'clipped a lot, don't say anything,' and deleted the thread the next morning."],
-        innocentTruths: ["The Mustang's driver told a friend that night that he had 'put one through a car lot.'"],
+        innocentTruths: ["The Audi's driver told a friend that night that he had 'put one through a car lot.'"],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "alibi", "expertTestimony"],
         story: StoryExtras(
             timeline: [(-3, "8:15 p.m.: The flyer for the takeover is posted on @tanner_lane_nights."),
@@ -128,7 +128,7 @@ extension StoryCases {
                        (24, "State Crime Laboratory reports the Camry's paint is consistent with the Charger's fender."),
                        (31, "{DL} charged.")],
             howIdentified: "A neighbor sent the flyer to the Sheriff's tip line the next morning. The account's recovery number belonged to {DL}, who drives a silver Charger with a cracked right headlight.",
-            notDone: ["The silver Mustang seen in the fan videos was never traced; none of the videos shows its plate.", "No one checked with {DL}'s employer whether the post incident was reported the Tuesday before."],
+            notDone: ["The silver Audi seen in the fan videos was never traced; none of the videos shows its plate.", "The manager who wrote the post note was never asked when {DL} first reported the damage."],
             defendantExam: [
                 .direct("Tell the court about that night.", "\"I put the meet together. I'm not going to say I didn't. I posted the flyer Tuesday night, I set up the blockers, and I took money from drivers for cones. About forty cars came, and a lot of people with phones.\""),
                 .direct("Did you drive?", "\"Yes. A few donuts in the intersection starting around 11:05, ten minutes maybe. That was stupid and I know it.\""),
@@ -148,7 +148,7 @@ extension StoryCases {
                                   explanation: "What usually happens at other takeovers doesn't show who was driving the car on this night. It is a guess dressed up as experience, and the question is who drove this car.",
                                   doctrineID: "speculation", weight: 1)),
                 (2, ObjectionSeed(question: "Prosecutor: \"What did the member who sent you the screenshot say about whose car it was?\"",
-                                  answer: "\"{D.He} said it was {DL}'s car that hit the lot.\"",
+                                  answer: "\"The member said it was {DL}'s car that hit the lot.\"",
                                   raisedBy: .defense, onCross: false, grounds: "Hearsay", shouldSustain: true,
                                   explanation: "The member's statement was made out of court and is offered for its truth, that the car was {DL}'s. The member isn't here to be cross-examined, and no exception applies.",
                                   doctrineID: "hearsay", weight: 1))

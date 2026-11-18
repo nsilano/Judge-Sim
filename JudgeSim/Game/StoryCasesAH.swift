@@ -63,7 +63,7 @@ extension StoryCases {
         ],
         prosecutionTheory: ["{D} rented a box under a fake name to receive fentanyl by mail and picked it up when it came."],
         defenseTheory: ["{D} was a $50 errand runner for someone named T. The State can't prove {D.he} knew what was in the envelope."],
-        aggravating: ["The offense involved a large quantity of controlled substance"],
+        aggravating: [],
         mitigating: ["The defendant has accepted responsibility", "The defendant is young"],
         victimImpacts: [],
         allocutions: ["\"I didn't ask what was in it because I didn't want to know. I know that's not an excuse.\""],

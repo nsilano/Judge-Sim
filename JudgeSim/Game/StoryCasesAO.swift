@@ -705,7 +705,7 @@ extension StoryCases {
         closings: ("His name, his room.", "Someone else's drugs."),
         timeline: [(-6, "{DL} rents room 114."), (0, "The manager calls deputies."), (0, "Deputies search the room with a warrant.")],
         identified: "The motel manager's complaint.",
-        aggravating: ["The offense involved a large quantity of drugs"],
+        aggravating: [],
         mitigating: ["The defendant has accepted responsibility"],
         mood: .divided,
         doctrines: ["searchSeizure", "burdenOfProof"],

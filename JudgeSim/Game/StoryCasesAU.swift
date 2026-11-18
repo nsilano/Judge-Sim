@@ -126,7 +126,7 @@ extension StoryCases {
         closings: ("Both counts.", "A friend."),
         timeline: [(0, "6 p.m.: the reception begins."), (0, "11:30 p.m.: {DL} drives home."), (0, "11:45 p.m.: the stop.")],
         identified: "A deputy.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
+        aggravating: [],
         mood: .indifferent)
 
     static let busPhoneSnatch = SmallCases.make(
@@ -490,7 +490,7 @@ extension StoryCases {
         closings: ("Impaired, dark.", "A wake."),
         timeline: [(0, "2 p.m.: the afternoon on the lake."), (0, "9:20 p.m.: heading home."), (0, "9:30 p.m.: the dock."), (0, "10:30 p.m.: the blood test.")],
         identified: "A marine officer and a blood test.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
+        aggravating: [],
         mood: .divided,
         impact: "He was my brother.",
         genders: ["V": .male])
@@ -517,7 +517,7 @@ extension StoryCases {
         closings: ("The lease and the phone.", "A cousin."),
         timeline: [(-60, "{DL} rents the unit."), (0, "The warrant is served."), (0, "Scales and packaging are inventoried.")],
         identified: "A storage unit warrant.",
-        aggravating: ["The offense involved a large quantity of drugs"],
+        aggravating: [],
         mood: .wantsConviction,
         doctrines: ["searchSeizure", "burdenOfProof"])
 

@@ -1236,6 +1236,37 @@ extension DefendantProfiles {
                 profile.jobs.insert(Job(title: "Unemployed", employer: "since release from custody", years: "\(release)–present", current: true), at: 0)
             }
         }
+        // A job doesn't survive being arrested again and again: someone who is always in and out of court is let go.
+        if person.isChronic, person.appearances.count >= 3, person.status != .incarcerated {
+            var letGo = false
+            for i in profile.jobs.indices where profile.jobs[i].current && profile.jobs[i].title != "Unemployed" && profile.jobs[i].title != "In custody" {
+                let start = Int(profile.jobs[i].years.prefix(4)) ?? year
+                guard start < year else { continue }
+                profile.jobs[i].current = false
+                profile.jobs[i].years = "\(start)–\(year) (let go after repeated arrests)"
+                letGo = true
+            }
+            if letGo && !profile.jobs.contains(where: { $0.current && $0.title == "Unemployed" }) {
+                profile.jobs.insert(Job(title: "Unemployed", employer: "since losing that job", years: "\(year)–present", current: true), at: 0)
+            }
+        }
+        // Life changes with repeated arrests: a marriage can end and a family can draw child services' attention. Which
+        // of these happens, if any, is fixed for the person.
+        if person.isChronic, person.appearances.count >= 4 {
+            let roll = person.styleRoll
+            if profile.family.hasPrefix("Married"), roll % 3 == 0, !profile.family.contains("marriage broke down") {
+                profile.family = "Separated" + (profile.family.firstIndex(of: ",").map { String(profile.family[$0...]) } ?? ".")
+                    + " The marriage broke down after the repeated arrests."
+            }
+            if profile.childCount > 0, roll % 4 == 0, !profile.family.contains("child services") {
+                profile.family += " Child services opened a case after the repeated arrests."
+            }
+        }
+        // Someone who has been before the court four times or more has usually lost their footing at home too.
+        if person.isChronic, person.appearances.count >= 4, person.status != .incarcerated,
+           !profile.residence.contains("Staying with") {
+            profile.residence = "Staying with a relative in the county; the court's records show a recent change of address."
+        }
         // A job at a business that has since closed is over.
         for i in profile.jobs.indices where profile.jobs[i].current && Gazetteer.living.closed[profile.jobs[i].employer] != nil {
             profile.jobs[i].current = false

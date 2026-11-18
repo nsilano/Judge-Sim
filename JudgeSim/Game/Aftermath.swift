@@ -103,7 +103,12 @@ enum Aftermath {
                                                     body: "A Hollis County grand jury returned a new indictment against \(d.name). The case comes back to Judge \(judgeLast), who presided over \(d.lastName)'s earlier case.",
                                                     docket: c.docket),
                                      personID: d.personID,
-                                     reoffense: Reoffense(personID: d.personID, templateKeys: beat.followUps,
+                                     reoffense: Reoffense(personID: d.personID,
+                                                          // A written follow-up for this story, and now and then a different kind of new charge that fits
+                                                          // the person's record (a driving offense after a driving offense, a theft after a theft), so a return
+                                                          // is not always the same charge. A beat about the same victim keeps only its own.
+                                                          templateKeys: beat.followUps + (beat.sameVictim ? [] : FollowUpCases.newCharges(forPrior: c.charges.first?.law.title)
+                                                              .filter { !beat.followUps.contains($0) && FollowUpCases.fits($0, age: d.age) }),
                                                           victimName: beat.sameVictim ? c.victimName
                                                               : beat.victimRole.flatMap { role in c.witnesses.first { $0.role == role }?.name },
                                                           incident: when,

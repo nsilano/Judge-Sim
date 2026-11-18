@@ -32,7 +32,7 @@ extension StoryVariants {
         defenseEvidence: [
             E(.video, 2, "Second Phone Clip", "A clip at 11:12 p.m. shows {DL} standing at the open driver's door of the WRX, handing something to a taller person in a gray hoodie. The clip ends before the car moves."),
             E(.statement, 1, "Borrowed Keys", "{DL} says {D.he} gave the keys to a friend called Kai for one spin and walked to the curb."),
-            E(.document, 1, "Spin Lane Map", "A sketch the group chat posted marking the spin lane in the open lot, far from the visitor row.")
+            E(.document, 1, "Spin Lane Map", "A sketch the group chat posted marking the spin lane in the open lot, with the visitor row to be kept clear.")
         ],
         prosecutionWitnesses: [
             WitnessSeed(name: nil, role: "Sheriff's deputy, patrol",
@@ -92,7 +92,7 @@ extension StoryVariants {
                         exam: [
                             .direct("Why were you at the meet?", "\"I stream car stuff. I know most of the regulars by sight.\""),
                             .direct("What did you see at 11:12?", "\"{DL} got out of the WRX, held the door, and handed keys to somebody taller in a gray hoodie. I filmed it on my second phone.\""),
-                            .direct("Did you know the person in the hoodie?", "\"I've seen {D.him} at other meets. I only know a first name, Kai.\""),
+                            .direct("Did you know the person in the hoodie?", "\"I've seen Kai at other meets. I only know a first name.\""),
                             .direct("Where was {DL} when the car spun?", "\"Standing at the curb with the cones. I saw {D.him} yelling at the crowd to back up.\""),
                             .cross("You didn't see the driver's face at the crash?", "\"No. It was moving too fast.\""),
                             .cross("You and {DL} are friends?", "\"We know each other from the meets.\""),
@@ -112,7 +112,7 @@ extension StoryVariants {
             timeline: [(-2, "The plaza_nights group chat posts the meet."),
                        (0, "10:31 p.m.: {DL}'s chat says the lot opens at 10:45. 10:40 p.m.: Cars begin arriving at the Parkside Plaza lot. 11:11 p.m.: A live stream shows {DL} in the WRX. 11:12 p.m.: A second clip shows {DL} at the open driver's door. 11:14 p.m.: The WRX slides into the visitor row. 11:27 p.m.: A deputy arrives."),
                        (1, "Deputies find the WRX behind {DL}'s house with the right rear crushed, and take the stream and building camera video."),
-                       (4, "{DL} tells a deputy that a friend named Kai was driving."),
+                       (1, "{DL} tells a deputy that a friend named Kai was driving."),
                        (12, "A search warrant for {DL}'s phone and the group chat returns no contact named Kai."),
                        (22, "State Crime Laboratory reports the WRX's bumper paint is consistent with the Civic's."),
                        (30, "{DL} charged.")],
@@ -120,7 +120,7 @@ extension StoryVariants {
             notDone: ["No one ever found the person {DL} calls Kai.", "The spectator's other phone was not examined for more video."],
             defendantExam: [
                 .direct("Tell the court about the night.", "\"I organized the meet. I posted it, I set the cones, and I told people to keep the visitor row clear. I did the first spin to get it started.\""),
-                .direct("What happened after your spin?", "\"I got out around 11:12 and Kai asked to try it. I gave {D.him} the keys and walked to the curb with the cones.\""),
+                .direct("What happened after your spin?", "\"I got out around 11:12 and Kai asked to try it. I gave Kai the keys and walked to the curb with the cones.\""),
                 .direct("Who is Kai?", "\"A guy I know from other meets. I only know the name. I wish I knew more.\""),
                 .direct("What did you see at 11:14?", "\"I heard the engine and then the crash. I yelled at everybody to back up, and then I told them to go.\""),
                 .direct("What happened to your car?", "\"Kai drove off in it. I found it behind my house the next morning with the back crushed.\""),

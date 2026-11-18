@@ -238,7 +238,7 @@ extension StoryCases {
         closings: ("The reading.", "A condition."),
         timeline: [(0, "7:35 a.m.: the drop-off line."), (0, "7:40 a.m.: the teacher notices the odor."), (0, "8:30 a.m.: the breath test.")],
         identified: "A teacher and a breath test.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
+        aggravating: [],
         mood: .wantsConviction)
 
     static let expiredTagFlee = SmallCases.make(

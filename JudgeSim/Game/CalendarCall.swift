@@ -337,7 +337,7 @@ enum CalendarCalls {
 
         var reasons: [String] = []
         if felonies >= 2 { reasons.append("\(last) has \(felonies) prior felonies. Probation has been tried.") }
-        else if !priors.isEmpty { reasons.append(rng.pick(["This isn't \(last)'s first time in front of a judge.", "\(last) has been given breaks before."])) }
+        else if !priors.isEmpty { reasons.append(rng.pick(["\(last) has a record.", "\(last) has been given breaks before."])) }
         if sameKind > 0 { reasons.append("It's the same kind of offense \(last) was convicted of before.") }
         if violent { reasons.append(rng.pick(["This was a violent offense, and the State takes it seriously.", "The victim wants \(last) to serve time, and the State agrees."])) }
         if chartActive { reasons.append("The sentencing chart calls for an active sentence at this record level.") }
@@ -519,7 +519,40 @@ enum CalendarCalls {
             bound.stateAsk = swap(m.stateAsk)
             bound.defenseAsk = swap(m.defenseAsk)
         }
+        // Someone this court has judged before: the State says so, more pointedly the more often it has happened.
+        if let remark = returnRemark(for: c) { bound.stateAsk = remark + " " + bound.stateAsk }
+        if let remark = defenseReturnRemark(for: c) { bound.defenseAsk = remark + " " + bound.defenseAsk }
         return bound
+    }
+
+    /// What defense counsel says when the client has been here before: a lawyer who has stood with the person already.
+    static func defenseReturnRemark(for c: CourtCase) -> String? {
+        let before = c.defendant.priors.filter(\.fromThisCourt).count
+        guard before >= 2 else { return nil }
+        let last = c.defendant.name.components(separatedBy: " ").last ?? c.defendant.name
+        var rng = SeededRNG(seed: c.seed ^ 0x5DE)
+        return rng.pick(["Counsel has stood with \(last) before and asks for something other than jail.",
+                         "Counsel knows this is not \(last)'s first time here and asks the court to look at the whole picture.",
+                         "Counsel concedes \(last)'s history and asks for terms \(last) can actually meet."])
+    }
+
+    /// What the prosecutor notes about a defendant who has been before this court before (nothing the first time).
+    static func returnRemark(for c: CourtCase) -> String? {
+        // Counted by court appearances, the way the news counts them, not only by convictions.
+        let appearances = c.defendant.history.filter { !$0.docket.hasSuffix("(PV)") && $0.docket != c.docket }.count
+        let before = max(c.defendant.priors.filter(\.fromThisCourt).count, appearances)
+        guard before >= 1 else { return nil }
+        let last = c.defendant.name.components(separatedBy: " ").last ?? c.defendant.name
+        let words = ["second", "third", "fourth", "fifth", "sixth", "seventh", "eighth"]
+        let ordinal = before - 1 < words.count ? words[before - 1] : "\(before + 1)th"
+        var rng = SeededRNG(seed: c.seed ^ 0x2E7)
+        if before == 1 {
+            return rng.pick(["The State notes \(last) has been in front of this court once before.",
+                             "This is \(last)'s second matter before this court."])
+        }
+        return rng.pick(["This is \(last)'s \(ordinal) matter before this court.",
+                         "The prosecutor notes this is the \(ordinal) time \(last) has been in front of this court.",
+                         "\(last) is back again: the \(ordinal) case in this court."])
     }
 
     /// What the State asks for at a first appearance, scaled to the most serious charge, the felony record and
@@ -992,7 +1025,7 @@ enum CalendarCalls {
                   (person.lastReleased ?? .distantPast) < settled,
                   (person.appearances.last?.date ?? .distantPast) < recent else { return false }
             let others = person.priors.filter { $0.docket == nil || $0.docket != term.docket }.count
-            return rng.chance(others == 0 ? 0.25 : (others >= 3 ? 1 : 0.7))
+            return rng.chance(others == 0 ? (person.isChronic ? 0.7 : 0.25) : (others >= 3 ? 1 : 0.7))
         }
         if let person = slipping.isEmpty ? nil : rng.pick(slipping), let term = person.probation, rng.chance(0.6),
            !matters.contains(where: { $0.personID == person.id }) {
@@ -1002,8 +1035,14 @@ enum CalendarCalls {
                 kind: .pvAdmission, personID: person.id, personName: person.name, personAge: person.age(on: date),
                 occupation: person.occupation, docket: term.docket + " (PV)",
                 summary: "\(person.name) admits " + pvAdmissionConduct(supervised: supervised) + " while on probation in \(term.docket).",
-                stateAsk: "Three-day quick dip.",
-                defenseAsk: "Admits it; asks to continue probation.",
+                stateAsk: {
+                    let earlier = (person.violations ?? []).count
+                    if earlier >= 2 { return "This is the \(["third", "fourth", "fifth"][min(earlier - 2, 2)]) violation in this court. The State asks for a CRV." }
+                    if earlier == 1 { return "A second violation. The State asks for a quick dip and a warning that the next is a CRV." }
+                    return "Three-day quick dip."
+                }(),
+                defenseAsk: (person.violations ?? []).isEmpty ? "Admits it; asks to continue probation."
+                    : "Admits it, and acknowledges an earlier violation; asks for one more chance on probation.",
                 options: ["Continue probation on the same terms", "Modify: add substance abuse treatment", "Order a three-day quick dip"]
                     + (crv > 0 ? ["Order a \(crv)-day CRV"] : [])))
         }

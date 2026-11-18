@@ -363,7 +363,7 @@ extension StoryCases {
         closings: ("The panel and the phone.", "A tampered rental."),
         timeline: [(-3, "{DL} rents the van."), (0, "7 a.m.: a dog alerts."), (0, "7:40 a.m.: the panel is opened.")],
         identified: "A weigh station search.",
-        aggravating: ["The offense involved a large quantity of drugs"],
+        aggravating: [],
         mood: .wantsConviction,
         doctrines: ["searchSeizure", "burdenOfProof"])
 

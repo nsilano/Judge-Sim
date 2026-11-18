@@ -272,7 +272,7 @@ extension StoryCases {
         closings: ("Speed, a bottle, a test.", "A test after two hours."),
         timeline: [(-1, "Night: {DL} drinks at a party."), (0, "7:50 a.m.: {V} is struck at the crossing."), (0, "7:58 a.m.: a deputy stops {DL}'s car."), (0, "10 a.m.: blood is drawn.")],
         identified: "A bus driver who followed the car.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
+        aggravating: [],
         mitigating: ["The defendant has accepted responsibility"],
         mood: .wantsConviction,
         impact: "I walked those children for nine years. I cannot stand on my leg.",
