@@ -479,7 +479,7 @@ extension StoryCases {
         closings: ("The record.", "One drink."),
         timeline: [(0, "10 p.m.: {DL} leaves the bar."), (0, "10:30 p.m.: the trooper sees the weave."), (1, "12 a.m.: the breath test.")],
         identified: "A trooper's stop and prior records.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
+        aggravating: [],
         mood: .wantsConviction,
         doctrines: ["priorRecord"])
 

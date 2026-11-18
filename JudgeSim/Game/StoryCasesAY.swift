@@ -117,7 +117,7 @@ extension StoryCases {
         closings: ("Guests.", "A text."),
         timeline: [(-14, "{DL} books a guard."), (0, "2 p.m.: the party starts."), (0, "3:15 p.m.: {V} is found."), (0, "3:40 p.m.: {V} is pronounced dead.")],
         identified: "Guest accounts and records.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
+        aggravating: [],
         mitigating: ["The defendant has accepted responsibility"],
         mood: .sympathetic,
         impact: "He was our only son.",

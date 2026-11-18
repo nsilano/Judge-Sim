@@ -542,7 +542,7 @@ extension StoryVariants {
         defenseRole: "Hotline counselor",
         defenseExam: [.direct("Did {DL} call?", "\"Yes.\""), .cross("Threats?", "\"No.\"")],
         theory: ("{D} kicked a trooper.", "A crisis."),
-        allocution: "\"I'm sorry.\"",
+        allocution: "\"I should have walked away.\"",
         truths: ("{DL} had left a note.", "A hotline called 911."),
         defendant: [.direct("Kick?", "\"I don't recall.\""), .direct("Why there?", "\"Despair.\""), .cross("Note?", "\"Yes.\""), .cross("Sorry?", "\"Yes.\"")],
         openings: ("A kick.", "A crisis."),

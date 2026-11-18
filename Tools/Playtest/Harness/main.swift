@@ -930,6 +930,47 @@ if args.count > 1 && args[1] == "scan" {
     let buckets = [("same day", gaps.filter { $0 == 0 }.count), ("1-7 days", gaps.filter { (1...7).contains($0) }.count),
                    ("8-30 days", gaps.filter { (8...30).contains($0) }.count), ("31+ days", gaps.filter { $0 > 30 }.count)]
     log("REPORT-TO-ARREST " + buckets.map { "\($0.0): \($0.1)" }.joined(separator: " · "))
+    // Who keeps coming back: how often chronic people return, how long between appearances, and whether each person's
+    // history lines up (dates in order, none in the future, no two appearances on one day, none while in custody).
+    do {
+        let cal = CourtCalendar.calendar
+        let people = game.people
+        let chronic = people.filter(\.isChronic)
+        func mean(_ xs: [Int]) -> String { xs.isEmpty ? "n/a" : String(format: "%.1f", Double(xs.reduce(0, +)) / Double(xs.count)) }
+        let totalAppearances = people.reduce(0) { $0 + $1.appearances.count }
+        let repeatAppearances = people.filter { $0.appearances.count >= 2 }.reduce(0) { $0 + $1.appearances.count }
+        log("RECURRENCE people \(people.count) · chronic \(chronic.count) · appearances \(totalAppearances) · by people seen twice or more \(repeatAppearances) (\(totalAppearances > 0 ? repeatAppearances * 100 / totalAppearances : 0)%)")
+        let trials = game.history.filter { $0.resolvedKind == "trial" }
+        log("  trials with a defendant who had been before this court: \(trials.filter { $0.returningDefendant }.count) of \(trials.count)")
+        log("  appearances per person: chronic \(mean(chronic.map { $0.appearances.count })) · others \(mean(people.filter { !$0.isChronic }.map { $0.appearances.count }))")
+        log("  seen 3+ times: \(people.filter { $0.appearances.count >= 3 }.count) · 5+ times: \(people.filter { $0.appearances.count >= 5 }.count) · chronic never back: \(chronic.filter { $0.appearances.count <= 1 }.count)")
+        var gapsDays: [Int] = []
+        for person in people {
+            let dates = person.appearances.map(\.date)
+            if dates != dates.sorted() { findings.append("[recurrence] \(person.name): appearances are out of date order") }
+            if let last = dates.max(), last > game.currentDate.addingTimeInterval(86_400) { findings.append("[recurrence] \(person.name): an appearance dated after today (\(short(last)))") }
+            let days = Set(dates.map { cal.startOfDay(for: $0) })
+            if days.count != dates.count, person.appearances.count > 1 {
+                let docketsByDay = Dictionary(grouping: person.appearances, by: { cal.startOfDay(for: $0.date) }).filter { $0.value.count > 1 && Set($0.value.map(\.docket)).count > 1 }
+                if !docketsByDay.isEmpty && !person.appearances.contains(where: { $0.charges.lowercased().contains("violation") }) {
+                    findings.append("[recurrence] \(person.name): two different cases on one day")
+                }
+            }
+            for (x, y) in zip(dates, dates.dropFirst()) { if let d = cal.dateComponents([.day], from: x, to: y).day { gapsDays.append(d) } }
+        }
+        let chronicGaps = chronic.flatMap { person -> [Int] in
+            let dates = person.appearances.map(\.date).sorted()
+            return zip(dates, dates.dropFirst()).compactMap { cal.dateComponents([.day], from: $0.0, to: $0.1).day }
+        }.sorted()
+        if !chronicGaps.isEmpty {
+            log("  days between a chronic person's appearances: shortest \(chronicGaps.first!) · median \(chronicGaps[chronicGaps.count / 2]) · longest \(chronicGaps.last!)")
+        }
+        let jumps = people.filter { $0.priors.count >= 2 }.filter { p in
+            guard let first = p.priors.map({ $0.ncClass.severity }).max(), let last = p.priors.last?.ncClass.severity else { return false }
+            return last < first - 6
+        }.count
+        log("  people whose latest conviction is far more serious than their worst earlier ones: \(jumps)")
+    }
     log("FINDINGS (\(findings.count))")
     for f in findings { log("- \(f)") }
     try? transcript.joined(separator: "\n").write(toFile: outPath, atomically: true, encoding: .utf8)

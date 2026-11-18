@@ -85,6 +85,8 @@ struct PersonRecord: Identifiable, Codable, Hashable {
         var date: Date
         var charges: String
         var outcome: String
+        /// The victim in that case, when it had one, so the same person can turn up in a later case (optional for older saves).
+        var victim: String? = nil
     }
 
     var id: UUID
@@ -116,6 +118,8 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     var stayAwayOrders: [StayAwayOrder]? = nil
     /// When the person last walked out of custody (optional for older saves).
     var lastReleased: Date? = nil
+    /// Someone this person is often arrested with, so the two turn up in court around the same time (optional for older saves).
+    var associate: UUID? = nil
     /// When a prison term's state bed opens and the person leaves the county jail, and the commitment it is for
     /// (optional for older saves).
     var stateBedDate: Date? = nil
@@ -201,6 +205,8 @@ struct ProbationTerm: Codable, Hashable {
     // Added for supervision fixes; optional so earlier saves still load.
     /// Misdemeanor exposure in days (nil: activeMonths × 30).
     var activeDays: Int?
+    /// Other dockets whose probation was merged into this term (optional for older saves).
+    var alsoDockets: [String]?
     /// Days actually served on CRV so far (nil: 90 per CRV).
     var crvDaysServed: Int?
     /// Days served in the county jail as special probation (a split sentence): credited if probation is revoked.

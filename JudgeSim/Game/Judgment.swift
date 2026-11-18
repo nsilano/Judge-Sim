@@ -1569,8 +1569,10 @@ enum Judgment {
         if d.priors.count >= 3 { propensity += 0.1 }
         if d.age > 50 { propensity *= 0.6 }
         if convicted {
-            if need.substance { propensity *= treatedSubstance ? 0.7 : 1.15 }
-            if need.mentalHealth { propensity *= treatedMental ? 0.75 : 1.1 }
+            // A third of the people with a record don't respond to treatment: it changes little for them.
+            let resists = d.personID.resistsTreatment(priors: d.priors.count)
+            if need.substance { propensity *= treatedSubstance ? (resists ? 1.0 : 0.7) : 1.15 }
+            if need.mentalHealth { propensity *= treatedMental ? (resists ? 1.0 : 0.75) : 1.1 }
             if k.maintainEmployment && bg?.employmentPlan != nil && onProbation { propensity *= 0.9 }
             if (k.education && onProbation) || (r.recommendations.vocational && !activeTerms.isEmpty) { propensity *= 0.93 }
             if k.angerManagement && (c.category == .violent || c.category == .robbery) { propensity *= 0.92 }
@@ -1950,13 +1952,13 @@ enum Judgment {
                                              title: "Newly Discovered Evidence", detail: evidence, side: .defense,
                                              kind: .document, weight: truthGuilty ? 1 : 4, supplemental: "Found after the first trial"))
             retrial.headline = "New trial: " + c.headline
-            let motion = ReliefMotion(docket: c.docket, personID: d.personID, personName: d.name, offense: principalTitle,
+            let motion = ReliefMotion(docket: c.docket, personID: d.personID, personName: d.name, offense: sentencingUnits.first?.law.title ?? principalTitle,
                                       newEvidence: truthGuilty ? evidence : "newly found material that points the other way, namely "
                                           + evidence.prefix(1).lowercased() + evidence.dropFirst(), meritorious: !truthGuilty, retrial: retrial)
             pending.append(PendingEvent(due: later(45...170),
                                         news: NewsItem(date: date, kind: .revelation,
                                                        headline: "\(d.name) asks for a new trial, citing new evidence",
-                                                       body: "Lawyers for \(d.name), convicted in Hollis County Superior Court of \(principalTitle.lowercasedPhrase), filed a motion for appropriate relief claiming newly discovered evidence. Judge \(judgeLast), who presided at trial, will hear it.",
+                                                       body: "Lawyers for \(d.name), convicted in Hollis County Superior Court of \((sentencingUnits.first?.law.title ?? principalTitle).lowercasedPhrase), filed a motion for appropriate relief claiming newly discovered evidence. Judge \(judgeLast), who presided at trial, will hear it.",
                                                        docket: c.docket),
                                         personID: d.personID, reliefMotion: motion))
         }

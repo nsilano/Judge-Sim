@@ -61,8 +61,12 @@ enum CaseGenerator {
         else if has(["fraud", "forgery", "embezzle", "false pretense"]) { category = .whiteCollar }
         else if has(["assault", "battery", "murder", "manslaughter", "threat"]) { category = .violent }
         var out = templates
-        if category != .violent && !has(["robbery", "kidnap", "stalking", "weapon", "firearm"]) {
-            let gentler = out.filter { !isMurder($0) }
+        // Killings are for people whose record is already violent; nobody jumps to one from a lesser offense.
+        func isKilling(_ t: CaseTemplate) -> Bool {
+            isMurder(t) || t.primaryLaw.contains("anslaughter") || t.primaryLaw.hasSuffix("DBV") || t.primaryLaw.hasPrefix("deathBy")
+        }
+        if (category != .violent && !has(["robbery", "kidnap"])) || !rng.chance(0.15) {
+            let gentler = out.filter { !isKilling($0) }
             if !gentler.isEmpty { out = gentler }
         }
         if let category, rng.chance(0.7) {
@@ -73,19 +77,46 @@ enum CaseGenerator {
         // person's worst conviction depends on who they are (fixed per person) and, for the drifters, how long the record is.
         let worst = person.priors.map { $0.ncClass.severity }.min()
         if let worst {
-            let roll = person.id.uuidString.utf8.reduce(0) { ($0 &* 31 &+ Int($1)) & 0xffff } % 100
-            let steps = roll < 45 ? 1 : roll < 80 ? 3 : 5
-            let reach = steps == 1 ? 1 : steps + min(3, max(0, person.priors.count - 1)) / 2
+            let roll = person.styleRoll
+            let steps = roll < 45 ? 1 : roll < 80 ? 2 : 3
+            let reach = steps == 1 ? 1 : steps + min(2, max(0, person.priors.count - 1) / 2)
             func severity(_ t: CaseTemplate) -> Int? { LawLibrary.lawIfPresent(t.primaryLaw)?.ncClass?.severity }
             let notFarWorse = out.filter { (severity($0) ?? worst) >= worst - reach }
             if !notFarWorse.isEmpty { out = notFarWorse }
             // The escalators sometimes come back for something at least as serious as before.
-            if steps == 5, rng.chance(0.4 + 0.1 * Double(min(3, person.priors.count))) {
+            if steps == 3, rng.chance(0.4 + 0.1 * Double(min(3, person.priors.count))) {
                 let atLeast = out.filter { (severity($0) ?? worst) <= worst }
                 if !atLeast.isEmpty { out = atLeast }
             }
         }
         return out
+    }
+
+    /// How much a written case has in it: exhibits, testimony, objections and timeline entries together.
+    static func lengthScore(_ t: CaseTemplate) -> Int {
+        var score: Int = t.prosecutionEvidence.count
+        score += t.defenseEvidence.count
+        for witness in t.prosecutionWitnesses { score += witness.exam.count }
+        for witness in t.defenseWitnesses { score += witness.exam.count }
+        if let story = t.story {
+            score += story.defendantExam.count
+            score += story.objections.count
+            score += story.timeline.count
+        }
+        return score
+    }
+
+    /// The scores that divide written cases into thirds: short, medium and long.
+    static let lengthCuts: (Int, Int) = {
+        let scores = StoryCases.all.map(lengthScore).sorted()
+        guard scores.count >= 3 else { return (0, 0) }
+        return (scores[scores.count / 3], scores[scores.count * 2 / 3])
+    }()
+
+    /// 0 for a short case, 1 for a medium one, 2 for a long one.
+    static func lengthClass(_ t: CaseTemplate) -> Int {
+        let score = lengthScore(t)
+        return score < lengthCuts.0 ? 0 : score < lengthCuts.1 ? 1 : 2
     }
 
     static func isMurder(_ template: CaseTemplate) -> Bool { template.primaryLaw.hasPrefix("murder") }
@@ -145,6 +176,15 @@ enum CaseGenerator {
                 context.victimOverride.map { _ in t.hasVictim } ?? true
             }
             var fitting = keepsVictim.isEmpty ? named : keepsVictim
+            // Now and then the new charge is not one of the hand-picked follow-ups but whatever fits this person's
+            // record and style: a step up, a related charge, the kind of thing their history points toward.
+            if context.victimOverride == nil, let person = context.returning, rng.chance(0.2) {
+                let wide = CaseTemplates.all.filter { t in
+                    sex.map { (t.requiredGenders["D"] ?? $0) == $0 } ?? true
+                }.filter { t in age.map { FollowUpCases.fits(t.key, age: $0) } ?? true }
+                let extra = Self.narrowedForReoffense(wide, person: person, rng: &rng)
+                if !extra.isEmpty { fitting = [rng.pick(extra)] }
+            }
             // Not one heard lately, and the ones heard least first, so the same follow-up doesn't come twice in a row.
             let notLately = fitting.filter { !context.recentTemplateKeys.contains($0.key) }
             if !notLately.isEmpty { fitting = notLately }
@@ -195,6 +235,16 @@ enum CaseGenerator {
             if fewest >= 1 {
                 let retellable = candidates.filter(hasUnseenTelling)
                 if !retellable.isEmpty { candidates = retellable }
+            }
+            // The bench shouldn't get a run of long trials, or a run of short ones: after two long cases in a row the next is
+            // shorter, and after three short ones the next is longer. Nothing is left out; it only changes the order.
+            let recentClasses = context.recentTemplateKeys.suffix(3).compactMap { key in StoryCases.all.first { $0.key == key }.map(lengthClass) }
+            if recentClasses.count >= 2, recentClasses.suffix(2).allSatisfy({ $0 == 2 }) {
+                let lighter = candidates.filter { lengthClass($0) < 2 }
+                if !lighter.isEmpty { candidates = lighter }
+            } else if recentClasses.count >= 3, recentClasses.allSatisfy({ $0 == 0 }) {
+                let heavier = candidates.filter { lengthClass($0) > 0 }
+                if !heavier.isEmpty { candidates = heavier }
             }
             // Once the written cases have all been heard, the ones heard longest ago come back first.
             let notRecentStories = candidates.filter { !context.recentTemplateKeys.contains($0.key) }
@@ -319,7 +369,7 @@ enum CaseGenerator {
             used.insert(person.lastName)
             // A convicted officer doesn't keep the badge: a conviction from this court ends a law enforcement career.
             let lostBadge = CaseComplexity.isLawEnforcement(person.occupation) && !person.priors.isEmpty
-                && !person.occupation.lowercased().hasPrefix("former")
+                && !person.occupation.lowercased().hasPrefix("former") && !person.occupation.lowercased().contains("retired")
             defendant = Defendant(personID: person.id, name: person.name, age: person.age(on: context.date),
                                   occupation: lostBadge ? "Former " + person.occupation.lowercased() : person.occupation,
                                   background: person.background, priors: person.priors,
@@ -339,6 +389,8 @@ enum CaseGenerator {
             var occupation = t.occupations.isEmpty ? rng.pick(NameBank.occupations) : rng.pick(t.occupations)
             // A college student is young; an older defendant works for a living.
             if t.occupations.isEmpty, age > 30, occupation.lowercased().contains("student") { occupation = rng.pick(NameBank.occupations.filter { !$0.lowercased().contains("student") }) }
+            // A licensed hygienist has finished a program; a teenager hasn't.
+            if t.occupations.isEmpty, age < 23, occupation.lowercased().contains("hygienist") { occupation = rng.pick(NameBank.occupations.filter { !$0.lowercased().contains("hygienist") && !$0.lowercased().contains("student") }) }
             // Written cases describe the defendant's record themselves; most say there is none. A serving officer
             // has none at all: a criminal record bars certification (12 NCAC 09B .0101).
             let officer = CaseComplexity.isLawEnforcement(occupation)
@@ -415,7 +467,7 @@ enum CaseGenerator {
         let speedySeed: MotionSeed? = t.story == nil && context.incidentDaysAgo == nil && rng.chance(0.07) ? rng.pick(GenericPools.speedyTrialSeeds) : nil
         let daysBack = context.incidentDaysAgo.map { max(1, $0) } ?? (speedySeed != nil ? rng.int(560...900) : rng.int(150...330) + (minDays - 150))
         var incident = Calendar.current.date(byAdding: .day, value: -daysBack, to: context.date) ?? context.date
-        if let pinned = t.story?.when?.incident(before: context.date, minDays: minDays, using: &rng) { incident = pinned }
+        if context.incidentDaysAgo == nil, let pinned = t.story?.when?.incident(before: context.date, minDays: minDays, using: &rng) { incident = pinned }
         let prosecutor = rng.pick(county.assistantDAs)
         let usePublicDefender = rng.chance(0.6)
         let stillDefending: ([String]) -> [String] = { list in let kept = list.filter { !context.departedCounsel.contains($0) }; return kept.isEmpty ? list : kept }

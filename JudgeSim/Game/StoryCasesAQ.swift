@@ -176,7 +176,7 @@ extension StoryCases {
         closings: ("The numbers.", "The deer."),
         timeline: [(0, "8 p.m.: {D} and {V} leave a bar."), (0, "11:48 p.m.: a text is open on the phone."), (0, "11:50 p.m.: the truck leaves the road."), (1, "1:50 a.m.: blood is drawn.")],
         identified: "A trooper's crash report and a blood test.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
+        aggravating: [],
         mood: .divided,
         impact: "They were my only child.")
 

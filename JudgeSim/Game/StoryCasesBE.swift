@@ -398,7 +398,7 @@ extension StoryCases {
         closings: ("The result.", "The signs."),
         timeline: [(0, "4 p.m.: construction zone."), (0, "4:20 p.m.: impact."), (0, "4:40 p.m.: {V} dies."), (0, "5 p.m.: breath test.")],
         identified: "A breath test.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
+        aggravating: [],
         mood: .wantsConviction,
         impact: "She was driving to see her grandson.",
         doctrines: ["intoxication"],
@@ -517,7 +517,7 @@ extension StoryCases {
         closings: ("The records.", "The friend."),
         timeline: [(0, "1 a.m.: the crash."), (0, "1:20 a.m.: the trooper."), (0, "2 a.m.: the test."), (1, "{DL} is charged.")],
         identified: "Records and a breath test.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
+        aggravating: [],
         mood: .wantsConviction,
         doctrines: ["burdenOfProof"],
         genders: ["D": .male])
@@ -546,7 +546,7 @@ extension StoryCases {
         closings: ("The result.", "The tracks."),
         timeline: [(0, "7 p.m.: the center line."), (0, "7:01 p.m.: the collision."), (0, "7:20 p.m.: medics."), (0, "8 p.m.: the test.")],
         identified: "A breath test and DMV record.",
-        aggravating: ["The defendant was impaired at the time of the offense"],
+        aggravating: [],
         mood: .wantsConviction,
         impact: "Our children were in the car.",
         doctrines: ["mistakeOfFact"])
