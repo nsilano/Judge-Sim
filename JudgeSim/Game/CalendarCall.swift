@@ -37,7 +37,7 @@ struct PleaTerms: Codable, Hashable {
 struct CalendarMatter: Identifiable, Codable, Hashable {
     enum Kind: String, Codable {
         case quickPlea, failureToAppear, continuance, bondModification, capacity, pvAdmission, earlyTermination, searchWarrant, motionForRelief, firstAppearance, arraignment, contempt
-        case expunction, bondForfeiture, drivingPrivilege, treatmentReview, treatmentGraduation, counselWithdrawal
+        case expunction, bondForfeiture, drivingPrivilege, treatmentReview, treatmentGraduation, counselWithdrawal, ethics, pleaColloquy, jurySelection
 
         var label: String {
             switch self {
@@ -59,6 +59,9 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .treatmentReview: return "Treatment court review"
             case .treatmentGraduation: return "Treatment court graduation"
             case .counselWithdrawal: return "Motion to withdraw as counsel"
+            case .ethics: return "Judicial conduct"
+            case .pleaColloquy: return "Plea colloquy"
+            case .jurySelection: return "Jury selection"
             }
         }
 
@@ -82,6 +85,9 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
             case .treatmentReview: return "heart.text.square.fill"
             case .treatmentGraduation: return "graduationcap.fill"
             case .counselWithdrawal: return "person.crop.circle.badge.minus"
+            case .ethics: return "scalemass.fill"
+            case .pleaColloquy: return "text.bubble.fill"
+            case .jurySelection: return "person.3.fill"
             }
         }
     }
@@ -134,10 +140,16 @@ struct CalendarMatter: Identifiable, Codable, Hashable {
     var petition: PetitionFacts? = nil
     /// For a treatment court review or graduation: the program, phase, and this period's report.
     var review: TreatmentReviewFacts? = nil
+    /// What the victim or the victim's family says at the hearing, and what they want (optional for older saves).
+    var victimVoice: String? = nil
+    var victimWish: String? = nil
 
     /// How the matter is captioned on its card.
     var caption: String {
         switch kind {
+        case .ethics: return "A question for the judge"
+        case .pleaColloquy: return "The plea colloquy"
+        case .jurySelection: return "Jury selection"
         case .searchWarrant: return "In re: search of \(personName)"
         case .expunction: return "In re: petition of \(personName)"
         case .drivingPrivilege: return "In re: \(personName), limited driving privilege"
@@ -286,6 +298,10 @@ struct CalendarCall: Identifiable, Codable, Hashable {
 enum CalendarCalls {
     /// How hard the State bargains in front of this judge, from its memory of the judge's rulings (-0.3 to 0.3).
     static var prosecutorEdge = 0.0
+    /// How the judge has ruled lately, which both sides take into account.
+    static var memory = JudgeMemory()
+    /// How full the county jail is (people held over beds), 0 to a little over 1.
+    static var jailLoad = 0.0
 
 
     private static let pleaLaws = ["felonyLarceny", "possSchedII", "breakingVehicle", "larcenyMerchant", "feloniousBE",
@@ -304,7 +320,8 @@ enum CalendarCalls {
     /// the charge is violent, whether it repeats an earlier offense, and what the sentencing chart calls for. A heavier
     /// charge or record always draws a harder ask. The defense answers that ask, in proportion, and says why.
     static func pleaPositions(_ law: Law, priors: [PriorConviction], rangeText: String, notes: [String], name: String,
-                              activeTerm: Int = 0, occupation: String = "", rng: inout SeededRNG) -> PleaPositions {
+                              activeTerm: Int = 0, occupation: String = "", prosecutor: String = "", defender: String = "",
+                              rng: inout SeededRNG) -> PleaPositions {
         let cls = law.ncClass ?? .misd1
         let last = name.components(separatedBy: " ").last ?? name
         let felonies = priors.filter { $0.ncClass.isFelony }.count
@@ -324,6 +341,25 @@ enum CalendarCalls {
         if chartActive { points += 4 }
         // The DA's office remembers this judge: after lenient rulings it digs in a notch, after tough ones it bargains a notch.
         if prosecutorEdge > 0.08 { points += 1 } else if prosecutorEdge < -0.08 { points -= 1 }
+        // The prosecutor's own style, and what this judge has done with pleas of this kind: a prosecutor who knows the judge
+        // turns down hard recommendations asks for less; one who knows the judge takes them asks for more.
+        let tier = JudgeMemory.tier(category: law.category, felony: cls.isFelony)
+        let tierWords = JudgeMemory.phrase(tier)
+        let prosecutorStyle = LawyerStyle.of(prosecutor, prosecutor: true)
+        let defenseStyle = LawyerStyle.of(defender, prosecutor: false)
+        if !prosecutor.isEmpty { if prosecutorStyle == .hardliner { points += 1 } else if prosecutorStyle == .dealmaker { points -= 1 } }
+        var stateSpoken = ""
+        let crowdedJail = jailLoad >= 0.9 && !violent
+        if crowdedJail { points -= 1 }
+        if let f = memory.pleaFollowRate(tier: tier) {
+            if f.rate <= 0.3 && prosecutorStyle != .hardliner {
+                points -= 1
+                stateSpoken = " The State has kept its recommendation to what this court has been willing to accept in recent \(tierWords) pleas."
+            } else if f.rate >= 0.8 && prosecutorStyle != .dealmaker {
+                points += 1
+                stateSpoken = " This court has taken the State's recommendation in most of its recent \(tierWords) pleas."
+            }
+        }
         // 0 joint probation, 1 split sentence, 2 active time, 3 prayer for judgment, 5 small joint deal.
         var stance: Int
         if chartActive || points >= 6 { stance = 2 }
@@ -445,6 +481,21 @@ enum CalendarCalls {
                 + recordLine + (violent ? " The victim was consulted and agrees." : "")
             defenseAsk = "We agree with the State's recommendation. " + argue(answer)
         }
+        var stateAskFinal = stateAsk
+        var defenseAskFinal = defenseAsk
+        // What the lawyers add from knowing this judge and each other.
+        if (stance == 1 || stance == 2) && !stateSpoken.isEmpty && rng.chance(0.7) { stateAskFinal += stateSpoken }
+        if crowdedJail && (stance == 1 || stance == 2) && rng.chance(0.6) { stateAskFinal += " The jail is at capacity, and the State is not asking for jail time it does not need on a non-violent case." }
+        if (stance == 1 || stance == 2), let fav = memory.pleaFavorite(tier: tier), fav.share >= 0.5 {
+            if fav.option == 0 { defenseAskFinal += " This court has put most recent \(tierWords) defendants on probation." }
+            else if fav.option == 4 && stance == 2 { defenseAskFinal += " This court has taken a split sentence in most recent \(tierWords) pleas." }
+        }
+        if (stance == 1 || stance == 2) && defenseStyle == .fighter && !defender.isEmpty { defenseAskFinal += " The defense is ready to try this case if the State will not move." }
+        if defenseStyle == .stretched && !defender.isEmpty && stance != 3 && stance != 5 {
+            // A lawyer with too many cases keeps it short: the answer to the State's ground is dropped.
+            defenseAskFinal = defenseAskFinal.components(separatedBy: ". ").prefix(2).joined(separator: ". ")
+            if !defenseAskFinal.hasSuffix(".") { defenseAskFinal += "." }
+        }
         // Where the judge starts when setting the probation terms: what the parties proposed.
         var startTerms = PleaTerms()
         startTerms.months = 12
@@ -457,7 +508,7 @@ enum CalendarCalls {
             "Reject the plea; set the case for trial",
             "Accept the plea; split sentence: \(jailDays) day\(jailDays == 1 ? "" : "s") in jail, then probation" + (stance == 1 ? " (State's ask)" : "")
         ]
-        return PleaPositions(stateAsk: stateAsk, defenseAsk: defenseAsk, options: options, terms: startTerms)
+        return PleaPositions(stateAsk: stateAskFinal, defenseAsk: defenseAskFinal, options: options, terms: startTerms)
     }
 
     /// The days in jail a split sentence's option names.
@@ -508,6 +559,10 @@ enum CalendarCalls {
         bound.occupation = c.defendant.occupation
         bound.docket = c.docket
         bound.pendingCase = c
+        if m.kind == .quickPlea || m.kind == .continuance, let voice = VictimStatement.statement(for: c, kind: m.kind, seed: c.seed) {
+            bound.victimVoice = voice.text
+            bound.victimWish = voice.wish
+        }
         if m.kind == .quickPlea, let charged = law {
             // Most pleas are bargains: the State often reduces the charge, more so when the charge as filed would carry
             // mandatory prison time.
@@ -532,7 +587,8 @@ enum CalendarCalls {
                 + ". Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
             var rng = SeededRNG(seed: c.seed ^ 0x9EA)
             let positions = pleaPositions(law, priors: c.defendant.priors, rangeText: terms.rangeText, notes: terms.notes,
-                                          name: c.defendant.name, activeTerm: terms.active, occupation: c.defendant.occupation, rng: &rng)
+                                          name: c.defendant.name, activeTerm: terms.active, occupation: c.defendant.occupation,
+                                          prosecutor: c.prosecutor, defender: c.defenseAttorney, rng: &rng)
             bound.suggestedTerms = positions.terms
             bound.stateAsk = positions.stateAsk
             bound.defenseAsk = positions.defenseAsk
@@ -642,6 +698,14 @@ enum CalendarCalls {
         var employed = true
         var local = true
         var felony = false
+        /// What this judge has done on bonds of this kind: releases on a promise or an unsecured bond most of the time,
+        /// or almost never. Only set with enough rulings to say.
+        var judgeLoose = false
+        var judgeRefusesUnsecured = false
+        var tierPhrase = ""
+        /// A recent release on this kind of charge went wrong, and a ruling the defense can cite as consistency.
+        var recentFallout = false
+        var precedent: String? = nil
     }
 
     /// The defense answers the State's position, in proportion to it and with a reason drawn from the client's real
@@ -667,9 +731,15 @@ enum CalendarCalls {
         var pool = for_
         var picked: [String] = []
         while picked.count < 2 && !pool.isEmpty { picked.append(pool.remove(at: rng.int(0...(pool.count - 1)))) }
+        if k.recentFallout { rebuttal += " The State points to another defendant's release going wrong, but \(last) is not that defendant, and a monitor answers the concern." }
+        if let p = k.precedent { rebuttal += " " + p }
         let because = " " + (picked.isEmpty ? "\(last) will appear" : picked.joined(separator: "; ").capitalizedFirst) + "." + rebuttal
         let reach = money.reach
         let state = scale.secured
+        // This judge has released on a promise or an unsecured bond in most recent bonds of this kind: say so and ask for it.
+        if k.judgeLoose && scale.wantsSecured && !(k.violent && k.felony) && state <= 25_000 {
+            return "Asks for an unsecured bond. This court has released on unsecured bonds in most of its recent \(k.tierPhrase) cases, and \(last) fits that pattern." + because
+        }
         // No money asked for: agree, and say why the law favors it.
         if !scale.wantsSecured {
             return rng.pick(["Agrees to the unsecured bond.", "Asks for a written promise and won't fight the unsecured bond."])
@@ -678,7 +748,7 @@ enum CalendarCalls {
         let monitor = state >= 20_000 || k.violent
         // Can't pay anything: argue for the least restrictive condition that still fits this charge.
         if reach == 0 {
-            if state <= 5_000 && !k.violent {
+            if state <= 5_000 && !k.violent && !k.judgeRefusesUnsecured {
                 return rng.pick(["Can't pay anything. Asks for a written promise to appear.", "Asks for release to \(keeper), since \(last) can't pay anything."])
                     + because + " A bond \(last) can't post is a detention order, and this charge doesn't call for one."
             }
@@ -686,8 +756,9 @@ enum CalendarCalls {
                 + " The monitor assures appearance, and a secured bond \(last) can't post would hold \(last) in jail until trial."
         }
         if money.cash >= state {
-            return rng.pick(["Will post the State's figure" + (monitor ? "; asks the court to drop the monitor." : "."),
-                             "Can post the State's figure but asks for it to be unsecured, since \(last) will appear either way."]) + because
+            let options = ["Will post the State's figure" + (monitor ? "; asks the court to drop the monitor." : "."),
+                           "Can post the State's figure but asks for it to be unsecured, since \(last) will appear either way."]
+            return (k.judgeRefusesUnsecured ? options[0] : rng.pick(options)) + because
         }
         if reach >= state {
             let lower = roundBond(Double(min(state, max(money.cash, state * 6 / 10))) * 0.9)
@@ -752,7 +823,70 @@ enum CalendarCalls {
         let flight = min(0.6, 0.06 + 0.12 * Double(ftas) + (local ? 0 : 0.12) + (employed ? 0 : 0.06) + 0.02 * Double(d.priors.count))
         let danger = min(0.5, 0.04 + (violent ? 0.08 : 0) + 0.05 * Double(felonies))
         let worst = c.charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
-        let scale = bondScale(worst, violent: violent, felonies: felonies, ftas: ftas, priors: d.priors.count, rng: &rng)
+        var scale = bondScale(worst, violent: violent, felonies: felonies, ftas: ftas, priors: d.priors.count, rng: &rng)
+        // The lawyers know this judge. The State's style and what the judge has done on bonds like this one shift the ask,
+        // within limits: it never goes below what the charge and record justify, and a hold or a Class A ask is left alone.
+        let tier = JudgeMemory.tier(category: c.category, felony: worst?.isFelony ?? false)
+        let prosecutorStyle = LawyerStyle.of(c.prosecutor, prosecutor: true)
+        var context = BondContext(violent: violent, felonies: felonies, priors: d.priors.count, ftas: ftas,
+                                  employed: employed, local: local, felony: worst?.isFelony ?? false)
+        context.tierPhrase = JudgeMemory.phrase(tier)
+        let crowded = jailLoad >= 0.9
+        let fallout = memory.recentFallout(tier: tier, asOf: c.sessionDate)
+        context.recentFallout = fallout != nil
+        // The lawyers hold the judge to what the court has done before: the defense cites a lenient ruling on a like charge,
+        // the State a strict one.
+        if let lenient = memory.precedent(tier: tier, lenient: true, excluding: d.name, asOf: c.sessionDate), let who = lenient.who, let what = lenient.outcome, rng.chance(0.3) {
+            context.precedent = "In State v. \(who), this court ruled on a \(context.tierPhrase) charge: \(what.prefix(1).lowercased() + what.dropFirst())."
+        }
+        var strictCite = ""
+        if let strict = memory.precedent(tier: tier, lenient: false, excluding: d.name, asOf: c.sessionDate), let who = strict.who, let what = strict.outcome, prosecutorStyle != .dealmaker, rng.chance(0.3) {
+            strictCite = " In State v. \(who), on a \(context.tierPhrase) charge, this court ordered: \(what.prefix(1).lowercased() + what.dropFirst())."
+        }
+        if worst != .A && scale.wantsSecured && crowded && !violent && ftas == 0 && felonies == 0 && !(worst?.isFelony ?? false) {
+            // With the jail full, the State doesn't ask the court to spend a bed on a clean-record misdemeanor.
+            scale.wantsSecured = false
+            scale.stateAsk = "Agrees to an unsecured bond of $\(scale.unsecured.formatted()). Why: the jail is at capacity, and this is a non-violent misdemeanor with no record and no missed court; the State won't ask the court to fill a bed over it."
+        }
+        if worst != .A && scale.wantsSecured {
+            var factor = 1.0
+            if prosecutorStyle == .hardliner { factor *= 1.1 } else if prosecutorStyle == .dealmaker { factor *= 0.92 }
+            var spoken = ""
+            if let f = fallout {
+                if prosecutorStyle != .dealmaker { factor *= 1.12 }
+                if rng.chance(0.4) { spoken += " The State reminds the court that \(f.who), released on \(f.condition) in a \(context.tierPhrase) case, " + (f.kind == "rearrest" ? "was arrested again within weeks." : "missed court.") }
+                context.judgeLoose = false
+            }
+            if crowded && !violent {
+                factor *= 0.88
+                spoken += " With the jail near capacity, the State has trimmed its figure."
+            }
+            spoken += strictCite
+            if let t = memory.bond(tier: tier) {
+                context.judgeLoose = t.unsecuredShare >= 0.6
+                context.judgeRefusesUnsecured = t.unsecuredShare <= 0.1
+                if t.ratio < 0.85 && t.typical > 0 {
+                    if prosecutorStyle == .hardliner { factor *= min(1.2, 1 / max(t.ratio, 0.5)) }
+                    else if prosecutorStyle == .dealmaker { factor *= max(0.8, t.ratio); spoken += " This court has set about $\(t.typical.formatted()) on its last \(t.n) \(context.tierPhrase) cases, and the State has tried to ask for what it usually sets." }
+                } else if t.ratio > 1.1 && t.typical > 0 {
+                    factor *= min(1.2, t.ratio)
+                    spoken += " This court has set about $\(t.typical.formatted()) on its last \(t.n) \(context.tierPhrase) cases, so the State asks accordingly."
+                }
+            }
+            if abs(factor - 1) > 0.03 {
+                let old = scale.secured
+                let adjusted = roundBond(Double(old) * factor)
+                if adjusted != old {
+                    scale.secured = adjusted
+                    scale.stateAsk = scale.stateAsk.replacingOccurrences(of: "$\(old.formatted()) secured", with: "$\(adjusted.formatted()) secured") + spoken
+                } else if !spoken.isEmpty { scale.stateAsk += spoken }
+            } else if !spoken.isEmpty { scale.stateAsk += spoken }
+        } else if let t = memory.bond(tier: tier) {
+            context.judgeLoose = t.unsecuredShare >= 0.6
+            context.judgeRefusesUnsecured = t.unsecuredShare <= 0.1
+        }
+        if fallout != nil { context.judgeLoose = false }
+        let voice = VictimStatement.statement(for: c, kind: .firstAppearance, seed: c.seed)
         let moderate = scale.unsecured
         let high = scale.secured
         var money = BailMoney.draw(employed: employed, local: local, ftas: ftas, rng: &rng)
@@ -776,9 +910,7 @@ enum CalendarCalls {
         var record = d.priors.isEmpty ? "No record" : "\(d.priors.count) prior\(d.priors.count == 1 ? "" : "s") (\(felonies) felon\(felonies == 1 ? "y" : "ies"))"
         if ftas > 0 { record += ", \(ftas) missed court date\(ftas == 1 ? "" : "s")" }
         var stateAsk = scale.stateAsk
-        var defenseAsk = defenseBondAsk(scale, money: money, last: d.lastName,
-                                        context: BondContext(violent: violent, felonies: felonies, priors: d.priors.count, ftas: ftas,
-                                                             employed: employed, local: local, felony: worst?.isFelony ?? false), rng: &rng)
+        var defenseAsk = defenseBondAsk(scale, money: money, last: d.lastName, context: context, rng: &rng)
         var options = ["Written promise to appear",
                        "Release to the custody of a designated person or program",
                        "Unsecured bond of an amount you set",
@@ -834,7 +966,8 @@ enum CalendarCalls {
                                                               ceiling: money.ceiling, reason: money.reason,
                                                               stateAsk: scale.wantsSecured || violentOffense ? high : moderate),
                               amountOptions: [2, 3, 4], amountRange: floor...max(500_000, high * 2, floor * 2), suggestedAmount: suggested,
-                              suggestedAmounts: [2: moderate], unavailableOptions: unavailable)
+                              suggestedAmounts: [2: moderate], unavailableOptions: unavailable,
+                              victimVoice: voice?.text, victimWish: voice?.wish)
     }
 
     /// A jailed defendant asks to have the bond lowered (G.S. 15A-538). The judge sets the new amount.
@@ -1025,6 +1158,12 @@ enum CalendarCalls {
         }
 
         var matters: [CalendarMatter] = []
+        // Now and then the calendar carries a question about the judge's own conduct.
+        if rng.chance(0.07) { matters.append(EthicsQuestions.matter(county: county, rng: &rng)) }
+        // And now and then a plea or jury selection where how the judge handles it is what an appeals court would review.
+        if rng.chance(0.08) { matters.append(CourtProceedings.matter(part: .colloquy, county: county, rng: &rng)) }
+        // Jury selection is switched off until the game has jury trials (see GAME_IDEAS.md); every trial now is a bench trial.
+        // if rng.chance(0.08) { matters.append(CourtProceedings.matter(part: .jury, county: county, rng: &rng)) }
         // Pleas come only from defendants already arrested and brought before the court (see GameState).
 
         // Capacity motions are rare: only now and then, and only for a defendant with a known mental health need.
@@ -1543,7 +1682,13 @@ extension CalendarCalls {
 
     /// What the State says to the defense's own reason for more time: a reason it can answer gets an answer; a hard personal
     /// reason (illness, a death, a trial elsewhere) draws no real objection. Otherwise the State gives a reason of its own.
-    static func stateResponse(to defenseReason: String, for c: CourtCase, recent: [String], rng: inout SeededRNG) -> String {
+    static func stateResponse(to defenseReason: String, for c: CourtCase, recent: [String], grantRate: Double? = nil, rng: inout SeededRNG) -> String {
+        // The State knows how this judge has treated requests for more time lately.
+        if let g = grantRate, rng.chance(0.4) {
+            let line = g >= 0.75 ? "No objection. This court has granted most recent requests for more time."
+                : (g <= 0.3 ? "Objects: this court has denied most recent requests for more time, and the State asks it to do the same here." : "")
+            if !line.isEmpty && !recent.contains(line) { return line }
+        }
         let r = defenseReason.lowercased()
         func has(_ words: [String]) -> Bool { words.contains { r.contains($0) } }
         var answers: [String] = []

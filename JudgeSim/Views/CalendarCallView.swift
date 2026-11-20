@@ -41,6 +41,9 @@ struct CalendarCallView: View {
                         }
                         Text("The courtroom is full. The clerk calls the calendar, and the matters come up one at a time.")
                             .font(.callout)
+                        if let note = game.staffNote(for: call) {
+                            Text(note).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
                     }
 
                     ForEach(call.matters) { matter in
@@ -114,14 +117,31 @@ private struct MatterCard: View {
             // A warrant application has no case yet; it names the person whose property would be searched.
             Text(matter.caption).font(.system(.subheadline, design: .serif).weight(.bold))
             Text(matter.summary).font(.callout).fixedSize(horizontal: false, vertical: true)
-            Label(matter.stateAsk, systemImage: "building.columns.fill")
-                .font(.caption)
-                .foregroundStyle(Theme.prosecution)
-                .fixedSize(horizontal: false, vertical: true)
-            Label(matter.defenseAsk, systemImage: "shield.fill")
-                .font(.caption)
-                .foregroundStyle(Theme.defense)
-                .fixedSize(horizontal: false, vertical: true)
+            if let c = matter.pendingCase, !c.prosecutor.isEmpty, !c.defenseAttorney.isEmpty {
+                Text("\(c.prosecutor) for the State · \(c.defenseAttorney) for the defense")
+                    .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            if let line = game.counselLine(for: matter) {
+                Text(line).font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            if let voice = matter.victimVoice {
+                Label(voice, systemImage: "person.2.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if !matter.stateAsk.isEmpty {
+                Label(matter.stateAsk, systemImage: "building.columns.fill")
+                    .font(.caption)
+                    .foregroundStyle(Theme.prosecution)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if !matter.defenseAsk.isEmpty {
+                Label(matter.defenseAsk, systemImage: "shield.fill")
+                    .font(.caption)
+                    .foregroundStyle(Theme.defense)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let note = matter.lawNote {
                 Text(note).font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
             }
@@ -175,7 +195,7 @@ private struct MatterCard: View {
                     }
                 }
             }
-            if matter.kind != .searchWarrant {
+            if ![.searchWarrant, .ethics, .pleaColloquy, .jurySelection].contains(matter.kind) {
                 let person = game.person(matter.personID)
                 NavigationLink {
                     DefendantProfilePage(name: matter.personName,

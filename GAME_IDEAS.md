@@ -1,4 +1,6 @@
-# Game ideas and roadmap
+# Game ideas
+
+The forward-looking list is in ROADMAP.md. This file is the original brainstorm and the three build phases.
 
 Brainstormed Nov 2026. Items are removed or moved to a changelog entry as they ship.
 
@@ -17,8 +19,8 @@ Rough order, each phase playable on its own.
    - **Bias checks.** Lawyers challenge inconsistency across similar rulings (needs the ruling record).
    - **Ethics situations.** A lawyer known socially, an ex parte contact, a recusal question: events with choices and consequences.
 3. **Mechanics**
-   - **Plea mechanics.** A real plea hearing: the colloquy, the factual basis, an Alford plea, a defendant who changes their mind.
-   - **Jury selection.** A pool with strikes and biases, a juror who knows a witness, affecting trial outcomes believably.
+   - **Plea mechanics.** Built as calendar matters (`CourtProceedings.swift`): Alford plea, medication, immigration warning, hesitation, mismatched terms, withdrawal before sentencing, interpreter.
+   - **Jury selection (switched off, future feature).** The scenarios are written and rated (`CourtProceedings.swift`, jury part: challenges for cause, Batson, prejudged and distressed jurors, hardship, a juror who knows a witness) but are not put on the calendar, because every trial in the game is a bench trial. Turn them on (the commented line in `CalendarCalls.make`) when the game adds jury trials: a pool with strikes and biases, a juror who knows a witness, and verdicts that depend on who is seated.
 
 ## Deferred: needs new cases or edits to existing ones
 - **Hard calls.** New cases where the law points one way and the facts another.
