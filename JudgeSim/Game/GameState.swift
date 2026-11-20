@@ -734,7 +734,8 @@ final class GameState: ObservableObject {
         while cursor < next {
             let previous = cursor
             cursor = cal.date(byAdding: .day, value: 1, to: cursor) ?? next
-            if schedule.isOff(cursor) && CourtCalendar.isCourtDay(cursor) { leaveDays += 1 }
+            // Only leave the judge booked counts: a storm closure or an assignment to another county is not leave.
+            if schedule.timeOff.contains(CourtSchedule.key(cursor)) && CourtCalendar.isCourtDay(cursor) { leaveDays += 1 }
             let newWeek = !cal.isDate(CourtCalendar.monday(onOrBefore: previous), inSameDayAs: CourtCalendar.monday(onOrBefore: cursor))
             if newWeek {
                 closeWeek(endingBefore: cursor)
@@ -888,6 +889,8 @@ final class GameState: ObservableObject {
 
     /// Reasons the defense has given lately, so the same one doesn't come up week after week.
     private var recentContinuanceReasons: [String] = []
+    /// What the State has said lately in answer, for the same reason.
+    private var recentStateObjections: [String] = []
 
     /// Why the defense wants more time, fitted to the case and not one given lately.
     private func continuanceReason(for c: CourtCase, rng: inout SeededRNG) -> String {
@@ -899,14 +902,28 @@ final class GameState: ObservableObject {
                     "Lead counsel is out on medical leave.", "Still waiting on discovery the State promised a month ago.",
                     "The defense investigator just found a new witness.",
                     "A defense witness is deployed until next month.", "Counsel has a death in the family.",
-                    "Plea talks are close; asks for two weeks to finish them.", "Needs an interpreter for the client's family witnesses."]
-        if c.victimName != nil { pool += ["Needs time to subpoena records from the victim's employer."] }
-        if forensic { pool += ["Lab report just arrived; needs an expert.", "Wants its own expert to retest the evidence."] }
-        if digital { pool += ["Four hours of new bodycam video to review.", "Phone extraction report just came in; 900 pages."] }
-        if witnessed { pool += ["Three State witnesses still haven't been interviewed."] }
+                    "Plea talks are close; asks for two weeks to finish them.", "Needs an interpreter for the client's family witnesses.",
+                    "Counsel's trial in another county ran over and isn't finished.", "Counsel is on parental leave until the end of the month.",
+                    "Needs time to depose the State's lead detective.", "A defense character witness is in the hospital.",
+                    "The State amended the charge last week and the defense has to re-prepare.",
+                    "A storm knocked out counsel's office for three days, and the file is on the server.",
+                    "The defense can't find its alibi witness, who has left the state.",
+                    "Co-counsel is withdrawing and the new lawyer needs to get up to speed.",
+                    "A motion to suppress should be heard before the trial date.",
+                    "The State disclosed a statement late and the defense needs time to respond to it.",
+                    "The defense expert is traveling and can't testify before the 20th.",
+                    "Client wants to hire a private lawyer and needs a few weeks to arrange it.",
+                    "Client is waiting on a mental health evaluation report.",
+                    "Counsel has a surgery scheduled and can't try a case that week."]
+        if c.victimName != nil { pool += ["Needs time to subpoena records from the victim's employer.", "Wants to interview the victim's neighbors, who weren't in the State's file."] }
+        if forensic { pool += ["Lab report just arrived; needs an expert.", "Wants its own expert to retest the evidence.", "The State's analyst's bench notes arrived last week."] }
+        if digital { pool += ["Four hours of new bodycam video to review.", "Phone extraction report just came in; 900 pages.", "The surveillance video has to be enhanced before it can be used."] }
+        if witnessed { pool += ["Three State witnesses still haven't been interviewed.", "Two State witnesses have been hard to reach and the defense needs to talk to both."] }
         if !jailed { pool += ["Client is in inpatient treatment for 28 days.", "Client just had surgery and can't sit through a trial yet.",
-                              "Client is out of state caring for a dying parent."] }
-        else { pool += ["Can't get jail visits to prepare; the jail is on lockdown.", "Client was moved to another county's jail and is hard to reach."] }
+                              "Client is out of state caring for a dying parent.", "Client is on a work contract out of the county until next month.",
+                              "Client's family has an emergency and client asked for time to deal with it."] }
+        else { pool += ["Can't get jail visits to prepare; the jail is on lockdown.", "Client was moved to another county's jail and is hard to reach.",
+                        "The jail's video visitation has been down for two weeks."] }
         let fresh = pool.filter { !recentContinuanceReasons.contains($0) }
         let pick = rng.pick(fresh.isEmpty ? pool : fresh)
         recentContinuanceReasons.append(pick)
@@ -1457,8 +1474,12 @@ final class GameState: ObservableObject {
                                 "Client thinks the trial is about something else entirely.", "Client won't speak to counsel at all."])
                         }
                         if kind == .continuance {
-                            call.matters[index].stateAsk = rng.pick(CalendarCalls.fittingStateObjections(for: c) + ["No objection.", "No position; make it the last."])
-                            call.matters[index].defenseAsk = continuanceReason(for: c, rng: &rng)
+                            let defenseReason = continuanceReason(for: c, rng: &rng)
+                            call.matters[index].defenseAsk = defenseReason
+                            let stateLine = CalendarCalls.stateResponse(to: defenseReason, for: c, recent: recentStateObjections, rng: &rng)
+                            call.matters[index].stateAsk = stateLine
+                            recentStateObjections.append(stateLine)
+                            if recentStateObjections.count > 12 { recentStateObjections.removeFirst() }
                             let ordinals = ["first", "second", "third", "fourth", "fifth"]
                             let nth = ordinals[min(priorContinuances[c.id] ?? 0, ordinals.count - 1)]
                             for word in ["second", "third", "fourth"] {
@@ -2246,7 +2267,10 @@ final class GameState: ObservableObject {
             var reasons = ["a witness is about to deploy with the National Guard", "the State's key witness is moving out of state",
                            "the investigating officer is retiring", "the State's expert is leaving for a federal job",
                            "a deputy who saw the arrest has been transferred to the coast", "the State's lab analyst has a surgery date",
-                           "the civilian witness has no phone and the State is driving out to find them", "the State's photos are still at the lab"]
+                           "the civilian witness has no phone and the State is driving out to find them", "the State's photos are still at the lab",
+                           "the lead prosecutor on the file is about to go on leave", "a witness is in a treatment program that ends next month",
+                           "the evidence custodian is retiring and has to testify before leaving", "the State's expert has a court date in another state next month",
+                           "the key records have to be certified by a company that is closing", "a witness is a student who will be away for the summer"]
             if c.victimName != nil { reasons += ["the victim's family is asking every week", "the victim is elderly and in poor health"] }
             if c.background?.isJailed == true { reasons.append("the defendant has been held a long time and the office wants it tried") }
             awaiting[index].priorityRequested = date

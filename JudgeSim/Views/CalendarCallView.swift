@@ -48,7 +48,8 @@ struct CalendarCallView: View {
                                    amount: Binding(get: { amounts[matter.id] ?? matter.suggested(for: choices[matter.id]) ?? 0 },
                                                    set: { amounts[matter.id] = $0 }),
                                    date: Binding(get: { dates[matter.id] }, set: { dates[matter.id] = $0 }),
-                                   terms: Binding(get: { pleaTerms[matter.id] ?? matter.suggestedTerms ?? PleaTerms() }, set: { pleaTerms[matter.id] = $0 }))
+                                   terms: Binding(get: { pleaTerms[matter.id] ?? matter.suggestedTerms ?? PleaTerms() }, set: { pleaTerms[matter.id] = $0 }),
+                                   otherTrialDays: call.matters.filter { $0.id != matter.id && needsDate($0) }.compactMap { dates[$0.id] })
                     }
 
                     PrimaryButton(title: call.isBondSession ? "Close the Session" : "Close the Calendar Call", icon: "hammer.fill",
@@ -100,6 +101,8 @@ private struct MatterCard: View {
     @Binding var amount: Int
     @Binding var date: Date?
     @Binding var terms: PleaTerms
+    /// Trial days the judge has already picked for other matters in this call.
+    var otherTrialDays: [Date] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -134,13 +137,13 @@ private struct MatterCard: View {
             if matter.kind == .arraignment && choice == 0 {
                 Text("Pick the trial day. Each side has said how much time it wants; too soon and the defense will ask for more time.")
                     .font(.caption).foregroundStyle(.secondary)
-                DayPickerList(kind: .trial, count: 30, choice: $date)
+                DayPickerList(kind: .trial, count: 30, pendingDays: otherTrialDays, choice: $date)
             }
             if matter.kind == .continuance && choice == 0 {
-                ContinuanceDatePicker(date: $date)
+                ContinuanceDatePicker(date: $date, otherTrialDays: otherTrialDays)
             }
             if matter.kind == .counselWithdrawal, let choice, choice <= 1 {
-                NewCounselDatePicker(option: matter.options[choice], date: $date)
+                NewCounselDatePicker(option: matter.options[choice], date: $date, otherTrialDays: otherTrialDays)
             }
             if let warrant = matter.warrant {
                 NavigationLink {
@@ -434,6 +437,7 @@ struct CalendarResults: View {
 private struct ContinuanceDatePicker: View {
     @EnvironmentObject private var game: GameState
     @Binding var date: Date?
+    var otherTrialDays: [Date] = []
 
     private var earliest: Date {
         CourtCalendar.calendar.date(byAdding: .day, value: 7, to: game.currentDate) ?? game.currentDate
@@ -442,7 +446,7 @@ private struct ContinuanceDatePicker: View {
     var body: some View {
         Text("Pick the new trial date. The defense asked for about four weeks.")
             .font(.caption).foregroundStyle(.secondary)
-        DayPickerList(kind: .trial, earliest: earliest, count: 30, choice: $date)
+        DayPickerList(kind: .trial, earliest: earliest, count: 30, pendingDays: otherTrialDays, choice: $date)
     }
 }
 
@@ -452,6 +456,7 @@ private struct NewCounselDatePicker: View {
     @EnvironmentObject private var game: GameState
     let option: String
     @Binding var date: Date?
+    var otherTrialDays: [Date] = []
 
     private var weeks: Int { option.contains("six weeks") ? 6 : 3 }
     private var earliest: Date {
@@ -462,7 +467,7 @@ private struct NewCounselDatePicker: View {
         Text("The new lawyer will need about \(weeks) weeks to get ready. Pick the new trial date; set it sooner and the new lawyer will likely ask for more time.")
             .font(.caption).foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
-        DayPickerList(kind: .trial, earliest: earliest, count: 30, choice: $date)
+        DayPickerList(kind: .trial, earliest: earliest, count: 30, pendingDays: otherTrialDays, choice: $date)
     }
 }
 

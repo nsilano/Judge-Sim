@@ -300,69 +300,111 @@ enum CalendarCalls {
         var terms = PleaTerms()
     }
 
+    /// The State's position on a plea follows the law and the facts: the class of the offense, the prior record, whether
+    /// the charge is violent, whether it repeats an earlier offense, and what the sentencing chart calls for. A heavier
+    /// charge or record always draws a harder ask. The defense answers that ask, in proportion, and says why.
     static func pleaPositions(_ law: Law, priors: [PriorConviction], rangeText: String, notes: [String], name: String,
-                              activeTerm: Int = 0, rng: inout SeededRNG) -> PleaPositions {
+                              activeTerm: Int = 0, occupation: String = "", rng: inout SeededRNG) -> PleaPositions {
         let cls = law.ncClass ?? .misd1
         let last = name.components(separatedBy: " ").last ?? name
         let felonies = priors.filter { $0.ncClass.isFelony }.count
         let sameKind = priors.filter { $0.offense.lowercased().contains(law.title.lowercased().components(separatedBy: " ").last ?? "~") }.count
         let violent = [LawCategory.violent, .robbery].contains(law.category) || ["strangulation", "awdwisi", "commonLawRobbery", "burglary2"].contains(law.id)
         let chartActive = notes.contains { $0.contains("calls for an active sentence") }
-        // How hard the State pushes: 0 joint probation, 1 split sentence, 2 active time.
-        var push = 0.0
-        if cls.isFelony { push += 0.25 }
-        push += 0.2 * Double(min(3, felonies)) + 0.1 * Double(min(3, priors.count))
-        if violent { push += 0.3 }
-        if sameKind > 0 { push += 0.25 }
-        if chartActive { push += 0.5 }
-        // The DA's office remembers this judge: after lenient rulings it digs in, after tough ones it bargains more freely.
-        // It leans, but never so far that every plea is the same.
-        push += max(-0.15, min(0.15, prosecutorEdge))
-        // Overloaded offices deal: a first offense with nobody hurt often goes for less.
-        if priors.isEmpty && !violent { push -= 0.2 }
-        let roll = Double.random(in: 0..<1, using: &rng)
-        // 0 probation, 1 split sentence, 2 active time, 3 prayer for judgment, 4 no position.
-        var stance = chartActive || roll < push - 0.45 ? 2 : (roll < push ? 1 : 0)
+        // How heavy the case is, in points: the class, the record, violence, a repeat, and the chart.
+        var points = 0
+        if cls.isFelony {
+            points += cls.severity <= NCClass.E.severity ? 3 : (cls.severity <= NCClass.G.severity ? 2 : 1)
+        } else if cls == .misdA1 {
+            points += 1
+        }
+        points += 2 * min(felonies, 3) + min(3, max(0, priors.count - felonies))
+        if violent { points += 2 }
+        if sameKind > 0 { points += 1 }
+        if chartActive { points += 4 }
+        // The DA's office remembers this judge: after lenient rulings it digs in a notch, after tough ones it bargains a notch.
+        if prosecutorEdge > 0.08 { points += 1 } else if prosecutorEdge < -0.08 { points -= 1 }
+        // 0 joint probation, 1 split sentence, 2 active time, 3 prayer for judgment, 5 small joint deal.
+        var stance: Int
+        if chartActive || points >= 6 { stance = 2 }
+        else if points >= 4 { stance = 1 }
+        else if points >= 2 || cls.isFelony || violent { stance = 0 }
+        else { stance = (cls == .misdA1 || cls == .misd1) ? 5 : 3 }
         // Special probation may not exceed one-fourth of the maximum term (G.S. 15A-1351(a)); a term too short to split
-        // gets no split offer.
+        // gets no split offer, and the State asks for probation instead.
         let splitCap = activeTerm <= 0 ? Int.max
             : (cls.isFelony ? StructuredSentencing.maximum(forMinimum: activeTerm, cls: cls) * 30 / 4 : activeTerm / 4)
         if stance == 1 && splitCap < 1 { stance = 0 }
-        if !chartActive {
-            if !cls.isFelony && priors.isEmpty && !violent && rng.chance(0.3) { stance = 3 }
-            else if !cls.isFelony && !violent && stance != 2 && rng.chance(0.4) { stance = 5 }
-            else if stance != 2 && rng.chance(0.12) { stance = 4 }
-        }
-        let jailDays = max(1, min(cls.isFelony ? rng.pick([30, 45, 60, 90]) : rng.pick([10, 14, 30]), splitCap))
+        // The jail time in a split sentence grows with the class and the record.
+        var wantedDays = cls.isFelony ? (cls.severity <= NCClass.F.severity ? 90 : 60) + (felonies > 0 ? 30 : 0)
+                                      : (violent || priors.count >= 2 ? 30 : (cls == .misdA1 || cls == .misd1 ? 14 : 10))
+        if sameKind > 0 && !cls.isFelony { wantedDays += 10 }
+        let jailDays = max(1, min(wantedDays, splitCap))
 
         var reasons: [String] = []
+        if cls.isFelony { reasons.append("This is a \(cls.shortLabel), and the State weighs it as one.") }
         if felonies >= 2 { reasons.append("\(last) has \(felonies) prior felonies. Probation has been tried.") }
-        else if !priors.isEmpty { reasons.append(rng.pick(["\(last) has a record.", "\(last) has been given breaks before."])) }
+        else if felonies == 1 { reasons.append("\(last) has a felony conviction already.") }
+        else if !priors.isEmpty { reasons.append("\(last) has \(priors.count) earlier conviction\(priors.count == 1 ? "" : "s").") }
         if sameKind > 0 { reasons.append("It's the same kind of offense \(last) was convicted of before.") }
         if violent { reasons.append(rng.pick(["This was a violent offense, and the State takes it seriously.", "The victim wants \(last) to serve time, and the State agrees."])) }
         if chartActive { reasons.append("The sentencing chart calls for an active sentence at this record level.") }
         if reasons.isEmpty { reasons.append(rng.pick(["A plea doesn't erase what happened.", "The State made its offer already. This is it."])) }
-        let why = reasons.prefix(2).joined(separator: " ")
+        let why = reasons.prefix(3).joined(separator: " ")
+
+        // What the defense can say for its client, from what is actually known.
+        let working = !occupation.isEmpty && !occupation.lowercasedPhrase.contains("unemployed")
+        var forClient: [String] = []
+        if priors.isEmpty { forClient.append("\(last) has no record") }
+        else if felonies == 0 { forClient.append("\(last) has no felony convictions") }
+        if working { forClient.append("\(last) works as \(occupation.lowercasedPhrase.withIndefiniteArticle) and supports a household on it") }
+        forClient.append("\(last) took responsibility early and saved the State a trial")
+        if violent { forClient.append("a plea spares the victim from testifying") }
+        func argue(_ extra: String = "") -> String {
+            var pool = forClient
+            var picked: [String] = []
+            while picked.count < 2 && !pool.isEmpty { picked.append(pool.remove(at: rng.int(0...(pool.count - 1)))) }
+            var out = (picked.isEmpty ? "" : picked.joined(separator: "; ").capitalizedFirst + ".")
+            if !extra.isEmpty { out += " " + extra }
+            return out.trimmingCharacters(in: .whitespaces)
+        }
+        // The defense answers the State's own ground.
+        var answer = ""
+        if felonies >= 2 { answer = "The State says probation has been tried, but that was years ago, and \(last) is in a different place now." }
+        else if sameKind > 0 { answer = "An earlier conviction doesn't make this one worse than what it is." }
+        else if chartActive { answer = "We understand what the chart says; we ask the court to weigh \(last)'s circumstances within it." }
 
         // The probation a joint recommendation names; the judgment entered on it carries the same terms.
-        let months = rng.pick([12, 18, 24])
-        let supervision = !cls.isFelony && priors.isEmpty && rng.chance(0.4) ? "unsupervised" : "supervised"
+        let months = cls.isFelony ? 24 : (priors.isEmpty ? 12 : 18)
+        let supervision = !cls.isFelony && priors.isEmpty && !violent && rng.chance(0.4) ? "unsupervised" : "supervised"
         let hours = rng.pick([24, 50, 75, 100])
-        // The terms a joint recommendation names: a curfew, a class, hours of community service, or nothing extra.
-        let conditionKind = rng.int(0...4)
+        // The terms a joint recommendation names fit the offense.
         var terms = PleaTerms()
         terms.months = months
         terms.supervised = supervision == "supervised"
         var condition = ""
-        switch conditionKind {
-        case 1: condition = " and \(hours) hours of community service"; terms.communityHours = hours
-        case 2: condition = " and a substance abuse assessment with any treatment recommended"; terms.treatment = 2
-        case 3: condition = " and an anger management course"; terms.treatment = 1
-        case 4: condition = " and a curfew for the first six months"; terms.curfewDays = 180
-        default: break
+        switch law.category {
+        case .violent, .robbery, .family:
+            condition = " and an anger management course"; terms.treatment = 1
+        case .drugs:
+            condition = " and a substance abuse assessment with any treatment recommended"; terms.treatment = 2
+        case .property, .whiteCollar:
+            condition = " and restitution to the victim"; terms.restitution = true
+        case .traffic:
+            condition = " and \(hours) hours of community service"; terms.communityHours = hours
+        default:
+            if rng.chance(0.5) { condition = " and \(hours) hours of community service"; terms.communityHours = hours }
+            else { condition = " and a curfew for the first six months"; terms.curfewDays = 180 }
         }
+        if violent { terms.stayAway = true; condition += ", and no contact with the victim" }
         // A small case's deal: community service and one other condition, unsupervised.
-        let smallKind = rng.int(0...3)
+        var smallKind = 0
+        switch law.category {
+        case .property, .whiteCollar: smallKind = 3
+        case .drugs: smallKind = 2
+        case .violent, .family: smallKind = 1
+        default: smallKind = rng.int(0...3)
+        }
         let smallCondition = ["unsupervised probation for six months", "a stay-away condition and unsupervised probation",
                               "an anger management or substance abuse class", "restitution paid within 60 days"][smallKind]
         var smallTerms = PleaTerms()
@@ -376,41 +418,32 @@ enum CalendarCalls {
         switch stance {
         case 2:
             stateAsk = "The State will take the plea, but not a probation deal. We ask for \(rangeText) active. " + why
-            defenseAsk = rng.pick(["Judge, \(last) took responsibility and saved the State a trial. Suspend the sentence; put \(last) on supervised probation with treatment.",
-                                   "Prison won't fix this. \(last) has a job lined up and family support. We ask for a suspended sentence.",
-                                   "We'd ask the court to consider a split sentence at most. \(last) has already sat in jail on this."])
+            if violent && (cls.isFelony || felonies > 0) || felonies >= 2 {
+                defenseAsk = "Asks for a split sentence at most, not the full term. " + argue(answer)
+            } else if chartActive {
+                defenseAsk = "Asks the court to consider a split sentence in place of the full active term, and credit for any time already served. " + argue(answer)
+            } else {
+                defenseAsk = "Asks for a suspended sentence and supervised probation. " + argue(answer)
+            }
         case 1:
             stateAsk = "The State asks for \(rangeText) suspended, with \(jailDays) day\(jailDays == 1 ? "" : "s") in the county jail up front as special probation, then 18 months supervised. " + why
-            defenseAsk = rng.pick(["Straight probation is enough, Judge. Jail time costs \(last) the job that pays the restitution.",
-                                   "My client has been clean since the arrest. Jail now undoes that. We ask for regular probation.",
-                                   "Give \(last) a chance at probation without the jail time. If it doesn't work, the court will see us again."])
+            defenseAsk = "Asks for regular probation without the jail time. " + argue(answer.isEmpty ? "Jail now would cost \(last) the job that pays any restitution, and if probation fails, the court will see us again." : answer)
         case 3:
             stateAsk = rng.pick(["The State doesn't oppose a prayer for judgment continued on payment of costs. \(last) has no record, and this was a mistake, not a pattern.",
-                                 "The State is satisfied with a PJC and costs. \(last) has done everything asked since the arrest.",
-                                 "Given \(last)'s clean record, the State asks for a prayer for judgment continued. The conviction stays on the books; that's enough."])
-            defenseAsk = rng.pick(["We join the State, Judge. My client has learned from this.", "We agree, Judge. My client paid the costs this morning."])
+                                 "The State is satisfied with a PJC and costs. \(last) has no record and has done everything asked since the arrest.",
+                                 "Given \(last)'s clean record and the low class of the offense, the State asks for a prayer for judgment continued. The conviction stays on the books; that's enough."])
+            defenseAsk = "We join the State. " + argue()
         case 5:
             stateAsk = "The State and defense jointly recommend \(hours) hours of community service within 90 days, \(smallCondition), and costs, with the charge reduced to a plea of guilty. "
-                + rng.pick(["No one was hurt, and this resolves it fairly.", "\(last) has cooperated since the arrest.", "A trial would cost more than the case is worth."])
-            defenseAsk = rng.pick(["My client will start the hours this week.", "My client accepts responsibility and wants this behind them.", "We agree with the State, Judge."])
-        case 4:
-            stateAsk = rng.pick(["The State takes no position on the sentence, Judge. We'll leave it to the court.",
-                                 "The plea is to the charge; the State makes no recommendation on punishment.",
-                                 "The State defers to the court on sentencing. The victim has been told the court will decide."])
-            defenseAsk = rng.pick(["We ask for a suspended sentence and probation, Judge. \(last) has work and a family that depends on that check.",
-                                   "We'd ask for probation with treatment. \(last) started going to meetings the week after the arrest.",
-                                   "A suspended sentence, Judge. \(last) has already lost a lot over this."])
+                + rng.pick(["No one was hurt, and this resolves it fairly.", "\(last) has no record and has cooperated since the arrest.", "A trial would cost more than the case is worth."])
+            defenseAsk = "We agree with the State. " + argue()
         default:
-            let recordLines = priors.isEmpty
-                ? ["\(last) has no real record and took responsibility early.", "It's a fair resolution for a first offense of this kind."]
-                : ["\(last) took responsibility early.", "It's a fair resolution given \(last)'s record and what the State can prove."]
+            let recordLine = priors.isEmpty
+                ? "\(last) has no real record and took responsibility early."
+                : "It's a fair resolution given \(last)'s record and what the State can prove."
             stateAsk = "The State and defense jointly recommend \(rangeText), suspended, \(months) months of \(supervision) probation\(condition), and costs. "
-                + rng.pick(recordLines + ["The victim was consulted and agrees.",
-                            "Our office has more cases than it can try; this one resolves fairly.",
-                            "The evidence had a problem we'd rather not litigate, and this is a sound result.",
-                            "\(last) gave a full statement and returned what was taken."])
-            defenseAsk = rng.pick(["My client has a job and wants to keep it.", "My client has been sober since the arrest.", "This is about one bad night, Judge.",
-                                   "My client is ready to start today.", "We agree with the State, Judge."])
+                + recordLine + (violent ? " The victim was consulted and agrees." : "")
+            defenseAsk = "We agree with the State's recommendation. " + argue(answer)
         }
         // Where the judge starts when setting the probation terms: what the parties proposed.
         var startTerms = PleaTerms()
@@ -499,7 +532,7 @@ enum CalendarCalls {
                 + ". Prior record: \(priorCount == 0 ? "none" : "\(priorCount) conviction\(priorCount == 1 ? "" : "s")")."
             var rng = SeededRNG(seed: c.seed ^ 0x9EA)
             let positions = pleaPositions(law, priors: c.defendant.priors, rangeText: terms.rangeText, notes: terms.notes,
-                                          name: c.defendant.name, activeTerm: terms.active, rng: &rng)
+                                          name: c.defendant.name, activeTerm: terms.active, occupation: c.defendant.occupation, rng: &rng)
             bound.suggestedTerms = positions.terms
             bound.stateAsk = positions.stateAsk
             bound.defenseAsk = positions.defenseAsk
@@ -555,67 +588,120 @@ enum CalendarCalls {
                          "\(last) is back again: the \(ordinal) case in this court."])
     }
 
-    /// What the State asks for at a first appearance, scaled to the most serious charge, the felony record and
-    /// missed court dates. A murder charge draws a request to hold without bond; a Class I gets an unsecured bond.
-    static func bondScale(_ cls: NCClass?, violent: Bool, felonies: Int, ftas: Int,
+    /// What the State asks for at a first appearance, scaled to the most serious charge, the whole record (felony and
+    /// misdemeanor convictions) and missed court dates. A murder charge draws a request to hold without bond. A clean-record,
+    /// non-violent misdemeanor gets an unsecured bond; a violent charge, any record, any missed court date, or any felony gets
+    /// a secured bond. A violent misdemeanor is never set below the usual figure for a Class 1 misdemeanor.
+    static func bondScale(_ cls: NCClass?, violent: Bool, felonies: Int, ftas: Int, priors: Int = 0,
                           rng: inout SeededRNG) -> (unsecured: Int, secured: Int, stateAsk: String, wantsSecured: Bool) {
-        let base = bondBase(cls)
-        let factor = (1.0 + 0.25 * Double(min(felonies, 6)) + 0.5 * Double(min(ftas, 3))) * (violent ? 1.25 : 1.0)
+        let severity = cls?.severity ?? NCClass.H.severity
+        let misdemeanorPriors = max(0, priors - felonies)
+        var base = bondBase(cls)
+        if violent && severity > NCClass.I.severity { base = max(base, 2_500) }
+        let factor = (1.0 + 0.25 * Double(min(felonies, 6)) + 0.1 * Double(min(misdemeanorPriors, 5)) + 0.5 * Double(min(ftas, 3))) * (violent ? 1.25 : 1.0)
         let jitter = Double.random(in: 0.85...1.2, using: &rng)
         // Even a homicide with a long record is set at no more than $1,000,000 here.
         let secured = roundBond(min(1_000_000, Double(base) * factor * jitter))
-        let unsecured = roundBond(Double(min(base, 15_000)) * Double.random(in: 0.2...0.8, using: &rng))
-        let severity = cls?.severity ?? NCClass.H.severity
-        let why = ftas > 0 ? " Missed court before." : felonies >= 2 ? " \(felonies) prior felonies." : violent ? " Violent charge." : ""
+        let unsecured = roundBond(Double(min(base, 15_000)) * min(factor, 2.0) * Double.random(in: 0.2...0.8, using: &rng))
+        // The State says why: the county's bond schedule for the class (G.S. 15A-535), then what the court may weigh
+        // beyond the charge (G.S. 15A-534: the record, missed court dates, danger to the community).
+        let classText = cls.map { $0.isFelony ? "Class \($0.rawValue) felony" : "Class \($0.rawValue) misdemeanor" } ?? "Class H felony"
+        var adds: [String] = []
+        if violent { adds.append("a violent charge") }
+        if felonies > 0 { adds.append("\(felonies) prior felon\(felonies == 1 ? "y" : "ies")") }
+        if misdemeanorPriors > 0 { adds.append("\(misdemeanorPriors) prior misdemeanor conviction\(misdemeanorPriors == 1 ? "" : "s")") }
+        if ftas > 0 { adds.append("\(ftas) missed court date\(ftas == 1 ? "" : "s")") }
+        let schedule = "the county's bond schedule (G.S. 15A-535) sets about $\(roundBond(Double(base)).formatted()) for a \(classText)"
+        let floorNote = violent && severity > NCClass.I.severity ? ", and a violent charge against a person is treated as at least a Class 1 misdemeanor" : ""
+        let because: String
+        if adds.isEmpty {
+            because = " Why: \(schedule)\(floorNote); no record and no missed court, so the State asks for the schedule amount."
+        } else {
+            because = " Why: \(schedule)\(floorNote). The State adds for \(adds.joined(separator: ", ")), which G.S. 15A-534 lets the court weigh."
+        }
         let ask: String
         if cls == .A {
-            ask = "Hold without bond, or $\(secured.formatted()) secured with house arrest."
+            ask = "Hold without bond, or $\(secured.formatted()) secured with house arrest. Why: a Class A felony; the State asks that the defendant be held (G.S. 15A-533) and, if released at all, on house arrest with a secured bond.\(adds.isEmpty ? "" : " The record also counts: \(adds.joined(separator: ", ")).")"
         } else if severity <= NCClass.E.severity && (violent || felonies > 0 || ftas > 0) {
-            ask = "$\(secured.formatted()) secured with house arrest." + why
-        } else if severity <= NCClass.G.severity || felonies >= 2 || ftas > 0 {
-            ask = "$\(secured.formatted()) secured." + why
-        } else if rng.chance(0.5) {
-            ask = "$\(secured.formatted()) secured."
+            ask = "$\(secured.formatted()) secured with house arrest." + because
+        } else if severity <= NCClass.I.severity || felonies > 0 || misdemeanorPriors > 0 || ftas > 0 || violent {
+            ask = "$\(secured.formatted()) secured." + because
         } else {
-            ask = "Agrees to an unsecured bond of $\(unsecured.formatted())."
+            ask = "Agrees to an unsecured bond of $\(unsecured.formatted()). Why: a non-violent misdemeanor with no record and no missed court. G.S. 15A-534 favors release on a written promise or an unsecured bond when that will reasonably assure appearance and safety; the schedule figure is about $\(roundBond(Double(base)).formatted())."
             return (unsecured, secured, ask, false)
         }
         return (unsecured, secured, ask, true)
     }
 
-    /// The defense answers the State's position: what the client can raise, in cash or through a bondsman, matters only
-    /// against a secured bond.
+    /// What the defense knows about its client that bears on release, used to argue the bond.
+    struct BondContext {
+        var violent = false
+        var felonies = 0
+        var priors = 0
+        var ftas = 0
+        var employed = true
+        var local = true
+        var felony = false
+    }
+
+    /// The defense answers the State's position, in proportion to it and with a reason drawn from the client's real
+    /// circumstances: ties, work, record, missed court, and what the client can actually post. It answers the State's own
+    /// ground (the record, the missed date, the violence) and never asks for something out of scale with the State's ask.
     static func defenseBondAsk(_ scale: (unsecured: Int, secured: Int, stateAsk: String, wantsSecured: Bool), money: BailMoney, last: String,
-                               rng: inout SeededRNG) -> String {
-        let keeper = rng.pick(["a parent", "a relative", "the pastor", "a pretrial release program", "a sibling", "a grandparent"])
-        if !scale.wantsSecured {
-            return rng.pick(["Agrees to the unsecured bond.", "Asks for a written promise; won't fight the unsecured bond."])
-        }
+                               context k: BondContext = BondContext(), rng: inout SeededRNG) -> String {
+        let keeper = rng.pick(["a parent", "a relative", "the pastor", "a pretrial release program", "a grandparent"])
+        // The client's side of the ledger.
+        var for_: [String] = []
+        if k.local { for_.append("\(last) has lived here for years and has nowhere else to go") }
+        if k.employed { for_.append("\(last) has a job to get back to") }
+        if k.ftas == 0 { for_.append("\(last) has never missed court") }
+        if k.priors == 0 { for_.append("\(last) has no record") }
+        else if k.felonies == 0 { for_.append("\(last) has no felony convictions") }
+        if !k.violent && !k.felony { for_.append("this is a misdemeanor and no one was hurt") }
+        else if !k.violent { for_.append("no one was hurt") }
+        var rebuttal = ""
+        if k.ftas > 0 { rebuttal = " The State leans on the missed court date, but one missed setting doesn't make \(last) a flight risk, and a monitor answers it." }
+        else if k.violent { rebuttal = " The State calls this violent; a monitor and a stay-away condition answer any safety concern without a bond \(last) can't make." }
+        else if k.felonies >= 2 { rebuttal = " The State points to the record, but none of it is a failure to appear." }
+        else if k.priors > 0 { rebuttal = " The State points to the record, but \(last) has always come back to court." }
+        var pool = for_
+        var picked: [String] = []
+        while picked.count < 2 && !pool.isEmpty { picked.append(pool.remove(at: rng.int(0...(pool.count - 1)))) }
+        let because = " " + (picked.isEmpty ? "\(last) will appear" : picked.joined(separator: "; ").capitalizedFirst) + "." + rebuttal
         let reach = money.reach
+        let state = scale.secured
+        // No money asked for: agree, and say why the law favors it.
+        if !scale.wantsSecured {
+            return rng.pick(["Agrees to the unsecured bond.", "Asks for a written promise and won't fight the unsecured bond."])
+                + " G.S. 15A-534 favors release on a promise when appearance and safety are assured, and they are here."
+        }
+        let monitor = state >= 20_000 || k.violent
+        // Can't pay anything: argue for the least restrictive condition that still fits this charge.
         if reach == 0 {
-            return rng.pick(["Can't pay anything. Asks for a written promise to appear.",
-                             "Asks for release to \(keeper).",
-                             "Asks for an unsecured bond of $\(scale.unsecured.formatted()) instead.",
-                             "Asks for house arrest with no money bond."])
+            if state <= 5_000 && !k.violent {
+                return rng.pick(["Can't pay anything. Asks for a written promise to appear.", "Asks for release to \(keeper), since \(last) can't pay anything."])
+                    + because + " A bond \(last) can't post is a detention order, and this charge doesn't call for one."
+            }
+            return "Asks for house arrest with a monitor and no money bond, since \(last) can't pay anything." + because
+                + " The monitor assures appearance, and a secured bond \(last) can't post would hold \(last) in jail until trial."
         }
-        if money.cash >= scale.secured {
-            return rng.pick(["Will post the State's figure.",
-                             "Asks for an unsecured bond instead.",
-                             "Won't fight the bond; asks to skip the monitor."])
+        if money.cash >= state {
+            return rng.pick(["Will post the State's figure" + (monitor ? "; asks the court to drop the monitor." : "."),
+                             "Can post the State's figure but asks for it to be unsecured, since \(last) will appear either way."]) + because
         }
-        if reach >= scale.secured {
-            let lower = roundBond(Double(min(scale.secured, money.cash)) * 0.8)
-            return rng.pick(["Asks for an unsecured bond; a bondsman's fee is money \(last) never gets back.",
-                             "Asks for $\(max(500, lower).formatted()) secured, which \(last) can post in cash.",
-                             "Won't go above the State's figure."])
+        if reach >= state {
+            let lower = roundBond(Double(min(state, max(money.cash, state * 6 / 10))) * 0.9)
+            return rng.pick(["Asks for $\(max(500, lower).formatted()) secured, which \(last) can post in cash; the State's $\(state.formatted()) means a bondsman's non-refundable fee.",
+                             "Asks the court to cut the State's $\(state.formatted()) to $\(max(500, lower).formatted()) secured."]) + because
         }
-        let ask = roundBond(Double(reach) * Double.random(in: 0.7...1.0, using: &rng))
+        // The client can't reach the State's figure: ask for what can be posted, argue why it is enough.
+        let ask = roundBond(Double(max(reach, 500)) * Double.random(in: 0.8...1.0, using: &rng))
+        let askText = "$\(min(ask, max(money.cash, reach)).formatted())"
         if !money.bondsman {
-            return "Asks for $\(min(ask, money.cash).formatted()) secured (no bondsman will take it) or release to \(keeper)."
+            return "Asks for \(askText) secured, the most \(last) can pay (no bondsman will take it), against the State's $\(state.formatted())." + because
+                + " Anything above that means \(last) sits in jail."
         }
-        return rng.pick(["Asks for $\(ask.formatted()) secured, which a bondsman would write.",
-                         "Asks for $\(ask.formatted()) secured with house arrest.",
-                         "Asks for release to \(keeper)."])
+        return "Asks for \(askText) secured" + (monitor ? " with house arrest" : "") + " instead of the State's $\(state.formatted()); that is what a bondsman would write for \(last)." + because
     }
 
     /// The usual secured bond for a charge of this class, before record and missed court dates.
@@ -666,7 +752,7 @@ enum CalendarCalls {
         let flight = min(0.6, 0.06 + 0.12 * Double(ftas) + (local ? 0 : 0.12) + (employed ? 0 : 0.06) + 0.02 * Double(d.priors.count))
         let danger = min(0.5, 0.04 + (violent ? 0.08 : 0) + 0.05 * Double(felonies))
         let worst = c.charges.compactMap { $0.law.ncClass }.min { $0.severity < $1.severity }
-        let scale = bondScale(worst, violent: violent, felonies: felonies, ftas: ftas, rng: &rng)
+        let scale = bondScale(worst, violent: violent, felonies: felonies, ftas: ftas, priors: d.priors.count, rng: &rng)
         let moderate = scale.unsecured
         let high = scale.secured
         var money = BailMoney.draw(employed: employed, local: local, ftas: ftas, rng: &rng)
@@ -690,7 +776,9 @@ enum CalendarCalls {
         var record = d.priors.isEmpty ? "No record" : "\(d.priors.count) prior\(d.priors.count == 1 ? "" : "s") (\(felonies) felon\(felonies == 1 ? "y" : "ies"))"
         if ftas > 0 { record += ", \(ftas) missed court date\(ftas == 1 ? "" : "s")" }
         var stateAsk = scale.stateAsk
-        var defenseAsk = defenseBondAsk(scale, money: money, last: d.lastName, rng: &rng)
+        var defenseAsk = defenseBondAsk(scale, money: money, last: d.lastName,
+                                        context: BondContext(violent: violent, felonies: felonies, priors: d.priors.count, ftas: ftas,
+                                                             employed: employed, local: local, felony: worst?.isFelony ?? false), rng: &rng)
         var options = ["Written promise to appear",
                        "Release to the custody of a designated person or program",
                        "Unsecured bond of an amount you set",
@@ -704,12 +792,11 @@ enum CalendarCalls {
             lawNote = "Iryna's Law: violent felony. You may hold without bond; release only on "
                 + (priorViolent ? "house arrest (earlier violent conviction)." : "a secured bond or house arrest.")
             if danger >= 0.15 || felonies > 0 || [NCClass.A, .B1, .B2, .C].contains(worst ?? .misd1) {
-                stateAsk = "Hold without bond (Iryna's Law)."
-            } else {
-                stateAsk = "$\(scale.secured.formatted()) secured."
+                stateAsk = "Hold without bond (Iryna's Law). Why: a violent felony. S.L. 2025-93 presumes no condition of release will reasonably assure the public's safety, and \(d.lastName)'s \(priorViolent ? "earlier violent conviction" : felonies > 0 ? "record" : "charge") points the same way."
             }
             let figure = max(min(money.reach, scale.secured, max(money.cash, money.reach / 2)), 1_000)
-            defenseAsk = priorViolent || money.reach == 0 ? "Asks for house arrest with a monitor." : "Asks for $\(figure.formatted()) secured with a monitor."
+            defenseAsk = (priorViolent || money.reach == 0 ? "Asks for house arrest with a monitor." : "Asks for $\(figure.formatted()) secured with a monitor.")
+                + " Release on a monitor answers the safety concern the State raises, and \(d.lastName) " + (ftas == 0 ? "has never missed court." : "has come back to court before.")
         }
         var summary = "\(d.name), \(d.age), arrested this week on \(law?.title.lowercased() ?? "a felony"). \(record). \(money.short(against: scale.wantsSecured || violentOffense ? scale.secured : nil))"
         var flightRisk = flight
@@ -726,7 +813,7 @@ enum CalendarCalls {
             unavailable = (unavailable ?? []).union([0, 1, 2])
             let missedWord = SentenceFormat.shortDate(missed)
             summary = "Back on your order for arrest: \(d.name) missed court on \(missedWord) (\(law?.title.lowercased() ?? "the charges")) and was picked up \(SentenceFormat.shortDate(served)). \(record). \(money.short(against: suggested))"
-            stateAsk = "$\(suggested.formatted()) secured. The law requires at least $\(minimum.formatted())."
+            stateAsk = "$\(suggested.formatted()) secured. Why: \(d.lastName) missed court, so G.S. 15A-534(d1) requires a secured bond of at least double the last secured bond, or $1,000, whichever is more: $\(minimum.formatted()) here."
             defenseAsk = rng.pick(["\(d.lastName) says the notice went to an old address; asks for the $\(minimum.formatted()) minimum.",
                                    "\(d.lastName) mixed up the date; asks for the $\(minimum.formatted()) minimum.",
                                    "\(d.lastName) had no ride that morning; asks for the $\(minimum.formatted()) minimum.",
@@ -1453,6 +1540,27 @@ extension CalendarCalls {
         }
     }
 
+
+    /// What the State says to the defense's own reason for more time: a reason it can answer gets an answer; a hard personal
+    /// reason (illness, a death, a trial elsewhere) draws no real objection. Otherwise the State gives a reason of its own.
+    static func stateResponse(to defenseReason: String, for c: CourtCase, recent: [String], rng: inout SeededRNG) -> String {
+        let r = defenseReason.lowercased()
+        func has(_ words: [String]) -> Bool { words.contains { r.contains($0) } }
+        var answers: [String] = []
+        if has(["expert", "lab report", "retest"]) { answers += ["Objects: the defense has had the lab report since discovery; an expert could have been retained months ago.", "The State doesn't object to a short continuance if the defense names its expert today."] }
+        if has(["video", "bodycam", "extraction", "900 pages", "discovery"]) { answers += ["Objects: the recordings were produced in discovery weeks ago.", "No objection to a short delay to review it, but the State asks for a firm date."] }
+        if has(["murder trial", "medical leave", "death in the family", "surgery", "inpatient", "dying parent", "deployed", "lockdown"]) { answers += ["No objection given that; the State asks that it be the last one.", "The State doesn't oppose a short delay for that reason."] }
+        if has(["plea talks"]) { answers += ["The State will keep talking, but not at the cost of a firm date.", "Objects: the State's offer has been on the table; it will not stall the case to keep it open."] }
+        if has(["newly appointed", "hasn't met the client"]) { answers += ["Objects: new counsel can be ready for the date already set; the file is in good order.", "No objection to two weeks for new counsel, no more."] }
+        if has(["interpreter"]) { answers += ["No objection; the State will help find an interpreter."] }
+        if has(["new witness", "alibi", "investigator"]) { answers += ["Objects: the defense had months to find its witnesses; the State asks for the disclosure today.", "The State asks that any new witness be disclosed in writing this week."] }
+        let freshAnswers = answers.filter { !recent.contains($0) }
+        if !freshAnswers.isEmpty && rng.chance(0.65) { return rng.pick(freshAnswers) }
+        let own = fittingStateObjections(for: c) + ["No objection.", "No position; make it the last."]
+        let fresh = own.filter { !recent.contains($0) }
+        return rng.pick(fresh.isEmpty ? own : fresh)
+    }
+
     static let stateObjections: [String] = [
         "Objects: the victim has missed work three times for this case.",
         "Objects: the case is over a year old and the victim is tired of waiting.",
@@ -1505,5 +1613,26 @@ extension CalendarCalls {
         "Objects: the county's surveillance system was upgraded and the State can't pull the old footage yet.",
         "Objects: the victim's family moved out of state and the State is arranging remote testimony.",
         "Objects: the State's firearms expert is testifying in another county on the same date.",
+        "Objects: the assistant DA who knows this file is starting a murder trial on the proposed dates.",
+        "Objects: the State's chain-of-custody witness retired last month and a replacement has to be prepared.",
+        "Objects: the evidence room flooded in the storm and the State is still inventorying what survived.",
+        "Objects: a witness is in a residential treatment program and can't be released to testify until the 20th.",
+        "Objects: the main civilian witness is serving on a jury in another county this month.",
+        "Objects: the State is waiting on the co-defendant's plea before it decides how to try this one.",
+        "Objects: the county hasn't approved the fee for the State's expert, and the expert won't commit without it.",
+        "Objects: the State's lead witness is a military reservist on a two-week drill.",
+        "Objects: a State witness is in custody in another county and the transport order hasn't been signed.",
+        "Objects: the State's witness has a baby due the week the court offered.",
+        "Objects: the transcript of the defendant's recorded statement is at the transcription service, due in ten days.",
+        "Objects: the detective who interviewed the defendant has been out sick, and no one else can lay the foundation.",
+        "Objects: the DA's office is down two prosecutors, and this case needs the one who is on leave.",
+        "Objects: the State just got a supplemental report from the agency and needs to turn it over to the defense.",
+        "Objects: a witness is recovering from surgery and the doctor has cleared the witness to testify only after next month.",
+        "Objects: the State's witness doesn't have a ride to court and the victim advocate is arranging transportation.",
+        "Objects: the officer who found the evidence is on parental leave.",
+        "Objects: a subpoenaed record keeper says the company's files are being moved and can't be reached for three weeks.",
+        "Objects: the weather closed the road to the witness's home and the State can't serve the subpoena.",
+        "Objects: the defense never sent the State its witness list, and the State needs time to run them down.",
+        "Objects: the State is waiting on the chief judge's ruling on a pending motion that controls how the case is tried.",
     ]
 }
