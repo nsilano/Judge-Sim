@@ -974,6 +974,8 @@ if args.count > 1 && args[1] == "scan" {
     log("FINDINGS (\(findings.count))")
     for f in findings { log("- \(f)") }
     try? transcript.joined(separator: "\n").write(toFile: outPath, atomically: true, encoding: .utf8)
+    let bondRulings = game.memory.rulings.filter { $0.kind == .bond }
+    print("MEMORY rulings=\(game.memory.rulings.count) bond=\(bondRulings.count) withWho=\(bondRulings.filter { $0.who != nil }.count) securedAsk=\(bondRulings.filter { $0.stateWantedSecured }.count) lenient=\(bondRulings.filter { $0.form <= 2 }.count) strict=\(bondRulings.filter { $0.form >= 4 }.count) fallouts=\(game.memory.fallouts?.count ?? 0) jailLoad=\(CalendarCalls.jailLoad) proceedings=\(game.calendarLog.filter { $0.kind == .pleaColloquy || $0.kind == .jurySelection }.count)")
     print("Played \(weeks) weeks (\(style)). \(game.casesHeard) cases heard. \(findings.count) flags. Transcript: \(outPath)")
 }
 

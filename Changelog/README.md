@@ -4,6 +4,7 @@ One file per release or phase, newest first. Start a new career after installing
 
 | File | Covers |
 |---|---|
+| [2026-11-20 The courthouse remembers](2026-11-20-judges-memory-and-courtroom-life.md) | Lawyers adapt to your rulings and cite them, recurring cast, fallout from bad releases, victim reactions, jail capacity, conduct questions, plea colloquy hearings, a lost-case fix |
 | [2026-11-20 Bond and plea positions based on the law, varied continuances, and fixes](2026-11-20-bonds-pleas-continuances.md) | Statutory bond asks with reasons, proportionate defense asks, severity-based plea positions with arguments, varied continuance reasons, calendar call day picker warning, leave notice fix |
 | [2026-11-20 Deeper testimony in every story](2026-11-20-testimony-depth.md) | Full direct and cross testimony for every witness in all 1,483 stories and tellings, rewritten openings and closings, deduplicated and varied phrasing, transcript layout fix |
 | [2026-11-06 Story bank, variants and fixes](2026-11-06-story-bank-and-variants.md) | 800 written stories, 321 alternate tellings, ~690 follow-ups, the story director, bug fixes, authoring tools |

@@ -19,6 +19,9 @@ struct LawyerRecord: Codable, Hashable {
     var lastCaption: String?
     /// "conviction" or "acquittal", for the last case.
     var lastResult: String?
+    /// Bond, plea and continuance requests this lawyer made before the judge, and how many were granted (optional for older saves).
+    var asks: Int? = nil
+    var granted: Int? = nil
 
     var tried: Int { convictions + acquittals }
 }

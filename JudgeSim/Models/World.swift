@@ -29,6 +29,9 @@ struct County: Codable, Hashable {
     var detectives: [CastMember]
     var officers: [CastMember]
     var troopers: [String]
+    /// Courtroom staff besides the clerk (optional for older saves; added on load).
+    var bailiff: String? = nil
+    var courtReporter: String? = nil
 
     var fullName: String { "\(name), North Carolina" }
     var courtName: String { "\(name) Superior Court" }
@@ -62,7 +65,8 @@ struct County: Codable, Hashable {
                       policeChief: person(),
                       detectives: detectives,
                       officers: officers,
-                      troopers: [person(), person()])
+                      troopers: [person(), person()],
+                      bailiff: person(), courtReporter: person())
     }
 }
 
