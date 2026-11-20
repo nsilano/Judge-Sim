@@ -5,7 +5,36 @@ enum LawyerStyle: String, Codable, Hashable {
     case hardliner, balanced, dealmaker   // prosecutors
     case fighter, pragmatic, stretched    // defense
 
+    /// Styles handed out across the county's whole roster, so a handful of lawyers is never all one kind.
+    nonisolated(unsafe) static var assigned: [String: LawyerStyle] = [:]
+
+    private static func key(_ name: String) -> String {
+        var k = name.components(separatedBy: ",").first ?? name
+        if k.hasPrefix("ADA ") { k.removeFirst(4) }
+        return k.trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Gives about a quarter of the prosecutors the hardliner label and a quarter the dealmaker label (at least one of
+    /// each), and the same share of defense lawyers the fighter and stretched labels. The rest have no strong style.
+    static func assign(prosecutors: [String], defenders: [String]) {
+        // A lawyer's reputation doesn't change when the roster does: new hires fall back to the name-based style.
+        if (prosecutors + defenders).contains(where: { assigned[key($0)] != nil }) { return }
+        var result: [String: LawyerStyle] = [:]
+        func spread(_ names: [String], first: LawyerStyle, second: LawyerStyle, rest: LawyerStyle) {
+            let keys = names.map(key).sorted { SeededRNG.stableHash("style|" + $0) < SeededRNG.stableHash("style|" + $1) }
+            guard !keys.isEmpty else { return }
+            let each = max(1, keys.count / 4)
+            for (i, k) in keys.enumerated() {
+                result[k] = i < each ? first : (i >= keys.count - each && keys.count >= 2 * each + 1 ? second : rest)
+            }
+        }
+        spread(prosecutors, first: .hardliner, second: .dealmaker, rest: .balanced)
+        spread(defenders, first: .fighter, second: .stretched, rest: .pragmatic)
+        assigned = result
+    }
+
     static func of(_ name: String, prosecutor: Bool) -> LawyerStyle {
+        if let style = assigned[key(name)], prosecutor == [.hardliner, .balanced, .dealmaker].contains(style) { return style }
         let h = SeededRNG.stableHash(name) % 10
         if prosecutor { return h < 3 ? .hardliner : (h < 7 ? .balanced : .dealmaker) }
         return h < 3 ? .fighter : (h < 7 ? .pragmatic : .stretched)
