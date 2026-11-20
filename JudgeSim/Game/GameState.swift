@@ -149,7 +149,12 @@ private struct SaveData: Codable {
 @MainActor
 final class GameState: ObservableObject {
     @Published var judgeName: String?
-    @Published var county: County?
+    @Published var county: County? {
+        didSet {
+            guard let county else { return }
+            LawyerStyle.assign(prosecutors: county.assistantDAs, defenders: county.assistantPDs + county.privateCounsel)
+        }
+    }
     @Published var currentDate = Date()
     @Published var history: [CaseRecord] = []
     @Published var people: [PersonRecord] = []
@@ -2059,6 +2064,8 @@ final class GameState: ObservableObject {
         var rng = SeededRNG(seed: c.seed ^ 0xDE1E_6A7E)
         let other = "Judge " + rng.pick(NameBank.lastNames.filter { !(judgeName ?? "").hasSuffix($0) })
         stats.delegated = (stats.delegated ?? 0) + 1
+        // The player never reads a written story that went to another judge, so it can be told again with new people.
+        if c.templateKey.hasPrefix("story.") { pleaCredits[c.templateKey, default: 0] += 1 }
         happened(.reassigned(caption: c.caption, defendant: c.defendant.name, toJudge: other))
         history.insert(CaseRecord(docket: c.docket, caption: c.caption, headline: c.headline, category: c.category, date: date,
                                   defendantID: c.defendant.personID, outcome: "Reassigned to \(other)",
@@ -2659,6 +2666,8 @@ final class GameState: ObservableObject {
                 issueArrestOrder(for: c, issued: call.date, servedOn: found, how: how, heldCase: held)
             } else {
                 issueArrestOrder(for: c, issued: call.date, servedOn: .distantFuture, heldCase: held)
+                // A defendant who is never found never comes back for trial: the written story was never heard.
+                if c.templateKey.hasPrefix("story.") { pleaCredits[c.templateKey, default: 0] += 1 }
             }
         }
         /// To be tried now: today, if the day has room under the judge's limits, or the next day that does.

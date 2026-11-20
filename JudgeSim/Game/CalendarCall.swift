@@ -762,14 +762,19 @@ enum CalendarCalls {
         }
         if reach >= state {
             let lower = roundBond(Double(min(state, max(money.cash, state * 6 / 10))) * 0.9)
-            return rng.pick(["Asks for $\(max(500, lower).formatted()) secured, which \(last) can post in cash; the State's $\(state.formatted()) means a bondsman's non-refundable fee.",
-                             "Asks the court to cut the State's $\(state.formatted()) to $\(max(500, lower).formatted()) secured."]) + because
+            let figure = max(500, lower)
+            // "In cash" is only said when the client has that much; otherwise the figure is one a bondsman would write.
+            let cashLine = figure <= money.cash
+                ? "Asks for $\(figure.formatted()) secured, which \(last) can post in cash; the State's $\(state.formatted()) means a bondsman's non-refundable fee."
+                : "Asks for $\(figure.formatted()) secured, which \(last) can make through a bondsman's fee; the State's $\(state.formatted()) is more than the family can carry."
+            return rng.pick([cashLine, "Asks the court to cut the State's $\(state.formatted()) to $\(figure.formatted()) secured."]) + because
         }
         // The client can't reach the State's figure: ask for what can be posted, argue why it is enough.
         let ask = roundBond(Double(max(reach, 500)) * Double.random(in: 0.8...1.0, using: &rng))
         let askText = "$\(min(ask, max(money.cash, reach)).formatted())"
         if !money.bondsman {
-            return "Asks for \(askText) secured, the most \(last) can pay (no bondsman will take it), against the State's $\(state.formatted())." + because
+            // "The most the client can pay" is the same figure the card shows as what the client has.
+            return "Asks for $\(money.cash.formatted()) secured, the most \(last) can pay (no bondsman will take it), against the State's $\(state.formatted())." + because
                 + " Anything above that means \(last) sits in jail."
         }
         return "Asks for \(askText) secured" + (monitor ? " with house arrest" : "") + " instead of the State's $\(state.formatted()); that is what a bondsman would write for \(last)." + because
