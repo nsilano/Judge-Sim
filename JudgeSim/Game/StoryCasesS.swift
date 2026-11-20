@@ -351,7 +351,7 @@ extension StoryCases {
                             .direct("How did {DL} come to be at your apartment?", "\"She texted me that she needed to get away, that her husband was abusive. I drove ten hours and picked her up. She stayed three weeks. She hurt herself. She asked me to drive her back and leave her by the highway.\""),
                             .direct("How was the pickup arranged?", "\"Texts on a prepaid phone, weeks ahead. She told me when and where to be.\""),
                             .cross("You're not being charged?", "\"Nobody's charged me. Nobody's promised me anything either.\""),
-                            .cross("You didn't call anyone during three weeks of national news?", "\"She begged me not to. I should have.\"")
+                            .cross("You didn't call anyone during three weeks of national news?", "\"She begged me not to. I own that.\"")
                         ]),
             WitnessSeed(name: nil, role: "FBI agent",
                         direct: ["\"The abductors never existed.\""],

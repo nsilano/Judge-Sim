@@ -43,7 +43,7 @@ extension StoryCases {
                         weight: 3, lay: false,
                         exam: [
                             .direct("What did you find in the car?", "\"$1,790 rolled in a sock in the console, a gray hoodie on the back seat, and the pistol under the driver's seat.\""),
-                            .direct("Tell the jury about the pistol.", "\"A Daisy BB pistol built to look like a Glock 17. The orange safety tip had been painted black.\""),
+                            .direct("Describe the pistol in your own words.", "\"A Daisy BB pistol built to look like a Glock 17. The orange safety tip had been painted black.\""),
                             .direct("Can a BB pistol hurt someone?", "\"At close range it can put out an eye. Swung, it's a pound and a half of metal.\""),
                             .cross("It was empty when you found it.", "\"The CO2 was spent. We don't know about earlier that night.\""),
                             .cross("No fingerprints on the drawer.", "\"He never touched it. {V} handed him the money.\"")
@@ -249,7 +249,7 @@ extension StoryCases {
             howIdentified: "The forensic audit and casino player's card records.",
             notDone: ["The prior treasurer was never asked about the cash box key.", "Not every reimbursement was checked against supply store receipts."],
             defendantExam: [
-                .direct("Tell the jury about the reimbursements.", "\"I bought fish, oil, everything for the fry. I paid myself back. I should have kept receipts.\""),
+                .direct("What can you tell us about the reimbursements?", "\"I bought fish, oil, everything for the fry. I paid myself back. I should have kept receipts.\""),
                 .direct("And the casino?", "\"I go. A lot. I'm not proud of it. That was my money.\"", "\"I have a problem. Some of it was the department's money. I meant to put it back.\""),
                 .cross("$41,800 in checks and $7,300 in supply purchases.", "\"I didn't keep track.\""),
                 .cross("Eleven fish fries and not one deposit.", "\"Some of that cash went to buying for the next one.\""),

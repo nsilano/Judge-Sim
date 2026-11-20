@@ -164,7 +164,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("What happened?", "\"The sun was straight in my eyes. I couldn't see anything. There was a bang and the windshield cracked and I thought I'd hit the sign.\""),
                 .direct("Why didn't you stop?", "\"I thought it was a sign post. I was late for a client. I was going to deal with the car later.\""),
-                .cross("Your windshield cracked a foot from your face and you didn't stop?", "\"I know. I know how it sounds.\""),
+                .cross("Your windshield cracked a foot from your face and you didn't stop?", "\"I know. I hear how that sounds.\""),
                 .cross("It was a school zone at drop-off.", "\"I drive it every day. I'd never seen a guard there before.\"", "\"Yes.\""),
                 .cross("You couldn't see, and you kept driving at the same speed?", "\"I should have slowed down. I didn't.\"")
             ],

@@ -144,7 +144,7 @@ extension StoryCases {
                             .direct("What happened when you reached for the keys?", "\"{D.He} rolled the window up on my arm and put it in drive. I was running alongside the car trying to pull free until I fell.\""),
                             .direct("Were you hurt?", "\"A torn rotator cuff and road rash. I was out of work for three months.\""),
                             .cross("You reached into {DL}'s car?", "\"To take the keys from a driver refusing a lawful order. That's what we're trained to do.\""),
-                            .cross("You didn't wait for backup?", "\"Backup was four minutes out. I should have.\"")
+                            .cross("You didn't wait for backup?", "\"Backup was four minutes out. I own that.\"")
                         ]),
             WitnessSeed(name: nil, role: "DMV records custodian",
                         direct: ["\"Revoked two years.\""],
