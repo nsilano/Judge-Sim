@@ -664,12 +664,19 @@ struct DayPickerList: View {
     var count = 30
     /// Days that don't work for someone the trial needs, with the reason.
     var conflicts: [String: String] = [:]
+    /// Trial days already picked for other matters in the same calendar call; they aren't on the docket yet but they fill a day.
+    var pendingDays: [Date] = []
     @Binding var choice: Date?
     /// The month on screen, as its first day.
     @State private var month: Date?
 
     /// The court's current date, which every choice is measured from.
     private var today: Date { game.today?.date ?? game.currentDate }
+
+    /// How many other matters in this call are already set for the day.
+    private func pending(on day: Date) -> Int {
+        kind == .trial ? pendingDays.filter { CourtCalendar.isSameDay($0, day) }.count : 0
+    }
 
     /// The sitting days that can be chosen.
     private var allowed: Set<Date> {
@@ -709,7 +716,7 @@ struct DayPickerList: View {
             }
             PickerMonthGrid(month: first, today: today, allowed: open, choice: $choice, cell: cellState)
             if let day = choice {
-                PickerDayDetail(day: day, today: today, kind: kind, conflict: conflicts[CourtSchedule.key(day)],
+                PickerDayDetail(day: day, today: today, kind: kind, pending: pending(on: day), conflict: conflicts[CourtSchedule.key(day)],
                           current: excluding.map { CourtCalendar.isSameDay($0, day) } ?? false)
             } else {
                 Text("Pick a day. Green has room, red is full, orange has a conflict for someone the case needs; gray days the court doesn't sit or the case isn't ready.")
@@ -724,7 +731,7 @@ struct DayPickerList: View {
         if conflicts[CourtSchedule.key(day)] != nil { return .conflict }
         let limit = game.schedule.limit(on: day)
         let set = game.counts(on: day)
-        let used = kind == .trial ? set.trials : set.hearings
+        let used = (kind == .trial ? set.trials : set.hearings) + pending(on: day)
         let cap = kind == .trial ? limit.trials : limit.hearings
         return used >= cap ? .full : .open
     }
@@ -861,12 +868,13 @@ private struct PickerDayDetail: View {
     let day: Date
     let today: Date
     let kind: DayPickerList.Kind
+    var pending = 0
     let conflict: String?
     let current: Bool
 
     private var used: Int {
         let set = game.counts(on: day)
-        return kind == .trial ? set.trials : set.hearings
+        return (kind == .trial ? set.trials : set.hearings) + pending
     }
 
     private var cap: Int {
@@ -881,7 +889,7 @@ private struct PickerDayDetail: View {
     private var loadText: String {
         let set = game.counts(on: day)
         let limit = game.schedule.limit(on: day)
-        return "\(set.trials)/\(limit.trials) trials · \(set.hearings)/\(limit.hearings) hearings"
+        return "\(set.trials + pending)/\(limit.trials) trials · \(set.hearings)/\(limit.hearings) hearings"
     }
 
     var body: some View {
@@ -895,6 +903,10 @@ private struct PickerDayDetail: View {
             Text(loadText).font(.caption).foregroundStyle(.secondary)
             if let conflict {
                 Label("Conflict: \(conflict)", systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption2).foregroundStyle(.orange)
+            }
+            if pending > 0 {
+                Label("Another matter in this calendar call is already set for this day.", systemImage: "exclamationmark.triangle.fill")
                     .font(.caption2).foregroundStyle(.orange)
             }
             if full {
