@@ -152,7 +152,7 @@ extension StoryCases {
         defendant: [.direct("Why report it?", "\"It was gone. I didn't know where.\""),
                     .direct("Did you loan it?", "\"No.\"", "\"I told her she could use it. Then we fought.\""),
                     .cross("A text says keep the car.", "\"That was before the fight.\""),
-                    .cross("Wasting deputies' time.", "\"I'm sorry.\"")],
+                    .cross("Wasting deputies' time.", "\"I am truly sorry.\"")],
         openings: ("A stolen car that wasn't stolen.", "A breakup and a misunderstanding."),
         closings: ("A false report wastes the court's time.", "No intent to deceive."),
         timeline: [(0, "{DL} reports the car stolen."), (2, "Deputy finds it behind the girlfriend's shed.")],

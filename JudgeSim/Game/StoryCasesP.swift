@@ -88,7 +88,7 @@ extension StoryCases {
                 .direct("Why buy guns with a fake ID?", "\"Because we didn't want to be traced if we had to use them to protect ourselves.\""),
                 .cross("Your parents were watching TV. Your father had nothing in his hands.", "\"I thought they were coming for us.\""),
                 .cross("You walked to your car, reloaded, and came back.", "\"I don't remember that clearly.\""),
-                .cross("And you bought a Rolex a few days later.", "\"I know how that looks.\"")
+                .cross("And you bought a Rolex a few days later.", "\"I see how that looks.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Defense: \"Was the father a monster?\"",

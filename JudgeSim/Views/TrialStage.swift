@@ -536,36 +536,52 @@ struct ExaminationTranscript: View {
         }
 
         var body: some View {
-            DisclosureGroup(isExpanded: $expanded) {
-                VStack(alignment: .leading, spacing: 8) {
-                    objectionsAfter(-1)
-                    ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
-                        VStack(alignment: .leading, spacing: 3) {
-                            if !line.question.isEmpty {
-                                Text(line.examiner == .prosecution ? "State" : "Defense")
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(Theme.color(for: line.examiner))
-                                Text(line.question)
-                                    .font(.subheadline)
-                                    .foregroundStyle(Theme.quoteText)
-                            }
-                            Text(line.question.isEmpty ? line.answer : ExaminationTranscript.quoted(line.answer))
-                                .font(.system(.body, design: .serif))
-                                .foregroundStyle(Theme.text)
-                                .italic(line.question.isEmpty)
-                        }
-                        .padding(.vertical, 2)
-                        objectionsAfter(index)
+            // A plain header and body instead of DisclosureGroup, which pushes its content far in from the card's edge.
+            VStack(alignment: .leading, spacing: 8) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() }
+                } label: {
+                    HStack {
+                        Text("\(phase.rawValue) · \(lines.count) question\(lines.count == 1 ? "" : "s")"
+                             + (objections.isEmpty ? "" : " · \(objections.count) objection\(objections.count == 1 ? "" : "s")"))
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.down")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.secondary)
+                            .rotationEffect(.degrees(expanded ? 180 : 0))
                     }
+                    .contentShape(Rectangle())
                 }
-                .padding(.top, 6)
-            } label: {
-                Text("\(phase.rawValue) · \(lines.count) question\(lines.count == 1 ? "" : "s")"
-                     + (objections.isEmpty ? "" : " · \(objections.count) objection\(objections.count == 1 ? "" : "s")"))
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.secondary)
+                .buttonStyle(.plain)
+                if expanded {
+                    VStack(alignment: .leading, spacing: 12) {
+                        objectionsAfter(-1)
+                        ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
+                            VStack(alignment: .leading, spacing: 3) {
+                                if !line.question.isEmpty {
+                                    Text(line.examiner == .prosecution ? "State" : "Defense")
+                                        .font(.caption.weight(.bold))
+                                        .foregroundStyle(Theme.color(for: line.examiner))
+                                    Text(line.question)
+                                        .font(.subheadline)
+                                        .foregroundStyle(Theme.quoteText)
+                                }
+                                Text(line.question.isEmpty ? line.answer : ExaminationTranscript.quoted(line.answer))
+                                    .font(.system(.body, design: .serif))
+                                    .foregroundStyle(Theme.text)
+                                    .italic(line.question.isEmpty)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 2)
+                            objectionsAfter(index)
+                        }
+                    }
+                    .padding(.top, 2)
+                }
             }
-            .tint(.secondary)
         }
     }
 }

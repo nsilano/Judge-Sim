@@ -426,7 +426,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Did your grandmother give you permission?", "\"She says 'take what you need.' I needed rent money for a new place. I was going to get them back.\""),
                 .direct("Why the ring?", "\"It was the only thing worth anything.\""),
-                .cross("Her wedding ring, off her dresser, without asking about the ring itself.", "\"I didn't ask about the ring. I should have.\""),
+                .cross("Her wedding ring, off her dresser, without asking about the ring itself.", "\"I didn't ask about the ring. That is on me.\""),
                 .cross("You didn't tell anyone.", "\"I was ashamed.\""),
                 .cross("You didn't have a job to get them back with.", "\"I was looking.\"")
             ],

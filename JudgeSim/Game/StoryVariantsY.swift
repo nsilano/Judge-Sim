@@ -126,7 +126,7 @@ extension StoryVariants {
                 .direct("What happened to your car?", "\"Kai drove off in it. I found it behind my house the next morning with the back crushed.\""),
                 .cross("You told the crowd it was your spin.", "\"The first one. Not the one that crashed.\""),
                 .cross("You can't give a last name or number for Kai.", "\"No. I don't have either.\""),
-                .cross("You got the car back and didn't call police or {V}.", "\"I was scared. I should have.\""),
+                .cross("You got the car back and didn't call police or {V}.", "\"I was scared. In hindsight, yes.\""),
                 .cross("You knew the visitor row was twelve feet from the spin lane.", "\"I told everyone to keep it clear. I knew it was close.\"")
             ],
             objections: [

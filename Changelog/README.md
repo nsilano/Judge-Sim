@@ -4,6 +4,7 @@ One file per release or phase, newest first. Start a new career after installing
 
 | File | Covers |
 |---|---|
+| [2026-11-20 Deeper testimony in every story](2026-11-20-testimony-depth.md) | Full direct and cross testimony for every witness in all 1,483 stories and tellings, rewritten openings and closings, deduplicated and varied phrasing, transcript layout fix |
 | [2026-11-06 Story bank, variants and fixes](2026-11-06-story-bank-and-variants.md) | 800 written stories, 321 alternate tellings, ~690 follow-ups, the story director, bug fixes, authoring tools |
 | [2026-11-06 Real-case-inspired stories](2026-11-06-real-case-inspired-stories.md) | 50 fictionalized stories and 50 follow-ups (bank now 850) |
 | [2026-11-06 Playtest fixes and restored matters](2026-11-06-playtest-fixes.md) | Story charge fixes, case-director variety, calendar and sentencing fixes, warrants, arraignments, pleas and evidence continuances |

@@ -183,7 +183,7 @@ extension StoryCases {
                 .direct("Did you post those images?", "\"No. I had them on my old phone, which I kept in my glovebox for music. Somebody broke into my car and took it.\""),
                 .direct("What did you mean by 'everyone will see'?", "\"That people would see how {VL} treated me. I was talking about telling our friends. It was ugly and petty. It wasn't this.\""),
                 .cross("You work in IT. You know how to make an account look like someone else's.", "\"I reset passwords for a living. And I'd know not to do it from my own building.\""),
-                .cross("You didn't delete the images after the breakup.", "\"No. I should have.\"")
+                .cross("You didn't delete the images after the breakup.", "\"No. In hindsight, yes.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Defense attorney: \"You'd sent intimate images to other partners before, hadn't you?\"",
@@ -468,7 +468,7 @@ extension StoryCases {
             notDone: [],
             defendantExam: [
                 .direct("Why did you post it?", "\"We'd been joking all week that the calc final would kill us. Then they canceled the pep rally, and I thought, perfect, nothing on Friday but the test. The song is what we play on the soccer bus.\""),
-                .direct("Did you think anyone would be afraid?", "\"No. I posted it to my friends. I didn't think about anyone else seeing it, or what gunshots would mean to them. I should have.\""),
+                .direct("Did you think anyone would be afraid?", "\"No. I posted it to my friends. I didn't think about anyone else seeing it, or what gunshots would mean to them. In hindsight, yes.\""),
                 .cross("You searched school shooting statistics two weeks before.", "\"For my civics paper. My teacher has it.\""),
                 .cross("Half the school stayed home.", "\"I know. I'll never forget that.\"")
             ],
