@@ -202,7 +202,7 @@ extension FollowUpCases {
         state: [E(.video, 3, "Doorbell Camera", "{D} puts both hands on {V} and pushes {V.him} against the truck."), E(.statement, 2, "Neighbor", "A neighbor saw {D}'s hands go out.")],
         defense: [E(.statement, 1, "Lunge", "{D} says {V} lunged with a post hole digger.")],
         witnessRole: "Sheriff's deputy",
-        exam: [.direct("What does the camera show?", "\"{D} pushing {V} into the truck.\""), .direct("Did {V} have a tool?", "\"A post hole digger in {V.his} hand.\""),
+        exam: [.direct("What does the camera show?", "\"It shows {D} pushing {V} into the truck.\""), .direct("Did {V} have a tool?", "\"A post hole digger in {V.his} hand.\""),
                .cross("{V} lunged.", "\"I can't tell.\""), .cross("Was {V} hurt?", "\"A bruise.\"")],
         theory: ("{D} shoved {V} after a court order.", "A man with a tool lunging."), allocution: "\"I lost my temper over a fence again.\"",
         truths: ("{V} had said he'd \"see {D} in court again.\"", "{V} had swung the digger first, a second angle shows."),

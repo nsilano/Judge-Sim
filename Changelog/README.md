@@ -4,6 +4,7 @@ One file per release or phase, newest first. Start a new career after installing
 
 | File | Covers |
 |---|---|
+| [2026-11-22 Safer saves and a faster start](2026-11-22-saves-testimony-timelines-and-faster-start.md) | File-based saves with backups, natural testimony, realistic drunk-driving timelines, first bond hearing within days |
 | [2026-11-20 Consistent bond figures and story credits](2026-11-20-bond-consistency-and-story-credits.md) | Defense ask matches the client's cash, lawyer reputations spread across the roster, unread written stories go back on the list |
 | [2026-11-20 The courthouse remembers](2026-11-20-judges-memory-and-courtroom-life.md) | Lawyers adapt to your rulings and cite them, recurring cast, fallout from bad releases, victim reactions, jail capacity, conduct questions, plea colloquy hearings, a lost-case fix |
 | [2026-11-20 Bond and plea positions based on the law, varied continuances, and fixes](2026-11-20-bonds-pleas-continuances.md) | Statutory bond asks with reasons, proportionate defense asks, severity-based plea positions with arguments, varied continuance reasons, calendar call day picker warning, leave notice fix |

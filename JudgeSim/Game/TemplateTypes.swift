@@ -386,8 +386,14 @@ enum CaseOrigin: Hashable {
     /// An audit, complaint, or records review.
     case records
 
-    static func of(key: String, setting: CaseSetting) -> CaseOrigin {
+    /// Offenses an officer finds on the road: the arrest comes at the stop, not days later.
+    /// Impaired driving is always an arrest at the roadside, whatever the written file says about charging later.
+    static let impairedLaws: Set<String> = ["dwi", "habitualDWI", "felonyDBV", "misdDBV", "dwlrImpaired"]
+    static let roadsideLaws: Set<String> = ["dwi", "habitualDWI", "felonyDBV", "misdDBV", "dwlrImpaired", "dwlr", "fleeing"]
+
+    static func of(key: String, setting: CaseSetting, laws: [String] = []) -> CaseOrigin {
         if setting == .paper { return .records }
+        if laws.contains(where: { roadsideLaws.contains($0) }) { return .stop }
         switch key {
         case "trafficStopDrugs", "habitualDWI", "fleeingElude", "felonGun": return .stop
         case "trapHouse", "hiddenGun": return .warrant
@@ -408,11 +414,11 @@ struct CaseFacts {
     /// Summaries, charges, evidence, and testimony, lowercased.
     let text: String
 
-    init(key: String, category: LawCategory, hasVictim: Bool, text: String) {
+    init(key: String, category: LawCategory, hasVictim: Bool, text: String, laws: [String] = []) {
         self.key = key
         self.category = category
         self.setting = CaseSetting.of(category: category, key: key)
-        self.origin = CaseOrigin.of(key: key, setting: setting)
+        self.origin = CaseOrigin.of(key: key, setting: setting, laws: laws)
         self.hasVictim = hasVictim
         self.text = text.lowercased()
     }
@@ -422,7 +428,8 @@ struct CaseFacts {
         parts += c.charges.map { $0.specification }
         parts += c.evidence.map { $0.title + ". " + $0.detail }
         for w in c.witnesses { parts += w.direct + w.cross }
-        self.init(key: c.templateKey, category: c.category, hasVictim: c.victimName != nil, text: parts.joined(separator: " "))
+        self.init(key: c.templateKey, category: c.category, hasVictim: c.victimName != nil, text: parts.joined(separator: " "),
+                  laws: c.charges.map { $0.law.id })
     }
 
     /// True when any of the words appears in the case (or when no words are given).

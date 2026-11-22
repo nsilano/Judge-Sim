@@ -267,7 +267,6 @@ final class GameState: ObservableObject {
     /// Lawyers who took a job with the DA after withdrawing; they stop appearing for the defense.
     private var departedCounsel: Set<String> = []
     private var seedBase: UInt64 = UInt64.random(in: 1...UInt64.max / 2)
-    private let saveKey = "JudgeSim.nc.save.v1"
 
     init() {
         load()
@@ -503,6 +502,13 @@ final class GameState: ObservableObject {
         pending = []
         // A new career starts completely empty: no backlog, no arrests. Crimes happen, arrests follow, and the first bond
         // hearings trickle in over the first month; intake reaches its full pace by week eight.
+        // The docket starts empty, but crimes are already happening: one the day before the swearing-in, so the first arrest
+        // and the first bond hearing are days away, not weeks.
+        if county != nil {
+            var firstRNG = SeededRNG(seed: seedBase ^ 0xF1257)
+            var firstUsed = Set<UUID>()
+            openCrime(on: currentDate, story: false, allowMurder: false, knownDefendant: nil, rng: &firstRNG, excluding: &firstUsed)
+        }
         // Day one starts with an empty docket.
         today = CourtDay(date: currentDate, clock: CourtCalendar.opening(on: currentDate, minutesAfterMidnight: openingMinutes),
                          kind: .trial, entries: [], sessionDay: 1)
@@ -757,6 +763,8 @@ final class GameState: ObservableObject {
             if CourtCalendar.isCourtDay(cursor) {
                 var rng = SeededRNG(seed: seedBase ^ UInt64(abs(Int(cursor.timeIntervalSince1970)) / 3_600) ^ 0x1A7E)
                 intake(on: cursor, rng: &rng)
+                // Someone arrested overnight is at the first appearance this morning, not a day later.
+                resolveInvestigations(on: cursor)
                 reviewWaiting(on: cursor, rng: &rng)
                 publishDailyPaper(on: cursor, rng: &rng)
             }
@@ -886,8 +894,28 @@ final class GameState: ObservableObject {
                 bg.bondStatus = "Held in the \(county.name) Detention Center since the arrest on \(SentenceFormat.shortDate(item.arrest)), awaiting a bond hearing."
                 c.background = bg
             }
-            log(.arrest, c, on: item.arrest, "Arrested by the \(c.investigation?.facts?.agency ?? c.investigatingAgency) in \(item.town).")
-            log(.jailIn, c, on: item.arrest, "Booked into the \(county.name) jail to await a bond hearing.")
+            // Arrested at the scene: the arrest comes minutes after the stop or the call, and the booking within the hour or two.
+            var arrestAt = item.arrest
+            var bookedAt = item.arrest
+            if item.note?.hasPrefix("Arrested at the scene") == true,
+               let first = caseLog.last(where: { $0.docket == c.docket && cal.isDate($0.date, inSameDayAs: item.arrest) })?.date {
+                var trng = SeededRNG(seed: c.seed ^ 0xA77E_57ED)
+                let stopped = CaseFacts(c).origin == .stop
+                arrestAt = min(cal.date(byAdding: .minute, value: stopped ? trng.int(18...40) : trng.int(25...70), to: first) ?? first,
+                               cal.date(byAdding: .minute, value: 23 * 60 + 50, to: cal.startOfDay(for: item.arrest)) ?? first)
+                bookedAt = min(cal.date(byAdding: .minute, value: trng.int(40...85), to: arrestAt) ?? arrestAt,
+                               cal.date(byAdding: .minute, value: 23 * 60 + 58, to: cal.startOfDay(for: item.arrest)) ?? arrestAt)
+            }
+            // Someone arrested at the stop already has the arrest in the log: only the booking is left, after the warrant.
+            if caseLog.contains(where: { $0.docket == c.docket && $0.kind == .arrest && cal.isDate($0.date, inSameDayAs: item.arrest) }) {
+                var brng = SeededRNG(seed: c.seed ^ 0xB00C_ED)
+                let last = caseLog.last(where: { $0.docket == c.docket && cal.isDate($0.date, inSameDayAs: item.arrest) })?.date ?? item.arrest
+                bookedAt = min(cal.date(byAdding: .minute, value: brng.int(25...50), to: last) ?? last,
+                               cal.date(byAdding: .minute, value: 23 * 60 + 58, to: cal.startOfDay(for: item.arrest)) ?? last)
+            } else {
+                log(.arrest, c, on: arrestAt, "Arrested by the \(c.investigation?.facts?.agency ?? c.investigatingAgency) in \(item.town).")
+            }
+            log(.jailIn, c, on: bookedAt, "Booked into the \(county.name) jail to await a bond hearing.")
             post(InvestigationArc.arrestNews(c, on: date, town: item.town, agency: c.investigation?.facts?.agency ?? c.investigatingAgency,
                                              judge: lastName(judgeName), county: county, followed: item.note == nil, bondHearing: true))
             var held = item
@@ -1076,6 +1104,8 @@ final class GameState: ObservableObject {
         let roll = rng.int(1...100)
         let delay: Int
         if let forcedDelay { delay = forcedDelay }
+        // Early in a career arrests come quickly: most within days, so the first hearings come in the first week or two.
+        else if calendarWeekNumber <= 3 { delay = roll <= 45 ? 0 : (roll <= 85 ? rng.int(1...3) : rng.int(4...7)) }
         else if roll <= (story ? 15 : 20) { delay = 0 }
         else if roll <= 45 { delay = rng.int(1...7) }
         else if roll <= 75 { delay = rng.int(8...30) }
@@ -1096,7 +1126,21 @@ final class GameState: ObservableObject {
         let town = facts?.town ?? county?.seat ?? ""
         let followed = booked > happened
         let agencyName = facts?.agency ?? c.investigatingAgency
-        log(.crime, c, on: happened, "Reported to the \(agencyName) in \(town): \(InvestigationArc.subject(c)).")
+        if !followed && CaseFacts(c).origin == .stop {
+            // A traffic stop: the officer pulls the car over and the arrest follows within the hour, the same day,
+            // at the stop time the case file gives.
+            let minutes = facts?.time.flatMap { Clock.minutes($0) } ?? rng.int(20 * 60...23 * 60)
+            let stop = cal.date(byAdding: .minute, value: min(minutes, 23 * 60 + 30), to: happened) ?? happened
+            let subject = InvestigationArc.subject(c)
+            let text: String
+            if subject.contains("chase") { text = "The \(agencyName) tries to stop a car in \(town); the driver flees: \(subject)." }
+            else if subject.contains("crash") || subject.contains("collision") { text = "The \(agencyName) responds to a crash in \(town): \(subject)." }
+            else if subject == "a traffic stop" { text = "Traffic stop by the \(agencyName) in \(town)." }
+            else { text = "Traffic stop by the \(agencyName) in \(town): \(subject)." }
+            log(.crime, c, on: stop, text)
+        } else {
+            log(.crime, c, on: happened, "Reported to the \(agencyName) in \(town): \(InvestigationArc.subject(c)).")
+        }
         if followed { log(.investigation, c, on: happened, "\(agencyName) opens an investigation.") }
         if followed {
             var beats = InvestigationArc.beats(for: c, incident: happened, arrest: booked, town: town,
@@ -1208,18 +1252,33 @@ final class GameState: ObservableObject {
     /// A signed warrant is executed a day or so later; the arrest comes then, and the case lands on the waiting list.
     private func arrestOnWarrant(_ c: CourtCase, note: String, rng: inout SeededRNG) {
         let cal = CourtCalendar.calendar
+        let impairedStop = c.charges.contains { CaseOrigin.impairedLaws.contains($0.law.id) }
+        var warrantAt = currentDate
         if let facts = c.investigation?.facts {
-            log(.crime, c, on: facts.incident, "Reported to the \(facts.agency) in \(facts.town): \(InvestigationArc.subject(c)).")
-            log(.investigation, c, on: facts.incident, "\(facts.agency) opens an investigation.")
+            if impairedStop {
+                // The stop and the arrest come first, within the hour; the warrant is for the blood draw, signed after.
+                var trng = SeededRNG(seed: c.seed ^ 0xB10_0D)
+                let day = cal.startOfDay(for: facts.incident)
+                let stopMinutes = min(facts.time.flatMap { Clock.minutes($0) } ?? trng.int(60...180), 21 * 60)
+                let stop = cal.date(byAdding: .minute, value: stopMinutes, to: day) ?? day
+                let arrestTime = cal.date(byAdding: .minute, value: trng.int(18...40), to: stop) ?? stop
+                warrantAt = cal.date(byAdding: .minute, value: trng.int(30...80), to: arrestTime) ?? arrestTime
+                log(.crime, c, on: stop, "Traffic stop by the \(facts.agency) in \(facts.town): \(InvestigationArc.subject(c)).")
+                log(.arrest, c, on: arrestTime, "Arrested by the \(facts.agency) in \(facts.town).")
+            } else {
+                log(.crime, c, on: facts.incident, "Reported to the \(facts.agency) in \(facts.town): \(InvestigationArc.subject(c)).")
+                log(.investigation, c, on: facts.incident, "\(facts.agency) opens an investigation.")
+            }
         }
-        log(.warrant, c, on: currentDate, note.contains("another judge") ? "You denied the first search warrant; another judge signed a second one."
+        log(.warrant, c, on: warrantAt, note.contains("another judge") ? "You denied the first search warrant; another judge signed a second one."
                                                                        : "Search warrant signed by Judge \(lastName(judgeName ?? "")).")
         guard let facts = c.investigation?.facts else {
             awaitCase(c, note: note, on: currentDate)
             return
         }
         // The arrest follows the warrant, never comes before it.
-        let earliest = cal.date(byAdding: .day, value: rng.int(1...3), to: cal.startOfDay(for: currentDate)) ?? currentDate
+        let earliest = impairedStop ? cal.startOfDay(for: currentDate)
+            : (cal.date(byAdding: .day, value: rng.int(1...3), to: cal.startOfDay(for: currentDate)) ?? currentDate)
         let arrest = max(cal.startOfDay(for: facts.arrest), earliest)
         let ready = cal.date(byAdding: .day, value: rng.int(49...63), to: arrest) ?? arrest
         investigations.append(OpenInvestigation(courtCase: c, incident: cal.startOfDay(for: facts.incident), arrest: arrest,
@@ -1668,8 +1727,9 @@ final class GameState: ObservableObject {
                 if wantsWarrant && roomForNew {
                     let kind = rng.pick([WarrantApplication.Kind.residenceDrugs, .storageStolen, .phoneRecords, .bloodDraw, .bankRecords, .digitalAccounts, .dnaSample, .residenceWeapons])
                     // Nobody is arrested yet: the crime is under investigation, and the warrant, if signed, is executed in a day or three.
-                    let execution = cal.date(byAdding: .day, value: rng.int(1...3), to: date) ?? date
-                    if var c = freshCase(on: date, arrest: execution, incidentBefore: 5...30, categories: kind.categories, rng: &rng, excluding: &usedPeople) {
+                    // A blood-draw warrant is sought within hours of the stop: the driver is already under arrest, the same day.
+                    let execution = kind == .bloodDraw ? date : (cal.date(byAdding: .day, value: rng.int(1...3), to: date) ?? date)
+                    if var c = freshCase(on: date, arrest: execution, incidentBefore: kind == .bloodDraw ? 0...0 : 5...30, categories: kind.categories, rng: &rng, excluding: &usedPeople) {
                         // Not arrested yet. Whether the defendant will be held or bonded out after the arrest is kept
                         // in onRelease until then.
                         if var bg = c.background {
@@ -2388,8 +2448,10 @@ final class GameState: ObservableObject {
         // Over target, arrivals slow but don't stop, and they pick up as the county's pressure grows: a few extra
         // cases a week by the end of the first year, enough that the list outruns the calendar.
         let overflow = caseloadPressure > 1.05 ? min(0.85, 0.25 + 0.5 * (caseloadPressure - 1)) : 0
+        // In the first two weeks a crime happens most days, so the first arrests, and the first bond hearings, aren't weeks away.
+        let arrivals = calendarWeekNumber <= 2 ? 0.85 : 0.75 * max(0.3, caseloadRamp)
         if trialsInPipeline < pipelineTarget * 4, rng.chance(intakeFactor),
-           (underTarget && rng.chance(0.75 * max(0.3, caseloadRamp))) || (!underTarget && rng.chance(overflow)) {
+           (underTarget && rng.chance(arrivals)) || (!underTarget && rng.chance(overflow)) {
             let murderWaiting = (awaiting.map(\.entry) + scheduled.map(\.entry)).contains { entry in
                 if case .trial(let c) = entry.matter { return Self.isMurder(c) } else { return false }
             }
@@ -5258,22 +5320,27 @@ final class GameState: ObservableObject {
                             officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
                             showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog, bondReviews: bondReviews, heldCases: heldCases, pendingRearrests: pendingRearrests, pleaCredits: pleaCredits, judgeMemory: memory)
         if let encoded = try? JSONEncoder().encode(data) {
-            UserDefaults.standard.set(encoded, forKey: saveKey)
+            SaveStore.write(encoded)
         }
     }
 
     private func load() {
-        guard let raw = UserDefaults.standard.data(forKey: saveKey) else { return }
-        let data: SaveData
-        do {
-            data = try JSONDecoder().decode(SaveData.self, from: raw)
-        } catch {
-            // Keep the career that couldn't be read under its own key before a new one can be saved over it.
-            let backupKey = saveKey + ".backup-\(Int(Date().timeIntervalSince1970))"
-            UserDefaults.standard.set(raw, forKey: backupKey)
-            NSLog("JudgeSim: the saved career could not be read and was kept under %@: %@", backupKey, String(describing: error))
-            return
+        // Before a new build touches the career, keep it as it was.
+        SaveStore.backUpBeforeUpdate(build: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0")
+        // The newest copy that can be read wins; one that can't is kept aside, never deleted, and the next copy is tried.
+        var loaded: SaveData?
+        let copies = SaveStore.candidates()
+        for (label, raw) in copies {
+            do {
+                loaded = try JSONDecoder().decode(SaveData.self, from: raw)
+                if label != copies.first?.label { NSLog("JudgeSim: restored the career from %@", label) }
+                break
+            } catch {
+                SaveStore.keepUnreadable(raw, from: label)
+                NSLog("JudgeSim: the career in %@ could not be read and was kept aside: %@", label, String(describing: error))
+            }
         }
+        guard let data = loaded else { return }
         judgeName = data.judgeName
         county = data.county
         currentDate = data.currentDate
