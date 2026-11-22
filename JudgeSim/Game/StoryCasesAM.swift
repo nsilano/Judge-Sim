@@ -117,7 +117,7 @@ extension StoryCases {
                 E(.document, 1, "Urgent Care Note", "Scraped palms and a bruised hip.")],
         defense: [E(.statement, 2, "Leash", "A second walker says {V} swung the leash at {D}'s dog first.")],
         witnessRole: "Park jogger",
-        exam: [.direct("What did you see?", "\"{D} pushing {V} hard enough that {V.he} fell.\""),
+        exam: [.direct("What did you see?", "\"I saw {D} pushing {V} hard enough that {V.he} fell.\""),
                .direct("What happened before?", "\"I didn't see. I heard shouting.\""),
                .cross("{V} had a leash in hand.", "\"Yes.\""),
                .cross("The dog ran at {V}'s dog.", "\"I think so.\"")],

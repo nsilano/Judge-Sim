@@ -280,7 +280,7 @@ func datesAgree(_ c: CourtCase, where key: String) {
 let loadSavePath: String? = args.count > 2 && args[1] == "loadsave" ? args[2] : nil
 if let path = loadSavePath {
     guard let data = FileManager.default.contents(atPath: path) else { print("no save at \(path)"); exit(1) }
-    UserDefaults.standard.set(data, forKey: "JudgeSim.nc.save.v1")
+    UserDefaults.standard.set(data, forKey: SaveStore.legacyKey)
 }
 let shift = loadSavePath == nil ? 0 : 1
 let weeks = args.count > 1 + 2 * shift ? Int(args[1 + 2 * shift]) ?? 8 : 8
@@ -726,6 +726,7 @@ if args.count > 1 && args[1] == "scan" {
     game.startCareer(name: "Morgan Hale", start: Date())
     guard let county = game.county else { return }
     var tried = 0
+    var roadside = 0
     // Every alternate telling is the same case as its story, and plays through the same checks.
     for v in StoryVariants.all { for p in StoryVariants.problems(v, base: CaseTemplates.byKey[v.key]) { flag(p) } }
     for (i, t) in (StoryCases.all + StoryVariants.all).enumerated() {
@@ -734,6 +735,12 @@ if args.count > 1 && args[1] == "scan" {
         ctx.reservedNames = game.namesInPlay()
         var trng = SeededRNG(seed: UInt64(i) &* 7919 &+ 17)
         let c = CaseGenerator.build(t, seed: UInt64(i) &+ 1, band: rng.chance(0.5) ? .strong : .close, context: ctx, rng: &trng)
+        if c.charges.contains(where: { CaseOrigin.roadsideLaws.contains($0.law.id) }), let f = c.investigation?.facts {
+            roadside += 1
+            let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: f.incident), to: Calendar.current.startOfDay(for: f.arrest)).day ?? 0
+            if days != 0 && c.charges.contains(where: { CaseOrigin.impairedLaws.contains($0.law.id) }) { flag("\(t.key): a drunk-driving case arrests \(days) days after the incident") }
+            if CaseFacts(c).origin != .stop { flag("\(t.key): a roadside case is not treated as a traffic stop") }
+        }
         log("")
         log("=== \(t.key) ===")
         FileHandle.standardError.write(Data("\(i) \(t.key)\n".utf8))
@@ -743,6 +750,7 @@ if args.count > 1 && args[1] == "scan" {
     log("FINDINGS (\(findings.count))")
     for f in findings { log("- \(f)") }
     try? transcript.joined(separator: "\n").write(toFile: outPath, atomically: true, encoding: .utf8)
+    print("Roadside cases checked: \(roadside)")
     print("Tried \(tried) written cases. \(findings.count) flags. Transcript: \(outPath)")
 }
 
@@ -836,6 +844,11 @@ if args.count > 1 && args[1] == "scan" {
     // judge since the continuance is being tried elsewhere.
     let lost = continuedIDs.filter { $0.value.addingTimeInterval(21 * 86_400) < game.currentDate }
         .filter { item in !game.history.contains { $0.docket == item.key && $0.kind == "reassigned" } }
+        // A case reset for a date after the run ended (after a missed court date and a new bond, say) is scheduled, not lost.
+        .filter { item in
+            !game.scheduled.contains { if case .trial(let c) = $0.entry.matter { return c.docket == item.key } else { return false } }
+                && !game.awaiting.contains { $0.courtCase?.docket == item.key }
+        }
     if !lost.isEmpty {
         let where_ = lost.keys.sorted().map { docket -> String in
             let sched = game.scheduled.first { if case .trial(let c) = $0.entry.matter { return c.docket == docket } else { return false } }
@@ -974,6 +987,28 @@ if args.count > 1 && args[1] == "scan" {
     log("FINDINGS (\(findings.count))")
     for f in findings { log("- \(f)") }
     try? transcript.joined(separator: "\n").write(toFile: outPath, atomically: true, encoding: .utf8)
+    // A stop ends in an arrest within the hour; a drunk-driving case never reads as a report and an investigation.
+    var stopTimelines = 0
+    for docket in Set(game.caseLog.map(\.docket)).filter({ !$0.isEmpty }).sorted() {
+        let events = game.log(docket: docket)
+        let drunk = events.contains { $0.text.contains("a drunk-driving incident") }
+        if drunk && events.contains(where: { $0.text.hasPrefix("Reported to the") }) {
+            flag("\(docket): a drunk-driving case logged as a report instead of a traffic stop"); print("TIMELINE FLAG \(docket): drunk-driving logged as a report: " + events.prefix(5).map { $0.text }.joined(separator: " | "))
+        }
+        if let stop = events.first(where: { $0.text.hasPrefix("Traffic stop by") }), let arrest = events.first(where: { $0.kind == .arrest }) {
+            stopTimelines += 1
+            let minutes = Int(arrest.date.timeIntervalSince(stop.date) / 60)
+            if minutes < 5 || minutes > 90 { flag("\(docket): arrest \(minutes) minutes after the stop"); print("TIMELINE FLAG \(docket): \(minutes) min; " + events.prefix(5).map { "\($0.date) [\($0.kind.rawValue)] \($0.text)" }.joined(separator: " | ")) }
+            if stopTimelines <= 3 { for e in events.prefix(4) { print("  STOP TIMELINE \(docket) \(e.date) [\(e.kind.rawValue)] \(e.text)") } }
+        }
+    }
+    print("STOP TIMELINES: \(stopTimelines)")
+    print("SAVE BYTES: \(SaveStore.currentBytes)")
+    if let first = game.calendarLog.filter({ $0.kind == .firstAppearance }).map(\.date).min() {
+        let days = Calendar.current.dateComponents([.day], from: game.careerStart, to: first).day ?? -1
+        let week1 = game.calendarLog.filter { $0.kind == .firstAppearance && $0.date < Calendar.current.date(byAdding: .day, value: 7, to: game.careerStart)! }.count
+        print("FIRST BOND HEARING: day \(days) of the career; \(week1) heard in the first week")
+    } else { print("FIRST BOND HEARING: none") }
     let bondRulings = game.memory.rulings.filter { $0.kind == .bond }
     print("MEMORY rulings=\(game.memory.rulings.count) bond=\(bondRulings.count) withWho=\(bondRulings.filter { $0.who != nil }.count) securedAsk=\(bondRulings.filter { $0.stateWantedSecured }.count) lenient=\(bondRulings.filter { $0.form <= 2 }.count) strict=\(bondRulings.filter { $0.form >= 4 }.count) fallouts=\(game.memory.fallouts?.count ?? 0) jailLoad=\(CalendarCalls.jailLoad) proceedings=\(game.calendarLog.filter { $0.kind == .pleaColloquy || $0.kind == .jurySelection }.count)")
     print("Played \(weeks) weeks (\(style)). \(game.casesHeard) cases heard. \(findings.count) flags. Transcript: \(outPath)")
@@ -1064,6 +1099,34 @@ if args.count > 1 && args[1] == "tellings" {
 }
 if args.count > 1 && args[1] == "stories" {
     MainActor.assumeIsolated { tryEveryStory() }
+    exit(0)
+}
+if args.count > 1 && args[1] == "roadside" {
+    MainActor.assumeIsolated {
+        let game = GameState()
+        game.resetCareer()
+        game.startCareer(name: "Morgan Hale", start: Date())
+        guard let county = game.county else { return }
+        let cal = Calendar.current
+        var bad = 0, total = 0
+        for (i, t) in (StoryCases.all + StoryVariants.all).enumerated() {
+            var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 5000 + i * 10, recentTemplateKeys: [])
+            ctx.reservedNames = game.namesInPlay()
+            var trng = SeededRNG(seed: UInt64(i) &* 7919 &+ 17)
+            var brng = SeededRNG(seed: UInt64(i) &+ 99)
+            let c = CaseGenerator.build(t, seed: UInt64(i) &+ 1, band: brng.chance(0.5) ? .strong : .close, context: ctx, rng: &trng)
+            guard c.charges.contains(where: { CaseOrigin.roadsideLaws.contains($0.law.id) }), let f = c.investigation?.facts else { continue }
+            let impaired = c.charges.contains(where: { CaseOrigin.impairedLaws.contains($0.law.id) })
+            total += 1
+            let days = cal.dateComponents([.day], from: cal.startOfDay(for: f.incident), to: cal.startOfDay(for: f.arrest)).day ?? 0
+            let origin = CaseFacts(c).origin
+            if (days != 0 && impaired) || origin != .stop {
+                bad += 1
+                print("\(t.key): incident \(f.incident) arrest \(f.arrest) (\(days) days) origin \(origin) laws \(c.charges.map { $0.law.id }) timeline \((c.investigation?.timeline ?? []).prefix(3).map { $0.when + " " + String($0.what.prefix(40)) })")
+            }
+        }
+        print("roadside cases \(total), off \(bad)")
+    }
     exit(0)
 }
 MainActor.assumeIsolated { runCareer() }

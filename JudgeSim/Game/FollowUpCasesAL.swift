@@ -129,7 +129,7 @@ extension FollowUpCases {
         defense: [E(.statement, 1, "Alibi", "{DL}'s spouse says {D.he} was asleep at home.")],
         witnessRole: "Sheriff's deputy",
         exam: [.direct("What does the camera show?", "\"A truck like {D}'s, a man with bolt cutters, and the chain falling.\""),
-               .direct("Can you see his face?", "\"No. The truck has a bumper sticker like {D}'s.\""),
+               .direct("Can you see his face?", "\"No. The truck has a bumper sticker like {DL}'s.\""),
                .cross("Many trucks look alike.", "\"This one has the same sticker.\""),
                .cross("The plate isn't visible.", "\"No.\"")],
         theory: ("After being told to stay out, {D} cut the chain to fish anyway.", "A look-alike truck on a grainy video."),

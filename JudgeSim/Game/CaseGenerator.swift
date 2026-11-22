@@ -744,7 +744,8 @@ enum CaseGenerator {
         let factParts: [[String]] = [t.summaries.map { fill($0) }, charges.map(\.specification),
                                      evidence.map { $0.title + ". " + $0.detail }, witnesses.flatMap { $0.direct + $0.cross }]
         let factText = factParts.flatMap { $0 }.joined(separator: " ")
-        let facts = CaseFacts(key: t.key, category: t.category, hasVictim: t.hasVictim, text: factText)
+        let facts = CaseFacts(key: t.key, category: t.category, hasVictim: t.hasVictim, text: factText,
+                              laws: [t.primaryLaw] + (t.lesserLaw.map { [$0] } ?? []))
         var (investigation, gaps) = Investigations.make(t: t, facts: facts, values: values, incident: incident, sessionDate: context.date,
                                                         detective: detective, officer: officer, evidence: evidence,
                                                         defendant: profiledDefendant, charges: charges, victimName: victimName,
@@ -800,9 +801,11 @@ enum CaseGenerator {
             // The written file says when the arrest happened; the fact sheet follows it.
             // The defendant's arrest, not someone else's ("a man arrested with methamphetamine names the clerk"), and
             // never before the crime itself.
+            let isImpaired = ([t.primaryLaw] + (t.lesserLaw.map { [$0] } ?? [])).contains { CaseOrigin.impairedLaws.contains($0) }
             let arrests = story.timeline.filter { $0.0 >= 0 && ($0.1.lowercased().contains("arrested")
                 || $0.1.range(of: #"turns? (himself|herself|themselves|themself) in|turned (himself|herself) in|surrenders"#, options: .regularExpression) != nil
-                || ($0.1.lowercased().contains("charged") && $0.1.contains("{D"))) }
+                // On the road the arrest comes at the stop; a later "charged" line is the paperwork, not the arrest.
+                || (!isImpaired && $0.1.lowercased().contains("charged") && $0.1.contains("{D"))) }
             // An entry naming no one ("Arrested at work.") is the defendant's; one naming someone else is not.
             if let offset = (arrests.first { $0.1.contains("{D") } ?? arrests.first { !$0.1.contains("{") })?.0 {
                 investigation.facts?.arrest = CaseDates.add(offset, to: incident)

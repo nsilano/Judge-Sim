@@ -389,7 +389,7 @@ extension StoryCases {
             WitnessSeed(name: nil, role: "Mourner",
                         direct: ["\"{V} was pointing in {D.his} face.\""], cross: ["\"I didn't see the push.\""], weight: 1, lay: true,
                         exam: [
-                            .direct("What did you see?", "\"{V} cursing and pointing in {D}'s face. {D} put {D.his} hands out and {V} stepped back.\""),
+                            .direct("What did you see?", "\"{V} cursing and pointing in {D}'s face. {DL} put {D.his} hands out and {V} stepped back.\""),
                             .cross("Did you see the push?", "\"I saw hands on a chest.\"")
                         ])
         ],

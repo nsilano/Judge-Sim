@@ -2,6 +2,9 @@
 
 Things we have discussed and want to add but have not started. When one is started it moves to the changelog entry that ships it. Everything written follows the depth and realism rules in CLAUDE.md. New saved data must load old saves.
 
+## Game systems not started (no new case content needed)
+- **Life after conviction: jobs, licenses and trajectories.** A conviction costs what it would cost in life: a nurse sentenced to months loses the RN license and the job, a teacher, a trucker with a CDL, an officer or a lawyer lose theirs; a felony makes many jobs unavailable. Income falls, which changes who can post bond or pay fines and restitution. Then people diverge: some spiral (lost work, lost housing, new charges, probation violations), some recover (new work, treatment, years clean, an expunction petition years later). The paper can follow a few of them. Builds on the person records, occupations and expunction matters that already exist.
+
 ## Waiting on new game systems
 - **Jury trials and jury selection.** Every trial today is a bench trial. A jury mode would need a juror pool with strikes and biases, a juror who knows a witness, and verdicts that depend on who is seated. The judge's side of selection is already written and rated in `CourtProceedings.swift` (challenges for cause, Batson, prejudged and distressed jurors, hardship, a juror who knows a witness) but switched off: re-enable the commented line in `CalendarCalls.make` when jury trials exist.
 
