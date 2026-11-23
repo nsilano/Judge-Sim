@@ -513,7 +513,7 @@ enum CalendarCalls {
 
     /// The days in jail a split sentence's option names.
     static func splitDays(_ option: String) -> Int {
-        guard let range = option.range(of: #"\d+(?= days in jail)"#, options: .regularExpression) else { return 30 }
+        guard let range = option.regexRange(of: #"\d+(?= days in jail)"#, options: .regularExpression) else { return 30 }
         return Int(option[range]) ?? 30
     }
 

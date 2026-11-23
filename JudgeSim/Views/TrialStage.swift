@@ -486,7 +486,7 @@ struct ExaminationTranscript: View {
         guard !suppressed.isEmpty else { return all }
         // Whole phrases only: suppressing "State's Exhibit 1" leaves Exhibit 12 alone.
         let patterns = suppressed.map { "(?i)\\b" + NSRegularExpression.escapedPattern(for: $0) + "(?![0-9A-Za-z])" }
-        func mentions(_ text: String) -> Bool { patterns.contains { text.range(of: $0, options: .regularExpression) != nil } }
+        func mentions(_ text: String) -> Bool { patterns.contains { text.regexRange(of: $0, options: .regularExpression) != nil } }
         return all.filter { e in !mentions(e.question) && !mentions(e.answer) }
     }
 

@@ -77,7 +77,7 @@ struct ExhibitViewer: View {
     private func screen(_ r: ExhibitReview, stamp: String, text: String, index: Int) -> some View {
         let tag = "\(evidence.id)".stableHash
         // A speed the exhibit gives ("74 mph") is the speed on the screen.
-        let statedSpeed = (evidence.detail.range(of: #"\d{2,3}(?= ?mph)"#, options: .regularExpression)).flatMap { Int(evidence.detail[$0]) }
+        let statedSpeed = (evidence.detail.regexRange(of: #"\d{2,3}(?= ?mph)"#, options: .regularExpression)).flatMap { Int(evidence.detail[$0]) }
         switch r.look {
         case .bodycam: BodyCamScreen(stamp: stamp, text: text, unit: tag % 90_000 + 10_000)
         case .dashcam: DashCamScreen(source: r.source, stamp: stamp, text: text, car: tag % 40 + 10, speed: statedSpeed ?? (tag % 45 + 20 + index * 3))

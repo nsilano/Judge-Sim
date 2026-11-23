@@ -24,7 +24,7 @@ struct DefendantProfile: Codable, Hashable {
     /// The defendant's own children: "no children" is 0, "2 children" is 2.
     var childCount: Int {
         if family.contains("no children") { return 0 }
-        guard let match = family.range(of: #"\d+ child"#, options: .regularExpression) else { return 0 }
+        guard let match = family.regexRange(of: #"\d+ child"#, options: .regularExpression) else { return 0 }
         return Int(family[match].prefix { $0.isNumber }) ?? 0
     }
     /// Children the defendant is raising who aren't their own: foster children, a niece and nephew.
@@ -303,7 +303,7 @@ enum DefendantProfiles {
         // Whole words only ("bus" is not "business"), and the specific kind of work before the general one,
         // so a dental office manager works at a dental office, not a store.
         func matches(_ key: String) -> Bool {
-            lower.range(of: "\\b" + NSRegularExpression.escapedPattern(for: key), options: .regularExpression) != nil
+            lower.regexRange(of: "\\b" + NSRegularExpression.escapedPattern(for: key), options: .regularExpression) != nil
         }
         let general: Set<String> = ["manager", "store", "retail", "driver", "student", "college", "health", "contractor", "aide",
                                     "trainer", "server", "it ", "account", "financial", "construction"]
@@ -1335,7 +1335,7 @@ struct FamilyFacts {
         let mine = #"(\{D\.[Hh]is\}|\{DL?\}'s)"#
         let kids = "(child|children|kids|son|sons|daughter|daughters|baby|toddler|infant|stepson|stepdaughter|stepchildren|grandchildren|grandson|granddaughter|boys|girls)"
         func found(_ pattern: String, in source: String) -> Bool {
-            source.range(of: pattern, options: .regularExpression) != nil
+            source.regexRange(of: pattern, options: .regularExpression) != nil
         }
         if found(mine + #" (?:[A-Za-z0-9-]+ ){0,2}"# + kids + #"\b"#, in: text)
             || found(#"\b[Mm]y (?:[a-z0-9-]+ ){0,2}"# + kids + #"\b"#, in: voice) {

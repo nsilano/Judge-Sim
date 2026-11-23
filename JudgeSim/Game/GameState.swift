@@ -457,6 +457,7 @@ final class GameState: ObservableObject {
     // MARK: Career
 
     func startCareer(name: String, start: Date) {
+        Breadcrumbs.note("start career")
         judgeName = name
         county = County.generate(seed: seedBase)
         history = []
@@ -570,6 +571,7 @@ final class GameState: ObservableObject {
 
     /// Opens a matter on today's calendar.
     func open(_ entryID: UUID) -> DocketItem? {
+        Breadcrumbs.note("open docket entry \(entryID.uuidString.prefix(8))")
         guard var day = today, let index = day.entries.firstIndex(where: { $0.id == entryID }) else { return nil }
         let entry = day.entries[index]
         guard entry.isOpen else { return nil }
@@ -725,6 +727,7 @@ final class GameState: ObservableObject {
     /// Closes today's court and opens the next day the judge sits. Whatever wasn't reached today goes to the next day
     /// with room. The world moves through every day in between: sentences run, appeals come down, new cases are filed.
     func adjourn() {
+        Breadcrumbs.note("adjourn")
         guard let day = today else { return }
         freshAppeals = []
         let cal = CourtCalendar.calendar
@@ -755,18 +758,18 @@ final class GameState: ObservableObject {
             if newWeek {
                 closeWeek(endingBefore: cursor)
             }
-            advanceWorld(to: cursor, weekly: newWeek)
-            resolveInvestigations(on: cursor)
-            creditWaitingJailTime(through: cursor)
-            yearlyEvents(from: previous, to: cursor)
+            Profile.measure("advanceWorld") { advanceWorld(to: cursor, weekly: newWeek) }
+            Profile.measure("resolveInvestigations") { resolveInvestigations(on: cursor) }
+            Profile.measure("creditWaitingJailTime") { creditWaitingJailTime(through: cursor) }
+            Profile.measure("yearlyEvents") { yearlyEvents(from: previous, to: cursor) }
             if newWeek { localPages(weekOf: previous, publishing: cursor) }
             if CourtCalendar.isCourtDay(cursor) {
                 var rng = SeededRNG(seed: seedBase ^ UInt64(abs(Int(cursor.timeIntervalSince1970)) / 3_600) ^ 0x1A7E)
-                intake(on: cursor, rng: &rng)
+                Profile.measure("intake") { intake(on: cursor, rng: &rng) }
                 // Someone arrested overnight is at the first appearance this morning, not a day later.
-                resolveInvestigations(on: cursor)
-                reviewWaiting(on: cursor, rng: &rng)
-                publishDailyPaper(on: cursor, rng: &rng)
+                Profile.measure("resolveInvestigations") { resolveInvestigations(on: cursor) }
+                Profile.measure("reviewWaiting") { reviewWaiting(on: cursor, rng: &rng) }
+                Profile.measure("publishDailyPaper") { publishDailyPaper(on: cursor, rng: &rng) }
             }
         }
         if leaveDays >= 3, let judgeName {
@@ -781,9 +784,9 @@ final class GameState: ObservableObject {
             post(NewsItem(date: next, kind: .community, headline: "Judge \(lastName(judgeName)) back from leave", body: summary.joined(separator: " ")))
         }
         sessionEnds = next
-        today = buildDay(next, kind: .trial, sessionDay: 1)
+        today = Profile.measure("buildDay") { buildDay(next, kind: .trial, sessionDay: 1) }
         digest = news.filter { !seenBefore.contains($0.id) }
-        save()
+        Profile.measure("save (adjourn)") { save() }
     }
 
     /// Everyone besides the defendant who took part in a trial goes into the court's memory: the victim, and each
@@ -2596,8 +2599,7 @@ final class GameState: ObservableObject {
         // A trial moved up to an earlier date than the file was written for takes the credit back with it.
         background.custodyDays = clampedCustodyDays(max(1, background.custodyDays + waited), for: c, on: date)
         let after = background.custodyDays
-        background.bondStatus = background.bondStatus.replacingOccurrences(of: "for \(before) days?\\b", with: "for \(after) day\(after == 1 ? "" : "s")",
-                                                                           options: .regularExpression)
+        background.bondStatus = background.bondStatus.regexReplacing(of: "for \(before) days?\\b", with: "for \(after) day\(after == 1 ? "" : "s")")
         c.background = background
     }
 
@@ -2700,7 +2702,7 @@ final class GameState: ObservableObject {
                 // The bond the defendant was out on sets the floor for the next one: double a secured bond, or $1,000.
                 let old = bg.bondStatus
                 let secured = old.range(of: "unsecured", options: .caseInsensitive) == nil && old.range(of: "secured", options: .caseInsensitive) != nil
-                let lastSecured = secured ? old.range(of: #"\$[0-9,]+"#, options: .regularExpression)
+                let lastSecured = secured ? old.regexRange(of: #"\$[0-9,]+"#, options: .regularExpression)
                     .flatMap { Int(old[$0].dropFirst().replacingOccurrences(of: ",", with: "")) } : nil
                 bg.missedCourt = call.date
                 bg.ftaMinimumBond = max(1_000, (lastSecured ?? 0) * 2)
@@ -3227,6 +3229,7 @@ final class GameState: ObservableObject {
     }
 
     func completeCalendar(_ call: CalendarCall, choices: [UUID: Int], amounts: [UUID: Int] = [:], dates: [UUID: Date] = [:], pleaTerms: [UUID: PleaTerms] = [:]) {
+        Breadcrumbs.note("calendar call, \(call.matters.count) matters")
         // The record of what was decided, for the Calendar tab in Records.
         var reactionLines: [String] = []
         for m in call.matters {
@@ -3464,17 +3467,17 @@ final class GameState: ObservableObject {
         reserved.formUnion(Gazetteer.regulars(for: county).values)
         // Everyone already in the world, past defendants included: a new person never shares a full name with them.
         // (A returning defendant or a former witness charged later keeps their own name; that's the same person.)
-        reserved.formUnion(namesInPlay())
+        Profile.measure("gen: namesInPlay") { reserved.formUnion(namesInPlay()) }
         context.reservedNames = reserved
         // A resident charged now must not already be a defendant elsewhere in the county (two arrests the same week could
         // both pick the same resident, or the resident may already be on the docket as someone else's case).
-        let defendantsInPlay = defendantNamesInPlay()
+        let defendantsInPlay = Profile.measure("gen: defendantNamesInPlay") { defendantNamesInPlay() }
         context.residentDefendant = residentDefendant.flatMap { defendantsInPlay.contains($0.name) ? nil : $0 }.map { ResidentRef(name: $0.name, town: $0.town, occupation: $0.occupation, lastCaption: nil) }
         context.residents = residents.filter { !$0.deceased }.map { r in
             ResidentRef(name: r.name, town: r.town, occupation: r.occupation,
                         lastCaption: r.roles.last(where: { $0.part != "Victim" })?.caption)
         }
-        if followUp == nil { context.director = directorSnapshot() }
+        if followUp == nil { context.director = Profile.measure("gen: directorSnapshot") { directorSnapshot() } }
         if let followUp {
             context.forcedTemplateKeys = followUp.templateKeys
             context.victimOverride = followUp.victimName
@@ -3491,9 +3494,9 @@ final class GameState: ObservableObject {
         let recent = Set(recentLineKeys)
         var best: (score: Int, value: CourtCase)?
         for _ in 0..<4 {
-            var candidate = CaseGenerator.generate(seed: rng.next(), context: context)
-            let report = CaseAuditor.audit(&candidate)
-            let keys = CaseAuditor.lineKeys(candidate)
+            var candidate = Profile.measure("gen: generate") { CaseGenerator.generate(seed: rng.next(), context: context) }
+            let report = Profile.measure("gen: audit") { CaseAuditor.audit(&candidate) }
+            let keys = Profile.measure("gen: lineKeys") { CaseAuditor.lineKeys(candidate) }
             let repeats = keys.filter { recent.contains($0) }.count
             // Take the first draw that holds together and is mostly fresh; scoring on anything else would
             // favor the same few kinds of case over and over.
@@ -3504,7 +3507,7 @@ final class GameState: ObservableObject {
         guard var newCase = best?.value else { return nil }
         // Someone this judge ruled on earlier is back before the court: the paper recalls the decision, once.
         if let person = returning, followUp == nil {
-            let entries = journal.entries(seed: seedBase)
+            let entries = Profile.measure("gen: journal.entries") { journal.entries(seed: seedBase) }
             // Only a ruling worth recalling: a lenient one, or someone held without bond.
             if !entries.contains(where: { $0.kind == .callback && $0.name == person.name }),
                let past = entries.last(where: { $0.name == person.name && ($0.kind == .heldWithoutBond || $0.flags.contains { Self.lenientFlags.contains($0) }) }),
@@ -3696,7 +3699,7 @@ final class GameState: ObservableObject {
                 return (p, a)
             }
             if let (p, a) = drivers.isEmpty ? nil : rng.pick(drivers) {
-                let level = a.outcome.range(of: "Level [1-5]", options: .regularExpression).flatMap { Int(a.outcome[$0].suffix(1)) }
+                let level = a.outcome.regexRange(of: "Level [1-5]", options: .regularExpression).flatMap { Int(a.outcome[$0].suffix(1)) }
                 out.append(Petitions.privilegeMatter(personID: p.id, name: p.name, age: p.age(on: date), occupation: p.occupation, docket: a.docket,
                                                      level: level, convicted: a.date, date: date, propensity: p.propensity, newPerson: false, rng: &rng))
                 taken.insert(p.id)
@@ -3763,6 +3766,7 @@ final class GameState: ObservableObject {
     }
 
     func complete(_ courtCase: CourtCase, outcome: CaseOutcome, perjuryReferrals: [Witness] = []) {
+        Breadcrumbs.note("complete case \(courtCase.docket), convicted \(outcome.convicted)")
         guard stillOpen(courtCase.id) else { return }
         // Testimony the judge sent to the district attorney: the DA's decision, and what comes of it, arrive later.
         if !perjuryReferrals.isEmpty, let judgeName {
@@ -5319,9 +5323,7 @@ final class GameState: ObservableObject {
                             weekTally: weekTally, mood: mood, investigations: investigations, placeHistory: placeHistory, residents: residents,
                             officerRecords: officerRecords, lawyerRecords: lawyerRecords, living: living, bondQueue: bondQueue,
                             showCauseQueue: showCauseQueue, corrections: corrections, dispositions: dispositions, arraignQueue: arraignQueue, caseLog: caseLog, bondReviews: bondReviews, heldCases: heldCases, pendingRearrests: pendingRearrests, pleaCredits: pleaCredits, judgeMemory: memory)
-        if let encoded = try? JSONEncoder().encode(data) {
-            SaveStore.write(encoded)
-        }
+        SaveStore.saveInBackground(data)
     }
 
     private func load() {
@@ -5422,7 +5424,7 @@ final class GameState: ObservableObject {
                     }
                     fresh.id = old.id
                     // Keep the arrest date the old card gave.
-                    let when = old.summary.range(of: #"arrested on [A-Z][a-z]+ \d{1,2}, \d{4}"#, options: .regularExpression).map { String(old.summary[$0]) }
+                    let when = old.summary.regexRange(of: #"arrested on [A-Z][a-z]+ \d{1,2}, \d{4}"#, options: .regularExpression).map { String(old.summary[$0]) }
                     fresh.summary = fresh.summary.replacingOccurrences(of: "arrested this week", with: when ?? "arrested recently")
                     call.matters[m] = fresh
                 }

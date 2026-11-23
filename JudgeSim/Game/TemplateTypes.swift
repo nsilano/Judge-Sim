@@ -480,15 +480,15 @@ enum KinshipGender {
         }
         for token in ["D", "V", "ALT"] {
             for word in male {
-                if text.range(of: "\\{\(token)\\}, [^,.]{0,25}\\b\(word)\\b", options: .regularExpression) != nil
-                    || text.range(of: "\\b\(word),? \\{\(token)\\}", options: .regularExpression) != nil { note(token, .male) }
+                if text.regexRange(of: "\\{\(token)\\}, [^,.]{0,25}\\b\(word)\\b", options: .regularExpression) != nil
+                    || text.regexRange(of: "\\b\(word),? \\{\(token)\\}", options: .regularExpression) != nil { note(token, .male) }
             }
             for word in female {
-                if text.range(of: "\\{\(token)\\}, [^,.]{0,25}\\b\(word)\\b", options: .regularExpression) != nil
-                    || text.range(of: "\\b\(word),? \\{\(token)\\}", options: .regularExpression) != nil { note(token, .female) }
+                if text.regexRange(of: "\\{\(token)\\}, [^,.]{0,25}\\b\(word)\\b", options: .regularExpression) != nil
+                    || text.regexRange(of: "\\b\(word),? \\{\(token)\\}", options: .regularExpression) != nil { note(token, .female) }
             }
-            for word in possessiveMale where text.range(of: "\\{\(token)\\}'s \(word)\\b", options: .regularExpression) != nil { note(token, .female) }
-            for word in possessiveFemale where text.range(of: "\\{\(token)\\}'s \(word)\\b", options: .regularExpression) != nil { note(token, .male) }
+            for word in possessiveMale where text.regexRange(of: "\\{\(token)\\}'s \(word)\\b", options: .regularExpression) != nil { note(token, .female) }
+            for word in possessiveFemale where text.regexRange(of: "\\{\(token)\\}'s \(word)\\b", options: .regularExpression) != nil { note(token, .male) }
         }
         for token in conflicting { out[token] = nil }
         return out
