@@ -40,24 +40,47 @@ struct SeededRNG: RandomNumberGenerator {
     }
 }
 
-/// Replaces `{KEY}` tokens in template text.
+/// Replaces `{KEY}` tokens in template text. A case is thousands of strings, so each is read once: markers are found as the
+/// text is scanned and swapped in, instead of trying every possible marker against the whole string.
 struct TextFiller {
     var values: [String: String]
 
     func callAsFunction(_ text: String) -> String {
-        var result = text
-        var values = values
-        // he/she, him/her, his/her for each named person, from the first name.
-        for key in ["D", "V", "ALT"] where values["\(key).he"] == nil {
-            if let name = values[key] { values.merge(NameBank.gender(of: name).tokens(for: key)) { a, _ in a } }
-        }
+        // Most strings have nothing to fill.
+        guard text.utf8.contains(UInt8(ascii: "{")) else { return text }
+        var map = values
         // Two passes so extras can themselves contain tokens like {DL}.
+        var result = text
         for _ in 0..<2 {
-            for (key, value) in values {
-                result = result.replacingOccurrences(of: "{\(key)}", with: value)
+            guard result.utf8.contains(UInt8(ascii: "{")) else { break }
+            // he/she, him/her, his/her for each named person, from the first name. Only worked out when the text asks for one.
+            for key in ["D", "V", "ALT"] where map["\(key).he"] == nil && result.contains("{\(key).") {
+                if let name = map[key] { map.merge(NameBank.gender(of: name).tokens(for: key)) { a, _ in a } }
             }
+            result = Self.substitute(result, map)
         }
         return result
+    }
+
+    private static func substitute(_ text: String, _ map: [String: String]) -> String {
+        let bytes = Array(text.utf8)
+        var out: [UInt8] = []
+        out.reserveCapacity(bytes.count + 64)
+        var i = 0
+        let open = UInt8(ascii: "{"), close = UInt8(ascii: "}")
+        while i < bytes.count {
+            if bytes[i] == open, let end = bytes[(i + 1)...].firstIndex(of: close) {
+                let key = String(decoding: bytes[(i + 1)..<end], as: UTF8.self)
+                if let value = map[key] {
+                    out.append(contentsOf: value.utf8)
+                    i = end + 1
+                    continue
+                }
+            }
+            out.append(bytes[i])
+            i += 1
+        }
+        return String(decoding: out, as: UTF8.self)
     }
 
     func callAsFunction(_ texts: [String]) -> [String] {

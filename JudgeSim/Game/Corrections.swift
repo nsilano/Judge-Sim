@@ -268,7 +268,7 @@ enum Corrections {
     /// The bond in a bond line: the last dollar amount, e.g. 2500 from "Held on a $2,500 secured bond", or the doubled
     /// figure from "Released on a $5,000 bond; ... Bond doubled to $10,000".
     static func dollars(in text: String?) -> Int? {
-        guard let text, let range = text.range(of: #"\$[0-9,]+"#, options: [.regularExpression, .backwards]) else { return nil }
+        guard let text, let range = text.regexRange(of: #"\$[0-9,]+"#, options: [.regularExpression, .backwards]) else { return nil }
         return Int(text[range].dropFirst().replacingOccurrences(of: ",", with: ""))
     }
 

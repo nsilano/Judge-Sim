@@ -72,6 +72,55 @@ enum SaveStore {
         for old in kept.dropLast(3) { try? FileManager.default.removeItem(at: url(old)) }
     }
 
+
+    // MARK: Saving off the main thread
+
+    /// Turning a whole career into text takes tens of milliseconds and grows with the career, and the game saves after almost
+    /// every action. It is done on its own thread, with a burst of saves collapsed into the newest one, so the screen never waits.
+    nonisolated(unsafe) private static var pending: (() -> Data?)?
+    nonisolated(unsafe) private static var draining = false
+    private static let gate = NSLock()
+    private static let queue = DispatchQueue(label: "judgesim.save", qos: .utility)
+
+    /// Saves a snapshot of the career. The value is copied now; encoding and writing happen in the background.
+    static func saveInBackground<T: Encodable>(_ snapshot: T) {
+        gate.lock()
+        pending = { try? JSONEncoder().encode(snapshot) }
+        let start = !draining
+        draining = true
+        gate.unlock()
+        if start { queue.async { drain() } }
+    }
+
+    private static func drain() {
+        while true {
+            gate.lock()
+            let job = pending
+            pending = nil
+            if job == nil { draining = false; gate.unlock(); return }
+            gate.unlock()
+            if let data = job?() { write(data) }
+        }
+    }
+
+    /// Waits for any save in progress to reach the disk. Call when the app goes to the background.
+    static func flush() { queue.sync {} }
+
+    /// What is in the save folder, for the developer dashboard: each file with its size and when it was written.
+    static func summary() -> [String] {
+        let fm = FileManager.default
+        let names = ((try? fm.contentsOfDirectory(atPath: directory.path)) ?? []).filter { $0.hasPrefix("career") }.sorted()
+        var out: [String] = []
+        for name in names {
+            let attrs = try? fm.attributesOfItem(atPath: url(name).path)
+            let size = (attrs?[.size] as? Int) ?? 0
+            let when = (attrs?[.modificationDate] as? Date).map { ISO8601DateFormatter().string(from: $0) } ?? "?"
+            out.append("\(name): \(size / 1024) KB, written \(when)")
+        }
+        if UserDefaults.standard.data(forKey: legacyKey) != nil { out.append("An old copy is still in UserDefaults") }
+        return out.isEmpty ? ["No career file yet"] : out
+    }
+
     /// Size of the career file, for the playtest harness.
     static var currentBytes: Int { (try? Data(contentsOf: url(current)))?.count ?? -1 }
 }

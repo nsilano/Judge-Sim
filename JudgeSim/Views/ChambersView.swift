@@ -9,15 +9,20 @@ struct RootView: View {
         } else {
             TabView {
                 ChambersView()
+                    .onAppear { Breadcrumbs.note("tab: Chambers") }
                     .tabItem { Label("Chambers", systemImage: "building.columns.fill") }
                 CourtCalendarView()
+                    .onAppear { Breadcrumbs.note("tab: Calendar") }
                     .tabItem { Label("Calendar", systemImage: "calendar") }
                 RecordsView()
+                    .onAppear { Breadcrumbs.note("tab: Records") }
                     .tabItem { Label("Records", systemImage: "archivebox.fill") }
                 CorrectionsView()
+                    .onAppear { Breadcrumbs.note("tab: Corrections") }
                     .tabItem { Label("Corrections", systemImage: "lock.shield.fill") }
                     .badge(game.corrections?.openNotice?.kind == .releases ? 1 : 0)
                 LawLibraryView()
+                    .onAppear { Breadcrumbs.note("tab: Law Library") }
                     .tabItem { Label("Law Library", systemImage: "books.vertical.fill") }
             }
         }

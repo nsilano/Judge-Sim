@@ -130,7 +130,7 @@ enum Testimony {
             break
         }
         // A line that already says "you" can't be turned around without garbling it.
-        if s.lowercased().range(of: "\\byou(r|'re|'ve|'d|'ll)?\\b", options: .regularExpression) != nil { return nil }
+        if s.lowercased().regexRange(of: "\\byou(r|'re|'ve|'d|'ll)?\\b", options: .regularExpression) != nil { return nil }
         s = s.trimmingCharacters(in: CharacterSet(charactersIn: ".! "))
         for suffix in [", yes", ", no", ", sure", ", I guess"] where s.lowercased().hasSuffix(suffix) {
             s = String(s.dropLast(suffix.count))

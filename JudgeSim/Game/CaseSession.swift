@@ -146,7 +146,9 @@ final class CaseSession: ObservableObject {
     let judgeName: String
     let county: County
     private(set) var halftimeMotion: HalftimeMotion
-    @Published var stage: Stage = .briefing
+    @Published var stage: Stage = .briefing {
+        didSet { Breadcrumbs.note("trial stage: \(stage.title), \(courtCase.docket)") }
+    }
     @Published var rulings = Rulings()
     @Published private(set) var outcome: CaseOutcome?
     @Published private(set) var transcript: [TranscriptEntry] = []
@@ -580,7 +582,7 @@ final class CaseSession: ObservableObject {
         let terms = suppressedTerms
         guard !terms.isEmpty else { return exchanges }
         let patterns = terms.map { "(?i)\\b" + NSRegularExpression.escapedPattern(for: $0) + "(?![0-9A-Za-z])" }
-        func mentions(_ text: String) -> Bool { patterns.contains { text.range(of: $0, options: .regularExpression) != nil } }
+        func mentions(_ text: String) -> Bool { patterns.contains { text.regexRange(of: $0, options: .regularExpression) != nil } }
         return exchanges.filter { !mentions($0.question) && !mentions($0.answer) }
     }
 

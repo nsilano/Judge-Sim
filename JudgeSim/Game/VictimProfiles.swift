@@ -172,11 +172,11 @@ enum VictimProfiles {
         // "Her husband, {D}" and "his wife, {V}" still are.
         let vFirst = NSRegularExpression.escapedPattern(for: first.lowercased())
         let dFirst = NSRegularExpression.escapedPattern(for: (c.defendant.name.split(separator: " ").first.map(String.init) ?? "").lowercased())
-        let lower = lower.replacingOccurrences(of: "\\b(his|her|their) (wife|husband|spouse)s?\\b(?!,? (\(dFirst)|\(vFirst)))", with: "", options: .regularExpression)
+        let lower = lower.regexReplacing(of: "\\b(his|her|their) (wife|husband|spouse)s?\\b(?!,? (\(dFirst)|\(vFirst)))", with: "")
         // Whole words only: "son" isn't in "person", nor "ex-" in "next".
         for (word, line) in pairs {
             let pattern = word.hasSuffix("-") ? "\\b" + NSRegularExpression.escapedPattern(for: word) : "\\b" + NSRegularExpression.escapedPattern(for: word) + "s?\\b"
-            if lower.range(of: pattern, options: .regularExpression) != nil { return line }
+            if lower.regexRange(of: pattern, options: .regularExpression) != nil { return line }
         }
         switch c.category {
         case .family: return "Family or household member of the defendant."

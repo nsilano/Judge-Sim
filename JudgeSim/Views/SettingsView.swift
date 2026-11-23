@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The player's own Claude API key and model, for live answers from counsel.
 struct SettingsView: View {
@@ -113,6 +114,23 @@ struct SettingsView: View {
                             Text(message).font(.caption).foregroundStyle(.red)
                         }
                     }
+                }
+
+                Section {
+                    NavigationLink {
+                        DeveloperDashboardView()
+                    } label: {
+                        Label("Developer dashboard", systemImage: "waveform.path.ecg")
+                    }
+                    if DiagnosticsCollector.hasReport {
+                        ShareLink(item: DiagnosticsCollector.report()) {
+                            Label("Share crash information", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                } header: {
+                    Text("If the game crashes")
+                } footer: {
+                    Text("After a crash, open the dashboard or share the crash information. It lists what the game was doing and the report iOS keeps about the crash.")
                 }
 
                 Section {

@@ -240,7 +240,7 @@ private struct JailSections: View {
 
 /// The first dollar amount in a bond line, e.g. 2500 from "Held on a $2,500 secured bond".
 private func bondAmount(_ text: String?) -> Int? {
-    guard let text, let range = text.range(of: #"\$[0-9,]+"#, options: .regularExpression) else { return nil }
+    guard let text, let range = text.regexRange(of: #"\$[0-9,]+"#, options: .regularExpression) else { return nil }
     return Int(text[range].dropFirst().replacingOccurrences(of: ",", with: ""))
 }
 

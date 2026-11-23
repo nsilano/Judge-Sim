@@ -131,7 +131,7 @@ enum CaseGenerator {
         if t.summaries.contains(where: { $0.contains("{TIME}") }) { return nil }
         let pattern = "\\b(1[0-2]|[1-9]):[0-5][0-9] [ap]\\.m\\."
         func first(_ text: String) -> String? {
-            guard let range = text.range(of: pattern, options: .regularExpression) else { return nil }
+            guard let range = text.regexRange(of: pattern, options: .regularExpression) else { return nil }
             return String(text[range])
         }
         for entry in story.timeline where entry.0 == 0 { if let time = first(entry.1) { return time } }
@@ -703,8 +703,8 @@ enum CaseGenerator {
             } else {
                 // A neighbor in a dispute lives next door. (A home the story names as the scene is set per case.)
                 let raw = t.summaries.joined(separator: " ")
-                let neighbor = (story.victim?.relationship ?? "").lowercased().range(of: #"\bneighbor\b(?!'s)"#, options: .regularExpression) != nil
-                    || raw.range(of: #"(lives|lived|living) next door|\{DL\}'s neighbor|\{D\.his\} neighbor|next-door neighbor"#, options: .regularExpression) != nil
+                let neighbor = (story.victim?.relationship ?? "").lowercased().regexRange(of: #"\bneighbor\b(?!'s)"#, options: .regularExpression) != nil
+                    || raw.regexRange(of: #"(lives|lived|living) next door|\{DL\}'s neighbor|\{D\.his\} neighbor|next-door neighbor"#, options: .regularExpression) != nil
                 if neighbor && t.hasVictim {
                     let sameBuilding = (story.victim?.relationship ?? "").lowercased().contains("same")
                     profile.residence = fill(sameBuilding ? "Lives in the same building as {V}, on {STREET} in {HOOD}."
@@ -803,7 +803,7 @@ enum CaseGenerator {
             // never before the crime itself.
             let isImpaired = ([t.primaryLaw] + (t.lesserLaw.map { [$0] } ?? [])).contains { CaseOrigin.impairedLaws.contains($0) }
             let arrests = story.timeline.filter { $0.0 >= 0 && ($0.1.lowercased().contains("arrested")
-                || $0.1.range(of: #"turns? (himself|herself|themselves|themself) in|turned (himself|herself) in|surrenders"#, options: .regularExpression) != nil
+                || $0.1.regexRange(of: #"turns? (himself|herself|themselves|themself) in|turned (himself|herself) in|surrenders"#, options: .regularExpression) != nil
                 // On the road the arrest comes at the stop; a later "charged" line is the paperwork, not the arrest.
                 || (!isImpaired && $0.1.lowercased().contains("charged") && $0.1.contains("{D"))) }
             // An entry naming no one ("Arrested at work.") is the defendant's; one naming someone else is not.
@@ -1033,7 +1033,7 @@ enum CaseGenerator {
             let raw = rng.pick(t.victimImpacts)
             let family = #"^\{(VL|DL)\}'s (parent|parents|mother|father|sibling|brother|sister|son|daughter|children|family|partner|spouse|wife|husband|girlfriend|boyfriend|grandmother|grandfather|niece|nephew|aunt|uncle)\b"#
             var base: String
-            if let m = raw.range(of: family, options: .regularExpression), let colon = raw.range(of: ": \"") {
+            if let m = raw.regexRange(of: family, options: .regularExpression), let colon = raw.regexRange(of: ": \"") {
                 let token = raw[m].hasPrefix("{VL}") ? "{VL}" : "{DL}"
                 let first = token == "{VL}" ? "{VF}" : "{DF}"
                 base = fill(String(raw[..<colon.upperBound]) + raw[colon.upperBound...].replacingOccurrences(of: token, with: first))
@@ -1145,7 +1145,7 @@ enum CaseGenerator {
 
     /// The first dollar figure in a text, e.g. "$14,000" or "$2.3 million".
     private static func firstDollarAmount(in text: String) -> Int? {
-        guard let range = text.range(of: "\\$[0-9][0-9,]*(\\.[0-9]+)?( million)?", options: .regularExpression) else { return nil }
+        guard let range = text.regexRange(of: "\\$[0-9][0-9,]*(\\.[0-9]+)?( million)?", options: .regularExpression) else { return nil }
         let value = dollars(in: String(text[range]))
         return value.map { max(100, $0) }
     }
@@ -1274,7 +1274,7 @@ enum CaseGenerator {
             // different money). Anything already repaid, per the evidence, comes off.
             let counts = ([fill(t.specification)] + t.secondary.map { fill($0.specification) }).compactMap { firstDollarAmount(in: $0) }
             let refunded = (t.prosecutionEvidence + t.defenseEvidence).map { fill($0.detail) }.compactMap { detail -> Int? in
-                guard let r = detail.range(of: #"(refunded|repaid|paid back) \$[0-9,]+"#, options: .regularExpression) else { return nil }
+                guard let r = detail.regexRange(of: #"(refunded|repaid|paid back) \$[0-9,]+"#, options: .regularExpression) else { return nil }
                 return firstDollarAmount(in: String(detail[r]))
             }.reduce(0, +)
             // A count that names no amount: the loss is the largest figure the case itself gives.
@@ -1530,7 +1530,7 @@ enum CaseGenerator {
         text += [story.howIdentified, story.prosecutionOpening, story.defenseOpening, story.prosecutionClosing, story.defenseClosing]
         text += [story.background, story.family].compactMap { $0 }
         let pattern = #"\b(no|clean|spotless) (prior )?(criminal )?(record|history|convictions?|arrests?)\b(?! of)|never been (arrested|in trouble|charged|convicted)|first[- ]offen|first-time offender|first time in (a )?court"#
-        return text.contains { $0.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil }
+        return text.contains { $0.regexRange(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil }
     }
 
     private static func randomPriors(age: Int, year: Int, county: County, rng: inout SeededRNG) -> [PriorConviction] {
@@ -1584,7 +1584,7 @@ enum CaseGenerator {
         } else {
             // A role that names a woman or a man ("the victim's mother", "{DL}'s brother") gets a name to match.
             let role = " " + fill(seed.role).lowercased() + " "
-            func says(_ words: [String]) -> Bool { words.contains { role.range(of: "\\b\($0)\\b", options: .regularExpression) != nil } }
+            func says(_ words: [String]) -> Bool { words.contains { role.regexRange(of: "\\b\($0)\\b", options: .regularExpression) != nil } }
             let female = says(["mother", "sister", "daughter", "wife", "girlfriend", "aunt", "niece", "grandmother", "granddaughter",
                                "stepmother", "stepdaughter", "woman", "mom", "widow", "fiancée"])
             let male = says(["father", "brother", "son", "husband", "boyfriend", "uncle", "nephew", "grandfather", "grandson",
@@ -1607,9 +1607,9 @@ enum CaseGenerator {
         let rawRole = seed.role
         let kin = #"^\{(VL|DL)\}'s ((teenage|adult|older|younger|eldest|youngest|grown|teen) )?(parent|parents|mother|father|sibling|brother|sister|son|daughter|child|adult child|adult son|adult daughter|younger sibling|older sibling|older brother|younger brother|older sister|younger sister)\b"#
         let close = #"^\{(VL|DL)\}'s (partner|spouse|wife|husband|girlfriend|boyfriend|fiancée|fiancé|grandmother|grandfather|grandparent|aunt|uncle|cousin|niece|nephew|best friend)\b"#
-        if seed.name == nil, let m = rawRole.range(of: kin, options: .regularExpression) ?? rawRole.range(of: close, options: .regularExpression) {
+        if seed.name == nil, let m = rawRole.regexRange(of: kin, options: .regularExpression) ?? rawRole.regexRange(of: close, options: .regularExpression) {
             let who = rawRole[m].hasPrefix("{VL}") ? "V" : "D"
-            if rawRole.range(of: kin, options: .regularExpression) != nil, let first = name.split(separator: " ").first {
+            if rawRole.regexRange(of: kin, options: .regularExpression) != nil, let first = name.split(separator: " ").first {
                 name = "\(first) \(fill("{\(who)L}"))"
                 used.insert(name)
             }

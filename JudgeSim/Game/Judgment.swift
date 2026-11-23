@@ -2623,7 +2623,7 @@ private extension String {
         let letters = word.filter(\.isLetter)
         // Keep the capital on a name, an acronym, "I", or any word the case text capitalizes mid-sentence.
         let acronym = letters.count >= 2 && letters.allSatisfy(\.isUppercase)
-        let midSentence = context.range(of: "[a-z,;] \(NSRegularExpression.escapedPattern(for: word))\\b", options: .regularExpression) != nil
+        let midSentence = context.regexRange(of: "[a-z,;] \(NSRegularExpression.escapedPattern(for: word))\\b", options: .regularExpression) != nil
         let keep = word.isEmpty || word == "I" || acronym || names.contains(word) || midSentence
         let body = keep ? sentence : sentence.prefix(1).lowercased() + sentence.dropFirst()
         return self + body

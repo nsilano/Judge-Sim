@@ -75,7 +75,7 @@ struct Receipt {
 
         // The time the story gives, if any; otherwise one from the store's day.
         let time: String
-        if let range = e.detail.range(of: #"\b(1[0-2]|[1-9]):[0-5][0-9] ?[ap]\.?m\.?"#, options: [.regularExpression, .caseInsensitive]) {
+        if let range = e.detail.regexRange(of: #"\b(1[0-2]|[1-9]):[0-5][0-9] ?[ap]\.?m\.?"#, options: [.regularExpression, .caseInsensitive]) {
             let raw = e.detail[range].lowercased().replacingOccurrences(of: ".", with: "").replacingOccurrences(of: " ", with: "")
             time = raw.replacingOccurrences(of: "am", with: " AM").replacingOccurrences(of: "pm", with: " PM")
         } else {
@@ -128,7 +128,7 @@ struct Receipt {
         // How it was paid.
         var tender: String
         var cash: Double?
-        let digits = e.detail.range(of: #"ending in (\d{4})"#, options: .regularExpression).map { String(e.detail[$0].suffix(4)) }
+        let digits = e.detail.regexRange(of: #"ending in (\d{4})"#, options: .regularExpression).map { String(e.detail[$0].suffix(4)) }
         if kind == .pawn {
             tender = "LOAN PAID OUT: CASH"
         } else if text.contains("cash") && digits == nil {

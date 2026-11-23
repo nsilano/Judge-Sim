@@ -81,7 +81,7 @@ private struct ExhibitSticker: View {
 
 /// The first dollar figure in a line, for ledgers and receipts.
 private func amount(in text: String) -> String? {
-    guard let range = text.range(of: "\\$[0-9][0-9,]*(\\.[0-9]{2})?", options: .regularExpression) else { return nil }
+    guard let range = text.regexRange(of: "\\$[0-9][0-9,]*(\\.[0-9]{2})?", options: .regularExpression) else { return nil }
     return String(text[range])
 }
 

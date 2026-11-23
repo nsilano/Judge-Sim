@@ -18,7 +18,7 @@ enum VictimVoice {
         guard let text = impact?.lowercased() else { return false }
         return ["i forgive", "not to prison", "don't send", "don't want prison", "don't want revenge", "asking for mercy",
                 "lose everything too", "second chance", "find whoever is making", "let him come home", "let her come home"].contains { text.contains($0) }
-            || text.range(of: #"don't want \S+ in (prison|jail)"#, options: .regularExpression) != nil
+            || text.regexRange(of: #"don't want \S+ in (prison|jail)"#, options: .regularExpression) != nil
     }
 
     static func speaker(victim: String, died: Bool, child: Bool, young: Bool = false, rng: inout SeededRNG) -> Speaker {

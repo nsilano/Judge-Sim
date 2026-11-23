@@ -757,6 +757,7 @@ if args.count > 1 && args[1] == "scan" {
 // MARK: - The career
 
 @MainActor func runCareer() {
+    RegexCache.tally = [:]
     game = GameState()
     if let savePath = loadSavePath {
         // An older version's saved career: it must load whole and keep playing.
@@ -812,11 +813,13 @@ if args.count > 1 && args[1] == "scan" {
                 "date \(short(g.currentDate)), people \(g.people.count), awaiting \(g.awaiting.count), scheduled \(g.scheduled.count), bond \(g.bondQueue.count), investigations \(g.investigations.count), history \(g.history.count), news \(g.news.count), orders \(g.arrestOrders.count), today \(g.today?.entries.count ?? -1)"
             }
             let before = print(game)
+            // Closing the app moves it to the background, which finishes any save in progress.
+            SaveStore.flush()
             game = GameState()
             let after = print(game)
             if before != after { flag("Reload changed the game: before [\(before)] after [\(after)]") }
         }
-        game.adjourn()
+        Profile.measure("ADJOURN (whole)") { game.adjourn() }
         // Now and then the judge sets a bond review for someone held on a bond they can't post.
         if let held = game.jailRoster().first(where: { $0.kind == .pretrial && $0.caseID != nil }), let id = held.caseID,
            Int(game.currentDate.timeIntervalSince1970 / 86_400) % 9 == 0 {
@@ -1003,7 +1006,10 @@ if args.count > 1 && args[1] == "scan" {
         }
     }
     print("STOP TIMELINES: \(stopTimelines)")
+    SaveStore.flush()
     print("SAVE BYTES: \(SaveStore.currentBytes)")
+    for (p, n) in (RegexCache.tally ?? [:]).sorted(by: { $0.value > $1.value }).prefix(8) { print("  REGEX \(n) x \(p.prefix(110))") }
+    print("PROFILE  (regex searches: \(RegexCache.calls))"); for line in Profile.report().prefix(14) { print("  " + line) }
     if let first = game.calendarLog.filter({ $0.kind == .firstAppearance }).map(\.date).min() {
         let days = Calendar.current.dateComponents([.day], from: game.careerStart, to: first).day ?? -1
         let week1 = game.calendarLog.filter { $0.kind == .firstAppearance && $0.date < Calendar.current.date(byAdding: .day, value: 7, to: game.careerStart)! }.count
