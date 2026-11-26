@@ -91,6 +91,8 @@ struct PersonRecord: Identifiable, Codable, Hashable {
         var outcome: String
         /// The victim in that case, when it had one, so the same person can turn up in a later case (optional for older saves).
         var victim: String? = nil
+        /// The blood-alcohol result in an impaired-driving case, so a later privilege hearing quotes the same number (optional for older saves).
+        var bac: Double? = nil
     }
 
     var id: UUID
@@ -107,6 +109,8 @@ struct PersonRecord: Identifiable, Codable, Hashable {
     var appearances: [Appearance] = []
     /// How the projected release date was figured: minimum and maximum terms, credit, and any revocation (optional for older saves).
     var releaseNote: String? = nil
+    /// The follow-up cases this person has already had, so the same scene never comes back for the same person (optional for older saves).
+    var followUpKeys: [String]? = nil
     /// Post-release supervision after a prison term: active once released.
     var postRelease: PostReleaseTerm? = nil
     /// Post-release supervision that begins when the current prison term ends.
@@ -227,6 +231,9 @@ struct ProbationTerm: Codable, Hashable {
     var courtReviewDue: Date?
     var courtStrikes: Int?
     var courtGraduated: Bool?
+    /// A new arrest while on probation: the clock stops on the day of the arrest and the term is extended by the days lost when the court
+    /// rules on the violation (optional for older saves).
+    var tolledSince: Date?
 
     /// "Drug Treatment Court" or "Veterans Treatment Court", if the person was ordered into one.
     var treatmentCourt: String? {
@@ -264,6 +271,8 @@ struct ViolationHearing: Identifiable, Codable, Hashable {
     var officerCross: [String]?
     /// Violations already found in this case before this hearing (optional for older saves).
     var priorViolationCount: Int?
+    /// The docket of the new case in this court that this violation is based on, when there is one (optional for older saves).
+    var newCaseDocket: String?
 }
 
 struct NewsItem: Identifiable, Codable, Hashable {

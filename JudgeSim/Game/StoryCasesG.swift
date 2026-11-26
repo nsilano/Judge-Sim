@@ -39,7 +39,7 @@ extension StoryCases {
                             .direct("What happened to {VL}?", "\"Ethylene glycol poisoning. It's metabolized into crystals that destroy the kidneys. {VL}'s kidneys failed. {VL} will need dialysis or a transplant.\""),
                             .direct("Was it one dose or many?", "\"The pattern of illness over three weeks, with good days and bad days, fits repeated small doses rather than one large one.\""),
                             .cross("You can't say who put it there?", "\"Who put it there is your question, not mine. I can tell you it was there.\""),
-                            .cross("Or exactly which days?", "\"Not exactly.\"")
+                            .cross("Or exactly which days?", "\"Not exactly. I can't say exactly which days.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"{DL} was alone at that fridge on eight mornings.\""],
@@ -71,7 +71,7 @@ extension StoryCases {
         aggravating: ["The offense was committed over weeks with planning", "The victim suffered permanent injury"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{V}: \"Three times a week I sit in a chair for four hours while a machine cleans my blood. I'm fifty-one.\""],
-        allocutions: ["\"I didn't like {VL}. I didn't poison {VL}.\""],
+        allocutions: ["\"I come in early to beat the traffic on 17, and I put my lunch away in the break room fridge. Three of us use that computer. I was looking for another job, not poisoning anyone. I didn't like {VL}, but I didn't poison {V.him}.\""],
         guiltyTruths: ["A small dropper bottle with ethylene glycol residue was later found in {DL}'s desk drawer."],
         innocentTruths: ["The employee fired a week earlier was later caught on a different camera entering after hours."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -141,9 +141,9 @@ extension StoryCases {
                         exam: [
                             .direct("What did the audit find?", "\"Nine cases with cash replaced by paper, $64,000 total, all resealed with tape initialed by {DL}, and logged by {D.him}.\""),
                             .direct("Why does resealing matter?", "\"Opening a sealed bag requires a witness and a log entry explaining why. Each of these resealings has {DL}'s initials and no witness.\""),
-                            .cross("{DL} reported the broken lock three times?", "\"The tickets show that.\""),
+                            .cross("{DL} reported the broken lock three times?", "\"The tickets show that. {DL} reported the broken lock three times.\""),
                             .cross("Another deputy with keys retired during the audit?", "\"For medical reasons, I'm told.\""),
-                            .cross("Initials on tape can be copied by anyone holding a roll?", "\"In theory.\"")
+                            .cross("Initials on tape can be copied by anyone holding a roll?", "\"In theory. Initials on tape can be copied by anyone holding a roll.\"")
                         ]),
             WitnessSeed(name: nil, role: "Forensic accountant",
                         direct: ["\"{DL} paid far more in cash than {D.he} could explain.\""],
@@ -152,7 +152,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you find?", "\"$47,000 in cash paid to hospitals over two years. {DL}'s bank withdrawals cover only about $9,000 of that.\""),
                             .cross("A church fundraiser raised $38,000 in cash and checks?", "\"If those receipts are accurate, they could explain much of the gap.\""),
-                            .cross("So the unexplained cash is closer to zero?", "\"Closer. Not zero.\"")
+                            .cross("So the unexplained cash is closer to zero?", "\"Closer. Not zero. The unexplained cash is closer to zero, but not zero.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -164,14 +164,14 @@ extension StoryCases {
                             .direct("What did the church do?", "\"Barbecue plate sales, a gospel concert, a raffle. We handed {DL} envelopes of cash every few weeks for a year and a half.\""),
                             .direct("How much?", "\"Our books show $38,000 between the cash events and the online page.\""),
                             .cross("You can't prove how much cash went to {DL} versus deposited?", "\"I can show you every envelope in our ledger.\""),
-                            .cross("You love {DL}'s family?", "\"Our whole church does.\"")
+                            .cross("You love {DL}'s family?", "\"Our whole church does. We all love {DL}'s family.\"")
                         ])
         ],
         prosecutionTheory: ["{D} controlled the evidence room, initialed every resealed bag, and paid tens of thousands in cash on a deputy's salary."],
         defenseTheory: ["A broken lock for seven months, two other key holders, one of whom retired during the audit, and a church that raised $38,000 for a sick child."],
         aggravating: [],
         mitigating: ["Nineteen years of service", "No prior criminal record", "Severe family medical hardship"],
-        allocutions: ["\"I've guarded that room for six years. I would never steal there, not even for my child.\""],
+        allocutions: ["\"Every time I found a bag with a damaged seal, I resealed it. The church gave envelopes every few weeks, and I have their ledger. I should have written more down. I've guarded that room for six years. I would never steal there, not even for my child.\""],
         guiltyTruths: ["A bundle of seized bills with case markings was later found in {DL}'s attic."],
         innocentTruths: ["The retired deputy's estate later turned over $52,000 in bundled cash with evidence tags."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -239,7 +239,7 @@ extension StoryCases {
                             .direct("How did that feel?", "\"Like my skin was crawling. I changed my route to work, my gym, my phone. I still look at my rearview mirror constantly.\""),
                             .cross("You and {DL} bought that car together, and {D.he} put a tracker on it then?", "\"I didn't know it was there.\""),
                             .cross("{DL} never approached you, never said a word at the gym or the restaurant?", "\"Just looked at me. That was enough.\""),
-                            .cross("{DL} has gone to that gym for ten years?", "\"Not on Saturdays.\"")
+                            .cross("{DL} has gone to that gym for ten years?", "\"{DL} has gone to that gym for ten years, but not on Saturdays.\"")
                         ]),
             WitnessSeed(name: nil, role: "Digital forensics examiner",
                         direct: ["\"{DL} checked the tracker 212 times.\""],
@@ -267,8 +267,8 @@ extension StoryCases {
         defenseTheory: ["A tracker put on a jointly bought car long before the breakup, a gym and restaurant {DL} has used for years, and not one threat. Grief isn't stalking."],
         aggravating: ["The surveillance was covert and prolonged"],
         mitigating: ["No threats were made", "No prior criminal record"],
-        victimImpacts: ["{V}: \"I check under my car before I get in. Every single time.\""],
-        allocutions: ["\"I should have removed it. I was falling apart. I'd never hurt {VL}.\""],
+        victimImpacts: ["{V}: \"I check under my car before I get in. Every single time. After I moved out I got an alert on my phone, and then a mechanic found a tracker taped in the wheel well. I can't drive to the grocery store without looking behind me.\""],
+        allocutions: ["\"We put that tracker in the car when we bought it, so we could find it. I've gone to that gym for ten years and that restaurant for just as long. I know. It was sick. I'm getting help. I should have removed it, and I'm sorry.\""],
         guiltyTruths: ["Receipts later showed {DL} bought the electrical tape the day after {VL} moved out."],
         innocentTruths: ["The mechanic who originally installed the bumper confirmed the tape had been there since the purchase."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -357,14 +357,14 @@ extension StoryCases {
                         exam: [
                             .direct("What did you see?", "\"Two guys pounding on the driver's window, one pulling the door handle, somebody smacking the windshield with a pole. The driver looked terrified.\""),
                             .direct("Were you with the march?", "\"I was. I support it. I'm still telling you what I saw.\""),
-                            .cross("The driver accelerated hard toward a person standing still?", "\"Hard, yeah. Too hard.\"")
+                            .cross("The driver accelerated hard toward a person standing still?", "\"Hard, yeah. Too hard. The driver accelerated hard toward a person standing still.\"")
                         ])
         ],
         prosecutionTheory: ["{D} chose to drive into a person standing in front of the car. Fear doesn't justify running someone over."],
         defenseTheory: ["{DL} was surrounded, the windshield and door were attacked, and someone was trying to open the door. {DL} fled in reasonable fear and called 911."],
         aggravating: [],
         mitigating: ["{DL}'s vehicle was being attacked", "{DL} stopped and called 911", "No prior criminal record"],
-        victimImpacts: ["{V}: \"I walk with a cane now. I'm thirty-four.\""],
+        victimImpacts: ["{V}: \"A cane is part of my life now, and I'm thirty-four. I was part of that crowd, standing in the road, and the car moved forward into me. I've had months of therapy and still can't stand in a crowd. I wish we had found another way to be heard.\""],
         allocutions: ["\"I've spent my life taking care of people. I'm sorry {VL} was hurt. I truly thought I was going to be dragged out of that car.\""],
         guiltyTruths: ["{DL}'s earlier social media post read: \"If they block my road, I'm not stopping.\""],
         innocentTruths: ["The man pulling the door handle later admitted he was trying to get {DL} out to 'teach a lesson.'"],
@@ -433,7 +433,7 @@ extension StoryCases {
                             .direct("What did you pay?", "\"Three hundred cash. They don't take insurance.\""),
                             .cross("You wrote that you'd had back surgery and a fall from a ladder?", "\"Yes. Those were lies, as part of the investigation.\""),
                             .cross("{DL} relied on what you told {D.him}?", "\"{DL} didn't check any of it.\""),
-                            .cross("{DL} ordered a urine drug screen?", "\"Yes, at the end.\"")
+                            .cross("{DL} ordered a urine drug screen?", "\"Yes. {DL} ordered a urine drug screen at the end of the visit.\"")
                         ]),
             WitnessSeed(name: nil, role: "Pain medicine physician for the State",
                         direct: ["\"No legitimate practice prescribes like this.\""],
@@ -443,7 +443,7 @@ extension StoryCases {
                             .direct("What is the standard of care?", "\"A physical exam, prior records, a treatment plan, non-opioid therapy first, and close monitoring. Starting a new patient on 30 mg oxycodone, ninety tablets, after seven minutes, isn't medicine.\""),
                             .direct("What about the volume?", "\"Ten times the next prescriber in the county. That's not a busy practice; that's a distribution point.\""),
                             .cross("Many rural chronic pain patients were cut off abruptly after state limits?", "\"Yes, and some suffered for it.\""),
-                            .cross("{DL} discharged forty patients for misuse?", "\"That shows some monitoring.\"")
+                            .cross("{DL} discharged forty patients for misuse?", "\"That shows some monitoring. {DL} discharged forty patients for misuse.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -462,7 +462,7 @@ extension StoryCases {
         defenseTheory: ["{DL} treated injured working people that other providers abandoned, screened them, and discharged abusers. A deceived provider isn't a dealer."],
         aggravating: ["The offense involved large quantities over a long period", "{DL} abused a professional license"],
         mitigating: ["{DL} monitored patients and discharged those who misused", "No prior criminal record"],
-        allocutions: ["\"I took the patients no one else would. I may have trusted too much. I never sold anything.\""],
+        allocutions: ["\"I took the patients no one else would. Loggers and roofers with real injuries, whose insurers wouldn't pay for pain care. The officer described a documented injury and surgery, and I trusted the records. I may have trusted too much. I never sold anything.\""],
         guiltyTruths: ["The clinic's own office manager later testified {DL} told staff to 'keep them moving, cash only, no records.'"],
         innocentTruths: ["A review by the state medical board after trial found most of {DL}'s patients had legitimate, documented injuries."],
         moods: [.divided], doctrines: ["burdenOfProof"],

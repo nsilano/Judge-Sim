@@ -62,7 +62,7 @@ extension FollowUpCases {
         aggravating: [],
         mitigating: [],
         victimImpacts: ["{VL}: \"It wasn't the air fryer. It was watching somebody walk up to my door like they belonged there.\""],
-        allocutions: ["\"I'll pay for all of it. I'm not going to argue about the car anymore.\""],
+        allocutions: ["\"I'll pay for all of it, and I'm not going to argue about the car anymore. My friend had it that day, and I was home, but I know my phone and my account are tied to those packages. I'm sorry to {V}, who just wanted a quiet porch. I'll do whatever the court asks to make it right.\""],
         guiltyTruths: ["A fourth package from the same street, taken that morning, was found sold on a resale app from {DL}'s account."],
         innocentTruths: ["A relative with a key to the car later admitted taking it that afternoon and leaving {DL}'s phone in the console."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "eyewitnessID"],
@@ -114,7 +114,7 @@ extension FollowUpCases {
                             .direct("What was wrong with the receipt?", "\"The transaction number was real, but our system says that sale was a $12 box of screws, paid cash at register 3.\""),
                             .direct("What does the garden center video show?", "\"Somebody in a dark cap and the same jacket takes a washer off the pallet at 10:12 and wheels it toward the front. Eight minutes later, the defendant is at my counter with a washer and that cap on.\""),
                             .cross("You can't see a face on the garden center video?", "\"No. The cap's down. Same cap, same jacket.\""),
-                            .cross("Did anyone report a person selling items in the parking lot?", "\"Not that day, no.\"")
+                            .cross("Did anyone report a person selling items in the parking lot?", "\"Not that day, no. No one reported a person selling items in the parking lot.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"The phone had the templates and the printer order.\""],
@@ -133,7 +133,7 @@ extension FollowUpCases {
         aggravating: ["Planned, using equipment bought for the purpose"],
         mitigating: [],
         victimImpacts: [],
-        allocutions: ["\"I'm not going to make excuses. I need help finding real work.\""],
+        allocutions: ["\"I'm not going to make excuses. A man in the parking lot told me he couldn't return the pressure washer himself, and I was curious about how receipts were made because I wanted to start a small business. I need help finding real work. I'm sorry to Brennan's for the trouble, and I'll pay back the refund.\""],
         guiltyTruths: ["The receipt printer was found later in a storage unit rented in {DL}'s name, with a roll still loaded."],
         innocentTruths: ["The printer order had been placed by a roommate using {DL}'s phone, and the roommate later admitted printing the receipt and sending {DL} in to return the washer."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -145,7 +145,7 @@ extension FollowUpCases {
             defendantExam: [
                 .direct("Where did you get the washer?", "\"A guy in the parking lot. He said he couldn't return it himself.\""),
                 .direct("Why the printer and the templates?", "\"I was going to start a small business. I needed receipts.\""),
-                .cross("The parking lot camera shows you walking in empty-handed.", "\"He met me inside.\""),
+                .cross("The parking lot camera shows you walking in empty-handed.", "\"He met me inside, so I wasn't carrying anything when I came in from the lot.\""),
                 .cross("Templates for three hardware chains, for your own business?", "\"I was looking at what receipts look like.\"")
             ],
             prosecutionOpening: "{DL} walked in with nothing and walked out with $279.",
@@ -205,7 +205,7 @@ extension FollowUpCases {
         aggravating: [],
         mitigating: [],
         victimImpacts: [],
-        allocutions: ["\"I've been out of work. I'm not proud of what I've done for money since.\""],
+        allocutions: ["\"I've been out of work, and I'm not proud of what I've done for money since. I bought that fuel from a guy for a neighbor's tractor, and I don't know why my phone put me at that site. I'm sorry to the crew at the grading company.\""],
         guiltyTruths: ["A siphon hose with the same red dye was found coiled under the seat of {DL}'s pickup when it was released from the tow lot."],
         innocentTruths: ["A relative who borrowed the pickup that night, phone and all, later admitted the theft."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -258,7 +258,7 @@ extension FollowUpCases {
                             .direct("What did you find on the statement?", "\"Tires for a personal pickup, a game console and seven weeks of groceries. Twenty-three hundred dollars.\""),
                             .direct("How did that affect your business?", "\"I run four trucks. That's a month of insurance. I gave {DL} a job when other people wouldn't, and I felt like a fool.\""),
                             .cross("You told my client to use the card if stuck?", "\"Once, about gas, the first week. I meant gas to get home.\""),
-                            .cross("You deducted $200 for personal fuel?", "\"Because {DL} told me about it. Nobody told me about the tires.\"")
+                            .cross("You deducted $200 for personal fuel?", "\"Nobody told me about the tires.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"None of the charges were disclosed until the statement came.\""],
@@ -277,7 +277,7 @@ extension FollowUpCases {
         aggravating: [],
         mitigating: [],
         victimImpacts: ["{VL}: \"I took a chance on {DL}. I won't take one on anybody else for a long time.\""],
-        allocutions: ["\"I thought I'd square it up like the first time. I let it get away from me.\""],
+        allocutions: ["\"I thought I'd square it up like the first time, and I let it get away from me. My tires were bald, and the owner had told me to put them on the card and pay them off over the summer. The game console is the one thing I can't defend. I'm sorry to {V} for the trust I broke.\""],
         guiltyTruths: ["The game console was resold online by {DL} the week after it was bought."],
         innocentTruths: ["{VL} had told {DL} in front of another driver to put the tires on the card and pay them off over the summer."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -289,7 +289,7 @@ extension FollowUpCases {
             defendantExam: [
                 .direct("Why did you use the card for tires?", "\"My truck's tires were bald and I couldn't get to work without it. {VL} said square up later.\""),
                 .direct("Did you plan to pay it back?", "\"Yes. Same as the fuel.\""),
-                .cross("You told {VL} about the fuel. Not about the tires.", "\"I was going to.\""),
+                .cross("You told {VL} about the fuel. Not about the tires.", "\"I was going to tell {V.him} about the tires too. I just hadn't gotten to it.\""),
                 .cross("A game console isn't getting unstuck.", "\"No. That one I can't defend.\"")
             ],
             prosecutionOpening: "A card for the trucks, and $2,310 spent on anything but.",
@@ -349,8 +349,8 @@ extension FollowUpCases {
         defenseTheory: ["{DL} didn't steal it, and the State can't say who sent the message or what it meant."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"I check the driveway every morning before coffee now.\""],
-        allocutions: ["\"I should have known better than to take that deal.\""],
+        victimImpacts: ["{VL}: \"I check the driveway every morning before coffee now. That trailer carried my tools and a lot of years of work, and it was gone from my own driveway. Then I saw it for sale online with my roof vent still on it. I added a camera and a chain, and I still don't sleep well.\""],
+        allocutions: ["\"I should have known better than to take that deal. I paid eighteen hundred dollars at a cash sale at the back of a lot, and I figured I could make a little money. I didn't think about what that meant. I'm sorry to {V}, and I'll tell the detective every detail I remember.\""],
         guiltyTruths: ["The prepaid number was later found to belong to a man {DL} had sold two other trailers for, both stolen."],
         innocentTruths: ["The message was about a different trailer {DL} was selling for a coworker, whose title was in the mail; the trailer at issue came from a cash sale {DL} had no reason to doubt."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -421,7 +421,7 @@ extension FollowUpCases {
         aggravating: [],
         mitigating: [],
         victimImpacts: [],
-        allocutions: ["\"I'm not going to name anybody. I'll take what comes.\""],
+        allocutions: ["\"I'm not going to name anybody, and I'll take what comes. I was driving that night because I couldn't sleep, and that road is how I get anywhere. A friend asked to store the generators, and I said yes without asking enough. I'm sorry to the rental yard for the loss.\""],
         guiltyTruths: ["The bolt cutters used on the fence were in {DL}'s truck toolbox, with fence paint on the jaws."],
         innocentTruths: ["The friend {DL} wouldn't name had borrowed {DL}'s truck and phone that night, and later admitted the theft."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -431,7 +431,7 @@ extension FollowUpCases {
             howIdentified: "A license plate reader near the yard.",
             notDone: [],
             defendantExam: [
-                .direct("Where were you at 3 a.m. that night?", "\"Driving. I couldn't sleep.\""),
+                .direct("Where were you at 3 a.m. that night?", "\"Driving around. I couldn't sleep, so I took the car out for a while.\""),
                 .direct("How did the generators get in your shed?", "\"A friend asked to store them.\""),
                 .cross("Who is the friend?", "\"I'm not going to say.\""),
                 .cross("Your truck and phone were a quarter mile from the yard.", "\"That road's how I get anywhere.\"")
@@ -493,7 +493,7 @@ extension FollowUpCases {
         aggravating: [],
         mitigating: [],
         victimImpacts: [],
-        allocutions: ["\"I was drowning in that loan. I'm not asking anyone to understand.\""],
+        allocutions: ["\"I was drowning in that loan, and I'm not asking anyone to understand. I reported that SUV stolen from the mall, and I came out and it was gone. I was upset and I didn't think about how a claim would be read. I'm sorry to the insurer, and I'll cooperate however the court asks.\""],
         guiltyTruths: ["A gas can bought at a station near the logging road at 12:40 a.m. was paid for with {DL}'s debit card."],
         innocentTruths: ["A ring of car thieves operating at the mall was later caught using a fob reader to start SUVs; the mall readers had been down at one entrance that night."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -565,8 +565,8 @@ extension FollowUpCases {
         defenseTheory: ["{DL} is a bad contractor who got hurt and fell behind. A broken contract is a civil matter."],
         aggravating: ["Victim was elderly"],
         mitigating: [],
-        victimImpacts: ["{VL}: \"I'm seventy-four. I can't climb up there. I trusted the person at my door.\""],
-        allocutions: ["\"I meant to do that roof. I got in over my head and I'll pay {VL} back.\""],
+        victimImpacts: ["{VL}: \"I'm seventy-four. I can't climb up there. I trusted the person at my door, and I wrote a check for six thousand five hundred dollars because they were polite and I was afraid of the next storm. Nothing was ever ordered. We're still putting buckets under the leaks.\""],
+        allocutions: ["\"I meant to do that roof. I got in over my head after hurting my back, and I waited too long for a better price on materials. I told {V} a backorder story to buy time, and that was wrong. I'll pay every dollar back.\""],
         guiltyTruths: ["{DL} had taken a $4,000 deposit from a homeowner in the next county the week before, with the same texts about a backorder."],
         innocentTruths: ["{DL} had paid a roofing crew a $3,000 cash deposit that week, and the crew's owner skipped town with it."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -636,8 +636,8 @@ extension FollowUpCases {
         defenseTheory: ["Estate sale accounting is messy. {DL} owes {VL} money, but this is a contract dispute."],
         aggravating: ["Took advantage of a grieving family"],
         mitigating: [],
-        victimImpacts: ["{VL}: \"I didn't need the money as much as I needed to know her things went to people who'd want them, and that I was told the truth.\""],
-        allocutions: ["\"I'll make it right. I'll pay every dollar.\""],
+        victimImpacts: ["{VL}: \"I didn't need the money as much as I needed to know her things went to people who'd want them, and that I was told the truth. My aunt saved every dish in that house for sixty years. When the number didn't match, I felt like I had been handing her belongings to a stranger. I'd like to know what happened.\""],
+        allocutions: ["\"I'll make it right. I'll pay every dollar. After refunds and expenses, the number I reported was what I had, but I know some money from another sale got mixed in. I should have kept it separate and told {V} plainly. I'm sorry for the hurt, and I'm sorry about {V.his} aunt's things.\""],
         guiltyTruths: ["{DL} had under-reported two other estate sales the same spring by the same method."],
         innocentTruths: ["A helper {DL} hired had pocketed the cash box on the second day; {DL} reported only what {D.he} could account for."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -700,7 +700,7 @@ extension FollowUpCases {
                             .direct("What did the defendant ask you to build?", "\"One table, to put in the booth. Later {DL} said there were six orders.\""),
                             .direct("Were you paid?", "\"Not a dollar. I built the sample from the $600 of lumber and that was it.\""),
                             .cross("You quit the job?", "\"I quit because I wasn't paid, and six tables is three months of work, not four weeks.\""),
-                            .cross("So my client did buy lumber?", "\"Enough for one table.\"")
+                            .cross("So my client did buy lumber?", "\"Enough for one table. That's what the receipt covers, and no more.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"The deposits went to rent and a car payment.\""],
@@ -709,7 +709,7 @@ extension FollowUpCases {
                         exam: [
                             .direct("Where did the deposits go?", "\"Into the defendant's personal account, then out to rent, a car payment, and everyday spending. $600 went to the lumber yard.\""),
                             .direct("Did the defendant contact the customers before leaving?", "\"No. The booth was cleared out and the phone stopped answering.\""),
-                            .cross("So some money went to the work?", "\"$600 of $6,200.\"")
+                            .cross("So some money went to the work?", "\"Yes. About $600 of the $6,200 went to the actual work.\"")
                         ])
         ],
         defenseWitnesses: [],
@@ -717,8 +717,8 @@ extension FollowUpCases {
         defenseTheory: ["{DL} bought lumber, had a builder, and lost the builder. A business that failed isn't a fraud."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"We ate on card tables again. It's silly to cry over a table, and I did.\""],
-        allocutions: ["\"I thought I could get it done. I owe those people.\""],
+        victimImpacts: ["{VL}: \"We ate on card tables again. It's silly to cry over a table, and I did. We'd saved fourteen hundred and fifty dollars for a farmhouse table to seat the whole family at Thanksgiving. Instead we passed the food down a row of folding chairs. The kids asked where our table was.\""],
+        allocutions: ["\"I thought I could get it done. The builder quit on me, and I spent the money while I looked for another one. I should have called every customer and told them. I didn't know what to say, and I let it go quiet. I owe those people, and I'm sorry.\""],
         guiltyTruths: ["{DL} was taking the same kind of deposits at a flea market in the next county under a different booth name."],
         innocentTruths: ["{DL} had lined up a second builder, who backed out after a fire in his shop, a week before the booth closed."],
         moods: [.divided], doctrines: ["burdenOfProof"],

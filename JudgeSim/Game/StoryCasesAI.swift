@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "Being the caretaker of {V}, a child under 16, intentionally inflicted serious physical injury, a spiral fracture of the left upper arm, on {DATE}.",
         ageRange: 32...55, occupations: ["school cafeteria manager", "church secretary", "long-haul trucker"], hasVictim: true,
         summaries: [
-            "{V}, three, had lived with {D} as a foster child for five months when {D} brought {V.him} to the emergency room at 8:10 p.m. on {DATE} with a swollen left arm. X-rays showed a spiral fracture of the upper arm. {D} said {V} had fallen from the top bunk while playing with the older foster child, who is seven. The child abuse pediatrician who examined {V} found four bruises on the upper arm in the shape of fingertips, and says a spiral fracture in a three-year-old comes from twisting, not a fall. The defense's expert, a biomechanical engineer, says a child who catches an arm in a bunk bed ladder while falling can twist it the same way. The older foster child told a social worker \"{V.he} fell,\" then later, \"I don't know.\""
+            "{V}, three, had lived with {D} as a foster child for five months when {DL} brought {V.him} to the emergency room at 8:10 p.m. on {DATE} with a swollen left arm. X-rays showed a spiral fracture of the upper arm. {D.He} said {V} had fallen from the top bunk while playing with the older foster child, who is seven. The child abuse pediatrician who examined {V} found four bruises on the upper arm in the shape of fingertips, and says a spiral fracture in a three-year-old comes from twisting, not a fall. The defense's expert, a biomechanical engineer, says a child who catches an arm in a bunk bed ladder while falling can twist it the same way. The older foster child told a social worker \"{V.he} fell,\" then later, \"I don't know.\""
         ],
         prosecutionEvidence: [
             E(.document, 3, "Pediatrician's Report", "A spiral fracture of the left humerus and four oval bruises on the inner upper arm, \"consistent with a forceful grip.\" No other injuries, no prior fractures."),
@@ -46,7 +46,7 @@ extension StoryCases {
                             .direct("What did the older child say?", "\"First, '{V.he} fell.' A week later, 'I don't know.' We didn't push a seven-year-old.\""),
                             .direct("Did you measure the bunk?", "\"Fifty-two inches to the top mattress. Carpet over concrete.\""),
                             .cross("In eleven years, {DL} has had no substantiated reports.", "\"That's what the file says.\""),
-                            .cross("Did anyone see {DL} grab {V}?", "\"No.\"")
+                            .cross("Did anyone see {DL} grab {V}?", "\"No. Nobody saw {DL} grab {V}.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -58,7 +58,7 @@ extension StoryCases {
                             .direct("What did you test?", "\"A child-size dummy falling from the top bunk with the arm hooked in the ladder rung. The torque on the upper arm is enough for a spiral fracture in a three-year-old.\""),
                             .direct("What about the bruises?", "\"A child grabbed by an adult rushing to help after the fall would bruise the same way.\""),
                             .cross("You've never examined a living child.", "\"I'm an engineer. I study forces.\""),
-                            .cross("The defense paid for your work.", "\"My usual rate, yes.\"")
+                            .cross("The defense paid for your work.", "\"My usual rate, yes. The defense paid for my work at the rate I charge everyone.\"")
                         ])
         ],
         prosecutionTheory: ["{D} gripped and twisted a three-year-old's arm hard enough to break it, then waited ninety minutes and blamed a fall."],
@@ -66,7 +66,7 @@ extension StoryCases {
         aggravating: ["The victim was very young", "The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record", "The defendant has a support system in the community"],
         victimImpacts: ["The guardian ad litem reads a statement: \"{V} doesn't want anyone to pick {V.him} up anymore. {V.He} flinches when grown-ups reach for {V.his} arms. Whatever happened, {V.he} needs a home where that stops.\""],
-        allocutions: ["\"I've loved every child who came through my door. I would never hurt that baby.\"", "\"I lost my temper. I've never said that out loud. I'm sorry.\""],
+        allocutions: ["\"I have loved every child who came through my door, and I held that little one through the night in the hospital. I heard a thump and screaming while I was making supper, and I found {V.him} on the floor by the bunk ladder. I would never hurt a baby. I'm asking the court to see eleven years of children I've cared for.\"", "\"I lost my temper that evening, and I have never said that out loud until now. {V} was crying and I grabbed {V.his} arm harder than I should have. I told a story about a bunk bed because I was scared. I'm deeply sorry, and I will accept whatever help or consequences the court orders.\""],
         guiltyTruths: ["The older foster child, in therapy a year later, said {DL} had \"squeezed and turned\" {V}'s arm when {V.he} wouldn't stop crying."],
         innocentTruths: ["A home security camera the court never saw showed {V} slipping from the ladder with an arm through the rungs while {DL} was in the kitchen."],
         moods: [.divided], doctrines: ["expertTestimony", "burdenOfProof", "lesserIncluded"],
@@ -79,7 +79,7 @@ extension StoryCases {
                 .direct("Why wait to go to the hospital?", "\"The nurse line said to ice it and watch for swelling. When it swelled, I went.\""),
                 .cross("Four fingertip bruises on the inside of the arm.", "\"I grabbed {V.him} up off the floor. I was scared.\"", "\"I picked {V.him} up fast. I may have held too tight.\""),
                 .cross("The child was crying a lot that week, wasn't {V.he}?", "\"{V.He} was teething and missing {V.his} mother. They all cry.\""),
-                .cross("You were alone with two small children and supper on the stove.", "\"That's foster care.\"")
+                .cross("You were alone with two small children and supper on the stove.", "\"That's foster care. I was alone with two small children and supper on the stove, and that's the job.\"")
             ],
             prosecutionOpening: "A three-year-old's twisted arm and an adult's fingerprints on it.",
             defenseOpening: "A fall from a bunk bed, and eleven years of trust.",
@@ -122,7 +122,7 @@ extension StoryCases {
                             .direct("What about the scars?", "\"Face, front legs, and chest, on almost every dog. Dogs fighting loose don't scar that evenly.\""),
                             .direct("What happened to the dogs?", "\"Nine were placed with rescue groups after rehabilitation. Five couldn't be.\"", "\"Five were too aggressive to place. That's the hardest part of my job.\""),
                             .cross("A breeder keeps dogs chained too.", "\"Not on buried axles, out of reach, with a treadmill in the shed.\""),
-                            .cross("You didn't see a fight.", "\"No.\"")
+                            .cross("You didn't see a fight.", "\"No. I didn't see a fight.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Sheriff's investigator",
                         direct: ["\"The notebook is a fight record.\""],
@@ -133,7 +133,7 @@ extension StoryCases {
                             .direct("Who wrote it?", "\"The handwriting examiner says it's consistent with {DL}'s writing on the lease and on {D.his} truck title.\""),
                             .direct("What did the phone show?", "\"Texts setting 'a match' on Saturdays, with weights.\""),
                             .cross("The back acre was leased to someone else.", "\"To 'Rudy,' with no last name and no phone. The neighbors never saw him.\""),
-                            .cross("Selling puppies is legal.", "\"It is.\"")
+                            .cross("Selling puppies is legal.", "\"It is. Selling puppies is legal, and I've never said it wasn't.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -145,7 +145,7 @@ extension StoryCases {
                             .direct("How do you know {DL}?", "\"I bought a puppy from {D.him} two years ago. Healthy, shots up to date.\""),
                             .direct("What did you see at the property?", "\"Dogs on chains. Water bowls. Nothing scary.\""),
                             .cross("Did you notice the scars on the adult dogs?", "\"Some had scars. I thought they were rescues.\""),
-                            .cross("Did you go behind the house?", "\"No.\"")
+                            .cross("Did you go behind the house?", "\"No. I didn't go behind the house.\"")
                         ])
         ],
         prosecutionTheory: ["{D} kept fourteen dogs for fighting, trained them on a treadmill, kept a fight record in {D.his} own hand, and buried the losers."],
@@ -153,7 +153,7 @@ extension StoryCases {
         aggravating: ["The offense was especially heinous, atrocious, or cruel"],
         mitigating: ["The defendant has been gainfully employed"],
         victimImpacts: ["The animal services director: \"I held two of those dogs while the vet put them down. They wagged their tails at me. That's what got to me.\""],
-        allocutions: ["\"I grew up around it. I know that's not an excuse.\"", "\"Those dogs were my life. I never hurt them.\""],
+        allocutions: ["\"I grew up around dogs and around the people who fight them, and I know that's no excuse. I breed pit bulls and sell puppies. That's the business I knew, and I never learned a better one. The fourteen dogs you saw were mine, and I'm sorry for the condition they were in. I'm willing to change how I live.\"", "\"Those dogs were my life, and I raised most of them from puppies. I fed them, trained them, and slept in that shed with the sick ones. I never hurt them. I rented the back acre to Rudy, and I can't speak for what he did out there. I'm asking you to look at who really ran that place.\""],
         guiltyTruths: ["A video on {DL}'s phone, recovered later, shows two dogs fighting in the shed while {DL} counts the minutes."],
         innocentTruths: ["A man named Rudolph Pace was arrested in South Carolina with the matching half of the notebook, in his handwriting."],
         moods: [.wantsConviction], doctrines: ["searchSeizure", "burdenOfProof"],
@@ -218,9 +218,9 @@ extension StoryCases {
                         exam: [
                             .direct("What did you find in the skiff?", "\"Thirty pots, buoys freshly painted green, still tacky, with {DL}'s number stenciled on. Hold one to the light and you can read {V}'s number underneath.\""),
                             .direct("What's the rule on found pots?", "\"You can't keep another licensee's marked gear. If it's derelict, you report it to Marine Fisheries.\""),
-                            .direct("Did {DL} report finding them?", "\"No.\""),
+                            .direct("Did {DL} report finding them?", "\"No. {DL} didn't report finding them.\""),
                             .cross("The storm was four days earlier.", "\"It was. {V} checked the line after it.\""),
-                            .cross("Did you see {DL} pull the pots?", "\"No.\"")
+                            .cross("Did you see {DL} pull the pots?", "\"No. I didn't see {DL} pull the pots.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -231,8 +231,8 @@ extension StoryCases {
                         exam: [
                             .direct("What's the creek like after a nor'easter?", "\"Pots tangled up in the marsh grass, buoys torn off, lines everywhere. Everybody loses gear.\""),
                             .direct("What do people do with loose pots?", "\"Some keep them. Some call. Depends on the man.\""),
-                            .cross("Would you repaint another man's buoys?", "\"No.\""),
-                            .cross("Would you stencil your number over his?", "\"No, I wouldn't do that.\"")
+                            .cross("Would you repaint another man's buoys?", "\"No. I wouldn't repaint another man's buoys.\""),
+                            .cross("Would you stencil your number over {V.his}?", "\"No, I wouldn't do that.\"")
                         ])
         ],
         prosecutionTheory: ["{D} pulled {V}'s line, painted over the buoys, and stenciled {D.his} own number on them."],
@@ -240,7 +240,7 @@ extension StoryCases {
         aggravating: ["The offense was committed for pecuniary gain"],
         mitigating: ["The defendant has been gainfully employed", "The defendant has a support system in the community"],
         victimImpacts: ["\"My daddy fished that creek and his daddy before him. I build every pot by hand in my yard. When somebody takes your line, they take your month.\""],
-        allocutions: ["\"I should have called it in. I'll pay {V} for every pot.\""],
+        allocutions: ["\"I should have called it in the minute I found those pots tangled in the marsh after the storm. I thought they were lost, and I let that thought make me careless. I'll pay {V} for every pot and every day {V.he} lost on the water. I know a waterman's gear is {V.his} living, and I'm sorry.\""],
         guiltyTruths: ["A neighbor's camera at the landing showed {DL}'s skiff going out at 4 a.m. the morning the line disappeared, two days after the storm, and coming back loaded."],
         innocentTruths: ["A second waterman later admitted to pulling {V}'s line and dumping the pots where {DL} found them, to start trouble between the two."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "mistakeOfFact", "lesserIncluded"],
@@ -275,7 +275,7 @@ extension StoryCases {
         specification: "Unlawfully sold fentanyl to {V}, and the ingestion of the substance caused the death of {V}, on {DATE}.",
         ageRange: 19...28, occupations: ["line cook", "warehouse worker", "community college student"], hasVictim: true,
         summaries: [
-            "{V}, 20, was found unresponsive in Room 112 at {PLACE.MOTEL} at 6:15 a.m., the morning after a birthday party on {DATE} that broke up around 2 a.m. The medical examiner found a fatal level of fentanyl. Texts show {V} asked {D} for \"two blues\" at 11:48 p.m., and {D} answered \"got u.\" At 12:20 a.m., {V} sent {D} $20 on a payment app with the note \"gas.\" {DL} admits giving {V} two pills from {D.his} own supply, but says {D.he} never sold anything: the $20 was for driving {V} to the party, and {D.he} took the same pills that night. The law requires a sale."
+            "{V}, 20, was found unresponsive in Room 112 at {PLACE.MOTEL} at 6:15 a.m., the morning after a birthday party on {DATE} that broke up around 2 a.m. The medical examiner found a fatal level of fentanyl. Texts show {V} asked {D} for \"two blues\" at 11:48 p.m., and {DL} answered \"got u.\" At 12:20 a.m., {V} sent {DL} $20 on a payment app with the note \"gas.\" {DL} admits giving {V} two pills from {D.his} own supply, but says {D.he} never sold anything: the $20 was for driving {V} to the party, and {D.he} took the same pills that night. The law requires a sale."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Texts and Payment", "11:48 p.m.: \"u got two blues?\" / \"got u.\" 12:20 a.m.: $20 from {V} to {DL}, note \"gas.\"", .search),
@@ -295,8 +295,8 @@ extension StoryCases {
                             .direct("What did the phones show?", "\"At 11:48, {V} asks for two blues. {DL} says 'got u.' At 12:20, twenty dollars to {DL} with the note 'gas.'\""),
                             .direct("What do 'blues' cost around here?", "\"Ten dollars apiece, give or take. Two for twenty.\""),
                             .direct("Had {DL} been paid for pills before?", "\"Three other payments to {DL} with the note 'gas' in the past month, from people who didn't need a ride.\""),
-                            .cross("{V} asked {DL} for a ride at 9:05 that night.", "\"{V} did.\""),
-                            .cross("{DL} took the same pills that night.", "\"{D.His} blood says so.\"")
+                            .cross("{V} asked {DL} for a ride at 9:05 that night.", "\"{V} did. {V} asked {DL} for a ride at 9:05 that night.\""),
+                            .cross("{DL} took the same pills that night.", "\"{D.His} blood says so. The test shows {D.he} took the same pills that night.\"")
                         ]),
             WitnessSeed(name: nil, role: "{V}'s mother",
                         direct: ["\"I found out from a deputy on my porch at seven in the morning.\""],
@@ -337,7 +337,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why did {V} send you $20?", "\"For gas. I drove {V.him} there from Cane Creek.\""),
                 .direct("Did you give {V} pills?", "\"Two of mine. I took the same ones. I didn't know they were that strong.\""),
-                .cross("'Got u.' Then twenty dollars.", "\"For the ride.\""),
+                .cross("'Got u.' Then twenty dollars.", "\"The twenty dollars was for the ride.\""),
                 .cross("Three other 'gas' payments that month.", "\"I drive people. I have a car and they don't.\"", "\"Some of those were rides.\""),
                 .cross("Where did you get the pills?", "\"A guy. I'm not going to say.\"")
             ],
@@ -363,7 +363,7 @@ extension StoryCases {
         ],
         ageRange: 20...34, occupations: ["unemployed", "part-time warehouse worker", "landscaper"], hasVictim: true,
         summaries: [
-            "{D} moved in with {D.his} grandmother, {V}, 78, a widow, after losing {D.his} apartment. On {DATE}, {D} pawned {V}'s diamond wedding ring and {D.his} late grandfather's gold watch at {PLACE.PAWN} for $650, under {D.his} own name. {V}'s daughter noticed the ring missing from {V}'s hand a week later. {V} first told a deputy {V.he} had never let the ring out of {V.his} sight; at a second interview {V.he} said {V.he} may have told {D} to \"take what you need.\" {V}'s doctor says {V.he} has early memory loss."
+            "{D} moved in with {D.his} grandmother, {V}, 78, a widow, after losing {D.his} apartment. On {DATE}, {DL} pawned {V}'s diamond wedding ring and {D.his} late grandfather's gold watch at {PLACE.PAWN} for $650, under {D.his} own name. {V}'s daughter noticed the ring missing from {V}'s hand a week later. {V} first told a deputy {V.he} had never let the ring out of {V.his} sight; at a second interview {V.he} said {V.he} may have told {DL} to \"take what you need.\" {V}'s doctor says {V.he} has early memory loss."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Pawn Ticket", "A diamond ring and a gold wristwatch pawned for $650 by {D}, with {D.his} thumbprint and license.", .search),
@@ -393,8 +393,8 @@ extension StoryCases {
                         exam: [
                             .direct("How did you find the ring?", "\"The pawn shop's report to our database. Both pieces, pawned by {DL} for $650.\""),
                             .direct("What did {DL} say?", "\"That {D.his} grandmother said to take what {D.he} needed, and {D.he} meant to get them back when {D.he} got paid.\""),
-                            .direct("Did {DL} have a job?", "\"Not then.\""),
-                            .cross("The pawn was in {DL}'s own name.", "\"It was.\""),
+                            .direct("Did {DL} have a job?", "\"Not then. {DL} didn't have a job at the time.\""),
+                            .cross("The pawn was in {DL}'s own name.", "\"It was. The pawn was in {DL}'s own name.\""),
                             .cross("{V} told you the second time {V.he} might have said to take what {D.he} needed.", "\"{V.He} did. {V.He} also cried and said {V.he} didn't remember.\"")
                         ])
         ],
@@ -406,7 +406,7 @@ extension StoryCases {
                         exam: [
                             .direct("What does {V} say to family?", "\"'Take what you need.' Every time any of us is short. Groceries, gas money, whatever's in the jar.\""),
                             .direct("How is {DL} with {V}?", "\"{D.He} drives {V.him} to every appointment. {D.He} sets out {V.his} pills.\""),
-                            .cross("Has {V} ever offered anyone the ring?", "\"No. Never that.\""),
+                            .cross("Has {V} ever offered anyone the ring?", "\"No. Never that. {V} has never offered anyone the ring.\""),
                             .cross("Did {DL} tell anyone about the pawn?", "\"Not that I know of.\"")
                         ])
         ],
@@ -415,7 +415,7 @@ extension StoryCases {
         aggravating: ["The victim was very old", "The defendant took advantage of a position of trust"],
         mitigating: ["The defendant was young at the time of the offense", "The defendant has a support system in the community"],
         victimImpacts: ["\"I keep reaching for it with my thumb. Fifty-four years, it was always there. I'm not angry. I'm just sad, and I want it back.\""],
-        allocutions: ["\"Grandma, I'm sorry. I was going to get it back. I'll get it back.\"", "\"I'm going to treatment. I'll pay the pawn shop out of my first check.\""],
+        allocutions: ["\"Grandma, I'm sorry. I was going to get that ring and Grandpa's watch back before you ever noticed. You told me to take what I needed, and I needed rent money, but I should have asked about the ring. I'll get it back and I'll earn your trust back, however long it takes me.\"", "\"I'm going to treatment, and I'm doing it because I know where this started. I'll pay the pawn shop out of my first check so Grandma gets {V.his} ring back on {V.his} hand. {V.He} took me in when I had nowhere to go. I let {V.him} down, and I want to make it right.\""],
         guiltyTruths: ["{DL} had pawned and lost two of {V}'s rings at another shop the year before, which the family never noticed."],
         innocentTruths: ["{V}'s neighbor, who was visiting that day, heard {V} tell {DL}, \"Take the ring and the watch, honey, Earl would want you to have a roof.\""],
         moods: [.sympathetic], doctrines: ["burdenOfProof", "mistakeOfFact"],
@@ -427,8 +427,8 @@ extension StoryCases {
                 .direct("Did your grandmother give you permission?", "\"She says 'take what you need.' I needed rent money for a new place. I was going to get them back.\""),
                 .direct("Why the ring?", "\"It was the only thing worth anything.\""),
                 .cross("Her wedding ring, off her dresser, without asking about the ring itself.", "\"I didn't ask about the ring. That is on me.\""),
-                .cross("You didn't tell anyone.", "\"I was ashamed.\""),
-                .cross("You didn't have a job to get them back with.", "\"I was looking.\"")
+                .cross("You didn't tell anyone.", "\"I didn't tell anyone because I was ashamed.\""),
+                .cross("You didn't have a job to get them back with.", "\"I didn't have a job, but I was looking for one.\"")
             ],
             prosecutionOpening: "A widow's ring of fifty-four years, pawned for $650.",
             defenseOpening: "'Take what you need.'",

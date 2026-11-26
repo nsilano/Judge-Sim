@@ -51,7 +51,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} say before the crash?", "\"{D.He} said 'watch this' and floored it. We were going into the curve and I said slow down. Then everybody was screaming.\""),
                             .direct("How much had {DL} had to drink?", "\"A lot. We'd been at it since about four. {D.He} took some pills from {D.his} parent's cabinet too.\""),
-                            .cross("You were drinking too?", "\"Yes. I wasn't driving.\""),
+                            .cross("You were drinking too?", "\"Yes. I wasn't driving. I was drinking too, but I wasn't driving.\""),
                             .cross("You took beer from the store with {DL}?", "\"Yes. I've been charged for it.\"")
                         ])
         ],
@@ -62,7 +62,7 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What did you find?", "\"A young person raised with money and no limits. A parent bought {D.him} alcohol at thirteen. When {D.he} was caught driving at fifteen, the family paid it away. {DL} never learned that actions have consequences.\""),
-                            .cross("Did {DL} know that drinking and driving could kill people?", "\"Intellectually, yes.\""),
+                            .cross("Did {DL} know that drinking and driving could kill people?", "\"Intellectually, yes. {DL} knew that drinking and driving could kill people.\""),
                             .cross("Is 'never told no' a mental illness?", "\"No. It's a developmental explanation, not a diagnosis.\""),
                             .cross("How much are you being paid?", "\"My fee is $450 an hour.\"")
                         ])
@@ -73,7 +73,7 @@ extension StoryCases {
         mitigating: ["{DL} was 18 with no prior record", "The defendant has expressed remorse"],
         victimImpacts: ["{VIC3}'s spouse: \"I heard the crash from our kitchen. I watched my spouse run outside to help. I never saw them alive again.\"",
                         "{VIC4}'s child: \"My parent stopped because that's who they were. Somebody needed help, they stopped.\""],
-        allocutions: ["\"I'm so sorry. I can't fix it. I know there isn't anything I can say.\""],
+        allocutions: ["\"I can't fix it. I know there isn't anything I can say. I remember the drinking, getting in the truck, and my friend saying slow down. I don't remember some of what was said that night. I think about the four families every day.\""],
         guiltyTruths: ["A video from that night shows {DL} saying in the truck, \"My parents will just pay for it,\" after a friend asked if {D.he} should drive."],
         innocentTruths: ["Toxicology on the second blood draw showed the diazepam was at a level consistent with a prescription {DL} had for a sports injury, taken that morning."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -90,7 +90,7 @@ extension StoryCases {
                 .direct("What do you remember?", "\"Drinking. Getting in the truck. My friend saying slow down. Then waking up with glass in my face.\""),
                 .direct("Did anyone ever stop you from drinking before?", "\"No. My parent used to buy it for us.\""),
                 .cross("You said 'watch this' and sped up.", "\"I don't remember saying that. I believe them that I did.\""),
-                .cross("You knew how to get away with things because you always had.", "\"I guess so. Yes.\"")
+                .cross("You knew how to get away with things because you always had.", "\"I guess so. Yes. I knew how to get away with things because I always had.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Defense: \"Doctor, would prison simply teach {DL} more bad lessons?\"",
@@ -144,7 +144,7 @@ extension StoryCases {
                         weight: 3, lay: true,
                         exam: [
                             .direct("What happened when the SUV reached you?", "\"I stepped in front and pounded on the hood and yelled stop. The driver looked right at me. Eye contact. Then the wheel turned and the SUV went around me and sped up.\""),
-                            .direct("Did the driver appear panicked?", "\"No. Calm. Focused.\""),
+                            .direct("Did the driver appear panicked?", "\"No. Calm. Focused. The driver didn't appear panicked.\""),
                             .cross("You couldn't see the driver's feet?", "\"From where I stood, I couldn't see below the dash.\""),
                             .cross("Could a stuck accelerator have caused the speed?", "\"It doesn't explain steering around me. Or around the band.\"")
                         ]),
@@ -155,7 +155,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did the SUV's data show?", "\"Accelerator input of 40 to 70 percent the whole time. No brake application for 31 seconds. Steering inputs that track the gaps between people.\""),
                             .direct("Did you test the recall defect?", "\"Yes. The defect causes a hesitation, not acceleration. And it doesn't explain why the brakes were never used.\""),
-                            .cross("There is an open recall on this model?", "\"There is.\""),
+                            .cross("There is an open recall on this model?", "\"There is. There's an open recall on this model.\""),
                             .cross("You can't tell who was pressing the pedal?", "\"Only one person was in the SUV.\"")
                         ])
         ],
@@ -166,7 +166,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did you hear?", "\"Honking. Long blasts. I thought maybe it was part of the parade at first, then I thought somebody was trying to warn us.\""),
-                            .cross("Did the SUV slow down?", "\"No. It went faster.\""),
+                            .cross("Did the SUV slow down?", "\"No. It went faster. The SUV didn't slow down.\""),
                             .cross("Did it stop when it hit people?", "\"It kept going. That's what I can't get past.\"")
                         ])
         ],
@@ -176,7 +176,7 @@ extension StoryCases {
         mitigating: ["The defendant suffered from a mental condition that significantly reduced culpability"],
         victimImpacts: ["{VIC2}'s mother: \"She was eight. She was in the parade in her sequins. She waved at me.\"",
                         "A grandmother in the dance troupe: \"I was beside my friend. Now I march for her.\""],
-        allocutions: ["\"I'm not a monster. People keep saying that. I'm not evil. God knows my heart.\""],
+        allocutions: ["\"I'm not a monster. People keep saying that, and I'm not evil. God knows my heart. I was trying to get away from a fight and didn't know there was a parade. I pressed everything and it wouldn't stop. I'm sorry to every family on that street.\""],
         guiltyTruths: ["Jail calls recorded {DL} telling a relative, \"I told them to move. They didn't move.\""],
         innocentTruths: ["A later recall bulletin found the model's accelerator pedal could stick under the floor mat at high pressure, and the mat in the SUV was found jammed forward."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "insanity"],
@@ -279,7 +279,7 @@ extension StoryCases {
         aggravating: ["The defendant took advantage of a position of trust", "The offense was committed for pecuniary gain"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s sister: \"My brother was not perfect. He did not deserve to be poisoned in his own kitchen.\""],
-        allocutions: ["\"I didn't want him dead. I wanted him to need me for once.\""],
+        allocutions: ["\"I wanted {V.him} sick so {V.he} would stay home and be nice to me. I put drops in {V.his} water to see how much was dangerous so I wouldn't give that much. I didn't want {V.him} dead. I wanted {V.him} to need me for once.\""],
         guiltyTruths: ["A note in {DL}'s phone dated a week before listed the insurance company's claims number and the amount of the policy."],
         innocentTruths: ["A pharmacist later remembered {VL} buying several bottles of eye drops {V.himself} the week before, saying they helped {V.him} sleep."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "lesserIncluded"],
@@ -379,7 +379,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["The defendant has expressed remorse"],
         victimImpacts: ["{VL}'s mother: \"He was coming out to see what was happening. He was a father of two. He was killed over a dollar fifty.\""],
-        allocutions: ["\"I've done this so many times. I never pictured a real person. I'm sorry.\""],
+        allocutions: ["\"Someone gave me an address and dared me, and I'd done it before. I never pictured a real person at the door, and I wanted everyone to go home. I called to see them show up. I'll never place a call like that again.\""],
         guiltyTruths: ["{DL} had posted online a week earlier, \"I want to see one go wrong for once.\""],
         innocentTruths: ["Investigators later found a second swatting call to the same address that night, minutes earlier, from a different caller."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -395,7 +395,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why did you make the call?", "\"Someone gave me an address and dared me. I'd done it before. Usually the cops show up, nobody's home, and it's on a livestream.\""),
                 .direct("Did you want anyone hurt?", "\"God, no. I wanted everyone to go home.\""),
-                .cross("You told them a man had a gun and gasoline. What did you expect the police to do?", "\"Show up.\""),
+                .cross("You told them a man had a gun and gasoline. What did you expect the police to do?", "\"I expected the police to show up.\""),
                 .cross("With guns drawn.", "\"Rifles up, at a house with kids in it.\"")
             ],
             objections: [
@@ -461,7 +461,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} first say?", "\"That {D.he} hadn't seen {VL} in months. When we showed the photos, {D.he} said two masked people broke in and killed {V.him} while {D.he} hid.\""),
                             .direct("Why the rental car?", "\"Rented 90 miles from home so {D.his} own car wouldn't be seen. Phone off during the drive. Three gas cans so {D.he} wouldn't need to stop at a station near {VL}'s house.\""),
-                            .cross("The knife was never found?", "\"No. Nor the gun.\""),
+                            .cross("The knife was never found?", "\"No. Nor the gun. The knife was never found, and neither was the gun.\""),
                             .cross("{DL} was invited to the house that day?", "\"The messages show {VL} said {D.he} could come over.\"")
                         ])
         ],
@@ -473,7 +473,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you find?", "\"A relationship where {VL} used {DL} sexually and degraded {D.him}, and {DL} kept coming back. That's a recognized pattern.\""),
                             .cross("Your conclusions come from {DL}'s own account?", "\"Mostly, and from the messages.\""),
-                            .cross("Did you know {DL} lied to police twice about being there?", "\"I was told that.\""),
+                            .cross("Did you know {DL} lied to police twice about being there?", "\"I was told {DL} lied to police twice about being there.\""),
                             .cross("Does the profile include renting a car and bringing a gun?", "\"That's planning. It isn't part of any profile I know.\"")
                         ])
         ],
@@ -482,7 +482,7 @@ extension StoryCases {
         aggravating: ["The offense was especially heinous, atrocious, or cruel"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s sister: \"Twenty-seven times. And then she called his phone and left a message asking him to call her back.\""],
-        allocutions: ["\"I'm sorry. I loved him. I'll regret that day for the rest of my life.\""],
+        allocutions: ["\"I dropped the camera when {V.he} came out of the shower, and then it happened. After years of abuse, I was ashamed and terrified. I loved {V.him}. I'm sorry, and I'll regret that day for the rest of my life.\""],
         guiltyTruths: ["A friend later produced a message from {DL} weeks before: \"If I can't have him, nobody will.\""],
         innocentTruths: ["A neighbor later reported seeing two people in dark clothes leaving the house through the back yard around 6 p.m. that day."],
         moods: [.wantsConviction], doctrines: ["selfDefense", "burdenOfProof"],
@@ -500,9 +500,9 @@ extension StoryCases {
             defendantExam: [
                 .direct("What happened in the bathroom?", "\"I dropped the camera. {V.He} came out of the shower screaming. {V.He} body-slammed me. I ran to the closet where I knew {V.he} kept a gun, and it went off.\""),
                 .direct("Why did you lie twice?", "\"I was ashamed and terrified.\""),
-                .cross("{VL} kept a gun in the closet? Nobody ever saw one there.", "\"{V.He} did.\""),
-                .cross("Your relative's .25 went missing the week before. Same caliber.", "\"That's a coincidence.\""),
-                .cross("And the 27 stab wounds?", "\"I don't remember them.\"")
+                .cross("{VL} kept a gun in the closet? Nobody ever saw one there.", "\"{V.He} did. {VL} kept a gun in the closet, even if nobody else ever saw one there.\""),
+                .cross("Your relative's .25 went missing the week before. Same caliber.", "\"My relative's .25 went missing the week before, and it's the same caliber, but that's a coincidence.\""),
+                .cross("And the 27 stab wounds?", "\"I don't remember them. I don't remember the 27 stab wounds.\"")
             ],
             objections: [
                 (1, ObjectionSeed(question: "Prosecutor: \"Detective, in your opinion, was {DL} lying about the intruders?\"",

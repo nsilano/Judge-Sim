@@ -57,7 +57,9 @@ enum NewsDesk {
                        "Judge finds \(f.last) guilty of \(f.offense)",
                        "Guilty: \(f.last) case ends in conviction",
                        "\(f.last) found guilty after \(f.mediaAttention >= 2 ? "closely watched" : "brief") bench trial"]
-        if f.active && !f.sentence.isEmpty { options.append("\(f.last) headed to prison after \(f.offense) conviction") }
+        let sentenceText = f.sentence.lowercased()
+        let jail = sentenceText.contains("county jail") || sentenceText.contains("sheriff") || sentenceText.contains(" days")
+        if f.active && !f.sentence.isEmpty { options.append("\(f.last) headed to \(jail ? "jail" : "prison") after \(f.offense) conviction") }
         if f.timeServed { options += ["\(f.last) convicted, released with time served", "Jail credit covers \(f.last)'s sentence"] }
         else if !f.active && !f.sentence.isEmpty { options.append("\(f.last) convicted, avoids prison") }
         if f.countsTotal > 1 && f.countsConvicted < f.countsTotal { options.append("Split verdict for \(f.last): guilty on \(f.countsConvicted) of \(f.countsTotal) counts") }
@@ -82,19 +84,31 @@ enum NewsDesk {
             : ""
         if convicted {
             let sentence = f.sentence.isEmpty ? "" : ", and imposed \(f.sentence)"
-            return rng.pick([
+            return Variety.pick([
                 "Superior Court Judge \(f.judge) found \(f.name), \(f.age), guilty\(counts)\(sentence), ending a case that began with an arrest\(place).",
                 "\(f.name) stood as Judge \(f.judge) announced the verdict: guilty\(counts). The judge then imposed \(f.sentence.isEmpty ? "judgment" : f.sentence).",
                 "A Hollis County judge has convicted \(f.name)\(counts) of \(f.offense)\(sentence).",
-                "After hearing the evidence without a jury, Judge \(f.judge) found \(f.last) guilty\(counts)\(sentence)."
-            ])
+                "After hearing the evidence without a jury, Judge \(f.judge) found \(f.last) guilty\(counts)\(sentence).",
+            "\(f.name), \(f.age), was found guilty\(counts) by Judge \(f.judge) after a bench trial\(sentence).",
+            "The verdict came from the bench: Judge \(f.judge) found \(f.last) guilty\(counts)\(sentence).",
+            "Judge \(f.judge) ruled that the State had proven its case against \(f.name), finding \(f.last) guilty\(counts)\(sentence).",
+            "\(f.name) was convicted of \(f.offense) in Hollis County Superior Court\(sentence).",
+            "Judge \(f.judge) announced a guilty verdict\(counts) against \(f.name), \(f.age)\(sentence).",
+            "A bench trial ended with a guilty verdict\(counts) for \(f.name), \(f.age)."
+            ], rng: &rng)
         }
-        return rng.pick([
+        return Variety.pick([
             "Judge \(f.judge) found \(f.name), \(f.age), not guilty of \(f.offense) after a bench trial, saying the State had not proven its case beyond a reasonable doubt.",
             "\(f.name) left the Hollis County Courthouse a free \(rng.chance(0.5) ? "person" : "defendant") after Judge \(f.judge) returned a verdict of not guilty.",
             "The State's case against \(f.name) ended in acquittal\(place.isEmpty ? "" : " in a case that began\(place)").",
-            "In a ruling from the bench, Judge \(f.judge) acquitted \(f.last) of \(f.offense)."
-        ])
+            "In a ruling from the bench, Judge \(f.judge) acquitted \(f.last) of \(f.offense).",
+        "Judge \(f.judge) acquitted \(f.name), \(f.age), of \(f.offense) after a bench trial.",
+        "\(f.name) was cleared of \(f.offense) when Judge \(f.judge) found the evidence did not support a conviction.",
+        "The judge's verdict was not guilty: \(f.name), \(f.age), walked out of the courtroom without a conviction.",
+        "After a bench trial, Judge \(f.judge) found \(f.last) not guilty of \(f.offense).",
+        "\(f.last) was acquitted of \(f.offense) in Hollis County Superior Court.",
+        "Judge \(f.judge) ruled from the bench that the State had not met its burden, and \(f.name) was found not guilty."
+        ], rng: &rng)
     }
 
     static func kicker(_ f: VerdictFacts, convicted: Bool, rng: inout SeededRNG) -> String {
@@ -116,41 +130,41 @@ enum NewsDesk {
     // MARK: Other stories
 
     static func rearrestHeadline(_ name: String, rng: inout SeededRNG) -> String {
-        rng.pick(["\(name), out on bond, arrested again", "Released last month, \(name) back in jail",
-                  "New charge for \(name) while case is pending", "\(name) arrested while awaiting trial"])
+        Variety.pick(["\(name), out on bond, arrested again", "Released last month, \(name) back in jail",
+                  "New charge for \(name) while case is pending", "\(name) arrested while awaiting trial", "\(name) back in custody after new arrest", "Pending case, new charge: \(name)", "\(name) arrested a second time while on release", "\(name) arrested again while case is pending", "\(name) in jail after new charge", "New arrest for \(name), who was out on bond", "\(name) picked up on a new charge", "Out on release, \(name) arrested again", "\(name) faces second case after new arrest"], rng: &rng)
     }
 
     static func releaseHeadline(_ name: String, last: String, jail: Bool = false, rng: inout SeededRNG) -> String {
         if jail {
-            return rng.pick(["\(name) released from the county jail", "\(last) comes home", "\(name) completes jail term", "\(last) out of jail"])
+            return Variety.pick(["\(name) released from the county jail", "\(last) comes home", "\(name) completes jail term", "\(last) out of jail", "\(name) walks out of the county jail", "\(last) free after serving a jail term", "\(name) finishes county jail sentence", "\(name) leaves the county jail a free person", "\(last) home after county jail term", "After the jail term, \(last) goes home", "\(name) released after serving jail sentence", "County jail door opens for \(last)", "\(name) done with jail time"], rng: &rng)
         }
-        return rng.pick(["\(name) released from custody", "\(last) comes home", "After prison, \(last) begins again",
-                  "\(name) completes prison term", "Out of prison, \(last) faces the next step"])
+        return Variety.pick(["\(name) released from custody", "\(last) comes home", "After prison, \(last) begins again",
+                  "\(name) completes prison term", "Out of prison, \(last) faces the next step", "\(name) leaves prison after serving a term", "\(last) returns home from prison", "\(name) walks out of prison", "\(name) out of prison", "\(last) released from state prison", "After years inside, \(name) goes home", "\(last) walks free after prison sentence", "State prison term ends for \(name)", "\(name) released after prison term"], rng: &rng)
     }
 
     static func releaseColor(_ last: String, town: String, jail: Bool = false, rng: inout SeededRNG) -> String {
         if jail {
-            return rng.pick(["A relative said the family plans a small dinner. \"We're just glad to have them home.\"",
+            return Variety.pick(["A relative said the family plans a small dinner. \"We're just glad to have them home.\"",
                              "Neither \(last) nor counsel could be reached for comment.",
                              "A pastor from \(town) picked \(last) up outside the detention center.",
-                             "\(last)'s first stop, a relative said, was a barbershop on Main Street."])
+                             "\(last)'s first stop, a relative said, was a barbershop on Main Street.", "A cousin drove \(last) home from the detention center.", "\(last) declined to speak to reporters on the way out.", "Family members waited in the parking lot for most of the morning.", "A friend waited at the curb with a change of clothes.", "\(last) thanked the officer at the desk and walked out without speaking to anyone else.", "A sister arrived early and sat outside the detention center for two hours.", "\(last) stopped at a diner on the way home, a relative said.", "A relative said the first thing \(last) wanted was a shower and a home-cooked meal.", "Nobody was waiting, and \(last) walked toward the bus stop."], rng: &rng)
         }
-        return rng.pick(["A relative said the family plans a small dinner. \"We're just glad to have them home.\"",
+        return Variety.pick(["A relative said the family plans a small dinner. \"We're just glad to have them home.\"",
                   "A reentry program in \(town) has offered a bed and job placement.",
                   "Neither \(last) nor counsel could be reached for comment.",
                   "\"I've got a lot to make up for,\" \(last) told a reporter outside the prison gate. \"I know that.\"",
                   "A pastor from \(town) picked \(last) up at the gate.",
-                  "\(last)'s first stop, a relative said, was a barbershop on Main Street."])
+                  "\(last)'s first stop, a relative said, was a barbershop on Main Street.", "\"I just want to get to work Monday,\" \(last) said.", "A cousin who drove \(last) home said the family has a room ready.", "\(last)'s supervision officer said the first check-in is Friday."], rng: &rng)
     }
 
     static func probationDoneHeadline(_ name: String, last: String, rng: inout SeededRNG) -> String {
-        rng.pick(["\(name) completes probation", "\(last) finishes probation without a violation",
-                  "Probation ends for \(last)", "\(last) closes the book on a conviction"])
+        Variety.pick(["\(name) completes probation", "\(last) finishes probation without a violation",
+                  "Probation ends for \(last)", "\(last) closes the book on a conviction", "\(name) finishes supervision", "\(last) completes the terms of probation", "Probation behind \(last) after a quiet year", "\(name) finishes probation", "Probation completed for \(last)", "\(last) done with supervision", "\(name) meets every term of probation", "\(last) off probation", "Supervision ends for \(name)"], rng: &rng)
     }
 
     static func chargedAgainHeadline(_ name: String, lead: String, rng: inout SeededRNG) -> String {
-        rng.pick(["\(name) charged \(lead)", "Familiar name: \(name) arrested \(lead)",
-                  "\(name) back before the court, charged \(lead)", "New arrest for \(name)"])
+        Variety.pick(["\(name) charged \(lead)", "Familiar name: \(name) arrested \(lead)",
+                  "\(name) back before the court, charged \(lead)", "New arrest for \(name)", "\(name) faces a new charge", "Back in court: \(name)", "\(name) arrested again, charged \(lead)", "\(name) arrested on a new charge", "\(name) in jail again", "\(name) booked on new charge", "Second case for \(name)", "\(name) faces another charge", "New charge lands \(name) back in court"], rng: &rng)
     }
 
     // MARK: The week's other pages
@@ -282,7 +296,7 @@ enum NewsDesk {
             let supervised = person.postRelease != nil || (person.status == .probation && (person.probation?.supervised ?? true))
             let line = job.map { "\(person.lastName) now works as \($0.title.lowercasedPhrase.withIndefiniteArticle) at \($0.employer)." }
                 ?? rng.pick(["\(person.lastName) is still looking for work. \"Every application asks about a record,\" \(person.lastName) said.",
-                             "\(person.lastName) lives with family in \(rng.pick(towns)) and attends a reentry group on Thursdays."])
+                             "\(person.lastName) lives with family in \(rng.pick(towns)) and attends a reentry group on Thursdays.", "\(person.lastName) took a job washing dishes after three weeks of searching.", "\(person.lastName) says the hardest part has been explaining a gap on every application.", "\(person.lastName) is saving for a used car and takes the bus to a job interview each week.", "\(person.lastName) says the biggest surprise has been how long it takes to get an ID replaced.", "\(person.lastName) rents a room in \(rng.pick(towns)) and says the quiet is something to get used to.", "\(person.lastName) has started attending church again and says the congregation has been welcoming.", "\(person.lastName) says the first month out was spent catching up on paperwork.", "\(person.lastName) is doing day labor while waiting to hear back on a full-time job."])
             var closers = ["\"I think about that courtroom every day,\" \(person.lastName) said.", "\(person.lastName) declined to talk about the case."]
             if supervised {
                 let officer = person.postRelease != nil ? "A post-release supervision officer" : "A probation officer"
@@ -297,14 +311,14 @@ enum NewsDesk {
         // The blotter.
         if rng.chance(0.45) {
             let entries = (0..<rng.int(3...5)).map { _ in
-                rng.pick(["A \(rng.int(19...61))-year-old \(rng.pick(towns)) resident was charged with driving while impaired after a crash on Highway 17.",
+                Variety.pick(["A \(rng.int(19...61))-year-old \(rng.pick(towns)) resident was charged with driving while impaired after a crash on Highway 17.",
                           "Deputies recovered a stolen pickup at a boat ramp near \(rng.pick(towns)).",
                           "Port Hollis police are investigating a break-in at a vape shop on Front Street.",
                           "A \(rng.int(18...35))-year-old was charged with felony possession of cocaine after a traffic stop.",
                           "Catalytic converters were taken from \(rng.int(3...9)) vehicles at a church parking lot overnight.",
                           "A \(rng.int(20...70))-year-old was charged with assault on a female after a domestic call in \(rng.pick(towns)).",
                           "Deputies seized \(rng.int(2...14)) firearms during a search in \(rng.pick(towns)); charges are pending.",
-                          "A man was cited for trespassing after sleeping in the courthouse parking deck."])
+                          "A man was cited for trespassing after sleeping in the courthouse parking deck.", "Deputies served a protective order at a home outside \(rng.pick(towns)).", "A trailer fire near \(rng.pick(towns)) was ruled accidental.", "A \(rng.int(19...61))-year-old was cited for driving without a license after a stop in \(rng.pick(towns)).", "Police are asking for help identifying a man who used a stolen card at a \(rng.pick(towns)) gas station.", "A \(rng.int(30...79))-year-old \(rng.pick(towns)) woman reported her mailbox damaged for the third time this month.", "Deputies checked on a report of a loose dog near a school in \(rng.pick(towns)); no one was hurt."], rng: &rng)
             }
             items.append(NewsItem(date: w.date, kind: .arrest, headline: "Sheriff's and police log",
                                   body: Array(Set(entries)).joined(separator: " "),

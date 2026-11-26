@@ -51,9 +51,9 @@ extension StoryCases {
                         exam: [
                             .direct("How did {DL} become a suspect?", "\"The hospital's pharmacist flagged insulin pulled for patients who had no order. Every pull came from {DL}'s badge, and {DL} was on every shift where a patient crashed.\""),
                             .direct("What about the charting?", "\"After two of the deaths, someone logged in as {DL} and edited the medication records to remove the insulin pulls. The edits were made in the early morning hours, near the end of {D.his} shift.\""),
-                            .cross("The hospital's own audit found badge sharing on that unit?", "\"It did.\""),
-                            .cross("Did anyone see {DL} inject insulin into any patient?", "\"No one saw it.\""),
-                            .cross("You searched {DL}'s home and car?", "\"We found nothing related.\"")
+                            .cross("The hospital's own audit found badge sharing on that unit?", "\"It did. The hospital's own audit found badge sharing on that unit.\""),
+                            .cross("Did anyone see {DL} inject insulin into any patient?", "\"No. No one saw {DL} inject insulin into any patient.\""),
+                            .cross("You searched {DL}'s home and car?", "\"We searched {DL}'s home and car and found nothing.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -65,15 +65,15 @@ extension StoryCases {
                             .direct("How did the badges work on that unit?", "\"When you're running two halls alone at 3 a.m. and the cabinet's across the unit, you hand your badge to whoever's going. Everybody did it. It's against policy and we all did it.\""),
                             .direct("What kind of nurse is {DL}?", "\"One of the best I've worked with. Families asked for {D.him} by name.\""),
                             .cross("Did you ever pull insulin with {DL}'s badge?", "\"Never. I had my own badge and I used it.\""),
-                            .cross("Do you know anyone who did?", "\"I can't name anyone.\"")
+                            .cross("Do you know anyone who did?", "\"I can't name anyone. I don't know anyone who did.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was on duty for every crash, pulled insulin for patients who didn't need it, and then erased the record. Three people died."],
         defenseTheory: ["A broken hospital with shared badges and half staffing is looking for one person to blame. No one saw {DL} do anything, and the cabinet log can't say whose hand pulled the insulin."],
         aggravating: ["The victims were very old or infirm", "The defendant took advantage of a position of trust", "The offense involved multiple victims"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{VL}'s child: \"Our parent went in for a heart rhythm problem and was supposed to come home on Friday.\""],
-        allocutions: ["\"I became a nurse to take care of people. I never hurt one.\""],
+        victimImpacts: ["{VL}'s child: \"Our parent went in for a heart rhythm problem and was supposed to come home on Friday. We had a casserole in the freezer and a ramp being built at the front door. Instead we planned a funeral. Nobody could tell us why a man who wasn't diabetic had sugar that low.\""],
+        allocutions: ["\"I became a nurse to take care of people, and I never hurt one. I worked nights on that unit for years with half the staff we needed. I pulled insulin only for patients with orders, and sometimes other nurses asked me to. I grieve for every family. I'm asking the court to look at how this unit really ran.\""],
         guiltyTruths: ["A used insulin syringe with {DL}'s fingerprints was later found in a sharps container in a locked supply room only {DL} had used that night."],
         innocentTruths: ["After {DL}'s arrest, another patient on the unit crashed with injected insulin on a night {DL} was in jail."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -167,7 +167,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What concerns you about the hair evidence?", "\"A thirteen-year-old rootless fragment, a method with no published error rate for samples this degraded, and a single lab that developed it and tested it. That's not how science earns trust.\""),
-                            .cross("Did you retest the sample yourself?", "\"There wasn't enough left.\""),
+                            .cross("Did you retest the sample yourself?", "\"There wasn't enough left. I couldn't retest the sample myself.\""),
                             .cross("Can you point to any error in the lab's analysis?", "\"I can point to the absence of validation.\"")
                         ])
         ],
@@ -176,7 +176,7 @@ extension StoryCases {
         aggravating: ["The offense involved multiple victims", "The offense was especially heinous, atrocious, or cruel"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s mother: \"I set a place at Christmas for thirteen years. I'd like to know I can stop.\""],
-        allocutions: ["\"I've never hurt anyone. I have a family. I'm asking you to look at the science.\""],
+        allocutions: ["\"I've never hurt anyone in my life. I design schools and churches, and I have a wife and a daughter who need me home. I followed this case like everyone else in the county, and I followed it closer when my daughter reached those women's age. I'm asking the court to look hard at the science.\""],
         guiltyTruths: ["A storage unit rented under an alias by {DL} was later found to contain burlap and jewelry belonging to one of the victims."],
         innocentTruths: ["A second hair from the same burlap, tested later by another lab, excluded {DL} and matched a man already in prison for a similar killing."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -280,7 +280,7 @@ extension StoryCases {
         aggravating: ["The offense involved multiple victims", "The defendant abused a position of public trust"],
         mitigating: ["The defendant has a long record of public service"],
         victimImpacts: ["{VL}'s daughter, now 53: \"I was fourteen and asleep down the hall. I've waited my whole adult life to say their names in this room.\""],
-        allocutions: ["\"I served this county for thirty years. I don't know how my DNA got there.\""],
+        allocutions: ["\"I served this county for thirty years, answered hundreds of calls, and gave my word on a badge. I don't know how my DNA ended up in that house, and after forty years I can't tell you where I was that night. I'm sorry for the families who waited so long. I hope the truth comes out, whatever it is.\""],
         guiltyTruths: ["A box of victims' jewelry from several of those old break-ins was found in {DL}'s attic after the trial."],
         innocentTruths: ["The genealogist later found an error in one branch of the tree; a cousin of {DL}'s, now dead, also fit the profile."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "searchSeizure", "chainOfCustody"],
@@ -352,7 +352,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What can you tell us about the earring?", "\"I bought my sister that pair for her birthday. Little silver moons with a blue stone. She had them on when she left.\""),
-                            .cross("Those earrings were sold at mall kiosks all over the state?", "\"Probably. These were hers.\""),
+                            .cross("Those earrings were sold at mall kiosks all over the state?", "\"Probably. These were hers. The earrings were sold at kiosks across the state, but these were hers.\""),
                             .cross("How can you tell this one is hers and not an identical one?", "\"One of the stones was chipped. This one's chipped.\"")
                         ]),
             WitnessSeed(name: nil, role: "SBI agent",
@@ -381,8 +381,8 @@ extension StoryCases {
         defenseTheory: ["A common earring, common zip ties, and a truck route through two of the busiest truck stops in the state. No DNA, no witness, no confession."],
         aggravating: ["The offense involved multiple victims", "The offense was especially heinous, atrocious, or cruel"],
         mitigating: [],
-        victimImpacts: ["{VL}'s sister: \"She was trying to get home to her son. She was twenty-three.\""],
-        allocutions: ["\"I've given rides to a lot of people. I never hurt any of them.\""],
+        victimImpacts: ["{VL}'s sister: \"{V.He} was trying to get home to {V.his} son, and {V.he} was twenty-three. {V.His} boy still keeps a picture of {V.him} on his nightstand, and he asks when {V.he}'s coming. We waited by the phone for days before anyone told us anything. We've never had a chance to say a proper goodbye.\""],
+        allocutions: ["\"I've given rides to a lot of people in my years on the road, and I never hurt any of them. I don't remember faces from a year ago, and I won't pretend to. I have a family who has stood with me. I'm sorry for the families who lost their daughters, and I pray they get answers.\""],
         guiltyTruths: ["A third woman, who escaped from a sleeper cab two years earlier, later identified {DL} from a photo array."],
         innocentTruths: ["A second driver whose logging device had been tampered with was later found to have been at both stops, and was linked by DNA to a third killing."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "priorActs"],
@@ -455,7 +455,7 @@ extension StoryCases {
                             .direct("What did you see that night?", "\"I heard crying and someone saying 'there's someone here.' I opened my door and saw a person in black with a mask over the mouth and nose walk past toward the back door. I froze. I locked my door.\""),
                             .direct("What do you remember about the person?", "\"Bushy eyebrows. Tall, not very muscular, athletic. That's all.\""),
                             .cross("You'd been drinking that night?", "\"Some. I knew what I saw.\""),
-                            .cross("You couldn't see the face?", "\"Only the eyebrows.\""),
+                            .cross("You couldn't see the face?", "\"I couldn't see the face, only the eyebrows.\""),
                             .cross("You didn't call 911 for hours?", "\"I thought I was dreaming. I texted my roommate. I was in shock.\"")
                         ]),
             WitnessSeed(name: nil, role: "SBI forensic scientist",
@@ -464,7 +464,7 @@ extension StoryCases {
                         weight: 3, lay: false,
                         exam: [
                             .direct("What did you find on the sheath?", "\"A single-source male profile on the button snap. It matches {DL} at every location. The chance of a random match is about one in five octillion.\""),
-                            .cross("Touch DNA can be transferred without the person touching the object?", "\"Secondary transfer is possible.\""),
+                            .cross("Touch DNA can be transferred without the person touching the object?", "\"Secondary transfer is possible. Touch DNA can transfer without the person touching the object.\""),
                             .cross("You found no victim blood in {DL}'s car or homes?", "\"Not a trace. We swabbed everything.\""),
                             .cross("You found three other male profiles in the house you haven't identified?", "\"Three unknowns. They're still unknown.\"")
                         ])
@@ -485,7 +485,7 @@ extension StoryCases {
         aggravating: ["The offense involved multiple victims", "The offense was especially heinous, atrocious, or cruel"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s father: \"Four families are sitting in this room. Every holiday since, there has been an empty chair.\""],
-        allocutions: ["\"I didn't know them. I didn't kill them.\""],
+        allocutions: ["\"I didn't know those students, and I didn't hurt them. I was driving in the country that night looking at stars, the way I do when I can't sleep. I've never seen that knife sheath, and I know how fragile DNA evidence can be. I'm so sorry for the families, and I want the real person found.\""],
         guiltyTruths: ["The knife that fit the sheath was later found in a storage unit rented by {DL}'s relative, with a victim's blood in the handle seam."],
         innocentTruths: ["One of the three unidentified profiles in the house was later matched to a man with a history of stalking one of the victims."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "expertTestimony"],

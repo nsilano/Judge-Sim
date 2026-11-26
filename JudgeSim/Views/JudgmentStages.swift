@@ -227,12 +227,15 @@ struct SentencingStage: View {
             StepHeader(number: 1, title: "Hear from the parties", detail: "The victim's statement and the defendant's words to the court.")
             CollapsibleSection(title: "Victim & defendant", icon: "person.2.fill",
                                summary: "Victim impact statement and allocution", expanded: true) {
-                if let impact = c.victimImpact {
+                let mainVerdict = c.charges.first.flatMap { session.rulings.verdicts[$0.id] }
+                let asCharged = !(mainVerdict == .lesser || mainVerdict == .notGuilty || mainVerdict == .dismissed || mainVerdict == .insanity)
+                // The victim's written statement is about the offense as charged; it isn't read for a lesser finding.
+                if let impact = c.victimImpact, asCharged {
                     Text("Victim impact").font(.caption.weight(.bold)).foregroundStyle(Theme.prosecution)
                     Text(impact).font(.system(.callout, design: .serif)).italic()
                 }
                 Text("The defendant addresses the court").font(.caption.weight(.bold)).foregroundStyle(Theme.defense)
-                Text(c.allocution(afterPlea: session.rulings.pleaAccepted == true, pleaKind: session.rulings.pleaKind)).font(.system(.callout, design: .serif)).italic()
+                Text(c.allocution(afterPlea: session.rulings.pleaAccepted == true, pleaKind: session.rulings.pleaKind, asCharged: asCharged)).font(.system(.callout, design: .serif)).italic()
             }
 
             StepHeader(number: 2, title: "Record & factors", detail: "Prior record level and any aggravating or mitigating factors you find.")
@@ -1335,13 +1338,7 @@ struct JudgmentStage: View {
                 Text(ethics).font(.callout).card()
             }
 
-            SectionTitle(text: "In the hallway", icon: "quote.bubble.fill")
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(outcome.reactions, id: \.self) { line in
-                    Text(line).font(.system(.callout, design: .serif))
-                }
-            }
-            .card()
+// The hallway reactions after a ruling are switched off for now (outcome.reactions is still produced).
 
             SectionTitle(text: "Tomorrow's paper", icon: "newspaper.fill")
             NewsCard(item: outcome.news)

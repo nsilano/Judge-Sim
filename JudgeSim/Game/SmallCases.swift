@@ -13,16 +13,17 @@ enum SmallCases {
                      mood: PublicMood = .indifferent, impact: String? = nil, doctrines: [String] = ["burdenOfProof"],
                      genders: [String: Gender] = [:]) -> CaseTemplate {
         let civilian = FollowUpCases.isCivilianRole(role)
+        let witnessToken = FollowUpCases.stateWitnessToken(role: role, victim: victim, exam: exam, defendant: defendant)
         var defenseWitnesses: [WitnessSeed] = []
         if let defenseRole {
             defenseWitnesses = [WitnessSeed(name: nil, role: defenseRole, direct: [], cross: [], weight: 1, lay: true, exam: defenseExam)]
         }
-        return CaseTemplate(
+        var template = CaseTemplate(
             key: key, category: category, headlines: headlines, primaryLaw: law, lesserLaw: nil,
             threshold: threshold, lesserThreshold: 0, specification: spec,
             ageRange: ages, occupations: [], hasVictim: victim, summaries: [summary],
             prosecutionEvidence: state, defenseEvidence: defense,
-            prosecutionWitnesses: [WitnessSeed(name: FollowUpCases.witnessName(for: role), role: role, direct: [], cross: [], weight: 2, lay: civilian, exam: exam)],
+            prosecutionWitnesses: [WitnessSeed(name: witnessToken, role: role, direct: [], cross: [], weight: 2, lay: civilian, exam: exam)],
             defenseWitnesses: defenseWitnesses,
             prosecutionTheory: [theory.0], defenseTheory: [theory.1],
             aggravating: aggravating, mitigating: mitigating.isEmpty ? ["The defendant has accepted responsibility"] : mitigating,
@@ -32,5 +33,7 @@ enum SmallCases {
                                prosecutionOpening: openings.0, defenseOpening: openings.1,
                                prosecutionClosing: closings.0, defenseClosing: closings.1, genders: genders)
         )
+        template.shortForm = true
+        return template
     }
 }

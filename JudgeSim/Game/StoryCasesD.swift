@@ -39,7 +39,7 @@ extension StoryCases {
                             .direct("What did you see?", "\"Two people face to face. The shorter one, {VL}, was pointing and talking loud. {VL} never made a fist. Then the other one, {DL}, threw a right hand, hard, and {VL} went straight back like a board. The sound of the head on the curb, I hear it at night.\""),
                             .direct("Did {VL} raise a hand to {DL}?", "\"Not that I saw. Pointing, that's it.\""),
                             .cross("You couldn't hear what {VL} said?", "\"Music from the club was too loud.\""),
-                            .cross("{VL} stepped toward {DL} right before the punch?", "\"{VL} stepped in, yeah.\""),
+                            .cross("{VL} stepped toward {DL} right before the punch?", "\"{VL} stepped in, yeah. {VL} stepped toward {DL} right before the punch.\""),
                             .cross("{DL} stayed and helped until the ambulance came?", "\"Yes. Kneeling, holding {VL}'s head.\"")
                         ]),
             WitnessSeed(name: nil, role: "Neurosurgeon",
@@ -49,7 +49,7 @@ extension StoryCases {
                         exam: [
                             .direct("What injuries did {VL} have?", "\"A skull fracture at the back of the head and a large bleed over the brain. We operated within an hour, but the swelling was too great.\""),
                             .direct("What caused them?", "\"The back of the head hitting concrete with full body weight. A person knocked unconscious can't break the fall.\""),
-                            .cross("At 0.17 blood alcohol, {VL}'s reflexes and balance were impaired?", "\"Significantly.\""),
+                            .cross("At 0.17 blood alcohol, {VL}'s reflexes and balance were impaired?", "\"Significantly. At 0.17, {VL}'s reflexes and balance were significantly impaired.\""),
                             .cross("Most single punches don't cause death?", "\"Most don't. When the person falls onto concrete, they can.\"")
                         ])
         ],
@@ -167,7 +167,7 @@ extension StoryCases {
         aggravating: ["The images were sent to the victim's employer and coworkers"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{V}: \"I changed jobs. I changed my number. I still wonder who in the grocery store has seen them.\""],
-        allocutions: ["\"I was hurt and I said ugly things. I did not post those pictures.\""],
+        allocutions: ["\"I had those photos on my old phone, which I kept in my glovebox. I was hurt and I said ugly things. I did not post those pictures. I reset passwords for a living, and I'd know better than to do that from my own home.\""],
         guiltyTruths: ["The stolen Android was later found in {DL}'s sock drawer during an unrelated search."],
         innocentTruths: ["A neighbor arrested for the car break-ins had the stolen phone and admitted posting the images to 'mess with' {DL}."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -183,7 +183,7 @@ extension StoryCases {
                 .direct("Did you post those images?", "\"No. I had them on my old phone, which I kept in my glovebox for music. Somebody broke into my car and took it.\""),
                 .direct("What did you mean by 'everyone will see'?", "\"That people would see how {VL} treated me. I was talking about telling our friends. It was ugly and petty. It wasn't this.\""),
                 .cross("You work in IT. You know how to make an account look like someone else's.", "\"I reset passwords for a living. And I'd know not to do it from my own building.\""),
-                .cross("You didn't delete the images after the breakup.", "\"No. In hindsight, yes.\"")
+                .cross("You didn't delete the images after the breakup.", "\"No. In hindsight, yes. I didn't delete the images after the breakup, and I should have.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Defense attorney: \"You'd sent intimate images to other partners before, hadn't you?\"",
@@ -231,12 +231,12 @@ extension StoryCases {
                         cross: ["\"The backseat passenger could reach it too.\""],
                         weight: 2, lay: false,
                         exam: [
-                            .direct("Why did you stop the car?", "\"A broken right taillight.\""),
+                            .direct("Why did you stop the car?", "\"A broken right taillight. That's why I stopped the car.\""),
                             .direct("What did you see as you walked up?", "\"The front passenger, {DL}, leaned forward and down, below the window, for a second or two. Then sat back with both hands on the dash, which nobody asked for.\""),
                             .direct("Where was the pistol?", "\"On the floor, directly under {DL}'s seat, grip forward, as if pushed there from the front.\""),
                             .cross("You never saw the gun in {DL}'s hands?", "\"Not in {D.his} hands. It was on the floorboard.\""),
                             .cross("The backseat passenger could reach under the front seat from behind?", "\"I tested it. Yes, with some effort.\""),
-                            .cross("Leaning forward could be reaching for a phone, or for a seatbelt?", "\"Could be.\"")
+                            .cross("Leaning forward could be reaching for a phone, or for a seatbelt?", "\"Leaning forward could be reaching for a phone or for a seatbelt.\"")
                         ]),
             WitnessSeed(name: nil, role: "Latent print and DNA analyst",
                         direct: ["\"No usable prints, and the DNA was too mixed to interpret.\""],
@@ -255,8 +255,8 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Whose car is it?", "\"Mine. I'd picked up {DL} from the restaurant ten minutes before. The backseat passenger, I'd given a ride all afternoon.\""),
-                            .direct("Had {DL} been in the car before that day?", "\"Not for weeks.\""),
-                            .cross("You don't know whose gun it was?", "\"No. It's not mine.\""),
+                            .direct("Had {DL} been in the car before that day?", "\"Not for weeks. {DL} hadn't been in the car for weeks before that day.\""),
+                            .cross("You don't know whose gun it was?", "\"No. It's not mine. I don't know whose gun it was.\""),
                             .cross("You'd say anything to keep your cousin out of prison?", "\"I'm telling you what I know.\"")
                         ])
         ],
@@ -264,7 +264,7 @@ extension StoryCases {
         defenseTheory: ["{DL} had been in the car ten minutes. The backseat passenger had been in it all afternoon and could reach under that seat. No forensic evidence ties anyone to the gun."],
         aggravating: ["The firearm was loaded"],
         mitigating: ["{DL} has been employed and arrest-free for nine years"],
-        allocutions: ["\"I've stayed out of trouble nine years. I would never have a gun. I know what it'd cost me.\""],
+        allocutions: ["\"I was reaching for my phone when it slid off my lap as we braked. I've been in that car for ten minutes and didn't know it was there. I've stayed out of trouble nine years. I would never have a gun. I know what it'd cost me.\""],
         guiltyTruths: ["Jail calls recorded later show {DL} telling the cousin to 'say I just got in.'"],
         innocentTruths: ["The backseat passenger was later arrested with the stolen gun's matching holster in a backpack."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "searchSeizure"],
@@ -328,7 +328,7 @@ extension StoryCases {
                             .direct("Why did this claim get flagged?", "\"An owner behind on payments with negative equity, a truck that burned within days of being reported stolen, and no forced entry to the ignition. Those are the top three signs of owner give-up fraud.\""),
                             .direct("What did the phone records show?", "\"{DL}'s phone near the field at 1:12 a.m. the night of the fire. {DL} told me {D.he} was home asleep.\""),
                             .cross("A spare key under the bumper would explain an undamaged ignition?", "\"If the thief found it, yes.\""),
-                            .cross("Two other trucks were stolen and burned in the county that month?", "\"I've read that.\""),
+                            .cross("Two other trucks were stolen and burned in the county that month?", "\"I've read that two other trucks were stolen and burned in the county that month.\""),
                             .cross("You're paid by the insurance company that would owe $41,000?", "\"I'm employed by them, yes.\"")
                         ]),
             WitnessSeed(name: nil, role: "Fire investigator",
@@ -337,7 +337,7 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("How did the fire start?", "\"Gasoline poured in the cab and ignited. This was intentional.\""),
-                            .cross("Thieves burn stolen cars to destroy fingerprints and DNA?", "\"Commonly.\""),
+                            .cross("Thieves burn stolen cars to destroy fingerprints and DNA?", "\"Commonly. Thieves commonly burn stolen cars to destroy fingerprints and DNA.\""),
                             .cross("Nothing in the fire points to the owner?", "\"Nothing in the fire itself.\"")
                         ])
         ],
@@ -349,15 +349,15 @@ extension StoryCases {
                         exam: [
                             .direct("How do you know {DL}?", "\"{DL} is helping me sell my house. It's on that road by the field.\""),
                             .direct("Does {DL} come by late?", "\"{DL} dropped off paperwork after showings a couple of times, at night. Real estate agents keep strange hours.\""),
-                            .cross("You didn't see {DL} that night?", "\"No, I was asleep.\""),
-                            .cross("At 1 a.m.?", "\"Not that late, no.\"")
+                            .cross("You didn't see {DL} that night?", "\"No. I didn't see {DL} that night because I was asleep.\""),
+                            .cross("At 1 a.m.?", "\"Not that late, no. It wasn't 1 a.m.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was underwater on the truck, about to lose it, and burned it for the insurance. {DL}'s phone was at the field that night."],
         defenseTheory: ["A spare key under the bumper, a rash of stolen and burned trucks, and a road {DL} drives for work. Debt isn't proof of fraud."],
         aggravating: ["The fraud involved setting a fire"],
         mitigating: ["No prior criminal record"],
-        allocutions: ["\"I was behind on my truck. That's true. I didn't burn it.\""],
+        allocutions: ["\"I was driving home from a late closing two towns over when that truck went missing, and I filed my claim. I was behind on payments, and that's true. I'd locked myself out three times, and everyone in my family does. I didn't burn it.\""],
         guiltyTruths: ["A gas can receipt from {DL}'s credit card that afternoon surfaced in a later audit."],
         innocentTruths: ["The two men behind the other truck fires admitted taking {DL}'s truck with the spare key."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -447,14 +447,14 @@ extension StoryCases {
                             .direct("What was the joke?", "\"We'd been saying 'don't come Friday' all week because of the calc final. Like, it's going to kill us. Then they canceled the pep rally and {DL} posted it. The song was the one the soccer team plays on the bus.\""),
                             .direct("Did you take it as a threat?", "\"No. I laughed. Everybody who knows {DL} knew.\""),
                             .cross("Strangers saw it too?", "\"It was a private story, but yeah, a lot of people.\""),
-                            .cross("The gunshot sounds were a bad idea?", "\"A really bad idea.\"")
+                            .cross("The gunshot sounds were a bad idea?", "\"Making the gunshot sounds was a really bad idea.\"")
                         ])
         ],
         prosecutionTheory: ["{D} posted a picture of the school, a skull, gunshots, and 'don't come Friday.' Half the school stayed home. That's a threat of mass violence, however it was meant."],
         defenseTheory: ["A bad joke about a calculus final, made to friends, by a kid with no weapons, no plan, and no history. A threat requires intent to threaten."],
         aggravating: ["The threat caused widespread fear and disruption"],
         mitigating: ["{DL} was a teenager with no prior record", "{DL} cooperated fully and apologized immediately", "No weapons or plan found"],
-        allocutions: ["\"I didn't think. I'd never hurt anyone. I'm so sorry for scaring people.\""],
+        allocutions: ["\"We'd been joking all week that the calculus final would kill us. I posted it to my friends and didn't think about anyone else seeing it. I didn't think. I'd never hurt anyone. I'm so sorry for scaring people at the school.\""],
         guiltyTruths: ["A deleted note on {DL}'s phone, recovered later, listed names of students who had bullied {D.him}."],
         innocentTruths: ["The calculus teacher later confirmed the 'don't come Friday' joke had started in class, from the teacher."],
         moods: [.divided], doctrines: ["burdenOfProof"],

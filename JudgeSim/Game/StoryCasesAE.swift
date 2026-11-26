@@ -100,7 +100,7 @@ extension StoryCases {
                 .direct("Why did you start recording?", "\"Because a man grabbed my cart and wouldn't let go. I wanted a record of it.\""),
                 .direct("What happened with the phone?", "\"I asked the deputy if it was the law that I had to show a receipt. He said yes, then he snatched my phone and tried to shut it off. I pulled my arm back because he grabbed me.\""),
                 .cross("You saw the screen on the card reader?", "\"I heard it beep. I didn't read the screen.\"", "\"It beeped. That's what it does when it goes through.\""),
-                .cross("You refused to show a receipt to a deputy.", "\"I didn't have one to show. I offered him my bank app.\""),
+                .cross("You refused to show a receipt to a deputy.", "\"I didn't have one to show. I offered {OFF.him} my bank app.\""),
                 .cross("And you pulled away from him.", "\"From his hand on my wrist, yes.\"")
             ],
             prosecutionOpening: "No receipt, no completed sale, and a $1,098 television headed out the door.",

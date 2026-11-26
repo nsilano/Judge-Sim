@@ -70,8 +70,8 @@ extension StoryCases {
         defenseTheory: ["{DL} buys salvage from many sellers and had no reason to suspect these parts. The State's case rests on two thieves trying to save themselves."],
         aggravating: ["The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: ["The defendant has been gainfully employed", "The defendant has a support system in the community"],
-        victimImpacts: ["{V}: \"That truck was my business. I lost three weeks of contracts and my insurance doubled.\""],
-        allocutions: ["\"I should have asked more questions about where the parts came from.\""],
+        victimImpacts: ["{V}: \"That truck was my business. I haul equipment for three contractors, and without it I lost three weeks of contracts. My insurance doubled, and I borrowed a friend's trailer to finish jobs. When I saw it half-stripped on that lift, I felt sick.\""],
+        allocutions: ["\"I should have asked more questions about where the parts came from. People come by with parts all the time, from salvage auctions and wrecks and private sellers, and I paid what they asked. I never ground a serial number. I'm sorry that {V}'s truck ended up on my lift, and I'll cooperate fully.\""],
         guiltyTruths: ["A ledger in the shop's ceiling, found later, listed each truck by model, the thief's nickname, and $1,500."],
         innocentTruths: ["The texts were later traced to {DL}'s shop manager, who used {DL}'s old phone and ran the back lot at night without {DL}'s knowledge."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "searchSeizure"],
@@ -86,8 +86,8 @@ extension StoryCases {
             defendantExam: [
                 .direct("Where did the parts come from?", "\"People come by with parts all the time. Salvage auctions, wrecks, private sellers. I paid fair prices.\""),
                 .direct("What about the ground-off VINs?", "\"I didn't grind anything. Some parts come that way.\""),
-                .cross("$1,500 for a diesel truck worth $60,000. That's a fair price?", "\"For parts, sometimes.\""),
-                .cross("Why tell people to come after midnight?", "\"I never said that.\"")
+                .cross("$1,500 for a diesel truck worth $60,000. That's a fair price?", "\"For parts, sometimes. A diesel truck for $1,500 can be a fair price for parts.\""),
+                .cross("Why tell people to come after midnight?", "\"I never said that. I never told people to come after midnight.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Prosecutor: \"Did you know {DL} had a prior conviction for possessing stolen goods?\"",
@@ -142,7 +142,7 @@ extension StoryCases {
                             .direct("What did you find?", "\"$212. We'd told teachers they'd get grants. We'd booked buses for the zoo trip. There was nothing.\""),
                             .direct("Is the outgoing president's signature on those checks real?", "\"No. I know her signature. That isn't it.\""),
                             .cross("{DL} volunteered more hours than anyone?", "\"Yes. Which is why nobody looked.\""),
-                            .cross("{DL} has paid back $9,000?", "\"After we caught it.\"")
+                            .cross("{DL} has paid back $9,000?", "\"{DL} paid back $9,000 only after we caught it.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Financial crimes detective",
                         direct: ["\"The statements were cut and pasted.\""],
@@ -170,7 +170,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant made substantial or full restitution to the victim", "The defendant has expressed remorse"],
         victimImpacts: ["A teacher: \"My students sold wrapping paper for a year to go to the aquarium. I had to tell them it wasn't happening.\""],
-        allocutions: ["\"I'm ashamed. I'll repay every dollar. I'm sorry to the kids.\""],
+        allocutions: ["\"I was losing at online slots, and I kept thinking I'd win it back and put it back. I brought photocopies to the meetings, and I did it twenty-two times, and I got good at lying. I'm selling my car to start repaying, and I'll repay every dollar. I'm sorry to the kids.\""],
         guiltyTruths: ["A message from {DL} to a friend that spring: \"PTA money is the easiest money in the world, nobody checks.\""],
         innocentTruths: ["The outgoing PTA president later admitted co-signing several of the cash checks for a shared 'reimbursement' the two of them had agreed on."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -249,7 +249,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did you tie {DL} to the death?", "\"The fentanyl in {VL}'s cell had the same cutting agents and ratios as what we found in {DL}'s car. The letters had a different mix. And the money trail goes straight to {DL}.\""),
                             .direct("What about the cell checks?", "\"The log shows checks every 30 minutes. The video shows {DL} at the desk all night. {VL} was dead for hours before anyone found {V.him}.\""),
-                            .cross("Fentanyl was also coming through the mail room?", "\"Yes. Different composition.\""),
+                            .cross("Fentanyl was also coming through the mail room?", "\"Yes. Different composition. Fentanyl was also coming through the mail room, but it was different.\""),
                             .cross("The pod was understaffed?", "\"Badly. Two officers for a pod that needs five.\"")
                         ])
         ],
@@ -269,7 +269,7 @@ extension StoryCases {
         aggravating: ["The defendant abused a position of public trust", "The offense involved multiple victims"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s mother: \"My child was in jail on a probation violation. They were supposed to be safe. The person paid to watch them sold them the drug that killed them.\""],
-        allocutions: ["\"I needed the money. I never thought anyone would die.\""],
+        allocutions: ["\"I needed the money, and I never thought anyone would die. I brought in cigarettes and phones, and I was handed a package that I did not open. I didn't know there was fentanyl in what they gave me. Every shift did it, which doesn't make it right.\""],
         guiltyTruths: ["A message from {DL} to the dealer the day after the death: \"Lay low, somebody in C died. Next drop next week.\""],
         innocentTruths: ["A later lab retest found the fentanyl in {VL}'s cell matched a batch of soaked letters better than {DL}'s supply."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "searchSeizure"],
@@ -285,7 +285,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Did you bring drugs into the jail?", "\"I brought in cigarettes and phones. I didn't know there was fentanyl in what they handed me.\""),
                 .direct("What about the 12 grams in your car?", "\"I'd been handed a package to bring in. I didn't open it.\""),
-                .cross("$2,000 a trip for cigarettes?", "\"That's what they paid.\""),
+                .cross("$2,000 a trip for cigarettes?", "\"That's what they paid. They paid $2,000 a trip for cigarettes.\""),
                 .cross("You logged cell checks you never made.", "\"Every shift did it. That doesn't make it right.\"")
             ],
             objections: [
@@ -346,7 +346,7 @@ extension StoryCases {
                         exam: [
                             .direct("What warnings did {DL} have?", "\"Thirty-one complaints, a bitten delivery driver, a neighbor pinned to the wall, a vet's letter, and a dog trainer who quit after two sessions.\""),
                             .direct("What did {DL} do after the attack?", "\"Put the dogs back in the apartment. Never called 911. A neighbor did.\""),
-                            .cross("{DL} had bite wounds on {D.his} hands?", "\"Minor ones.\""),
+                            .cross("{DL} had bite wounds on {D.his} hands?", "\"Minor ones. {DL} had minor bite wounds on {D.his} hands.\""),
                             .cross("{DL} says {D.he} threw {D.himself} on top of {VL}?", "\"That's what {D.he} says. The neighbor didn't see that.\"")
                         ])
         ],
@@ -357,9 +357,9 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("How did the dogs behave with you?", "\"Responsive to commands. Big, protective, but manageable with proper handling.\""),
-                            .cross("How many sessions did you have?", "\"Two.\""),
+                            .cross("How many sessions did you have?", "\"Two. We had two sessions.\""),
                             .cross("Did you recommend muzzles in public?", "\"In writing, twice. It's in my notes.\""),
-                            .cross("Did {DL} use them?", "\"Not that I saw.\"")
+                            .cross("Did {DL} use them?", "\"Not that I saw. I didn't see {DL} use them.\"")
                         ])
         ],
         prosecutionTheory: ["{D} knew {D.his} dogs were killers. After dozens of warnings, {D.he} walked them unmuzzled into a narrow hallway, couldn't hold them, and didn't even call 911. That's malice: a depraved indifference to human life."],
@@ -367,7 +367,7 @@ extension StoryCases {
         aggravating: ["The offense was especially heinous, atrocious, or cruel"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s partner: \"She was coming home with groceries. She fought for five minutes. She was the strongest person I knew.\""],
-        allocutions: ["\"I'm so sorry. I'd give anything to undo that day.\""],
+        allocutions: ["\"I'd give anything to undo that day. {V} was at {V.his} door, and the dog lunged, and I couldn't hold it. I threw myself on {V.him}. I thought the dogs were protective and not killers, and I was wrong. I'll carry this for the rest of my life.\""],
         guiltyTruths: ["A neighbor later disclosed a recording of {DL} saying weeks earlier, \"If that coach complains one more time, I'll let them say hello.\""],
         innocentTruths: ["A building camera, found later, showed a maintenance worker leaving the dogs' door unlatched and the dogs bolting out before {DL} could grab them."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "lesserIncluded"],
@@ -459,7 +459,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Who handled cars between auction and sale?", "\"{DL}'s old partner did the reconditioning in the back bay. {DL} was out front selling.\""),
-                            .cross("Who signed the odometer statements?", "\"{DL}.\""),
+                            .cross("Who signed the odometer statements?", "\"{DL} signed the odometer statements.\""),
                             .cross("Was the partner still there the last eight months?", "\"No, {DL} bought {D.his} share out.\"")
                         ])
         ],
@@ -468,7 +468,7 @@ extension StoryCases {
         aggravating: ["The offense involved multiple victims"],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
         victimImpacts: ["{V}: \"I bought that car for my kid's commute to nursing school. The transmission went because it had 160,000 miles on it.\""],
-        allocutions: ["\"I'll make every buyer whole.\""],
+        allocutions: ["\"I'll make every buyer whole. I sell cars, and the reconditioning was done in the back, and I signed what the paperwork said. I don't read every sheet, and I don't know who used that tool. I'm sorry to {V} and to every family who bought from my lot. I'll refund what I owe.\""],
         guiltyTruths: ["A text from {DL} to the former partner: \"Take another 80 off the Camry, it's moving slow.\""],
         innocentTruths: ["The device's account was registered to the former partner, and the purchase was made from the partner's home address."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],

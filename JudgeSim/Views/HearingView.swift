@@ -218,7 +218,8 @@ struct HearingView: View {
 
         SectionTitle(text: "Order", icon: "hammer.fill")
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(HearingDecision.allCases, id: \.self) { decision in
+            // Holding the violation for the new case is only a choice when the new case is in this court.
+            ForEach(HearingDecision.allCases.filter { $0 != .holdForNewCase || h.newCaseDocket != nil }, id: \.self) { decision in
                 ChoiceRow(title: decision.label,
                           subtitle: decision == .crv ? "\(ViolationHearings.crvDays(h)) days here. " + decision.detail
                             : (decision == .revoke ? "Activates \(ViolationHearings.exposureText(h.probation)) after CRV credit. " + decision.detail : decision.detail),
@@ -269,7 +270,7 @@ struct HearingView: View {
         }
         .card()
 
-        PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.decision != nil && session.rulings.finding != nil,
+        PrimaryButton(title: "Enter Order", icon: "hammer.fill", enabled: session.rulings.decision != nil && (session.rulings.finding != nil || session.rulings.decision == .holdForNewCase),
                       hint: "Make a finding and choose an order above.") {
             Haptics.gavel()
             session.finish()

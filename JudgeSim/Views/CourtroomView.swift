@@ -347,7 +347,7 @@ struct BriefingStage: View {
 
             if let victim = VictimProfiles.make(c, county: session.county) {
                 CollapsibleSection(title: "The victim", icon: "person.crop.circle.badge.exclamationmark",
-                                   summary: "\(victim.name)" + (victim.age.map { ", \($0)" } ?? "") + (victim.deceased ? " · deceased" : " · \(victim.occupation.lowercasedPhrase)"),
+                                   summary: "\(victim.name), \(victim.description)" + (victim.deceased ? " · deceased" : " · \(victim.occupation.lowercasedPhrase)"),
                                    expanded: false) {
                     VictimCard(victim: victim)
                 }

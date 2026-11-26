@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "Assaulted {V} with a deadly weapon, an aluminum softball bat, inflicting serious injury, at {PLACE.PARK} on {DATE}.",
         ageRange: 26...50, occupations: ["HVAC technician", "warehouse supervisor", "auto body painter"], hasVictim: true,
         summaries: [
-            "On {DATE}, after a close coed rec-league game at {PLACE.PARK}, {V} and {D} argued at the gate between the field and the gravel lot about a play at home plate. Witnesses agree {V} pushed {D} and followed {D.him} toward the cars, shouting. They disagree about what came next. {D} had a bag of bats over {D.his} shoulder. {D.He} pulled one out and swung once. It caught {V} beside the left eye and broke the orbital bone; {V} needed surgery and a titanium plate. {DL} says {V} came at {D.him} with fists raised and {D.he} swung to keep {V} off. Two teammates of {V}'s say {V} had stopped and turned away."
+            "On {DATE}, after a close coed rec-league game at {PLACE.PARK}, {V} and {D} argued at the gate between the field and the gravel lot about a play at home plate. Witnesses agree {V} pushed {DL} and followed {D.him} toward the cars, shouting. They disagree about what came next. {D.He} had a bag of bats over {D.his} shoulder. {D.He} pulled one out and swung once. It caught {V} beside the left eye and broke the orbital bone; {V} needed surgery and a titanium plate. {DL} says {V} came at {D.him} with fists raised and {D.he} swung to keep {V} off. Two teammates of {V}'s say {V} had stopped and turned away."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Surgical Records", "A fracture of the left orbital floor repaired with a titanium plate. {V} spent two nights in the hospital and still has double vision when looking up."),
@@ -34,7 +34,7 @@ extension StoryCases {
                             .direct("What happened after the game?", "\"We argued about the play at the plate. I was loud. I pushed {D.him}, once, and {D.he} walked off toward the lot, and I followed for a few steps still running my mouth.\""),
                             .direct("Then what?", "\"I said something like 'forget it' and turned toward my truck. Next thing I'm on the gravel and I can't see out of my left eye.\"", "\"I'd already turned to go. That's the last thing I remember before the gravel.\""),
                             .direct("How are you now?", "\"There's a plate under my eye. When I look up I see two of everything. I drive a forklift. I haven't been cleared to go back.\""),
-                            .cross("You pushed {DL} first.", "\"I did. Once.\""),
+                            .cross("You pushed {DL} first.", "\"I did. Once. I pushed {DL} first, one time.\""),
                             .cross("And you were suspended last season for shoving another player.", "\"Yes. And I'd take a punch for that. Not a bat.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Sheriff's investigator",
@@ -58,7 +58,7 @@ extension StoryCases {
                             .direct("What did you see?", "\"{V} shoved {D.him} and kept coming, yelling, fists up. {DL} backed up two or three steps and then swung.\""),
                             .direct("How close was {V}?", "\"An arm's length. Maybe less.\""),
                             .cross("You were walking to your car with your back to them, weren't you?", "\"I turned around when I heard the yelling.\""),
-                            .cross("When did you turn, before or after the swing?", "\"Right before. I think.\"")
+                            .cross("When did you turn, before or after the swing?", "\"I think I turned right before the swing.\"")
                         ])
         ],
         prosecutionTheory: ["{V} pushed first and was loud, but {V} had turned away. {D} answered words and a shove with a bat to the face."],
@@ -66,7 +66,7 @@ extension StoryCases {
         aggravating: ["The victim suffered permanent injury"],
         mitigating: ["The victim was a voluntary participant in the conduct", "No prior criminal record"],
         victimImpacts: ["\"I've played ball in that league since I was nineteen. I can't play catch with my daughter now because I can't tell which ball is real. I was wrong to push. I wasn't wrong enough for this.\""],
-        allocutions: ["\"I've played that night back a thousand times. I wish I'd kept walking.\""],
+        allocutions: ["\"I have played that night back a thousand times, and every time I wish I had just kept walking to my truck. {V} shoved me and kept coming, and I swung the bag without thinking. I never wanted anyone hurt over a rec-league game. I'm sorry for the injury and for what {V.he} has been through since, and I hope {V.he} heals.\""],
         guiltyTruths: ["A second video, found later on a player's phone, showed {V} with both hands at {V.his} sides, half-turned, when the bat came around."],
         innocentTruths: ["A second video, found later on a player's phone, showed {V} lunging with a fist cocked as {DL} swung."],
         moods: [.divided], doctrines: ["selfDefense", "burdenOfProof", "lesserIncluded"],
@@ -105,7 +105,7 @@ extension StoryCases {
         ],
         ageRange: 52...71, occupations: ["farmer", "cattle farmer"], hasVictim: true,
         summaries: [
-            "Around 11:20 p.m. on {DATE}, three young people who had been driving the back roads near Shiloh pulled a pickup into the gravel entrance of {D}'s farm to turn around. {D}, who had reported two tractor batteries and a welder stolen from the same barn in the past month, came down the hill with a .30-30 rifle and a flashlight. The driver says {D} yelled once and fired as the truck backed out. Two rounds hit the truck: one the tailgate, one the rear window, which spattered glass into the face and neck of {V}, 18, riding in the back seat. {DL} says {D.he} fired twice into the ground as a warning, and the truck came at {D.him} before it reversed."
+            "Around 11:20 p.m. on {DATE}, three young people who had been driving the back roads near Shiloh pulled a pickup into the gravel entrance of {D}'s farm to turn around. {DL}, who had reported two tractor batteries and a welder stolen from the same barn in the past month, came down the hill with a .30-30 rifle and a flashlight. The driver says {DL} yelled once and fired as the truck backed out. Two rounds hit the truck: one the tailgate, one the rear window, which spattered glass into the face and neck of {V}, 18, riding in the back seat. {DL} says {D.he} fired twice into the ground as a warning, and the truck came at {D.him} before it reversed."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "Bullet Holes", "One hole through the tailgate and one through the rear window, both angled upward, from behind the truck. A fragment was recovered from the back seat headrest.", .search),
@@ -126,7 +126,7 @@ extension StoryCases {
                             .direct("What happened?", "\"A light came down the hill and somebody yelled. My friend was already backing out. Then a bang, and the back window just came in on me.\"", "\"Somebody yelled and there was a bang and the glass hit me. I put my head down and screamed.\""),
                             .direct("How were you hurt?", "\"Glass in my face and neck. They pulled a piece out right under my eye. I still have a scar there. I don't ride in back seats anymore.\""),
                             .cross("You'd driven up the lane a ways, hadn't you?", "\"I don't know how far. I was in the back.\""),
-                            .cross("Had anyone been drinking?", "\"Not me. I'm eighteen.\"")
+                            .cross("Had anyone been drinking?", "\"Not me. I'm eighteen, and I wasn't drinking.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Sheriff's investigator",
                         direct: ["\"Both rounds came from behind the truck.\""],
@@ -148,8 +148,8 @@ extension StoryCases {
                         exam: [
                             .direct("What's it been like out there?", "\"Batteries, fuel, a trailer, two four-wheelers. Thieves come at night with their lights off. The deputies are twenty minutes away on a good night.\""),
                             .direct("How do you know {DL}?", "\"Thirty years. {D.He}'s the one who pulls your cows out of the ditch. Never been in trouble.\""),
-                            .cross("You weren't at the gate that night.", "\"No, sir.\""),
-                            .cross("Would you shoot at a truck that was leaving?", "\"I hope I wouldn't.\"")
+                            .cross("You weren't at the gate that night.", "\"No, sir. I wasn't at the gate that night.\""),
+                            .cross("Would you shoot at a truck that was leaving?", "\"I wouldn't shoot at a truck that was leaving, I hope.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was tired of thieves and fired on a truckload of teenagers who were leaving. Both bullets hit the back of the truck."],
@@ -157,7 +157,7 @@ extension StoryCases {
         aggravating: ["The offense created a great risk of death to more than one person"],
         mitigating: ["No prior criminal record", "The defendant has a support system in the community", "The defendant has been a person of good character"],
         victimImpacts: ["\"I was eighteen and riding around with my friends because there's nothing else to do out there. I didn't steal anybody's batteries. Every time I look in a mirror I see the scar under my eye and I remember the sound of that window.\""],
-        allocutions: ["\"I'm sorry for that child. I thought they were the ones who'd been robbing me. I was wrong.\""],
+        allocutions: ["\"I'm sorry for that child, and for the other two in the truck. I had lost a welder and two tractor batteries in a month, and when I heard an engine in my lane at night I thought they were the ones robbing me. I was wrong, and I know it now. I have not slept a full night since I saw that glass.\""],
         guiltyTruths: ["{DL} told a neighbor the next morning, \"I wasn't going to let them leave this time.\""],
         innocentTruths: ["The driver later admitted to a friend that he'd driven up the lane toward {DL} with his high beams on \"to scare the old man\" before backing out."],
         moods: [.divided], doctrines: ["selfDefense", "burdenOfProof", "lesserIncluded"],
@@ -198,7 +198,7 @@ extension StoryCases {
         ],
         ageRange: 23...45, occupations: ["certified nursing assistant", "line cook", "school bus driver"], hasVictim: true,
         summaries: [
-            "{D} was two months behind on rent at {PLACE.APARTMENTS}. On {DATE}, while {D} was at work, the landlord, {V}, changed the lock on Unit 4 and taped a notice to the door. No court had ordered an eviction. That night {D} broke the back window, climbed in, and filled two trash bags with clothes, {D.his} child's school things, and a laptop. {V}, who lives across the parking lot, called 911 and told deputies a burglar was carrying property out of the unit. {DL} says everything {D.he} took was {D.his}. {V} says the laptop and a television left in the unit were being held for the back rent under the lease."
+            "{D} was two months behind on rent at {PLACE.APARTMENTS}. On {DATE}, while {DL} was at work, the landlord, {V}, changed the lock on Unit 4 and taped a notice to the door. No court had ordered an eviction. That night {DL} broke the back window, climbed in, and filled two trash bags with clothes, {D.his} child's school things, and a laptop. {V}, who lives across the parking lot, called 911 and told deputies a burglar was carrying property out of the unit. {DL} says everything {D.he} took was {D.his}. {V} says the laptop and a television left in the unit were being held for the back rent under the lease."
         ],
         prosecutionEvidence: [
             E(.physical, 2, "Broken Window", "The back window of Unit 4 broken from outside, with blood on the sill from a cut on {DL}'s forearm."),
@@ -229,7 +229,7 @@ extension StoryCases {
                             .direct("What did you find?", "\"{DL} in the parking lot with two trash bags and a cut forearm. The back window was broken.\""),
                             .direct("What was in the bags?", "\"Clothes, a child's backpack, medication in {DL}'s name, and a laptop. {D.He} showed me a receipt for the laptop in {D.his} email.\""),
                             .direct("Why did you charge {D.him}?", "\"The landlord said the lease gave {V.him} the right to the property and the unit, and I had the broken window. I let the magistrate sort it out.\""),
-                            .cross("Did you check whether there was an eviction order?", "\"Not that night.\""),
+                            .cross("Did you check whether there was an eviction order?", "\"Not that night. I didn't check whether there was an eviction order.\""),
                             .cross("What did {DL} say to you?", "\"'This is my home. My kid's medicine is in there.'\"")
                         ])
         ],
@@ -241,7 +241,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you find in the court records?", "\"No summary ejectment filed by {V} for Unit 4, ever. Without a judgment and a sheriff's writ, a residential tenant can't be locked out in North Carolina.\""),
                             .direct("Can a lease give a landlord the right to hold a tenant's belongings?", "\"Not for residential tenants. That clause is void under our landlord-tenant law.\""),
-                            .cross("You work for the office that represents {DL} in the civil case.", "\"Yes.\""),
+                            .cross("You work for the office that represents {DL} in the civil case.", "\"Yes. I work for the office that represents {DL} in the civil case.\""),
                             .cross("Breaking a window is still breaking a window.", "\"It's {DL}'s window to answer for. It's not a burglary of {D.his} own home.\"")
                         ])
         ],
@@ -250,7 +250,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant supports the defendant's family", "The defendant has been gainfully employed"],
         victimImpacts: ["\"I'm not a big company. I own eight units and I'm behind too. I didn't think I needed a lawyer to lock my own door.\""],
-        allocutions: ["\"I'll pay for the window. My son's inhaler was in there. I wasn't going to leave it.\""],
+        allocutions: ["\"I'll pay for the back window, and I'm sorry for breaking it. I came home from a double shift to a lock that wouldn't turn and a notice taped to my door. My son's inhaler and school things were in there, and I wasn't going to leave a boy without his medicine. All I took was ours, and I left the television.\""],
         guiltyTruths: ["A neighbor later said {DL} told her {D.he} planned to take the television too and sell it before the landlord could."],
         innocentTruths: ["{V} had locked out two earlier tenants the same way, and a legal aid lawyer had warned {V.him} in writing that it was illegal."],
         moods: [.sympathetic], doctrines: ["burdenOfProof", "lesserIncluded", "mistakeOfFact"],
@@ -285,7 +285,7 @@ extension StoryCases {
         specification: "Assaulted {V} with a deadly weapon, a handgun, with intent to kill, inflicting serious injury, outside {BAR} on {DATE}.",
         ageRange: 28...46, occupations: ["licensed security guard", "armed security officer"], hasVictim: true,
         summaries: [
-            "Shortly before closing on {DATE}, {D}, the armed security guard at {BAR}, put {V} out the door after {V} threw a drink at a bartender. Ten minutes later {V} came back up the sidewalk toward the door, shouting, with something dark in {V.his} right hand. {D} drew and fired three times. One round hit {V} in the hip. The object was a phone. {DL} says {V} had told {D.him} on the way out, \"I've got something in the car for you,\" and came back holding the dark object low like a pistol. The bar's door camera shows the approach but not {V}'s hand clearly."
+            "Shortly before closing on {DATE}, {D}, the armed security guard at {BAR}, put {V} out the door after {V} threw a drink at a bartender. Ten minutes later {V} came back up the sidewalk toward the door, shouting, with something dark in {V.his} right hand. {DL} drew and fired three times. One round hit {V} in the hip. The object was a phone. {DL} says {V} had told {D.him} on the way out, \"I've got something in the car for you,\" and came back holding the dark object low like a pistol. The bar's door camera shows the approach but not {V}'s hand clearly."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Door Camera", "{V} walks up the sidewalk shouting, right arm at {V.his} side. {D} draws and fires three times from about twenty feet. The camera angle and the dark object in {V}'s hand make it impossible to tell what it is."),
@@ -337,7 +337,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
         victimImpacts: ["\"I acted like an idiot that night and I deserved to be thrown out. I didn't deserve a bullet. I used to run every morning. Now I count the steps to my mailbox.\""],
-        allocutions: ["\"I thought I was about to die. I'm sorry it was a phone. I think about that every day.\""],
+        allocutions: ["\"I thought my life was in danger. I had heard that sentence before, and the last time it ended with a gun, so when I saw something black in {V.his} hand I fired. I'm sorry it turned out to be a phone, and I'm sorry {V.he} was hurt. I think about those three shots every single day.\""],
         guiltyTruths: ["{DL} texted a coworker an hour before the shooting, \"If that drunk comes back I'm going to light that drunk up.\""],
         innocentTruths: ["A phone video from across the street later showed {V} raise the phone toward {DL} in a two-handed grip, like a pistol, just before the shots."],
         moods: [.divided], doctrines: ["selfDefense", "imperfectSelfDefense", "burdenOfProof", "lesserIncluded"],
@@ -376,7 +376,7 @@ extension StoryCases {
         ],
         ageRange: 19...34, occupations: ["unemployed", "day laborer", "fast food worker"], hasVictim: true,
         summaries: [
-            "At 7:25 a.m. on {DATE}, {V}, a nurse coming off a twelve-hour night shift at {PLACE.HOSPITAL}, was unlocking {V.his} car on level 3 of the parking deck when a man in a gray hoodie held a folding knife to {V.his} side and took {V.his} purse. Forty minutes later {V}'s debit card bought $84 in gas and cigarettes at {PLACE.GASSTATION}. The station camera shows {D}. Two days later {V} picked {D} from a photo array as the man with the knife. {DL} says a man {D.he} knows only as \"Junior\" gave {D.him} the card to buy gas and {D.he} was nowhere near the hospital."
+            "At 7:25 a.m. on {DATE}, {V}, a nurse coming off a twelve-hour night shift at {PLACE.HOSPITAL}, was unlocking {V.his} car on level 3 of the parking deck when a man in a gray hoodie held a folding knife to {V.his} side and took {V.his} purse. Forty minutes later {V}'s debit card bought $84 in gas and cigarettes at {PLACE.GASSTATION}. The station camera shows {D}. Two days later {V} picked {DL} from a photo array as the man with the knife. {DL} says a man {D.he} knows only as \"Junior\" gave {D.him} the card to buy gas and {D.he} was nowhere near the hospital."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Gas Station Video", "{D} at the register at 8:05 a.m., paying $84 with {V}'s debit card, wearing a gray hoodie."),
@@ -397,7 +397,7 @@ extension StoryCases {
                             .direct("How long did you see his face?", "\"A few seconds. He was close. The hood was up but I saw his face under it.\"", "\"Three or four seconds, maybe. Close up, under the hood.\""),
                             .direct("How has this affected you?", "\"I park in the same deck every night. I don't anymore. My husband walks me in. I'm a nurse. I'm supposed to be the one who takes care of people, and now I'm scared of a stairwell.\""),
                             .cross("You'd been awake for more than twenty hours.", "\"Yes. I still saw him.\""),
-                            .cross("You told the officer 'ninety percent,' not a hundred.", "\"I was being honest.\"")
+                            .cross("You told the officer 'ninety percent,' not a hundred.", "\"I was being honest. I said ninety percent because that's how sure I was.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Robbery detective",
                         direct: ["\"The card was used forty minutes later by {DL}.\""],
@@ -428,7 +428,7 @@ extension StoryCases {
         aggravating: ["The victim was targeted while leaving work"],
         mitigating: ["The defendant is young"],
         victimImpacts: ["\"I've worked nights at that hospital for eleven years. I've held people's hands while they died. I never once thought about walking to my car. Now I sit in it with the doors locked before I can start it.\""],
-        allocutions: ["\"I used the card. I shouldn't have. I didn't rob anybody.\"", "\"I'm sorry for what {V} went through.\""],
+        allocutions: ["\"I used that card, and I should not have. A friend at the pump told me to fill up and take the cigarettes, and I knew it was not his to give, but I did it anyway. That was wrong and I'll answer for it. I did not rob anybody, though. I was asleep at my mom's house that morning.\"", "\"I'm sorry for what {V} went through on that deck after a long night shift. Nobody should have a knife held to them walking to their car. I wish I could take that fear away and give {V.him} the morning back. I hope {V.he} goes to work now without looking over {V.his} shoulder.\""],
         guiltyTruths: ["{V}'s purse was later found in a storm drain two blocks from {DL}'s mother's house, with {DL}'s fingerprint on the clasp."],
         innocentTruths: ["A man arrested for another deck robbery a month later had {V}'s hospital badge in his car and a cousin called Junior."],
         moods: [.wantsConviction], doctrines: ["eyewitnessID", "burdenOfProof", "lesserIncluded"],

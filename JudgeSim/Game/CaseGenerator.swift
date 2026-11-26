@@ -30,6 +30,8 @@ enum CaseGenerator {
         var allowMurder = true
         /// A follow-up case: what kind it is, the victim it involves, and how long ago it happened.
         var forcedTemplateKeys: [String]? = nil
+        /// Follow-up cases this defendant has had already; none of them comes again for the same person.
+        var avoidTemplateKeys: Set<String> = []
         var victimOverride: String? = nil
         var incidentDaysAgo: Int? = nil
         /// The day of the arrest, when the court already knows it (a warrant executed, a first appearance).
@@ -51,6 +53,18 @@ enum CaseGenerator {
 
     /// A person charged again is likelier to be charged with something like their last offense than with something far
     /// worse: a reckless driver comes back for driving, a thief for theft, and murder is for people with a violent record.
+    /// A story with two written statements, one admitting and one denying: the defendant who did it admits it and the one who
+    /// didn't denies it, whatever the order the author wrote them in.
+    static func allocutionFitting(_ options: [String], guilty: Bool, rng: inout SeededRNG) -> String {
+        guard options.count > 1 else { return options.first ?? "" }
+        func denies(_ text: String) -> Bool {
+            let lower = text.lowercased()
+            return ["i didn't", "i did not", "wasn't me", "it wasn't", "not guilty", "innocent", "i never took", "i never did", "i never touched", "i never went"].contains { lower.contains($0) }
+        }
+        let fitting = options.filter { denies($0) != guilty }
+        return rng.pick(fitting.isEmpty ? options : fitting)
+    }
+
     static func narrowedForReoffense(_ templates: [CaseTemplate], person: PersonRecord, rng: inout SeededRNG) -> [CaseTemplate] {
         let text = (person.priors.last?.offense ?? "").lowercased()
         func has(_ words: [String]) -> Bool { words.contains { text.contains($0) } }
@@ -129,10 +143,12 @@ enum CaseGenerator {
         guard let story = t.story else { return nil }
         if let time = story.time { return time }
         if t.summaries.contains(where: { $0.contains("{TIME}") }) { return nil }
-        let pattern = "\\b(1[0-2]|[1-9]):[0-5][0-9] [ap]\\.m\\."
+        let pattern = "\\b(1[0-2]|[1-9])(:[0-5][0-9])? [ap]\\.m\\."
         func first(_ text: String) -> String? {
             guard let range = text.regexRange(of: pattern, options: .regularExpression) else { return nil }
-            return String(text[range])
+            let found = String(text[range])
+            // "4 p.m." reads as "4:00 p.m." so the clock matches the draw's format.
+            return found.contains(":") ? found : found.replacingOccurrences(of: " ", with: ":00 ")
         }
         for entry in story.timeline where entry.0 == 0 { if let time = first(entry.1) { return time } }
         for summary in t.summaries { if let time = first(summary) { return time } }
@@ -159,7 +175,7 @@ enum CaseGenerator {
         // Written cases come up first, until each has been heard once.
         // Alternate tellings wait until every written case has been heard in this career: until then each story is told
         // as written, and only after all of them are used up do the retellings start.
-        let originalsUsed = StoryCases.all.filter { context.allowMurder || !isMurder($0) }.allSatisfy { (useCounts[$0.key] ?? 0) >= 1 }
+        let originalsUsed = StoryCases.audited.filter { context.allowMurder || !isMurder($0) }.allSatisfy { (useCounts[$0.key] ?? 0) >= 1 }
         // Now and then, about one draw in twenty, a story that has been heard before may come back told another way even
         // early on; it stays rare until the whole bank is used up.
         let earlyRetelling = rng.chance(0.05)
@@ -168,7 +184,8 @@ enum CaseGenerator {
         if let keys = context.forcedTemplateKeys {
             let sex = context.returning.map { NameBank.gender(of: $0.name) }
             let age = context.returning.map { $0.age(on: context.date) }
-            let named = keys.compactMap { key in (FollowUpCases.all + CaseTemplates.all).first { $0.key == key } }.filter { t in
+            // The story auditor: a follow-up that is still a skeleton is not put in front of the player.
+            let named = keys.compactMap { key in (FollowUpCases.all + CaseTemplates.all).first { $0.key == key } }.filter { StoryAuditor.passes($0) }.filter { t in
                 sex.map { (t.requiredGenders["D"] ?? $0) == $0 } ?? true
             }.filter { t in age.map { FollowUpCases.fits(t.key, age: $0) } ?? true }
             // Keep the same victim when the case allows that person; otherwise any of the kinds named.
@@ -185,6 +202,9 @@ enum CaseGenerator {
                 let extra = Self.narrowedForReoffense(wide, person: person, rng: &rng)
                 if !extra.isEmpty { fitting = [rng.pick(extra)] }
             }
+            // Never a scene this person has already been through.
+            let freshForPerson = fitting.filter { !context.avoidTemplateKeys.contains($0.key) }
+            if !freshForPerson.isEmpty { fitting = freshForPerson }
             // Not one heard lately, and the ones heard least first, so the same follow-up doesn't come twice in a row.
             let notLately = fitting.filter { !context.recentTemplateKeys.contains($0.key) }
             if !notLately.isEmpty { fitting = notLately }
@@ -193,12 +213,12 @@ enum CaseGenerator {
                 return build(StoryVariants.telling(of: template, heard: tellingCount(template.key)), seed: seed, band: rng.chance(0.6) ? .strong : .close, context: context, rng: &rng)
             }
         }
-        var unheardStories = StoryCases.all.filter { useCounts[$0.key] == nil }
+        var unheardStories = StoryCases.audited.filter { useCounts[$0.key] == nil }
         if !context.allowMurder { unheardStories.removeAll(where: isMurder) }
         // Every case that can come to trial here is a written one, calendar-call matters included.
         // Unheard stories come first; once all have been heard, the ones heard least come back with new people.
         if !context.generic {
-            var all = StoryCases.all
+            var all = StoryCases.audited
             if !context.allowMurder { all.removeAll(where: isMurder) }
             if let wanted = context.categories {
                 let narrowed = all.filter { wanted.contains($0.category) }
@@ -220,7 +240,7 @@ enum CaseGenerator {
             // A kind of case or a returning defendant narrows the choice only while it has an unheard story: once the narrowed
             // list is used up, an unheard story of any kind comes before one is told twice.
             if !originalsUsed && (all.map { useCounts[$0.key] ?? 0 }.min() ?? 0) >= 1 {
-                var unheardAnywhere = StoryCases.all.filter { (useCounts[$0.key] ?? 0) == 0 }
+                var unheardAnywhere = StoryCases.audited.filter { (useCounts[$0.key] ?? 0) == 0 }
                 if !context.allowMurder { unheardAnywhere.removeAll(where: isMurder) }
                 if context.returning == nil || storyContext.returning == nil, !unheardAnywhere.isEmpty { all = unheardAnywhere }
             }
@@ -252,6 +272,19 @@ enum CaseGenerator {
             else if let oldest = candidates.map({ context.recentTemplateKeys.lastIndex(of: $0.key) ?? -1 }).min() {
                 candidates = candidates.filter { (context.recentTemplateKeys.lastIndex(of: $0.key) ?? -1) == oldest }
             }
+            // The same kind of charge shouldn't run in a streak: nothing with the same main offense as the last few cases
+            // while another kind is on offer, and the stalking family (stalking, cyberstalking, a violated order) waits far longer.
+            func lawGroup(_ key: String) -> String? {
+                guard let law = (StoryCases.all.first { $0.key == key } ?? CaseTemplates.all.first { $0.key == key })?.primaryLaw else { return nil }
+                return ["stalking", "cyberstalking", "stalkingCourtOrder", "dvpoViolation"].contains(law) ? "stalkingFamily" : law
+            }
+            let recentGroups = context.recentTemplateKeys.suffix(25).compactMap(lawGroup)
+            let nearGroups = Set(recentGroups.suffix(5))
+            let varied = candidates.filter { c in
+                guard let g = lawGroup(c.key) else { return true }
+                return g == "stalkingFamily" ? !recentGroups.contains(g) : !nearGroups.contains(g)
+            }
+            if !varied.isEmpty { candidates = varied }
             if !candidates.isEmpty {
                 // Murder trials come up now and then, not every week: most draws go to another kind of case.
                 let others = candidates.filter { !isMurder($0) }
@@ -422,8 +455,8 @@ enum CaseGenerator {
             // A written case's defendant gets the background the story gives, or a plain one; a random life story
             // could contradict what the case says (military service, a divorce, a layoff, a prison GED).
             let backgroundLine = t.story.map { story in
-                story.background ?? rng.pick(["Grew up in {HOOD}.", "Has lived in {HOOD} for most of the last decade.",
-                                              "Raised in {HOOD}.", "Moved to {HOOD} as a teenager and stayed."])
+                story.background ?? Variety.pick(["Grew up in {HOOD}.", "Has lived in {HOOD} for most of the last decade.",
+                                              "Raised in {HOOD}.", "Moved to {HOOD} as a teenager and stayed.", "Born and raised in {HOOD}.", "Has called {HOOD} home since childhood.", "Moved to {HOOD} for work and has stayed ever since.", "Has spent nearly all of adult life in {HOOD}.", "Settled in {HOOD} in early adulthood after growing up in a neighboring county.", "Has lived in {HOOD} on and off for years.", "Came to {HOOD} as a child and finished school there."], rng: &rng)
             } ?? BackgroundLines.pick(age: age, occupation: occupation, used: context.usedBackgrounds, towns: county.towns, rng: &rng)
             let background = TextFiller(values: ["HOOD": rng.pick(county.towns)])(backgroundLine)
             defendant = Defendant(personID: UUID(), name: name, age: age, occupation: occupation.capitalizedFirst,
@@ -440,7 +473,15 @@ enum CaseGenerator {
         // A parent, child, or sibling the story says shares the family name has the defendant's last name.
         let familyVictim = t.story?.sameSurname == true
             ? String(drawnVictim.split(separator: " ").first ?? "") + " " + defendant.lastName : drawnVictim
-        let victimName = t.hasVictim ? (sameVictim ?? familyVictim) : nil
+        // A story whose victim is a business, church, or school ("{V}, a bakery") gets that kind of name, not a person's.
+        let storyAllText = t.story == nil ? "" : (t.summaries + [t.specification] + (t.prosecutionWitnesses + t.defenseWitnesses).flatMap { $0.exam.flatMap { $0.questions + $0.answers } }).joined(separator: " ")
+        let orgPattern = "\\{V\\}, an? (small |local )?(bakery|bar|restaurant|hotel|motel|school district|school|pharmacy|company|bank|credit union|store|hardware store|church|laundromat|farm supply store|tire shop|jewelry store|diner|cafe|market|dealership|salon|gym|clinic|warehouse|bodega)\\b(?! (owner|manager|clerk|employee|worker|teller|cashier|attendant|director|president))"
+        let victimIsOrganization = t.hasVictim && sameVictim == nil && !storyAllText.isEmpty
+            && storyAllText.regexRange(of: orgPattern, options: .regularExpression) != nil
+            && !storyAllText.contains("{V.") && !storyAllText.contains("{VL}") && !storyAllText.contains("{VF}")
+        let organizationName = victimIsOrganization
+            ? NameBank.organization(church: storyAllText.contains("{V}, a church"), using: &rng, excluding: &used) : nil
+        let victimName = t.hasVictim ? (organizationName ?? sameVictim ?? familyVictim) : nil
         let drawnAlternate = NameBank.person(using: &rng, excluding: &used, gender: t.requiredGenders["ALT"], avoiding: knownNames)
         let alternate = t.story?.altSameSurname == true
             ? String(drawnAlternate.split(separator: " ").first ?? "") + " " + defendant.lastName : drawnAlternate
@@ -453,7 +494,7 @@ enum CaseGenerator {
         let sheriffDetectives = county.detectives.filter { $0.agency.contains("Sheriff") }
         let sheriffOfficers = county.officers.filter { $0.agency.contains("Sheriff") }
         var detective = setting == .road && !sheriffs
-            ? CastMember(name: trooperName, title: rng.pick(["Trooper", "Master Trooper", "Sergeant"]), agency: "N.C. State Highway Patrol")
+            ? CastMember(name: trooperName, title: Variety.pick(["Trooper", "Master Trooper", "Sergeant", "Trooper First Class", "First Sergeant", "Lieutenant"], rng: &rng), agency: "N.C. State Highway Patrol")
             : rng.pick(sheriffs && !sheriffDetectives.isEmpty ? sheriffDetectives : county.detectives)
         var officer = setting == .road && !sheriffs && rng.chance(0.5)
             ? CastMember(name: NameBank.person(using: &rng, excluding: &used, avoiding: context.reservedNames), title: "Trooper", agency: "N.C. State Highway Patrol")
@@ -468,6 +509,20 @@ enum CaseGenerator {
         let daysBack = context.incidentDaysAgo.map { max(1, $0) } ?? (speedySeed != nil ? rng.int(560...900) : rng.int(150...330) + (minDays - 150))
         var incident = Calendar.current.date(byAdding: .day, value: -daysBack, to: context.date) ?? context.date
         if context.incidentDaysAgo == nil, let pinned = t.story?.when?.incident(before: context.date, minDays: minDays, using: &rng) { incident = pinned }
+        // A story that names the day of the week for its date ("On Friday, {DATE}") or says it was on a weekend happens on one.
+        do {
+            let text = t.summaries.joined(separator: " ")
+            let cal = Calendar.current
+            let names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+            var wanted: Set<Int>? = nil
+            for (i, name) in names.enumerated() where text.contains("\(name), {DATE}") { wanted = [i + 1] }
+            if wanted == nil, text.contains("on a weekend") || text.contains("over the weekend") { wanted = [1, 7] }
+            if let wanted {
+                for back in 0..<7 {
+                    if let day = cal.date(byAdding: .day, value: -back, to: incident), wanted.contains(cal.component(.weekday, from: day)) { incident = day; break }
+                }
+            }
+        }
         let prosecutor = rng.pick(county.assistantDAs)
         let usePublicDefender = rng.chance(0.6)
         let stillDefending: ([String]) -> [String] = { list in let kept = list.filter { !context.departedCounsel.contains($0) }; return kept.isEmpty ? list : kept }
@@ -542,6 +597,13 @@ enum CaseGenerator {
         values.merge(NameBank.gender(of: defendant.name).tokens(for: "D")) { a, _ in a }
         values.merge(NameBank.gender(of: victimName ?? "").tokens(for: "V")) { a, _ in a }
         values.merge(NameBank.gender(of: alternate).tokens(for: "ALT")) { a, _ in a }
+        // The case's officers and detectives get pronouns too: {OFF.him}, {DET.he}, {TROOPER.his}.
+        for key in ["OFF", "DET", "TROOPER"] {
+            guard let display = values[key] else { continue }
+            let titles: Set<String> = ["Deputy", "Investigator", "Detective", "Trooper", "Officer", "Sgt.", "Sergeant", "Lt.", "Lieutenant", "Cpl.", "Corporal", "Capt.", "Captain", "Sheriff", "Agent"]
+            let first = display.components(separatedBy: " ").drop { titles.contains($0) }.joined(separator: " ")
+            values.merge(NameBank.gender(of: first).tokens(for: key)) { a, _ in a }
+        }
         let fill = TextFiller(values: values)
 
         // Charges. A written case is the same story every time, but how much proof it takes varies, so some
@@ -550,10 +612,12 @@ enum CaseGenerator {
         // (A lower threshold is a stronger case for the State; the hidden truth follows the strength.)
         let shift = t.story != nil ? rng.pick([-4, -3, -3, -2, 0, 0, 0, 1, 3, 4]) : 0
         let primaryThreshold = max(1, t.threshold + shift)
-        var charges = [Charge(count: 1, lawID: t.primaryLaw, lesserLawID: t.lesserLaw,
+        // Stalking after a stalking conviction is a felony (G.S. 14-277.3A(d)); the plain offense is its lesser.
+        let repeatStalker = t.primaryLaw == "stalking" && (context.priorOffense?.lowercased().contains("stalking") ?? false)
+        var charges = [Charge(count: 1, lawID: repeatStalker ? "stalkingFelony" : t.primaryLaw, lesserLawID: repeatStalker ? "stalking" : t.lesserLaw,
                               specification: fill(t.specification), threshold: primaryThreshold,
                               lesserThreshold: max(1, t.lesserThreshold + shift))]
-        for extra in t.secondary where rng.chance(extra.chance) {
+        for extra in t.secondary where !charges.contains(where: { $0.lawID == extra.lawID }) && rng.chance(extra.chance) {
             let threshold = extra.threshold == 0 ? primaryThreshold : max(1, extra.threshold + shift)
             charges.append(Charge(count: charges.count + 1, lawID: extra.lawID, lesserLawID: nil,
                                   specification: fill(extra.specification), threshold: threshold,
@@ -633,7 +697,16 @@ enum CaseGenerator {
         var witnesses: [Witness] = []
         if t.story != nil {
             // A written case calls every witness, in order, exactly as written.
-            for item in t.prosecutionWitnesses {
+            // A business, church, or school can't take the stand under its own name: its owner or head is a person.
+            let victimSeed = organizationName == nil ? victimWitnessIndex(in: t) : nil
+            for (index, rawWritten) in t.prosecutionWitnesses.enumerated() {
+                let written = organizationName != nil && rawWritten.name == "{V}"
+                    ? WitnessSeed(name: nil, role: rawWritten.role, direct: rawWritten.direct, cross: rawWritten.cross, weight: rawWritten.weight, lay: rawWritten.lay, exam: rawWritten.exam)
+                    : rawWritten
+                // The witness the story's own words name as the victim ("teller {V}", "{V}'s boat") is the victim.
+                let item = index == victimSeed
+                    ? WitnessSeed(name: "{V}", role: written.role, direct: written.direct, cross: written.cross, weight: written.weight, lay: written.lay, exam: written.exam)
+                    : written
                 witnesses.append(makeWitness(item, side: .prosecution, fill: fill, rng: &rng, used: &used, impeach: false, regulars: regulars, residents: context.residents, hood: values["HOOD"] ?? hood, reserved: context.reservedNames))
             }
             for item in t.defenseWitnesses {
@@ -745,7 +818,7 @@ enum CaseGenerator {
                                      evidence.map { $0.title + ". " + $0.detail }, witnesses.flatMap { $0.direct + $0.cross }]
         let factText = factParts.flatMap { $0 }.joined(separator: " ")
         let facts = CaseFacts(key: t.key, category: t.category, hasVictim: t.hasVictim, text: factText,
-                              laws: [t.primaryLaw] + (t.lesserLaw.map { [$0] } ?? []))
+                              laws: [t.primaryLaw], readsStopFromText: t.story != nil)
         var (investigation, gaps) = Investigations.make(t: t, facts: facts, values: values, incident: incident, sessionDate: context.date,
                                                         detective: detective, officer: officer, evidence: evidence,
                                                         defendant: profiledDefendant, charges: charges, victimName: victimName,
@@ -1006,22 +1079,23 @@ enum CaseGenerator {
         let testimony = Witness(
             name: defendant.name, role: "Defendant, testifying in their own defense", calledBy: .defense,
             direct: ["\(defendant.lastName) gives their account, consistent with the defense theory: " + fill(rng.pick(t.defenseTheory)),
-                     rng.pick(["\"I want the court to hear it from me.\"",
+                     Variety.pick(["\"I want the court to hear it from me.\"",
                                "\"I've waited a long time to tell my side.\"",
-                               "\"I'm not going to pretend I'm perfect. But I didn't do what they say.\""])],
+                               "\"I'm not going to pretend I'm perfect. But I didn't do what they say.\"", "\"I've never been in a courtroom like this, and I'm going to tell it the way I remember it.\"", "\"I'm nervous, but I'm going to tell the truth, because that's all I've got.\"", "\"Everybody else has told you what they think happened. I was there, and I'm going to tell you what I saw.\"", "\"I know how it looks. I'd ask you to hear all of it before you decide.\"", "\"My lawyer told me to answer plain and not guess. That's what I'm going to do.\"", "\"I've had a long time to think about that day, and I've gone over it more times than I can count.\"", "\"I'm not here to blame anybody. I just want to explain my part.\""], rng: &rng)],
             cross: testimonyHolds
                 ? ["On cross, \(defendant.lastName) stays calm and consistent, and concedes only small details."]
                 : ["On cross, \(defendant.lastName) has no explanation for \(strongestState.map { "\"\($0.title)\"" } ?? "the State's evidence") and contradicts an earlier statement."],
             weight: testimonyHolds ? 2 : -2,
             lay: true, isDefendant: true)
         var fullTestimony = testimony
-        fullTestimony.exchanges = Testimony.defendant(testimony, ctx: testimonyContext, holds: testimonyHolds,
-                                                      sessionDate: context.date, rng: &rng)
+        fullTestimony.exchanges = Testimony.withoutRepeats(Testimony.defendant(testimony, ctx: testimonyContext, holds: testimonyHolds,
+                                                                               sessionDate: context.date, rng: &rng))
         if let story = t.story {
             fullTestimony.exchanges = story.defendantExam.map { line in
                 TestimonyExchange(phase: line.phase, examiner: line.phase == .cross ? .prosecution : .defense,
                                   question: fill(line.question(0)), answer: fill(line.answer(0)))
             }
+            fullTestimony.exchanges = fullTestimony.exchanges.map(Testimony.withoutRepeats)
         }
         if let objection = t.story == nil && rng.chance(0.4) ? ObjectionEngine.make(for: fullTestimony, ctx: testimonyContext, rng: &rng) : nil {
             objections.append(objection)
@@ -1127,7 +1201,7 @@ enum CaseGenerator {
             // A family asking for mercy doesn't also ask the judge to be tough.
             victimImpact: victimImpact.map { background.victimStance == .wantsLeniency ? $0 : Reputation.insideQuote($0, CourthouseMood.current.familyPlea(seed: seed)) },
             // Cases without a written statement get one built from their facts when the defendant speaks (Allocutions).
-            allocution: t.allocutions.isEmpty ? "" : Reputation.insideQuote(fill(rng.pick(t.allocutions)), CourthouseMood.current.defendantPlea(seed: seed)),
+            allocution: t.allocutions.isEmpty ? "" : Reputation.insideQuote(fill(Self.allocutionFitting(t.allocutions, guilty: actuallyGuilty, rng: &rng)), CourthouseMood.current.defendantPlea(seed: seed)),
             twist: twistText,
             ethics: ethics,
             mood: mood,
@@ -1260,7 +1334,7 @@ enum CaseGenerator {
             restitution = rng.int(7...16) * 1_000; basis = "funeral expenses"
         case "protestAssault", "policeForce":
             restitution = rng.int(12...70) * 1_000; basis = "medical bills"
-        case "imageLeak", "stalking":
+        case "imageLeak", "stalking", "stalkingFelony":
             restitution = rng.int(2...9) * 500; basis = "counseling costs and lost wages"
         case "story.homeInvasion":
             // The cash is stated; the guns and jewelry were never recovered, except the one pawned rifle.
@@ -1285,23 +1359,23 @@ enum CaseGenerator {
             let died = t.victimDies
             switch t.category {
             case .property:
-                restitution = stated ?? rng.int(6...30) * 100; basis = rng.pick(["unrecovered property and repairs", "the value of what was taken and the damage to the door", "replacement costs the owner documented"])
+                restitution = stated ?? rng.int(6...30) * 100; basis = Variety.pick(["unrecovered property and repairs", "the value of what was taken and the damage to the door", "replacement costs the owner documented", "stolen property and the cost of repairs", "the damaged lock and the items taken", "repair of the broken window and the missing items", "the replacement value of the stolen items", "the insurance deductible and the losses the policy didn't cover", "what the owner was never able to recover"], rng: &rng)
             case .robbery:
-                restitution = stated ?? rng.int(3...25) * 100; basis = rng.pick(["cash and property taken", "the stolen money and a replaced phone", "what was taken and the victim's lost wages"])
+                restitution = stated ?? rng.int(3...25) * 100; basis = Variety.pick(["cash and property taken", "the stolen money and a replaced phone", "what was taken and the victim's lost wages", "the money taken and a replaced wallet and cards", "cash taken and the cost of replacing stolen keys and ID", "the stolen property and time lost from work", "stolen cash and a broken phone screen", "property taken in the robbery", "the victim's stolen belongings"], rng: &rng)
             case .whiteCollar, .cyber:
-                restitution = stated ?? (petty ? rng.int(3...20) * 100 : rng.int(4...90) * 1_000); basis = rng.pick(["money taken", "documented losses", "the victims' losses, per the bank records"])
+                restitution = stated ?? (petty ? rng.int(3...20) * 100 : rng.int(4...90) * 1_000); basis = Variety.pick(["money taken", "documented losses", "the victims' losses, per the bank records", "the amounts withdrawn without authorization", "funds that were never returned", "the victims' documented out-of-pocket losses", "money taken and the bank fees that followed", "the losses shown on the account statements", "unpaid sums, per the records"], rng: &rng)
             case .violent, .family, .traffic:
-                let contactless = ["stalking", "stalkingCourtOrder", "cyberstalking", "communicatingThreats", "witnessIntimidation",
+                let contactless = ["stalking", "stalkingFelony", "stalkingCourtOrder", "cyberstalking", "communicatingThreats", "witnessIntimidation",
                                    "dvpoViolation", "assaultPointingGun"].contains(t.primaryLaw)
                 if died {
                     restitution = rng.int(7...18) * 1_000; basis = "funeral and burial expenses"
                 } else if contactless {
-                    if rng.chance(0.5) { restitution = rng.int(3...20) * 100; basis = rng.pick(["counseling costs", "new locks and a security camera", "counseling and a changed phone number"]) }
+                    if rng.chance(0.5) { restitution = rng.int(3...20) * 100; basis = Variety.pick(["counseling costs", "new locks and a security camera", "counseling and a changed phone number", "counseling and a safety system", "a replaced phone and new locks", "the cost of moving", "security upgrades at the home", "counseling sessions the victim paid for", "therapy costs"], rng: &rng) }
                 } else if t.hasVictim {
                     // A minor offense asks for a minor sum: an irritated eye is not a $5,000 medical bill.
                     restitution = (petty ? rng.int(3...15) : rng.int(8...90)) * 100 * (t.category == .traffic ? 4 : 1)
-                    basis = t.category == .traffic ? rng.pick(["medical bills and vehicle damage", "the victim's medical bills"])
-                        : rng.pick(["medical bills", "emergency room and follow-up care", "medical bills and lost wages", "counseling and medical costs"])
+                    basis = t.category == .traffic ? rng.pick(["medical bills and vehicle damage", "the victim's medical bills", "the other driver's medical bills and car repairs", "ambulance transport and vehicle damage", "the emergency room bill and the damage to the car", "repair costs and treatment for injuries", "medical expenses and a rental car", "the victim's hospital bill and towing"])
+                        : Variety.pick(["medical bills", "emergency room and follow-up care", "medical bills and lost wages", "counseling and medical costs", "hospital bills and missed work", "treatment costs and time off work", "dental work and medical bills", "ambulance and emergency room charges", "surgery and physical therapy", "medical expenses and lost income"], rng: &rng)
                 }
             default:
                 break
@@ -1355,8 +1429,8 @@ enum CaseGenerator {
         let treatmentDetail: String?
         switch need {
         case .none: treatmentDetail = nil
-        case .substance: treatmentDetail = rng.pick(["An opioid use disorder going back about six years.", "Alcohol, Judge. It's been the thread through everything.", "Methamphetamine use that started after a back injury at work."])
-        case .mentalHealth: treatmentDetail = rng.pick(["Diagnosed bipolar disorder, untreated since losing Medicaid coverage.", "Severe depression, with one hospitalization last year.", "PTSD, documented by the VA."])
+        case .substance: treatmentDetail = Variety.pick(["An opioid use disorder going back about six years.", "Alcohol, Judge. It's been the thread through everything.", "Methamphetamine use that started after a back injury at work.", "Crack cocaine, Judge. It started a few years back and took over from there.", "A prescription painkiller dependency that began after surgery and never stopped.", "Daily drinking that got worse over the last three years.", "An addiction to fentanyl that started with pills from a friend.", "Marijuana and alcohol together, Judge, every weekend and then every day.", "Cocaine use that picked up during a hard stretch at work.", "A methadone program that was interrupted when the clinic closed."], rng: &rng)
+        case .mentalHealth: treatmentDetail = Variety.pick(["Diagnosed bipolar disorder, untreated since losing Medicaid coverage.", "Severe depression, with one hospitalization last year.", "PTSD, documented by the VA.", "Anxiety and panic attacks, treated on and off for years.", "Schizoaffective disorder, stable on medication until the prescription lapsed.", "Major depression following the death of a parent.", "Diagnosed ADHD and anxiety, with no treatment since leaving school.", "A traumatic brain injury from a car wreck and the mood problems that came with it.", "Bipolar II, diagnosed at the county health department two years ago."], rng: &rng)
         case .both: treatmentDetail = "Co-occurring: a substance use disorder layered on untreated depression."
         }
 
@@ -1388,11 +1462,17 @@ enum CaseGenerator {
         if age < 35 { supporters.append("The client's grandmother, who raised them, is in the second row.") }
         if age >= 60 && kids > 0 && !partnerIsVictim { supporters.append("My client's grown children are here today.") }
         let support: String? = rng.chance(0.6) ? rng.pick(supporters) : nil
-        let discovery: String? = rng.chance(0.25) ? rng.pick([
+        let discovery: String? = rng.chance(0.25) ? Variety.pick([
             "The State Crime Laboratory report arrived late; we turned it over nine days before trial.",
             "A supplemental police report surfaced last week and was disclosed immediately.",
-            "Body camera footage from a second officer was located and disclosed on Friday."
-        ]) : nil
+            "Body camera footage from a second officer was located and disclosed on Friday.",
+        "A second witness statement was found in the file and handed over yesterday.",
+        "The chain-of-custody log was corrected and re-served on Monday.",
+        "Cell tower records from the carrier arrived this week and have been provided to the defense.",
+        "A photo array that had been left out of the first discovery packet was turned over Thursday.",
+        "A supplemental lab note was filed late and disclosed within a day of receipt.",
+        "Jail call recordings were located last week and delivered to defense counsel."
+        ], rng: &rng) : nil
 
         let hiddenMitigatorPool = [
             "The defendant voluntarily acknowledged wrongdoing at an early stage of the criminal process",
@@ -1462,11 +1542,17 @@ enum CaseGenerator {
         if !defendant.priors.isEmpty && rng.chance(0.2) {
             let prior = rng.pick(defendant.priors.filter { !$0.fromThisCourt }.isEmpty ? defendant.priors : defendant.priors.filter { !$0.fromThisCourt })
             disputedID = prior.id
-            disputedReason = rng.pick([
+            disputedReason = Variety.pick([
                 "The State's only proof of the \(prior.year) \(prior.offense) conviction is a DCI printout. My client says that was a cousin with the same name, and the date of birth on the printout is off by a year.",
                 "The \(prior.year) \(prior.offense) in \(prior.county) was a plea without counsel, Judge, and there's no waiver of counsel in the file.",
-                "We dispute the \(prior.year) \(prior.offense). The State has no judgment, just a line in a statewide database, and the file number doesn't match."
-            ])
+                "We dispute the \(prior.year) \(prior.offense). The State has no judgment, just a line in a statewide database, and the file number doesn't match.",
+            "The \(prior.year) \(prior.offense) was resolved by a waiver form signed without a lawyer present, and the form is missing a page.",
+            "My client doesn't recall a \(prior.year) \(prior.offense) conviction in \(prior.county). We ask the State to produce a certified judgment.",
+            "The \(prior.year) \(prior.offense) was dismissed after a deferred prosecution, Judge, and the State is counting it anyway.",
+            "The record of the \(prior.year) \(prior.offense) shows the wrong class of offense, and without a certified copy we can't accept it.",
+            "We object to the \(prior.year) \(prior.offense). The only paperwork is a computer entry, and the name is spelled differently from my client's.",
+            "The State hasn't shown the \(prior.year) \(prior.offense) was ever entered as a judgment."
+            ], rng: &rng)
         }
         var districtSentence: String?
         if !isFelony, let cls = primary.law.ncClass {
@@ -1566,6 +1652,40 @@ enum CaseGenerator {
                                           county: where_, sentence: rng.pick(seed.sentences)))
         }
         return priors.sorted { $0.year < $1.year }
+    }
+
+
+    /// Which State witness is the victim, when the story's own summary and charge say who the victim is ("teller {V}",
+    /// "{V}, the archivist", "{V}'s boat") and a witness's role says the same. Nil when no witness plainly is.
+    static func victimWitnessIndex(in t: CaseTemplate) -> Int? {
+        guard t.hasVictim, t.story != nil else { return nil }
+        let text = (t.summaries.first ?? "") + " " + t.specification
+        var words = Set<String>()
+        let generic: Set<String> = ["the", "and", "from", "with", "that", "this", "their", "defendant", "person", "victim", "man", "woman", "worker", "employee", "member"]
+        func add(_ raw: String) {
+            for w in raw.lowercased().components(separatedBy: CharacterSet.letters.inverted) where w.count >= 4 && !generic.contains(w) { words.insert(w) }
+        }
+        for pattern in [#"([A-Za-z]+(?: [A-Za-z]+)?) \{V\}(?!')"#, #"\{V\}, (?:the |a |an )?([A-Za-z]+(?: [A-Za-z]+)?)[,.;]"#, #"\{V\}'s ([A-Za-z]+)"#] {
+            guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+            let range = NSRange(text.startIndex..., in: text)
+            for match in regex.matches(in: text, range: range) where match.numberOfRanges > 1 {
+                if let r = Range(match.range(at: 1), in: text) { add(String(text[r])) }
+            }
+        }
+        // "a jewelry store owned by {V}": the owner is the victim, and the witness who speaks as the owner is that person.
+        if text.contains("owned by {V}") || text.contains("belonging to {V}") || text.contains("operated by {V}") { words.insert("owner") }
+        guard !words.isEmpty else { return nil }
+        for (index, seed) in t.prosecutionWitnesses.enumerated() where seed.name == nil && seed.lay && !seed.exam.isEmpty {
+            let examText = seed.exam.flatMap { $0.questions + $0.answers }.joined(separator: " ")
+            if ["{V}", "{VL}", "{VF}", "{V."].contains(where: { examText.contains($0) }) { continue }
+            let role = seed.role.lowercased()
+            if words.contains(where: { role.contains($0) }) { return index }
+            // The victim is a business or institution ("{V}, a jewelry store"): its owner or head is the one who testifies for it.
+            let orgNouns: Set<String> = ["store", "shop", "bakery", "restaurant", "pharmacy", "company", "church", "school", "hotel", "plant", "farm", "market",
+                                         "bar", "club", "tavern", "retailer", "business", "firm", "garage", "studio", "clinic", "library", "society", "district", "county", "town", "bank", "inn", "motel", "cafe", "diner", "dealership"]
+            if !words.isDisjoint(with: orgNouns), ["owner", "proprietor", "director", "president", "principal", "pastor", "administrator", "band director", "archivist", "librarian"].contains(where: { role.contains($0) }) { return index }
+        }
+        return nil
     }
 
     private static func makeWitness(_ seed: WitnessSeed, side: Side, fill: TextFiller,
@@ -1681,6 +1801,7 @@ enum CaseGenerator {
                 exchanges.insert(TestimonyExchange(phase: .direct, examiner: side, question: "Have you testified in this courtroom before?",
                                                    answer: "\"Yes. In \(recalled).\""), at: min(at, 1))
             }
+            exchanges = Testimony.withoutRepeats(exchanges)
             witness.exchanges = exchanges
             witness.direct = exchanges.filter { $0.phase == .direct }.map(\.answer)
             witness.cross = exchanges.filter { $0.phase != .direct }.map(\.answer)

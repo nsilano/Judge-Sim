@@ -67,7 +67,7 @@ enum Perjury {
             } else if !a.knowing {
                 reason = rng.pick(["\"Being wrong isn't lying,\" the district attorney said. \"The witness could have honestly believed it.\"",
                                    "The district attorney's office said the witness may have been mistaken, and perjury requires a knowing lie.",
-                                   "Prosecutors said the witness's account was wrong but not provably dishonest; the witness wasn't in a position to know."])
+                                   "Prosecutors said the witness's account was wrong but not provably dishonest; the witness wasn't in a position to know.", "\"A wrong answer is not a crime,\" the district attorney said. \"We'd have to prove the witness knew it was false.\"", "Prosecutors said the witness appeared to be recalling events as best the witness could, and nothing suggested a deliberate falsehood.", "The district attorney's office said conflicting accounts are common and do not by themselves amount to perjury.", "The district attorney said the statement was inaccurate, but nothing in the record showed the witness knew it.", "Prosecutors said the witness likely misremembered, and misremembering is not a crime.", "The district attorney's office said it reviewed the testimony closely and found an honest mistake, not a lie."])
             } else {
                 reason = "The district attorney's office said it couldn't prove the testimony false with more than the witness's word against another's, as North Carolina law requires."
             }

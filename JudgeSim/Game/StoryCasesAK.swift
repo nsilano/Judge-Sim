@@ -14,7 +14,7 @@ extension StoryCases {
         specification: "Possessed a landscaping trailer and two zero-turn mowers valued at $21,500, the property of {V}, knowing and having reasonable grounds to believe them stolen, on {DATE}.",
         ageRange: 22...55, occupations: ["small engine mechanic", "used equipment dealer", "lawn care operator"], hasVictim: true,
         summaries: [
-            "{V}'s enclosed landscaping trailer, with two zero-turn mowers inside, was taken from the lot behind {V.his} business in {HOOD} over a weekend. Nine days later {V}'s office manager found the mowers listed on Facebook Marketplace at $3,200 each, about a third of their value, by {D}. When a deputy posing as a buyer met {D} at {D.his} shop, the trailer was out back with {V}'s company decals scraped off and the mowers' serial plates ground smooth. {DL} says {D.he} bought everything for $4,000 cash from a man who said he was closing his business, and that {D.he} grinds plates off all the used equipment {D.he} rebuilds."
+            "{V}'s enclosed landscaping trailer, with two zero-turn mowers inside, was taken from the lot behind {V.his} business in {HOOD} over a weekend. Nine days later {V}'s office manager found the mowers listed on Facebook Marketplace at $3,200 each, about a third of their value, by {D}. When a deputy posing as a buyer met {DL} at {D.his} shop, the trailer was out back with {V}'s company decals scraped off and the mowers' serial plates ground smooth. {DL} says {D.he} bought everything for $4,000 cash from a man who said he was closing his business, and that {D.he} grinds plates off all the used equipment {D.he} rebuilds."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Marketplace Listings", "Two zero-turn mowers at $3,200 each, posted by {DL}'s account four days after the theft; the photos show {V}'s mower deck stickers."),
@@ -57,7 +57,7 @@ extension StoryCases {
                             .direct("Do shops ever grind serial plates?", "\"When you swap a deck or a frame, sometimes the old plate comes off.\""),
                             .direct("Is $4,000 for a trailer and two mowers believable?", "\"For a guy dumping a business fast, maybe.\""),
                             .cross("Would you record the old serial number?", "\"Yes. For warranty, for the buyer.\""),
-                            .cross("Would you buy $21,000 of equipment from a stranger with no paperwork?", "\"No, I wouldn't.\"")
+                            .cross("Would you buy $21,000 of equipment from a stranger with no paperwork?", "\"No. I wouldn't buy $21,000 of equipment from a stranger with no paperwork.\"")
                         ])
         ],
         prosecutionTheory: ["{D} bought a trailer full of equipment for a fifth of its value from a man with no name, ground off the serial plates, and listed it four days later. {D.He} knew."],
@@ -65,7 +65,7 @@ extension StoryCases {
         aggravating: ["The offense was committed for pecuniary gain"],
         mitigating: ["The defendant has made substantial or full restitution", "The defendant has a positive employment history and is gainfully employed"],
         victimImpacts: ["\"I built that business mowing yards out of my truck bed. Losing two crews in May nearly put me under.\""],
-        allocutions: ["\"I should've asked for paperwork. I'll make {V} whole.\"", "\"I knew it was too cheap. I didn't want to ask.\""],
+        allocutions: ["\"I should have asked for paperwork before I paid that man. He said he was closing his lawn business and needed cash the same day, and I took the price as luck. I'll make {V} whole, every dollar, and I'm sorry for the weeks of work and customers {V.he} lost without that equipment.\"", "\"I knew it was too cheap, and I didn't want to ask why. I wanted two good mowers for a fair price, and I let myself believe the story I was told. That was a mistake, and {V} paid for it. I'm sorry, and I'll do whatever the court orders to put it right.\""],
         guiltyTruths: ["{DL}'s phone held a text from the seller the night of the theft: \"got 2 more zero turns, same deal as last time.\""],
         innocentTruths: ["The man called Ricky was arrested months later with a storage unit full of stolen mowers and named eleven buyers, none of whom he'd told the truth."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "mistakeOfFact"],
@@ -77,7 +77,7 @@ extension StoryCases {
                 .direct("Where did you get the equipment?", "\"A man named Ricky said he was closing his lawn business and needed cash that day.\""),
                 .direct("Why grind the plates?", "\"I rebuild everything I sell. I always do that.\"", "\"So nobody could trace them back. I knew they were hot.\""),
                 .cross("$4,000 for $21,000 of equipment.", "\"People in a hurry take less.\""),
-                .cross("No name, no phone number, no receipt.", "\"It was cash.\""),
+                .cross("No name, no phone number, no receipt.", "\"It was cash. There was no name, no phone number, and no receipt.\""),
                 .cross("You scraped the company decals off the trailer.", "\"I was going to repaint it.\"")
             ],
             prosecutionOpening: "A fifth of the price, a man with no last name, and serial plates ground smooth.",
@@ -100,7 +100,7 @@ extension StoryCases {
         specification: "Being in a position of trust and confidence with {V}, an older adult, knowingly by deception used {V}'s funds for {D.his} own benefit, $140,600, between March and {DATE}.",
         ageRange: 35...62, occupations: ["car salesman", "real estate agent", "retired Army sergeant", "restaurant manager"], hasVictim: true,
         summaries: [
-            "{V}, 88, signed a power of attorney naming {V.his} nephew {D} after a fall two years ago. Over the next nineteen months, $140,600 left {V}'s savings: $62,000 for a pickup truck titled to {D}, $38,000 in transfers to {D}'s account marked \"caregiving,\" and the rest in cash withdrawals. {V}'s nursing home bill went unpaid for five months, and the home moved to discharge {V}. {DL} says {V} wanted {D.him} to have the truck as thanks for taking care of {V.him}, that the caregiving payments were what any aide would charge, and that {D.his} aunt's mind was sharp when {V.he} said so. {V} now has moderate dementia and doesn't remember."
+            "{V}, 88, signed a power of attorney naming {V.his} nephew {D} after a fall two years ago. Over the next nineteen months, $140,600 left {V}'s savings: $62,000 for a pickup truck titled to {DL}, $38,000 in transfers to {DL}'s account marked \"caregiving,\" and the rest in cash withdrawals. {V}'s nursing home bill went unpaid for five months, and the home moved to discharge {V}. {DL} says {V} wanted {D.him} to have the truck as thanks for taking care of {V.him}, that the caregiving payments were what any aide would charge, and that {D.his} aunt's mind was sharp when {V.he} said so. {V} now has moderate dementia and doesn't remember."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Bank Records", "$140,600 out over nineteen months: a $62,000 truck dealer check, $38,000 in transfers to {DL}, and $40,600 in ATM and teller cash."),
@@ -130,8 +130,8 @@ extension StoryCases {
                         exam: [
                             .direct("What happened with the bill?", "\"Paid for twelve months, then nothing. I sent eleven letters and called every week.\""),
                             .direct("What did {DL} say?", "\"That the money was tied up. Then {D.he} stopped answering.\""),
-                            .cross("{DL} visited {V} every Sunday.", "\"Most Sundays, yes.\""),
-                            .cross("Medicaid applications take time.", "\"{DL} never filed one.\"")
+                            .cross("{DL} visited {V} every Sunday.", "\"Most Sundays, yes. {DL} visited {V} most Sundays.\""),
+                            .cross("Medicaid applications take time.", "\"Medicaid applications take time, but {DL} never filed one.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -143,7 +143,7 @@ extension StoryCases {
                             .direct("What did you hear {V} say?", "\"On {V.his} porch, before the fall got bad: 'That boy deserves a new truck for all he does for me.'\""),
                             .direct("Did {DL} care for {V}?", "\"Every day for a year before the home. Groceries, pills, rides.\""),
                             .cross("Did {V} say $62,000?", "\"{V.He} didn't say a number.\""),
-                            .cross("Did you know the nursing home bill wasn't paid?", "\"No. That's not right.\"")
+                            .cross("Did you know the nursing home bill wasn't paid?", "\"No. That's not right. I didn't know the nursing home bill wasn't paid.\"")
                         ])
         ],
         prosecutionTheory: ["{D} used {V.his} aunt's power of attorney like a checkbook: a truck, paychecks to {D.himself}, and cash, while {V} faced eviction from {V.his} nursing home."],
@@ -151,7 +151,7 @@ extension StoryCases {
         aggravating: ["The victim was very old", "The defendant took advantage of a position of trust or confidence", "The offense involved an actual loss of more than $50,000"],
         mitigating: ["The defendant has made substantial or full restitution", "The defendant has a support system in the community"],
         victimImpacts: ["{V}'s daughter reads: \"Mama worked forty years at the hosiery mill and saved every penny so she'd never be a burden. She almost ended up in a hallway with her suitcase.\""],
-        allocutions: ["\"I took care of her when nobody else would. She wanted me to have that truck.\"", "\"I lost control of it. The casino got the rest. I'm so sorry, Aunt {VF}.\""],
+        allocutions: ["\"I took care of Aunt {VF} when nobody else would, for two years, and {V.he} told me I'd earned that truck. I never meant to leave {V.him} short. I thought the money would last longer than it did, and I meant to fix it. I'm sorry {V.he} was ever worried about {V.his} care.\"", "\"I lost control of it, and the casino got the rest. I started by telling myself I was owed, and then I stopped telling myself anything. Aunt {VF}, I'm so sorry. You trusted me with everything you had, and I let you down. I'll spend years paying it back if I have to.\""],
         guiltyTruths: ["{DL}'s ex-wife produced a text from {D.him}: \"Aunt won't remember, she can't even remember my name half the time.\""],
         innocentTruths: ["A note in {V}'s handwriting, found in a hymnal after trial, said, \"Buy that boy his truck. He's my right hand.\""],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "victimRights"],
@@ -217,7 +217,7 @@ extension StoryCases {
                             .direct("What did {DL} drink?", "\"Five beers on the tab, then two shots during karaoke for the group.\""),
                             .direct("How did {DL} seem?", "\"Happy, loud, singing. Normal karaoke night.\""),
                             .cross("Some of those drinks may have been for others.", "\"It was one tab for the group. I can't say who drank what.\""),
-                            .cross("{DL} wasn't stumbling.", "\"No, {D.he} walked fine.\"")
+                            .cross("{DL} wasn't stumbling.", "\"No, {D.he} walked fine. {D.He} wasn't stumbling.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -237,7 +237,7 @@ extension StoryCases {
         aggravating: ["The defendant's driving placed others at serious risk"],
         mitigating: ["The defendant has accepted responsibility", "The defendant has a support system in the community", "The defendant has a positive employment history and is gainfully employed"],
         victimImpacts: ["{V}'s mother reads: \"They went to the beach for a weekend. I picked out my child's casket instead of picking {V.him} up at the airport. I don't hate {DL}. I just want {D.him} to understand.\""],
-        allocutions: ["\"{V} was my best friend. I'd give anything to have taken that turn slower.\"", "\"I shouldn't have been driving. I knew it then.\""],
+        allocutions: ["\"{V} was my best friend since we were kids, and I would give anything to go back and take that turn slower. We were just having a night out. I've replayed it every hour since, and I can't make it come out any different. I'm sorry to {V.his} family, and I'll carry this the rest of my life.\"", "\"I shouldn't have been driving, and I knew it then. I'd had a few beers over the evening and told myself I was fine because it was only a golf cart. {V} trusted me to get us home. I broke that trust in a few seconds. I'm sorry beyond words.\""],
         guiltyTruths: ["Another friend in the group later told a civil lawyer that {DL} had been \"doing donuts\" in a parking lot with the cart twenty minutes before the crash."],
         innocentTruths: ["The rental company's own repair shop later admitted the cart's left rear brake cable had been jury-rigged with a hose clamp after an earlier complaint."],
         moods: [.sympathetic], doctrines: ["burdenOfProof", "expertTestimony", "lesserIncluded"],
@@ -275,7 +275,7 @@ extension StoryCases {
         specification: "On more than one occasion followed, was in the presence of, and watched {V} without legal purpose while a domestic violence protective order prohibiting that conduct was in effect, causing {V} to fear for {V.his} safety, between October and {DATE}.",
         ageRange: 26...45, occupations: ["HVAC technician", "warehouse supervisor", "truck driver", "electrician"], hasVictim: true,
         summaries: [
-            "{V} has a one-year protective order against {D}, her ex-husband, ordering him to stay 500 feet from her and from their daughter's school except for exchanges set by the custody order. On {DATE} {D} parked across the street from the park pavilion where {V} was holding their daughter's sixth birthday party, sat for an hour, then walked over with a wrapped present and handed it to the girl. A teacher at the party called 911. {V}'s phone log shows {D}'s truck outside her apartment four other nights in three weeks, recorded by her doorbell camera. {DL} says he came to give his daughter a present on her birthday, that the custody order lets him see her, and that he lives two blocks from {V}'s apartment and drives past it to work."
+            "{V} has a one-year protective order against {D}, her ex-husband, ordering him to stay 500 feet from her and from their daughter's school except for exchanges set by the custody order. On {DATE} {DL} parked across the street from the park pavilion where {V} was holding their daughter's sixth birthday party, sat for an hour, then walked over with a wrapped present and handed it to the girl. A teacher at the party called 911. {V}'s phone log shows {DL}'s truck outside her apartment four other nights in three weeks, recorded by her doorbell camera. {DL} says he came to give his daughter a present on her birthday, that the custody order lets him see her, and that he lives two blocks from {V}'s apartment and drives past it to work."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Protective Order", "A one-year DVPO: no contact with {V}, stay 500 feet from her home, workplace, and the child's school, except custody exchanges at the sheriff's office."),
@@ -306,7 +306,7 @@ extension StoryCases {
                             .direct("What made you call 911?", "\"{V} told me about the order, and he'd been sitting in that truck staring at the pavilion for an hour.\""),
                             .direct("What happened when he walked over?", "\"{V} froze. The kids kept playing. He handed the present over and stood there looking at {V}.\""),
                             .cross("He didn't speak to {V}.", "\"He didn't. He looked at her.\""),
-                            .cross("He was gentle with his daughter.", "\"He was.\"")
+                            .cross("He was gentle with his daughter.", "\"He was gentle with his daughter.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -318,7 +318,7 @@ extension StoryCases {
                             .direct("What did he say about the party?", "\"That his little girl was turning six and he'd bought her a bike helmet with unicorns on it. He just wanted to see her open it.\""),
                             .direct("What's his route to work?", "\"Same as mine. Past those apartments every day.\""),
                             .cross("He knew he wasn't supposed to be near {V}.", "\"He knew about the order.\""),
-                            .cross("Did he say he'd been parking outside her place at night?", "\"No.\"")
+                            .cross("Did he say he'd been parking outside her place at night?", "\"No. He didn't say he'd been parking outside her place at night.\"")
                         ])
         ],
         prosecutionTheory: ["Under a court order to stay away, {D} parked outside {V}'s home four nights, then sat outside their daughter's party for an hour. A present doesn't change what the order says."],
@@ -326,7 +326,7 @@ extension StoryCases {
         aggravating: ["The defendant committed the offense while a court order was in effect", "The victim was particularly vulnerable"],
         mitigating: ["The defendant has a positive employment history and is gainfully employed", "The defendant has a support system in the community"],
         victimImpacts: ["\"My daughter's sixth birthday, and the photo I have is me frozen by the cake table. I just want to live without checking a camera every night.\""],
-        allocutions: ["\"I just wanted to see my little girl blow out her candles.\"", "\"I couldn't let go. I know I have to.\""],
+        allocutions: ["\"I just wanted to see my little girl blow out her candles. It was her sixth birthday, and I had a helmet for her bike sitting on the seat of my truck. I know the order said stay away, and I'm not trying to excuse it. I miss my daughter, and I'm sorry I scared {V}.\"", "\"I couldn't let go, and I know I have to. I kept telling myself one more drive by wouldn't matter, and every time it did. I'm sorry for putting {V} in fear and for what my daughter might have seen. I'll follow the order and the custody schedule, and I'll get help if the court asks.\""],
         guiltyTruths: ["A GPS tracker, found later magnetized under {V}'s car, was registered to {DL}'s email address."],
         innocentTruths: ["{DL}'s phone location showed his truck was at the night shift job site on two of the four nights the doorbell camera recorded, and the truck outside was his brother's, the same make and color."],
         moods: [.divided], doctrines: ["burdenOfProof", "victimRights"],
@@ -337,9 +337,9 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why did you go to the party?", "\"It was her birthday. I bought her a helmet for her new bike.\""),
                 .direct("Why were you outside {V}'s apartment those nights?", "\"I drive that way to work. Sometimes I'd stop and look at the window and think about my family.\"", "\"I wasn't. That's not always me in that truck.\""),
-                .cross("The order says exchanges at the sheriff's office only.", "\"It was her birthday.\""),
+                .cross("The order says exchanges at the sheriff's office only.", "\"The order says exchanges at the sheriff's office only, but it was her birthday.\""),
                 .cross("You sat in your truck watching for an hour first.", "\"I was getting up my nerve.\""),
-                .cross("Engine running, 50 minutes, outside her door at midnight.", "\"I was thinking.\"")
+                .cross("Engine running, 50 minutes, outside her door at midnight.", "\"I sat there with the engine running because I was thinking.\"")
             ],
             prosecutionOpening: "A court order said stay away, and he kept coming back.",
             defenseOpening: "A father, a birthday, and a bike helmet with unicorns on it.",
@@ -382,7 +382,7 @@ extension StoryCases {
                             .direct("How did you find the problem?", "\"The loan defaulted. When we skip-traced the borrower, we found a death certificate.\""),
                             .direct("Who was in the license photo?", "\"Not the deceased. We compared it to {V}'s old license. Similar, younger, different nose and ears.\""),
                             .direct("Where did the car go?", "\"Recovered at a body shop in {CITY}. The shop says {DL} dropped it off.\""),
-                            .cross("You didn't see who signed the contract.", "\"No.\""),
+                            .cross("You didn't see who signed the contract.", "\"No. I didn't see who signed the contract.\""),
                             .cross("Brothers can look alike.", "\"That's why the photo was chosen, I'd think.\"")
                         ]),
             WitnessSeed(name: nil, role: "DMV license examiner",
@@ -413,7 +413,7 @@ extension StoryCases {
         aggravating: ["The offense was committed for pecuniary gain", "The defendant planned the offense"],
         mitigating: ["The defendant has made substantial or full restitution", "The defendant was suffering from a mental or physical condition that reduced culpability"],
         victimImpacts: ["{ALT} reads: \"Collection agencies called my house asking for my dead husband. I had to send his death certificate to six companies. Every letter was like burying him again.\""],
-        allocutions: ["\"I didn't do this. She's lying because of the house.\"", "\"I was drowning in debt after he died. I told myself he'd want to help.\""],
+        allocutions: ["\"I didn't do this. My brother died and I buried {V.him}, and I would never use {V.his} name for a loan. I think {V.he} is blaming me because of the fight over the house. I'm asking the court to look at who else had {V.his} papers and who else had a reason.\"", "\"I was drowning in debt after {V.he} died, and I told myself {V.he} would have wanted to help me. {V.He} never said it, and I knew that. It was my brother's name, and I used it. I'm sorry to everyone I hurt, and I'll pay back whatever I can.\""],
         guiltyTruths: ["{DL}'s phone, searched later, held photos of {V}'s birth certificate and Social Security card taken the week {D.he} stayed with {ALT}."],
         innocentTruths: ["{ALT}'s boyfriend, who resembled both brothers, was later found with a second license in {V}'s name and admitted using the papers."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "eyewitnessID", "expertTestimony"],
@@ -425,8 +425,8 @@ extension StoryCases {
                 .direct("Is that you in the license photo?", "\"It looks like me. People mixed us up our whole lives.\"", "\"Yes. I'm not going to say it isn't.\""),
                 .direct("Did you take your brother's papers?", "\"No. {ALT} had them locked up.\""),
                 .cross("The body shop says you dropped off the car.", "\"I've taken a lot of cars there.\""),
-                .cross("You stayed in {ALT}'s house the month after the funeral.", "\"I was helping her.\""),
-                .cross("The handwriting examiner says probably you.", "\"Probably isn't for sure.\"")
+                .cross("You stayed in {ALT}'s house the month after the funeral.", "\"I was helping her. I stayed in {ALT}'s house the month after the funeral to help her.\""),
+                .cross("The handwriting examiner says probably you.", "\"Probably isn't for sure. The examiner says probably, and that's not certain.\"")
             ],
             prosecutionOpening: "A dead man's name, a living brother's face.",
             defenseOpening: "A grieving family, a lawsuit, and a lockbox that wasn't his.",

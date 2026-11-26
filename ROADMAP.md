@@ -3,6 +3,7 @@
 Things we have discussed and want to add but have not started. When one is started it moves to the changelog entry that ships it. Everything written follows the depth and realism rules in CLAUDE.md. New saved data must load old saves.
 
 ## Game systems not started (no new case content needed)
+- **Read-aloud (text to speech).** A button on testimony, openings and closings, the case file and calendar cards that reads the text aloud, so no one has to read it all. The first version uses the phone's built-in speech: a play and pause button, a speed setting, and a different voice for each speaker (judge, State, defense, each witness). Later: read each line as it comes up in the trial, highlight the line being read, and keep reading with the screen locked.
 - **Life after conviction: jobs, licenses and trajectories.** A conviction costs what it would cost in life: a nurse sentenced to months loses the RN license and the job, a teacher, a trucker with a CDL, an officer or a lawyer lose theirs; a felony makes many jobs unavailable. Income falls, which changes who can post bond or pay fines and restitution. Then people diverge: some spiral (lost work, lost housing, new charges, probation violations), some recover (new work, treatment, years clean, an expunction petition years later). The paper can follow a few of them. Builds on the person records, occupations and expunction matters that already exist.
 
 ## Waiting on new game systems

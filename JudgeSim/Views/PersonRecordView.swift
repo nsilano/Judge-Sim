@@ -106,7 +106,11 @@ enum PersonFileSection: String, CaseIterable, Identifiable {
         case .supervision:
             var parts: [String] = []
             if let term = p.probation {
-                parts.append((p.status == .incarcerated ? "Probation after release" : "Probation") + " until \(SentenceFormat.shortDate(term.ends))")
+                if let since = term.tolledSince {
+                    parts.append("Probation stopped since \(SentenceFormat.shortDate(since)) while a violation on a new arrest is pending")
+                } else {
+                    parts.append((p.status == .incarcerated ? "Probation after release" : "Probation") + " until \(SentenceFormat.shortDate(term.ends))")
+                }
             }
             if let prs = p.postRelease {
                 parts.append("Post-release supervision until \(SentenceFormat.shortDate(prs.ends))")

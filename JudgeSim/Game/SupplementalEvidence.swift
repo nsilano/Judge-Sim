@@ -175,7 +175,7 @@ enum SupplementalEvidence {
     }
 
     private static func make(_ request: EvidenceRequest, direction: Direction, dl: String, alt: String, rng: inout SeededRNG) -> Item {
-        let business = rng.pick(["a pharmacy", "a gas station", "a laundromat", "a pawn shop", "an auto parts store", "a church"])
+        let business = rng.pick(["a pharmacy", "a gas station", "a laundromat", "a pawn shop", "an auto parts store", "a church", "a bank branch", "a dollar store", "a hardware store", "a restaurant", "a car wash", "a convenience store"])
         switch (request, direction) {
         case (.alibi, _):
             return make(.phoneRecords, direction: direction, dl: dl, alt: alt, rng: &rng)

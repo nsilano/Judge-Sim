@@ -17,7 +17,7 @@ extension StoryCases {
         specification: "Stole $86 in groceries and household items from a retail grocery store, on {DATE}.",
         ageRange: 38...64, occupations: ["retired bookkeeper", "school bus aide", "dental receptionist"], hasVictim: false,
         summaries: [
-            "A loss prevention officer watched {D} slip a $19 scented candle and two packs of batteries into {D.his} purse at a grocery on {DATE}, then pay for a gallon of milk and walk out. {D} has stopped here three times this year for small items, always paying for something cheap. {D} has more than enough in {D.his} account: the receipt in {D.his} purse for the milk was $3. {DL} says {D.he} doesn't know why {D.he} does it, that the urge comes on like a wave, and that {D.he} has been seeing a therapist for it since the spring."
+            "A loss prevention officer watched {D} slip a $19 scented candle and two packs of batteries into {D.his} purse at a grocery on {DATE}, then pay for a gallon of milk and walk out. {D.He} has stopped here three times this year for small items, always paying for something cheap. {D.He} has more than enough in {D.his} account: the receipt in {D.his} purse for the milk was $3. {DL} says {D.he} doesn't know why {D.he} does it, that the urge comes on like a wave, and that {D.he} has been seeing a therapist for it since the spring."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Store Camera", "{D} puts a candle and two packs of batteries into a purse at the end of aisle seven, then pays for milk at the register."),
@@ -51,7 +51,7 @@ extension StoryCases {
         aggravating: ["The defendant has prior convictions of the same kind"],
         mitigating: ["The defendant was suffering from a mental or physical condition that reduced culpability", "The defendant has accepted responsibility", "The defendant has a support system in the community"],
         victimImpacts: [],
-        allocutions: ["\"I know how it looks. I'm in treatment. I don't want to do this anymore.\"", "\"I'm so ashamed. I have the money. I can't make it stop.\""],
+        allocutions: ["\"I know how it looks, and I'm not going to argue about it. I took a candle and two packs of batteries I did not need, and I paid for milk so no one would look at me. I'm in treatment, and I'm taking it seriously. I don't want to do this anymore, and I'm sorry to the store.\"", "\"I'm so ashamed. I have the money to pay for every one of those things, and I still can't make myself stop. Three times this year I've promised myself it was over, and I broke that promise. I'm sorry to the staff who have to watch it. I'm asking for help to end it.\""],
         guiltyTruths: ["A closet in {DL}'s home held forty-one unopened items from stores around the county."],
         innocentTruths: ["{DL} had stopped for six weeks while on a new medication and relapsed after missing three therapy appointments."],
         moods: [.sympathetic], doctrines: ["burdenOfProof", "insanity"],
@@ -83,7 +83,7 @@ extension StoryCases {
         specification: "Willfully resisted, delayed, and obstructed a public officer, a sheriff's deputy, in discharging a duty of the officer's office, on {DATE}.",
         ageRange: 19...38, occupations: ["line cook", "warehouse worker", "unemployed"], hasVictim: false,
         summaries: [
-            "On {DATE} a deputy approached {D} outside a dollar store after a clerk reported a man \"casing\" the store. When the deputy asked for ID, {D} said, \"I didn't do anything,\" and ran. The deputy chased {D} through a back alley and over a chain-link fence, where {D}'s jacket caught and {D} hung until the deputy arrived. {D} had nothing illegal on {D.him}. {DL} says {D.he} ran because {D.he} had an unpaid ticket and was afraid of being jailed, and that the deputy had no reason to stop {D.him}."
+            "On {DATE} a deputy approached {D} outside a dollar store after a clerk reported a man \"casing\" the store. When the deputy asked for ID, {DL} said, \"I didn't do anything,\" and ran. The deputy chased {DL} through a back alley and over a chain-link fence, where {DL}'s jacket caught and {DL} hung until the deputy arrived. {D.He} had nothing illegal on {D.him}. {DL} says {D.he} ran because {D.he} had an unpaid ticket and was afraid of being jailed, and that the deputy had no reason to stop {D.him}."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Body Camera", "The deputy asks for ID; {D} runs; the deputy yells \"Stop, sheriff's office\" twice during the chase."),
@@ -99,7 +99,7 @@ extension StoryCases {
                             .direct("What did you do when you arrived?", "\"I walked up, said hello, and asked for ID. {D.He} said 'I didn't do anything' and ran.\""),
                             .direct("What happened then?", "\"I yelled 'Stop, sheriff's office.' Twice. {D.He} climbed a fence and hung there by the jacket.\""),
                             .cross("You didn't see a crime.", "\"No. A clerk called about suspicious behavior.\""),
-                            .cross("{D.He} had nothing on {D.him}.", "\"Correct.\"")
+                            .cross("{D.He} had nothing on {D.him}.", "\"Correct. {D.He} had nothing on {D.him}.\"")
                         ])
         ],
         defenseWitnesses: [],
@@ -108,7 +108,7 @@ extension StoryCases {
         aggravating: ["The defendant has prior convictions of the same kind"],
         mitigating: ["The defendant has accepted responsibility", "The defendant has a positive employment history and is gainfully employed"],
         victimImpacts: [],
-        allocutions: ["\"I panicked. I had a ticket and I thought I'd go to jail.\"", "\"I shouldn't have run. I'm sorry.\""],
+        allocutions: ["\"I panicked. I had an unpaid ticket, and I figured the deputy would take me to jail, so I ran. I climbed that fence without thinking and got stuck, and the whole thing was embarrassing and unnecessary. I'm sorry to the deputy who had to chase me. I'll take care of the ticket.\"", "\"I shouldn't have run, and I know that. I heard the deputy and I just kept going, which was a bad idea. I could have stopped and talked, and none of this would have happened. I'm sorry for the trouble and the time it took, and I'll handle what I owe.\""],
         guiltyTruths: ["{DL} had a small bag of marijuana in a sock and ran partly because of it."],
         innocentTruths: ["The clerk who called was later fired for calling the sheriff on several customers who weren't doing anything."],
         moods: [.indifferent], doctrines: ["searchSeizure", "burdenOfProof"],
@@ -119,7 +119,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why did you run?", "\"I had a ticket I didn't pay. I figured they'd take me to jail.\""),
                 .direct("Did you hear the deputy say stop?", "\"I heard something. I just kept going.\""),
-                .cross("He identified himself twice.", "\"Yes. I didn't stop.\""),
+                .cross("He identified himself twice.", "\"Yes. I didn't stop. He identified himself twice, and I kept going.\""),
                 .cross("You hung from a fence.", "\"It was a bad idea.\"")
             ],
             prosecutionOpening: "A deputy said stop twice. {DL} kept running.",
@@ -140,7 +140,7 @@ extension StoryCases {
         specification: "Engaged in disorderly conduct in a public place by making a public disturbance in a retail store parking lot, on {DATE}.",
         ageRange: 28...60, occupations: ["electrician", "bank teller", "retired mail carrier"], hasVictim: false,
         summaries: [
-            "On {DATE}, {D} tried to return a $240 space heater to a home goods store without a receipt and was refused. {D} began shouting at the cashier, followed {D.him} into the parking lot, stood in the lane blocking cars, and screamed that the store was \"robbing people.\" A manager called deputies after {D} refused to move for ten minutes. {DL} says {D.he} was upset because the heater had been a gift for {D.his} mother and that the manager was rude."
+            "On {DATE}, {D} tried to return a $240 space heater to a home goods store without a receipt and was refused. {DL} began shouting at the cashier, followed {D.him} into the parking lot, stood in the lane blocking cars, and screamed that the store was \"robbing people.\" A manager called deputies after {DL} refused to move for ten minutes. {DL} says {D.he} was upset because the heater had been a gift for {D.his} mother and that the manager was rude."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Parking Lot Camera", "{D} stands in the traffic lane for ten minutes, arms waving, while four cars wait."),
@@ -155,7 +155,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} do?", "\"Shouted, followed my cashier outside, and stood in the lane yelling for ten minutes.\""),
                             .direct("Did you ask {D.him} to move?", "\"Three times. {D.He} told me what I could do with my store.\""),
-                            .cross("No one was hurt.", "\"No. People were scared.\""),
+                            .cross("No one was hurt.", "\"No. People were scared. No one was hurt, but people were scared.\""),
                             .cross("The return was refused.", "\"No receipt, no return. It's the policy.\"")
                         ])
         ],
@@ -165,7 +165,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["The defendant has accepted responsibility", "The defendant has a positive employment history and is gainfully employed"],
         victimImpacts: [],
-        allocutions: ["\"I lost my temper over a space heater. I'm embarrassed.\""],
+        allocutions: ["\"I lost my temper over a space heater I'd bought as a gift for my mother. I wanted a manager to come out, and I stood in the lane without thinking about the cars. I'm embarrassed, and I'm not proud of how loud I got. I'm sorry to the cashier and the drivers I held up.\""],
         guiltyTruths: ["{DL}'s texts that day said, \"going to make a scene at that store until they give me my money.\""],
         innocentTruths: ["A customer in the lane later testified {DL} moved the moment deputies arrived and apologized to the drivers."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -196,7 +196,7 @@ extension StoryCases {
         specification: "Entered and remained on premises of {V}, a private farm pond, after being notified not to enter, on {DATE}.",
         ageRange: 24...62, occupations: ["welder", "truck driver", "HVAC technician"], hasVictim: true,
         summaries: [
-            "{V} owns a farm outside {HOOD} with a stocked pond. After finding trash and a cut fence, {V} posted four \"No Trespassing\" signs and told {D} personally, a month earlier, not to fish there. On {DATE}, {V} saw {D}'s truck at the gate and found {D} fishing at the pond with two coolers. {D} says the signs were hidden by brush, that {V}'s earlier warning was about the creek, and that the pond has been fished by locals for fifty years."
+            "{V} owns a farm outside {HOOD} with a stocked pond. After finding trash and a cut fence, {V} posted four \"No Trespassing\" signs and told {D} personally, a month earlier, not to fish there. On {DATE}, {V} saw {DL}'s truck at the gate and found {DL} fishing at the pond with two coolers. {DL} says the signs were hidden by brush, that {V}'s earlier warning was about the creek, and that the pond has been fished by locals for fifty years."
         ],
         prosecutionEvidence: [
             E(.physical, 2, "Posted Signs", "Four weathered \"No Trespassing\" signs on posts along the fence line; one at the gate."),
@@ -220,8 +220,8 @@ extension StoryCases {
         defenseTheory: ["The gate sign was hidden by brush, the earlier warning was about the creek, and fifty years of local custom led {D} to believe the pond was open."],
         aggravating: [],
         mitigating: ["The defendant has accepted responsibility"],
-        victimImpacts: ["\"I've asked nicely for years. People take that as permission.\""],
-        allocutions: ["\"I thought it was still okay. I'll stay off.\""],
+        victimImpacts: ["\"I've asked nicely for years, and I've put up four signs. People take politeness as permission. I found trash and a cut fence, and then I found another fisherman with two coolers. It's my pond, and my family stocked it. I'd like folks to ask before they come.\""],
+        allocutions: ["\"I thought it was still okay to fish there, since we've always done it. I saw the gate, but the sign was covered in vines, and I never walked the fence line. I didn't mean any disrespect to the owner. I'll stay off the property, and I'm sorry for the trouble.\""],
         guiltyTruths: ["{DL}'s text to a friend said, \"he told me not to fish there but he's never around, meet me at the pond.\""],
         innocentTruths: ["{V}'s earlier warning had been to a different man, who looked like {DL}."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "mistakeOfFact"],
@@ -232,7 +232,7 @@ extension StoryCases {
                 .direct("Did {V} tell you to stay out?", "\"{V.He} told somebody. I thought it was about the creek.\""),
                 .direct("Did you see the signs?", "\"The gate one was covered in vines.\""),
                 .cross("Four signs and a warning.", "\"I only saw the gate. I didn't walk the fence.\""),
-                .cross("You brought two coolers.", "\"We always fish there.\"")
+                .cross("You brought two coolers.", "\"I brought two coolers because we always fish there.\"")
             ],
             prosecutionOpening: "Signs, a warning, and a man at the water.",
             defenseOpening: "Hidden signs and fifty years of local habit.",
@@ -254,7 +254,7 @@ extension StoryCases {
         specification: "Drove a motor vehicle on a public highway while {D.his} driver's license was revoked, on {DATE}.",
         ageRange: 25...58, occupations: ["dishwasher", "poultry plant worker", "roofing laborer"], hasVictim: false,
         summaries: [
-            "A trooper stopped {D} on {DATE} at 5:40 a.m. for a broken taillight. A records check showed {D}'s license had been revoked eight months earlier after {D} failed to pay a fine and missed a court date on a speeding ticket. {D} was on the way to a 6 a.m. shift at a poultry plant twenty-two miles away, with no bus line and no one to carry {D.him}. {DL} says {D.he} didn't know the revocation was still in effect because the notice went to an old address."
+            "A trooper stopped {D} on {DATE} at 5:40 a.m. for a broken taillight. A records check showed {D.his} license had been revoked eight months earlier after {D.he} failed to pay a fine and missed a court date on a speeding ticket. {D.He} was on the way to a 6 a.m. shift at a poultry plant twenty-two miles away, with no bus line and no one to carry {D.him}. {DL} says {D.he} didn't know the revocation was still in effect because the notice went to an old address."
         ],
         prosecutionEvidence: [
             E(.document, 3, "DMV Records", "A revocation effective eight months earlier for failure to appear and unpaid fines; notice mailed to the address on file."),
@@ -269,7 +269,7 @@ extension StoryCases {
                         exam: [
                             .direct("What happened at the stop?", "\"Broken taillight. A check showed a revoked license. {D.He} said, 'I know I shouldn't be driving.'\""),
                             .direct("Was the notice mailed?", "\"Yes, to the address on file.\""),
-                            .cross("{D.He} was on the way to work.", "\"That's what {D.he} said.\""),
+                            .cross("{D.He} was on the way to work.", "\"That's what {D.he} said. {D.He} said {D.he} was on the way to work.\""),
                             .cross("The address was old.", "\"It was the address on file. That's {D.his} responsibility.\"")
                         ])
         ],
@@ -279,7 +279,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["The defendant has a positive employment history and is gainfully employed", "The defendant has accepted responsibility"],
         victimImpacts: [],
-        allocutions: ["\"I had no way to get to work. I should have fixed my license.\""],
+        allocutions: ["\"I had no way to get to work, and my plant is twenty-two miles away. My shift starts at six, and I figured I had no choice but to drive. I should have fixed my license long ago. I'm sorry to the trooper, and I'll set up the payments and make it right.\""],
         guiltyTruths: ["{DL}'s phone held a letter photo from the DMV, taken two months before the stop."],
         innocentTruths: ["The DMV later admitted mailing the notice to {DL}'s previous address even after a change-of-address was filed."],
         moods: [.sympathetic], doctrines: ["burdenOfProof", "mistakeOfFact"],
@@ -290,7 +290,7 @@ extension StoryCases {
                 .direct("Did you know your license was revoked?", "\"I knew I had a ticket. Nobody told me about a revocation.\"", "\"I figured I did. I had no choice.\""),
                 .direct("Why drive?", "\"The plant is twenty-two miles away and my shift starts at six.\""),
                 .cross("You told the trooper you shouldn't be driving.", "\"I figured something was wrong.\""),
-                .cross("Rides were available?", "\"Not at that hour.\"")
+                .cross("Rides were available?", "\"Not at that hour. Rides weren't available at that hour.\"")
             ],
             prosecutionOpening: "A revoked license and a man who admitted it.",
             defenseOpening: "A worker and a notice that went to the wrong place.",
@@ -335,7 +335,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["The defendant has accepted responsibility", "The defendant has a positive employment history and is gainfully employed"],
         victimImpacts: [],
-        allocutions: ["\"It's just weed. I'm sorry I wasted the court's time.\"", "\"That wasn't mine. I'd never keep it in a car.\""],
+        allocutions: ["\"It's six grams, and I'm sorry I wasted the court's time with it. I told the deputy the truth right away, and I should not have had it in the car. I know it's a small thing, but I'll follow the law from now on. I'll keep my car clean.\"", "\"It's the family car, and several of us drive it, and I shouldn't have left anything in the glove box. I've been honest with the deputy and with the court. I'm sorry for the trouble, and I'll be careful about what stays in a shared car.\""],
         guiltyTruths: ["{DL}'s phone held texts about buying the bag from a friend two days before the stop."],
         innocentTruths: ["The cousin was arrested months later with a larger amount from the same dealer and admitted leaving the bag."],
         moods: [.indifferent], doctrines: ["searchSeizure", "fruitPoisonousTree", "burdenOfProof"],
@@ -366,7 +366,7 @@ extension StoryCases {
         specification: "Assaulted {V} by pushing {V.him} in the chest with both hands, on {DATE}.",
         ageRange: 28...66, occupations: ["retired mechanic", "church deacon", "insurance adjuster"], hasVictim: true,
         summaries: [
-            "On {DATE}, after a funeral at a church in {HOOD}, {D} and {V} reached the last parking space near the door at the same time. Words were exchanged. {D} got out and walked to {V}'s window. According to {V}, {D} shoved {V.him} in the chest when {V.he} got out of the car, and {V.he} stumbled into the neighboring bumper. {D} says {V} stepped toward {D.him} with a closed fist and {D.he} put out {D.his} hands to keep {V.him} back. A church usher saw part of it."
+            "On {DATE}, after a funeral at a church in {HOOD}, {D} and {V} reached the last parking space near the door at the same time. Words were exchanged. {D.He} got out and walked to {V}'s window. According to {V}, {DL} shoved {V.him} in the chest when {V.he} got out of the car, and {V.he} stumbled into the neighboring bumper. {DL} says {V} stepped toward {D.him} with a closed fist and {D.he} put out {D.his} hands to keep {V.him} back. A church usher saw part of it."
         ],
         prosecutionEvidence: [
             E(.statement, 2, "Usher's Statement", "The usher saw {D} \"put both hands on {V}'s chest\" but didn't see what happened before."),
@@ -397,8 +397,8 @@ extension StoryCases {
         defenseTheory: ["{D} held out {D.his} hands to keep an angry man away. A defensive gesture isn't an assault."],
         aggravating: [],
         mitigating: ["The defendant acted under strong provocation", "The defendant has accepted responsibility"],
-        victimImpacts: ["\"At a funeral. Over a parking space. I'm still ashamed of how I acted.\""],
-        allocutions: ["\"I put my hands up. I'd do it again, and I'm sorry it happened.\"", "\"I lost my temper. I'm sorry for what I did at that church.\""],
+        victimImpacts: ["\"At a funeral. Over a parking space. I'm still ashamed of how I acted. I shouted and stepped toward someone I didn't know, and then I stumbled backward. The family was trying to say goodbye, and we turned it into a scene. I'm sorry that I played any part in it.\""],
+        allocutions: ["\"We were at a funeral, and we were all upset. I put my hands up when {V} got out yelling and stepped toward me with a fist. I'd do it again to protect myself, but I'm sorry it happened, especially at a church. I'm sorry for the families who saw it.\"", "\"I lost my temper at that church, and I'm sorry for what I did. A funeral is not a place for a fight, and I know that. Everyone was grieving, and I made it worse. I'm sorry to {V}, to the ushers, and to the family we were there to honor.\""],
         guiltyTruths: ["A second usher later recalled {D} saying, \"Keep your hands off my space,\" before the shove."],
         innocentTruths: ["{V}'s own sister later said {V} had been raising a fist and calling {D} names."],
         moods: [.divided], doctrines: ["selfDefense", "burdenOfProof"],
@@ -446,7 +446,7 @@ extension StoryCases {
                         exam: [
                             .direct("How do you know the tools are yours?", "\"I etch my initials on everything. They were on the drill and the nail gun.\""),
                             .direct("What was taken?", "\"A drill set and a nail gun. Four hundred dollars, and a day's work lost.\""),
-                            .cross("You left the truck unlocked.", "\"I did. I'm learning.\""),
+                            .cross("You left the truck unlocked.", "\"I did. I'm learning. I left the truck unlocked, and I won't do it again.\""),
                             .cross("You didn't see who took them.", "\"No. I saw them in {D.his} bag.\"")
                         ])
         ],
@@ -455,8 +455,8 @@ extension StoryCases {
         defenseTheory: ["{D} found a bag on a roadside. The camera shows a man in a hoodie, not a face. Possession of found property isn't breaking and entering."],
         aggravating: [],
         mitigating: ["The defendant has accepted responsibility"],
-        victimImpacts: ["\"I lost a day's work and a drill I'd had since my first job. Now I take everything inside.\""],
-        allocutions: ["\"I needed money. I'm sorry.\""],
+        victimImpacts: ["\"I lost a day's work and a drill I'd had since my first job. I'd saved for that set when I was twenty, and it carried me through every house I ever framed. Now I take everything inside every night. It's a small thing to some, but it's my living.\""],
+        allocutions: ["\"I needed money. I took those tools out of a truck, and I figured I could pawn them. I'm not going to lie about it. I'm sorry to the owner, who lost {V.his} drill and {V.his} nail gun. I'm asking for the chance to get my life in order and pay it back.\""],
         guiltyTruths: ["The gray hoodie was found in {DL}'s closet with a small flashlight in the pocket."],
         innocentTruths: ["A neighbor's camera later showed another man in a gray hoodie dropping a duffel in the ditch where {DL} said {D.he} found it."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "eyewitnessID"],
@@ -467,8 +467,8 @@ extension StoryCases {
             defendantExam: [
                 .direct("Where did you get the bag?", "\"On the side of the road. I thought somebody dumped it.\"", "\"Out of a truck. I'm not going to lie.\""),
                 .direct("Why carry it?", "\"I figured I could pawn it.\""),
-                .cross("Etched initials on the drill.", "\"I didn't look.\""),
-                .cross("A flashlight in your hand at 2:30 a.m.", "\"I walk at night.\"")
+                .cross("Etched initials on the drill.", "\"I didn't look. I never looked for the etched initials on the drill.\""),
+                .cross("A flashlight in your hand at 2:30 a.m.", "\"I had a flashlight in my hand at 2:30 a.m. because I walk at night.\"")
             ],
             prosecutionOpening: "A duffel bag with another man's initials on the tools.",
             defenseOpening: "A bag in a ditch, and a man who picked it up.",
@@ -490,7 +490,7 @@ extension StoryCases {
         specification: "Knowingly possessed amphetamine, a Schedule II controlled substance, on {DATE}.",
         ageRange: 19...27, occupations: ["college student", "line cook", "delivery driver"], hasVictim: false,
         summaries: [
-            "A trooper stopped {D} on {DATE} for speeding and searched the car after {D} consented. In the backpack was an unlabeled sandwich bag with 22 pills identified as amphetamine salts (Adderall). {D} has no prescription. {DL} says a friend gave {D.him} the pills to hold during exams, that {D.he} never took any, and that {D.he} forgot they were in the backpack."
+            "A trooper stopped {D} on {DATE} for speeding and searched the car after {DL} consented. In the backpack was an unlabeled sandwich bag with 22 pills identified as amphetamine salts (Adderall). {D.He} has no prescription. {DL} says a friend gave {D.him} the pills to hold during exams, that {D.he} never took any, and that {D.he} forgot they were in the backpack."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "The Pills", "22 pills in a sandwich bag, identified by the State Crime Laboratory as amphetamine salts.", .search),
@@ -505,8 +505,8 @@ extension StoryCases {
                         exam: [
                             .direct("What happened?", "\"A speeding stop. I asked to look in the car and {D.he} said yes. In the backpack, I found an unlabeled bag of pills.\""),
                             .direct("What did {D.he} say?", "\"That a friend gave them to {D.him}. {D.He} said {D.he} forgot they were there.\""),
-                            .cross("{D.He} was cooperative.", "\"Very.\""),
-                            .cross("There's no sign {D.he} took any.", "\"No.\"")
+                            .cross("{D.He} was cooperative.", "\"Very. {D.He} was very cooperative.\""),
+                            .cross("There's no sign {D.he} took any.", "\"No. There's no sign {D.he} took any.\"")
                         ])
         ],
         defenseWitnesses: [],
@@ -515,7 +515,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["The defendant has accepted responsibility", "The defendant has a support system in the community"],
         victimImpacts: [],
-        allocutions: ["\"I was holding them for a friend. I know that's not an excuse.\""],
+        allocutions: ["\"I was holding those pills for a friend during exams, and I forgot they were in my backpack. I had no prescription, and I know that matters. I'm sorry to the trooper for the trouble. I should have handed them back right away, and I'll stay clear of any pills that aren't mine.\""],
         guiltyTruths: ["{DL}'s messages showed {D.he} had asked the friend for pills before exams the week before."],
         innocentTruths: ["The friend came forward and said {DL} had never asked for or taken any."],
         moods: [.sympathetic], doctrines: ["burdenOfProof", "mistakeOfFact"],
@@ -526,7 +526,7 @@ extension StoryCases {
                 .direct("Whose pills are they?", "\"My friend's. I was holding them.\""),
                 .direct("Did you know they were in the bag?", "\"I forgot. It was months of exams.\""),
                 .cross("You consented to the search.", "\"I had nothing to hide. I forgot.\""),
-                .cross("You don't have a prescription.", "\"No.\"")
+                .cross("You don't have a prescription.", "\"No. I don't have a prescription.\"")
             ],
             prosecutionOpening: "Twenty-two Adderall pills and no prescription.",
             defenseOpening: "A friend's pills, forgotten in a backpack.",
@@ -561,7 +561,7 @@ extension StoryCases {
                         exam: [
                             .direct("How do you know it's yours?", "\"The serial number on the frame matches my receipt, and it has a scratch on the fork from when I fell last winter.\""),
                             .direct("What did losing it mean?", "\"I got to work an hour late for two weeks. I almost lost my job.\""),
-                            .cross("You didn't see who took it.", "\"No.\""),
+                            .cross("You didn't see who took it.", "\"No. I didn't see who took it.\""),
                             .cross("Bicycles resell all the time.", "\"Not with a serial number.\"")
                         ])
         ],
@@ -570,8 +570,8 @@ extension StoryCases {
         defenseTheory: ["{D} bought a bike and sold it. The State can't show {D.he} knew it was stolen, or that {D.he} cut the lock."],
         aggravating: [],
         mitigating: ["The defendant has accepted responsibility"],
-        victimImpacts: ["\"I'd saved up for that bike. I take the bus now, and it adds an hour.\""],
-        allocutions: ["\"I needed the money. I should have asked more questions.\""],
+        victimImpacts: ["\"I'd saved up for that bike. I bought it a piece at a time over a year, and I rode it to work every day. Now I take the bus, and it adds an hour to my morning. A cable lock wasn't enough for someone with bolt cutters.\""],
+        allocutions: ["\"I needed the money, and I should have asked more questions when a man outside the library offered me a bike for sixty dollars. It was a good deal, and I took it. I pawned it with my own ID. I'm sorry to {V}, and I'll make it right however the court says.\""],
         guiltyTruths: ["{DL}'s phone had a photo of the bike taken the night of the theft, next to a bolt cutter."],
         innocentTruths: ["A man arrested later for a string of bicycle thefts admitted selling the bike to {DL} outside the library."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "mistakeOfFact"],

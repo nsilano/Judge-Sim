@@ -34,7 +34,7 @@ extension FollowUpCases {
                         exam: [
                             .direct("Why did you tell {DL} to stay back?", "\"We had a tip one of those men had a gun. Until we found it, nobody else needed to be near that car.\""),
                             .direct("Did {D.he} stay back?", "\"Not after the third time. {D.He} walked across the road toward the passenger side while we were getting the passenger out.\"", "\"{D.He} came across the road while my partner had the passenger out. That's when I arrested {D.him}.\""),
-                            .direct("Did you find a gun?", "\"Under the passenger seat.\""),
+                            .direct("Did you find a gun?", "\"Under the passenger seat. I found it when I searched the car after the stop.\""),
                             .cross("You'd agree {DL} had every right to record you?", "\"Yes. I told {D.him} to record from by {D.his} car.\""),
                             .cross("How close was {D.he}, exactly?", "\"Close enough I took my eyes off the passenger to deal with {D.him}. I'd say ten feet.\"")
                         ])
@@ -44,7 +44,7 @@ extension FollowUpCases {
         defenseTheory: ["{DL} filmed from the shoulder across the road. {D.He} was arrested for the camera, not for where {D.he} stood."],
         aggravating: [],
         mitigating: ["No prior criminal record"],
-        allocutions: ["\"I film because of what happened to me before. I'll keep doing it, from farther back.\""],
+        allocutions: ["\"I film because of what happened to me before, and I'll keep doing it, from farther back. I stood on the shoulder across the road and never crossed the center line, and I only wanted a record, because I believe people deserve one. I'm sorry I made the deputies uneasy, and I'll give them more room.\""],
         guiltyTruths: ["The passenger's own phone, recovered later, filmed {DL} standing beside the rear door, close enough to touch it, while the gun was still under the seat."],
         innocentTruths: ["A neighbor's doorbell camera across the road showed {DL} on the shoulder the whole time; the closer shot on {D.his} video was the phone's zoom."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -55,7 +55,7 @@ extension FollowUpCases {
             defendantExam: [
                 .direct("Where were you standing?", "\"On the shoulder across the road, by my car. I never crossed the center line.\""),
                 .direct("Why were you filming?", "\"After what happened to me at Harbor Mart, I film every stop I see. People deserve a record.\""),
-                .cross("You heard the deputy tell you three times to stay back.", "\"I heard the order. I was back.\""),
+                .cross("You heard the deputy tell you three times to stay back.", "\"I heard the order, and I was already back where I had been told to stand.\""),
                 .cross("Your own video gets closer at the end.", "\"I zoomed in. My feet didn't move.\"")
             ],
             prosecutionOpening: "Three orders to stay back, and a gun still in the car.",
@@ -101,7 +101,7 @@ extension FollowUpCases {
         defenseTheory: ["{DL} told a witness in {D.his} lawsuit he'd see {D.him} in court. A threat case needs more than one man's ear."],
         aggravating: [],
         mitigating: ["No prior criminal record"],
-        allocutions: ["\"I shouldn't have walked over there. I was angry. I didn't threaten anybody.\""],
+        allocutions: ["\"I shouldn't have walked over to that car. I was angry, and I wanted that associate to see I wasn't scared anymore. What I said was that we'd see each other in civil court, and I didn't threaten anybody. I'm sorry for how it sounded, and I'll stay away from that lot.\""],
         guiltyTruths: ["{DL} texted a cousin twenty minutes later: \"ran into that loss prevention from harbor mart. told em to watch their back.\""],
         innocentTruths: ["A shopper loading groceries two cars over came forward after the case: she heard {DL} say \"civil court\" and laugh on the way back to {D.his} car."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],

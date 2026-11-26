@@ -40,7 +40,7 @@ extension StoryCases {
                         exam: [
                             .direct("Who bought the shotguns?", "\"That man there. {DL}. He showed a license with a different name, but I remember him because he asked twice which load would 'do the most damage.'\""),
                             .cross("The ID said a different name?", "\"Different name, same face. I didn't catch it then.\""),
-                            .cross("You sell dozens of guns a week. How can you remember one face?", "\"Because of that question.\"")
+                            .cross("You sell dozens of guns a week. How can you remember one face?", "\"Because of that question. I remember that face because of what was asked of me that day.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Homicide detective",
                         direct: ["\"Two shotguns, sixteen shots, and a reload.\""],
@@ -50,7 +50,7 @@ extension StoryCases {
                             .direct("Walk us through the shooting.", "\"They entered the den with two shotguns. {VF} was hit first. {VIC2} tried to get away. They ran out of shells. {DL} went to the car, reloaded, came back, and fired the last shot into {VIC2}'s face.\""),
                             .direct("What did they say that night?", "\"That they'd been at a movie. The ticket stub they gave us was for a showing they couldn't have attended.\""),
                             .cross("Did anyone investigate the abuse claims?", "\"No. We investigated the murder.\""),
-                            .cross("They were young men living at home with their father?", "\"Twenty-one and eighteen.\"")
+                            .cross("They were young men living at home with their father?", "\"They were young men, twenty-one and eighteen, living at home with their father.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -60,7 +60,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did {BRO} tell you as a child?", "\"When we were about thirteen, he said his father was touching him and he didn't know how to make it stop. I told him to tell his mother. He said she knew.\""),
-                            .cross("You never told an adult?", "\"No. I was thirteen.\""),
+                            .cross("You never told an adult?", "\"No. I was thirteen. I never told an adult because I was only thirteen.\""),
                             .cross("You first mentioned this after the brothers were charged?", "\"After the arrests. I didn't think it mattered until then.\"")
                         ])
         ],
@@ -68,8 +68,8 @@ extension StoryCases {
         defenseTheory: ["The brothers were abused for years. They believed, honestly if unreasonably, that their parents were about to kill them. That is imperfect self-defense: voluntary manslaughter, not murder."],
         aggravating: ["The offense involved multiple victims", "The offense was especially heinous, atrocious, or cruel"],
         mitigating: ["No prior criminal record", "The defendant was suffering from a mental or physical condition that reduced culpability"],
-        victimImpacts: ["{VIC2}'s sister: \"Whatever happened in that house, my sister was crawling away when they reloaded.\""],
-        allocutions: ["\"I'm sorry. I was afraid. I know that doesn't make it right.\""],
+        victimImpacts: ["{VIC2}'s sister: \"Whatever happened in that house, my sister was crawling away when they reloaded. She was a gentle woman who baked for the neighbors and sent cards on every birthday. I have her voicemails saved. I can't forgive that part, and I will never understand it.\""],
+        allocutions: ["\"I was afraid, and I know that doesn't make it right. For years I lived in a house where I didn't know what would happen to my brother and me, and that week I truly believed we were about to be hurt. I can't undo what we did, and I think about my parents every day.\""],
         guiltyTruths: ["A letter {DL} wrote from jail asked a friend to testify falsely about seeing {VF} hit {D.him}."],
         innocentTruths: ["A sealed family court file later surfaced in which {VIC2} had reported {VF}'s abuse of the boys years earlier and then withdrawn it."],
         moods: [.divided], doctrines: ["imperfectSelfDefense", "burdenOfProof"],
@@ -147,7 +147,7 @@ extension StoryCases {
                             .direct("Where did the money go?", "\"Into one checking account. From there, to earlier investors as 'returns,' to {DL}'s lake house, credit cards, tuition, and the dealership. After year two, not one dollar was invested in anything.\""),
                             .direct("Could the 9 percent have been real?", "\"Nothing pays 9 percent every single quarter for eleven years. Not even the best fund in the world.\""),
                             .cross("{DL} made actual trades in the first year?", "\"Yes, and lost 30 percent. Then the statements started showing gains.\""),
-                            .cross("{DL} repaid some investors?", "\"With other investors' money.\"")
+                            .cross("{DL} repaid some investors?", "\"{DL} repaid some investors with other investors' money.\"")
                         ]),
             WitnessSeed(name: "{VIC2}", role: "Investor (retired nurse)",
                         direct: ["\"{DL} said it was safer than a bank.\""],
@@ -176,7 +176,7 @@ extension StoryCases {
         mitigating: ["No prior criminal record", "The defendant has a support system in the community"],
         victimImpacts: ["{V}: \"I was going to leave something for my grandchildren. Now my grandchildren are paying my light bill.\"",
                         "A retired firefighter: \"Thirty years of running into burning buildings and the pension's gone.\""],
-        allocutions: ["\"I always meant to pay it back. I thought the next year would be better. I'm so sorry.\""],
+        allocutions: ["\"I always meant to pay it back. I lost money in the first year and couldn't face telling anyone, and each year I told myself the next one would be better. I'm so sorry to every family, every retiree, and every church member who trusted me. I stood in the pulpit and looked at them. I'll spend my life trying to repay what I can.\""],
         guiltyTruths: ["A file on {DL}'s laptop titled \"exit\" listed offshore banks and countries without extradition treaties."],
         innocentTruths: ["Records later showed {DL}'s business partner, not {DL}, controlled the account from year three and created the statements."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -194,7 +194,7 @@ extension StoryCases {
                 .direct("Did you set out to steal?", "\"No. I lost money in the first year and couldn't face telling anyone. I kept thinking I'd make it back.\""),
                 .direct("Why the statements?", "\"So people wouldn't panic and pull out all at once.\""),
                 .cross("So people wouldn't find out.", "\"So the congregation wouldn't know. That was the reason.\""),
-                .cross("You took $4 million for yourself while you were 'making it back.'", "\"I paid my salary.\"")
+                .cross("You took $4 million for yourself while you were 'making it back.'", "\"I paid my salary. Part of that money was my salary.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Defense: \"Pastor, has {DL} been a good person all {D.his} life?\"",
@@ -257,7 +257,7 @@ extension StoryCases {
                             .direct("Did {DL} stay in {D.his} truck as instructed?", "\"No. {D.He} got out and followed on foot. {D.He} said {D.he} was looking for a street sign. It's a community with three streets that {D.he} patrolled every night.\""),
                             .direct("Did {DL}'s account change?", "\"In details. Where {VL} came from, what {VL} said, whether {D.he} was following or returning to the truck.\""),
                             .cross("{DL}'s injuries were real?", "\"Yes. Broken nose. Lacerations on the scalp.\""),
-                            .cross("{DL} cooperated and gave five statements?", "\"Yes, without a lawyer.\"")
+                            .cross("{DL} cooperated and gave five statements?", "\"Yes. {DL} cooperated and gave five statements without a lawyer.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -268,8 +268,8 @@ extension StoryCases {
                         exam: [
                             .direct("What did you see?", "\"Two people on the grass. The one on top, in dark clothes, was throwing punches down. The one on the bottom was yelling help.\""),
                             .cross("It was dark and raining?", "\"Dark, and coming down hard.\""),
-                            .cross("You couldn't see faces?", "\"No. Just the clothes.\""),
-                            .cross("Whose voice was yelling for help?", "\"I don't know.\"")
+                            .cross("You couldn't see faces?", "\"No. Just the clothes. I couldn't see faces, only the clothes.\""),
+                            .cross("Whose voice was yelling for help?", "\"I don't know whose voice was yelling for help.\"")
                         ])
         ],
         prosecutionTheory: ["{D} profiled a teenager walking home, followed {V.him} against a dispatcher's advice, and started a confrontation with a gun. A person who provokes the fight can't claim self-defense."],
@@ -378,7 +378,7 @@ extension StoryCases {
         aggravating: ["The defendant took advantage of a position of trust", "The defendant induced others to participate in the commission of the offense", "The offense was committed for pecuniary gain"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s mother: \"She used a child to murder my son. Two families are destroyed and she smiled at the cameras.\""],
-        allocutions: ["\"I didn't ask anyone to kill my husband. I made terrible mistakes but I am not a murderer.\""],
+        allocutions: ["\"I didn't ask anyone to kill my husband. I made terrible mistakes, and I had an affair with a student that I'll be ashamed of until I die, but I am not a murderer. I loved my husband and I'm grieving him. I'm asking the court to separate what I did wrong from what I'm accused of.\""],
         guiltyTruths: ["A letter later surfaced in which {DL} wrote to {TEEN}, before the killing, \"Remember, once it's done, nobody can ever know.\""],
         innocentTruths: ["{TEEN} later recanted to a journalist, saying a friend suggested blaming {DL} to get a deal."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -484,7 +484,7 @@ extension StoryCases {
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s grandmother: \"She was brave enough to take that video. She knew. She gave us his face.\"",
                         "{VIC2}'s mother: \"They were best friends. They're buried side by side.\""],
-        allocutions: ["\"I didn't kill those girls. I'll say that until I die.\""],
+        allocutions: ["\"I didn't kill those girls, and I'll say that until the day I die. I was locked alone in a cell for a year and I said things I didn't mean because I wanted it to end. I walked to that bridge that day and left before two. My heart goes out to their families.\""],
         guiltyTruths: ["A box cutter recovered from {DL}'s garage, overlooked in the first search, had traces of {VIC2}'s DNA in the hinge."],
         innocentTruths: ["A hair found in {VIC2}'s hand, tested years later, came from an unknown man who was not {DL}."],
         moods: [.divided], doctrines: ["burdenOfProof", "voluntariness", "expertTestimony"],
@@ -503,7 +503,7 @@ extension StoryCases {
                 .direct("Were you on the trail that day?", "\"Yes. I told the police that the first week. I walked to the bridge, saw some teenagers, and left before 2. I never saw those girls.\""),
                 .direct("Why did you confess?", "\"I was out of my mind. Locked alone for a year. I wanted it to end.\""),
                 .cross("You told your spouse, 'I did it.'", "\"I said a lot of things.\""),
-                .cross("The round from your gun was between them.", "\"I don't know how it got there. I don't believe it's from my gun.\"")
+                .cross("The round from your gun was between them.", "\"I honestly can't say how it got there. I don't believe it's from my gun.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Defense: \"Isn't firearms identification just your subjective opinion?\"",

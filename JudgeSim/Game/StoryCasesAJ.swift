@@ -35,7 +35,7 @@ extension StoryCases {
                             .direct("Did you think the gun was real?", "\"Yes. It looked like the one my cousin carries. I wasn't going to find out.\""),
                             .direct("How have you been since?", "\"I quit. I can't work nights anymore.\""),
                             .cross("You never saw his face.", "\"He had a mask under the hood. I saw the gun.\""),
-                            .cross("You told deputies he was 'about six feet.' {DL} is five-eight.", "\"He was standing over me. Everybody looks tall with a gun.\"")
+                            .cross("You told deputies he was 'about six feet.' {DL} is five-eight.", "\"{OFF.He} was standing over me. Everybody looks tall with a gun.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Sheriff's detective",
                         direct: ["\"The cash, the car, and the pistol, eleven minutes later.\""],
@@ -66,7 +66,7 @@ extension StoryCases {
         aggravating: ["The defendant planned the offense", "The offense was committed for pecuniary gain"],
         mitigating: ["The defendant was suffering from a mental or physical condition that reduced culpability", "The defendant has accepted responsibility"],
         victimImpacts: ["\"I was putting myself through community college working nights. I had to drop my classes. I still see that gun when I close my eyes.\""],
-        allocutions: ["\"I owed money to the wrong people. I never wanted to hurt anybody. That's why I took a BB gun.\"", "\"I didn't rob anybody. I was just driving home.\""],
+        allocutions: ["\"I owed money to the wrong people, and I was desperate. I did it, and I picked a BB gun so that nobody would get hurt. I never wanted to frighten that clerk, and I know it looked real to {V}. I'm sorry for the terror I caused, and I'll do whatever the court requires to put this behind me.\"", "\"I did rob that place, and I'm ashamed. I was in trouble with money, and I painted that BB gun to make it look real enough, which I regret now. I never wanted to hurt anybody. I'm sorry to {V} for the fear I put into a night shift. I'll pay back every dollar I can.\""],
         guiltyTruths: ["{DL}'s phone, searched later, held a photo of the painted pistol taken the afternoon before the robbery, with the caption \"looks real enough.\""],
         innocentTruths: ["{DL}'s roommate, arrested months later on another robbery, admitted borrowing {DL}'s car that night and stashing the money and pistol in it."],
         moods: [.wantsConviction], doctrines: ["lesserIncluded", "burdenOfProof", "eyewitnessID"],
@@ -77,7 +77,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Where were you that night?", "\"Driving home from my girlfriend's. I didn't know anything was in the car.\"", "\"I did it. I was in trouble with money, and I picked a BB gun so nobody would get hurt.\""),
                 .direct("Whose pistol is it?", "\"It's mine. I bought it for target practice in the backyard.\""),
-                .cross("You painted the orange tip black.", "\"It looked better.\""),
+                .cross("You painted the orange tip black.", "\"I painted the orange tip black because I thought it looked better.\""),
                 .cross("$1,790 in a sock in your console, eleven minutes after a robbery.", "\"I can't explain that.\"", "\"Yes, sir.\""),
                 .cross("You wanted the clerk to think it was real.", "\"Anybody would think it was real. That's the point of it.\"")
             ],
@@ -103,7 +103,7 @@ extension StoryCases {
         specification: "Willfully and wantonly set fire to and burned a barn, a building used for curing tobacco and storing farm equipment, on {DATE}.",
         ageRange: 50...70, occupations: ["farmer", "farm equipment dealer", "feed store owner"], hasVictim: false,
         summaries: [
-            "A 1920s log tobacco barn on {D}'s farm outside {HOOD} burned to the ground around 2 a.m. on {DATE}, along with a tractor and a hay baler inside. Six weeks earlier {D} had raised the barn's insurance from $40,000 to $185,000, listing it as \"historic.\" The farm was three payments behind on its equipment loan. The State fire investigator found a pour pattern across the dirt floor and a gas can melted near the doorway, and a lab found gasoline in the soil samples. {DL} says the barn had a wood stove for curing and an old wiring run, that the tractor always leaked fuel, and that {D.he} was asleep at home a mile away when the fire started."
+            "A 1920s log tobacco barn on {D}'s farm outside {HOOD} burned to the ground around 2 a.m. on {DATE}, along with a tractor and a hay baler inside. Six weeks earlier {DL} had raised the barn's insurance from $40,000 to $185,000, listing it as \"historic.\" The farm was three payments behind on its equipment loan. The State fire investigator found a pour pattern across the dirt floor and a gas can melted near the doorway, and a lab found gasoline in the soil samples. {DL} says the barn had a wood stove for curing and an old wiring run, that the tractor always leaked fuel, and that {D.he} was asleep at home a mile away when the fire started."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Lab Report", "Gasoline identified in four of six soil samples from the barn floor, in a line from the doorway to the tractor."),
@@ -124,7 +124,7 @@ extension StoryCases {
                             .direct("Could the wood stove have started it?", "\"The stove is in the far corner, and that corner burned last. The fire moved toward it, not away.\""),
                             .direct("What about the wiring?", "\"The power to the barn was off at the panel. I checked the breaker.\""),
                             .cross("A leaking tractor puts gasoline on the floor.", "\"Under the tractor. Not in a line from the door.\""),
-                            .cross("Burn patterns are interpretation.", "\"The lab results aren't.\"")
+                            .cross("Burn patterns are interpretation.", "\"Burn patterns are interpretation, but the lab results aren't.\"")
                         ]),
             WitnessSeed(name: nil, role: "Insurance agent",
                         direct: ["\"{DL} wanted the barn insured as historic, and wanted it right then.\""],
@@ -132,9 +132,9 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("Why did the coverage go up?", "\"{DL} came in and said the barn was a historic structure and asked for $185,000. I told {D.him} the premium would triple. {D.He} said do it today.\""),
-                            .direct("Had {DL} ever changed coverage before?", "\"Not in nineteen years.\""),
+                            .direct("Had {DL} ever changed coverage before?", "\"Not in nineteen years. {DL} had never changed coverage before.\""),
                             .cross("Barns like that are rare now.", "\"They are. That's what {D.he} said too.\""),
-                            .cross("Some people insure what they love.", "\"Some people do.\"")
+                            .cross("Some people insure what they love.", "\"Some people do. Some people insure what they love.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -145,7 +145,7 @@ extension StoryCases {
                         exam: [
                             .direct("What do you know about the tractor?", "\"I borrowed it in April. It left a puddle of gas everywhere it sat. I told {DL} to fix it.\""),
                             .direct("What did {DL} say about the barn?", "\"That it was the last one like it in the county and {D.his} granddaddy built it.\""),
-                            .cross("Did you know about the loan default?", "\"No.\""),
+                            .cross("Did you know about the loan default?", "\"No. I didn't know about the loan default.\""),
                             .cross("Did you see the fire start?", "\"No, I woke up to the sirens.\"")
                         ])
         ],
@@ -154,7 +154,7 @@ extension StoryCases {
         aggravating: ["The offense was committed for pecuniary gain", "The defendant planned the offense"],
         mitigating: ["The defendant has a support system in the community", "The defendant has a positive employment history and is gainfully employed"],
         victimImpacts: [],
-        allocutions: ["\"I'd never burn my granddaddy's barn. That barn was the farm.\"", "\"I was going to lose the farm. I thought I could save it. I was wrong.\""],
+        allocutions: ["\"I'd never burn my granddaddy's barn. That barn was the farm. I was asleep in my bed when the sirens woke me, and I lost a tractor and a baler in that fire. I raised the insurance because a man from the historical society told me to protect it. I'm heartbroken, and I want the truth found.\"", "\"I was going to lose the farm, and I thought raising that insurance would save it. Farming's like that some years, and we were three payments behind. I'm sorry that I let things get that far, and I'm sorry for the loss of that old barn. I did not set the fire, and I'd ask the court to look closely.\""],
         guiltyTruths: ["A feed store receipt found in {DL}'s truck showed two gas cans bought the evening before the fire, though the farm's tractor ran on diesel at the pump."],
         innocentTruths: ["A farmhand fired the week before, arrested a year later for another barn fire, admitted setting this one for revenge."],
         moods: [.divided], doctrines: ["expertTestimony", "burdenOfProof", "characterEvidence"],
@@ -232,7 +232,7 @@ extension StoryCases {
                             .direct("What kind of treasurer was {DL}?", "\"The kind who showed up at 4 a.m. to start the fryers and was the last one to leave.\""),
                             .direct("Did {DL} buy supplies for the department?", "\"All the time. Fish, oil, cups, the raffle prizes.\""),
                             .cross("$63,000 worth?", "\"No. Not anything like that.\""),
-                            .cross("Did the board approve forty-one checks to {DL}?", "\"Not that I remember.\"")
+                            .cross("Did the board approve forty-one checks to {DL}?", "\"Not that I remember. I don't recall the board approving forty-one checks.\"")
                         ])
         ],
         prosecutionTheory: ["{D} pocketed the fish fry cash and wrote {D.himself} checks with no receipts, and the money went to a casino while firefighters wore expired gear."],
@@ -240,7 +240,7 @@ extension StoryCases {
         aggravating: ["The defendant took advantage of a position of trust or confidence", "The offense involved an actual loss of more than $50,000"],
         mitigating: ["The defendant has made substantial or full restitution", "The defendant has a support system in the community"],
         victimImpacts: ["The fire chief reads: \"We bought new gear with a GoFundMe from people who'd already given at our fish fries. Folks in {HOOD} pay for that department twice now.\""],
-        allocutions: ["\"I have a gambling problem. I'm in meetings now. I'll pay back every dime.\"", "\"I spent my own money on that department for nine years. I didn't steal from it.\""],
+        allocutions: ["\"I have a gambling problem, and I'm in meetings now. Some of that money was the department's, and I meant to put it back every time. I should have kept receipts and told someone I was in trouble. I'm sorry to the firefighters who trusted me. I'll pay back every dime.\"", "\"I spent my own money on that department for nine years, buying fish and oil and supplies for the fry. I paid myself back without writing it down, and I know that's no way to handle other people's money. I'm sorry for the mess in the books. I'll account for every dollar I can.\""],
         guiltyTruths: ["{DL}'s text to a friend, found later, said \"I'll put it back before anyone looks, I always do.\""],
         innocentTruths: ["The department's prior treasurer, who kept a key to the cash box, was later found to have taken the fundraiser cash for years."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -251,9 +251,9 @@ extension StoryCases {
             defendantExam: [
                 .direct("What can you tell us about the reimbursements?", "\"I bought fish, oil, everything for the fry. I paid myself back. I should have kept receipts.\""),
                 .direct("And the casino?", "\"I go. A lot. I'm not proud of it. That was my money.\"", "\"I have a problem. Some of it was the department's money. I meant to put it back.\""),
-                .cross("$41,800 in checks and $7,300 in supply purchases.", "\"I didn't keep track.\""),
+                .cross("$41,800 in checks and $7,300 in supply purchases.", "\"I didn't keep track of the $41,800 in checks or the $7,300 in supplies.\""),
                 .cross("Eleven fish fries and not one deposit.", "\"Some of that cash went to buying for the next one.\""),
-                .cross("You signed every one of those checks to yourself.", "\"I was the treasurer.\"")
+                .cross("You signed every one of those checks to yourself.", "\"I was the treasurer. I signed every one of those checks because that was my job.\"")
             ],
             prosecutionOpening: "Fish fry money and fire gear money, gone to a casino.",
             defenseOpening: "A shoebox of records and a treasurer who gave nine years.",
@@ -273,7 +273,7 @@ extension StoryCases {
         specification: "Knowingly and designedly, with intent to cheat and defraud, obtained $26,950 from the Hollis Livestock Market by falsely representing that {D.he} owned 22 head of cattle belonging to {V}, on {DATE}.",
         ageRange: 28...60, occupations: ["farmhand", "cattle hauler", "farmer"], hasVictim: true,
         summaries: [
-            "{V} leased pasture next to {D}'s land and ran 40 head of black Angus there. On {DATE}, {D} hauled 22 of them to the Hollis Livestock Market and sold them in the Tuesday sale for $26,950, signing a form swearing the cattle were {D.his}. {V} noticed the herd short a week later. The cattle carried {V}'s ear tags, and the market's video shows {D} unloading them. {DL} says {V} owed {D.him} $31,000 for two years of hay, fencing, and feeding the cattle through a drought, and that {V} told {D.him} to \"sell what you need to make it right.\" {V} says no such conversation ever happened."
+            "{V} leased pasture next to {D}'s land and ran 40 head of black Angus there. On {DATE}, {DL} hauled 22 of them to the Hollis Livestock Market and sold them in the Tuesday sale for $26,950, signing a form swearing the cattle were {D.his}. {V} noticed the herd short a week later. The cattle carried {V}'s ear tags, and the market's video shows {DL} unloading them. {DL} says {V} owed {D.him} $31,000 for two years of hay, fencing, and feeding the cattle through a drought, and that {V} told {D.him} to \"sell what you need to make it right.\" {V} says no such conversation ever happened."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Sale Barn Records", "Consignment form signed by {DL} certifying ownership of 22 head; check for $26,950 cashed the next day."),
@@ -313,8 +313,8 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did {DL} buy that summer?", "\"Pallets of feed every week and round bales on credit. {D.He} told me it was for {V}'s cattle on the lease.\""),
-                            .direct("Did {V} ever pay for that feed?", "\"Not at my counter.\""),
-                            .cross("Did you hear {V} tell {DL} to sell the cattle?", "\"No.\""),
+                            .direct("Did {V} ever pay for that feed?", "\"Not at my counter. {V} never paid for that feed at my counter.\""),
+                            .cross("Did you hear {V} tell {DL} to sell the cattle?", "\"No. I didn't hear {V} tell {DL} to sell the cattle.\""),
                             .cross("Did {DL} ever say {D.he} was going to?", "\"{D.He} said {D.he} was tired of waiting.\"")
                         ])
         ],
@@ -323,7 +323,7 @@ extension StoryCases {
         aggravating: ["The offense was committed for pecuniary gain"],
         mitigating: ["The defendant has made substantial or full restitution", "The defendant acted under strong provocation"],
         victimImpacts: ["\"Those were bred cows, my next two years of calves. I had to sell the rest to pay the lease.\""],
-        allocutions: ["\"I fed those cows when nobody else would. I took what I was owed.\"", "\"I should've taken {V} to small claims court. I'm sorry.\""],
+        allocutions: ["\"I fed those cows through two years of hay and a drought when nobody else would. I believed I took what I was owed, and I told {V} to make it right. I did not read the fine print on the form I signed. I'm sorry that it came to this, and I'll pay back what the court decides.\"", "\"I should have taken {V} to small claims court instead of selling those cattle. I needed the money, and {V.he} wasn't answering my calls. I see now that I was wrong to sign that form. I'm sorry for the hurt to {V.his} herd, and I'll make it right.\""],
         guiltyTruths: ["The sale barn's office camera recorded {DL} telling a buyer, \"Owner's out of state, {V.he} won't miss them.\""],
         innocentTruths: ["{V}'s own brother later testified in a civil case that he heard {V} tell {DL} to \"sell what you need\" over the fence that August."],
         moods: [.divided], doctrines: ["burdenOfProof", "mistakeOfFact", "justification"],
@@ -358,7 +358,7 @@ extension StoryCases {
         specification: "Assaulted {V} with a deadly weapon, a steel tactical flashlight, inflicting serious injury, a skull fracture, on {DATE}.",
         ageRange: 23...45, occupations: ["bouncer", "nightclub security guard"], hasVictim: true,
         summaries: [
-            "At closing time on {DATE}, {D}, a bouncer at a bar on {STREET} in {HOOD}, walked {V} out the back door after {V} refused to leave. In the alley, {D} hit {V} once in the head with a 14-inch steel flashlight. {V} fell and fractured {V.his} skull on the curb and spent nine days in the hospital. The alley camera shows {V} turning and raising {V.his} hands toward {D} a second before the swing, but is too grainy to show whether {V} was holding anything. {DL} says {V} had threatened to \"cut\" {D.him} inside and reached into {V.his} pocket. Deputies found a closed folding knife in {V}'s jacket pocket at the hospital."
+            "At closing time on {DATE}, {D}, a bouncer at a bar on {STREET} in {HOOD}, walked {V} out the back door after {V} refused to leave. In the alley, {DL} hit {V} once in the head with a 14-inch steel flashlight. {V} fell and fractured {V.his} skull on the curb and spent nine days in the hospital. The alley camera shows {V} turning and raising {V.his} hands toward {DL} a second before the swing, but is too grainy to show whether {V} was holding anything. {DL} says {V} had threatened to \"cut\" {D.him} inside and reached into {V.his} pocket. Deputies found a closed folding knife in {V}'s jacket pocket at the hospital."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Alley Camera", "{D} walks {V} out; {V} turns, hands rising; {D} swings the flashlight once; {V} drops."),
@@ -378,7 +378,7 @@ extension StoryCases {
                             .direct("What happened in the alley?", "\"He shoved me out the door. I turned around to ask for my hat, which fell off inside. Next thing I remember is the hospital.\""),
                             .direct("Did you reach for your knife?", "\"No. I carry it for work. I never touched it.\""),
                             .cross("You told {DL} you'd cut {D.him}.", "\"I don't remember saying that. I was drunk.\""),
-                            .cross("How many drinks?", "\"Maybe eight.\"")
+                            .cross("How many drinks?", "\"I had maybe eight drinks that night.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Police detective",
                         direct: ["\"{V}'s hands were empty on the video.\""],
@@ -387,7 +387,7 @@ extension StoryCases {
                         exam: [
                             .direct("What does the video show?", "\"{V} turns, hands come up about chest high, open as far as I can tell. One swing to the head.\""),
                             .direct("Where was the knife?", "\"Closed, in the inside jacket pocket, zipped. The nurse found it.\""),
-                            .cross("You can't see {V}'s hands clearly.", "\"Not clearly, no.\""),
+                            .cross("You can't see {V}'s hands clearly.", "\"Not clearly, no. I can't see {V}'s hands clearly.\""),
                             .cross("The pocket was on the side {V} reached toward.", "\"{V}'s hands went up, not toward the pocket.\"")
                         ])
         ],
@@ -408,7 +408,7 @@ extension StoryCases {
         aggravating: ["The defendant was armed with a deadly weapon at the time of the crime", "The defendant took advantage of a position of trust or confidence"],
         mitigating: ["The defendant acted under strong provocation", "The defendant has a positive employment history and is gainfully employed"],
         victimImpacts: ["\"I can't hear out of my left ear. I lost my job on a roofing crew because I can't keep my balance on a ladder. I was a drunk fool that night, but I didn't deserve a skull fracture.\""],
-        allocutions: ["\"He said he'd cut me and he turned on me. I had a second to decide.\"", "\"I swung too hard. I knew it the second I did it.\""],
+        allocutions: ["\"{V} said {V.he}'d cut me and turned on me, and I had a second to decide. I swung what I had in my hand. I never saw a knife, but I knew what {V.he} said. I'm sorry that {V.he} was hurt so badly. I was trained to keep people safe, and I wish it hadn't gone that far.\"", "\"I swung too hard, and I knew it the second I did it. A flashlight in the hand of a man my size is a dangerous thing. I'm sorry for the skull fracture and for the nine days {V} spent in the hospital. I've thought about that alley every night since.\""],
         guiltyTruths: ["A second camera in the bar's kitchen doorway, found later, showed {V}'s hands empty and open at chest height when {DL} swung."],
         innocentTruths: ["A delivery driver parked in the alley later came forward and said {V} had the knife half out of the pocket when {DL} swung."],
         moods: [.divided], doctrines: ["selfDefense", "imperfectSelfDefense", "lesserIncluded"],

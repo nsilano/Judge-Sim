@@ -47,7 +47,7 @@ extension StoryCases {
                             .direct("How did you get to {DL}?", "\"A neighbor sent the flyer to our tip line the next morning. The account's recovery number belongs to {DL}.\""),
                             .direct("What did {DL}'s car look like when you saw it?", "\"Two days after, outside {D.his} apartment. A silver Charger, cracked right headlight cover, scuffed right front fender.\""),
                             .cross("You didn't see the slide yourself?", "\"No. I got there seven minutes after it.\""),
-                            .cross("The plate isn't readable on the lot video?", "\"Correct.\""),
+                            .cross("The plate isn't readable on the lot video?", "\"Correct. The plate isn't readable on the lot video.\""),
                             .cross("There was a silver Audi in that intersection too, wasn't there?", "\"On the fan videos, yes. I count at least a dozen silver or gray cars. One of them is a Audi.\""),
                             .cross("You never found the Audi's owner?", "\"No. None of the videos shows its plate.\"")
                         ]),
@@ -61,7 +61,7 @@ extension StoryCases {
                             .direct("What did the damage cost?", "\"The estimates came to $21,400. Fifteen thousand nine hundred for the four cars, $3,900 for the fence and gate, $1,600 for the pole.\""),
                             .direct("Do you know {DL}?", "\"No. I know the name now.\""),
                             .direct("How has it affected the business?", "\"I couldn't sell the Camry or the Civic for two months. I paid for the repairs first and put bollards in front of the gate.\""),
-                            .cross("You didn't see the car that hit your lot?", "\"No. Only the camera.\""),
+                            .cross("You didn't see the car that hit your lot?", "\"No. Only the camera. I didn't see the car that hit the lot, only the camera showed it.\""),
                             .cross("The camera doesn't show the plate?", "\"No. It's a wide lens for the gate.\"")
                         ]),
             WitnessSeed(name: nil, role: "Sheriff's detective, social media and phone records",
@@ -103,8 +103,8 @@ extension StoryCases {
                             .direct("When did {DL} leave?", "\"Around 11:20. {D.He} said {D.he} was done and heading home, and the Charger pulled out onto Dunmore toward the highway.\""),
                             .direct("What happened at 11:26?", "\"I was looking down Tanner, waving cars off. I heard the crash and turned around. Afterward I saw the Audi that had been running all night take off down Tanner.\""),
                             .direct("What did {DL} tell you about the Charger?", "\"That {D.he} backed into a post at work. {D.He} said it the Tuesday before, before any of this.\""),
-                            .cross("You helped set up the blockade?", "\"Yes.\""),
-                            .cross("You didn't see the slide itself?", "\"No. I heard it.\""),
+                            .cross("You helped set up the blockade?", "\"Yes. I helped set up the blockade.\""),
+                            .cross("You didn't see the slide itself?", "\"No. I heard it. I didn't see the slide itself, but I heard it.\""),
                             .cross("You told the deputy you didn't remember when {DL} left?", "\"I said around eleven-something. I wasn't looking at a clock.\""),
                             .cross("You and {DL} talked about your testimony?", "\"We talked about what we remembered.\"")
                         ])

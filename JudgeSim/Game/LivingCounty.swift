@@ -118,7 +118,7 @@ enum CountyLife {
             return news("\(sold.name) sold", "\(seller) has sold \(sold.name) in \(sold.town) to \(buyer), who says the name stays.", town: sold.town)
         default:
             // Growth: a new subdivision brings construction-site thefts and break-ins for a while.
-            let town = rng.pick(["Wexley", "Cane Creek", "Bayard"])
+            let town = rng.pick(["Wexley", "Cane Creek", "Bayard", "Dunmore Mills", "Port Hollis"])
             heat(town, [.property], by: 1.4, weeks: 16)
             let street = Gazetteer.street(in: town, rng: &rng)
             return news("New subdivision breaks ground in \(town)", "Crews cleared land off \(street) for 140 homes. Deputies say building sites are a magnet for tool and copper thefts, and ask neighbors to call in anything after dark.", town: town)

@@ -76,7 +76,13 @@ struct HalftimeMotion {
         let opening = rng.pick([
             "The State rests. \(defense) moves to dismiss \(scope) for insufficient evidence (G.S. 15A-1227).",
             "\(defense) rises at the close of the State's evidence: \"Your Honor, the defense moves to dismiss \(scope).\"",
-            "With the State's case in, \(defense) moves to dismiss \(scope), arguing the evidence doesn't reach every element."
+            "With the State's case in, \(defense) moves to dismiss \(scope), arguing the evidence doesn't reach every element.",
+        "The State rests. \(defense) rises and moves to dismiss \(scope), saying the evidence doesn't support a finding on each element.",
+        "\(defense): \"Your Honor, at this point the defense moves to dismiss \(scope) for insufficiency of the evidence.\"",
+        "As soon as the State rests, \(defense) is on their feet with a motion to dismiss \(scope).",
+        "\(defense) asks to be heard before the defense case begins: \"Your Honor, we move to dismiss \(scope).\"",
+        "With no more witnesses from the State, \(defense) moves to dismiss \(scope) under G.S. 15A-1227.",
+        "The State closes its case. \(defense) stands and moves to dismiss \(scope), arguing the State has not carried its burden."
         ])
         let witness = stateWitness.isEmpty ? nil : rng.pick(stateWitness)
         let exhibit = stateEvidence.first
@@ -85,11 +91,17 @@ struct HalftimeMotion {
             "\"Taken in the light most favorable to the State, \(basis.isEmpty ? "the evidence" : basis) is substantial evidence of every element. Contradictions are for the fact-finder, not a reason to dismiss.\"",
             "\"The State is entitled to every reasonable inference. \(basis.isEmpty ? "The evidence" : basis.prefix(1).uppercased() + basis.dropFirst()) puts \(dl) right in the middle of it.\"",
             "\"Circumstantial evidence is enough, Your Honor. \(basis.isEmpty ? "What the court has heard" : basis.prefix(1).uppercased() + basis.dropFirst()) is more than a scintilla on each element.\"",
-            "\"The defense is arguing weight, not sufficiency. That's an argument for closing.\""
+            "\"The defense is arguing weight, not sufficiency. That's an argument for closing.\"",
+        "\"Viewed in the light most favorable to the State, there's more than enough to take every element to the fact-finder.\"",
+        "\"Your Honor, the State has offered substantial evidence on each element. Credibility is for the court to weigh later.\"",
+        "\"The defense is asking the court to weigh the evidence now. That is not what this motion is for.\"",
+        "\"Every reasonable inference goes to the State at this stage, and \(dl) is not entitled to dismissal on this record.\"",
+        "\"The State has put on direct and circumstantial evidence on each element. The motion should be denied.\"",
+        "\"Any conflict in the evidence is for the fact-finder to resolve, Your Honor, not a ground for dismissal.\""
         ])
         let renewal = rng.chance(0.8)
             ? rng.pick(["At the close of all the evidence, \(defense) renews the motion to dismiss; the earlier rulings stand.",
-                        "\(defense): \"The defense renews its motion at the close of all the evidence, Your Honor, for the record.\" The earlier rulings stand."])
+                        "\(defense): \"The defense renews its motion at the close of all the evidence, Your Honor, for the record.\" The earlier rulings stand.", "\(defense) renews the motion to dismiss at the close of all the evidence. The earlier rulings stand.", "\(defense): \"We renew our motion, Your Honor.\" The earlier rulings stand.", "Before the court moves on, \(defense) renews the motion to dismiss on the same grounds, and the earlier rulings stand.", "\(defense) notes for the record that the defense renews its motion at the close of the evidence. The earlier rulings stand.", "\(defense) stands again: \"The motion to dismiss is renewed, Your Honor, on every count previously argued.\" The earlier rulings stand.", "With all the evidence in, \(defense) renews the earlier motion to dismiss, and the earlier rulings stand."])
             : "The defense rests without renewing the motion to dismiss. Under Appellate Rule 10(a)(3), the sufficiency argument may not be preserved."
         return HalftimeMotion(challenged: challenged, arguments: arguments, opening: opening, response: response, renewal: renewal)
     }
@@ -612,43 +624,43 @@ final class CaseSession: ObservableObject {
                         "Your Honor, as sure as the method allows. " + (core ?? "The limits are the ones I described."),
                         "Confident, Your Honor, within the limits I gave on cross. I wouldn't sign a report I wasn't sure of.",
                         "To a reasonable degree of scientific certainty. " + (mine ?? "I'd testify the same way tomorrow."),
-                        "Sure of the result, Your Honor. Less sure of anything the result can't tell us, and I said so."])),
+                        "Sure of the result, Your Honor. Less sure of anything the result can't tell us, and I said so.", "As sure as the science permits, Your Honor, and I told the court where its limits are.", "Sure enough to put my name on it, Your Honor, with the limitations I described.", "I stand by the result, Your Honor. I would tell you if there were a reason not to.", "Sure of the result, Your Honor. I've run this test the same way hundreds of times, and the controls came back as they should.", "I'm confident in my conclusion, Your Honor, and just as confident about what the result does not show.", "As certain as the method lets anyone be. I documented every step so another examiner could check my work.", "Very sure of the analysis, Your Honor. I'd have flagged it if a control had failed, and none did.", "I'm comfortable standing behind this result, Your Honor. A second examiner reviewed it before it left the lab.", "My conclusion is what the data support, Your Honor, and I would not say more than that."])),
                     q("How long have you done this work?", rng.pick([
                         "\(years) years, Your Honor.", "Going on \(years) years. Before that, graduate school.",
                         "\(years) years in this field, Your Honor, and I've been qualified in this court before.",
-                        "About \(years) years. Long enough to have been wrong once and learned from it."])),
+                        "About \(years) years. Long enough to have been wrong once and learned from it.", "\(years) years in the laboratory, Your Honor, and I've testified in this county before.", "About \(years) years, Your Honor, starting as a trainee under a senior examiner.", "\(years) years, Your Honor. I've lost count of the cases.", "\(years) years, Your Honor, and I still review my work the way I did in my first month.", "\(years) years in this line of work, Your Honor. I've seen enough cases to be careful.", "I've been doing this for \(years) years, Your Honor, and I've kept up my certification the whole time.", "\(years) years, Your Honor. I started out assisting senior analysts and worked my way up.", "It's been \(years) years, Your Honor, and I've testified in a number of counties.", "About \(years) years, Your Honor, give or take a few months."])),
                     q("Is there anything you left out?", rng.pick([
                         "Only the technical detail in my report, Your Honor. Nothing that changes the conclusion.",
                         "The bench notes are in the file, Your Honor. They say the same thing in more words.",
                         "No, Your Honor. " + (mine ?? "The report covers it."),
-                        "Nothing material. If the court wants the raw data, I brought it."])),
+                        "Nothing material. If the court wants the raw data, I brought it.", "Nothing material, Your Honor. The report is complete as far as I know.", "The raw data are attached to the report, Your Honor, if the court wants them.", "No, Your Honor. I included everything I relied on.", "No, Your Honor. Everything that bears on my conclusion is in the report.", "Only the routine bench steps, Your Honor, which I documented but didn't narrate.", "Nothing that would change what I told the court, Your Honor.", "I can't think of anything. If the court wants more detail on any step, I can give it.", "Nothing, Your Honor. My notes and the report match.", "The only thing I left out was the background on how the instrument works, and I'm happy to explain it."])),
                     q("Did anyone talk to you about your testimony?", rng.pick([
                         "The prosecutor reviewed my report with me, Your Honor. Nobody told me what to say.",
                         "We met for twenty minutes last week to go over scheduling and the report. That's all.",
                         "Both sides had my report, Your Honor. Only the State asked to meet.",
-                        "No one told me what to conclude, Your Honor. I'd have walked out if they had."]))]
+                        "No one told me what to conclude, Your Honor. I'd have walked out if they had.", "The prosecutor asked me to explain a term in my report, Your Honor, and that was all.", "I spoke to the prosecutor's paralegal about my schedule, Your Honor. No one discussed my conclusions.", "We met briefly yesterday, Your Honor. I was told to tell the truth.", "Only to confirm the date and where to park, Your Honor. Nobody discussed what my testimony would be.", "The prosecutor asked whether I'd testified before, and I said I had. That was the extent of it.", "I got a call from the clerk about the schedule, Your Honor, and nothing more.", "We had a short call. I was asked to explain things in plain language, and I said I would.", "The defense attorney called me once to ask about my report, Your Honor, and I answered the same way I'm answering now.", "Nobody has asked me to shade anything, Your Honor, and I wouldn't have agreed if they had."]))]
         }
         if official {
             var out = [q("How sure are you?", rng.pick([
                             "Your Honor, I'm sure of what I saw and of what I wrote down that night.",
                             "Sure, Your Honor. " + (core ?? "It's in my report, written the same day."),
                             "As sure as I can be. I wrote my report before I knew who'd be charged.",
-                            "I'm confident, Your Honor. If I wasn't sure of something, I'd have said so on the stand."])),
+                            "I'm confident, Your Honor. If I wasn't sure of something, I'd have said so on the stand.", "I'm sure of what I did and what I wrote, Your Honor. I wrote it that night.", "Sure of the facts in my report, Your Honor. I don't guess in a report.", "As sure as I can be, Your Honor, and I wrote it all down while it was fresh.", "I'm sure of what I put in my report, Your Honor, and I'm sure of what I remember beyond it.", "Sure, Your Honor. I took notes at the scene so I wouldn't have to rely on memory.", "Very sure. I've been doing this a long time, and I know how important it is to get the details right.", "I'm sure about the sequence of events, Your Honor. There are small details I'd have to check my notes on.", "As sure as I can be, Your Honor. Everything I've said today is in my report.", "I wouldn't have written it down if I weren't sure, Your Honor."])),
                        q("Did anyone talk to you about your testimony?", rng.pick([
                             "I met with the prosecutor to review my report, Your Honor. That's routine.",
                             "The ADA went over the timeline with me last week. Nobody told me what to say.",
                             "Just a phone call about the date, Your Honor, and a copy of my own report.",
-                            "We prepped for about half an hour. Mostly the ADA wanted to know what I'd remember without notes."])),
+                            "We prepped for about half an hour. Mostly the ADA wanted to know what I'd remember without notes.", "We went over my report the day before, Your Honor. Nobody changed anything.", "The prosecutor asked me to be clear and to listen to the questions, Your Honor. That's all.", "I reviewed my report with the ADA, Your Honor, as I do before every trial.", "I spoke with the ADA before today, Your Honor. They asked me to review my report and answer honestly.", "We met in the hallway for about ten minutes this morning, Your Honor. Nobody told me how to answer.", "I got an email with my own report attached and a note about the court date, Your Honor.", "The ADA asked if there was anything in my report I wanted to correct before testifying. There wasn't.", "We talked on the phone yesterday about when I'd be called, Your Honor, and that was about it.", "I met with the prosecutor like I always do. I'm told to tell the truth, and I do."])),
                        q("Is there anything you left out?", rng.pick([
                             "Not that I can think of, Your Honor. It's all in the report.",
                             "No, Your Honor. " + (mine ?? "My report has the rest."),
                             "Some routine steps, Your Honor, like securing the scene. Nothing that changes anything.",
-                            "Only paperwork, Your Honor. The property sheet and the supplemental."]))]
+                            "Only paperwork, Your Honor. The property sheet and the supplemental.", "No, Your Honor. If it happened, it's in my report.", "Nothing I recall, Your Honor. I'd have written it down.", "I don't believe so, Your Honor. I was thorough.", "Nothing important, Your Honor. I put the key facts in the report.", "Only things that didn't bear on the case, Your Honor, like radio traffic with dispatch.", "No, Your Honor. If I saw it or did it, it's in the supplemental report.", "I don't think so. I went back over my notes last night and they match the report.", "The routine entries, Your Honor. Times and unit numbers are in the log.", "Nothing that I'm aware of, Your Honor. I try to be complete."]))]
             if saw {
                 out.append(q("How far away were you?", rng.pick(["A few feet, Your Honor. I was right there.", "Across the room, maybe twenty feet.",
-                                                                  "From my patrol car, about fifty yards, then I closed the distance.", "Close enough to touch, by the end of it."])))
+                                                                  "From my patrol car, about fifty yards, then I closed the distance.", "Close enough to touch, by the end of it.", "About ten feet, Your Honor.", "Maybe thirty feet, Your Honor, with a clear line of sight.", "Close enough to hear everything, Your Honor.", "About fifteen feet, Your Honor, with nothing between us.", "Maybe twenty-five yards at first, then I walked up closer.", "From the driver's seat, Your Honor, about thirty feet.", "Within arm's reach, Your Honor, once I got to the doorway.", "About forty feet when I first noticed what was going on, and a lot less once I walked up.", "Across the street, Your Honor, maybe sixty feet, with a clear view."])))
                 out.append(q("What was the lighting like?", rng.pick(["Streetlights and my flashlight, Your Honor.", "Daylight. No problem seeing.",
-                                                                       "My headlights and the takedown lights.", "Indoor lighting, all of it on."])))
+                                                                       "My headlights and the takedown lights.", "Indoor lighting, all of it on.", "The light over the entrance and my flashlight, Your Honor.", "Good daylight, Your Honor.", "Overhead lights in the lot, Your Honor, plus my flashlight.", "The overhead lights over the lot, Your Honor, and I had my flashlight.", "It was well lit, Your Honor. There's a light pole right there.", "Daylight, Your Honor, and not a cloud in the sky.", "My spotlight and the streetlight on the corner.", "Interior lights and my flashlight, Your Honor.", "The porch light and my flashlight, Your Honor, and I could see fine."])))
             }
             return out
         }
@@ -658,28 +670,28 @@ final class CaseSession: ObservableObject {
                         "I'm sure about what I saw. I'm less sure about the exact times.",
                         "Sure, Your Honor. " + (core ?? "I've gone over it a thousand times."),
                         "As sure as I am of anything. I've thought about it every day since.",
-                        "Sure of the big things. The little things, I've tried not to fill in."])),
+                        "Sure of the big things. The little things, I've tried not to fill in.", "I'm sure about the main part. Some details are fuzzy.", "Mostly sure. It was a lot to take in.", "Sure, Your Honor. I've gone over it in my head every night.", "I thought I was sure until I heard some of the questions, Your Honor."])),
                    q("Did anyone talk to you about your testimony?", rng.pick([
                         "The prosecutor went over what I'd be asked. Nobody told me what to say.",
                         "Just the lawyer who called me, about when to show up.",
                         "A victim advocate called to tell me what the courtroom would be like. That's it.",
                         "My family asked about it. I told them I couldn't talk about it.",
-                        "Nobody, Your Honor. I got a subpoena in the mail."])),
+                        "Nobody, Your Honor. I got a subpoena in the mail.", "A woman from the DA's office called to explain how court works. That was it.", "I met the prosecutor in the hallway this morning for a few minutes.", "They told me to tell the truth and that's what I'm doing.", "A woman from the DA's office called to remind me about the date and ask if I needed a ride. That was all.", "No one told me what to say, Your Honor. They just said to tell the truth.", "I talked to the prosecutor on the phone for a couple of minutes, and mostly it was about parking.", "My neighbor asked if I was nervous. That's about all we talked about.", "I got a letter and a phone call, Your Honor. Nobody coached me.", "A lawyer met me out in the hall and said to listen to the question and answer it. I'm trying to."])),
                    q("Is there anything you left out?", rng.pick([
                         "No, Your Honor. That's everything I remember.",
                         "Only that I was scared. That's why some of it's blurry.",
                         "No, Your Honor. " + (mine ?? "I told it the way it happened."),
                         "Nothing I can think of, Your Honor. I didn't want to leave anything out.",
-                        "Just how it felt, Your Honor. You can't really put that into answers."]))]
+                        "Just how it felt, Your Honor. You can't really put that into answers.", "I told it as well as I could, Your Honor.", "Nothing I can think of. It's still hard to talk about.", "Maybe some small things. I told you what mattered.", "I don't think so, Your Honor. I've told it the same way each time.", "Some details are fuzzy, but I haven't left out anything that matters.", "I'm sure there's something I've forgotten, Your Honor. It's been a while.", "No, Your Honor. I answered what I was asked.", "Only how scared I was, which is hard to explain.", "I can't think of anything else, Your Honor. If I do, I'll say so."]))]
         if saw {
             out.append(q("How far away were you?", rng.pick(["Close. Ten, fifteen feet.", "Across the street, maybe forty feet.", "Right there. Arm's length.",
-                                                              "From my porch to the road. Maybe thirty yards.", "Same room, Your Honor. Not far at all."])))
+                                                              "From my porch to the road. Maybe thirty yards.", "Same room, Your Honor. Not far at all.", "Not far. Twenty feet, maybe.", "Down the hall from where I was standing.", "Across the parking lot, Your Honor.", "Not far, Your Honor. About the length of this courtroom.", "Maybe fifteen feet, with nothing in the way.", "From the doorway to the sidewalk, Your Honor. I could see everything.", "A long way, Your Honor. Maybe a hundred feet, but I could see clearly.", "Close enough to hear what was being said.", "From my car, across the lot. Maybe fifty feet."])))
             out.append(q("What was the lighting like?", rng.pick(["It was light out, Your Honor.", "There was a streetlight, but it was dim.",
-                                                                   "Inside, with the lights on.", "Just the porch light and headlights.", "Late afternoon. Sun was low."])))
+                                                                   "Inside, with the lights on.", "Just the porch light and headlights.", "Late afternoon. Sun was low.", "Dusk, Your Honor. Not dark yet.", "A kitchen light and a lamp.", "A flickering fluorescent light.", "It was daytime, Your Honor, and there was plenty of light.", "A streetlight on the corner and the light from the store window.", "Just the lamp in the front room, Your Honor, but it was enough.", "The moon was out and there was a light over the door.", "It was getting dark, Your Honor, and the lights hadn't come on yet.", "Bright. The sun was right overhead."])))
             out.append(q("What happened right before that?", rng.pick(["Everything was normal, Your Honor. Then it all happened at once.",
                                                                         "There was some arguing first. I didn't hear all of it.",
                                                                         "I'd just gotten there. I hadn't even put my keys down.",
-                                                                        "Nothing I noticed. That's what still bothers me."])))
+                                                                        "Nothing I noticed. That's what still bothers me.", "We were just talking, Your Honor.", "I was on my phone and not paying attention until the noise.", "Nothing out of the ordinary until it started.", "Nothing unusual, Your Honor. I was in the middle of getting ready to leave.", "I heard voices raised a minute before, but I didn't think anything of it.", "I was talking to someone else and wasn't looking that way.", "It was an ordinary evening, Your Honor, until it wasn't.", "I'd been there about ten minutes. Nothing seemed wrong.", "There was a little tension, Your Honor, but nothing that made me think it would turn into this."])))
         }
         return out
     }

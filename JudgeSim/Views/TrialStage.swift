@@ -112,7 +112,12 @@ struct Statement: View {
         HStack(alignment: .top, spacing: 10) {
             Rectangle().fill(Theme.color(for: side)).frame(width: 3)
             VStack(alignment: .leading, spacing: 4) {
-                Text(speaker).font(.caption.weight(.bold)).foregroundStyle(Theme.color(for: side))
+                HStack {
+                    Text(speaker).font(.caption.weight(.bold)).foregroundStyle(Theme.color(for: side))
+                    Spacer()
+                    ReadAloudButton(id: "statement|\(speaker)|\(text.prefix(24))",
+                                    lines: { [SpeechReader.Line(text: text, speaker: speaker)] })
+                }
                 Text("\u{201C}\(text)\u{201D}").font(.system(.callout, design: .serif)).italic()
             }
         }
@@ -490,8 +495,23 @@ struct ExaminationTranscript: View {
         return all.filter { e in !mentions(e.question) && !mentions(e.answer) }
     }
 
+    /// The whole examination in order, the questioners in their own voice and the witness in theirs.
+    private var spokenLines: [SpeechReader.Line] {
+        var out: [SpeechReader.Line] = []
+        for phase in [TestimonyExchange.Phase.direct, .cross, .redirect] {
+            for e in exchanges where e.phase == phase {
+                if !e.question.isEmpty { out.append(SpeechReader.Line(text: e.question, speaker: e.examiner == .prosecution ? "State's lawyer" : "Defense lawyer")) }
+                out.append(SpeechReader.Line(text: e.answer, speaker: witness.name))
+            }
+        }
+        return out
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if !exchanges.isEmpty {
+                ReadAloudButton(id: "testimony|\(witness.id)", lines: { spokenLines }, title: "Read \(witness.name)'s testimony aloud")
+            }
             ForEach([TestimonyExchange.Phase.direct, .cross, .redirect], id: \.self) { phase in
                 let lines = exchanges.filter { $0.phase == phase }
                 let here = objections.filter { self.phase(of: $0) == phase }.map { (after: placement($0, lines: lines), objection: $0) }

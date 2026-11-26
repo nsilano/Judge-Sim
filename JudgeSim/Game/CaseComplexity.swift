@@ -87,7 +87,7 @@ enum CaseComplexity {
               needsVictim: true),
         AddOn(lawID: "cyberstalking",
               specification: "Repeatedly sent electronic messages to {V} for the purpose of abusing, annoying, threatening, or harassing.",
-              categories: [.cyber, .family, .robbery],
+              categories: [.cyber],
               thresholdDelta: -2,
               evidence: EvidenceSeed(.digital, 1, "Message Log", "Forty-one messages to {V} over nine days, most of them after {V.he} blocked {DL}'s first account."),
               needsVictim: true)
@@ -114,6 +114,8 @@ enum CaseComplexity {
                 && !existing.contains(addOn.lawID)
                 && addOn.lawID != t.primaryLaw && addOn.lawID != t.lesserLaw
                 && !addOn.excludedKeys.contains(t.key)
+                // Stalking charges already cover the pattern of contact; a second stalking count would double it.
+                && !(addOn.lawID == "cyberstalking" && t.primaryLaw.lowercased().contains("stalking"))
                 && (!addOn.needsVictim || t.hasVictim)
                 && (!addOn.needsFelonyPrior || hasFelonyPrior)
                 && !(lawEnforcement && addOn.lawID == "concealedWeapon")

@@ -81,7 +81,7 @@ def stories(path):
 
 def calls(path):
     s = open(path).read(); n = 0
-    for m in re.finditer(r'SmallCases\.make\(', s):
+    for m in re.finditer(r'(?:SmallCases\.make|\bfollowUp)\(', s):
         i = m.end() - 1; j = balanced(s, i, '(', ')')
         if j < 0: continue
         block = s[i:j + 1]
@@ -97,10 +97,10 @@ def main():
         for _id, key, block, _i, _j in calls(os.path.join(GAME, path)):
             if not want or _id in want: print(f'=== {_id} {key}\n{block}\n')
         return
-    files = sys.argv[1:] or sorted(glob.glob(os.path.join(GAME, 'StoryCases*.swift')) + glob.glob(os.path.join(GAME, 'StoryVariants*.swift')))
+    files = sys.argv[1:] or sorted(glob.glob(os.path.join(GAME, 'StoryCases*.swift')) + glob.glob(os.path.join(GAME, 'StoryVariants*.swift')) + glob.glob(os.path.join(GAME, 'FollowUpCases*.swift')))
     # Any sentence used in 5+ different stories is filler, not testimony.
     where = collections.defaultdict(set)
-    for f in sorted(glob.glob(os.path.join(GAME, 'StoryCases*.swift')) + glob.glob(os.path.join(GAME, 'StoryVariants*.swift'))):
+    for f in sorted(glob.glob(os.path.join(GAME, 'StoryCases*.swift')) + glob.glob(os.path.join(GAME, 'StoryVariants*.swift')) + glob.glob(os.path.join(GAME, 'FollowUpCases*.swift'))):
         for _id, _k, b, _i, _j in calls(f):
             for x in set(sentences(b)): where[x].add(_id)
     BOILER.update(x for x, ids in where.items() if len(ids) >= 5)
@@ -115,5 +115,9 @@ def main():
     print(f'SUMMARY {bad} of {total} stories below depth', file=sys.stderr)
     if '--by-file' in os.environ.get('DEPTH_OPTS', ''):
         for f, n in per.most_common(): print(f, n, file=sys.stderr)
-    sys.exit(1 if bad else 0)
+    import subprocess
+    st = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'statements.py'), '--list'], capture_output=True, text=True)
+    sys.stdout.write(st.stdout)
+    print(st.stdout.strip().split('\n')[-1].replace('STATEMENTS:', 'SENTENCING STATEMENTS:'), file=sys.stderr)
+    sys.exit(1 if (bad or st.returncode) else 0)
 main()

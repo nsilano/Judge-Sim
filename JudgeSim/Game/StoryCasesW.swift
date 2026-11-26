@@ -58,7 +58,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Were you at the hall after the storm?", "\"Yes. I was there when the water came through.\""),
-                            .direct("What did you see after the storm?", "\"Water coming through the hall ceiling. {DL} got a roofer out there the next week and paid him in cash out of an envelope.\""),
+                            .direct("How long was water coming through the ceiling?", "\"Hours, until the storm cleared. The ceiling tiles were soaked through.\""),
                             .cross("How much was in that envelope?", "\"I don't know. I didn't count it.\""),
                             .cross("And you don't know whose money it was?", "\"No. I just saw {DL} hand it over.\"")
                         ])
@@ -68,7 +68,7 @@ extension StoryCases {
         aggravating: ["The offense involved a large monetary loss"],
         mitigating: ["The defendant has a long record of public and community service", "No prior criminal record"],
         victimImpacts: ["{V}: \"Those bingo nights paid for wheelchair ramps and funerals. Men I served with went without because of this.\""],
-        allocutions: ["\"I gave that post twenty years. I never meant to hurt anybody.\""],
+        allocutions: ["\"I paid prizes and bills in cash when things came up, and I didn't write it all down. The extra money in the box was my own, since I sell firewood. I gave that post twenty years. I never meant to hurt anybody. I'm sorry for the mess in the books.\""],
         guiltyTruths: ["{DL}'s home computer held a spreadsheet titled \"Thursday\" tracking the skimmed amount week by week."],
         innocentTruths: ["The second counter later admitted signing count sheets inflated to cover his own sports betting debts."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -80,7 +80,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Did you take any of the post's money?", "\"No. I paid prizes and bills in cash when things came up. I should have written them down.\""),
                 .cross("$41,000 in cash went into your account, always on Fridays.", "\"That was my own money. I sell firewood.\""),
-                .cross("Do you have a single receipt for the firewood?", "\"Not written down, no.\"")
+                .cross("Do you have a single receipt for the firewood?", "\"Not written down, no. I don't have a single receipt for the firewood.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Prosecutor: \"What did the other members say about {DL} once the audit came out?\"",
@@ -152,14 +152,14 @@ extension StoryCases {
                             .direct("What was your role with the store?", "\"I handled the store's loan at the bank.\""),
                             .direct("Did the bank ask {DL} to raise the coverage?", "\"Yes. Our letter asked for coverage equal to the appraisal, which was $475,000.\""),
                             .cross("The letter was sent two years before the change?", "\"That's right. {DL} didn't act on it until this year.\""),
-                            .cross("By the time of the fire, the loan was four months behind and the bank had sent a foreclosure notice?", "\"Yes.\"")
+                            .cross("By the time of the fire, the loan was four months behind and the bank had sent a foreclosure notice?", "\"Yes. That's accurate. The loan was behind by the time of the fire.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was losing the store, raised the insurance, drove there in the middle of the night, and poured gasoline in three places."],
         defenseTheory: ["An old building with bad wiring burned. The coverage matched the bank's demand, and a phone tower covers miles, not a doorway."],
         aggravating: ["The offense endangered the responding firefighters"],
         mitigating: ["No prior criminal record", "The defendant has strong community ties"],
-        allocutions: ["\"That store was my grandfather's. I'd never burn it.\""],
+        allocutions: ["\"That night I was home in bed. I live four miles from that store, and the fire may have started from lightning striking the tower. The only reason I raised the coverage was that I finally had the money. That store was my grandfather's. I'd never burn it.\""],
         guiltyTruths: ["A gas station camera two miles away showed {DL} filling two red cans at 1:20 a.m."],
         innocentTruths: ["An electrician later found a failed junction box behind the wall, hidden from the investigator by collapsed shelving."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -169,7 +169,7 @@ extension StoryCases {
             howIdentified: "Motive, the policy change, and phone location records.",
             notDone: ["No one canvassed gas stations near the store until weeks later."],
             defendantExam: [
-                .direct("Where were you that night?", "\"Home in bed.\""),
+                .direct("Where were you that night?", "\"I was home in bed that night.\""),
                 .cross("Your phone was near the store at 1:41.", "\"I live four miles away. Maybe it hit that tower.\""),
                 .cross("Why raise the insurance the month the loan went bad?", "\"Because I finally had the money for the premium.\"")
             ],
@@ -240,17 +240,17 @@ extension StoryCases {
                         exam: [
                             .direct("Where were you that morning?", "\"Working the landing, inside the bait shop.\""),
                             .direct("What did you hear before the fight?", "\"{VL} said, 'I'll gut you,' loud enough that I came out of the bait shop.\""),
-                            .direct("How long before the fight was that?", "\"A few minutes.\""),
+                            .direct("How long before the fight was that?", "\"That was only a few minutes before the fight.\""),
                             .cross("Did you see the paddle swing?", "\"No. I was walking around the building when it happened.\""),
-                            .cross("So you never saw where {VL}'s hands were when {D.he} swung?", "\"No, I didn't.\"")
+                            .cross("So you never saw where {VL}'s hands were when {D.he} swung?", "\"No, I didn't. I never saw where {VL}'s hands were when {D.he} swung.\"")
                         ])
         ],
         prosecutionTheory: ["{VL} was loud and angry but empty-handed. {D} answered words with a two-handed swing of a six-foot paddle to the head."],
         defenseTheory: ["{VL} threatened to gut {DL}, came at {D.him} with a knife on {V.his} belt and the snap undone. One swing to keep {V.him} back was self-defense."],
         aggravating: [],
         mitigating: ["The defendant was provoked by the victim's threats", "No prior criminal record"],
-        victimImpacts: ["{V}: \"I can't stand on a boat anymore without falling. Fishing was my whole life.\""],
-        allocutions: ["\"I thought {V.he} was going for the knife. I'm sorry {V.he} got hurt that bad.\""],
+        victimImpacts: ["{V}: \"I can't stand on a boat anymore without falling. Fishing was my whole life, and I lost the use of my leg. I only argued with a man about who was next at the ramp. I spent weeks learning to walk again, and I sold my boat.\""],
+        allocutions: ["\"{V.He} said {V.he}'d gut me and came at me with {V.his} hand going to a knife. I swung at {V.him}, and I wasn't aiming. I thought {V.he} was going for the knife. I'm sorry {V.he} got hurt that bad, and I'm sorry for the morning at the landing.\""],
         guiltyTruths: ["{DL} texted a friend that afternoon: \"Guy ran his mouth, so I rang his bell. Knife never came out.\""],
         innocentTruths: ["A boat-mounted camera later found on another vessel showed {VL}'s hand on the knife handle as {V.he} stepped toward {DL}."],
         moods: [.divided], doctrines: ["selfDefense", "burdenOfProof"],
@@ -312,7 +312,7 @@ extension StoryCases {
                             .direct("What did the dispensing records show?", "\"{DL} pulled fentanyl three times as often as the other nurses on the same patients' units, and wasted partial doses at a rate I've never seen.\""),
                             .direct("How many doses were recorded as wasted?", "\"212 over four months. 140 of them had no witness signature.\""),
                             .direct("And the returned syringe?", "\"Logged as fentanyl. It was saline.\""),
-                            .cross("The unit ran two nurses short on most of {DL}'s shifts?", "\"Yes, it did.\""),
+                            .cross("The unit ran two nurses short on most of {DL}'s shifts?", "\"Yes, it did. The unit ran two nurses short on most of {DL}'s shifts.\""),
                             .cross("Skipping the witness signature is common when the floor is busy?", "\"It happens. Not 140 times by one nurse.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective, drug diversion unit",
@@ -333,10 +333,10 @@ extension StoryCases {
                         cross: ["\"I never saw anyone use {DL}'s login.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("Did you work on the same unit as {DL}?", "\"Yes, surgical recovery.\""),
+                            .direct("Did you work on the same unit as {DL}?", "\"Yes. I worked on the same unit as {DL}, surgical recovery.\""),
                             .direct("How was the unit staffed?", "\"Short. We were down two nurses on a lot of shifts.\""),
                             .direct("Did nurses share logins?", "\"During a code, someone would pull meds while the cabinet was still logged in under whoever opened it.\""),
-                            .cross("That happened during codes, not as a routine?", "\"Mostly during codes, yes.\""),
+                            .cross("That happened during codes, not as a routine?", "\"Mostly during codes, yes. That happened during codes, not as a routine.\""),
                             .cross("Did you ever see anyone use {DL}'s login?", "\"No, not that I saw.\"")
                         ])
         ],
@@ -344,7 +344,7 @@ extension StoryCases {
         defenseTheory: ["A short-staffed unit, shared logins, and lockers anyone could open. The State can't show {DL} was the one taking the drug."],
         aggravating: ["The defendant took advantage of a position of trust"],
         mitigating: ["The defendant has sought treatment for substance use", "No prior criminal record"],
-        allocutions: ["\"I got hurt on the job and I got hooked. I'm in treatment now. My patients deserved better.\""],
+        allocutions: ["\"I got hurt on the job and I got hooked. I wasted doses alone because nobody was there to witness. I don't know how that happened with the other records, and anybody could have put them there. I'm in treatment now. My patients deserved better.\""],
         guiltyTruths: ["{DL}'s hair test, ordered by the nursing board, was positive for fentanyl for the whole four-month period."],
         innocentTruths: ["A traveling nurse who left the hospital the week of the search was later caught diverting under other nurses' logins at another hospital."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -436,8 +436,8 @@ extension StoryCases {
         defenseTheory: ["{DL} was hit by a stray shot walking past and ran. The only person who puts a gun in {D.his} hand bought a lighter sentence with that story."],
         aggravating: [],
         mitigating: ["The defendant was young at the time of the offense"],
-        victimImpacts: ["{V}: \"I quit that job. I still see the barrel every time I close my eyes.\""],
-        allocutions: ["\"I didn't have a gun. I got shot and I panicked.\""],
+        victimImpacts: ["{V}: \"I quit that job. I still see the barrel every time I close my eyes. They came in at eleven o'clock in masks, and I handed over the money. I fired twice as they ran, and I've replayed it for months. I don't want to work nights again.\""],
+        allocutions: ["\"I didn't have a gun. I was walking past to my cousin's when I heard shots and felt my shoulder burn. I ran because I panicked, and then I went to the emergency room. I didn't know what to say. I got shot and I panicked, and I'm sorry for the clerk.\""],
         guiltyTruths: ["The storm drain {ALT} described was searched months later and held a black pistol traced to a burglary in {DL}'s neighborhood."],
         innocentTruths: ["{ALT}'s cousin later admitted being the second masked robber, and the blood was {DL}'s from being hit walking past the door."],
         moods: [.wantsConviction], doctrines: ["accompliceTestimony", "burdenOfProof"],
@@ -448,7 +448,7 @@ extension StoryCases {
             notDone: ["The storm drain {ALT} named was not searched before the trial."],
             defendantExam: [
                 .direct("Why were you at the store?", "\"I was walking past to my cousin's. I heard shots and felt my shoulder burn.\""),
-                .cross("Your blood is on the floor in front of the register.", "\"I don't know how.\""),
+                .cross("Your blood is on the floor in front of the register.", "\"My blood is on the floor in front of the register, and I don't know how.\""),
                 .cross("You told the ER it was a drive-by.", "\"At the time I thought that's what it was.\"")
             ],
             objections: [

@@ -51,7 +51,7 @@ extension StoryCases {
                             .direct("What did you see when you arrived at Bethel?", "\"Fire at the back of the building, coming up into the roof. It was the middle of the night.\""),
                             .direct("What happened at Bethel?", "\"We went in to check for anyone sleeping in the fellowship hall. The roof trusses gave way. I have plates in my back and I won't fight fires again.\""),
                             .cross("You don't know who set the fire?", "\"No. I know {DL} was standing outside when I got there.\""),
-                            .cross("{DL} was often first to a fire, wasn't {D.he}?", "\"Often, yes.\"")
+                            .cross("{DL} was often first to a fire, wasn't {D.he}?", "\"Often, yes. {DL} was often first to a fire.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -62,16 +62,16 @@ extension StoryCases {
                         exam: [
                             .direct("What kind of firefighter is {DL}?", "\"A good one. {D.He}'s got two commendations from the department for rescues.\""),
                             .direct("Was it unusual for {DL} to arrive first?", "\"No. {D.He} lives in the middle of the district and sleeps with the scanner on. {D.He} was first to half our calls.\""),
-                            .cross("First before the call was even dispatched?", "\"That's unusual, yes.\""),
-                            .cross("And that happened at two of these three church fires?", "\"Yes. Two of them.\"")
+                            .cross("First before the call was even dispatched?", "\"That's unusual, yes. {DL} was first before the call was even dispatched.\""),
+                            .cross("And that happened at two of these three church fires?", "\"Yes. Two of them. That happened at two of these three church fires.\"")
                         ])
         ],
         prosecutionTheory: ["{D} set three churches on fire so {D.he} could be the hero who got there first. The phone, the fuel, and the radio logs put {D.him} at every fire before anyone else knew."],
         defenseTheory: ["{DL} is a dedicated firefighter who lives near all three churches. The fuel is common, the phone towers cover miles, and early arrivals are what good volunteers do."],
         aggravating: ["The offense involved multiple victims", "The defendant knowingly created a great risk of death to more than one person"],
         mitigating: ["No prior criminal record", "The defendant has a long record of public service"],
-        victimImpacts: ["A Bethel deacon: \"My grandmother was baptized in that church. We're holding services in the school cafeteria.\""],
-        allocutions: ["\"I've spent years running into fires to help people. I'd never burn a church.\""],
+        victimImpacts: ["A Bethel deacon: \"My grandmother was baptized in that church, and so was I. Now we hold services in the school cafeteria, with folding chairs and a borrowed piano. The pews, the hymnals, and the quilts our women made over the years are ash. People keep asking how someone could do it. I don't have an answer for them.\""],
+        allocutions: ["\"I've spent years running into fires to help people, and I'd never burn a church. I hear the pagers on my scanner and I know every district in this county, which is why I show up early. I'm sorry for the congregations and for the firefighter who was hurt. That roof collapse could have been my own friends.\""],
         guiltyTruths: ["A lighter engraved with {DL}'s fire company insignia was later found buried in ash at the back door of Mount Zion."],
         innocentTruths: ["A man arrested for a fourth church fire a year later confessed to all four, describing details of the first three."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -135,8 +135,8 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} tell you?", "\"That he'd thought about it for a month, picked a night when she was calm, and shot her while she slept. He wanted us to know it was a decision.\""),
                             .direct("What did you find in the house?", "\"His best suit laid out, and a handwritten note: 'I kept my promise. Forgive me. Bury us together.'\""),
-                            .cross("He hadn't slept in weeks?", "\"He looked like it.\""),
-                            .cross("He asked about the dogs before he asked about a lawyer?", "\"He did.\"")
+                            .cross("He hadn't slept in weeks?", "\"He looked like it. He hadn't slept in weeks, from the look of him.\""),
+                            .cross("He asked about the dogs before he asked about a lawyer?", "\"He did. He asked about the dogs before he asked about a lawyer.\"")
                         ]),
             WitnessSeed(name: nil, role: "Hospice nurse",
                         direct: ["\"She was not in pain at the end.\""],
@@ -183,7 +183,7 @@ extension StoryCases {
                 .direct("Why did you do it?", "\"Because I promised her. She was scared all the time, and she didn't know where she was or who I was. That wasn't her life anymore.\""),
                 .direct("Did you mean to kill yourself too?", "\"I meant to. My hands wouldn't do it.\""),
                 .cross("She wasn't in pain. She had months.", "\"You didn't hear her screaming at three in the morning.\""),
-                .cross("You planned it for a month.", "\"A month. Every detail.\"")
+                .cross("You planned it for a month.", "\"Every detail. I planned it for a month.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Defense: \"Should your father go to prison?\"",
@@ -269,8 +269,8 @@ extension StoryCases {
         defenseTheory: ["Making liquor without a license is a crime, but {VL}'s death was an accident. {DL} posted rules, trained the boy, and ran into the fire to save him."],
         aggravating: ["The victim was very young"],
         mitigating: ["The defendant has expressed remorse"],
-        victimImpacts: ["{VL}'s mother: \"He was seventeen. He was saving for a truck. He thought it was an adventure.\""],
-        allocutions: ["\"I loved that boy like my own. I'd trade places with him today.\""],
+        victimImpacts: ["{VL}'s mother: \"{V.He} was seventeen, and {V.he} was saving for a truck. {V.He} thought it was an adventure, and {V.he} told us the man paid {V.him} fifty dollars a night. I sat with {V.him} in the burn unit for two days. I wish we had known what {V.he} was really doing out there.\""],
+        allocutions: ["\"I loved that boy like my own. I'd trade places with {V.him} today without a second thought. I told {V.him} every night, no lighters, step outside if you smell anything sweet, and I ran into that fire after {V.him}. I know I broke the law with that still, and I'll answer for it. I think of {V} every day.\""],
         guiltyTruths: ["A buyer later told agents {DL} had asked him to \"keep the boy's name out of it\" the morning after the explosion."],
         innocentTruths: ["A neighbor's game camera, reviewed later, showed {VL} stepping outside to smoke and walking back in moments before the blast."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -286,7 +286,7 @@ extension StoryCases {
                 .direct("Did you warn the boy about fire?", "\"Every night. No smoking, no lighters, and step outside if you smell anything sweet.\""),
                 .direct("Why no ventilation?", "\"I'd always kept the doors cracked. That night it was cold and he must have shut them.\""),
                 .cross("You paid a seventeen-year-old to sit by an open flame and a pot of alcohol.", "\"To watch it. To keep it from boiling over.\""),
-                .cross("Garden hose for propane?", "\"It worked for years.\"")
+                .cross("Garden hose for propane?", "\"A garden hose for propane worked for years.\"")
             ],
             objections: [
                 (1, ObjectionSeed(question: "Prosecutor: \"What kind of man pays a child to sit by a bomb?\"",
@@ -342,7 +342,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} tell you?", "\"That FEMA sent him to help seniors first. He had a badge on a lanyard. He said if I paid the deposit that day I'd be at the top of the list.\""),
                             .direct("What work was done?", "\"A blue tarp. It blew off in October. I've been living in two rooms.\""),
-                            .cross("He did put a tarp on your roof?", "\"For $14,000, a tarp.\""),
+                            .cross("He did put a tarp on your roof?", "\"He put a tarp on my roof for $14,000.\""),
                             .cross("He told you shingles were back-ordered after the storm?", "\"Yes, he told me that. He kept my money anyway.\"")
                         ]),
             WitnessSeed(name: nil, role: "State Bureau of Investigation financial agent",
@@ -375,7 +375,7 @@ extension StoryCases {
         aggravating: ["The offense involved multiple victims", "The victim was especially vulnerable due to age", "The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: [],
         victimImpacts: ["{V}: \"I've lived in that house fifty years. The storm took my roof. He took the money to fix it.\""],
-        allocutions: ["\"I got in over my head. I meant to do the work.\""],
+        allocutions: ["\"I got in over my head after that storm. I meant to do the work, and I had crews lined up, but materials ran short and my men walked off. I took deposits I couldn't stand behind, and I'm sorry to every family on those streets. They were already hurting, and I made it worse.\""],
         guiltyTruths: ["A notebook found in {DL}'s truck listed storms by date and county, with notes like \"elderly, insurance paid, move fast.\""],
         innocentTruths: ["Records later showed {DL}'s business partner controlled the account and made most of the withdrawals without {DL}'s knowledge."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -446,7 +446,7 @@ extension StoryCases {
                             .direct("How many assistants worked nights?", "\"Most nights, one. One of us for 42 residents.\""),
                             .direct("Did you turn {VL} on those nights?", "\"I never worked that hall. I was pulled to the dining room and laundry those nights. Those aren't my initials, and that's not how I write.\""),
                             .direct("Did anyone ask you to initial her chart?", "\"No. Nobody ever asked me. I didn't know my initials were on it.\""),
-                            .cross("Could anyone have turned 42 residents every two hours alone?", "\"No. Nobody could.\""),
+                            .cross("Could anyone have turned 42 residents every two hours alone?", "\"No. Nobody could. No one could have turned 42 residents every two hours alone.\""),
                             .cross("The staffing wasn't something {DL} could fix alone, was it?", "\"Not alone. The owners set the staff.\"")
                         ]),
             WitnessSeed(name: nil, role: "State nurse surveyor",
@@ -457,7 +457,7 @@ extension StoryCases {
                             .direct("What did you find on staffing?", "\"One nursing assistant for 42 residents on most nights, for months.\""),
                             .direct("How long does a wound like this take?", "\"Weeks of no turning, no wound care. Any nurse looking at her would have seen it.\""),
                             .direct("What did {VL}'s chart say?", "\"That she was turned every two hours, with assistants' initials. Those assistants weren't on her hall.\""),
-                            .cross("The owners staffed below state minimums?", "\"Yes. We've cited them.\""),
+                            .cross("The owners staffed below state minimums?", "\"Yes. We've cited them. The owners staffed below state minimums.\""),
                             .cross("And {DL} emailed the owners eleven times asking for more staff?", "\"Yes. I've seen those emails.\"")
                         ])
         ],
@@ -470,15 +470,15 @@ extension StoryCases {
                             .direct("How hard was {DL} working?", "\"Seventy-hour weeks. The timecards show it.\""),
                             .direct("What happened when {DL} asked for staff?", "\"Corporate said no every time. Budget. We were told to make it work.\""),
                             .cross("Did corporate tell {DL} to fake the charts?", "\"Nobody at corporate said that. They said fix the numbers.\""),
-                            .cross("Being short-staffed didn't require anyone to sign other people's initials?", "\"No. It didn't.\"")
+                            .cross("Being short-staffed didn't require anyone to sign other people's initials?", "\"No. It didn't. Being short-staffed didn't require anyone to sign other people's initials.\"")
                         ])
         ],
         prosecutionTheory: ["{D} knew {V} was not being turned and filled in her chart to say she was. The falsified records hid the neglect until it killed her."],
         defenseTheory: ["{DL} was set up to fail by owners who wouldn't staff the building. The deaths belong to them. Bad paperwork isn't culpable negligence."],
         aggravating: ["The victim was especially vulnerable due to age or disability", "The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
-        victimImpacts: ["{VL}'s daughter: \"Every Sunday I asked if she was being turned. They showed me the chart.\""],
-        allocutions: ["\"I tried. I couldn't be everywhere. I'm sorry I wrote down what I wished was true.\""],
+        victimImpacts: ["{VL}'s daughter: \"Every Sunday I asked if {V.he} was being turned, and every Sunday they showed me the chart. {V.He} had taught school for forty years and kept every thank-you card. I trusted the paper, and I trusted them. I'd give anything to have pulled back {V.his} blanket once myself.\""],
+        allocutions: ["\"I tried my best, but I couldn't be everywhere. I asked in writing eleven times for more staff, and nobody listened. I'm sorry I wrote down what I wished was true instead of what was happening. I will think about {V} for as long as I live, and I'm sorry to {V.his} family.\""],
         guiltyTruths: ["A text from {DL} to the administrator the week inspectors came: \"Charts are fixed. Don't let them see Room 14.\""],
         innocentTruths: ["The regional manager later admitted ordering all directors of nursing to \"complete the charts\" before inspections."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -492,7 +492,7 @@ extension StoryCases {
             notDone: ["The corporate owners were not charged."],
             defendantExam: [
                 .direct("Why did you fill in those entries?", "\"Because I believed the girls were doing the turns and just not charting. I was catching up the paperwork. I was wrong about what was happening.\""),
-                .direct("Did you ask for help?", "\"Eleven times, in writing.\""),
+                .direct("Did you ask for help?", "\"I asked for help eleven times, in writing.\""),
                 .cross("You signed other people's initials.", "\"I signed them. I knew better.\""),
                 .cross("You never looked at her wounds.", "\"I didn't have time to look at anybody.\"")
             ],

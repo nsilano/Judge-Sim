@@ -45,7 +45,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {VL} say when you called?", "\"{VL} was sobbing. {V.He} said the therapist touched {V.his} breast and kept going up {V.his} leg, and {V.he} didn't know what to do.\""),
                             .cross("You weren't there?", "\"I was two hours away. I just got the text.\""),
-                            .cross("{VL} told you about the phone call with {V.his} mother too?", "\"Not then. Later.\"")
+                            .cross("{VL} told you about the phone call with {V.his} mother too?", "\"Not then. Later. {VL} told me about the call with {V.his} mother later.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -64,7 +64,7 @@ extension StoryCases {
         defenseTheory: ["{VL} consented in writing to chest and inner leg work. A standard technique, done after an upsetting phone call, felt wrong. Twelve years and 9,000 sessions say {DL} isn't a predator."],
         aggravating: ["The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{V}: \"I can't let anyone touch my shoulders. Not even my partner.\""],
+        victimImpacts: ["{V}: \"I can't let anyone touch my shoulders now, not even my partner. I froze on that table, and I keep asking myself why I didn't say something sooner. I stopped going to massage, and I flinch when a stranger stands behind me. I walked into that room to relax after a hard month, and I walked out ashamed.\""],
         allocutions: ["\"I would never do that to a client. I'm sorry {VL} felt violated, but I didn't do what {V.he} says.\""],
         guiltyTruths: ["After the trial, two more former clients came forward with nearly identical accounts."],
         innocentTruths: ["{VL} later told a therapist {V.he} had a past trauma triggered when {DL} began pectoral work without warning."],
@@ -147,7 +147,7 @@ extension StoryCases {
                             .direct("What was in the car?", "\"A 9mm casing under the passenger seat. The State Crime Lab matched it to the six from the house.\""),
                             .cross("The video shows shots from the passenger side?", "\"From the passenger window. You can see the flash.\""),
                             .cross("So if {DL} was in the car, {D.he} was driving, not shooting?", "\"If {D.he} was driving, yes.\""),
-                            .cross("You never asked who else drove that car?", "\"{DL} wouldn't say.\""),
+                            .cross("You never asked who else drove that car?", "\"{DL} wouldn't say. I asked, but {DL} wouldn't tell me who else drove that car.\""),
                             .cross("Did you interview the cousin?", "\"The cousin declined to talk.\"")
                         ])
         ],
@@ -158,16 +158,16 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Who used {DL}'s car?", "\"{DL} let half the family use it. The cousin had it all the time.\""),
-                            .cross("Do you know who had it that night?", "\"I couldn't tell you.\""),
-                            .cross("Did {DL} ever lend it overnight?", "\"Sometimes for days.\"")
+                            .cross("Do you know who had it that night?", "\"I couldn't tell you. I don't know who had it that night.\""),
+                            .cross("Did {DL} ever lend it overnight?", "\"{DL} lent it overnight, sometimes for days.\"")
                         ])
         ],
         prosecutionTheory: ["{D}'s car, with {D.his} dent, fired six shots into a house, and a matching casing was in {D.his} car three days later. Whether driver or shooter, {DL} acted in concert."],
         defenseTheory: ["{DL} lends that car to family, including the cousin who had the grudge. The shots came from the passenger side, and the State can't put {DL} in the car at all."],
         aggravating: ["The offense endangered children"],
         mitigating: [],
-        victimImpacts: ["{V}: \"My kids sleep on the living room floor now, away from the windows.\""],
-        allocutions: ["\"I didn't shoot anybody's house. I'm not going to say who had my car.\""],
+        victimImpacts: ["{V}: \"My kids sleep on the living room floor now, away from the windows. One of those bullets went through the bedroom where they were asleep, and I can't forget how close it was. I jump at every car that slows down outside. I just want my children to feel safe in their own beds again.\""],
+        allocutions: ["\"I didn't shoot at anybody's house, and I'm sorry for the fear those children and their mother went through. That car is lent out to family all the time, and I wasn't in it that night. I won't put another person's name in this, because that's not who I am. I'm asking the court to weigh what is actually proven.\""],
         guiltyTruths: ["{DL}'s phone, later obtained, connected to a tower a block from the house at 11:19 p.m."],
         innocentTruths: ["The cousin was later arrested with the gun that fired the casings and admitted using {DL}'s car that night."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -233,7 +233,7 @@ extension StoryCases {
                         exam: [
                             .direct("What wounds did {VL} have?", "\"Three: one to the chest that went into the lung, one to the abdomen, and one to the lower back. The chest wound was fatal.\""),
                             .direct("What does the back wound suggest?", "\"That {VL} was turned away, at least partly, when it was inflicted.\""),
-                            .cross("You can't tell the order of the wounds?", "\"Not with certainty.\""),
+                            .cross("You can't tell the order of the wounds?", "\"Not with certainty. I can't tell the order of the wounds with certainty.\""),
                             .cross("In a struggle, people twist and turn?", "\"They twist, they grab, they fall. It's never like the diagrams.\"")
                         ]),
             WitnessSeed(name: nil, role: "Bartender at {BAR}",
@@ -254,8 +254,8 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did you see?", "\"{DL} was walking to {D.his} truck. {VL} came out yelling, broke a bottle on a car, and came at {DL} with it. Then they were tangled up, and {VL} went down.\""),
-                            .direct("Did you see a knife?", "\"Not until after.\""),
-                            .cross("You'd been drinking?", "\"A few beers.\""),
+                            .direct("Did you see a knife?", "\"Not until after. I didn't see a knife until after.\""),
+                            .cross("You'd been drinking?", "\"I'd had a few beers.\""),
                             .cross("It was dark and it happened fast?", "\"Fast. The lot lights were on.\""),
                             .cross("You didn't stay to talk to police?", "\"I called 911 and gave my name. Then I left.\"")
                         ])
@@ -264,8 +264,8 @@ extension StoryCases {
         defenseTheory: ["{VL}, drunk and enraged, chased {DL} into the lot and came at {D.him} with a broken bottle. {DL} defended {D.himself}. At most, this is manslaughter."],
         aggravating: [],
         mitigating: ["The victim was the initial aggressor", "The defendant voluntarily surrendered"],
-        victimImpacts: ["{VL}'s brother: \"Over a pool game. Twenty dollars.\""],
-        allocutions: ["\"I didn't want any of it. I wish I'd driven away faster.\""],
+        victimImpacts: ["{VL}'s brother: \"It started over a pool game and twenty dollars. My brother was thirty years old, and {V.he} had a daughter who is going to grow up asking about {V.him}. We got the call in the middle of the night and drove to the lot. I can't believe anything that small cost us this much.\""],
+        allocutions: ["\"I didn't want any of it. I left that bar to avoid a fight, and I wish I had driven away faster. It happened in seconds, and I've lived in it every night since. I'm sorry to {VL}'s family for their loss, and I know nothing I say gives them back their son.\""],
         guiltyTruths: ["A dashcam in a parked car later showed {DL} turning back toward {VL} after {VL} dropped the bottle."],
         innocentTruths: ["A dashcam in a parked car later showed {VL} slashing at {DL}'s face with the bottle before {DL} pulled the knife."],
         moods: [.divided], doctrines: ["selfDefense", "imperfectSelfDefense"],
@@ -312,7 +312,7 @@ extension StoryCases {
         ],
         ageRange: 35...50, occupations: ["pharmaceutical sales representative", "HVAC technician"], hasVictim: true,
         summaries: [
-            "On {DATE}, after a U-12 soccer game at the {HOOD} recreation fields, {D}, a parent, confronted {V}, the 19-year-old referee, over a red card given to {D}'s child. Video from another parent's phone shows {DL} walking onto the field, the two standing chest to chest, a blur of movement, and {VL} on the ground. {VL}'s jaw was broken in two places. {DL} says {VL} shoved {D.him} in the chest first and {D.he} reacted. {DL} was convicted in district court and appealed."
+            "On {DATE}, after a U-12 soccer game at the {HOOD} recreation fields, {D}, a parent, confronted {V}, the 19-year-old referee, over a red card given to {DL}'s child. Video from another parent's phone shows {DL} walking onto the field, the two standing chest to chest, a blur of movement, and {VL} on the ground. {VL}'s jaw was broken in two places. {DL} says {VL} shoved {D.him} in the chest first and {D.he} reacted. {DL} was convicted in district court and appealed."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Parent's Video", "{DL} walks onto the field shouting; 1.5 seconds of blur when they're chest to chest; {VL} falls."),
@@ -355,7 +355,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you see?", "\"The ref put both hands on the parent's chest and shoved hard. The parent stumbled back, came forward, and swung once.\""),
                             .direct("Do you know either of them?", "\"Never met either one. I coach the other team.\""),
-                            .cross("{DL} walked onto the field and got in the referee's face?", "\"Yes. That was wrong.\""),
+                            .cross("{DL} walked onto the field and got in the referee's face?", "\"Yes. That was wrong. {DL} walked onto the field and got in the referee's face.\""),
                             .cross("A shove doesn't justify breaking someone's jaw?", "\"I'm telling you what happened.\"")
                         ])
         ],
@@ -363,8 +363,8 @@ extension StoryCases {
         defenseTheory: ["{VL} shoved {DL} first, hard, and {DL} reacted with a single punch. Ugly, but self-defense, or at most simple assault."],
         aggravating: ["The victim was a youth sports official"],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
-        victimImpacts: ["{V}: \"I was nineteen and doing it for gas money. I'll never step on a field again.\""],
-        allocutions: ["\"I'm ashamed of how I acted in front of my kid. I'm sorry for {VL}'s injury.\""],
+        victimImpacts: ["{V}: \"I was nineteen and doing it for gas money. Now I eat through a straw for weeks, and my jaw is wired and I've missed work and classes. I'll never step on a field again. I used to love a Saturday morning with kids and a whistle, and a few seconds took that from me.\""],
+        allocutions: ["\"I'm ashamed of how I acted in front of my own kid. I was angry about a red card on a clean tackle, and I walked onto that field when I should have walked to my car. I'm sorry for {VL}'s injury and for the pain it caused {V.his} family. I'll never act that way at a game again.\""],
         guiltyTruths: ["A second video, from the bleachers, later showed {VL}'s hands open and stationary, not pushing."],
         innocentTruths: ["A second video, from the bleachers, later showed {VL} shoving {DL} back several feet."],
         moods: [.wantsConviction], doctrines: ["selfDefense"],
@@ -436,7 +436,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did you identify {DL}?", "\"Of fourteen dark sedans with plates starting 7KR, one had a registered owner with a security job. That was {DL}.\""),
                             .direct("What did the search find?", "\"A blue-and-amber dash light bar and a gold badge that says 'Special Officer.'\""),
-                            .cross("Did you look at the other thirteen cars?", "\"Not in person.\""),
+                            .cross("Did you look at the other thirteen cars?", "\"Not in person. I didn't look at the other thirteen cars in person.\""),
                             .cross("The badge says 'Special Officer,' not police?", "\"'Special Officer.' It's the kind you can order online.\""),
                             .cross("Did you get {DL}'s phone location?", "\"We didn't request it. I should have.\"")
                         ])
@@ -456,8 +456,8 @@ extension StoryCases {
         defenseTheory: ["Fourteen cars share that partial plate, the badge says 'Special Officer' for {D.his} job, and an uncertain identification from a flashlit window isn't proof."],
         aggravating: ["The offense targeted a person traveling alone at night"],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
-        victimImpacts: ["{V}: \"Now when real blue lights come up behind me, I drive to a gas station before I stop.\""],
-        allocutions: ["\"I didn't stop anybody. I'd never do that.\""],
+        victimImpacts: ["{V}: \"Now when real blue lights come up behind me, I drive to a gas station before I stop. I replay that man at my window with {D.his} flashlight and {D.his} questions about whether anyone was waiting for me. I used to feel safe driving home late from work. I don't anymore, and I resent that.\""],
+        allocutions: ["\"I didn't stop anybody that night. I was asleep on my couch at home, and I'd never pull someone over on a highway. The lights on my truck are for patrolling the industrial park for my company, and that's all I use them for. I'm sorry that {V} was frightened, and I hope the real person is found.\""],
         guiltyTruths: ["{DL}'s phone, obtained later, connected to a tower on Route 17 at 11:03 p.m."],
         innocentTruths: ["Another of the fourteen sedans belonged to a man later caught doing the same thing in a neighboring county."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],

@@ -106,6 +106,8 @@ struct CaseTemplate {
     var extras: [String: [String]] = [:]
     /// A fully written case: every witness, objection, and argument is authored, and nothing generic is mixed in.
     var story: StoryExtras? = nil
+    /// Written with SmallCases.make (the short form), whose examinations the story auditor checks.
+    var shortForm = false
     /// Set on an alternate telling so the victim's fate stays what the original story says.
     var victimDiedFlag: Bool? = nil
     /// People whose sex the case fixes, keyed "D", "V", or "ALT".
@@ -127,6 +129,8 @@ struct CaseTemplate {
         var result = genders.merging(story?.genders ?? [:]) { a, _ in a }
         // The story's own words settle sex too: "{V}, the defendant's husband" makes {V} a man, "{V}'s wife" a man's wife.
         for (token, gender) in KinshipGender.inferred(for: self) where result[token] == nil { result[token] = gender }
+        // So does a pronoun the story wrote out by hand: "{D} was found with a wrench in his cab" needs a man.
+        for (token, gender) in PronounGender.inferred(for: self) where result[token] == nil { result[token] = gender }
         let laws = [primaryLaw] + [lesserLaw].compactMap { $0 } + secondary.map(\.lawID)
         if laws.contains("assaultFemale") {
             result["D"] = result["D"] ?? .male
@@ -388,12 +392,21 @@ enum CaseOrigin: Hashable {
 
     /// Offenses an officer finds on the road: the arrest comes at the stop, not days later.
     /// Impaired driving is always an arrest at the roadside, whatever the written file says about charging later.
-    static let impairedLaws: Set<String> = ["dwi", "habitualDWI", "felonyDBV", "misdDBV", "dwlrImpaired"]
-    static let roadsideLaws: Set<String> = ["dwi", "habitualDWI", "felonyDBV", "misdDBV", "dwlrImpaired", "dwlr", "fleeing"]
+    static let impairedLaws: Set<String> = ["dwi", "habitualDWI", "felonyDBV", "misdDBV", "dwlrImpaired", "seriousInjuryVehicle"]
+    static let roadsideLaws: Set<String> = ["dwi", "habitualDWI", "felonyDBV", "misdDBV", "dwlrImpaired", "seriousInjuryVehicle", "dwlr", "fleeing", "recklessDriving"]
+
+    static let reportedLaws: Set<String> = ["cardFraud", "embezzlement", "embezzlement100k", "exploitationElder", "falsePretenses", "falsePretenses100k",
+                                            "forgery", "identityTheft", "insuranceFraud", "prescriptionFraud", "securitiesFraud", "uttering", "perjury",
+                                            "accessingComputers", "damagingComputers", "cyberstalking", "privateImages", "extortion", "bribery",
+                                            "communicatingThreats", "stalking", "stalkingCourtOrder", "dvpoViolation", "massViolenceThreat",
+                                            "felonyLarceny", "misdLarceny", "larcenyFirearm", "possStolen", "injuryPersonalProperty", "injuryRealProperty",
+                                            "breakingVehicle", "burglary1", "burglary2", "feloniousBE", "falseReport", "impersonatingLEO", "animalCruelty", "witnessIntimidation"]
 
     static func of(key: String, setting: CaseSetting, laws: [String] = []) -> CaseOrigin {
         if setting == .paper { return .records }
         if laws.contains(where: { roadsideLaws.contains($0) }) { return .stop }
+        // Fraud, forgery and computer crimes aren't "a call about something that just happened": someone reports them afterward.
+        if laws.contains(where: { reportedLaws.contains($0) }) { return .report }
         switch key {
         case "trafficStopDrugs", "habitualDWI", "fleeingElude", "felonGun": return .stop
         case "trapHouse", "hiddenGun": return .warrant
@@ -414,13 +427,18 @@ struct CaseFacts {
     /// Summaries, charges, evidence, and testimony, lowercased.
     let text: String
 
-    init(key: String, category: LawCategory, hasVictim: Bool, text: String, laws: [String] = []) {
+    init(key: String, category: LawCategory, hasVictim: Bool, text: String, laws: [String] = [], readsStopFromText: Bool = false) {
         self.key = key
         self.category = category
         self.setting = CaseSetting.of(category: category, key: key)
-        self.origin = CaseOrigin.of(key: key, setting: setting, laws: laws)
+        var origin = CaseOrigin.of(key: key, setting: setting, laws: laws)
+        // A story whose own words say a car was pulled over at the roadside starts with a stop, whatever the charge.
+        let lowered = text.lowercased()
+        if readsStopFromText, origin == .call, ["traffic stop", "pulled over", "dead taillight", "broken taillight", "stopped the car", "stopped a car", "stopped his car", "stopped her car", "stopped their car", "at a checkpoint", "license checkpoint"]
+            .contains(where: { lowered.contains($0) }) { origin = .stop }
+        self.origin = origin
         self.hasVictim = hasVictim
-        self.text = text.lowercased()
+        self.text = lowered
     }
 
     init(_ c: CourtCase) {
@@ -429,7 +447,7 @@ struct CaseFacts {
         parts += c.evidence.map { $0.title + ". " + $0.detail }
         for w in c.witnesses { parts += w.direct + w.cross }
         self.init(key: c.templateKey, category: c.category, hasVictim: c.victimName != nil, text: parts.joined(separator: " "),
-                  laws: c.charges.map { $0.law.id })
+                  laws: c.charges.prefix(1).map { $0.law.id })
     }
 
     /// True when any of the words appears in the case (or when no words are given).
@@ -445,6 +463,60 @@ struct CaseFacts {
     var identity: Bool { mentions(["description", "lineup", "identif", "mask", "hoodie", "matching", "unknown", "footage"]) }
 }
 
+
+/// Reads the sex of the defendant and the victim from the pronouns a written case spells out ("he", "her") in sentences that
+/// name only that person, so a story that says "his cab" is never given a woman's name. A person the story is inconsistent
+/// about is left free.
+enum PronounGender {
+    nonisolated(unsafe) static var cache: [String: [String: Gender]] = [:]
+
+    static func inferred(for template: CaseTemplate) -> [String: Gender] {
+        if let hit = cache[template.key] { return hit }
+        var parts: [String] = template.summaries + template.prosecutionTheory + template.defenseTheory + template.victimImpacts
+            + template.allocutions
+        if let story = template.story {
+            parts += [story.prosecutionOpening, story.defenseOpening, story.prosecutionClosing, story.defenseClosing]
+        }
+        parts += template.prosecutionEvidence.map(\.detail) + template.defenseEvidence.map(\.detail)
+        for seed in template.prosecutionWitnesses + template.defenseWitnesses {
+            parts += seed.direct + seed.cross
+            for line in seed.exam { parts += line.questions + line.answers }
+        }
+        if let story = template.story {
+            for line in story.defendantExam { parts += line.questions + line.answers }
+        }
+        let found = infer(parts)
+        cache[template.key] = found
+        return found
+    }
+
+    static func infer(_ parts: [String]) -> [String: Gender] {
+        let male: Set<String> = ["he", "him", "his", "himself"], female: Set<String> = ["she", "her", "hers", "herself"]
+        var votes: [String: (m: Int, f: Int)] = [:]
+        for text in parts {
+            for sentence in text.components(separatedBy: CharacterSet(charactersIn: ".!?")) {
+                let namesD = sentence.contains("{D}") || sentence.contains("{DL}") || sentence.contains("{DF}")
+                let namesV = sentence.contains("{V}") || sentence.contains("{VL}")
+                let others = ["{ALT", "{DET", "{OFF", "{PROS", "{DEF", "{TROOPER", "{ELECTEDDA", "{SHERIFF"].contains { sentence.contains($0) }
+                // Exactly one of the two people is named, and no one else: then a bare pronoun is theirs.
+                guard !others, namesD != namesV else { continue }
+                let bare = sentence.regexReplacing(of: "\\{[^}]*\\}", with: " ").lowercased()
+                let words = Set(bare.components(separatedBy: CharacterSet.letters.inverted))
+                let isMale = !words.isDisjoint(with: male), isFemale = !words.isDisjoint(with: female)
+                guard isMale != isFemale else { continue }
+                let key = namesD ? "D" : "V"
+                var v = votes[key] ?? (0, 0)
+                if isMale { v.m += 1 } else { v.f += 1 }
+                votes[key] = v
+            }
+        }
+        var out: [String: Gender] = [:]
+        for (key, v) in votes {
+            if v.m > 0 && v.f == 0 { out[key] = .male } else if v.f > 0 && v.m == 0 { out[key] = .female }
+        }
+        return out
+    }
+}
 
 /// Reads the sex of the people a written case names through a relationship word, so the name matches the pronouns the
 /// testimony uses: "{V}, the defendant's husband" is a man; "{V}'s husband" is a woman.

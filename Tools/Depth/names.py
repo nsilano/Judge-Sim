@@ -172,3 +172,70 @@ if '--finish' in sys.argv:
     random.seed(9)
     for fn, k, a, na in random.sample(samples2, min(14, len(samples2))):
         print('---', fn, k); print('  ', a[:210]); print('->', na[:210])
+
+# ---- narrative step: python3 Tools/Depth/names.py --narrative [--apply]
+# The summary, the opening and closing statements, the theories and the victim's statement name the defendant in full again
+# and again. The full name stays once; later mentions become a pronoun where one is clear, and the last name otherwise.
+if '--narrative' in sys.argv:
+    def narrate(text):
+        text, _ = fix_answer('', text, skip_first=False)
+        parts = text.split('{D}')
+        if len(parts) <= 2:
+            return text
+        rest = '{DL}'.join(parts[1:])
+        return parts[0] + '{D}' + rest
+    LINE_ONE = re.compile(r'^(\s+(?:summary|impact): ")((?:[^"\\]|\\.)*)(",?)$')
+    PAIR = re.compile(r'^(\s+(?:openings|closings|theory): \(")((?:[^"\\]|\\.)*)(", ")((?:[^"\\]|\\.)*)("\),?)$')
+    STRING_LINE = re.compile(r'^(\s+")((?:[^"\\]|\\.)*)(",?)$')
+    nar = {'fields': 0, 'files': 0}
+    shown = []
+    for f in sorted(glob.glob(os.path.join(ROOT, 'Story*.swift')) + glob.glob(os.path.join(ROOT, 'FollowUp*.swift'))):
+        lines = open(f).read().split('\n'); changed = False
+        block = False
+        for i, l in enumerate(lines):
+            stripped = l.strip()
+            if stripped.endswith(('summaries: [', 'victimImpacts: [', 'prosecutionTheory: [', 'defenseTheory: [')):
+                block = True
+                continue
+            if block and stripped.startswith(']'):
+                block = False
+            if block:
+                m = STRING_LINE.match(l)
+                if m:
+                    new = narrate(m.group(2))
+                    if new != m.group(2):
+                        nar['fields'] += 1; changed = True
+                        if len(shown) < 200: shown.append((m.group(2), new))
+                        lines[i] = m.group(1) + new + m.group(3)
+                continue
+            if i > 0 and lines[i - 1].rstrip().endswith(('summary:', 'impact:')):
+                m = STRING_LINE.match(l)
+                if m:
+                    new = narrate(m.group(2))
+                    if new != m.group(2):
+                        nar['fields'] += 1; changed = True
+                        if len(shown) < 200: shown.append((m.group(2), new))
+                        lines[i] = m.group(1) + new + m.group(3)
+                    continue
+            m = LINE_ONE.match(l)
+            if m:
+                new = narrate(m.group(2))
+                if new != m.group(2):
+                    nar['fields'] += 1; changed = True
+                    if len(shown) < 200: shown.append((m.group(2), new))
+                    lines[i] = m.group(1) + new + m.group(3)
+                continue
+            m = PAIR.match(l)
+            if m:
+                a, b = narrate(m.group(2)), narrate(m.group(4))
+                if a != m.group(2) or b != m.group(4):
+                    nar['fields'] += 1; changed = True
+                    if len(shown) < 200: shown.append((m.group(2) + ' || ' + m.group(4), a + ' || ' + b))
+                    lines[i] = m.group(1) + a + m.group(3) + b + m.group(5)
+        if changed:
+            nar['files'] += 1
+            if APPLY: open(f, 'w').write('\n'.join(lines))
+    print('NARRATIVE', nar)
+    random.seed(4)
+    for old, new in random.sample(shown, min(10, len(shown))):
+        print('---'); print('  ', old[:300]); print('->', new[:300])

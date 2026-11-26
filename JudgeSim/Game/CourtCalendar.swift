@@ -316,7 +316,7 @@ enum ContinuanceMotions {
         let weeks = rng.int(3...6)
         let stateEvidence = c.evidence.filter { $0.side == .prosecution }
         let place = rng.pick(["the convenience store across the street", "the apartment complex's front office", "a neighbor's doorbell camera",
-                              "the gas station at the corner", "the city traffic camera at the intersection"])
+                              "the gas station at the corner", "the city traffic camera at the intersection", "the pharmacy on the corner", "a camera outside the church", "the car wash next door", "the bank's drive-through camera", "the hardware store's parking lot camera", "the laundromat across the road"])
         let speedyObjection = jailed
             ? "\(dl) has been sitting in the Hollis County jail waiting for this trial. Every week of delay is another week in custody."
             : "\(dl) has been under this charge for a long time and has been ready for trial at every setting."
@@ -355,7 +355,7 @@ enum ContinuanceMotions {
             let why = rng.pick(["was served with a subpoena but was admitted to the hospital on Saturday",
                                 "is out of state on military orders until the end of the month",
                                 "had a death in the family and is in Georgia for the funeral",
-                                "was served but called this morning from the emergency room, where their child was taken overnight"])
+                                "was served but called this morning from the emergency room, where their child was taken overnight", "was served but broke an ankle on Tuesday and is under orders not to travel", "is a long-haul driver who is stuck out of state until next week", "was in a car accident on the way to court and is at the emergency room", "has surgery scheduled that cannot be moved", "is the only caregiver for a parent who was hospitalized last night", "was ordered to appear in federal court in another district on the same day"])
             let who = witness.map { "\($0.name), \($0.role.lowercased())," } ?? "a material witness"
             let lawyer = movant == .prosecution ? ada : defense
             return ContinuanceMotion(

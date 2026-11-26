@@ -369,6 +369,9 @@ var hearingDates: [UUID: Date] = [:]
     continuedIDs[c.docket] = nil
     for e in c.evidence where e.supplemental != nil { log("  NEW EVIDENCE: \(e.exhibit) \(e.title) (weight \(e.weight)): \(e.detail)") }
     log("TRIAL \(c.docket) · \(c.caption)")
+    if game.holdsProbation(c.defendant.personID), game.probationHoldDockets.contains(c.docket), let bg = c.background, !bg.isJailed || bg.bondStatus.hasPrefix("Released") {
+        flag("\(c.docket): \(c.defendant.name) is on a probation hold but the trial shows \(bg.isJailed ? "a release" : "no custody"): \(bg.bondStatus.prefix(80))")
+    }
     log("  Charges: " + c.charges.map { $0.law.title }.joined(separator: "; "))
     log("  Defendant: \(d.name), \(d.age), \(d.occupation); priors: \(d.priors.count); \(c.background?.bondStatus ?? "")")
     log("  TEMPLATE \(c.templateKey)")
@@ -511,7 +514,7 @@ var hearingDates: [UUID: Date] = [:]
        days(start, h.date) < 60, !h.newCriminalConduct {
         flag("\(h.personName) (\(h.probation.docket)): violation hearing \(days(start, h.date)) days after probation began")
     }
-    if let person = game.person(h.personID), person.status != .probation, person.postRelease == nil {
+    if let person = game.person(h.personID), person.status != .probation, person.postRelease == nil, h.newCaseDocket == nil, h.probation.tolledSince == nil, !h.violations.contains(where: { $0.contains("in this court (") }) {
         flag("\(h.personName): violation hearing, but the person's status is \(person.status)")
     }
     if h.violations.contains(where: { $0.contains("arrears on court-ordered payments") }) && (h.probation.monthlyObligation ?? 0) == 0 {
@@ -523,13 +526,50 @@ var hearingDates: [UUID: Date] = [:]
     if s.canRevoke { decisions.append(.revoke) }
     if style == "harsh" { decisions = s.canRevoke ? [.revoke, .crv] : [.crv, .quickDip] }
     if style == "lenient" { decisions = [.continueAsIs, .modify] }
-    s.rulings.decision = s.rulings.finding == .established ? rng.pick(decisions) : .continueAsIs
+    // A violation based on a new case in this court also offers the hold until that case is decided.
+    if let docket = h.newCaseDocket {
+        log("  New case in this court: \(docket); tolled since \(h.probation.tolledSince.map { short($0) } ?? "NOT SET")")
+        if h.probation.tolledSince == nil { flag("\(h.personName): violation on new case \(docket), but the probation clock was not stopped") }
+        decisions += [.holdForNewCase, .holdForNewCase, .holdForNewCase]
+        if style == "harsh" { decisions = [.holdForNewCase, .revoke] }
+        if style == "lenient" { decisions = [.continueAsIs, .holdForNewCase] }
+        pvStats["new-case hearings", default: 0] += 1
+    }
+    s.rulings.decision = (s.rulings.finding == .established || s.rulings.decision == nil && h.newCaseDocket != nil) ? rng.pick(decisions) : .continueAsIs
+    // The forced test: first hearings alternate between holding for the new case and revoking at once; the hearing held after the
+    // new case is always a revocation, so both orders (revoke first, or sentence first then revoke) are exercised.
+    if style == "revoke" || style == "revokehold" {
+        s.rulings.finding = .established
+        if h.newCaseDocket != nil { revokeFlip.toggle(); s.rulings.decision = (revokeFlip || style == "revokehold") ? .holdForNewCase : .revoke }
+        else if h.violations.contains(where: { $0.contains("in this court (") }) { s.rulings.decision = .revoke }
+        else { s.rulings.decision = s.canRevoke ? .revoke : .crv }
+        pvStats["forced \(s.rulings.decision.map { "\($0)" } ?? "?")", default: 0] += 1
+    }
+    if h.newCaseDocket != nil && s.rulings.decision == .continueAsIs && rng.chance(0.4) { s.rulings.decision = .holdForNewCase }
     s.finish()
     guard let outcome = s.outcome else { flag("\(h.personName): hearing produced no outcome"); return }
     log("  Ruling: \(s.rulings.finding.map { "\($0)" } ?? "?") / \(s.rulings.decision.map { "\($0)" } ?? "?")")
     for line in outcome.lines { log("  \(line)") }
+    let wasServing = game.person(h.personID).flatMap { $0.status == .incarcerated ? $0.releaseDate : nil }
     game.completeHearing(h, outcome: outcome)
+    if s.rulings.decision == .revoke, let earlier = wasServing, earlier > game.currentDate, earlier != .distantFuture, let after = game.person(h.personID)?.releaseDate {
+        pvStats["revoked while already serving", default: 0] += 1
+        if after <= earlier { flag("\(h.personName): probation revoked while serving a sentence, but the release date didn't move (\(short(earlier)) -> \(short(after)))") }
+        else { pvStats["... consecutive release moved later", default: 0] += 1 }
+    }
+    if h.newCaseDocket != nil || h.probation.tolledSince != nil {
+        let decision = s.rulings.decision
+        pvStats["decision \(decision.map { "\($0)" } ?? "?")", default: 0] += 1
+        if let p = game.person(h.personID) {
+            let tolled = p.probation?.tolledSince != nil
+            if decision == .holdForNewCase && !tolled { flag("\(h.personName): violation held for the new case, but the probation clock is running") }
+            if decision != .holdForNewCase && tolled { flag("\(h.personName): ruled on the violation (\(decision.map { "\($0)" } ?? "?")), but the probation clock is still stopped") }
+            if decision == .revoke && p.probation != nil { flag("\(h.personName): probation revoked but the term remains") }
+        }
+    }
 }
+nonisolated(unsafe) var pvStats: [String: Int] = [:]
+nonisolated(unsafe) var revokeFlip = false
 
 // MARK: - Calendar calls
 
@@ -555,6 +595,9 @@ var hearingDates: [UUID: Date] = [:]
         }
         if m.kind == .arraignment && pick == 0 {
             dates[m.id] = game.nextSittingDay(onOrAfter: CourtCalendar.calendar.date(byAdding: .day, value: 35, to: game.currentDate) ?? game.currentDate)
+        }
+        if m.kind == .failureToAppear, let c = m.pendingCase, c.background?.bondStatus.contains("probation hold") == true {
+            flag("\(m.docket): \(m.personName) failed to appear while held on a probation hold")
         }
         // A missed court date should be about a case that was due in court.
         if m.kind == .failureToAppear, let c = m.pendingCase,
@@ -699,7 +742,8 @@ func checkText(_ text: String, where place: String) {
         flag("\(item.courtCase.defendant.name): arrested \(days(item.arrest, now)) days ago and still waiting for a bond hearing")
     }
     for p in game.people where p.status == .probation {
-        if let term = p.probation, days(term.ends, now) > 7 {
+        // A term stopped by a new arrest isn't running out; it is extended by the days lost when the violation is decided.
+        if let term = p.probation, term.tolledSince == nil, days(term.ends, now) > 7 {
             flag("\(p.name): still on probation \(days(term.ends, now)) days after it was due to end (\(term.docket))")
         }
         if p.probation == nil { flag("\(p.name): status is probation but no probation term on file") }
@@ -732,13 +776,14 @@ if args.count > 1 && args[1] == "scan" {
     for (i, t) in (StoryCases.all + StoryVariants.all).enumerated() {
         var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 5000 + i * 10,
                                         recentTemplateKeys: [])
-        ctx.reservedNames = game.namesInPlay()
+        // The same filter the game uses: a name the county remembers, the dead included, is never given to someone new.
+        ctx.reservedNames = game.namesInPlay().union(game.residents.map(\.name))
         var trng = SeededRNG(seed: UInt64(i) &* 7919 &+ 17)
         let c = CaseGenerator.build(t, seed: UInt64(i) &+ 1, band: rng.chance(0.5) ? .strong : .close, context: ctx, rng: &trng)
-        if c.charges.contains(where: { CaseOrigin.roadsideLaws.contains($0.law.id) }), let f = c.investigation?.facts {
+        if (c.charges.first.map({ CaseOrigin.roadsideLaws.contains($0.law.id) }) ?? false), let f = c.investigation?.facts {
             roadside += 1
             let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: f.incident), to: Calendar.current.startOfDay(for: f.arrest)).day ?? 0
-            if days != 0 && c.charges.contains(where: { CaseOrigin.impairedLaws.contains($0.law.id) }) { flag("\(t.key): a drunk-driving case arrests \(days) days after the incident") }
+            if days != 0 && (c.charges.first.map({ CaseOrigin.impairedLaws.contains($0.law.id) }) ?? false) { flag("\(t.key): a drunk-driving case arrests \(days) days after the incident") }
             if CaseFacts(c).origin != .stop { flag("\(t.key): a roadside case is not treated as a traffic stop") }
         }
         log("")
@@ -751,6 +796,8 @@ if args.count > 1 && args[1] == "scan" {
     for f in findings { log("- \(f)") }
     try? transcript.joined(separator: "\n").write(toFile: outPath, atomically: true, encoding: .utf8)
     print("Roadside cases checked: \(roadside)")
+    for s in StoryCases.all.prefix(900) { let p = MainActor.assumeIsolated { StoryAuditor.problems(s) }; if !p.isEmpty && ProcessInfo.processInfo.environment["AUDIT_LIST"] != nil { print("AUDIT \(s.key): \(p.joined(separator: "; "))") } }
+    print("STORY AUDITOR holds back \(MainActor.assumeIsolated { StoryAuditor.held(StoryCases.all) }) of \(StoryCases.all.count) written stories and \(MainActor.assumeIsolated { StoryAuditor.held(FollowUpCases.all) }) of \(FollowUpCases.all.count) follow-ups")
     print("Tried \(tried) written cases. \(findings.count) flags. Transcript: \(outPath)")
 }
 
@@ -851,6 +898,8 @@ if args.count > 1 && args[1] == "scan" {
         .filter { item in
             !game.scheduled.contains { if case .trial(let c) = $0.entry.matter { return c.docket == item.key } else { return false } }
                 && !game.awaiting.contains { $0.courtCase?.docket == item.key }
+                // A defendant who is never found (an order for arrest that is never served) is not a lost trial.
+                && !game.arrestOrders.contains { $0.docket == item.key && ($0.servedOn == .distantFuture || $0.servedOn > game.currentDate) }
         }
     if !lost.isEmpty {
         let where_ = lost.keys.sorted().map { docket -> String in
@@ -1001,11 +1050,22 @@ if args.count > 1 && args[1] == "scan" {
         if let stop = events.first(where: { $0.text.hasPrefix("Traffic stop by") }), let arrest = events.first(where: { $0.kind == .arrest }) {
             stopTimelines += 1
             let minutes = Int(arrest.date.timeIntervalSince(stop.date) / 60)
-            if minutes < 5 || minutes > 90 { flag("\(docket): arrest \(minutes) minutes after the stop"); print("TIMELINE FLAG \(docket): \(minutes) min; " + events.prefix(5).map { "\($0.date) [\($0.kind.rawValue)] \($0.text)" }.joined(separator: " | ")) }
+            if minutes < 5 || minutes > 90 { flag("\(docket): arrest \(minutes) minutes after the stop: " + events.prefix(6).map { "\($0.kind.rawValue) \($0.date) \($0.text.prefix(70))" }.joined(separator: " | ")); print("TIMELINE FLAG \(docket): \(minutes) min; " + events.prefix(5).map { "\($0.date) [\($0.kind.rawValue)] \($0.text)" }.joined(separator: " | ")) }
             if stopTimelines <= 3 { for e in events.prefix(4) { print("  STOP TIMELINE \(docket) \(e.date) [\(e.kind.rawValue)] \(e.text)") } }
         }
     }
     print("STOP TIMELINES: \(stopTimelines)")
+    for f in findings { print("FINDING: \(f.prefix(300))") }
+    let oldWording = game.caseLog.filter { $0.kind == .crime && $0.text.hasPrefix("Reported to the") && ["a police chase", "a traffic stop", "a drunk-driving incident", "a fatal crash", "a crash"].contains(where: { $0.hasSuffix(": " + $0 + ".") ? true : false } ) }
+    _ = oldWording
+    var leftover = 0, chases = 0, getsAway = 0
+    for e in game.caseLog {
+        if e.kind == .crime, e.text.hasPrefix("Reported to the"), ["a police chase.", "a traffic stop.", "a drunk-driving incident.", "a fatal crash.", "a crash."].contains(where: { e.text.hasSuffix(": " + $0) }) { leftover += 1 }
+        if e.text.contains("pursues a driver") { chases += 1 }
+        if e.text.hasPrefix("The driver gets away") { getsAway += 1 }
+    }
+    print("WORDING: \(leftover) lines still say a police-witnessed event was reported; \(chases) chase lines; \(getsAway) escaped-driver lines")
+    if leftover > 0 { flag("\(leftover) timeline lines report something the police witnessed themselves") }
     SaveStore.flush()
     print("SAVE BYTES: \(SaveStore.currentBytes)")
     for (p, n) in (RegexCache.tally ?? [:]).sorted(by: { $0.value > $1.value }).prefix(8) { print("  REGEX \(n) x \(p.prefix(110))") }
@@ -1017,6 +1077,16 @@ if args.count > 1 && args[1] == "scan" {
     } else { print("FIRST BOND HEARING: none") }
     let bondRulings = game.memory.rulings.filter { $0.kind == .bond }
     print("MEMORY rulings=\(game.memory.rulings.count) bond=\(bondRulings.count) withWho=\(bondRulings.filter { $0.who != nil }.count) securedAsk=\(bondRulings.filter { $0.stateWantedSecured }.count) lenient=\(bondRulings.filter { $0.form <= 2 }.count) strict=\(bondRulings.filter { $0.form >= 4 }.count) fallouts=\(game.memory.fallouts?.count ?? 0) jailLoad=\(CalendarCalls.jailLoad) proceedings=\(game.calendarLog.filter { $0.kind == .pleaColloquy || $0.kind == .jurySelection }.count)")
+    // Probation stopped by a new arrest must be waiting on a hearing, or on the new case (a hold), not forgotten.
+    let waitingPersons = Set(game.scheduled.compactMap { entry -> UUID? in if case .hearing(let h) = entry.entry.matter { return h.personID } else { return nil } })
+    for p in game.people where p.probation?.tolledSince != nil {
+        let waiting = waitingPersons.contains(p.id) || (game.probationHoldDockets.contains { _ in true } && game.holdsProbation(p.id))
+        let days = p.probation?.tolledSince.map { Calendar.current.dateComponents([.day], from: $0, to: game.currentDate).day ?? 0 } ?? 0
+        if !waiting && days > 45 { flag("\(p.name): probation has been stopped for \(days) days with no hearing or hold waiting") }
+    }
+    pvStats["people now serving consecutive sentences"] = game.people.filter { ($0.releaseNote ?? "").hasPrefix("Consecutive to") }.count
+    for (k, v) in pvStats.sorted(by: { $0.key < $1.key }) { print("PV \(k): \(v)") }
+    for f in findings where f.contains("probation has been stopped") { print("LATE FLAG: \(f)") }
     print("Played \(weeks) weeks (\(style)). \(game.casesHeard) cases heard. \(findings.count) flags. Transcript: \(outPath)")
 }
 
@@ -1044,6 +1114,27 @@ if args.count > 3 && args[1] == "dossier" {
             out.append("IMPACT: \(c.victimImpact ?? "-")")
             print(out.joined(separator: "\n"))
         }
+    }
+    exit(0)
+}
+/// `Playtest testimony <count> <path>`: generated (non-written) cases' witness examinations, one witness per block, for the repeat audit.
+if args.count > 3 && args[1] == "testimony" {
+    MainActor.assumeIsolated {
+        let county = County.generate(seed: 42)
+        let count = Int(args[2]) ?? 200
+        var lines: [String] = []
+        for i in 0..<count {
+            var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: Date(), docketSequence: 9000 + i, recentTemplateKeys: [])
+            ctx.generic = true
+            ctx.storySlot = false
+            let c = CaseGenerator.generate(seed: UInt64(i) &* 7919 &+ 13, context: ctx)
+            for w in c.witnesses {
+                lines.append("### \(c.templateKey) | \(w.name) | \(w.role)")
+                for x in w.exchanges ?? [] { lines.append("\(x.phase)\t\(x.question.replacingOccurrences(of: "\n", with: " "))\t\(x.answer.replacingOccurrences(of: "\n", with: " "))") }
+            }
+        }
+        try? lines.joined(separator: "\n").write(toFile: args[3], atomically: true, encoding: .utf8)
+        print("Wrote \(count) cases to \(args[3])")
     }
     exit(0)
 }
@@ -1107,6 +1198,111 @@ if args.count > 1 && args[1] == "stories" {
     MainActor.assumeIsolated { tryEveryStory() }
     exit(0)
 }
+if args.count > 1 && args[1] == "texts" {
+    // Builds many cases (written stories and generated ones) and measures how names and pronouns read in everything a player sees.
+    MainActor.assumeIsolated {
+        let game = GameState()
+        game.resetCareer()
+        game.startCareer(name: "Morgan Hale", start: Date())
+        guard let county = game.county else { return }
+        var byLabel: [String: (passages: Int, repeats: Int, sentenceRepeats: Int)] = [:]
+        var samples: [String: [String]] = [:]
+        var pronounChecks = 0, pronounWrong = 0
+        var wrongSamples: [String] = []
+        func fullNames(_ text: String, _ name: String) -> Int { text.components(separatedBy: name).count - 1 }
+        let maleWords: Set<String> = ["he", "him", "his", "himself"], femaleWords: Set<String> = ["she", "her", "hers", "herself"]
+        for i in 0..<500 {
+            var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 9000 + i * 10, recentTemplateKeys: [])
+            ctx.reservedNames = game.namesInPlay()
+            let story = i % 2 == 0
+            ctx.generic = !story
+            ctx.storySlot = story
+            let c = CaseGenerator.generate(seed: UInt64(i) &* 7919 &+ 13, context: ctx)
+            let name = c.defendant.name
+            let last = c.defendant.lastName
+            let gender = NameBank.gender(of: name)
+            let kind = story ? "story" : "generated"
+            var parts: [(String, String)] = []
+            parts.append(("summary", c.summary))
+            parts.append(("opening", c.prosecutionOpening)); parts.append(("opening", c.defenseOpening))
+            parts.append(("closing", c.prosecutionClosing)); parts.append(("closing", c.defenseClosing))
+            if let v = c.victimImpact { parts.append(("victim impact", v)) }
+            parts.append(("allocution", c.allocution))
+            for w in c.witnesses { for t in w.direct + w.cross { parts.append(("testimony answer", t)) } }
+            for e in c.evidence { parts.append(("evidence", e.detail)) }
+            for (label, text) in parts {
+                let key = kind + " " + label
+                var entry = byLabel[key] ?? (0, 0, 0)
+                entry.passages += 1
+                let n = fullNames(text, name)
+                if n >= 2 { entry.repeats += 1; var l = samples[key] ?? []; if l.count < 3 { l.append(String(text.prefix(240))); samples[key] = l } }
+                for sentence in text.components(separatedBy: ". ") where fullNames(sentence, name) >= 2 { entry.sentenceRepeats += 1 }
+                byLabel[key] = entry
+                // pronouns in a sentence that names only the defendant should match the defendant's gender
+                for sentence in text.components(separatedBy: ". ") where sentence.contains(last) && !sentence.contains(c.victimName ?? "\u{0}") {
+                    let words = Set(sentence.lowercased().components(separatedBy: CharacterSet.letters.inverted))
+                    let hasM = !words.isDisjoint(with: maleWords), hasF = !words.isDisjoint(with: femaleWords)
+                    if hasM != hasF {
+                        pronounChecks += 1
+                        let wrong = (hasM && gender == .female) || (hasF && gender == .male)
+                        if wrong { pronounWrong += 1; if wrongSamples.count < 8 { wrongSamples.append("\(kind) \(label) [\(name) is \(gender)] \(sentence.prefix(200))") } }
+                    }
+                }
+            }
+        }
+        print("TEXTS by kind and passage (passages, with a full name twice, same full name twice in one sentence):")
+        for (k, v) in byLabel.sorted(by: { $0.key < $1.key }) { print("  \(k): \(v.passages), \(v.repeats), \(v.sentenceRepeats)") }
+        print("PRONOUNS: \(pronounWrong) of \(pronounChecks) sentences naming only the defendant use a pronoun that does not match the name's gender")
+        for w in wrongSamples { print("WRONG " + w) }
+        for (k, l) in samples.sorted(by: { $0.key < $1.key }).prefix(8) { for t in l.prefix(1) { print("SAMPLE [\(k)] " + t) } }
+    }
+    exit(0)
+}
+if args.count > 1 && args[1] == "variety" {
+    MainActor.assumeIsolated {
+        // 1. How evenly the picker spreads a pool, and that repeats stay possible.
+        for (name, pool) in [("missed-court defense", Excuses.missedCourtDefense), ("missed-court State", Excuses.missedCourtState), ("continuance defense", Excuses.continuanceDefense)] {
+            Variety.counts = [:]
+            var rng = SeededRNG(seed: 99)
+            let n = pool.count * 4
+            for _ in 0..<n { _ = Variety.pick(pool, rng: &rng) }
+            let used = pool.map { Variety.uses($0) }
+            print("VARIETY \(name): \(pool.count) options, \(n) picks: unused \(used.filter { $0 == 0 }.count), most used \(used.max() ?? 0), repeats happened: \((used.max() ?? 0) > 1)")
+            Variety.counts = [:]
+            for _ in 0..<(pool.count) { _ = Variety.pick(pool, rng: &rng) }
+            print("  after one pass of \(pool.count) picks: unused \(pool.map { Variety.uses($0) }.filter { $0 == 0 }.count) (a plain random pick leaves about \(Int(Double(pool.count) / 2.718)))")
+        }
+        // 2. Warrant applications across many cases: kinds, defects, and the text itself.
+        Variety.counts = [:]
+        let game = GameState()
+        game.resetCareer()
+        game.startCareer(name: "Morgan Hale", start: Date())
+        guard let county = game.county else { return }
+        var kinds: [String: Int] = [:], flaws: [String: Int] = [:], openers = Set<String>()
+        var empty = 0, leaked = 0
+        for i in 0..<600 {
+            var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 9000 + i * 10, recentTemplateKeys: [])
+            ctx.reservedNames = game.namesInPlay()
+            ctx.generic = true
+            ctx.storySlot = false
+            let c = CaseGenerator.generate(seed: UInt64(i) &* 104729 &+ 7, context: ctx)
+            var rng = SeededRNG(seed: UInt64(i) &+ 5)
+            for kind in SearchWarrants.fittingKinds(for: c) {
+                let w = SearchWarrants.application(for: c, date: game.currentDate, kind: kind, rng: &rng)
+                kinds[w.kind.rawValue, default: 0] += 1
+                flaws[w.flaw.rawValue, default: 0] += 1
+                openers.insert(String(w.affidavit.first?.prefix(40) ?? ""))
+                if w.affidavit.count < 3 || w.place.isEmpty || w.items.isEmpty { empty += 1 }
+                if (w.affidavit + [w.place]).contains(where: { $0.contains("\\(") || $0.contains("{") }) { leaked += 1 }
+            }
+        }
+        print("WARRANTS kinds: \(kinds.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))")
+        print("WARRANTS defects: \(flaws.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))")
+        print("WARRANTS: \(openers.count) different opening forms in the applications; incomplete \(empty); text with a stray marker \(leaked)")
+        print("VARIETY memory: \(Variety.summary)")
+    }
+    exit(0)
+}
 if args.count > 1 && args[1] == "roadside" {
     MainActor.assumeIsolated {
         let game = GameState()
@@ -1121,8 +1317,8 @@ if args.count > 1 && args[1] == "roadside" {
             var trng = SeededRNG(seed: UInt64(i) &* 7919 &+ 17)
             var brng = SeededRNG(seed: UInt64(i) &+ 99)
             let c = CaseGenerator.build(t, seed: UInt64(i) &+ 1, band: brng.chance(0.5) ? .strong : .close, context: ctx, rng: &trng)
-            guard c.charges.contains(where: { CaseOrigin.roadsideLaws.contains($0.law.id) }), let f = c.investigation?.facts else { continue }
-            let impaired = c.charges.contains(where: { CaseOrigin.impairedLaws.contains($0.law.id) })
+            guard (c.charges.first.map({ CaseOrigin.roadsideLaws.contains($0.law.id) }) ?? false), let f = c.investigation?.facts else { continue }
+            let impaired = (c.charges.first.map({ CaseOrigin.impairedLaws.contains($0.law.id) }) ?? false)
             total += 1
             let days = cal.dateComponents([.day], from: cal.startOfDay(for: f.incident), to: cal.startOfDay(for: f.arrest)).day ?? 0
             let origin = CaseFacts(c).origin
@@ -1132,6 +1328,75 @@ if args.count > 1 && args[1] == "roadside" {
             }
         }
         print("roadside cases \(total), off \(bad)")
+    }
+    exit(0)
+}
+if args.count > 1 && args[1] == "pronouns" {
+    // Builds every written story and follow-up several times (names are random, so sexes vary) and prints each plain
+    // he/she/him/his/her line whose sex does not match the defendant or victim this build drew.
+    MainActor.assumeIsolated {
+        let game = GameState()
+        game.resetCareer()
+        game.startCareer(name: "Morgan Hale", start: Date())
+        guard let county = game.county else { return }
+        let male: Set<String> = ["he", "him", "his", "himself"], female: Set<String> = ["she", "her", "hers", "herself"]
+        var seen = Set<String>()
+        var nEx = 0, nBuilt = 0
+        for (i, t) in (StoryCases.all + StoryVariants.all + FollowUpCases.all).enumerated() {
+            for rep in 0..<6 {
+                var ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: game.currentDate, docketSequence: 5000 + i * 10 + rep, recentTemplateKeys: [])
+                ctx.reservedNames = game.namesInPlay()
+                var trng = SeededRNG(seed: UInt64(i) &* 7919 &+ UInt64(rep) &* 104729 &+ 17)
+                let c = CaseGenerator.build(t, seed: UInt64(i + rep * 1000) &+ 1, band: .close, context: ctx, rng: &trng)
+                nBuilt += 1
+                let dg = NameBank.gender(of: c.defendant.name)
+                let vg = c.victimName.map { NameBank.gender(of: $0) }
+                for w in c.witnesses + [c.defendantTestimony].compactMap({ $0 }) {
+                    for x in w.exchanges ?? [] {
+                        nEx += 1
+                        for (kind, text) in [("A", x.answer), ("Q", x.question)] {
+                            let words = Set(text.lowercased().components(separatedBy: CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyz'").inverted))
+                            let hasM = !words.isDisjoint(with: male), hasF = !words.isDisjoint(with: female)
+                            guard hasM != hasF else { continue }
+                            let pg = hasM ? "M" : "F"
+                            print("PRON\t\(pg)\t\(t.key)\t\(w.role)\tD=\(dg)\tV=\(vg.map { "\($0)" } ?? "-")\t\(rep)\t\(kind == "Q" ? text : x.question)\t\(kind == "A" ? text : "")")
+                        }
+                    }
+                }
+            }
+        }
+        print("PRONOUN SCAN built \(nBuilt) exchanges \(nEx)")
+    }
+    exit(0)
+}
+if args.count > 3 && args[1] == "changed" {
+    // Prints the full filled testimony of the listed stories (keys file), built twice each so the people's sexes vary.
+    MainActor.assumeIsolated {
+        let county = County.generate(seed: 42)
+        let wanted = Set((try? String(contentsOfFile: args[2], encoding: .utf8))?.split(separator: "\n").map(String.init) ?? [])
+        var out: [String] = []
+        var seen = Set<String>()
+        for (i, t) in (StoryCases.all + StoryVariants.all + FollowUpCases.all).enumerated() where wanted.contains(t.key) {
+            for rep in 0..<2 {
+                let id = t.key + "#" + String(rep) + "#" + String(i)
+                if seen.contains(id) { continue }
+                seen.insert(id)
+                var trng = SeededRNG(seed: UInt64(i) &* 31 &+ UInt64(rep) &* 977 &+ 5)
+                let ctx = CaseGenerator.Context(county: county, judgeName: "Morgan Hale", date: Date(), docketSequence: 7000 + i * 2 + rep, recentTemplateKeys: [])
+                let c = CaseGenerator.build(t, seed: UInt64(i) &* 13 &+ UInt64(rep) &+ 3, band: .close, context: ctx, rng: &trng)
+                let dg = NameBank.gender(of: c.defendant.name)
+                let vname = c.victimName ?? "-"
+                let vg = c.victimName.map { "\(NameBank.gender(of: $0))" } ?? "-"
+                out.append("======== \(t.key) (build \(rep + 1))  DEFENDANT \(c.defendant.name) [\(dg)]  VICTIM \(vname) [\(vg)]")
+                out.append("SUMMARY: \(c.summary)")
+                for w in c.witnesses + [c.defendantTestimony].compactMap({ $0 }) {
+                    out.append("--- \(w.role) (\(w.name))")
+                    for x in w.exchanges ?? [] { out.append("Q: \(x.question.replacingOccurrences(of: "\n", with: " "))\nA: \(x.answer.replacingOccurrences(of: "\n", with: " "))") }
+                }
+            }
+        }
+        try? out.joined(separator: "\n").write(toFile: args[3], atomically: true, encoding: .utf8)
+        print("Wrote \(seen.count) builds to \(args[3])")
     }
     exit(0)
 }

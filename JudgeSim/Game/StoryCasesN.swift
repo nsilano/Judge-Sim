@@ -69,8 +69,8 @@ extension StoryCases {
         defenseTheory: ["{DL} believed a burglar was fleeing and tried to hold {V.him} for police. {VL} grabbed the shotgun. At most, this is a tragic mistake, not malice."],
         aggravating: ["The defendant was armed with a deadly weapon"],
         mitigating: ["No prior criminal record", "The defendant has a long record of public service"],
-        victimImpacts: ["{VL}'s mother: \"My son went out for a run. He was hunted. Say his name.\""],
-        allocutions: ["\"I thought I was protecting my neighbors. I'm sorry a young man is dead.\""],
+        victimImpacts: ["{VL}'s mother: \"My son went out for a run, and {V.he} was hunted. They chased {V.him} with guns in a truck for five minutes in a neighborhood where {V.he} had every right to be. {V.He} was twenty-five and had {V.his} whole life ahead of {V.him}. Say {V.his} name, and let no one tell you {V.he} was doing anything wrong.\""],
+        allocutions: ["\"I thought I was protecting my neighbors. I had seen that young man on the camera at a house under construction, and I believed {V.he} was the one breaking into cars. I'm sorry a young man is dead and that {V.his} family has to live with it. I'd give anything to have called the sheriff and stayed home.\""],
         guiltyTruths: ["A text {DL} sent a friend that afternoon, recovered later, said \"one of those guys came through again, we'll handle it.\""],
         innocentTruths: ["A neighbor later confirmed telling {DL} that night that a man matching {VL}'s description had stolen a gun from a truck the week before."],
         moods: [.wantsConviction], doctrines: ["selfDefense", "justification"],
@@ -136,7 +136,7 @@ extension StoryCases {
                         exam: [
                             .direct("What would {DL} have seen at the door?", "\"A bright red doormat, a different number on the door, and a door that was open. {DL}'s door had no mat.\""),
                             .direct("What did {DL}'s training require?", "\"If you think someone is in your home, you back out, take cover, and call it in. You don't go in alone.\""),
-                            .cross("Residents had gone to the wrong floor before?", "\"Several had.\""),
+                            .cross("Residents had gone to the wrong floor before?", "\"Several had. Residents had gone to the wrong floor before.\""),
                             .cross("It was dark inside the apartment?", "\"The lights were off except the TV.\"")
                         ]),
             WitnessSeed(name: nil, role: "Medical examiner",
@@ -159,14 +159,14 @@ extension StoryCases {
                             .direct("How do officers respond to a perceived intruder at close range?", "\"Training says you have one or two seconds. If you believe a stranger is coming at you in your own dark apartment, firing is consistent with that belief.\""),
                             .direct("Does exhaustion affect how an officer reads a threat?", "\"Yes. After a fourteen-hour shift, perception and judgment both suffer.\""),
                             .cross("The belief has to be reasonable, and the apartment wasn't hers?", "\"Reasonable in the moment, yes.\""),
-                            .cross("Training also says back out and call backup?", "\"When you can.\"")
+                            .cross("Training also says back out and call backup?", "\"Training also says back out and call backup when you can.\"")
                         ])
         ],
         prosecutionTheory: ["{D} ignored a red doormat and an open door, walked into a stranger's home with a drawn gun instead of calling for help, and shot a man eating ice cream on his couch."],
         defenseTheory: ["An exhausted officer in an identical hallway honestly believed {D.he} was home and facing an intruder. A mistaken, honest belief is not malice; at most it is manslaughter."],
         aggravating: ["The defendant abused a position of public trust"],
         mitigating: ["No prior criminal record", "The defendant has expressed remorse"],
-        victimImpacts: ["{VL}'s brother: \"He was in his own home. The safest place in the world.\""],
+        victimImpacts: ["{VL}'s brother: \"{V.He} was sitting on {V.his} own couch, eating ice cream, in the safest place in {V.his} life. {V.He} was an accountant who coached youth baseball and called our mother every Sunday. Someone walked through {V.his} door and {V.he} never got a chance to explain. I keep thinking about those last few seconds.\""],
         allocutions: ["\"I wish he'd been the one with the gun. I ask God every day why I'm alive and he's not.\""],
         guiltyTruths: ["The building's hallway camera, recovered later, showed {DL} pausing at the red mat and reading the door number before entering."],
         innocentTruths: ["The building manager later admitted the third and fourth floor door numbers had been swapped by a contractor that week."],
@@ -230,7 +230,7 @@ extension StoryCases {
                         exam: [
                             .direct("How is the Taser carried?", "\"Weak side, cross-draw, bright yellow. Everything about it is designed so you can't confuse it with the pistol. {DL} trained new officers on that.\""),
                             .direct("What does the video show?", "\"A strong-side draw of a black pistol, held for five seconds before firing. That's long enough to look at what's in your hand.\""),
-                            .cross("Weapon confusion has happened to other trained officers?", "\"It has. Rarely.\""),
+                            .cross("Weapon confusion has happened to other trained officers?", "\"Rarely. Weapon confusion has happened to other trained officers, but rarely.\""),
                             .cross("Another officer was being dragged by the car?", "\"Half in the car, yes.\"")
                         ]),
             WitnessSeed(name: nil, role: "Medical examiner",
@@ -253,7 +253,7 @@ extension StoryCases {
                             .direct("How does weapon confusion happen?", "\"An officer who has drawn a pistol thousands of times in training can, under extreme stress, run that motor program while consciously intending something else. The officer genuinely believes the Taser is in hand.\""),
                             .direct("What does shouting 'Taser' tell you?", "\"That the officer believed the Taser was in hand. People announce what they think they're doing.\""),
                             .cross("That's a failure of training and attention?", "\"It's a failure. It isn't a choice.\""),
-                            .cross("Five seconds passed between the draw and the shot?", "\"About five.\"")
+                            .cross("Five seconds passed between the draw and the shot?", "\"About five. Five seconds passed between the draw and the shot.\"")
                         ])
         ],
         prosecutionTheory: ["After 26 years of training on exactly this danger, {D} drew a black gun from the wrong side, held it for five seconds, and fired. That's culpable negligence."],
@@ -261,7 +261,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has a long record of public service", "The defendant has expressed remorse"],
         victimImpacts: ["{VL}'s mother: \"He had a two-year-old son. He was going to court on Monday to take care of that warrant.\""],
-        allocutions: ["\"I'm so sorry. I didn't want to hurt anybody. I will never forgive myself.\""],
+        allocutions: ["\"I shouted 'Taser' because I truly believed I had it in my hand, and my partner was being dragged by that car. I looked down and saw my gun. I will never forgive myself, and I know that no apology will mean enough to {V.his} family. I'd give anything to go back.\""],
         guiltyTruths: ["An earlier body camera clip from the same shift showed {DL} drawing the pistol by mistake and catching it, then joking about it."],
         innocentTruths: ["A department memo later revealed the holster configuration had been changed the week before without retraining."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -276,7 +276,7 @@ extension StoryCases {
                 .direct("What did you mean to do?", "\"Tase {V.him}. I said 'Taser' because I thought I had my Taser. My partner was being dragged.\""),
                 .direct("When did you realize?", "\"When it fired and the sound was wrong. I looked down and it was my gun.\""),
                 .cross("You trained rookies on exactly this.", "\"I did. I don't know how it happened.\""),
-                .cross("You held it for five seconds.", "\"It felt like one.\"")
+                .cross("You held it for five seconds.", "\"I held it for five seconds, but it felt like one.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Prosecutor: \"So any officer can kill someone and call it a 'motor program'?\"",
@@ -328,7 +328,7 @@ extension StoryCases {
                         exam: [
                             .direct("What does an armorer do?", "\"Controls every gun and every round. Live ammunition never comes on a set. Every round loaded is shaken, looked at, and shown to the actor.\""),
                             .direct("What went wrong here?", "\"Live rounds were mixed with dummies, the gun was left unsecured, and it wasn't checked again before it went to the actor.\""),
-                            .cross("The assistant director handed over the gun and called it cold without checking?", "\"That's a failure too.\""),
+                            .cross("The assistant director handed over the gun and called it cold without checking?", "\"That's a failure too. The assistant director handing over the gun and calling it cold without checking was a failure too.\""),
                             .cross("Production gave {DL} two jobs?", "\"I understand {DL} was stretched.\"")
                         ]),
             WitnessSeed(name: nil, role: "Prop master",
@@ -357,8 +357,8 @@ extension StoryCases {
         defenseTheory: ["A rushed production gave {DL} two jobs, a supplier mislabeled live rounds, and the assistant director handed over the gun without {DL}. Many people failed; the State chose the youngest."],
         aggravating: [],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{VL}'s spouse: \"Our son was nine. He asks why a movie was worth it.\""],
-        allocutions: ["\"I would give anything to undo that day. I did my best with what they gave me.\""],
+        victimImpacts: ["{VL}'s spouse: \"Our son was nine, and he asks why a movie was worth it. My husband loved making pictures, and {V.he} loved the people on set. {V.He} was on a ranch doing the work {V.he} loved when it ended. We have a house full of cameras and photographs now, and nobody to hold them.\""],
+        allocutions: ["\"I would give anything to undo that day. I checked every round I was responsible for, and I did my best with what they gave me and how little time they gave me. I was across the set doing my other job when they started without me. I'm sorry, and I think of {V} and the family every day.\""],
         guiltyTruths: ["A crew member later testified seeing {DL} use live rounds for target practice with the same revolver off set."],
         innocentTruths: ["The supplier's records later showed it had shipped a mixed box of live and dummy rounds to two other productions."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -424,7 +424,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL}'s phone show?", "\"Searches about heat deaths in cars a month before, and all day long, explicit messages with six women, including a sixteen-year-old. {DL} wrote one, 'I love my son but we all need escapes.'\""),
                             .direct("What did the lunch visit show?", "\"{DL} opened the driver's door and leaned in to put a bag on the seat. The car seat was right behind {D.him}, at head height.\""),
-                            .cross("The car seat was rear-facing and {KID} was small?", "\"It was rear-facing.\""),
+                            .cross("The car seat was rear-facing and {KID} was small?", "\"The car seat was rear-facing and {KID} was small.\""),
                             .cross("You can't say what {DL} saw when leaning in?", "\"I can say where the seat was.\"")
                         ]),
             WitnessSeed(name: nil, role: "Medical examiner",
@@ -454,8 +454,8 @@ extension StoryCases {
         defenseTheory: ["A devastating memory failure that has happened to hundreds of loving parents. {DL}'s private life is ugly but it isn't proof {D.he} killed {D.his} child on purpose."],
         aggravating: ["The victim was very young", "The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{KID}'s grandparent: \"He was the happiest baby. He waved at every truck.\""],
-        allocutions: ["\"I loved my son. I would trade my life for his.\""],
+        victimImpacts: ["{KID}'s grandparent: \"He was the happiest baby, and he waved at every truck that went by. He loved his grandmother's porch swing and his blue boots. We got a call in the afternoon, and our world stopped. Every time I pass a day care I have to pull over.\""],
+        allocutions: ["\"I loved my son. I would trade my life for his in a heartbeat. I drove to work on the same road I always take, thinking about a work problem, and in my mind my son was at day care. I will never be able to explain how that happened. I live with it every minute.\""],
         guiltyTruths: ["A deleted message recovered from {DL}'s laptop said, \"Soon I'll be free of all of it.\""],
         innocentTruths: ["The searches were later traced to {DL}'s spouse, who was researching a news story after a neighbor's child died the same way."],
         moods: [.divided], doctrines: ["burdenOfProof", "priorActs"],

@@ -71,7 +71,7 @@ extension StoryCases {
                         exam: [
                             .direct("What were the clerks told about the drawer under the register?", "\"{OWNER} said it was his drawer, and that if certain people came in asking for him, we gave them what was in there and put the money aside for him.\""),
                             .direct("Did you ever open it?", "\"Twice, when {OWNER} told me to. I didn't look in the bags.\""),
-                            .cross("You left the shop six months before {DL}'s arrest?", "\"About six months, yes.\""),
+                            .cross("You left the shop six months before {DL}'s arrest?", "\"I left the shop about six months before the arrest.\""),
                             .cross("You saw {DL} open that drawer?", "\"Yes, on nights {OWNER} wasn't there. That's when the nights people came in.\"")
                         ])
         ],
@@ -93,7 +93,7 @@ extension StoryCases {
                 .direct("What was in that drawer, as far as you knew?", "\"{OWNER}'s stuff. He told me certain people would come in and I should weigh out what they asked for and keep the cash for him.\""),
                 .direct("Why was the $280 in your pocket?", "\"I was holding it for {OWNER}. He came by in the mornings and I'd hand it over.\""),
                 .cross("You asked T for 'a zip' and complained the ice wasn't good.", "\"That was for me. I was using.\"", "\"I had a habit. That was about my own use.\""),
-                .cross("An ounce, every couple of weeks, for yourself?", "\"I used a lot.\""),
+                .cross("An ounce, every couple of weeks, for yourself?", "\"I used a lot. An ounce every couple of weeks was for my own use.\""),
                 .cross("And the man who asked for ice got it from you, weighed, in a vape box.", "\"I did what I was told to do.\"")
             ],
             prosecutionOpening: "Two buys on camera, a drawer full of methamphetamine, and the marked money in {DL}'s pocket.",
@@ -157,7 +157,7 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What did the swab of the grip show?", "\"A mixture from at least two people. {ALT} is the major contributor. {DL} cannot be excluded as a minor contributor.\""),
-                            .cross("Can a minor contribution come from secondary transfer?", "\"It can. Two people living in the same house share towels, door handles, a desk. A small amount can move from one surface to another.\""),
+                            .cross("Can a minor contribution come from secondary transfer?", "\"Two people living in the same house share towels, door handles, a desk. A small amount can move from one surface to another.\""),
                             .cross("So you can't say {DL} ever held this gun?", "\"I can't say when or how the DNA got there.\"")
                         ])
         ],
@@ -260,7 +260,7 @@ extension StoryCases {
                         cross: ["\"I don't know {V}.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("Whose internet do you use?", "\"{DL}'s. My own service got cut off in the spring, and {DL} gave me the password.\""),
+                            .direct("Whose internet do you use?", "\"My own service got cut off in the spring, and {DL} gave me the password.\""),
                             .direct("Were you online the nights in question?", "\"Probably. I'm online most nights.\""),
                             .cross("Do you know {V}?", "\"I've never met {V}. I'd never heard the name before this case.\""),
                             .cross("You let the detective look through your laptop?", "\"Yes. I had nothing to hide.\"")
@@ -271,7 +271,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
         victimImpacts: ["{V}: \"Those were the most private things I'd ever written, and they went out under my own name. I don't feel safe typing anything anymore.\""],
-        allocutions: ["\"I said something cruel in a text. I didn't do the rest of this.\""],
+        allocutions: ["\"I sent a cruel text the night we broke up, and I'm ashamed that I did. I know my words hurt {V} and I would take them back if I could. But I did not get into {V.his} accounts. I knew that old password from when we were together, and I never used it after we split. I hope the court can see the difference between a mean message and the rest of this.\""],
         guiltyTruths: ["The prepaid phone's box turned up months later in a storage bin {DL} rented, with the receipt still inside."],
         innocentTruths: ["A friend of {V}'s who had sat beside {V} at the shared laptop for years was later found to have bought the prepaid phone and to have parked outside {DL}'s fourplex those nights."],
         moods: [.divided], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -346,7 +346,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did the doorbell video show?", "\"A silver sedan passing at 2:15 a.m. with its headlights off. The shape of the taillights fits a 2013 to 2018 Altima. {DL} drives a 2016 silver Altima.\""),
                             .direct("What did you find at the scene?", "\"Four 9mm casings in the street, and four bullet holes in the front of the house.\""),
-                            .cross("How many silver or gray Altimas of those years are registered in this county?", "\"More than nine hundred.\""),
+                            .cross("How many silver or gray Altimas of those years are registered in this county?", "\"More than nine hundred. There are over nine hundred silver or gray Altimas of those years registered here.\""),
                             .cross("Your search of my client's home and car found no gun, no ammunition?", "\"Nothing. We also found no receipts or cases.\""),
                             .cross("And the residue test and phone records?", "\"The residue test was negative, though nine hours had passed. The phone stayed near the apartment all night.\""),
                             .redirect("Does a phone at home put its owner at home?", "\"No. It tells you where the phone was.\"")
@@ -360,7 +360,7 @@ extension StoryCases {
                         exam: [
                             .direct("Where was {DL} that night?", "\"Home. We went to bed around twelve-thirty. When the alarm went off at six-forty, {DL} was right there.\""),
                             .direct("Did {DL} own a gun?", "\"Not since I've known {D.him}. There's never been one in our place.\""),
-                            .cross("You were asleep between twelve-thirty and six-forty?", "\"Yes.\""),
+                            .cross("You were asleep between twelve-thirty and six-forty?", "\"Yes. I was asleep between twelve-thirty and six-forty.\""),
                             .cross("So you can't say {DL} didn't get up at two?", "\"I'd have heard the car. It's loud. But I was asleep, yes.\"")
                         ])
         ],
@@ -369,7 +369,7 @@ extension StoryCases {
         aggravating: ["The defendant knowingly created a great risk of death to more than one person"],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
         victimImpacts: ["{V}: \"My head was on that cushion twenty minutes before. I don't sleep more than a couple of hours at a time now.\""],
-        allocutions: ["\"I wanted my four hundred dollars. I didn't shoot at anybody's house.\""],
+        allocutions: ["\"I was upset about four hundred dollars and eight hours of work on a car, and I said some hot words at that cookout. I wanted that money back through small claims court, nothing more. I was at home that night, three miles away, and I did not shoot at anyone's house. I'm sorry for the fear that family went through, and I hope whoever did it is found.\""],
         guiltyTruths: ["A 9mm pistol later recovered from a creek near {DL}'s apartment was matched to the four casings; a friend admitted selling it to {DL} the day after the cookout."],
         innocentTruths: ["The casings were matched months later to a gun seized from a man {V} owed $1,200, who admitted the shooting."],
         moods: [.divided], doctrines: ["burdenOfProof", "alibi"],
@@ -449,7 +449,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you compare?", "\"Two 9mm casings from the back seat of {VL}'s car and the bullet from the autopsy, against test fires from the pistol in the backpack.\""),
                             .direct("And your conclusion?", "\"All three were fired from that pistol, to the exclusion of other firearms.\""),
-                            .cross("Your work says nothing about who fired it?", "\"Correct. Only which gun.\"")
+                            .cross("Your work says nothing about who fired it?", "\"Correct. Only which gun. My work tells you which gun, not who fired it.\"")
                         ]),
             WitnessSeed(name: nil, role: "Forensic pathologist, Office of the Chief Medical Examiner",
                         direct: ["\"A gunshot wound to the chest, through the heart.\""],
@@ -469,17 +469,17 @@ extension StoryCases {
                         exam: [
                             .direct("Who is Dre?", "\"A guy who was around {DL}'s place a few times that week. Tall, always had a backpack.\""),
                             .direct("Were you at the apartment on the night of the shooting?", "\"No. I was there the day before.\""),
-                            .cross("What's Dre's last name?", "\"I don't know.\""),
+                            .cross("What's Dre's last name?", "\"I don't know. I never learned Dre's last name.\""),
                             .cross("Phone number? Where he lives?", "\"No. I just know him as Dre.\""),
-                            .cross("So you can't say who had {DL}'s phone at 8:40 that night?", "\"No, I can't.\"")
+                            .cross("So you can't say who had {DL}'s phone at 8:40 that night?", "\"No. I can't say who had {DL}'s phone at 8:40 that night.\"")
                         ])
         ],
         prosecutionTheory: ["{D} set up the meeting on {D.his} own phone, went there with a pistol, killed {V} over a box of shoes, and took the shoes home to {D.his} closet."],
         defenseTheory: ["A rushed photo lineup and a man called Dre who had {DL}'s phone that night. Everything found in the apartment could have been left there."],
         aggravating: ["The defendant was armed with a deadly weapon", "The offense was committed for pecuniary gain"],
         mitigating: ["The defendant was young at the time of the offense"],
-        victimImpacts: ["{VL}'s mother: \"{VL} labeled every box by hand and kept a notebook of every sale, saving for a four-year school. I have that notebook. The last line is number 47.\"", "{VL}'s younger sibling: \"I still text {VL}'s phone. I know nobody's going to answer.\""],
-        allocutions: ["\"I'm sorry for that family. I didn't kill anyone.\""],
+        victimImpacts: ["{VL}'s mother: \"{VL} labeled every box by hand and kept a notebook of every sale, saving for a four-year school. I have that notebook. The last line is number 47.\"", "{VL}'s younger sibling: \"I still text {VL}'s phone sometimes, just to see the screen light up on my end. Nobody answers, and every time I know it. {VL} was paying for school one pair of shoes at a time, and I was proud of that. Our house is quiet now in a way I can't describe.\""],
+        allocutions: ["\"I'm sorry for that family and for what they lost, and nothing I say can change that. I'm not going to stand here and take on something I didn't do, because they deserve the truth more than they deserve a name to put on it. Dre had my phone that night and was in and out of my apartment. I pray the court keeps looking.\""],
         guiltyTruths: ["A jail call recorded after the arrest captured {DL} telling a friend, \"I told {V.him} to let go of the box.\""],
         innocentTruths: ["A man known as Dre was arrested months later in a second app robbery with an identical pistol, and a witness placed him with {DL}'s phone the night {V} was killed."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "eyewitnessID", "expertTestimony"],

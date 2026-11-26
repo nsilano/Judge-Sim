@@ -52,20 +52,20 @@ enum Petitions {
         let (eligible, reason) = expunctionEligibility(priors: priors, year: year)
         let last = name.components(separatedBy: " ").last ?? name
         let others = priors.count - 1
-        let why = rng.pick(["Needs it for a job offer.", "Finishing nursing school.", "Turned down for apartments because of it.",
-                            "Wants to coach a youth league.", "Applying to the Coast Guard reserve."])
+        let why = Variety.pick(["Needs it for a job offer.", "Finishing nursing school.", "Turned down for apartments because of it.",
+                            "Wants to coach a youth league.", "Applying to the Coast Guard reserve.", "Applying to a nursing program.", "Wants to open a food truck and the permit asks about convictions.", "Trying to rent a home for a family.", "Applying for a commercial driver's license.", "Wants to volunteer at a school.", "Seeking a promotion that requires a background check.", "Applying to the volunteer fire department."], rng: &rng)
         let record = others == 0 ? "No other convictions." : "\(others) other conviction\(others == 1 ? "" : "s")."
         let stateAsk: String = eligible
-            ? rng.pick(["No position.", "No objection."])
-            : rng.pick(["Objects: \(reason)", "Objects: doesn't meet the statute.", "No position."])
+            ? rng.pick(["No position.", "No objection.", "No objection to the petition.", "The State does not oppose.", "No position; the record is clean.", "The State has reviewed the file and has no objection.", "Doesn't oppose.", "The State takes no position on this petition."])
+            : Variety.pick(["Objects: \(reason)", "Objects: doesn't meet the statute.", "No position.", "Objects: a waiting period has not run.", "Objects: the statute doesn't allow it for this offense.", "Objects: later convictions are on the record.", "Objects: the petitioner has a pending charge.", "Objects: the statutory period has not passed.", "Objects: a prior expungement was already granted.", "Objects: the conviction is of a type the statute excludes.", "Objects: the petition doesn't include the required affidavits.", "Objects: the petitioner has not paid all fines and costs."], rng: &rng)
         return CalendarMatter(
             kind: .expunction, personID: personID, personName: name, personAge: age, occupation: occupation,
             docket: "\(year % 100) CRS \(String(format: "%06d", docketSequence)) (expunction)",
             summary: "\(name), \(age), asks to expunge a \(target.year) \(target.offense.lowercased()) conviction (\(target.ncClass.isFelony ? "Class \(target.ncClass.rawValue) felony" : "misdemeanor")). \(record) \(why)",
             stateAsk: stateAsk,
-            defenseAsk: rng.pick(["Clean ever since; one mistake shouldn't follow forever.",
+            defenseAsk: Variety.pick(["Clean ever since; one mistake shouldn't follow forever.",
                                   "Has letters from an employer and a pastor.",
-                                  "Was \(max(16, age - (year - target.year))) at the time; a different person now."]),
+                                  "Was \(max(16, age - (year - target.year))) at the time; a different person now.", "Has completed every condition and held a steady job since.", "The conviction costs a job offer every time it shows up.", "Has raised a family and stayed out of trouble for years.", "Wants the chance the statute gives a person who has changed.", "Has stayed out of trouble since and wants a fresh start.", "Needs the record cleared to qualify for a better job.", "Has been volunteering at a church food pantry for years.", "The conviction keeps showing up on background checks and costs housing applications.", "Has finished school and wants to start a career the record blocks.", "Has been sober and working since the conviction."], rng: &rng),
             options: ["Grant the petition: expunge the conviction", "Deny the petition"],
             lawID: "expunction", priors: priors,
             petition: PetitionFacts(eligible: eligible, reason: reason, offense: target.offense, priorID: target.id,
@@ -104,9 +104,9 @@ enum Petitions {
             docket: docket + " (forfeiture)",
             summary: "\(company) asks to set aside the forfeited $\(amount.formatted()) bond for \(name). \(g.0)",
             stateAsk: schools
-                ? rng.pick(["School board objects: grounds not met.", "School board asks to enforce it."])
-                : rng.pick(["No position; no objection filed.", "Defers to the court."]),
-            defenseAsk: rng.pick(["\(company) did its job; set it aside.", "Asks the court not to hold bondsmen to every technicality."]),
+                ? rng.pick(["School board objects: grounds not met.", "School board asks to enforce it.", "School board objects: the defendant was not surrendered in time.", "School board says the schools are owed the full amount.", "School board objects: the surety did not act promptly.", "School board asks the court to keep the forfeiture in place.", "School board says the notice requirements were met.", "School board objects: no evidence the defendant could not have appeared.", "School board says the forfeited money is owed to the county schools.", "School board objects: the surety took the risk when it wrote the bond."])
+                : rng.pick(["No position; no objection filed.", "Defers to the court.", "The school board did not appear.", "No objection from the school board.", "School board takes no position.", "No one appeared for the school board.", "No objection filed by the school board.", "The school board left the matter to the court.", "School board offered no response.", "The school board did not oppose the motion."]),
+            defenseAsk: rng.pick(["\(company) did its job; set it aside.", "Asks the court not to hold bondsmen to every technicality.", "The defendant was in custody elsewhere on that date; the surety could not have produced them.", "The surety surrendered the defendant within the statutory period.", "\(company) paid for a fugitive recovery agent; it should not also lose the bond.", "The missed date came from a clerical error in the notice.", "\(company) acted quickly once the defendant missed court, and the delay was not its fault.", "The notice of forfeiture went to the wrong address, and \(company) never received it.", "The defendant was in the hospital on the court date, and \(company) has the records.", "\(company) located the defendant and returned the defendant to custody; the forfeiture should be set aside.", "The defendant died before the forfeiture became final.", "The defendant was in federal custody on the court date."]),
             options: ["Set aside the forfeiture", "Deny: the forfeiture stands; the surety pays $\(amount.formatted()) to the schools"],
             lawID: "bondForfeiture",
             petition: PetitionFacts(eligible: g.1, reason: g.2, amount: amount, company: company, newPerson: newPerson ? true : nil))
@@ -114,12 +114,19 @@ enum Petitions {
 
     // MARK: - Limited driving privilege
 
+    /// The blood-alcohol figure a case's text states (".12", "0.09"), when it states one.
+    static func bac(in text: String) -> Double? {
+        guard let range = text.regexRange(of: #"(?<![0-9])0?\.(0[89]|1[0-9]|2[01])(?![0-9])"#, options: .regularExpression) else { return nil }
+        return Double(text[range].hasPrefix("0") ? String(text[range]) : "0" + String(text[range]))
+    }
+
     static func privilegeMatter(personID: UUID, name: String, age: Int, occupation: String, docket: String, level: Int?, convicted: Date,
-                                date: Date, propensity: Double, newPerson: Bool, rng: inout SeededRNG) -> CalendarMatter {
+                                date: Date, propensity: Double, newPerson: Bool, knownBAC: Double? = nil, priorDWI knownPrior: Bool? = nil,
+                                rng: inout SeededRNG) -> CalendarMatter {
         let last = name.components(separatedBy: " ").last ?? name
         let lvl = level ?? rng.pick([3, 4, 4, 5, 5, 5, 2])
-        let bac = Double(rng.int(8...21)) / 100
-        let priorDWI = rng.chance(0.12)
+        let bac = knownBAC ?? Double(rng.int(8...21)) / 100
+        let priorDWI = knownPrior ?? rng.chance(0.12)
         let licenseValid = rng.chance(0.9)
         let assessed = rng.chance(0.88)
         let interlock = bac >= 0.15
@@ -133,8 +140,8 @@ enum Petitions {
             kind: .drivingPrivilege, personID: personID, personName: name, personAge: age, occupation: occupation,
             docket: docket + " (privilege)",
             summary: "\(name): DWI Level \(lvl) (\(SentenceFormat.shortDate(convicted))), asks to drive to work and treatment. BAC \(String(format: "%.2f", bac)) · license valid: \(licenseValid ? "yes" : "no") · DWI in 7 years: \(priorDWI ? "yes" : "no") · assessment: \(assessed ? "done" : "not done").",
-            stateAsk: rng.pick(["No position if the statute is met.", "Asks for a close look at the record.", "Objects: too soon."]),
-            defenseAsk: rng.pick(["Loses the job without it.", "Attending every treatment session.", "No bus where \(last) lives."]),
+            stateAsk: Variety.pick(["No position if the statute is met.", "Asks for a close look at the record.", "Objects: too soon.", "No position if the work letter is genuine.", "Asks that an ignition interlock be required.", "Objects: the record shows an earlier violation of a privilege.", "No position if the BAC and the record support it.", "Asks for a restricted privilege with limited hours.", "No position if treatment is verified.", "Objects until proof of assessment is filed.", "Asks that the privilege be limited to work and treatment only.", "Asks the court to require proof of insurance.", "No position if the employer's letter is verified."], rng: &rng),
+            defenseAsk: Variety.pick(["Loses the job without it.", "Attending every treatment session.", "No bus where \(last) lives.", "No bus runs to the job site.", "Needs to get a child to school and to treatment.", "Has a doctor's letter for regular appointments.", "Is the only driver in the household.", "Needs to get to a second job across the county.", "The only way to the treatment program is by car.", "Drives a coworker who has no license to the same job site.", "Has an employer who will only keep the job if driving is allowed.", "Needs to pick up a parent from dialysis three days a week.", "Works early shifts when no bus is running."], rng: &rng),
             options: ["Grant: drive for work, school, and treatment, 6 a.m. to 8 p.m. weekdays",
                       "Grant, with an ignition interlock on every vehicle \(last) drives", "Deny the privilege"],
             lawID: "limitedPrivilege",

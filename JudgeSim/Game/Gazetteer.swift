@@ -291,7 +291,10 @@ enum Gazetteer {
                                         ("HOSPITAL", .hospital), ("SCHOOL", .school), ("LANDING", .boatLanding)]
         var out: [String: String] = [:]
         for (key, kind) in wanted {
-            if let p = place(kind, in: town, rng: &rng) {
+            // A town without one of these (a boat landing inland) borrows the nearest one in the county, so no token is left unfilled.
+            var found = place(kind, in: town, rng: &rng)
+            if found == nil { for other in towns where other.name != town { if let p = place(kind, in: other.name, rng: &rng) { found = p; break } } }
+            if let p = found {
                 out["PLACE." + key] = p.name
                 out["PLACE." + key + ".ST"] = p.street
                 out["PLACE." + key + ".TOWN"] = p.town

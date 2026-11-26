@@ -39,7 +39,7 @@ extension StoryCases {
                             .direct("Who knew about the relationship?", "\"The coworker, and {DL}, who kept my calendar and saw the hotel charges. Nobody else.\""),
                             .direct("How did {DL} react to the layoff?", "\"Bitter. {DL} said 'after everything I've covered for you.' I took that as a threat even then.\""),
                             .cross("The coworker in the photos was laid off the same week and lost a bonus?", "\"Same week. I signed the layoff list myself.\""),
-                            .cross("The coworker knew everything you just said {DL} knew, and more?", "\"Of course.\""),
+                            .cross("The coworker knew everything you just said {DL} knew, and more?", "\"Of course. The coworker knew everything {DL} knew, and more.\""),
                             .cross("You never received a single message from {DL}'s phone or accounts?", "\"Not from {D.his} phone, not from any account we could tie to {D.him}.\"")
                         ]),
             WitnessSeed(name: nil, role: "Cyber crimes analyst",
@@ -61,7 +61,7 @@ extension StoryCases {
                         exam: [
                             .direct("What was the group?", "\"Five of us from work pooling small amounts into crypto. {DL} set up the wallet, but the coworker in the photos managed most of the trades and had the recovery phrase.\""),
                             .cross("You don't know who sent the message?", "\"No idea. It came from a number with no name on it.\""),
-                            .cross("{DL} set up the wallet?", "\"Yes, at the beginning.\"")
+                            .cross("{DL} set up the wallet?", "\"Yes. {DL} set up the wallet at the beginning.\"")
                         ])
         ],
         prosecutionTheory: ["{D} knew the secret, threatened revenge at the exit interview, and demanded payment into {D.his} own wallet."],
@@ -69,7 +69,7 @@ extension StoryCases {
         aggravating: ["The offense was motivated by revenge"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{V}: \"I made my own mistakes, and I've paid for them at home. Being hunted by someone I trusted is something else.\""],
-        allocutions: ["\"I was angry about the layoff. I'd never blackmail anyone.\""],
+        allocutions: ["\"I was angry about the layoff, and I would never blackmail anyone. I knew about the affair for a year and never said a word. I told {V} only that I'd look into severance through a lawyer. Four other people could access our group account. I'm sorry for what {V} went through, and I hope the sender is found.\""],
         guiltyTruths: ["A draft of the demand was later found in {DL}'s cloud notes."],
         innocentTruths: ["The coworker later admitted sending the demand to {DL}'s former friend in a recorded call."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -132,7 +132,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did the wound show?", "\"Pellets entered the left side of the chest and the left upper back. The center of the pattern was behind the left armpit.\""),
                             .direct("What does that mean for position?", "\"{VL}'s left side and back were toward the shooter. That's someone turned at least partly away.\""),
-                            .cross("A right-handed person raising a sledgehammer over the right shoulder turns the left side toward whoever is in front?", "\"That's possible.\""),
+                            .cross("A right-handed person raising a sledgehammer over the right shoulder turns the left side toward whoever is in front?", "\"That's possible. A right-handed person raising a sledgehammer would turn that way.\""),
                             .cross("You can't tell the court where the hammer was at the moment of the shot?", "\"I can tell you where the bullet went, not where the hammer was.\"")
                         ]),
             WitnessSeed(name: nil, role: "Neighbor across the street",
@@ -155,14 +155,14 @@ extension StoryCases {
                         exam: [
                             .direct("What does the hammer's location tell you?", "\"Very little. A person hit by a shotgun at twelve feet often spins and drops whatever they're holding. A hammer raised over the right shoulder would naturally fall behind and to the side.\""),
                             .direct("And the wound angle?", "\"Consistent with someone raising a hammer over the right shoulder while facing the porch.\""),
-                            .cross("It's also consistent with someone turning away?", "\"It's consistent with both.\"")
+                            .cross("It's also consistent with someone turning away?", "\"It's consistent with both. It could be someone swinging or someone turning away.\"")
                         ])
         ],
         prosecutionTheory: ["{D} promised it would be 'the last time,' came out armed, and shot {V} as {V.he} turned away."],
         defenseTheory: ["{VL} came into {DL}'s own yard with a sledgehammer after months of threats. North Carolina law presumes fear of death when someone unlawfully enters your home's curtilage with force."],
         aggravating: ["{DL} had announced an intent to harm {VL}"],
         mitigating: ["{VL} unlawfully entered {DL}'s yard with a weapon", "No prior criminal record", "{DL} immediately called 911"],
-        victimImpacts: ["{VL}'s sibling: \"It was a fence. Two old neighbors and a fence.\""],
+        victimImpacts: ["{VL}'s sibling: \"It was a fence. Two old neighbors and a fence. They could have settled it with a handshake years ago. Instead we have a funeral and an empty chair at every family dinner. I'd give up every acre we own for one more Sunday phone call.\""],
         allocutions: ["\"I didn't want this. I begged the magistrate for help. I thought {VL} was going to kill me on my own porch.\""],
         guiltyTruths: ["A home security camera later recovered from {DL}'s shed showed {VL} lowering the hammer and turning before the shot."],
         innocentTruths: ["The same camera showed the hammer raised over {VL}'s shoulder at the moment of the shot."],
@@ -232,7 +232,7 @@ extension StoryCases {
                             .cross("You're charged with fraud yourself?", "\"I am. My own case is still pending.\""),
                             .cross("Your deal depends on delivering someone?", "\"It depends on telling the truth.\""),
                             .cross("You borrowed $6,000 from {DL} and said you'd pay it back in chunks?", "\"That was a separate thing. I paid that back already.\""),
-                            .cross("No receipt, no record of that repayment?", "\"It was cash.\"")
+                            .cross("No receipt, no record of that repayment?", "\"It was cash. There was no receipt and no record of the repayment.\"")
                         ]),
             WitnessSeed(name: nil, role: "FBI special agent",
                         direct: ["\"{DL} said 'appreciate it' and took the envelope.\""],
@@ -241,8 +241,8 @@ extension StoryCases {
                         exam: [
                             .direct("What did the recording capture?", "\"{ALT} saying 'for keeping things moving,' {DL} saying 'appreciate it' and pocketing $1,500 in marked bills.\""),
                             .direct("What do the deposits show?", "\"Cash deposits averaging about $1,500 a month into {DL}'s account, starting the month after the framing inspection {ALT} described.\""),
-                            .cross("{DL} never said the word 'inspection' on the recording?", "\"Not on that recording.\""),
-                            .cross("{DL} also has a side business repairing lawn equipment for cash?", "\"We saw that.\"")
+                            .cross("{DL} never said the word 'inspection' on the recording?", "\"Not on that recording. {DL} never said the word 'inspection' there.\""),
+                            .cross("{DL} also has a side business repairing lawn equipment for cash?", "\"We saw that. {DL} also has a side business repairing lawn equipment for cash.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -261,7 +261,7 @@ extension StoryCases {
         defenseTheory: ["{ALT} owed {DL} $6,000 and is trading {D.him} for leniency on {ALT}'s own fraud. 'Keeping things moving' was the developer's script, not {DL}'s words."],
         aggravating: ["The offense endangered public safety"],
         mitigating: ["Nineteen years of public service", "No prior criminal record"],
-        allocutions: ["\"That money was mine. I lent it when {ALT} was going under. I never sold an inspection.\""],
+        allocutions: ["\"That money was mine. I lent it when the developer was going under, and the developer was paying me back in chunks since spring. I never sold an inspection. I've inspected buildings in this county for nineteen years, and I missed a few out of eleven hundred, like anyone. I'm sorry that the loan looked like something else.\""],
         guiltyTruths: ["A ledger in {DL}'s truck later listed the developer's address with monthly checkmarks."],
         innocentTruths: ["{ALT}'s former bookkeeper later testified the developer bragged about framing the inspector who 'wouldn't play ball.'"],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -330,8 +330,8 @@ extension StoryCases {
                             .direct("What did you observe?", "\"Strong odor of alcohol, slurred speech, unsteady when getting out. {DL} performed poorly on field sobriety tests.\""),
                             .direct("Why is that 'driving'?", "\"Under North Carolina law, being in the driver's seat with the engine running is being in actual physical control. That's driving.\""),
                             .cross("The truck was in park and never moved?", "\"In park the whole time. The engine was running, but it never moved.\""),
-                            .cross("It was nineteen degrees?", "\"It was cold.\""),
-                            .cross("{DL} told you right away {D.he} was there to sleep, not drive?", "\"{DL} said that.\"")
+                            .cross("It was nineteen degrees?", "\"It was cold. It was nineteen degrees that night.\""),
+                            .cross("{DL} told you right away {D.he} was there to sleep, not drive?", "\"{DL} said that. {DL} told me right away {D.he} was there to sleep, not drive.\"")
                         ]),
             WitnessSeed(name: nil, role: "Bartender",
                         direct: ["\"I cut {DL} off at midnight.\""],
@@ -341,7 +341,7 @@ extension StoryCases {
                             .direct("How much did {DL} drink?", "\"Six or seven beers and two shots between ten and midnight. I cut {DL} off.\""),
                             .direct("What did {DL} do?", "\"Paid and went outside around a quarter to one.\""),
                             .cross("{DL} asked you to call a cab first?", "\"{DL} asked if I knew any. Rideshare was dead that night.\""),
-                            .cross("{DL} told you 'I'm going to sleep in the truck'?", "\"Something like that.\"")
+                            .cross("{DL} told you 'I'm going to sleep in the truck'?", "\"Something like that. {DL} said {D.he} was going to sleep in the truck.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -361,7 +361,7 @@ extension StoryCases {
         defenseTheory: ["{DL} did the responsible thing: tried to get a ride, failed, and slept in a parked truck in nineteen-degree cold. The truck never moved."],
         aggravating: [],
         mitigating: ["The vehicle never moved", "{DL} attempted to arrange a ride", "{DL} is engaged in recovery"],
-        allocutions: ["\"I relapsed, but I didn't drive. For the first time in my life, I didn't drive.\""],
+        allocutions: ["\"I relapsed, but I didn't drive. For the first time in my life, I didn't drive. The back seat of my truck is full of welding gear, so the driver's seat is the only place I could sleep. The lights come on with the engine, and I didn't think about it.\""],
         guiltyTruths: ["The truck's GPS showed it had been driven to a gas station and back at 1:30 a.m."],
         innocentTruths: ["A second camera confirmed the truck never moved from 10:05 p.m. until the tow."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -435,9 +435,9 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} do?", "\"Opened three accounts, received wires from at least six victims, withdrew cash within hours, and sent it overseas in amounts just under reporting limits.\""),
                             .direct("Why do you believe {DL} knew it was fraud?", "\"When the bank questioned the deposits, {DL} asked the handler what to say and then told the bank they were family gifts. People who think their job is legitimate don't lie to banks.\""),
-                            .cross("The handlers are overseas and will never be caught?", "\"Very likely.\""),
-                            .cross("These operations recruit desperate people with fake job ads?", "\"That's their model.\""),
-                            .cross("{DL} cooperated and gave you every message?", "\"{DL} did.\"")
+                            .cross("The handlers are overseas and will never be caught?", "\"Very likely. The handlers are overseas and will probably never be caught.\""),
+                            .cross("These operations recruit desperate people with fake job ads?", "\"That's their model. These operations recruit desperate people with fake job ads.\""),
+                            .cross("{DL} cooperated and gave you every message?", "\"{DL} did. {DL} cooperated and gave me every message.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -447,16 +447,16 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("Who are money mules?", "\"Usually people in financial crisis, recruited through fake job ads that look like real payment-processing work. Many genuinely don't understand at first.\""),
-                            .cross("Many realize at some point and keep going for the money?", "\"Many do.\""),
-                            .cross("Lying to a bank about the source of deposits is a red flag of knowledge?", "\"It's a strong one.\"")
+                            .cross("Many realize at some point and keep going for the money?", "\"Many do. Many realize at some point and keep going for the money.\""),
+                            .cross("Lying to a bank about the source of deposits is a red flag of knowledge?", "\"It's a strong one. Lying to a bank about the source of deposits is a red flag of knowledge.\"")
                         ])
         ],
         prosecutionTheory: ["{D} moved stolen money for five months, kept $28,000, and lied to the bank when asked. That's knowing participation."],
         defenseTheory: ["{DL} answered a job ad while facing eviction and was used by an overseas ring that will never see a courtroom. {DL} never deceived {V}."],
         aggravating: ["The victim was elderly and the loss was devastating"],
         mitigating: ["{DL} cooperated fully with investigators", "{DL} did not personally deceive the victim", "No prior criminal record"],
-        victimImpacts: ["{V}: \"I'm not angry at the person in that chair the way I'm angry at 'Daniel.' But somebody has to answer for my spouse's life savings.\""],
-        allocutions: ["\"I needed a job. By the time I understood, I was afraid to stop. I'm sorry, {VL}.\""],
+        victimImpacts: ["{V}: \"I'm not angry at the person in that chair the way I'm angry at Daniel. But somebody has to answer for my spouse's life savings. We saved for fifty years, and I sent it in pieces to someone I'd never met. I'm sixty-eight, and I'm learning to live on much less.\""],
+        allocutions: ["\"I needed a job. I'd been laid off and had an eviction notice, and the ad looked real, with a contract. By the time I understood what I was doing, I was afraid to stop. I spent most of it on rent. I'm sorry, {V}, and I'd pay it all back if I could.\""],
         guiltyTruths: ["Messages later recovered show {DL} recruiting two friends as mules for a bonus."],
         innocentTruths: ["A federal task force later found the ring had threatened {DL}'s family when {D.he} tried to quit."],
         moods: [.divided], doctrines: ["burdenOfProof"],

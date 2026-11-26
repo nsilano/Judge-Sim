@@ -59,7 +59,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("Are the injuries consistent with a beating?", "\"No. In beating deaths with a weapon, I see skull fractures and brain injury almost every time. She had none. Scalp lacerations from striking stair edges, and then she bled for a long time.\""),
-                            .cross("You've testified for defendants many times?", "\"For both sides.\""),
+                            .cross("You've testified for defendants many times?", "\"For both sides. I've testified for defendants and for the State many times.\""),
                             .cross("And the fractured thyroid cartilage, from strangulation?", "\"It can happen in a fall. It's not common.\"")
                         ])
         ],
@@ -67,8 +67,8 @@ extension StoryCases {
         defenseTheory: ["{VL} fell on steep stairs after alcohol and Valium. The State's spatter science is unreliable and there's no weapon. A secret is not a motive for murder."],
         aggravating: ["The offense was committed for pecuniary gain"],
         mitigating: ["No prior criminal record", "The defendant has a support system in the community"],
-        victimImpacts: ["{VL}'s sister: \"She was my best friend. I don't believe stairs did that.\""],
-        allocutions: ["\"I loved my wife. I didn't kill her. I'll say it until the end.\""],
+        victimImpacts: ["{VL}'s sister: \"{V.He} was my best friend. We talked every Sunday for thirty years, and I knew every scar and every story. I don't believe stairs did that. I keep thinking about the one night {V.he} needed someone to hear {V.him}, and nobody did.\""],
+        allocutions: ["\"I loved my wife. We had wine that night, and {V.he} went in ahead of me while I stayed out by the pool, and when I came in I found {V.him} at the foot of the stairs. I wiped {V.his} face and called for help the second I found {V.him}. I did not kill {V.him}, and I'll say it until the end.\""],
         guiltyTruths: ["A neighbor later came forward to say she heard a man shouting and a woman crying 'stop' from the house around 1:30 that morning."],
         innocentTruths: ["A forensic engineer later found three of {VL}'s hairs, roots attached, clutched with feathers from a barred owl, suggesting an owl attack outside before she came in and fell."],
         moods: [.divided], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -120,7 +120,7 @@ extension StoryCases {
         ],
         ageRange: 56...60, occupations: ["grocery store head cashier"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V}, a Baptist minister in {HOOD}, was admitted to the hospital with nausea, numbness in his hands and feet, and failing kidneys, five months after marrying {D}. Doctors found 100 times the normal level of arsenic in his body. He nearly died, and his levels rose again while in the hospital, after {D} brought him homemade banana pudding and milkshakes. Investigators exhumed {VIC2}, {DL}'s boyfriend of twelve years, who died six years ago of what was called a heart attack. His body was full of arsenic. {DL}'s first husband and her father had also died of mysterious stomach illnesses. {DL} is charged with {VIC2}'s murder and with trying to kill {VL}."
+            "On {DATE}, {V}, a Baptist minister in {HOOD}, was admitted to the hospital with nausea, numbness in his hands and feet, and failing kidneys, five months after marrying {D}. Doctors found 100 times the normal level of arsenic in his body. He nearly died, and his levels rose again while in the hospital, after {D.he} brought him homemade banana pudding and milkshakes. Investigators exhumed {VIC2}, {DL}'s boyfriend of twelve years, who died six years ago of what was called a heart attack. His body was full of arsenic. {DL}'s first husband and her father had also died of mysterious stomach illnesses. {DL} is charged with {VIC2}'s murder and with trying to kill {VL}."
         ],
         prosecutionEvidence: [
             E(.forensic, 3, "Exhumation Toxicology", "Arsenic in {VIC2}'s hair and nails at levels showing repeated doses over the last months of his life."),
@@ -151,7 +151,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {VIC2}'s hair show?", "\"Hair grows about half an inch a month. Segment by segment, arsenic rises and falls for the last six months of his life. That's someone being given it over and over.\""),
                             .direct("Could orchard soil cause this?", "\"Not at these levels, and not in two men who lived in different places years apart.\""),
-                            .cross("Arsenic occurs naturally in soil and water?", "\"In trace amounts. These are not trace amounts.\"")
+                            .cross("Arsenic occurs naturally in soil and water?", "\"These are not trace amounts.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -171,7 +171,7 @@ extension StoryCases {
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{V}: \"I married her in front of my whole church. I'd have given her anything she asked for.\"",
                         "{VIC2}'s daughter: \"He suffered for months and she held his hand the whole time.\""],
-        allocutions: ["\"I never hurt anybody. God knows the truth.\""],
+        allocutions: ["\"I never hurt anybody, and God knows the truth. I cooked for that family because I loved them, and I sat by {V}'s bed every day {V.he} was sick. The arsenic has been in that house since the seventies, because Mama never threw anything away. I would never poison anyone for money, and I'm heartbroken.\""],
         guiltyTruths: ["A pharmacist later identified {DL} as the woman who asked, years earlier, which ant poisons \"still have the real arsenic in them.\""],
         innocentTruths: ["Well testing at {VL}'s parsonage later found arsenic levels forty times the federal limit, from old pesticide in the soil."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "priorActs"],
@@ -277,7 +277,7 @@ extension StoryCases {
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s mother: \"She opened the door because she trusted him. She trusted everybody.\"",
                         "{VIC2}'s brother: \"For a year we thought it was a stranger. It was the man who handed her lunch.\""],
-        allocutions: ["\"I'm sorry. I don't know why I did it.\""],
+        allocutions: ["\"I hadn't slept in two days when they questioned me, and they kept saying they knew. After a while I just wanted it to stop, and I said what they wanted to hear. I did not hurt {V}, and I would never hurt anyone. I'm sorry for {V.his} family's pain, and I pray the truth is found.\""],
         guiltyTruths: ["A cellmate later produced a letter in {DL}'s handwriting listing two more women's names, both unsolved strangulations in another county."],
         innocentTruths: ["A full DNA profile developed years later from {VIC3}'s apartment matched a man already in prison for a similar killing."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "voluntariness"],
@@ -294,7 +294,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why did you confess?", "\"I hadn't slept in two days. They kept saying they knew. After a while I just wanted it to stop.\""),
                 .direct("How did you know the keys were in the freezer?", "\"I don't remember who said that first.\""),
-                .cross("You knew what each woman was wearing.", "\"They showed me pictures.\""),
+                .cross("You knew what each woman was wearing.", "\"I knew what each woman was wearing because they showed me pictures.\""),
                 .cross("Pictures from the crime scenes? None were shown on the recording.", "\"Then I can't tell you where those details came from.\"")
             ],
             objections: [
@@ -372,15 +372,15 @@ extension StoryCases {
                             .direct("Why did the couple's toxicology take six weeks?", "\"The state lab was backlogged. We sent it routine. In hindsight it should have been expedited.\""),
                             .direct("If the results had come back in days, what would have happened?", "\"We'd have known it was carbon monoxide, and that room would have been closed.\""),
                             .cross("Two healthy people dying in the same room: should someone have checked the room?", "\"Someone should have. I know I should have.\""),
-                            .cross("Nothing about the lab backlog stopped the motel from checking that room itself?", "\"No. Nothing stopped them.\"")
+                            .cross("Nothing about the lab backlog stopped the motel from checking that room itself?", "\"No. Nothing stopped them. The lab backlog didn't stop the motel from checking that room itself.\"")
                         ])
         ],
         prosecutionTheory: ["{D} cut corners on a gas conversion with no permit and a rotted vent, ignored a worker's warning, and kept renting the room where two people had just died."],
         defenseTheory: ["{DL} relied on a contractor and didn't know. The medical examiner's delay, not culpable negligence by {DL}, is why the room stayed open."],
         aggravating: ["The offense involved multiple victims", "The victim was very young"],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
-        victimImpacts: ["{KID}'s father: \"He wanted to swim in the pool. That's all. He wanted to swim.\""],
-        allocutions: ["\"I would give anything to go back. I didn't know. I'm so sorry.\""],
+        victimImpacts: ["{KID}'s father: \"{KID} wanted to swim in the pool. That's all. {KID} wanted to swim. We booked that motel because it had a pool, and our child had been counting the days. We checked in, and in the morning {KID} was gone. We'll never stay anywhere with a pool again.\""],
+        allocutions: ["\"I would give anything to go back. I did not know about that gas, and the contractor told me the work had been done right. I'm not a gas fitter. When the older couple died, we thought it was natural causes. I'm so sorry about {KID}, and I'll live with it every day of my life.\""],
         guiltyTruths: ["An email recovered from the company's server showed {DL} writing, \"skip the permit, nobody inspects pool rooms.\""],
         innocentTruths: ["The contractor later admitted falsifying a document telling {DL} the vent had passed a county inspection."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -476,7 +476,7 @@ extension StoryCases {
                         exam: [
                             .direct("How did you know {VL}?", "\"From around {HOOD}, from before he won. We'd see each other.\""),
                             .direct("Who was after {VL}?", "\"Everybody. Once you win, everybody's your cousin. A couple of guys said he owed them and they'd get it.\""),
-                            .cross("Did you ever see anyone threaten {VL}?", "\"Not myself.\""),
+                            .cross("Did you ever see anyone threaten {VL}?", "\"Not myself. I never saw anyone threaten {VL} myself.\""),
                             .cross("And by the time {VL} went missing, most of his money had already gone to {DL}'s company?", "\"That's what I heard, yes. I don't know the numbers.\"")
                         ])
         ],
@@ -485,7 +485,7 @@ extension StoryCases {
         aggravating: ["The offense was committed for pecuniary gain", "The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s mother: \"He told me money would make everything easier. He bought me a house. Then he was gone and I got text messages.\""],
-        allocutions: ["\"I didn't kill him. I was scared and I did terrible things after.\""],
+        allocutions: ["\"I did not kill {V}. Some men came for {V.him}, and they told me I was next, and I helped hide {V.him} because I was afraid. I was scared, and I did terrible things after. I'm sorry for what I took and for the way I lied. I was desperate, and I'll help the court find the truth.\""],
         guiltyTruths: ["A handgun recovered later from a pond behind {DL}'s boyfriend's property was matched to the bullets in {VL}'s chest; it was registered to {DL}."],
         innocentTruths: ["A man arrested in another state later bragged on a jail call about \"the lottery guy\" and described the slab in detail."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -501,8 +501,8 @@ extension StoryCases {
             defendantExam: [
                 .direct("Did you kill {VL}?", "\"No. Some men came for him. I helped hide him because they said I was next.\""),
                 .direct("Why the texts?", "\"So nobody would come looking and get hurt.\""),
-                .cross("You had $1.3 million of his money.", "\"I was investing it.\""),
-                .cross("And you offered a man money to confess.", "\"I was desperate.\"")
+                .cross("You had $1.3 million of his money.", "\"I had $1.3 million of his money, and I was investing it.\""),
+                .cross("And you offered a man money to confess.", "\"I offered a man money to confess because I was desperate.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Defense: \"How many times have you lied to police before?\"",
