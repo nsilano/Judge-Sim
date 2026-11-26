@@ -62,16 +62,36 @@ struct TextFiller {
         return result
     }
 
+    /// Whether what has been written so far ends a sentence (or is empty), ignoring spaces and an opening quote.
+    private static func opensSentence(_ out: [UInt8]) -> Bool {
+        var j = out.count - 1
+        while j >= 0, out[j] == UInt8(ascii: " ") { j -= 1 }
+        // An opening quote mark, plain or escaped, or the curly one's three bytes.
+        if j >= 0, out[j] == UInt8(ascii: "\"") { j -= 1; while j >= 0, out[j] == UInt8(ascii: " ") { j -= 1 } }
+        guard j >= 0 else { return true }
+        return [UInt8(ascii: "."), UInt8(ascii: "?"), UInt8(ascii: "!")].contains(out[j]) && (j == out.count - 1 || out[j + 1] == UInt8(ascii: " ") || out[j + 1] == UInt8(ascii: "\""))
+    }
+
     private static func substitute(_ text: String, _ map: [String: String]) -> String {
         let bytes = Array(text.utf8)
         var out: [UInt8] = []
         out.reserveCapacity(bytes.count + 64)
         var i = 0
         let open = UInt8(ascii: "{"), close = UInt8(ascii: "}")
+        // A full name is written once in a passage; later mentions of the same person use the last name.
+        var named: Set<String> = []
         while i < bytes.count {
             if bytes[i] == open, let end = bytes[(i + 1)...].firstIndex(of: close) {
                 let key = String(decoding: bytes[(i + 1)..<end], as: UTF8.self)
-                if let value = map[key] {
+                if var value = map[key] {
+                    if key == "D" || key == "V" {
+                        if named.contains(key), let last = map[key + "L"], !last.isEmpty { value = last } else { named.insert(key) }
+                    }
+                    // A pronoun token that opens a sentence is capitalized, so "{D.his} truck" never reads "his truck".
+                    if key.count > 2, let dot = key.firstIndex(of: "."), ["D", "V", "ALT"].contains(String(key[..<dot])),
+                       key[key.index(after: dot)...].first?.isLowercase == true, Self.opensSentence(out) {
+                        value = value.prefix(1).uppercased() + value.dropFirst()
+                    }
                     out.append(contentsOf: value.utf8)
                     i = end + 1
                     continue

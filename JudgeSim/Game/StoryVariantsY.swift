@@ -19,7 +19,7 @@ extension StoryVariants {
         ],
         ageRange: 20...34, occupations: ["welder", "forklift operator", "HVAC installer"], hasVictim: true,
         summaries: [
-            "From 10:40 p.m. on {DATE}, drivers poured into the Parkside Plaza lot in {HOOD}, empty since the grocery store left, for a meet that {D} had organized in a group chat called plaza_nights. About thirty cars and a hundred spectators lined the access road while drivers took turns spinning in the open lot. At 11:14 p.m. a black Subaru WRX lost its tail on a spin, crossed the access lane, and hit two cars in the visitor row of the Willow Run Apartments next door, then a mail kiosk and a dumpster enclosure. {V}, a resident, owns both cars: a Honda Civic and an old Ford Ranger. The damage to the two cars came to $11,800. The WRX is registered to {D}. {D} says someone else was driving it."
+            "From 10:40 p.m. on {DATE}, drivers poured into the Parkside Plaza lot in {HOOD}, empty since the grocery store left, for a meet that {D} had organized in a group chat called plaza_nights. About thirty cars and a hundred spectators lined the access road while drivers took turns spinning in the open lot. At 11:14 p.m. a black Subaru WRX lost its tail on a spin, crossed the access lane, and hit two cars in the visitor row of the Willow Run Apartments next door, then a mail kiosk and a dumpster enclosure. {V}, a resident, owns both cars: a Honda Civic and an old Ford Ranger. The damage to the two cars came to $11,800. The WRX is registered to {D.him}. {DL} says someone else was driving it."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Apartment Building Camera", "A black Subaru WRX slides sideways across the access lane at 11:14 p.m. and hits the Civic and the Ranger in the visitor row, then clips the mail kiosk. The glare off the windshield hides the driver."),
@@ -57,8 +57,8 @@ extension StoryVariants {
                             .direct("What did you see?", "\"My Civic and my Ranger smashed together and a piece of a taillight on the ground. The mail kiosk was on its side.\""),
                             .direct("What did it cost?", "\"The Civic was $7,400 and the Ranger $4,400. I have no collision coverage on the Ranger.\""),
                             .direct("How did you get to work?", "\"I borrowed a car for three weeks, then took the bus.\""),
-                            .cross("You didn't see who was driving?", "\"No.\""),
-                            .cross("The visitor row is next to the access lane?", "\"Yes, about twelve feet.\"")
+                            .cross("You didn't see who was driving?", "\"No. I didn't see who was driving.\""),
+                            .cross("The visitor row is next to the access lane?", "\"Yes. The visitor row is about twelve feet from the access lane.\"")
                         ]),
             WitnessSeed(name: nil, role: "Sheriff's detective, phone and live stream records",
                         direct: ["\"The stream shows {DL} getting into the WRX and saying 'watch this.'\""],
@@ -70,7 +70,7 @@ extension StoryVariants {
                             .direct("What did {DL}'s chat say?", "\"At 10:31, 'first spin is mine, keep the visitor row clear.' At 11:16, 'everyone out now, go.'\""),
                             .direct("Did you look for a Kai?", "\"There is no Kai in the group chat or in {DL}'s phone contacts.\""),
                             .cross("The 11:12 clip shows {DL} outside the car?", "\"It shows {DL} at the open door, handing something to a taller person in a gray hoodie.\""),
-                            .cross("That could be keys?", "\"It could be. It could also be a drink.\""),
+                            .cross("That could be keys?", "\"It could also be a drink.\""),
                             .cross("The stream stops before the car moves?", "\"Yes. About three minutes pass between the stream and the crash.\"")
                         ]),
             WitnessSeed(name: nil, role: "State Crime Laboratory trace evidence examiner",
@@ -81,7 +81,7 @@ extension StoryVariants {
                             .direct("What did you compare?", "\"Blue paint smears on the WRX's right rear bumper and a sample from the Civic's door.\""),
                             .direct("What did you find?", "\"The layers and pigments match the Civic's factory blue, in the same order.\""),
                             .direct("Does that tie the WRX to the crash?", "\"Yes. It ties that bumper to that Civic. It says nothing about who was behind the wheel.\""),
-                            .cross("Nothing in your examination identifies the driver?", "\"Nothing.\"")
+                            .cross("Nothing in your examination identifies the driver?", "\"Nothing. Nothing in my examination identifies the driver.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -104,7 +104,7 @@ extension StoryVariants {
         aggravating: ["The visitor row sat twelve feet from the spin lane with spectators at the curb", "{DL} announced the spin in the group chat beforehand"],
         mitigating: ["No prior criminal record", "{DL} has offered to pay for the Civic", "No one was hurt"],
         victimImpacts: ["{VL}: \"I live on the second floor. I came down to a car wrapped around my truck. I was without a car for three weeks, and I had to take the bus to work.\""],
-        allocutions: ["\"I started that meet, and I put those cars in danger. I'm sorry to the people who live there.\""],
+        allocutions: ["\"I organized that meet. I posted it, set the cones, and did the first spin to get it started, and then I handed my keys to someone I barely knew. I put those cars in danger, and a family's Civic and truck were wrecked. I'm sorry to the people who live there, and I should have called them the next morning.\""],
         guiltyTruths: ["Kai held the keys for a moment, handed them back, and {DL} made the final spin {D.himself}."],
         innocentTruths: ["A third phone video, never turned over, shows the person in the gray hoodie in the WRX's driver seat as the spin begins."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "eyewitnessID", "expertTestimony"],
@@ -164,7 +164,7 @@ extension StoryVariants {
         ],
         ageRange: 20...34, occupations: ["auto body technician", "delivery driver", "diesel mechanic"], hasVictim: true,
         summaries: [
-            "On the night of {DATE} it rained steadily in {HOOD}. After a car show ended at the county fairgrounds at 9 p.m., {D} told the group chat the meet would continue in the big gravel-and-asphalt lot behind the grandstand. About forty cars and eighty spectators stayed. At 10:52 p.m., a white Nissan 370Z that {D} was driving slid out of a spin and hit a food truck and a pickup truck parked in the vendor row, then a section of fence and a light pole. {V}, who runs the food truck and owns the pickup, counted $13,700 in damage to the two vehicles. Deputies took the first 911 call at 10:55 p.m. {D} says the wet pavement, not {D.his} driving, caused the slide."
+            "On the night of {DATE} it rained steadily in {HOOD}. After a car show ended at the county fairgrounds at 9 p.m., {D} told the group chat the meet would continue in the big gravel-and-asphalt lot behind the grandstand. About forty cars and eighty spectators stayed. At 10:52 p.m., a white Nissan 370Z that {D.he} was driving slid out of a spin and hit a food truck and a pickup truck parked in the vendor row, then a section of fence and a light pole. {V}, who runs the food truck and owns the pickup, counted $13,700 in damage to the two vehicles. Deputies took the first 911 call at 10:55 p.m. {D.He} says the wet pavement, not {D.his} driving, caused the slide."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Fairgrounds Gate Camera", "At 10:52 p.m. a white car slides sideways across the lot and strikes the vendor row. The same car had spun in the same area at 10:31, 10:38 and 10:44 p.m."),
@@ -189,7 +189,7 @@ extension StoryVariants {
                             .direct("What did you find?", "\"A food truck with its side caved in, a pickup pushed against it, a fence section down and a light pole leaning. Glass on the pavement.\""),
                             .direct("What did the marks tell you?", "\"Four sets of spin marks in the same area, one running sixty feet from the middle of the lot to the vendor row. Wet roads don't draw circles like that.\""),
                             .direct("Where was the Nissan?", "\"We found it behind {DL}'s house the next morning with the right front crushed.\""),
-                            .cross("You weren't there when it happened?", "\"No. Thirteen minutes later.\""),
+                            .cross("You weren't there when it happened?", "\"No. Thirteen minutes later. I arrived thirteen minutes after it happened.\""),
                             .cross("It was raining hard?", "\"A steady rain. The lot was wet and the north end had standing water.\""),
                             .cross("Cones were set in front of the vendor row?", "\"Yes, twenty-five feet out. The car went through them.\"")
                         ]),
@@ -225,7 +225,7 @@ extension StoryVariants {
                             .direct("What happened at 9:30?", "\"I walked back and told {DL} the lot was closed to cars after 9. {D.He} said they'd be quick.\""),
                             .direct("Did you tell anyone else?", "\"I told the show manager. He said he'd handle it. I went back to the gate.\""),
                             .cross("You didn't call deputies at 9:30?", "\"No. I thought they'd leave.\""),
-                            .cross("You can't say what was said to the vendors?", "\"No. I wasn't there.\"")
+                            .cross("You can't say what was said to the vendors?", "\"No. I wasn't there. I can't say what was said to the vendors.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -237,7 +237,7 @@ extension StoryVariants {
                             .direct("What did you review?", "\"The weather record, photos of the lot, and the in-car video. I also tested a sample of the surface.\""),
                             .direct("What did you find?", "\"A thin wet film over polished asphalt and a gravel patch at the north end cuts friction badly. A rear-drive car can lose the rear at fairly low speed there.\""),
                             .direct("Does the video show {DL} braking?", "\"Yes. Hard braking at the start of the slide. Braking on that surface makes the slide worse.\""),
-                            .cross("{DL} had spun on the same surface three times before?", "\"The video shows that.\""),
+                            .cross("{DL} had spun on the same surface three times before?", "\"The video shows that. {DL} had spun on the same surface three times before.\""),
                             .cross("Doing donuts on wet asphalt makes a slide more likely?", "\"Yes. It increases the risk.\""),
                             .cross("A careful driver would have stopped?", "\"A careful driver would not have been there.\"")
                         ])
@@ -247,7 +247,7 @@ extension StoryVariants {
         aggravating: ["{DL} was told the lot was closed to driving at 9:30 p.m.", "{DL} spun on the same wet pavement four times beside parked trucks"],
         mitigating: ["No prior criminal record", "{DL} has offered to repay part of the damage", "No one was hurt"],
         victimImpacts: ["{VL}: \"I was inside. If that truck had come in a few feet further, I'd have been under it. Two weeks without events cost me more than the repair.\""],
-        allocutions: ["\"I told people to stay behind the cones, and I still put them in the way. I'm sorry for what it did to {VL}'s work.\""],
+        allocutions: ["\"The rain ended our car show, and I thought we could keep the meet going in the back lot. I was told it was closed to cars, and I did a few spins anyway because I figured the wet pavement made it slower. I lost control and hit {VL}'s food truck. I'm sorry for the damage to {VL}'s work, and I should have stayed to talk.\""],
         guiltyTruths: ["{DL} had planned the spins on the wet lot and told a friend beforehand it would be 'the best slide night yet.'"],
         innocentTruths: ["The north end of the lot had standing water from a blocked drain that the fairgrounds had been told about in the spring."],
         moods: [.divided], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -267,7 +267,7 @@ extension StoryVariants {
                 .direct("What happened at 10:52?", "\"I started a turn and the rear came around. I braked. It got worse. I couldn't stop it.\""),
                 .direct("What did you do after?", "\"I stopped, looked, saw the truck. I told people to go because I panicked.\""),
                 .cross("You said on camera 'the rain makes it better.'", "\"I did. I was wrong about that.\""),
-                .cross("You spun four times on that surface before the slide.", "\"Yes.\""),
+                .cross("You spun four times on that surface before the slide.", "\"Yes. I spun four times on that surface before the slide.\""),
                 .cross("You were twenty-five feet from the vendor row.", "\"I thought that was enough. It wasn't.\""),
                 .cross("You left and didn't talk to {V}.", "\"I was scared. I would handle it differently now.\"")
             ],

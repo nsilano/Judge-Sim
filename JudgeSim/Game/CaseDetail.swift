@@ -392,7 +392,7 @@ enum DefendantProfiles {
             education = "BSN, East Carolina University, \(grad(22)); Master of Science in Nursing, \(grad(26))."
         } else if has(["lawyer", "attorney"]) && !selfDescribed {
             careerAge = 25
-            education = "Bachelor's degree from \(rng.pick(["East Carolina University", "UNC Wilmington", "NC State University"])), \(grad(22)); law degree, Campbell University School of Law, \(grad(25))."
+            education = "Bachelor's degree from \(Variety.pick(["East Carolina University", "UNC Wilmington", "NC State University", "UNC Charlotte", "Appalachian State University", "UNC Greensboro", "Western Carolina University", "North Carolina A&T State University", "Elon University"], rng: &rng)), \(grad(22)); law degree, Campbell University School of Law, \(grad(25))."
         } else if has(["architect"]) && !has(["armorer"]) {
             careerAge = 23
             education = "Bachelor of Architecture, NC State University, \(grad(23))."
@@ -432,7 +432,7 @@ enum DefendantProfiles {
         } else if (has(["software", "engineer", "account", "cpa", "founder", "ceo", "executive", "pharmaceutical", "teacher", "real estate", "sales manager",
                        "financial advisor", "underwriter", "media coordinator", "novelist", "columnist", "director", "company president"]) && !selfDescribed) {
             careerAge = 22
-            education = "Bachelor's degree from \(rng.pick(["East Carolina University", "UNC Wilmington", "NC State University"])), \(grad(22))."
+            education = "Bachelor's degree from \(Variety.pick(["East Carolina University", "UNC Wilmington", "NC State University", "UNC Charlotte", "Appalachian State University", "UNC Greensboro", "Western Carolina University", "North Carolina A&T State University", "Elon University"], rng: &rng)), \(grad(22))."
         } else if has(["police", "sheriff", "sergeant", "deputy", "officer", "detention"]) {
             careerAge = 21
             education = "Associate degree in criminal justice, Hollis Community College, \(grad(20)); Basic Law Enforcement Training, \(grad(21))."
@@ -520,11 +520,17 @@ enum DefendantProfiles {
                 let sideStart = max(start, anchorYear - rng.int(1...3))
                 timeline.append((sideStart, Job(title: "Part-time \(job)", employer: employer(for: job, rng: &rng), years: "\(sideStart)–present", current: true)))
             } else if rng.chance(0.3) && !professional && !has(["rideshare", "driver"]) {
-                let side = rng.pick(["weekend server", "weekend security guard", "weekend delivery driver", "part-time rideshare driver"])
+                let side = Variety.pick(["weekend server", "weekend security guard", "weekend delivery driver", "part-time rideshare driver", "weekend warehouse loader", "weekend landscaper", "weekend bartender", "weekend cashier", "weekend stocker", "weekend cleaner"], rng: &rng)
                 let sideEmployer: String = switch side {
-                case "weekend server": rng.pick(["The Lantern Row Tavern", "Pell Avenue Diner"])
+                case "weekend server": rng.pick(["The Lantern Row Tavern", "Pell Avenue Diner", "Harbor House Seafood", "The Brickyard Grill", "Dockside Oyster Bar", "Front Street Grill", "Cane Creek Family Restaurant", "Wexley Pizza House"])
                 case "weekend security guard": "Allied Coastal Security"
                 case "weekend delivery driver": "Coastal Courier Services"
+                case "weekend warehouse loader": rng.pick(["Hollis Freight Depot", "Cane Creek Distribution", "Port Hollis Cold Storage", "Wexley Parcel Hub"])
+                case "weekend landscaper": rng.pick(["Green Row Lawn Care", "Dunmore Mills Landscaping", "Bayard Tree and Turf", "Pinewood Grounds Crew"])
+                case "weekend bartender": rng.pick(["The Lantern Row Tavern", "Dockside Oyster Bar", "The Brickyard Grill", "Front Street Grill"])
+                case "weekend cashier": rng.pick(["Bayard Quick Stop", "Cane Creek Hardware", "Pell Avenue Pharmacy", "Wexley Grocery"])
+                case "weekend stocker": rng.pick(["Harvest Table Market", "Hollis Discount Foods", "Port Hollis Home Supply", "Wexley Grocery"])
+                case "weekend cleaner": rng.pick(["Bright Path Janitorial", "Coastal Office Cleaning", "Hollis County Maid Service", "Dunmore Mills Building Services"])
                 default: "self-employed (rideshare apps)"
                 }
                 let sideStart = max(start, anchorYear - rng.int(1...3))
@@ -599,7 +605,7 @@ enum DefendantProfiles {
         facts.merge(FamilyFacts.from(background: background))
         let family: String
         if (student || age < 20) && facts.minChildren == 0 && facts.status == nil {
-            family = rng.pick(["Single, no children.", "Single, no children.", "In a relationship, no children."])
+            family = Variety.pick(["Single, no children.", "Single, no children.", "In a relationship, no children.", "Engaged, no children.", "In a long-term relationship, no children.", "Dating someone seriously, no children.", "Single, no children, and close to a large extended family.", "Single, no children; helps raise a younger sibling.", "Single, no children, and lives close to both parents."], rng: &rng)
         } else {
             let maxChildren = max(facts.minChildren, min(3, max(0, (age - 18) / 4)))
             let drawn = maxChildren == 0 ? 0 : rng.int(0...maxChildren)
@@ -628,7 +634,7 @@ enum DefendantProfiles {
         } else if highSchool {
             residence = background.contains("foster care") ? "Lives with a foster family in \(town)." : "Lives with family on \(street) in \(town)."
         } else if student {
-            residence = rng.pick(["Lives in student housing.", "Lives with family on \(street) in \(town)."])
+            residence = rng.pick(["Lives in student housing.", "Lives with family on \(street) in \(town).", "Lives in an off-campus apartment with roommates.", "Lives with a roommate in an apartment near campus.", "Rents a room in a shared house in \(town).", "Lives in a dormitory on campus.", "Lives with parents on \(street) in \(town).", "Lives with family in \(town) and commutes to class."])
         } else {
             // A married person, a parent, or someone with a career has a home of their own, not a friend's spare room.
             let settled = professional || family.hasPrefix("Married") || family.hasPrefix("Widowed") || !family.contains("no children")
@@ -890,10 +896,10 @@ enum Investigations {
         case .records:
             let reporter = victimName ?? organization(values) ?? "the reporting party"
             assigned = CaseDates.add(rng.int(2...9), to: incident)
-            log(incident, .init(when: CaseDates.dayYear(incident), what: rng.pick([
+            log(incident, .init(when: CaseDates.dayYear(incident), what: Variety.pick([
                 "Complaint received by \(detective.agency) from \(reporter).",
                 "\(reporter.capitalizedFirst) reports suspected \(lossNoun(facts)) to \(detective.agency).",
-                "\(detective.agency) opens a file after \(reporter) brings in \(facts.money ? "account statements" : "records and screenshots")."])))
+                "\(detective.agency) opens a file after \(reporter) brings in \(facts.money ? "account statements" : "records and screenshots").", "\(reporter.capitalizedFirst) contacts \(detective.agency) about suspected \(lossNoun(facts)).", "\(detective.agency) receives a written complaint from \(reporter) describing suspected \(lossNoun(facts)).", "A complaint about suspected \(lossNoun(facts)) is brought to \(detective.agency) by \(reporter).", "\(reporter.capitalizedFirst) meets with \(detective.agency) to report suspected \(lossNoun(facts)).", "\(detective.agency) opens an inquiry after \(reporter) reports suspected \(lossNoun(facts)).", "\(reporter.capitalizedFirst) brings a complaint about suspected \(lossNoun(facts)) to \(detective.agency)."], rng: &rng)))
             log(assigned, .init(when: CaseDates.day(assigned), what: "\(detective.display) assigned as lead investigator; preservation letters sent for \(facts.money ? "bank and business records" : "account, device, and provider records")."))
             day = CaseDates.days(from: incident, to: assigned)
             arrest = CaseDates.add(rng.int(45...150), to: incident)
@@ -914,7 +920,7 @@ enum Investigations {
             let opened = CaseDates.add(-rng.int(18...45), to: incident)
             log(opened, .init(when: CaseDates.dayYear(opened), what: facts.setting == .drugs
                 ? rng.pick(["Narcotics investigation opens after neighbor complaints about short-stay traffic on \(street).",
-                            "\(detective.display) begins surveillance of a residence on \(street) in \(town)."])
+                            "\(detective.display) begins surveillance of a residence on \(street) in \(town).", "A tip about frequent late-night visitors to a residence on \(street) starts a narcotics investigation.", "\(detective.display) receives information about drug sales from a home on \(street) in \(town) and opens a file.", "Narcotics investigation opens after a confidential source describes sales from a residence on \(street).", "Repeated patrol calls to \(street) lead \(detective.display) to open a narcotics investigation.", "\(detective.display) opens a narcotics investigation after a pattern of brief visits to a residence on \(street) in \(town).", "The drug unit starts watching a residence on \(street) in \(town) after neighbor complaints and a tip from a source."])
                 : "\(detective.display) develops information tying a residence on \(street) in \(town) to the investigation."))
             if facts.mentions(["controlled buy", "controlled buys"]) {
                 let firstBuy = CaseDates.add(rng.int(4...9), to: opened)
@@ -932,7 +938,7 @@ enum Investigations {
             let reportDay = CaseDates.add(rng.int(0...3), to: incident)
             log(reportDay, .init(when: CaseDates.dayYear(reportDay), what: rng.pick([
                 "\(reporter.capitalizedFirst) reports the incident to \(detective.agency); \(officer.display) takes the initial report.",
-                "\(officer.display) takes a report from \(reporter) about events in \(town)."])))
+                "\(officer.display) takes a report from \(reporter) about events in \(town).", "\(reporter.capitalizedFirst) calls \(detective.agency) to report the incident; \(officer.display) is sent to take the statement.", "\(officer.display) meets \(reporter) in \(town) and takes a written report.", "\(reporter.capitalizedFirst) tells \(officer.display) what happened; \(officer.display) documents it and forwards the report to \(detective.agency).", "\(detective.agency) logs a report from \(reporter) about an incident in \(town).", "\(reporter.capitalizedFirst) comes forward to \(detective.agency); \(officer.display) takes the initial report.", "\(officer.display) takes a statement from \(reporter) and opens an incident report."])))
             assigned = CaseDates.add(rng.int(1...3), to: reportDay)
             log(assigned, .init(when: CaseDates.day(assigned), what: "\(detective.display) assigned as lead investigator."))
             day = CaseDates.days(from: incident, to: assigned)
@@ -941,9 +947,9 @@ enum Investigations {
             log(incident, .init(when: "\(CaseDates.dayYear(incident)), \(time ?? "")",
                                   what: "Hollis County 911 Communications receives a call reporting \(incidentNoun(facts, charges: charges)) \(place)."))
             log(incident, .init(when: "\(CaseDates.day(incident)), \(arrival ?? "")",
-                                  what: "\(officer.display) arrives, " + rng.pick(["secures the scene, and starts a body-camera recording.",
+                                  what: "\(officer.display) arrives, " + Variety.pick(["secures the scene, and starts a body-camera recording.",
                                                                                  "checks on the people present, and calls for a supervisor.",
-                                                                                 "requests EMS, separates the witnesses, and keeps the body camera running."])))
+                                                                                 "requests EMS, separates the witnesses, and keeps the body camera running.", "separates the people involved and begins taking names.", "checks for injuries, secures the area with tape, and activates the body camera.", "speaks with the person who called, then walks the scene before anyone else enters.", "radios for backup and keeps bystanders back from the scene.", "photographs the scene on arrival and asks dispatch for a detective.", "calls for medical help and asks witnesses to wait for statements."], rng: &rng)))
             if !collected.isEmpty {
                 log(incident, .init(when: "\(CaseDates.day(incident)), overnight",
                                       what: "Scene photographed and processed; collected: \(collected.map(\.title).prefix(3).joined(separator: ", "))."))
@@ -1014,13 +1020,13 @@ enum Investigations {
 
         // Gaps both sides will argue about
         var local = values
-        local["NEARBY"] = rng.pick(["a pharmacy", "a gas station", "a laundromat", "a pawn shop", "an auto parts store", "a corner market", "a church"]) + " on \(street)"
+        local["NEARBY"] = Variety.pick(["a pharmacy", "a gas station", "a laundromat", "a pawn shop", "an auto parts store", "a corner market", "a church", "a barbershop", "a dollar store", "a hardware store", "a car wash", "a convenience store", "a bank branch"], rng: &rng) + " on \(street)"
         local["PLACESHORT"] = street
-        local["SURFACE"] = rng.pick(["the door frame", "the counter", "the car door", "the railing", "the window ledge"])
+        local["SURFACE"] = Variety.pick(["the door frame", "the counter", "the car door", "the railing", "the window ledge", "the doorknob", "the tailgate", "the handle", "the mailbox", "the porch railing", "the gate latch"], rng: &rng)
         local["N"] = "\(rng.int(3...7))"
         local["M"] = "\(rng.int(14...30))"
-        local["FEW"] = rng.pick(["two", "three", "one"])
-        local["HOURS"] = rng.pick(["two and a half", "three", "nearly four"])
+        local["FEW"] = Variety.pick(["two", "three", "one", "four", "five", "a handful", "two or three", "six", "a few of them"], rng: &rng)
+        local["HOURS"] = Variety.pick(["two and a half", "three", "nearly four", "two", "four", "five", "three and a half", "four and a half", "one and a half"], rng: &rng)
         local["ROADNAME"] = values["ROAD"] ?? street
         local["LIGHT"] = time.map { Clock.partOfDay($0) == "night" ? "the dark, lit by headlights" : "traffic going by" } ?? "traffic going by"
         local["CONTAINER"] = facts.origin == .stop ? "car" : "house"
@@ -1061,13 +1067,13 @@ enum Investigations {
             scene = "\((values["ROAD"] ?? street).capitalizedFirst) near \(town): " + rng.pick([
                 "tire marks measured, vehicle positions photographed, weather and lighting noted.",
                 "a two-lane road, posted 45 mph, " + (Clock.partOfDay(time) == "night" ? "no streetlights." : "dry pavement."),
-                "the roadway was photographed and marked before the vehicles were moved."])
+                "the roadway was photographed and marked before the vehicles were moved.", "skid marks and debris photographed, with measurements taken from fixed points along the roadway.", "the shoulder, the lane lines, and the final resting position of each vehicle were photographed and measured.", "a rural two-lane road with no marked shoulder; the roadway width was measured and the approach photographed from both directions.", "debris on the pavement was marked and photographed before the road was reopened.", "the lanes were photographed from both directions, and points of impact were marked with paint.", "the road surface, signage, and sight lines were photographed from the driver's position."])
         case .drugs:
             scene = facts.origin == .warrant
                 ? "A residence on \(street) in \(town). Rooms were photographed before and after the search."
                 : "\(street.capitalizedFirst) in \(town). The vehicle was photographed and inventoried."
         case .scene:
-            scene = "\(place.capitalizedFirst). Lighting: \(Clock.partOfDay(time) == "night" ? rng.pick(["one working streetlight", "lit storefronts", "dark, no streetlights"]) : "daylight"). The area was photographed and measured before evidence was moved."
+            scene = "\(place.capitalizedFirst). Lighting: \(Clock.partOfDay(time) == "night" ? Variety.pick(["one working streetlight", "lit storefronts", "dark, no streetlights", "a single porch light", "a flickering streetlight", "light from a nearby parking lot", "headlights only", "a security light on the building", "dim, with one lamp at the corner"], rng: &rng) : "daylight"). The area was photographed and measured before evidence was moved."
         }
 
         let sheet = CaseFactSheet(setting: facts.setting, incident: incident, time: time, place: place, street: street, town: town,
@@ -1110,7 +1116,7 @@ enum Investigations {
         let law = charges.first?.lawID.lowercased() ?? ""
         switch facts.setting {
         case .road: return facts.mentions(["pedestrian", "cyclist", "crosswalk"]) ? "a person struck by a vehicle" : "a crash"
-        case .drugs: return facts.mentions(["overdose", "unresponsive", "died"]) ? "an unresponsive person" : "suspected drug activity"
+        case .drugs: return facts.mentions(["overdose", "unresponsive", "died"]) ? "an unresponsive person" : (facts.mentions(["undercover", "controlled buy", "controlled purchase", "informant"]) ? "a drug sale" : "suspected drug activity")
         default: break
         }
         if law.contains("robbery") { return "a robbery" }
@@ -1119,7 +1125,7 @@ enum Investigations {
         if law.contains("arson") || law.contains("burning") { return "a fire" }
         if law.contains("murder") || law.contains("manslaughter") { return facts.mentions(["shot", "gun"]) ? "shots fired and a person down" : "a person seriously hurt" }
         if law.contains("riot") || law.contains("disorderly") { return "a disturbance" }
-        if facts.category == .violent || facts.category == .family { return facts.mentions(["gun", "shot", "pistol"]) ? "shots fired" : "an assault" }
+        if facts.category == .violent || facts.category == .family { return facts.mentions(["gunshot", "shots fired", "fired a shot", "shot at", "was shot", "shooting"]) ? "shots fired" : "an assault" }
         return "a disturbance"
     }
 
@@ -1137,9 +1143,9 @@ enum Investigations {
     private static func obtainedPhrase(_ item: Evidence, rng: inout SeededRNG) -> String {
         let title = item.title
         switch item.kind {
-        case .video: return rng.pick(["\(title) collected and copied to the case file.", "\(title) obtained and preserved.", "\(title) downloaded and reviewed."])
-        case .digital: return rng.pick(["\(title) obtained by search warrant.", "\(title) returned by the provider under a warrant.", "\(title) extracted and reviewed."])
-        case .document: return rng.pick(["\(title) obtained by subpoena.", "\(title) produced to investigators.", "\(title) collected and reviewed."])
+        case .video: return Variety.pick(["\(title) collected and copied to the case file.", "\(title) obtained and preserved.", "\(title) downloaded and reviewed.", "\(title) retrieved from the business and copied to the case file.", "\(title) secured and logged into evidence.", "\(title) copied from the source and checked against the original.", "\(title) preserved in its original format.", "\(title) provided to investigators and reviewed frame by frame.", "\(title) gathered and logged."], rng: &rng)
+        case .digital: return Variety.pick(["\(title) obtained by search warrant.", "\(title) returned by the provider under a warrant.", "\(title) extracted and reviewed.", "\(title) obtained by court order.", "\(title) recovered from the device and reviewed.", "\(title) produced by the provider and verified.", "\(title) imaged and examined by a forensic analyst.", "\(title) copied from the device under the warrant.", "\(title) extracted, hashed, and reviewed."], rng: &rng)
+        case .document: return Variety.pick(["\(title) obtained by subpoena.", "\(title) produced to investigators.", "\(title) collected and reviewed.", "\(title) obtained from the custodian of records.", "\(title) provided by the business at investigators' request.", "\(title) gathered and logged into evidence.", "\(title) secured and copied for the file.", "\(title) requested and received by investigators.", "\(title) reviewed by the lead investigator."], rng: &rng)
         default: return "\(title) obtained."
         }
     }
@@ -1149,44 +1155,44 @@ enum Investigations {
         let titles = state.map { $0.title.lowercased() }.joined(separator: " ")
         switch facts.origin {
         case .stop:
-            return rng.pick(["Identity was never in question: \(dl) was the driver when \(officer.display) stopped the car.",
+            return Variety.pick(["Identity was never in question: \(dl) was the driver when \(officer.display) stopped the car.",
                              "\(dl) was behind the wheel at the stop and produced a license.",
-                             "\(officer.display) identified \(dl) at the roadside from a driver's license."])
+                             "\(officer.display) identified \(dl) at the roadside from a driver's license.", "\(officer.display) checked \(dl)'s license at the stop, and the registration matched the vehicle.", "\(dl) was the only person in the vehicle when it was stopped.", "The in-car camera recorded \(dl) handing over a license and registration.", "\(dl) gave \(officer.display) a driver's license at the window, and the dashboard camera recorded the exchange.", "Identity was established at the stop by license, and \(dl) did not dispute being the driver.", "\(officer.display) ran \(dl)'s license through dispatch at the roadside."], rng: &rng)
         case .warrant:
-            return rng.pick(["Lease and utility records tied \(dl) to the residence, and \(dl) was present when the warrant was served.",
+            return Variety.pick(["Lease and utility records tied \(dl) to the residence, and \(dl) was present when the warrant was served.",
                              "\(dl) was inside when the warrant was executed; the lease is in \(dl)'s name.",
-                             "Surveillance and records connected \(dl) to the house before the warrant was served."])
+                             "Surveillance and records connected \(dl) to the house before the warrant was served.", "Mail and utility bills addressed to \(dl) were found at the residence, and \(dl) was there when officers entered.", "Neighbors and the landlord's records placed \(dl) at the address.", "\(dl) answered the door when the warrant was served and confirmed living there.", "\(dl)'s driver's license listed the address, and \(dl) was home when officers arrived.", "Officers had watched \(dl) come and go from the house for weeks before the warrant.", "\(dl) was found inside the residence, and the keys on \(dl) opened the front door."], rng: &rng)
         case .records:
             if facts.key == "perjuryTrial" { return "Comparing \(dl)'s sworn testimony with phone records and messages showed the testimony was false." }
             if facts.category == .cyber {
-                return rng.pick(["Server logs and account records traced the activity to devices and accounts associated with \(dl).",
+                return Variety.pick(["Server logs and account records traced the activity to devices and accounts associated with \(dl).",
                                  "Login records, IP addresses, and payment trails led back to \(dl).",
-                                 "The account activity was traced to \(dl)'s credentials and home connection."])
+                                 "The account activity was traced to \(dl)'s credentials and home connection.", "Subscriber records tied the accounts to an address where \(dl) lived.", "Device and login records linked the activity to \(dl)'s phone and laptop.", "The provider's records connected the accounts to an email address used by \(dl).", "IP logs matched the connection at \(dl)'s home, and the timing lined up with the activity.", "Forensic examination of the devices showed the accounts were accessed from \(dl)'s equipment.", "The account recovery information led to \(dl)'s phone number."], rng: &rng)
             }
-            return rng.pick(["The records traced the money to accounts associated with \(dl).",
+            return Variety.pick(["The records traced the money to accounts associated with \(dl).",
                              "Bank records showed the funds landing in accounts \(dl) controlled.",
-                             "An audit flagged the transactions, and the paperwork bore \(dl)'s name or credentials."])
+                             "An audit flagged the transactions, and the paperwork bore \(dl)'s name or credentials.", "A forensic accountant traced the transfers to accounts in \(dl)'s name.", "Deposit records showed the money going into an account that \(dl) controlled.", "Bank records tied the withdrawals to \(dl) through signatures and surveillance images.", "The company's own audit pointed to \(dl) as the person who made the entries.", "Internal records showed the changes were entered under \(dl)'s login.", "Payment records connected the transactions to \(dl)'s business and bank accounts."], rng: &rng)
         case .report:
             if let victimName { return "\(victimName) named \(dl) in the initial report." }
-            return rng.pick(["The report itself identified \(dl).", "Witnesses named \(dl) when the report was taken."])
+            return rng.pick(["The report itself identified \(dl).", "Witnesses named \(dl) when the report was taken.", "\(dl) was named by the person who made the report.", "The caller gave \(dl)'s name to the officer who took the report.", "The report named \(dl) and gave a description that matched.", "Two people identified \(dl) by name when the report was taken.", "The person reporting knew \(dl) and provided a name and address.", "\(dl) was identified in the original report and in later interviews."])
         case .call:
             if facts.setting == .road {
                 if facts.mentions(["paint", "body shop", "debris"]) { return "Vehicle debris and paint transfer from the scene were matched to \(dl)'s vehicle." }
                 if facts.mentions(["walked into", "came forward", "turned"]) { return "\(dl) came forward the next day with a lawyer." }
-                return rng.pick(["\(dl) was at the scene, identified as the driver of one of the vehicles. Identity was not in dispute.",
+                return Variety.pick(["\(dl) was at the scene, identified as the driver of one of the vehicles. Identity was not in dispute.",
                                  "The first officer identified \(dl) at the scene as the driver.",
-                                 "\(dl) was still at the scene when officers arrived and was identified from a driver's license."])
+                                 "\(dl) was still at the scene when officers arrived and was identified from a driver's license.", "\(dl) stayed at the scene and gave \(officer.display) a driver's license and insurance card.", "Identity was not in dispute; \(dl) was identified as the driver by the first officer and by the other driver.", "A witness at the scene pointed out \(dl) as the person who had been driving.", "\(dl) was identified from a license and from the vehicle registration.", "The tag on the vehicle came back to \(dl), who was found at the scene.", "Officers matched \(dl) to the vehicle through the registration, and \(dl) was present at the scene."], rng: &rng)
             }
             if titles.contains("lineup") || titles.contains("identification") { return "A witness picked \(dl) from a photo lineup." }
             if titles.contains("pawn") { return "Pawn records listed an item under \(dl)'s name." }
             if titles.contains("video") || titles.contains("footage") || titles.contains("camera") {
                 return rng.pick(["Video from the area showed someone matching \(dl); a patrol officer recognized \(dl) from the stills.",
-                                 "Stills from the footage were circulated, and a tip named \(dl)."])
+                                 "Stills from the footage were circulated, and a tip named \(dl).", "Detectives circulated stills from the video, and a former coworker recognized \(dl).", "A deputy who knew \(dl) from the neighborhood recognized \(dl) in the footage.", "Clothing and a distinctive walk in the video led investigators to \(dl).", "The footage was shared with local agencies, and an officer identified \(dl) from the stills.", "A tip after the stills were released named \(dl), and the footage matched the description.", "Investigators matched the person on the video to \(dl)'s driver's license photograph."])
             }
-            if arrestSameDay { return rng.pick(["\(dl) was detained at the scene when officers arrived.", "\(dl) was still there when the first officer arrived."]) }
+            if arrestSameDay { return rng.pick(["\(dl) was detained at the scene when officers arrived.", "\(dl) was still there when the first officer arrived.", "\(dl) was on the scene and was detained when the first officer arrived.", "Officers found \(dl) at the location when they arrived and took \(dl) into custody.", "\(dl) was found nearby by the first officers to respond.", "\(dl) remained at the location and was identified when officers arrived.", "\(dl) was located within minutes of the call by the responding officer.", "The first unit on scene found \(dl) there and detained \(dl) while the scene was secured."]) }
             if let victimName, !facts.identity { return "\(victimName) knew \(dl) and named \(dl) to the first officer." }
             if titles.contains("phone") || titles.contains("cell") || titles.contains("text") { return "Phone records pointed to \(dl)." }
-            return rng.pick(["A Crime Stoppers tip named \(dl).", "\(dl) was stopped nearby shortly afterward and matched the description."])
+            return rng.pick(["A Crime Stoppers tip named \(dl).", "\(dl) was stopped nearby shortly afterward and matched the description.", "An anonymous caller gave \(dl)'s name to investigators.", "A neighbor told the lead detective \(dl) had been seen in the area.", "\(dl)'s name came up in interviews with several people who were nearby.", "A witness gave a description, and a patrol officer recognized \(dl) from it.", "A tip to investigators named \(dl).", "Phone calls from two different people led investigators to \(dl)."])
         }
     }
 }

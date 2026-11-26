@@ -42,7 +42,7 @@ extension StoryCases {
                             .direct("Why did you record your calls?", "\"When I saw {VL}'s face on the news, I called the detective. They asked me to keep talking to {DL} and record it.\""),
                             .direct("What did {DL} say on those calls?", "\"That {DL} was in Denver for work, that {D.he} missed me, that we'd go to Portugal in the spring. I could hear the vigil in the background.\""),
                             .cross("{DL} never said anything about hurting {VL}?", "\"Not a word. {D.He} talked about {VL} like {D.he} hung the moon.\""),
-                            .cross("{DL} never said {D.he} wanted a new life without the baby?", "\"Not in those words.\"")
+                            .cross("{DL} never said {D.he} wanted a new life without the baby?", "\"Not in those words. {DL} never said {D.he} wanted a new life without the baby in those words.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Lead detective",
                         direct: ["\"The remains surfaced a mile from {DL}'s alibi.\""],
@@ -74,7 +74,7 @@ extension StoryCases {
         aggravating: ["The victim was pregnant"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{VL}'s parent: \"We lost our child and our grandchild on the same day. It happened on Thanksgiving. Every Thanksgiving from now on, there will be two empty places at our table.\""],
-        allocutions: ["\"I've done things I'm ashamed of. I didn't kill my family.\""],
+        allocutions: ["\"I've done things I'm ashamed of. I lied to everyone for months because I'm a coward, and I lied about the kayak and the lake. That does not make me a murderer. I did not kill my family, and I grieve for {V} and our child. I'd ask the court to listen to the whole truth.\""],
         guiltyTruths: ["A hair caught in the kayak's anchor cleat was later matched to {VL}."],
         innocentTruths: ["One of the burglars confessed years later that {VL} surprised them in a neighbor's yard that morning."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -92,7 +92,7 @@ extension StoryCases {
                 .direct("Why lie to your coworker?", "\"Because I'm a coward. I'd been lying to everyone for months. It doesn't make me a murderer.\""),
                 .direct("Why the passport and cash?", "\"Reporters were camped on my lawn. People spat at me in the grocery store. I wanted to disappear.\""),
                 .cross("You told the coworker you'd 'lost' your spouse three weeks before {VL} vanished.", "\"I said it to explain why I was alone on holidays. It was a lie, a terrible one.\""),
-                .cross("An anchor kit, paid in cash.", "\"Kayaks need anchors.\"")
+                .cross("An anchor kit, paid in cash.", "\"Kayaks need anchors. An anchor kit, paid in cash, is for kayaks.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Prosecutor: \"Do you think {DL} killed {VL}?\"",
@@ -182,8 +182,8 @@ extension StoryCases {
         defenseTheory: ["{DL} believed the chief engineer, poured personal money into the company, and never cashed out. Failure isn't fraud."],
         aggravating: ["The offense caused large monetary losses", "The offense involved forged documents"],
         mitigating: ["{DL} did not profit personally", "No prior criminal record"],
-        victimImpacts: ["{V}: \"I'm seventy-one. That money was the cushion. Now I'm working part-time at a hardware store.\""],
-        allocutions: ["\"I believed we were going to save lives. I cut corners I should never have cut. I'm sorry.\""],
+        victimImpacts: ["{V}: \"I'm seventy-one. That money was the cushion. I put in a good portion of my retirement because the ring sounded like it could have saved a patient of mine. Now I'm working part-time at a hardware store. I feel foolish and frightened.\""],
+        allocutions: ["\"I believed we were going to save lives. My chief engineer told me we were at ninety percent in the lab, and I drafted a letter to a cardiologist to save time. I should have labeled the demo mode and been clearer with investors. I cut corners I should never have cut, and I'm sorry to everyone who invested.\""],
         guiltyTruths: ["A deleted voice memo surfaced: \"If they ever see the raw data, we're done.\""],
         innocentTruths: ["The chief engineer later admitted fabricating the lab numbers shown to {DL}."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -201,7 +201,7 @@ extension StoryCases {
                 .direct("Did you believe the ring worked?", "\"I believed it would. My chief engineer told me we were at 90 percent in the lab.\""),
                 .direct("The hospital letter?", "\"A cardiologist there told me verbally they loved it. I drafted the letter to save time and sent it for signature. I assumed it was signed. I should never have used it without seeing it signed.\""),
                 .direct("The demos?", "\"Demo mode was supposed to be labeled. I didn't make sure it was.\""),
-                .cross("'Do not show raw data to anyone outside. We need the Series B.' Your words.", "\"Startups protect their data.\""),
+                .cross("'Do not show raw data to anyone outside. We need the Series B.' Your words.", "\"Startups protect their data. That's what I meant by those words.\""),
                 .cross("You told {V} the study showed 94 percent.", "\"That's what I was told.\"")
             ],
             objections: [
@@ -263,7 +263,7 @@ extension StoryCases {
                             .direct("Did {DL} call 911 or {VL}'s family?", "\"No. {DL} called no one that night.\""),
                             .direct("What did {DL} say to you?", "\"That {DL} thought {VL} was going to do it anyway and {DL} wanted {VL} to stop suffering.\""),
                             .cross("{DL} was thirty miles away, never physically present?", "\"Thirty miles off. Everything happened through a phone.\""),
-                            .cross("For a year before, {DL} sent hotline numbers and offered rides to appointments?", "\"The messages show that.\"")
+                            .cross("For a year before, {DL} sent hotline numbers and offered rides to appointments?", "\"The messages show that. For a year before, {DL} sent hotline numbers and offered rides.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -275,7 +275,7 @@ extension StoryCases {
                             .direct("What was {DL}'s condition?", "\"A depressed teenager who had just started an antidepressant that carries a warning for agitation and distorted thinking in young people, in a relationship consumed by the other person's suicidality.\""),
                             .direct("How does that matter?", "\"It can produce a kind of hopeless, distorted logic: that the person you love will never stop hurting, and that helping them die is mercy. It's tragic and wrong, but it's illness, not malice.\""),
                             .cross("{DL} understood what the words meant?", "\"Literally, yes. Whether {DL} could weigh the consequences is another question.\""),
-                            .cross("{DL} could have called 911 that night?", "\"Physically, yes.\"")
+                            .cross("{DL} could have called 911 that night?", "\"Physically, yes. {DL} could have called 911 that night.\"")
                         ])
         ],
         prosecutionTheory: ["{D} pressured a vulnerable person into suicide for six weeks, stayed on the call to the end, and called no one. That is culpable negligence that caused a death."],
@@ -368,8 +368,8 @@ extension StoryCases {
                         exam: [
                             .direct("What caused the death in your opinion?", "\"A sudden cardiac arrhythmia in an enlarged heart, triggered by cocaine and the physical exertion of fighting. That can happen whether or not someone is on the floor.\""),
                             .direct("Did the restraint matter?", "\"It was part of the stress. I wouldn't call it the cause.\""),
-                            .cross("You'd agree the restraint was a contributing factor?", "\"A contributing factor, yes.\""),
-                            .cross("Under the law, a contributing cause can be enough?", "\"That's a legal question.\"")
+                            .cross("You'd agree the restraint was a contributing factor?", "\"A contributing factor, yes. I agree the restraint was a contributing factor.\""),
+                            .cross("Under the law, a contributing cause can be enough?", "\"That's a legal question. I'm not the one to say whether a contributing cause can be enough.\"")
                         ])
         ],
         prosecutionTheory: ["{D} knelt on a handcuffed detainee's back and neck for six minutes while {V} said 'I can't breathe' eleven times. That's malice."],
@@ -377,7 +377,7 @@ extension StoryCases {
         aggravating: ["The offense was committed by a public officer", "The victim was restrained and defenseless"],
         mitigating: ["No prior use-of-force complaints in fourteen years"],
         victimImpacts: ["{VL}'s sibling: \"{VL} was in a mental health crisis and needed a doctor. {VL} got six minutes on a concrete floor.\""],
-        allocutions: ["\"I'm sorry for the family's loss. I was doing the job I was trained to do.\""],
+        allocutions: ["\"I'm sorry for the family's loss, and I was doing the job I was trained to do. {V} had just bitten an officer, and I was afraid that if I let up, {V.he} would start fighting again. I heard {V.him} say it, and I'll regret it for as long as I live. I didn't know {V.he} had stopped.\""],
         guiltyTruths: ["An officer on the team later testified {DL} said \"{VL}'s faking\" when another officer asked to roll {VL} over."],
         innocentTruths: ["A cardiologist's review later found {VL}'s heart condition alone could have caused sudden death that day."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "lesserIncluded"],
@@ -391,8 +391,8 @@ extension StoryCases {
             notDone: ["The other four officers' body positions were never separately analyzed."],
             defendantExam: [
                 .direct("Why keep your weight on {VL}?", "\"{VL} had just bitten an officer. I was afraid that if I let up, {VL} would start fighting again. I didn't realize {VL} had stopped.\""),
-                .direct("Did you hear 'I can't breathe'?", "\"I heard it. In fourteen years I've heard it from people who were breathing fine. I'll regret not listening for the rest of my life.\""),
-                .cross("You teach the recovery-position rule.", "\"I do.\""),
+                .direct("Did you hear 'I can't breathe'?", "\"In fourteen years I've heard it from people who were breathing fine. I'll regret not listening for the rest of my life.\""),
+                .cross("You teach the recovery-position rule.", "\"I do. I teach the recovery-position rule.\""),
                 .cross("Two minutes after {VL} stopped moving, you were still there.", "\"I didn't know {VL} had stopped.\"")
             ],
             objections: [
@@ -443,9 +443,9 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did {DL} ask you to do?", "\"Wear masks, spray-paint the window, and push {DL} down in front of the office at a set time. {DL} picked the spot because a store camera would catch it from a distance, not close enough to see faces.\""),
-                            .direct("Who planned it?", "\"{DL}. We rehearsed it in the office parking lot the day before. {DL} told us what to yell.\""),
+                            .direct("Who planned it?", "\"We rehearsed it in the office parking lot the day before. {DL} told us what to yell.\""),
                             .direct("Why did you agree?", "\"{DL} said it would win the election and we'd have jobs in the council office. And the money.\""),
-                            .cross("You lied to police twice before telling this story?", "\"Yes. We were scared.\""),
+                            .cross("You lied to police twice before telling this story?", "\"Yes. We were scared. I lied to police twice before telling this story.\""),
                             .cross("Your story changed after police said you'd face felony assault charges?", "\"That's when we told the truth.\""),
                             .cross("You have an agreement with the State not to be charged?", "\"For a misdemeanor plea, yes.\"")
                         ]),
@@ -456,8 +456,8 @@ extension StoryCases {
                         exam: [
                             .direct("How did the investigation unfold?", "\"We canvassed for days, pulled every camera in a six-block area, and found the hardware store video. That led to the volunteers.\""),
                             .direct("What did it cost?", "\"About 1,900 officer-hours. Two detectives full-time for three weeks.\""),
-                            .cross("{DL} had a bruised cheek and cut lip?", "\"Yes. Minor injuries.\""),
-                            .cross("{DL} had reported threatening voicemails before?", "\"Yes, weeks earlier.\"")
+                            .cross("{DL} had a bruised cheek and cut lip?", "\"Yes. Minor injuries. {DL} had a bruised cheek and cut lip.\""),
+                            .cross("{DL} had reported threatening voicemails before?", "\"Yes, weeks earlier. {DL} had reported threatening voicemails before.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -469,14 +469,14 @@ extension StoryCases {
                             .direct("What did you see that night?", "\"{DL} came into the back office bleeding from the lip, shaking. {DL} wanted to drop out of the race.\""),
                             .direct("What about the $1,800?", "\"The two of them were going to knock doors full-time the last two weeks. That's a stipend, about right.\""),
                             .cross("You weren't outside when it happened?", "\"I was inside working the phones.\""),
-                            .cross("Other full-time volunteers were paid $100 a week?", "\"Part-time ones were.\"")
+                            .cross("Other full-time volunteers were paid $100 a week?", "\"Part-time ones were. I'm not sure about the full-time volunteers.\"")
                         ])
         ],
         prosecutionTheory: ["{D} paid two volunteers to stage an attack for votes, then lied to police and the public for three weeks."],
         defenseTheory: ["{DL} was attacked. The volunteers lied twice, then changed their story to avoid felony charges. The State's case depends on them."],
         aggravating: ["The false report diverted significant public resources"],
         mitigating: ["No prior criminal record"],
-        allocutions: ["\"I've told the truth from the first night.\""],
+        allocutions: ["\"I've told the truth from the first night. Two people in masks knocked me down and punched me, and I still have the scar on my lip. I paid college students to knock on doors for the last two weeks of my campaign. I'm sorry that it was a close election and that people doubt me.\""],
         guiltyTruths: ["A rehearsal video turned up on one volunteer's cloud backup, with {DL}'s voice giving directions."],
         innocentTruths: ["A man arrested for vandalizing another candidate's office later admitted to the attack."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],

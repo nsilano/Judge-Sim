@@ -43,7 +43,7 @@ extension StoryCases {
                             .direct("What did {DL} say during the drive?", "\"That if I didn't come back, there was no reason for either of us to be alive. When we went over the James River bridge, {DL} slowed down and said 'right here would be easy.'\""),
                             .direct("Why didn't you run sooner?", "\"{DL} had my phone. We were on the interstate. At the rest stop I was terrified that if I ran and {DL} caught me, it would be worse. At the gas station I saw a trooper's car across the road and I ran.\""),
                             .cross("You texted {DL} that morning to come by after work?", "\"To talk in the parking lot. Not to get driven to Virginia.\""),
-                            .cross("At the rest stop you walked into the building alone and walked back to the car?", "\"Yes. I've explained why.\""),
+                            .cross("At the rest stop you walked into the building alone and walked back to the car?", "\"Yes. I've explained why. I walked into the building alone and back to the car alone.\""),
                             .cross("You never told anyone at the rest stop you needed help?", "\"There was one person in there, and I was shaking too hard to speak.\"")
                         ]),
             WitnessSeed(name: nil, role: "Virginia State Police trooper",
@@ -54,7 +54,7 @@ extension StoryCases {
                             .direct("What did you see?", "\"{VL} running across the road toward my car, crying, saying 'please, please.' Couldn't hold a pen to fill out a statement for twenty minutes.\""),
                             .direct("What did you find in the car?", "\"{VL}'s phone in the driver's door pocket, and the locks set so only the driver could open the passenger doors.\""),
                             .cross("{DL} stayed at the pump and waited for you?", "\"Yes. {DL} was calm and said they'd been talking.\""),
-                            .cross("Driver-only locks are the factory setting on that car?", "\"I didn't know that.\"")
+                            .cross("Driver-only locks are the factory setting on that car?", "\"I didn't know driver-only locks are the factory setting on that car.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -73,8 +73,8 @@ extension StoryCases {
         defenseTheory: ["{VL} chose to get in, walked into a rest stop alone and walked back out. This was a painful, desperate breakup conversation, not a kidnapping."],
         aggravating: ["{DL} threatened to kill {VL}"],
         mitigating: ["No prior criminal record", "{DL} was in emotional crisis"],
-        victimImpacts: ["{V}: \"I don't drive over bridges anymore. I moved apartments twice.\""],
-        allocutions: ["\"I scared {VL}, and I'm sorry. I wanted one more chance to talk. I would never have hurt {VL}.\""],
+        victimImpacts: ["{V}: \"I don't drive over bridges anymore. I got into that car at the end of a shift and found myself five hours from home. I jumped out at a gas station with nothing but the clothes I had on. I moved apartments twice and I check the mirrors every day.\""],
+        allocutions: ["\"I scared {V}, and I'm sorry. We started driving and talking, and I didn't want it to end, and I kept thinking that if we got far enough we'd work it out. I took the phone because it kept ringing. I never meant to hurt {V.him}. I was in a bad place, and I'm getting help.\""],
         guiltyTruths: ["{DL}'s journal, found later, described the bridge as 'the plan if {VL} says no.'"],
         innocentTruths: ["The rest-stop attendant later said {VL} told them the drive was 'a fight, not a kidnapping.'"],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -152,8 +152,8 @@ extension StoryCases {
                         exam: [
                             .direct("How did the investigation lead to {DL}?", "\"The fraud cards bought specific laptops with recorded serial numbers. Four of those serial numbers were later sold on {DL}'s online store.\""),
                             .direct("What about the prepaid phone?", "\"Bought for cash at a store {DL} visits weekly. We couldn't get video of the purchase.\""),
-                            .cross("{DL} buys hundreds of the same laptops legitimately at liquidation auctions?", "\"The invoices show that.\""),
-                            .cross("A liquidator could sell returned stolen goods without knowing?", "\"It happens.\""),
+                            .cross("{DL} buys hundreds of the same laptops legitimately at liquidation auctions?", "\"The invoices show that. {DL} buys hundreds of the same laptops legitimately at liquidation auctions.\""),
+                            .cross("A liquidator could sell returned stolen goods without knowing?", "\"It happens. A liquidator could sell returned stolen goods without knowing.\""),
                             .cross("You didn't look into the substitute carrier fired for mail theft on that route?", "\"I learned about that after charging {DL}.\"")
                         ])
         ],
@@ -173,7 +173,7 @@ extension StoryCases {
         aggravating: ["The victim was elderly"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{V}: \"I trusted my neighbor. Whoever did this took my good name at the end of my life.\""],
-        allocutions: ["\"I would never steal from {VL}. I help {VL} with everything.\""],
+        allocutions: ["\"I would never steal from {V}. I help {V.him} with everything, and I've brought {V.him} the mail that went to my box by mistake, handing it right over. I buy electronics by the pallet, and I can't tell you where each came from. I'm sorry that {V.he} lost {V.his} good name, and I hope it's restored.\""],
         guiltyTruths: ["The prepaid phone was later found in a bag of {DL}'s shipping supplies."],
         innocentTruths: ["The fired carrier was federally indicted for opening cards in the names of twelve people on the route."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -234,10 +234,10 @@ extension StoryCases {
                         exam: [
                             .direct("What happened when you entered?", "\"We breached, I went in second, and we were all yelling 'Police, search warrant!' I had a vest that says POLICE in white letters. I turned into the hallway and saw a muzzle flash and went down.\""),
                             .direct("How has this affected you?", "\"Two surgeries, eight months of physical therapy. I may not go back to the street.\""),
-                            .cross("The person you were looking for had moved out seven weeks before?", "\"I learned that afterward.\""),
-                            .cross("Shouting 'police' while a door is being rammed in at 5 a.m., to someone asleep, may not be heard clearly?", "\"We were loud.\""),
-                            .cross("It was dark in the hallway; your vest lettering was on your chest, behind your rifle?", "\"Partly behind it.\""),
-                            .cross("{DL} called 911 during the raid?", "\"I've heard that recording.\"")
+                            .cross("The person you were looking for had moved out seven weeks before?", "\"I learned that afterward. The person I was looking for had moved out seven weeks before.\""),
+                            .cross("Shouting 'police' while a door is being rammed in at 5 a.m., to someone asleep, may not be heard clearly?", "\"We were loud. We shouted 'police' as the door was rammed at 5 a.m.\""),
+                            .cross("It was dark in the hallway; your vest lettering was on your chest, behind your rifle?", "\"Partly behind it. In the dark hallway, part of the lettering was hidden.\""),
+                            .cross("{DL} called 911 during the raid?", "\"I've heard that recording. {DL} called 911 during the raid.\"")
                         ]),
             WitnessSeed(name: nil, role: "Narcotics team sergeant",
                         direct: ["\"The warrant was signed by a magistrate.\""],
@@ -247,7 +247,7 @@ extension StoryCases {
                             .direct("Why a no-knock warrant?", "\"The target was believed to keep firearms and had a history of fleeing. A magistrate approved no-knock entry.\""),
                             .direct("Was the team announced?", "\"Every member yelled 'Police, search warrant' as we breached.\""),
                             .cross("You didn't check whether the target still lived there?", "\"Our information was nine weeks old. We should have checked.\""),
-                            .cross("You found no drugs and no evidence of any crime in the house?", "\"Nothing at all.\"")
+                            .cross("You found no drugs and no evidence of any crime in the house?", "\"Nothing at all. We found no drugs and no evidence of any crime in the house.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -265,8 +265,8 @@ extension StoryCases {
         defenseTheory: ["Police rammed the wrong house at 5 a.m. on a stale warrant. {DL}, asleep, believed {D.he} was being robbed, fired in self-defense, and called 911 for help."],
         aggravating: ["The victim was a law enforcement officer performing official duties"],
         mitigating: ["{DL} had no criminal record", "{DL} called 911 believing {D.he} was the victim"],
-        victimImpacts: ["{OFF}: \"I don't hate {DL}. I hate that my career might be over because of bad information.\""],
-        allocutions: ["\"I would never shoot a police officer knowingly. I thought I was going to die in my own bed.\""],
+        victimImpacts: ["{OFF}: \"I don't hate {D.him}. I hate that my career might be over because of bad information. We went in on a warrant at the wrong address, and the resident defended the home. I was hit, and I'm lucky to be alive. I wish the department had checked the address one more time.\""],
+        allocutions: ["\"I would never shoot a police officer knowingly. A crash like a car hit the house, and there was screaming and flashlights, and I grabbed my pistol. I thought I was going to die in my own bed. I've been sick about it since. I'm sorry to the officer who was hurt at the wrong house.\""],
         guiltyTruths: ["A neighbor's doorbell camera later showed officers knocking and announcing for ten seconds before ramming."],
         innocentTruths: ["The body camera's audio, enhanced later, shows the 'police' shouts began only after the door was already down."],
         moods: [.divided], doctrines: ["selfDefense", "searchSeizure"],
@@ -335,7 +335,7 @@ extension StoryCases {
                             .direct("Was the fentanyl level alone fatal?", "\"At 14 nanograms per milliliter, in someone without high tolerance, it's in the range we routinely see as fatal by itself.\""),
                             .direct("Would {VL} have died without the fentanyl?", "\"No. The alcohol and sedative levels were modest. Without the fentanyl, I would not expect death.\""),
                             .cross("You certified the cause as combined toxicity?", "\"Yes, because all three contributed.\""),
-                            .cross("The sedative and alcohol made the fentanyl more dangerous?", "\"They did.\"")
+                            .cross("The sedative and alcohol made the fentanyl more dangerous?", "\"They did. The sedative and alcohol made the fentanyl more dangerous.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Overdose task force detective",
                         direct: ["\"The texts are a sale.\""],
@@ -345,7 +345,7 @@ extension StoryCases {
                             .direct("What did you find?", "\"The texts, the empty bag matching the bag in {DL}'s apron, and three more pills, all fentanyl.\""),
                             .direct("What did {DL} say?", "\"That {DL} sold {VL} two pills at cost and thought they were real oxycodone.\""),
                             .cross("{DL} had a documented opioid addiction?", "\"Years of it. It's in {D.his} medical records.\""),
-                            .cross("No evidence {DL} sold to anyone but {VL}?", "\"None we found.\"")
+                            .cross("No evidence {DL} sold to anyone but {VL}?", "\"None we found. There's no evidence {DL} sold to anyone but {VL}.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -357,7 +357,7 @@ extension StoryCases {
                             .direct("What is your work?", "\"I treat people with opioid addiction.\""),
                             .direct("What's typical of people who sell a few pills to friends?", "\"They're almost always addicted themselves, splitting what they buy to afford their own supply. They usually believe the pills are what the label says.\""),
                             .direct("Does {DL}'s situation fit that pattern?", "\"Yes. A documented opioid use disorder, a few pills, and a price that matched what {D.he} paid.\""),
-                            .cross("Sharing pills at cost still spreads fentanyl, doesn't it?", "\"Yes. It does.\""),
+                            .cross("Sharing pills at cost still spreads fentanyl, doesn't it?", "\"Yes. It does. Sharing pills at cost still spreads fentanyl.\""),
                             .cross("It doesn't matter to {VL}'s family whether {DL} was a dealer or a user?", "\"No. It matters to the law.\"")
                         ])
         ],
@@ -366,7 +366,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["{DL} has an opioid use disorder and was not selling for profit", "No prior criminal record"],
         victimImpacts: ["{VL}'s parent: \"Two kids who worked together, laughed together. One is gone and one is going to prison. Find whoever is making these pills.\""],
-        allocutions: ["\"{VL} was my best friend at work. I'd take those pills back in a heartbeat. I'm in treatment now.\""],
+        allocutions: ["\"{V} was my best friend at work. {V.He} asked, and I had some, and I charged what I paid. I thought they were real. I'd take those pills back in a heartbeat. I'm in treatment now, and I'll live with this for the rest of my life.\""],
         guiltyTruths: ["Messages later showed {DL} selling to six other coworkers at a markup."],
         innocentTruths: ["{DL}'s online supplier was later indicted for selling counterfeit pills advertised as pharmacy-grade."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -439,7 +439,7 @@ extension StoryCases {
                             .direct("What is your job?", "\"I run the casino's surveillance room. We keep video of the gaming floor and a record of every players' card swipe.\""),
                             .direct("How do you know it's {DL}?", "\"The players' card in {DL}'s name, and the face on our camera, which matches the ID scanned when the card was issued.\""),
                             .direct("How long was {DL} at the machine that night?", "\"From 10:12 to 11:50 p.m., by the card records, and the video matches.\""),
-                            .cross("You were only asked to pull that one night, not {DL}'s other visits?", "\"Just that one night.\""),
+                            .cross("You were only asked to pull that one night, not {DL}'s other visits?", "\"Just that one night. I was only asked to pull that one night.\""),
                             .cross("You can't say anything about {DL}'s memory?", "\"My cameras record where people stand, not what they remember.\"")
                         ])
         ],
@@ -460,7 +460,7 @@ extension StoryCases {
         defenseTheory: ["{DL} hid gambling from everyone, even in {D.his} own memory. Several movie nights blurred together. A false memory isn't perjury; perjury requires knowing falsehood."],
         aggravating: ["The false testimony was given to secure an acquittal in a violent felony trial"],
         mitigating: ["No prior criminal record", "{DL} is in treatment for a gambling disorder"],
-        allocutions: ["\"I believed what I said. I've learned how much my addiction made me lie, even to myself.\""],
+        allocutions: ["\"I believed what I said under oath. We had movie nights almost every weekend, and I hid my casino trips from my partner and from myself. I've learned how much my addiction made me lie, even to myself. I'm sorry for the confusion in that courtroom. I'm in treatment, and I'll tell the truth from now on.\""],
         guiltyTruths: ["A text from {DL} to a friend the night of the robbery read: \"at the casino again, don't tell {ALT}.\""],
         innocentTruths: ["Another jail call showed {DL} asking {ALT}, 'Was that the night of the casino or movie night? I can't remember.'"],
         moods: [.indifferent], doctrines: ["burdenOfProof"],

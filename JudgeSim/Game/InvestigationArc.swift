@@ -46,15 +46,56 @@ enum InvestigationArc {
             if title.contains("hit and run") || title.contains("death by vehicle") { return "a crash" }
             if title.contains("impaired") && !title.contains("revoked") { return "a drunk-driving incident" }
             if title.contains("elude") { return "a police chase" }
-            return "a traffic stop"
+            // Only an offense an officer finds on the road reads as a stop; other traffic cases are incidents reported afterward.
+            if c.charges.first.map({ CaseOrigin.roadsideLaws.contains($0.law.id) }) == true { return "a traffic stop" }
+            return "a traffic incident"
         default: return title
         }
+    }
+
+    /// The first line of a case's timeline. A crime someone reports is "reported"; something the police run into themselves,
+    /// a chase, a traffic stop or a crash, is not: the officers are there.
+    static func openingLine(for c: CourtCase, agency: String, town: String) -> String {
+        let what = subject(c)
+        // "Traffic stop" is only right when the story is an officer stopping a car; a crash scene, a boat, or a driver
+        // identified later from a photograph is something else.
+        let story = c.summary.lowercased()
+        let officerStop = ["stopped", "pulled over", "traffic stop", "checkpoint", "pulled the", "pulled a"].contains { story.contains($0) }
+        let crash = ["crash", "wreck", "rolled", "collision", "struck", "ran off the road", "overturned"].contains { story.contains($0) }
+        let vessel = ["boat", "vessel", "ferry", "kayak", "jet ski"].contains { story.contains($0) }
+        if (what == "a traffic stop" || what == "a drunk-driving incident") && !officerStop {
+            if vessel { return "Reported to the \(agency) in \(town): a boating incident." }
+            if crash { return "The \(agency) responds to a crash in \(town)." }
+            return "Reported to the \(agency) in \(town): a \(what == "a drunk-driving incident" ? "report of a drunk driver" : "traffic incident")."
+        }
+        switch what {
+        case "a police chase": return "The \(agency) pursues a driver in \(town): a police chase."
+        case "a traffic stop": return "Traffic stop by the \(agency) in \(town)."
+        case "a drunk-driving incident": return "Traffic stop by the \(agency) in \(town): a drunk-driving incident."
+        case "a fatal crash": return "The \(agency) responds to a fatal crash in \(town)."
+        case "a crash": return "The \(agency) responds to a crash in \(town)."
+        default: return "Reported to the \(agency) in \(town): \(what)."
+        }
+    }
+
+    /// Offenses an officer sees happen (or finds on the spot), so no investigation runs and no one is "yet to be charged".
+    static func policeWitnessed(_ subject: String) -> Bool {
+        let s = subject.lowercased()
+        return ["disorderly", "resisting", "riot", "concealed", "perjury", "trespass", "chase", "traffic stop", "drunk-driving",
+                "affray", "disturbing", "fleeing", "weapon on", "obstruct", "contempt"].contains { s.contains($0) }
+    }
+
+    /// The line that follows when no one was arrested at the time.
+    static func investigationLine(for c: CourtCase, agency: String) -> String {
+        subject(c) == "a police chase" ? "The driver gets away; the \(agency) opens an investigation." : "\(agency) opens an investigation."
     }
 
     /// The beats between the incident and the arrest, as scheduled news.
     static func beats(for c: CourtCase, incident: Date, arrest: Date, town: String, agency: String, rng: inout SeededRNG) -> [PendingEvent] {
         let cal = CourtCalendar.calendar
         let what = subject(c)
+        // Offenses the officers see themselves are arrests on the spot; there is no open investigation for the paper to report.
+        if policeWitnessed(what) { return [] }
         let span = max(2, cal.dateComponents([.day], from: incident, to: arrest).day ?? 2)
         func day(_ fraction: Double) -> Date {
             cal.date(byAdding: .day, value: max(1, Int(Double(span) * fraction)), to: incident) ?? incident
@@ -67,7 +108,7 @@ enum InvestigationArc {
         var out = [item(cal.date(byAdding: .day, value: 1, to: incident) ?? incident,
                         "\(agency) investigating \(what) in \(town)",
                         "Investigators with the \(agency) are looking into \(what) in \(town). No one has been charged." + victimLine
-                            + rng.pick([" Anyone with information is asked to call the department's tip line.", " Investigators say they are following several leads.", ""]))]
+                            + rng.pick([" Anyone with information is asked to call the department's tip line.", " Investigators say they are following several leads.", "", " Anyone who saw something is asked to contact the agency.", " The agency said there is no known threat to the public.", " Investigators ask residents to check home cameras for anything useful.", " The agency said it will update the public when it can.", " Detectives are asking neighbors to report anything unusual.", " The agency said it has no further details to release at this time."]))]
         // Specifics make it local: the street, the lead investigator, a church in that town.
         let facts = c.investigation?.facts
         let street = facts?.street ?? town

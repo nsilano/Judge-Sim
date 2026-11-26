@@ -48,7 +48,7 @@ extension FollowUpCases {
                         exam: [
                             .direct("What was in the bag?", "\"Crystalline material, 6.8 grams net. It was methamphetamine.\""),
                             .cross("Was there more than one bag?", "\"One bag. I tested a sample from it and weighed all of it.\""),
-                            .cross("You can't say who packaged it?", "\"No.\"")
+                            .cross("You can't say who packaged it?", "\"No. I can't say who packaged it, because I never saw it being packed.\"")
                         ])
         ],
         defenseWitnesses: [],
@@ -57,7 +57,7 @@ extension FollowUpCases {
         aggravating: [],
         mitigating: ["The defendant has a substance use disorder"],
         victimImpacts: [],
-        allocutions: ["\"I've got to get away from the people I was around. I know that now.\""],
+        allocutions: ["\"My friend had my phone most of that week, because his was cut off. He asked me to drop something to somebody and bring back the money, and he gave the phone back that morning. I've got to get away from the people I was around. I know that now.\""],
         guiltyTruths: ["Deleted photos recovered later from {DL}'s phone showed the same bag on a scale an hour before the sale."],
         innocentTruths: ["The friend {DL} named was arrested a month later with the same app account signed in on a second phone."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -132,7 +132,7 @@ extension FollowUpCases {
                         exam: [
                             .direct("What did you see that afternoon?", "\"{ALT} came out of my building carrying a speaker box and asked {DL} to pop the trunk.\""),
                             .direct("Did {DL} touch it?", "\"No. {DL} was in the driver's seat the whole time.\""),
-                            .cross("You've known {DL} for years?", "\"Since high school.\""),
+                            .cross("You've known {DL} for years?", "\"Since high school, so we've known each other for a long time.\""),
                             .cross("You didn't tell deputies this until a month later?", "\"Nobody asked me until the lawyer did.\"")
                         ])
         ],
@@ -141,7 +141,7 @@ extension FollowUpCases {
         aggravating: [],
         mitigating: [],
         victimImpacts: [],
-        allocutions: ["\"I gave somebody a ride. I should have asked what was in that box.\""],
+        allocutions: ["\"{ALT} needed a ride and gave me twenty dollars for gas. I didn't look at what went into my trunk that afternoon. The cash was rent money, due that week. I gave somebody a ride. I should have asked what was in that box.\""],
         guiltyTruths: ["Texts on {DL}'s phone that night told a buyer, \"got it, be there by 11.\""],
         innocentTruths: ["{ALT} later pleaded guilty and told the court the speaker box and everything in it were {ALT}'s alone."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "searchSeizure"],
@@ -191,7 +191,7 @@ extension FollowUpCases {
                             .direct("Why did you stop the car?", "\"Driver's side headlight was out on {STREET}, 11:40 at night.\""),
                             .direct("What happened when you asked for the registration?", "\"{DL} opened the glove box. My light was on it, and I saw the grip of a revolver. The glove box shut fast, and {DL} reached for the visor and handed me the registration from there.\"", "\"The glove box came open, my flashlight landed on a revolver, and {DL} shut it right away and pulled the registration from the visor.\""),
                             .direct("What did {DL} say about the gun?", "\"'That's not mine. It's his car.'\""),
-                            .cross("The car belongs to {ALT}?", "\"Yes. Registered to {ALT}.\""),
+                            .cross("The car belongs to {ALT}?", "\"Yes. It's registered to {ALT}, and I never said otherwise.\""),
                             .cross("You never saw {DL} touch the revolver?", "\"No. I saw {DL} see it and close the door on it.\"")
                         ]),
             WitnessSeed(name: nil, role: "DNA analyst, State Crime Laboratory",
@@ -201,7 +201,7 @@ extension FollowUpCases {
                         exam: [
                             .direct("What did you find on the grip?", "\"A mixture from three people. {DL} cannot be excluded as one of them.\""),
                             .cross("How common is a 'cannot be excluded' result in a three-person mixture?", "\"More common than in a single-source sample. The statistic is weaker.\""),
-                            .cross("Is {ALT} also included?", "\"{ALT} is also included.\"")
+                            .cross("Is {ALT} also included?", "\"Yes. {ALT} is also included, and I've said so from the start.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -213,7 +213,7 @@ extension FollowUpCases {
                             .direct("Whose revolver is it?", "\"Mine. I keep it in the glove box.\""),
                             .direct("Did you tell {DL} it was there?", "\"No. {DL} asked to borrow the car to pick up a cousin, and I gave the keys.\""),
                             .cross("Where did you get it?", "\"From a guy at a yard sale.\""),
-                            .cross("It was reported stolen.", "\"I didn't know that.\""),
+                            .cross("It was reported stolen.", "\"I didn't know that. If I had, I never would have gone near it.\""),
                             .cross("You knew {DL} has a felony record when you handed over a car with a loaded gun in it?", "\"I forgot it was in there.\"")
                         ])
         ],
@@ -222,7 +222,7 @@ extension FollowUpCases {
         aggravating: [],
         mitigating: [],
         victimImpacts: [],
-        allocutions: ["\"I borrowed a car. I didn't know what was in it until that light came on.\""],
+        allocutions: ["\"I borrowed a car that night, and I didn't know what was in it until the light hit it. I panicked because I know what a gun means for me. I wanted it away from me. I'm sorry for the trouble at the stop.\""],
         guiltyTruths: ["A text from {DL}'s phone that afternoon asked {ALT}, \"is the 38 still in the box?\""],
         innocentTruths: ["{ALT}'s cousin later admitted leaving the revolver in the glove box without telling anyone."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -283,7 +283,7 @@ extension FollowUpCases {
                             .direct("What did you find at 4:25?", "\"Three people in the yard, a .22 rifle on the picnic table, five spent casings in the grass by the fence. {DL} was the only one in a red cap.\""),
                             .direct("What did {DL} say?", "\"I asked who'd been shooting. {DL} said, 'I only shot it a couple of times.'\"", "\"When I asked who was shooting, {DL} said, 'I only shot it a couple of times.'\""),
                             .cross("You didn't read {DL} any rights first?", "\"No. {DL} wasn't in custody. I was standing in a backyard asking what happened.\""),
-                            .cross("The rifle belongs to {ALT}?", "\"Yes. Lawfully owned.\"")
+                            .cross("The rifle belongs to {ALT}?", "\"Yes. It's lawfully owned, and the paperwork is in {ALT}'s name.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -292,9 +292,9 @@ extension FollowUpCases {
                         cross: ["\"{DL} was in a red cap.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("Whose rifle is it?", "\"Mine. My grandfather's, actually.\""),
+                            .direct("Whose rifle is it?", "\"Mine. It was my grandfather's, actually, and I inherited it years ago.\""),
                             .direct("Did you hand it to {DL}?", "\"I don't remember who handed what to who. We were just out back.\""),
-                            .cross("Who was wearing the red cap that day?", "\"{DL}.\""),
+                            .cross("Who was wearing the red cap that day?", "\"{DL} was wearing the red cap that day. I noticed it right away.\""),
                             .cross("And the person in the red cap is firing the rifle on the video.", "\"That's what the video shows.\"")
                         ])
         ],
@@ -303,7 +303,7 @@ extension FollowUpCases {
         aggravating: [],
         mitigating: [],
         victimImpacts: [],
-        allocutions: ["\"It was cans in a backyard. I know it doesn't matter to the law.\""],
+        allocutions: ["\"I told the deputy I shot it a couple of times because he was asking and I wanted to be honest. It was cans in a backyard. I might have shot it, and I know it doesn't matter to the law. I'm sorry for the worry to the neighbors.\""],
         guiltyTruths: ["{DL}'s own phone held a video from the same afternoon of {DL} firing the rifle, sent to a cousin."],
         innocentTruths: ["A visiting relative of {ALT}'s had borrowed {DL}'s red cap earlier that afternoon and admitted being the shooter on the video."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "miranda"],
@@ -312,9 +312,9 @@ extension FollowUpCases {
             howIdentified: "The neighbor's video and {DL}'s own statement.",
             notDone: [],
             defendantExam: [
-                .direct("Did you fire that rifle?", "\"I said a couple of times because the deputy was asking and I wanted to get it over with. I was mostly watching.\""),
-                .cross("Mostly watching?", "\"I might have shot it. I don't know exactly.\""),
-                .cross("You were in the red cap.", "\"Yes.\"")
+                .direct("Did you fire that rifle?", "\"I fired it a couple of times. I wasn't counting, and I was mostly standing around watching the others.\""),
+                .cross("Mostly watching?", "\"Mostly. I took a turn and then handed it back, so I don't know exactly how many shots I fired.\""),
+                .cross("You were in the red cap.", "\"Yes. I was wearing the red cap that day, and I won't pretend I wasn't.\"")
             ],
             prosecutionOpening: "A red cap, a rifle, and {DL}'s own words.",
             defenseOpening: "Forty yards and no face.",
@@ -386,7 +386,7 @@ extension FollowUpCases {
         aggravating: [],
         mitigating: [],
         victimImpacts: ["{V}: \"I thought it was over. Then strangers were at my door with my picture on their phones.\""],
-        allocutions: ["\"I didn't make that profile.\""],
+        allocutions: ["\"I didn't make that profile. I was at the library that day applying for jobs, and two applications went out from my email. The photos were on {V}'s phone too, and anyone could have them. I'm sorry for what {V} has been through.\""],
         guiltyTruths: ["The profile's password matched one {DL} had used for an old streaming account."],
         innocentTruths: ["A friend of {V}'s who had borrowed {V}'s old phone admitted copying the photos and making the profile from the same library."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -396,7 +396,7 @@ extension FollowUpCases {
             notDone: [],
             defendantExam: [
                 .direct("What were you doing at the library?", "\"Applying for jobs. Two applications went out from my email that night.\""),
-                .direct("Did you make the profile?", "\"No.\""),
+                .direct("Did you make the profile?", "\"No. I didn't make the profile, and I've never seen it before this case.\""),
                 .cross("Two photos only you had.", "\"They were on {V}'s phone too. Anyone could have them.\""),
                 .cross("And the one minute you happen to be at computer 4.", "\"Along with nine other people.\"")
             ],
@@ -447,7 +447,7 @@ extension FollowUpCases {
                         exam: [
                             .direct("Where was the account accessed from?", "\"The shared computer in the break room. Signed in at 2:14, sent the email at 2:19, signed out at 2:21.\""),
                             .direct("Who can use that computer?", "\"Anyone on shift. It's for timecards and benefits. No individual sign-in.\""),
-                            .cross("So the computer can't tell you who used it?", "\"No. Only when.\"")
+                            .cross("So the computer can't tell you who used it?", "\"No. It only tells you when someone used it, not who was sitting there.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Sheriff's detective",
                         direct: ["\"{DL} was in the room for the whole login.\""],
@@ -468,16 +468,16 @@ extension FollowUpCases {
                         exam: [
                             .direct("What did you see in the break room?", "\"{DL} at the table with a sandwich. Nobody at the computer.\""),
                             .direct("Did people know about the sticky note?", "\"Every lead knew. It was on the monitor in the office for months.\""),
-                            .cross("You were in the room from 2:11 to 2:13?", "\"About that.\""),
-                            .cross("So you don't know what happened at 2:14.", "\"No.\"")
+                            .cross("You were in the room from 2:11 to 2:13?", "\"About that. I was in the room from roughly 2:11 to 2:13.\""),
+                            .cross("So you don't know what happened at 2:14.", "\"No. I don't know what happened at 2:14, because I wasn't in the room.\"")
                         ])
         ],
         prosecutionTheory: ["{DL} had a grudge, said what {D.he} wanted to do, and was alone in the room for every minute of the login."],
         defenseTheory: ["A password on a sticky note any lead could read, a computer out of frame, and nothing on {DL}'s phone."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{V}: \"Six years of trust, gone in one email I never wrote.\""],
-        allocutions: ["\"I didn't send it. I was eating my lunch.\""],
+        victimImpacts: ["{V}: \"Six years of trust, gone in one email I never wrote. A message went out under my name and my boss read it before I'd finished my shift. I was walked out of a building I've worked in since the day it opened. I'd just like my name cleared.\""],
+        allocutions: ["\"I didn't send that email. I was eating my lunch on my break, which runs from two to two-twenty. I don't even know the manager's password. I was mad about the warning, but I didn't do this. I'm sorry for the trouble it caused.\""],
         guiltyTruths: ["A photo of the sticky note, taken in the shared office two days earlier, was later found in {DL}'s deleted pictures."],
         innocentTruths: ["A shift lead who had also been disciplined by {V} admitted signing in remotely to the break-room computer through a timecard tool."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -489,7 +489,7 @@ extension FollowUpCases {
                 .direct("What were you doing in the break room?", "\"Eating. My break is two to two-twenty.\""),
                 .direct("Did you use the computer?", "\"No. I didn't even know {VL}'s password.\""),
                 .cross("You said someone ought to show everybody who {VL} really is.", "\"I was mad about the warning. I didn't mean this.\""),
-                .cross("You were alone in that room from 2:13 to 2:22.", "\"Eating a sandwich.\"")
+                .cross("You were alone in that room from 2:13 to 2:22.", "\"Eating a sandwich. I was alone in that room, and nobody came in.\"")
             ],
             prosecutionOpening: "A grudge, a promise, and nine minutes alone with the computer.",
             defenseOpening: "A password anyone could read and a computer no camera could see.",
@@ -555,8 +555,8 @@ extension FollowUpCases {
         defenseTheory: ["A stranger charged at {DL} yelling. {DL} showed a gun, didn't fire, and left."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{V}: \"Over a gas pump. I keep thinking how close that was.\""],
-        allocutions: ["\"I thought I was about to get beat. I left. I didn't shoot.\""],
+        victimImpacts: ["{V}: \"Over a gas pump. I keep thinking how close that was. We argued for a minute and then I was looking at a gun. I haven't pumped gas at night since. My kids don't know why I fill up at noon now.\""],
+        allocutions: ["\"{V} was coming at me yelling, and I thought I was about to get jumped. I showed my pistol and left. I never aimed to shoot, and I knew where {V} was going to stop. I thought I was about to get beat.\""],
         guiltyTruths: ["A friend later told deputies {DL} bragged about \"making that dude freeze.\""],
         innocentTruths: ["{V} had been convicted twice of assault in fights started at gas stations."],
         moods: [.divided], doctrines: ["selfDefense", "burdenOfProof"],
@@ -568,7 +568,7 @@ extension FollowUpCases {
                 .direct("Why did you take out the pistol?", "\"{V} was coming at me yelling. I thought I was about to get jumped.\""),
                 .direct("Did you fire?", "\"No. I showed it and left.\""),
                 .cross("{V}'s hands were empty and {V} stopped six feet away.", "\"I didn't know that was where {V} was going to stop.\""),
-                .cross("You could have gotten in your car and left without the gun.", "\"Maybe. It happened fast.\"")
+                .cross("You could have gotten in your car and left without the gun.", "\"Maybe. It happened fast, and I didn't think about leaving.\"")
             ],
             prosecutionOpening: "A gun pointed at an unarmed person over a gas pump.",
             defenseOpening: "Fear, a raised gun, no shot, and a car pulling away.",
@@ -619,7 +619,7 @@ extension FollowUpCases {
                             .direct("What did you see?", "\"{DL} walked to the kitchen doorway, pulled a pistol from a waistband, and hit {V} across the face.\""),
                             .cross("How far away were you?", "\"Across the living room. Maybe fifteen feet.\""),
                             .cross("Was the room crowded?", "\"Twenty, thirty people. But I saw it.\""),
-                            .cross("You're a friend of {V}'s?", "\"We work together.\"")
+                            .cross("You're a friend of {V}'s?", "\"We work together, so I see {V.him} most days.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Sheriff's detective",
                         direct: ["\"An empty holster was in {DL}'s car.\""],
@@ -629,7 +629,7 @@ extension FollowUpCases {
                             .direct("What did your investigation find?", "\"{V} and one guest named {DL}. We searched {DL}'s car by warrant and found an empty pistol holster under the seat.\""),
                             .direct("And the rideshare receipt?", "\"A ride from that street at 12:34. The assault was about 12:30. It fits leaving right after.\""),
                             .cross("Another guest described a man in a black hoodie?", "\"Yes. We couldn't identify anyone from that description.\""),
-                            .cross("No gun was ever recovered?", "\"No.\"")
+                            .cross("No gun was ever recovered?", "\"No. No gun was ever recovered, so nobody can say what it looked like.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -640,16 +640,16 @@ extension FollowUpCases {
                         exam: [
                             .direct("What did you see?", "\"A man in a black hoodie with the hood up came through the back door and hit {V} with something black, then ran out the back.\""),
                             .direct("Was it {DL}?", "\"No. {DL} was wearing a white shirt that night. I'd been talking to {DL} earlier.\""),
-                            .cross("Did you see {DL} at 12:30?", "\"Not right at 12:30.\""),
-                            .cross("You're friends with {DL}?", "\"We know each other.\"")
+                            .cross("Did you see {DL} at 12:30?", "\"Not right at 12:30. I saw {D.him} sometime around then, but I can't give the exact minute.\""),
+                            .cross("You're friends with {DL}?", "\"We know each other, but I wouldn't call us close friends.\"")
                         ])
         ],
         prosecutionTheory: ["The person {V} argued with over cards came back with a pistol. Two eyewitnesses say so, and {DL} left in a car four minutes later."],
         defenseTheory: ["A drunk victim hit from the blind side, a guest across a crowded room, and a man in a black hoodie no one has identified."],
         aggravating: ["The defendant was armed with a deadly weapon"],
         mitigating: [],
-        victimImpacts: ["{V}: \"I see double when I'm tired. I flinch when anybody comes up on my left.\""],
-        allocutions: ["\"I left that party. I didn't hit anybody.\""],
+        victimImpacts: ["{V}: \"I see double when I'm tired. I flinch when anybody comes up on my left. The bone around my eye was broken, and I had fourteen stitches. I came to a house party for cards. I haven't been to one since.\""],
+        allocutions: ["\"I left that party around twelve-thirty because I'd lost at cards and I was done. I called a ride and went home. I didn't hit anybody, and I didn't know anything had happened until later.\""],
         guiltyTruths: ["A pistol found months later in a ditch near the party house had {DL}'s DNA on the grip and {V}'s blood on the slide."],
         innocentTruths: ["The man in the black hoodie was identified later from another guest's phone video and charged."],
         moods: [.divided], doctrines: ["eyewitnessID", "burdenOfProof"],
@@ -659,7 +659,7 @@ extension FollowUpCases {
             notDone: ["No phone video from the party was found despite asking every guest identified."],
             defendantExam: [
                 .direct("When did you leave the party?", "\"Around 12:30. I'd lost at cards and I was done. I called a ride.\""),
-                .direct("Did you hit {V}?", "\"No.\""),
+                .direct("Did you hit {V}?", "\"No. I never hit {V.him}, and I've said that since the first day.\""),
                 .cross("You left four minutes after {V} was hit.", "\"I didn't know anything had happened.\""),
                 .cross("There was an empty holster in your car.", "\"It's an old one. I don't have a gun.\"")
             ],

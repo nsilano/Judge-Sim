@@ -67,8 +67,8 @@ struct Receipt {
 
         let storeName: String
         switch kind {
-        case .fuel: storeName = source.isEmpty || source.contains("Hardware") ? rng.pick(["Gas & Go #17", "Coastal Fuel Mart", "Speedy Stop #4"]) : source
-        case .laundromat: storeName = rng.pick(["Suds City Laundromat", "Bright Wash Coin Laundry", "Main Street Wash & Fold"])
+        case .fuel: storeName = source.isEmpty || source.contains("Hardware") ? rng.pick(["Gas & Go #17", "Coastal Fuel Mart", "Speedy Stop #4", "Pelican Fuel & Deli", "Highway 17 Stop & Go", "Cane Creek Fuel Stop", "Quick Fill #9", "Bayard Gas & Grocery", "Route 17 Fuel Depot", "Marsh Road Mini Mart", "Wexley Fuel & Go"]) : source
+        case .laundromat: storeName = rng.pick(["Suds City Laundromat", "Bright Wash Coin Laundry", "Main Street Wash & Fold", "Sunny Day Laundromat", "Tide Pool Coin Laundry", "Clean Sweep Laundromat", "Spin Cycle Coin Laundry", "Wash House of Bayard", "Port Hollis Coin Wash", "Corner Wash Laundromat", "Dunmore Mills Wash & Dry"])
         case .pawn: storeName = source.contains("Pawn") ? source : "Hollis Pawn & Gold"
         case .store: storeName = source.isEmpty ? "Harbor Mart" : source
         }
@@ -102,7 +102,7 @@ struct Receipt {
         case .laundromat:
             taxRate = 0
             let washer = rng.int(1...24), dryer = rng.int(25...40)
-            items = [Item(name: "WASHER #\(washer)", detail: rng.pick(["TOP LOAD", "FRONT LOAD 20LB", "FRONT LOAD 40LB"]), price: rng.pick([3.25, 3.50, 4.75, 6.50])),
+            items = [Item(name: "WASHER #\(washer)", detail: rng.pick(["TOP LOAD", "FRONT LOAD 20LB", "FRONT LOAD 40LB", "FRONT LOAD 30LB", "TOP LOAD 18LB", "FRONT LOAD 50LB", "TOP LOAD 25LB", "FRONT LOAD 60LB", "FRONT LOAD 35LB"]), price: rng.pick([3.25, 3.50, 4.75, 6.50])),
                      Item(name: "DRYER #\(dryer)", detail: "\(rng.pick([30, 45, 60])) MIN", price: rng.pick([1.75, 2.25, 3.00]))]
             if text.contains("bleach") || text.contains("detergent") || rng.chance(0.5) { items.append(Item(name: "DETERGENT SNGL", detail: nil, price: 1.75)) }
         case .pawn:
@@ -134,12 +134,12 @@ struct Receipt {
         } else if text.contains("cash") && digits == nil {
             tender = "CASH"
         } else {
-            let brand = text.contains("debit") ? "DEBIT" : rng.pick(["VISA", "MASTERCARD", "DEBIT"])
+            let brand = text.contains("debit") ? "DEBIT" : rng.pick(["VISA", "MASTERCARD", "DEBIT", "DISCOVER", "AMEX"])
             tender = "\(brand) ************\(digits ?? String(format: "%04d", rng.int(1...9999)))"
         }
         var receipt = Receipt(kind: kind, store: storeName, address: "", phone: "(252) \(rng.int(200...989))-\(String(format: "%04d", rng.int(0...9999)))",
                               date: date ?? Date(), time: time, storeNumber: rng.int(2...480), register: rng.int(1...6),
-                              transaction: rng.int(10_000...99_999), cashier: rng.pick(["Cashier 04", "Cashier 11", "ID 2207", "Op 3", "Self-checkout 2"]),
+                              transaction: rng.int(10_000...99_999), cashier: rng.pick(["Cashier 04", "Cashier 11", "ID 2207", "Op 3", "Self-checkout 2", "Cashier 07", "Cashier 19", "Op 8", "Self-checkout 4"]),
                               items: items, taxRate: taxRate, tender: tender, cash: nil, pump: pump)
         if tender == "CASH" {
             let owed = receipt.total

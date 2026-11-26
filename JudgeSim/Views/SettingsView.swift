@@ -7,6 +7,8 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var keyDraft = ""
     @State private var testState: TestState = .idle
+    @AppStorage("speech.rate") private var speechRate: Double = 0.5
+    @AppStorage("speech.varied") private var variedVoices: Bool = true
 
     private enum TestState: Equatable {
         case idle, running, ok, failed(String)
@@ -114,6 +116,24 @@ struct SettingsView: View {
                             Text(message).font(.caption).foregroundStyle(.red)
                         }
                     }
+                }
+
+                Section {
+                    HStack {
+                        Image(systemName: "tortoise.fill").foregroundStyle(.secondary)
+                        Slider(value: $speechRate, in: 0.35...0.6)
+                        Image(systemName: "hare.fill").foregroundStyle(.secondary)
+                    }
+                    Toggle("A different voice for each speaker", isOn: $variedVoices)
+                    ReadAloudButton(id: "settings-sample", lines: {
+                        [SpeechReader.Line(text: "The court will come to order. Be seated.", speaker: "Bailiff"),
+                         SpeechReader.Line(text: "Your Honor, the State is ready to proceed.", speaker: "Prosecutor"),
+                         SpeechReader.Line(text: "The defense is ready, Your Honor.", speaker: "Defense lawyer")]
+                    }, title: "Hear a sample")
+                } header: {
+                    Text("Read aloud")
+                } footer: {
+                    Text("Every statement, testimony, case summary and calendar matter has a speaker button. Each person keeps the same voice.")
                 }
 
                 Section {

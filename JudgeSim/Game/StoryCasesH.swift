@@ -42,7 +42,7 @@ extension StoryCases {
                             .direct("How did you pick the photo?", "\"The officer showed me six pictures one at a time. I stopped at that one. I said I was pretty sure.\""),
                             .cross("You told the 911 operator you didn't really see the face.", "\"I was on the ground in pain. I said a lot of things.\""),
                             .cross("You were looking at the person for about a second?", "\"It felt longer. But yes, it was fast.\""),
-                            .cross("Did the officer tell you anything after you picked the photo?", "\"He said, 'Okay, thank you.' That's all.\"")
+                            .cross("Did the officer tell you anything after you picked the photo?", "\"{OFF.He} said, 'Okay, thank you.' That's all.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"The pass was forty yards from {DL}'s door.\""],
@@ -74,7 +74,7 @@ extension StoryCases {
         aggravating: ["The victim was very old"],
         mitigating: ["The defendant has a support system in the community", "The defendant has been gainfully employed"],
         victimImpacts: ["{V}: \"I don't take the bus anymore. My grandson drives me. I used to go everywhere by myself.\""],
-        allocutions: ["\"I'm sorry about what happened to {VL}. It wasn't me.\""],
+        allocutions: ["\"I was at work on the loading dock that evening, and I clocked out at five fifty-eight. A gray hooded sweatshirt is common, and everybody in my building owns two. I paid for something years ago. I'm sorry about what happened to {VL}. It wasn't me.\""],
         guiltyTruths: ["A coworker later admitted punching out for {DL} that day as a favor."],
         innocentTruths: ["A fingerprint on the recovered purse later matched another resident of the complex who had a mark above one eyebrow."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -155,7 +155,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you see?", "\"The cop told {DL} to go. {DL} kept saying {D.he} wanted {D.his} friend. Then the cop went to grab {D.him} and {DL} turned and swung.\""),
                             .direct("Did you hear the officer say 'under arrest'?", "\"I think so. It was loud.\""),
-                            .cross("You were in the fight that brought police there?", "\"I broke it up.\""),
+                            .cross("You were in the fight that brought police there?", "\"I wasn't fighting. I broke up the fight that brought police there.\""),
                             .cross("You weren't charged with anything?", "\"Nobody charged me. I was doing my job.\""),
                             .cross("You 'think' you heard 'under arrest'?", "\"I'm not a hundred percent.\"")
                         ])
@@ -168,7 +168,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did you see before you started recording?", "\"The officer came up behind {DL} and wrapped an arm around {D.his} neck. I didn't hear anything said. That's why I started filming.\""),
                             .direct("What does the video show?", "\"The arm across {DL}'s throat and {DL}'s elbow going back. Then they both go down.\""),
-                            .cross("You'd been drinking that night too?", "\"Two beers.\""),
+                            .cross("You'd been drinking that night too?", "\"I'd had two beers that night too.\""),
                             .cross("Could you hear anything over the music from the bar?", "\"Not well. But I saw the officer's mouth, and it didn't move.\"")
                         ])
         ],
@@ -177,7 +177,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["The defendant has been gainfully employed", "No prior criminal record"],
         victimImpacts: ["Officer {OFFICER}: \"I've done this nine years. That was the first time I thought I was going to lose a fight.\""],
-        allocutions: ["\"I never would have swung at a cop on purpose. I didn't know who had me.\""],
+        allocutions: ["\"I was trying to get my friend out of the bar so we could leave. I heard leave, and I was leaving. I'd been drinking but I wasn't fighting anyone. I never would have swung at an officer on purpose. I didn't know who had me, and I'm sorry.\""],
         guiltyTruths: ["A second bystander's video, found later, shows the officer saying \"You're under arrest\" before reaching for {DL}."],
         innocentTruths: ["A second bystander's video, found later, shows the officer grabbing {DL} from behind with no warning."],
         moods: [.divided], doctrines: ["selfDefense", "burdenOfProof"],
@@ -252,7 +252,7 @@ extension StoryCases {
                         weight: 2, lay: true,
                         exam: [
                             .direct("What did you see?", "\"The driver in front of me got out and walked up to the truck yelling. Then the truck door flew open and the driver came out swinging a tire iron.\""),
-                            .cross("You were behind {VL}'s car?", "\"Yes, one car back.\""),
+                            .cross("You were behind {VL}'s car?", "\"Yes. I was one car back behind {VL}'s car.\""),
                             .cross("Could you see {VL}'s hands at {DL}'s window?", "\"Not really. {VL}'s back was to me.\"")
                         ])
         ],
@@ -272,8 +272,8 @@ extension StoryCases {
         defenseTheory: ["{VL} confronted {DL}, pounded on the window, and reached inside. {DL} had a right to defend against an attack in {D.his} own vehicle."],
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has a support system in the community"],
-        victimImpacts: ["{V}: \"I think about that swing every time I'm at a red light.\""],
-        allocutions: ["\"I shouldn't have gotten out of the truck. But I didn't know what {VL} was reaching for.\""],
+        victimImpacts: ["{V}: \"I think about that swing every time I'm at a red light. I only walked up to say something about being cut off, and a man swung at me through a window. I've changed my route to avoid that merge. I jump when anyone gets close to my door.\""],
+        allocutions: ["\"{VL} was banging on my window and then reached in at my face. The window was down, and {V.his} arm was inside. I swung at the mirror to make {V.him} stop. I shouldn't have gotten out of the truck, but I didn't know what {VL} was reaching for.\""],
         guiltyTruths: ["A traffic camera clip later surfaced showing {VL} standing a step back from the truck, not reaching in, when {DL} got out."],
         innocentTruths: ["A traffic camera clip later surfaced showing {VL}'s arm inside {DL}'s window just before {DL} got out."],
         moods: [.divided], doctrines: ["selfDefense"],
@@ -334,7 +334,7 @@ extension StoryCases {
                         exam: [
                             .direct("What caused {VL}'s death?", "\"A single stab wound to the chest that went through the heart. It took significant force to go five inches deep.\""),
                             .direct("Were there defensive wounds?", "\"A small cut on the left palm, which can happen when someone raises a hand.\""),
-                            .cross("There was only one wound?", "\"One.\""),
+                            .cross("There was only one wound?", "\"One. There was only one wound.\""),
                             .cross("In your experience, do planned killings with a knife usually involve one wound?", "\"I can't speak to planning. I can tell you there was one.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
@@ -344,7 +344,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} tell you?", "\"That {VL} confessed the affair and said {V.he} was leaving, and that {DL} snapped and grabbed the knife.\""),
                             .direct("What did the phone show?", "\"A text to a friend six days earlier: 'If it's true I don't know what I'll do.' And searches for divorce lawyers.\""),
-                            .cross("The searches were for divorce lawyers, not weapons?", "\"Divorce lawyers.\""),
+                            .cross("The searches were for divorce lawyers, not weapons?", "\"The searches were for divorce lawyers, not weapons.\""),
                             .cross("{DL} called 911 within ninety seconds and did CPR?", "\"Inside of two minutes. {D.He} was doing compressions when the first unit arrived.\""),
                             .cross("Is there any evidence {DL} took the knife out before the argument?", "\"No. The block was on the counter where they were standing.\"")
                         ])
@@ -356,7 +356,7 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did you understand the text to mean?", "\"That {DL} would fall apart. {DL} cried on the phone with me for an hour that night. {D.He} talked about counseling.\""),
-                            .direct("Had you ever seen {DL} violent?", "\"Never. Twenty years.\""),
+                            .direct("Had you ever seen {DL} violent?", "\"Never. Twenty years. I've never seen {DL} violent in twenty years.\""),
                             .cross("'I don't know what I'll do' could mean a lot of things?", "\"I know what I thought it meant.\""),
                             .cross("Did you ask {D.him}?", "\"I didn't want to know the answer.\"")
                         ])
@@ -365,8 +365,8 @@ extension StoryCases {
         defenseTheory: ["A sudden confession, an argument in a kitchen, and a single blow in the heat of passion, followed by a desperate 911 call. That's voluntary manslaughter, not murder."],
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant accepted responsibility for the criminal conduct", "The defendant acted under strong provocation"],
-        victimImpacts: ["{VL}'s sibling: \"{VL} made mistakes. {V.He} didn't deserve to die on the kitchen floor for them.\""],
-        allocutions: ["\"I killed the person I loved most. I'll never forgive myself, and I'm not asking anyone else to.\""],
+        victimImpacts: ["{VL}'s sibling: \"{VL} made mistakes, as we all do. {V.He} didn't deserve to die on the kitchen floor for them. We spent a year in the courthouse hallways, and I'll never forget the sound of that call. I want everyone to remember my sibling's laughter and not that night.\""],
+        allocutions: ["\"{VL} said it was true, that it had been going on for two years, and {V.he} was leaving. I called 911 and pressed on {V.his} chest until they pulled me off. I didn't know if I could survive it. I killed the person I loved most. I'll never forgive myself.\""],
         guiltyTruths: ["A neighbor later recalled hearing {DL} shout \"I warned you\" ten minutes before the 911 call, suggesting a longer argument than {DL} described."],
         innocentTruths: ["{VL}'s own text to the other person, recovered later, said the conversation \"blew up in seconds.\""],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -465,7 +465,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has a support system in the community"],
         victimImpacts: [],
-        allocutions: ["\"I would have died for those dogs. I let them down. I know that.\""],
+        allocutions: ["\"Every one of those dogs was going to be put down somewhere, and I couldn't turn them away. My helper quit, and I was cleaning sixteen hours a day and falling behind. I got down to thirty, then the county called about more dogs. I would have died for those dogs. I let them down.\""],
         guiltyTruths: ["Records later showed {DL} turned away an offer of volunteer cleaning help two weeks before the seizure."],
         innocentTruths: ["{DL}'s phone showed calls to four rescues the week before the seizure asking them to take dogs."],
         moods: [.divided], doctrines: ["burdenOfProof"],

@@ -33,6 +33,7 @@ enum LesserIncluded {
         "embezzlement100k": ["embezzlement"],
         "habitualDWI": ["dwi"],
         "felonyDBV": ["misdDBV"],
+        "seriousInjuryVehicle": ["dwi"],
         "felonyChildAbuse": ["childAbuseMisd"],
     ]
 

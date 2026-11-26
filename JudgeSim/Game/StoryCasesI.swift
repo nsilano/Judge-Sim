@@ -47,9 +47,9 @@ extension StoryCases {
                         exam: [
                             .direct("Why did you focus on {DL}?", "\"The business was failing, the landlord was evicting, coverage had doubled six weeks earlier, and {DL}'s phone was near the restaurant twenty minutes before the alarm.\""),
                             .direct("What did {DL} say about the phone?", "\"That {D.he} drove past on the way home from a sibling's house in Bayard.\""),
-                            .cross("The fired cook threatened to burn the place down?", "\"So a server says.\""),
+                            .cross("The fired cook threatened to burn the place down?", "\"So a server says. A server told us the fired cook threatened to burn the place down.\""),
                             .cross("Where was the cook that night?", "\"Says home asleep. We didn't verify it.\""),
-                            .cross("The insurance increase came with $60,000 in new equipment?", "\"There were invoices, yes.\"")
+                            .cross("The insurance increase came with $60,000 in new equipment?", "\"There were invoices, yes. The insurance increase came with $60,000 in new equipment.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -69,7 +69,7 @@ extension StoryCases {
         aggravating: ["The offense involved planning and financial motive"],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
         victimImpacts: ["The building's owner: \"The fire spread to the dentist's office next door. Two businesses closed for a year.\""],
-        allocutions: ["\"That restaurant was my parents' dream before it was mine. I'd never burn it.\""],
+        allocutions: ["\"That restaurant was my parents' dream before it was mine. I grew up folding napkins at those tables and learned to cook at the back stove. I spent sixty thousand dollars I borrowed to keep it going, and I would never burn it down. I'm sorry for the dentist next door and everyone who lost work.\""],
         guiltyTruths: ["A gas station receipt from {DL}'s credit card for a two-gallon can and gasoline at 1:58 a.m. surfaced after trial."],
         innocentTruths: ["The fired cook's roommate later told police the cook came home at 3:30 a.m. smelling of smoke."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -138,8 +138,8 @@ extension StoryCases {
                             .direct("What do the logs show?", "\"A login to the backup service account at 11:47 p.m., from an IP address the provider assigned to {DL}'s account, followed by commands deleting the shipping database and every backup volume.\""),
                             .direct("What was on {DL}'s laptop?", "\"A search for whether deleted backups can be recovered, two days before the deletion. No remote session software that would match the login.\""),
                             .cross("An IP address identifies a connection, not a person?", "\"A connection. Anyone on that router shares it.\""),
-                            .cross("Was {DL}'s router password-protected?", "\"I understand it wasn't.\""),
-                            .cross("You found no trace of the login on {DL}'s laptop?", "\"Not on that laptop.\"")
+                            .cross("Was {DL}'s router password-protected?", "\"I understand {DL}'s router wasn't password-protected.\""),
+                            .cross("You found no trace of the login on {DL}'s laptop?", "\"Not on that laptop. I found no trace of the login on {DL}'s laptop.\"")
                         ]),
             WitnessSeed(name: nil, role: "{CO} operations director",
                         direct: ["\"{DL} was the only one who knew the system that well.\""],
@@ -150,7 +150,7 @@ extension StoryCases {
                             .direct("What did {DL} say when fired?", "\"In writing: 'You'll find out how much you needed me.'\""),
                             .cross("The backup account's password was on a sticky note on the rack?", "\"Until about a year ago. I thought it had been changed.\""),
                             .cross("Was it changed when {DL} was fired?", "\"No. Nobody knew that account existed but IT.\""),
-                            .cross("Two other IT employees knew it?", "\"Apparently.\"")
+                            .cross("Two other IT employees knew it?", "\"Apparently. Two other IT employees knew it.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -169,8 +169,8 @@ extension StoryCases {
         defenseTheory: ["An open network, a password on a sticky note, and two other employees who used that account. The State traced a connection, not a person."],
         aggravating: ["The offense caused damage over $100,000"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{CO}'s owner: \"We laid off nine people the month after. Three years of customer history, gone.\""],
-        allocutions: ["\"I was angry. I sent a stupid email. I didn't touch their servers.\""],
+        victimImpacts: ["{CO}'s owner: \"We laid off nine people the month after, and I had to say it to each of them face to face. Three years of customer history were gone, and we spent most of a year trying to rebuild what we could. Some of those accounts never came back. It nearly cost us the company.\""],
+        allocutions: ["\"I was angry the week I was let go, and I sent an email I'm embarrassed by. That's the truth, and I'll own it. But I was home watching a game that night and did not touch their servers. I had no idea my access was still alive. I'm sorry for what the company lost.\""],
         guiltyTruths: ["A second laptop belonging to {DL}, later found at a relative's house, contained the remote session logs."],
         innocentTruths: ["One of the other IT employees, fired a month later, was found to have used the same account from a neighbor's driveway."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "searchSeizure"],
@@ -251,7 +251,7 @@ extension StoryCases {
                         exam: [
                             .direct("What does the video show?", "\"{DL} going straight to {VL}'s pump, standing close for about forty seconds, and leaving. {VL} gets in the car without finishing.\""),
                             .direct("What did {DL} say when interviewed?", "\"That {D.he} asked {VL} to tell the truth. When I asked how {D.he} knew who {VL} was, {D.he} said 'everybody knows.'\""),
-                            .cross("The video has no audio?", "\"No audio.\""),
+                            .cross("The video has no audio?", "\"No. The video has no audio at all.\""),
                             .cross("{DL} gets gas there four times a week?", "\"So the card records show.\"")
                         ])
         ],
@@ -271,8 +271,8 @@ extension StoryCases {
         defenseTheory: ["A chance meeting at a station {DL} uses four times a week, and a plea to tell the truth. Fear is understandable, but it isn't proof of a threat."],
         aggravating: [],
         mitigating: ["The defendant has been gainfully employed"],
-        victimImpacts: ["{V}: \"I moved my son out of the county. He had to change schools. I still testified.\""],
-        allocutions: ["\"I love my brother. I never threatened anybody.\""],
+        victimImpacts: ["{V}: \"I moved my son out of the county and he had to change schools in the middle of the year. I kept my phone by the bed for months, and I still look at who is parked near the house. I testified anyway, because that is what I promised to do, and I'd do it again.\""],
+        allocutions: ["\"I love my brother, and that is the only reason I was at that pump talking to {V}. I asked {V.him} to tell the truth, and that is all I meant. I never threatened anybody, and I never would. I'm sorry {V.he} felt afraid, and I wish I had just kept driving.\""],
         guiltyTruths: ["Jail call recordings later showed {DL}'s sibling telling {DL} to \"go talk to\" {VL} the day before."],
         innocentTruths: ["A second customer, found later, heard {DL} say only \"tell the truth, please\" and \"I'm sorry.\""],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -336,7 +336,7 @@ extension StoryCases {
                             .direct("How did you react to the voicemail?", "\"I didn't let my kids play in the backyard for a month. I'd seen {DL} shoot an animal from the porch.\""),
                             .direct("Why did you believe it?", "\"'I've got a shotgun and I know how to use it, and I've got nothing to lose.' What else does that mean?\""),
                             .cross("You'd seen the survey showing your fence is on {DL}'s land?", "\"I'd heard about it. I had my own survey.\""),
-                            .cross("{DL} never came on your property or confronted you after the voicemail?", "\"No. We stayed away.\"")
+                            .cross("{DL} never came on your property or confronted you after the voicemail?", "\"No. We stayed away. {DL} never came on my property or confronted me after the voicemail.\"")
                         ]),
             WitnessSeed(name: nil, role: "Sheriff's deputy",
                         direct: ["\"{DL} said 'I meant every word.'\""],
@@ -345,7 +345,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} say when you visited?", "\"That {D.he} meant every word. Then {D.he} said {D.he} meant {D.he}'d take {VL} to court.\""),
                             .direct("Did {DL} have the shotgun?", "\"By the back door, loaded. {D.He} handed it over when I asked.\""),
-                            .cross("{DL} said the shotgun was for raccoons getting in {D.his} chicken coop?", "\"{D.He} did say that.\""),
+                            .cross("{DL} said the shotgun was for raccoons getting in {D.his} chicken coop?", "\"{D.He} did say that. {DL} said the shotgun was for raccoons in {D.his} chicken coop.\""),
                             .cross("{DL} cooperated completely?", "\"Handed over the keys and sat on the curb till we were done.\"")
                         ])
         ],
@@ -366,7 +366,7 @@ extension StoryCases {
         defenseTheory: ["An angry old neighbor with a real grievance, who meant a lawsuit, saw a lawyer the next day, and never came near {VL}. Bluster isn't a true threat."],
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has a support system in the community"],
-        victimImpacts: ["{V}: \"I still check the window before I let the kids out.\""],
+        victimImpacts: ["{V}: \"I still check the window before I let the kids out into the yard. We had an alarm put in, and I don't walk alone after dark anymore. A voicemail like that doesn't go away when the call ends. It was about a fence, and I had never feared a neighbor before that day.\""],
         allocutions: ["\"I said a stupid thing in anger. I'm seventy years old. I wasn't going to shoot anybody over a fence.\""],
         guiltyTruths: ["A second voicemail, deleted by {VL} and recovered from the carrier, said \"I'll be waiting.\""],
         innocentTruths: ["{DL}'s doctor later confirmed {DL} had early dementia that affected impulse control at the time."],
@@ -438,7 +438,7 @@ extension StoryCases {
                             .direct("What was taken from your unit?", "\"A generator, a miter saw, and two drills. About $2,400.\""),
                             .direct("Did you recognize the listing?", "\"The scratch on the handle where I backed into it. That's mine.\""),
                             .cross("The serial number in the photo doesn't match your receipt?", "\"One digit. Maybe the photo's blurry.\""),
-                            .cross("That model is common?", "\"It's popular, yeah.\"")
+                            .cross("That model is common?", "\"It's popular, yeah. That model is common.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"The only code used that night was {DL}'s.\""],
@@ -460,15 +460,15 @@ extension StoryCases {
                         exam: [
                             .direct("Did you sell {DL} a generator?", "\"Yes, at the Saturday market. {DL} buys from me a lot. I wrote a receipt.\""),
                             .cross("Where did you get that generator?", "\"Somebody brought it to my table. I don't ask.\""),
-                            .cross("So it could have been stolen?", "\"I suppose anything could.\"")
+                            .cross("So it could have been stolen?", "\"I suppose anything could. It could have been stolen.\"")
                         ])
         ],
         prosecutionTheory: ["{D}'s code opened the gate twice that night, {D.his} bolt cutters match the locks, and {D.he} listed a stolen generator two weeks later."],
         defenseTheory: ["A code on a borrowed lanyard, a gate that sticks open, a serial number that doesn't match, and none of the stolen property in {DL}'s unit."],
         aggravating: [],
         mitigating: ["The defendant has been gainfully employed"],
-        victimImpacts: ["{V}: \"Those tools were my side business. I couldn't take jobs for two months.\""],
-        allocutions: ["\"I buy and sell. That's not a crime. I didn't break into anybody's unit.\""],
+        victimImpacts: ["{V}: \"Those tools were my side business, and I built it up over six years of weekends. Without them I couldn't take jobs for two months, and I had to borrow from my brother to cover the truck payment. I'm still replacing things one at a time. It hurt in a way people don't expect.\""],
+        allocutions: ["\"I buy and sell used tools for a living, and that's not a crime. I was at the facility that night to pick up inventory, and then I went home. I lent my gate code on a lanyard to a friend, and I wasn't there when the units were cut. I'm sorry for the people who lost their things.\""],
         guiltyTruths: ["The friend later said the lanyard was returned two weeks before the break-ins."],
         innocentTruths: ["The friend who borrowed the lanyard was arrested a month later with tools from the same break-ins."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],

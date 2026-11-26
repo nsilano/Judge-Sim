@@ -33,16 +33,22 @@ enum FollowUpCases {
         let text = (offense ?? "").lowercased()
         func has(_ words: [String]) -> Bool { words.contains { text.contains($0) } }
         if has(["controlled", "cocaine", "heroin", "marijuana", "drug", "trafficking", "paraphernalia", "fentanyl", "opioid", "opium"]) {
-            return ["story.followup.drugsAgain", "story.followup.consoleBaggie", "story.followup.pipeInJacket", "story.followup.motelMeth", "story.followup.parkSale"]
+            return ["story.followup.drugsAgain", "story.followup.consoleBaggie", "story.followup.pipeInJacket", "story.followup.motelMeth", "story.followup.parkSale",
+                    "story.followup.appDrugSale", "story.followup.motelDelivery", "story.followup.gloveboxPistol"]
         }
         if has(["driving", "dwi", "fleeing", "reckless", "speed", "hit and run", "license", "vehicle"]) {
-            return ["story.followup.eludingStop", "story.followup.revokedTaillightStop", "story.followup.revokedWorkTruck", "story.followup.constructionZoneSpeed", "story.followup.revokedPharmacyRun", "story.followup.schoolPickupLine"]
+            return ["story.followup.eludingStop", "story.followup.revokedTaillightStop", "story.followup.revokedWorkTruck", "story.followup.constructionZoneSpeed", "story.followup.revokedPharmacyRun", "story.followup.schoolPickupLine",
+                    "story.followup.checkpointRefusal", "story.followup.ditchCrash", "story.followup.stoplightRearEnd"]
         }
         if has(["larceny", "theft", "burglary", "breaking", "stolen", "robbery", "arson", "trespass", "property", "fraud", "forgery", "embezzle"]) {
-            return ["story.followup.warehouseTheft", "story.followup.carBreakIns", "story.followup.theftAgain", "story.followup.formulaBag", "story.followup.toolboxPickup", "story.followup.formerEmployerLot", "story.followup.stolenGenerator", "story.followup.keyedCarParking"]
+            return ["story.followup.warehouseTheft", "story.followup.carBreakIns", "story.followup.theftAgain", "story.followup.formulaBag", "story.followup.toolboxPickup", "story.followup.formerEmployerLot", "story.followup.stolenGenerator", "story.followup.keyedCarParking",
+                    "story.followup.porchPackages", "story.followup.receiptPrinter", "story.followup.dieselTank", "story.followup.companyCard", "story.followup.trailerVIN",
+                    "story.followup.generatorYard", "story.followup.estateSale", "story.followup.layawayBooth", "story.followup.stormDeposit"]
         }
         if has(["assault", "battery", "threat", "stalking", "harass", "female", "domestic", "protective", "child"]) {
-            return ["story.followup.assaultAgain", "story.followup.harassAgain", "story.followup.textThreatsManager", "story.followup.pumpLineShove"]
+            return ["story.followup.assaultAgain", "story.followup.harassAgain", "story.followup.textThreatsManager", "story.followup.pumpLineShove",
+                    "story.followup.barThreat", "story.followup.poolHallCue", "story.followup.parkingLotWords", "story.followup.filmingStop", "story.followup.pointedPistol",
+                    "story.followup.pistolWhip", "story.followup.backyardRifle", "story.followup.fakeProfile", "story.followup.managerInbox", "story.followup.newPartnerAssault"]
         }
         return newCharges
     }
@@ -80,7 +86,7 @@ enum FollowUpCases {
                             .direct("How did {VL} react?", "\"{V.He} went white. {V.He} said, 'That's the person from the court case,' and asked me to call the police.\""),
                             .direct("Where did {DL} go after that?", "\"Out to the lot. Our camera shows {D.him} out there until {VL} walked to {V.his} car at 5:02.\""),
                             .cross("You never heard {DL} threaten anyone inside the store?", "\"No. {D.He} didn't say a word inside. {D.He} just stood there looking at {V.him}.\""),
-                            .cross("And you didn't hear what was said in the parking lot?", "\"No. I was inside.\"")
+                            .cross("And you didn't hear what was said in the parking lot?", "\"No. I was inside the building, so I couldn't hear anything that was said in the parking lot.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Domestic violence investigator",
                         direct: ["\"The order was served on {D.him} in court. {D.He} signed it.\""],
@@ -91,7 +97,7 @@ enum FollowUpCases {
                             .direct("Was {DL} aware of the order?", "\"It was entered with {D.his} judgment in open court, and {D.his} signature is on the copy {D.he} received.\""),
                             .direct("Where was {DL} arrested?", "\"Two blocks from the store, at 5:20, eighteen minutes after {D.he} followed {VL} to {V.his} car.\""),
                             .cross("{DL} had no weapon when arrested?", "\"No weapon. Just the gum.\""),
-                            .cross("And no one saw {DL} touch {VL} or block {V.his} car?", "\"No. Nobody reported that.\"")
+                            .cross("And no one saw {DL} touch {VL} or block {V.his} car?", "\"No. Nobody reported seeing {D.him} touch {V.him} or block {V.his} car.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -111,8 +117,8 @@ enum FollowUpCases {
         defenseTheory: ["A clumsy attempt to get {D.his} belongings back, in a public store, with no touching. Angry words in a parking lot aren't a true threat."],
         aggravating: [],
         mitigating: ["No physical contact occurred"],
-        victimImpacts: ["{VL}: \"I changed my schedule, my route, my phone. {D.He} still found me at work.\""],
-        allocutions: ["\"I just wanted my tools. I know I went about it wrong.\""],
+        victimImpacts: ["{VL}: \"I changed my schedule, my route, and my phone number, and {D.he} still found me at work. I was standing at my register when {D.he} got in my line with a pack of gum. I didn't breathe until my manager came over. I love that job, and now I look at every face in the line.\""],
+        allocutions: ["\"I just wanted my tools back, and I know I went about it wrong. I've stood in this room before, and I was told to stay away from {V}, so I had no business walking into that store. I never touched {V.him} or said anything threatening. I'm sorry I put {V.him} through that at work.\""],
         guiltyTruths: ["{DL}'s phone showed searches for {VL}'s work schedule the night before."],
         innocentTruths: ["The store had moved {VL} to a new shift that week; {DL}'s friend had told {D.him} {VL} wouldn't be working."],
         moods: [.wantsConviction], doctrines: ["victimRights", "burdenOfProof"],
@@ -123,7 +129,7 @@ enum FollowUpCases {
             defendantExam: [
                 .direct("Why did you go to the store?", "\"To ask about my tools. That's all. I didn't think a grocery store was {V.his} workplace in the way the order meant.\""),
                 .cross("The order says workplace. You knew {V.he} worked there.", "\"...I knew. Everyone knew where {V.he} worked.\""),
-                .cross("You waited in the lot for fifty minutes.", "\"I wanted to talk.\"")
+                .cross("You waited in the lot for fifty minutes.", "\"I wanted to talk to {V.him}. I waited because I didn't know another way to reach {V.him}.\"")
             ],
             objections: [
                 (2, ObjectionSeed(question: "Defense: \"And {VL} had texted {DL} a month earlier, hadn't {V.he}? So {V.he} didn't really want no contact?\"",
@@ -190,8 +196,8 @@ enum FollowUpCases {
         defenseTheory: ["Someone else had the phone. Tower records put two phones in the same place, not {D}'s thumbs on the screen."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"Every time my phone buzzes, my heart stops. Every time.\""],
-        allocutions: ["\"I needed {V.him} to hear me. I couldn't stand the silence.\""],
+        victimImpacts: ["{VL}: \"Every time my phone buzzes, my heart stops. One hundred forty texts came in nine days from a number I didn't know, and then photos of my own porch. I put a lock on every window and stopped answering anything unknown. I just want to be able to look at my phone without shaking.\""],
+        allocutions: ["\"I needed {V.him} to hear me, and I couldn't stand the silence. I know the order said no contact, and I'm sorry I let it get that far. But a friend set up that prepaid phone and sent those texts, and I never touched it. I'll respect the order from here on.\""],
         guiltyTruths: ["A draft of message 72 was found in {DL}'s own phone's notes app."],
         innocentTruths: ["The friend's own phone, examined later, held screenshots of the messages being typed."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "victimRights"],
@@ -202,7 +208,7 @@ enum FollowUpCases {
             defendantExam: [
                 .direct("Did you send those messages?", "\"No. A friend set up that phone and sent them. I never touched it.\""),
                 .cross("You bought the phone.", "\"I bought it for my friend.\""),
-                .cross("Which ones did you send?", "\"The apologies.\"")
+                .cross("Which ones did you send?", "\"The apologies. I sent the ones where I said I was sorry, and I'm not proud of the rest.\"")
             ],
             prosecutionOpening: "A phone bought with cash, a court order, and 140 messages.",
             defenseOpening: "A borrowed phone and a lot of guessing.",
@@ -254,7 +260,7 @@ enum FollowUpCases {
                             .direct("Where do you live?", "\"In the next building over from {VL}'s, in the same complex.\""),
                             .direct("How often did {DL} visit?", "\"Couple times a week, maybe more.\""),
                             .direct("Why would {DL} wait out in the car?", "\"I work late. {D.He}'d wait for me to get home.\""),
-                            .cross("On the nights the car sat outside with the engine running, did {DL} come into your apartment?", "\"Not every time.\""),
+                            .cross("On the nights the car sat outside with the engine running, did {DL} come into your apartment?", "\"Not every time. Some nights {D.he} sat there with the engine running and then drove off.\""),
                             .cross("So you can't say what {DL} was doing out there on the nights {D.he} didn't come in?", "\"No. I wasn't out there.\"")
                         ])
         ],
@@ -263,7 +269,7 @@ enum FollowUpCases {
         aggravating: [],
         mitigating: ["No physical contact occurred"],
         victimImpacts: ["{VL}: \"I sleep at my sister's now. I pay rent on an apartment I'm afraid to go home to.\""],
-        allocutions: ["\"I was visiting family. I never meant to scare anybody.\""],
+        allocutions: ["\"I was visiting family, and I never meant to scare anybody. My cousin works late and lives in the next building, and I was waiting for her to get off. That lot has only one way out, so any car leaving follows the one ahead of it. I know the order said to stay away, and I'm sorry how it looked.\""],
         guiltyTruths: ["The cousin moved out of the complex a month before the first logged night."],
         innocentTruths: ["The cousin's lease and mail confirm the cousin still lived there, with an assigned parking spot facing {VL}'s building."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -333,8 +339,8 @@ enum FollowUpCases {
         defenseTheory: ["A shared lot, an anonymous note writer, and a handwriting opinion that stops short of certainty."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"'You did this to me.' {D.He} blames me for what this court did.\""],
-        allocutions: ["\"I didn't write those notes.\""],
+        victimImpacts: ["{VL}: \"'You did this to me.' That's what the note said, and it was clearly meant for me. Whoever wrote it blames me for what this court did. I found four of them in a month, and then a flat tire. I look around the lot before I get out of my car now.\""],
+        allocutions: ["\"I didn't write those notes, and I haven't been near that lot. I've been in this courtroom before, and I know why {V} might be afraid, and I'm sorry for that. But I'm not the one who put anything under that windshield wiper. I ask the court to weigh that carefully.\""],
         guiltyTruths: ["A notebook with matching torn edges was found in {DL}'s truck."],
         innocentTruths: ["A coworker of {VL}'s later admitted leaving the notes during a workplace feud."],
         moods: [.wantsConviction], doctrines: ["expertTestimony", "burdenOfProof"],
@@ -345,7 +351,7 @@ enum FollowUpCases {
             defendantExam: [
                 .direct("Did you write these notes?", "\"No. I haven't been near that lot.\""),
                 .direct("Did you slash {VL}'s tire?", "\"No. I wasn't there, and I don't know who did.\""),
-                .cross("\"You did this to me.\" Who else would write that?", "\"Anybody who was there.\"")
+                .cross("\"You did this to me.\" Who else would write that?", "\"Anybody who was there that night could have written it. It doesn't point to me.\"")
             ],
             prosecutionOpening: "Four notes in {D.his} handwriting, on the car of the person the court protected.",
             defenseOpening: "Handwriting comparison is an opinion, not a fingerprint.",
@@ -409,16 +415,16 @@ enum FollowUpCases {
                             .direct("Do you want this case to go forward?", "\"No. I don't want to testify against {D.him}.\""),
                             .direct("Why did you tell the deputy something different that night?", "\"I was crying and scared and angry. I said things I shouldn't have.\""),
                             .cross("That night, crying and hoarse, you told the deputy, '{D.He} had me by the throat against the counter'?", "\"I said that. I was upset.\""),
-                            .cross("You've been through this before, in this courtroom.", "\"...Twice now. Same courtroom.\"")
+                            .cross("You've been through this before, in this courtroom.", "\"Twice now, in this same courtroom, and I know how that looks.\"")
                         ])
         ],
         prosecutionTheory: ["The second time is the most dangerous time. The marks on {V}'s neck and {V.his} words that night tell what happened, whatever {V.he} says now."],
         defenseTheory: ["The only person who was there says {V.he} fell. The State is prosecuting a family that doesn't want this."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"I don't want to talk about it.\""],
-        allocutions: ["\"I'm getting help this time. I mean it.\""],
-        guiltyTruths: ["A text {VL} sent {V.his} sister that night read: \"{D.He} did it again. I couldn't breathe.\""],
+        victimImpacts: ["{VL}: \"I don't want to talk about it. I called nobody the first time, and the deputies came anyway. My voice is still hoarse, and the marks on my neck are what everyone sees. Please don't ask me to relive it. I just want to be left alone.\""],
+        allocutions: ["\"I'm getting help this time, and I mean it. We argued over a phone bill, and it got loud, and {V.he} slipped in the kitchen. That's all I'm going to say about that night. I've been here before, and I know what that means. I want to do better for both of us.\""],
+        guiltyTruths: ["A text {VL} sent {V.him} sister that night read: \"{D.He} did it again. I couldn't breathe.\""],
         innocentTruths: ["A visiting relative later told police {VL} had fallen while reaching for a cabinet, and the marks came from a necklace caught as {V.he} fell."],
         moods: [.wantsConviction], doctrines: ["victimRights", "hearsayExceptions"],
         story: StoryExtras(
@@ -484,7 +490,7 @@ enum FollowUpCases {
                         exam: [
                             .direct("What did you note at booking?", "\"Three parallel scratches on the left forearm.\""),
                             .direct("What did the scratches look like?", "\"Thin lines, side by side, like fingernail scratches.\""),
-                            .cross("Booking was two days later?", "\"That's right.\""),
+                            .cross("Booking was two days later?", "\"That's right. Booking was two days after it happened.\""),
                             .cross("So you can't say how or when {DL} got those scratches?", "\"No. I only wrote down what I saw at booking.\"")
                         ])
         ],
@@ -492,8 +498,8 @@ enum FollowUpCases {
         defenseTheory: ["{V} attacked first; {D} grabbed what was in reach. Scratches don't lie."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"I have metal plates in my face. I still flinch when someone raises a hand.\""],
-        allocutions: ["\"{V.He} was coming at me. I didn't mean for it to be that bad.\""],
+        victimImpacts: ["{VL}: \"I have metal plates in my face. I needed nine stitches over my eye and surgery for the cheekbone, and I eat soft food. I still flinch when someone raises a hand, even across a table. I'd lived with that fear before, and now I can't get rid of it.\""],
+        allocutions: ["\"{V.He} was coming at me, and I didn't mean for it to be that bad. We were arguing, and {V.he} was clawing at me, and I grabbed the first thing I touched. I've been in this courtroom before, and I know how this looks. I'm sorry {V.he} was hurt, and I mean that.\""],
         guiltyTruths: ["A neighbor's doorbell camera audio caught {DL} shouting \"Look what you made me do\" as {D.he} left."],
         innocentTruths: ["{VL}'s blood alcohol at the hospital was 0.21, and {V.his} own statement that night began \"I went after {D.him} first.\""],
         moods: [.wantsConviction], doctrines: ["selfDefense", "burdenOfProof"],
@@ -504,7 +510,7 @@ enum FollowUpCases {
             defendantExam: [
                 .direct("What happened before you swung?", "\"We were arguing and {V.he} came at me. {V.He} scratched up my arm.\""),
                 .direct("Why did you swing the skillet?", "\"{V.He} was clawing at me. I grabbed the first thing I touched.\""),
-                .cross("Then you ran and turned off your phone for two days.", "\"I panicked.\"")
+                .cross("Then you ran and turned off your phone for two days.", "\"I panicked. I ran, I turned off my phone for two days, and I know that looks bad.\"")
             ],
             prosecutionOpening: "Cast iron, a fractured face, and a defendant who ran.",
             defenseOpening: "Scratches on {D.his} arm, and a fight {D.he} didn't start.",
@@ -561,8 +567,8 @@ enum FollowUpCases {
         defenseTheory: ["An aggressive drunk with a pool cue, and a split-second reaction."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"I still lose words in the middle of sentences. I went out to play pool.\""],
-        allocutions: ["\"I thought {V.he} was going to hit me with that cue.\""],
+        victimImpacts: ["{VL}: \"I still lose words in the middle of sentences. I went out to play pool on a Friday night, and I spent five days in the hospital with a brain bleed. I can't remember the parking lot at all. I'm a different person than I was before that night.\""],
+        allocutions: ["\"I thought {V.he} was going to hit me with that cue. It started over the pool table, and it followed us out to the lot, and {V.he} had the stick up. I swung without thinking. I'm sorry {V.he} was hurt that badly. I was here before, and I should have known to walk away.\""],
         guiltyTruths: ["A second camera angle, recovered later, shows the pool cue still leaning inside the door when the bottle was swung."],
         innocentTruths: ["A patron's phone video, found later, shows {VL} swinging the cue at {DL}'s head first."],
         moods: [.divided], doctrines: ["selfDefense", "burdenOfProof"],
@@ -612,7 +618,7 @@ enum FollowUpCases {
                             .direct("Who was home that night?", "\"Me and my two children. They were asleep upstairs.\""),
                             .direct("What did you hear?", "\"The window slide, footsteps across the kitchen, then the back door. My kids were asleep right above it.\""),
                             .direct("What was missing?", "\"My laptop, my jewelry box, and a handgun from the closet shelf. The back window was open.\""),
-                            .cross("You never saw who it was?", "\"No. Thank God.\""),
+                            .cross("You never saw who it was?", "\"No. Thank God I never saw who it was, because I'm not sure I could have handled it.\""),
                             .cross("By the time you got to the kitchen, whoever it was had gone?", "\"Yes. The window was open and they were gone.\"")
                         ]),
             WitnessSeed(name: nil, role: "Latent print examiner",
@@ -643,8 +649,8 @@ enum FollowUpCases {
         defenseTheory: ["Buying stolen jewelry at a gas station is foolish; it isn't burglary. A partial print doesn't put {D.him} inside."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"My son sleeps in my room now. The gun is still out there.\""],
-        allocutions: ["\"I bought that jewelry. I didn't go in anybody's house.\""],
+        victimImpacts: ["{VL}: \"My son sleeps in my room now, and the gun is still out there. I heard a noise downstairs at three in the morning, and by the time I reached the kitchen the window was open. My two children were asleep upstairs the whole time. I keep thinking about what could have happened.\""],
+        allocutions: ["\"I bought that jewelry from a man at a gas station for sixty dollars, and I tried to sell it. That was foolish. I didn't go in anybody's house, and I never touched that gun. I know I've been in this room before, and I'm trying to stay on the straight path.\""],
         guiltyTruths: ["The missing handgun was recovered months later in a car {DL} had sold."],
         innocentTruths: ["The man who sold the jewelry at the gas station was arrested later with the laptop and the gun."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -655,7 +661,7 @@ enum FollowUpCases {
             defendantExam: [
                 .direct("Where did you get the jewelry?", "\"A guy at the gas station on the highway. Sixty dollars.\""),
                 .direct("Were you ever inside that house?", "\"No. Never. I bought the jewelry and tried to sell it. That's all I did.\""),
-                .cross("And your palm print on the window?", "\"I don't know how it got there.\"")
+                .cross("And your palm print on the window?", "\"I can't tell you how it ended up there.\"")
             ],
             prosecutionOpening: "A family asleep upstairs, and {D.his} palm on the window.",
             defenseOpening: "A bad purchase at a gas station is not a burglary.",
@@ -692,7 +698,7 @@ enum FollowUpCases {
                             .direct("What happened?", "\"Someone in a gray hoodie came around the counter, put a folding knife to my neck, and took the $340 out of the register.\""),
                             .direct("How close was the person?", "\"Close enough to smell. The knife was under my jaw. I looked at the eyes the whole time.\""),
                             .direct("How sure were you when you picked {DL} from the photos?", "\"Sure. I told the officer, 'That's the one. I'll never forget the eyes.'\""),
-                            .cross("The hood was up and the lower face was covered?", "\"Yes. The eyes weren't.\""),
+                            .cross("The hood was up and the lower face was covered?", "\"Yes. The hood was up and the lower face was covered, but the eyes weren't.\""),
                             .cross("You saw only the eyes, during a robbery, with a knife at your throat?", "\"Yes. I wasn't looking anywhere else.\"")
                         ])
         ],
@@ -702,19 +708,19 @@ enum FollowUpCases {
                         cross: ["\"I fell asleep at halftime.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("How do you know {DL}?", "\"We share an apartment.\""),
+                            .direct("How do you know {DL}?", "\"We share an apartment, so I see {D.him} every day.\""),
                             .direct("Where was {DL} that night?", "\"On the couch with me watching the game.\""),
-                            .direct("Did {DL} go out at any point?", "\"Not that I saw.\""),
+                            .direct("Did {DL} go out at any point?", "\"Not that I saw. I'd have noticed if {D.he} had gone out.\""),
                             .cross("The whole game?", "\"...I fell asleep around halftime.\""),
-                            .cross("So you can't say where {DL} was after you fell asleep?", "\"No. I was asleep.\"")
+                            .cross("So you can't say where {DL} was after you fell asleep?", "\"No. I was asleep, so I can't say where {D.he} was after that.\"")
                         ])
         ],
         prosecutionTheory: ["{V} looked into those eyes from six inches away, and {D.his} hoodie was in {D.his} car."],
         defenseTheory: ["A hooded, masked robber, a frightened clerk, and a hoodie half the county owns."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"I quit. I can't work a register anymore.\""],
-        allocutions: ["\"I didn't rob anybody.\""],
+        victimImpacts: ["{VL}: \"I quit. I can't work a register anymore. A man held a knife to my neck and made me empty the drawer, and I still feel the blade when I close my eyes. I took a job where I never stand behind a counter. I flinch when anyone steps toward me.\""],
+        allocutions: ["\"I didn't rob anybody, and I'm sorry for what that clerk went through. I was at home watching the game, and the hoodie they found is one they sell at three stores in the county. I've been in this courtroom before, and I know it hurts my case. I ask the court to look closely at the lineup.\""],
         guiltyTruths: ["{DL}'s phone was at the gas station's tower at the time of the robbery."],
         innocentTruths: ["The same robber hit another store a week later while {DL} was in jail."],
         moods: [.wantsConviction], doctrines: ["eyewitnessID", "burdenOfProof"],
@@ -723,9 +729,9 @@ enum FollowUpCases {
             howIdentified: "{VL}'s photo lineup identification.",
             notDone: ["{DL}'s phone location was not requested."],
             defendantExam: [
-                .direct("Where were you that night?", "\"Home. Watching the game.\""),
+                .direct("Where were you that night?", "\"Home, watching the game. I didn't leave the apartment at all that night.\""),
                 .direct("What about the hoodie in your car?", "\"It's mine. It's the same one they sell at three stores in the county.\""),
-                .cross("Your roommate fell asleep at halftime.", "\"I didn't.\"")
+                .cross("Your roommate fell asleep at halftime.", "\"I didn't fall asleep at halftime. I stayed up for the whole game.\"")
             ],
             prosecutionOpening: "Six inches from a knife, {V} memorized the eyes.",
             defenseOpening: "A covered face and a common sweatshirt.",
@@ -788,8 +794,8 @@ enum FollowUpCases {
         defenseTheory: ["A tragic crash with a speeding motorcycle. The State's alcohol math is an estimate."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}'s mother: \"{V.He} spent twelve hours keeping strangers alive. {V.He} was ten minutes from home.\""],
-        allocutions: ["\"I would trade places with {V.him}. I mean that.\""],
+        victimImpacts: ["{VL}'s mother: \"{V.He} spent twelve hours keeping strangers alive, and {V.he} was ten minutes from home. {V.He} was thirty-four, a nurse, and the person everyone in our family called when something was wrong. Now I don't know whom to call. I keep setting a place at the table.\""],
+        allocutions: ["\"I would trade places with {V.him}. I mean that, and I'll say it again to {V.his} family. The light was yellow when I looked, and the motorcycle came into the intersection fast. I've been in this room before, and I know I shouldn't have been driving that night after drinking.\""],
         guiltyTruths: ["A bar receipt showed six drinks ordered on {DL}'s card in the two hours before the crash."],
         innocentTruths: ["The signal controller was later found to have a timing fault at that intersection that night."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -800,7 +806,7 @@ enum FollowUpCases {
             defendantExam: [
                 .direct("Was the light red?", "\"It was yellow when I looked.\""),
                 .direct("Did you see the motorcycle?", "\"Not until it was right there. It came into the intersection fast.\""),
-                .cross("You'd been drinking.", "\"I'd had a couple.\"")
+                .cross("You'd been drinking.", "\"I'd had a couple of drinks, but I wasn't drunk.\"")
             ],
             prosecutionOpening: "Red for 2.4 seconds. No brakes. A nurse on {V.his} way home.",
             defenseOpening: "A terrible crash with two drivers going too fast.",
@@ -860,8 +866,8 @@ enum FollowUpCases {
         defenseTheory: ["{V} had other sources. The State can't prove these were the pills."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}'s father: \"{V.He} was eleven weeks sober. {V.He} thought it was one Percocet.\""],
-        allocutions: ["\"I didn't know they were fake. I swear to God.\""],
+        victimImpacts: ["{VL}'s father: \"{V.He} was eleven weeks sober. {V.He} thought it was one Percocet. {V.He} called me that morning and said {V.he} was proud, and I told {V.him} I was, too. We found {V.him} in {V.his} bedroom with two blue pills beside {V.him}. We'd just started to believe it was over.\""],
+        allocutions: ["\"I didn't know they were fake. I swear to God. I thought I was selling two Percocets, and if I'd known, I never would have sold them to anybody. I've been in this room before, and I know I shouldn't have been selling at all. I'm sorry for that family.\""],
         guiltyTruths: ["{DL} had texted another buyer that week: \"these are the strong ones, go slow.\""],
         innocentTruths: ["A second supplier admitted delivering pills to {VL} later that evening."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -944,8 +950,8 @@ enum FollowUpCases {
         defenseTheory: ["Gifts from a grateful friend, and a contractor who skipped town."],
         aggravating: ["The victim was mentally infirm"],
         mitigating: [],
-        victimImpacts: ["{VL}'s daughter: \"Mama's in a nursing home on Medicaid now. That was her house money.\""],
-        allocutions: ["\"I loved that lady. She wanted me to have it.\""],
+        victimImpacts: ["{VL}'s daughter: \"Mama's in a nursing home on Medicaid now. That was {V.his} house money. {V.He} worked forty years and saved every dollar so {V.he} would never be a burden. Thirty-eight thousand dollars left {V.his} account in a year. I don't know how to explain it to {V.him} when {V.he} asks.\""],
+        allocutions: ["\"I loved that lady. {V.He} wanted me to have it, and {V.he} said so more than once because {V.his} kids never came around. I drove {V.him} to every appointment and fixed {V.his} roof. A contractor took some of the money and disappeared. I know how it looks, and I'm sorry for {V.his} family's pain.\""],
         guiltyTruths: ["{DL} had opened a second bank account in {VL}'s name and was the only signer."],
         innocentTruths: ["The missing contractor was later arrested in South Carolina with {VL}'s $9,500 check endorsed to him."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -997,7 +1003,7 @@ enum FollowUpCases {
                             .direct("What happened when you lit the car up?", "\"It accelerated. Two stop signs, ninety in a forty-five, until it went in the ditch.\""),
                             .direct("What happened after the car went in the ditch?", "\"The driver got out and ran into the woods. We caught {DL} about ten minutes later.\""),
                             .cross("All this over an expired tag?", "\"That's what the stop was for. The chase was the defendant's choice.\""),
-                            .cross("Nobody was hurt?", "\"No. Nobody was hurt.\"")
+                            .cross("Nobody was hurt?", "\"No. Nobody was hurt, and I'm thankful for that every day.\"")
                         ])
         ],
         defenseWitnesses: [],
@@ -1006,7 +1012,7 @@ enum FollowUpCases {
         aggravating: [],
         mitigating: ["No one was injured"],
         victimImpacts: [],
-        allocutions: ["\"I panicked. I thought I was going back to jail.\""],
+        allocutions: ["\"I panicked. I thought there was a warrant out for me, and I thought I was going back to jail. I ran two stop signs and spun into a ditch, and I'm lucky nobody was hurt. I've been in this room before. I'm sorry for the danger, and I'll deal with whatever comes.\""],
         guiltyTruths: ["There was no warrant; {DL} had a bag of pills in the car {D.he} threw into the woods."],
         innocentTruths: ["A records error had in fact listed an old warrant under {DL}'s name that night."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -1016,8 +1022,8 @@ enum FollowUpCases {
             notDone: [],
             defendantExam: [
                 .direct("Why did you run?", "\"I thought there was a warrant. I panicked.\""),
-                .direct("Why did you run into the woods after the crash?", "\"Same reason. I was scared and I wasn't thinking straight.\""),
-                .cross("Ninety miles an hour past houses with kids in them.", "\"I wasn't thinking.\"")
+                .direct("What would you tell the deputies now?", "\"I'm sorry I ran. I should have stopped and talked to them, and I'll answer anything they ask.\""),
+                .cross("Ninety miles an hour past houses with kids in them.", "\"I wasn't thinking. I was going ninety past houses with kids in them, and I know that.\"")
             ],
             prosecutionOpening: "An expired tag. Ninety miles an hour.",
             defenseOpening: "Panic is not a plan.",
@@ -1063,8 +1069,8 @@ enum FollowUpCases {
         defenseTheory: ["A night-shift worker following a supervisor's instructions about damaged boxes."],
         aggravating: ["The defendant took advantage of a position of trust"],
         mitigating: [],
-        victimImpacts: ["{VL}: \"Small business. I gave {D.him} a chance when nobody else would.\""],
-        allocutions: ["\"I needed the money. I know that's not an excuse.\""],
+        victimImpacts: ["{VL}: \"I run a small business, and I gave {D.him} a chance when nobody else would. Six thousand four hundred dollars of drills and saws left that dock in three weeks. I had to explain to my supplier why my numbers were off. It felt like being betrayed by someone at my own table.\""],
+        allocutions: ["\"I needed the money, and I know that's not an excuse. I worked nights at that warehouse and took boxes my supervisor called damaged returns, and I believed him. I've been in this courtroom before, and the owner gave me a chance anyway. I'm sorry I let {V.him} down.\""],
         guiltyTruths: ["No supervisor was on duty either night."],
         innocentTruths: ["The night supervisor admitted telling {DL} to take the boxes and later selling some {D.himself}."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -1073,7 +1079,7 @@ enum FollowUpCases {
             howIdentified: "Dock camera and the serial numbers in the online listings.",
             notDone: ["The night supervisor was not interviewed."],
             defendantExam: [
-                .direct("What shift did you work?", "\"Nights, at the warehouse.\""),
+                .direct("What shift did you work?", "\"Nights, at the warehouse. I clock in around ten and I'm there until morning.\""),
                 .direct("Why were you loading boxes into your car?", "\"My supervisor said they were damaged returns, to get rid of them.\""),
                 .cross("And then you sold them online.", "\"They worked fine. Seemed like a waste.\"")
             ],
@@ -1123,8 +1129,8 @@ enum FollowUpCases {
         defenseTheory: ["Using a found card is wrong. It isn't breaking into a car."],
         aggravating: [],
         mitigating: [],
-        victimImpacts: ["{VL}: \"My work laptop. I almost lost my job over it.\""],
-        allocutions: ["\"I found that wallet. I shouldn't have tried the card.\""],
+        victimImpacts: ["{VL}: \"It was my work laptop, and I almost lost my job over it. I came out to find my window punched out and my bag gone. The wallet, the license, the whole day gone. I had to replace everything and explain to my boss how a company laptop disappeared.\""],
+        allocutions: ["\"I found that wallet on the sidewalk by the bus stop, and I shouldn't have tried the card. It was stupid, and I'm sorry. But I didn't break into anybody's car. I've been in this courtroom before, and I know I keep landing here. I want to change that.\""],
         guiltyTruths: ["The laptop bag was found in a dumpster behind {DL}'s building."],
         innocentTruths: ["Another man was arrested the next week with the other five victims' property and spark-plug chips."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],

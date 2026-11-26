@@ -172,7 +172,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["No prior criminal record", "Has completed an intake for an abuser treatment program"],
         victimImpacts: ["{V}: \"I left with a duffel bag and a broken phone. I still can't sleep in a room with the door closed.\""],
-        allocutions: ["\"I shouldn't have touched that phone. I shouldn't have done any of it. I'm sorry, {V}.\""],
+        allocutions: ["\"I panicked when {V.he} said {V.he} was leaving. We were both pulling on the phone, and it came loose. I threw it after, because I was angry, and I'm not proud of that. I shouldn't have touched it. I'm sorry, {V}.\""],
         guiltyTruths: ["A text {DL} sent his brother at 12:30 a.m. read: \"Cops here. I smacked {V.him}, I lost it.\""],
         innocentTruths: ["A second neighbor, awake on the balcony, saw through the window that {V} fell sideways into the counter edge as both of them pulled at the phone."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -250,7 +250,7 @@ extension StoryCases {
                             .direct("What does the video show in the four seconds after the shove?", "\"{DL} steadies against the jukebox. {VL} stands still, then takes one step forward with hands open at chest height.\""),
                             .direct("Did you interview the other people in the bar?", "\"All six who were there. Only {DL}'s friend said anything about a threat, and that was before the shove. Nobody else could make out words over the music.\""),
                             .cross("You can't tell from the video what {VL} intended by that step?", "\"No. I can tell you what the hands were doing.\""),
-                            .cross("There's no sound to tell us whether {VL} was making threats?", "\"There's no sound.\"")
+                            .cross("There's no sound to tell us whether {VL} was making threats?", "\"There's no sound. The recording has no audio, so it can't tell us.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -340,7 +340,7 @@ extension StoryCases {
                             .direct("When did {DL}'s call come in?", "\"10:53. The caller said someone with lights was behind and asked if it was real.\""),
                             .direct("What did you tell {D.him}?", "\"I checked the deputy's location on my screen and told the caller at 10:54 that it was a Hollis County deputy and to pull over.\""),
                             .direct("When did the pickup stop?", "\"10:56, at the gas station. I stayed on the line until the deputy was at the window.\""),
-                            .cross("How did the caller sound?", "\"Scared. Breathing hard.\"")
+                            .cross("How did the caller sound?", "\"Scared. Breathing hard. The caller sounded scared and out of breath.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -449,7 +449,7 @@ extension StoryCases {
                         exam: [
                             .direct("Where was {DL} that night?", "\"Home. We watched the news and went to bed around ten.\""),
                             .direct("Do you know how the fender got dented?", "\"A deer, on the way back from my mother's, about two weeks before. I was in the passenger seat.\""),
-                            .cross("You were asleep by 10:30?", "\"Yes.\""),
+                            .cross("You were asleep by 10:30?", "\"Yes. I was asleep by 10:30, and I stayed asleep until morning.\""),
                             .cross("So you can't say whether the truck left the driveway at eleven?", "\"I'd have heard it. It's loud. But I was asleep, so no, I can't swear to it.\""),
                             .cross("Why didn't the deer strike get reported to insurance?", "\"The dent wasn't worth the deductible.\"")
                         ])
@@ -459,7 +459,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["{V}: \"I used to walk that road every night. Now I can't walk to the mailbox without a cane, and I still don't know who left me there.\""],
-        allocutions: ["\"I'm sorry for what happened to {V}. I wasn't on that road. That's all I can say.\""],
+        allocutions: ["\"I was in bed that night. I get up at five for work. I clipped a mailbox backing out of a job site the weekend after, and I didn't know anyone had been hit. I wasn't on that road.\""],
         guiltyTruths: ["The salvage yard's owner later found the original mirror in the scrap pile, cracked, with a strand of dark fabric in the hinge."],
         innocentTruths: ["A Silverado owner in the next county confessed to his pastor that he hit something on Pruitt Mill Road that night, and the pastor persuaded him to call the Highway Patrol."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "eyewitnessID"],

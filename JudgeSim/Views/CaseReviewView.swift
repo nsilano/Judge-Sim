@@ -74,6 +74,7 @@ struct CaseReviewSheet: View {
             Text(c.caption).font(.system(.title3, design: .serif).weight(.bold))
             Text("\(c.docket) · \(c.court.label)").font(.caption.monospaced()).foregroundStyle(.secondary)
             Text(c.summary).font(.callout)
+            ReadAloudButton(id: "summary|\(c.id)", lines: { [SpeechReader.Line(text: c.summary, speaker: "Clerk")] }, title: "Read the summary aloud")
         }
         .card()
         SectionTitle(text: "Charges", icon: "list.bullet.rectangle")

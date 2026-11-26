@@ -72,8 +72,8 @@ extension StoryCases {
         defenseTheory: ["{DL} did the last robbery out of desperation and admits it. {DL} copied the first three robberies from the news coverage, which reported the method in detail, and {DL} has an alibi for the first."],
         aggravating: ["The offense involved multiple victims"],
         mitigating: ["The defendant has expressed remorse", "The defendant accepted responsibility"],
-        victimImpacts: ["{V}: \"I can't stand at a window with my back to the door anymore. I quit.\""],
-        allocutions: ["\"I was about to be homeless with a broken back. I'm ashamed. I never had a gun.\""],
+        victimImpacts: ["{V}: \"I can't stand at a window with my back to the door anymore. I quit. Someone slid a note across my counter and I counted out three thousand dollars with my hands shaking. I'd been a teller for nine years, and I loved the customers. I work in a bakery now, and I take the long way around to avoid the bank.\""],
+        allocutions: ["\"I was about to be homeless with a broken back. I had read about the robberies with the note, and I thought it would work for me, and I robbed the last branch. I never had a gun, and I never meant to hurt anyone. I'm ashamed of what I put that teller through. I'm asking the court for the chance to get my life in order.\""],
         guiltyTruths: ["The pad of paper, with the indentations of all four notes, was found later in the Buick's trunk."],
         innocentTruths: ["A man arrested in Virginia for the same kind of robberies later confessed to the first two Hollis County banks, describing details."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "lesserIncluded"],
@@ -166,7 +166,7 @@ extension StoryCases {
                         exam: [
                             .direct("How were you watching?", "\"{D.He} was filming the stop on {D.his} phone, and I was watching it live.\""),
                             .direct("How did {DL} sound on the live video?", "\"Scared. {D.He}'s had bad experiences with police.\""),
-                            .direct("Did {DL} say anything about hurting the deputy?", "\"No. Nothing like that.\""),
+                            .direct("Did {DL} say anything about hurting the deputy?", "\"No. Nothing like that. {DL} said nothing about hurting the deputy.\""),
                             .cross("You watched {D.him} drive away with the deputy's arm in the window?", "\"I saw the car move.\""),
                             .cross("And you heard {D.him} say 'you're trespassing on my property' as it moved?", "\"I heard {D.him} say that, yes.\"")
                         ])
@@ -175,8 +175,8 @@ extension StoryCases {
         defenseTheory: ["{DL}'s beliefs are wrong, but beliefs aren't crimes. The deputy reached into the car first, and {DL} panicked. There was no intent to hurt anyone."],
         aggravating: [],
         mitigating: ["No prior violent record"],
-        victimImpacts: ["Deputy {OFFICER}: \"I've done a thousand traffic stops. This is the one I think about.\""],
-        allocutions: ["\"I do not consent to these proceedings. I am a living soul, not a corporate fiction.\""],
+        victimImpacts: ["Deputy {OFFICER}: \"I've done a thousand traffic stops. This is the one I think about. My arm was caught in that window, and I was dragged along the road before I could free it. It healed, but I still wake up at night feeling the glass. I want people to understand that a stop can turn dangerous in a second.\""],
+        allocutions: ["\"I do not consent to these proceedings. I believe a license is a contract, and I never signed one, and I was traveling, not driving. I hold those beliefs sincerely, and I mean the court no disrespect. I rolled up my window to end what I considered a trespass. I did not feel anyone's arm and did not mean to hurt a deputy.\""],
         guiltyTruths: ["A message {DL} posted the week before, recovered later, read: \"Next time one of them reaches in my car, I'm leaving with their arm.\""],
         innocentTruths: ["Frame-by-frame analysis of {DL}'s phone video later suggested the window was already rising before the deputy reached in."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "rightToCounsel"],
@@ -267,16 +267,16 @@ extension StoryCases {
                             .direct("How do you know {DL}?", "\"We've hunted together for years.\""),
                             .direct("What kind of hunter is {DL}?", "\"Careful. Hunter safety instructor for the church youth group.\""),
                             .direct("Have you ever seen {D.him} take a careless shot?", "\"Never. {D.He}'s the one telling everybody else to wait.\""),
-                            .cross("You knew that land was posted?", "\"Everybody hunts it.\""),
-                            .cross("You weren't with {DL} that evening?", "\"No. I wasn't there.\"")
+                            .cross("You knew that land was posted?", "\"I knew the land was posted, but everybody hunts it.\""),
+                            .cross("You weren't with {DL} that evening?", "\"No. I wasn't there. I wasn't with {DL} that evening.\"")
                         ])
         ],
         prosecutionTheory: ["{D} hunted where hunting was forbidden, after legal light, and fired at a shape {D.he} couldn't identify, beside a public trail. That's culpable negligence."],
         defenseTheory: ["A terrible accident by an experienced hunter who honestly believed {D.he} saw a deer. Bad judgment isn't culpable negligence."],
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has expressed remorse"],
-        victimImpacts: ["{VL}'s spouse: \"The dog came home alone. That's how I knew.\""],
-        allocutions: ["\"I've hunted since I was eight. I broke every rule I teach. I'm so sorry.\""],
+        victimImpacts: ["{VL}'s spouse: \"The dog came home alone. That's how I knew. {V} walked that greenway every evening, rain or shine, and the dog always came back a few steps ahead. That night I heard the tags jingle at the door and found no one behind them. I can't walk that path without hearing that single shot.\""],
+        allocutions: ["\"I've hunted since I was eight, and that evening I broke every rule I teach. I saw brown moving low in the brush and heard a step like a deer, and I was sure. I ran to {V} and tried CPR, and I couldn't think. I'll never pick up a rifle again.\""],
         guiltyTruths: ["A text {DL} sent a friend that evening, before calling 911, read: \"I think I shot somebody. What do I do.\""],
         innocentTruths: ["A neighbor's trail camera, found later, showed a deer crossing the brush seconds before {VL} walked into the same spot."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -292,7 +292,7 @@ extension StoryCases {
                 .direct("What did you see?", "\"Brown moving low through the brush, and I heard it step like a deer. I was sure.\""),
                 .direct("Why did it take eleven minutes to call?", "\"I ran to it. I tried to help. I tried CPR. I couldn't think.\""),
                 .cross("You fired after legal light, on posted land, next to a trail.", "\"After light, on posted land, next to a trail. All three.\""),
-                .cross("You never saw antlers. You never saw a deer.", "\"I believed it was.\"")
+                .cross("You never saw antlers. You never saw a deer.", "\"I never saw antlers or a deer, but I believed it was one.\"")
             ],
             objections: [
                 (1, ObjectionSeed(question: "Prosecutor: \"Detective, was the defendant trying to cover it up?\"",
@@ -347,7 +347,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} tell you about {D.his} training?", "\"That she did a residency in orthopedics and left hospitals to do real healing. Her coat said doctor. The wall said doctor.\""),
                             .direct("What happened after the injections?", "\"Both knees swelled up and turned red. I had a fever of 104. Three surgeries. I walk with a cane now.\""),
-                            .direct("How much did you pay?", "\"$8,400.\""),
+                            .direct("How much did you pay?", "\"I paid $8,400 in total.\""),
                             .cross("You signed a form saying the treatment was experimental?", "\"I signed a form a doctor handed me.\""),
                             .cross("Infection is a known risk of any injection?", "\"I've heard that, yes. I didn't know what was in those vials.\"")
                         ]),
@@ -368,19 +368,19 @@ extension StoryCases {
                         cross: ["\"I thought she was a doctor.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("What treatment did you get?", "\"The IV vitamin drips.\""),
+                            .direct("What treatment did you get?", "\"The IV vitamin drips. That was the treatment I got.\""),
                             .direct("How was your experience?", "\"Good. The vitamin drips helped my energy, and she listened more than any doctor.\""),
-                            .direct("Did you have any problems from the drips?", "\"No. None.\""),
-                            .cross("Did you believe {DL} was a medical doctor?", "\"Yes. Wasn't she?\""),
-                            .cross("You never had the knee injections?", "\"No. Just the drips.\"")
+                            .direct("Did you have any problems from the drips?", "\"No. None. I had no problems from the drips.\""),
+                            .cross("Did you believe {DL} was a medical doctor?", "\"Yes. Wasn't she? I believed {DL} was a medical doctor.\""),
+                            .cross("You never had the knee injections?", "\"No. Just the drips. I never had the knee injections.\"")
                         ])
         ],
         prosecutionTheory: ["{D} pretended to be a doctor, forged credentials, and injected people with contaminated product from a website. Consent obtained by fraud isn't consent."],
         defenseTheory: ["{DL} offered alternative treatments to adults who signed consent forms saying they were experimental. Infections are a known risk of any injection. This is a regulatory matter, not assault."],
         aggravating: ["The offense involved multiple victims", "The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{V}: \"I wanted to keep playing with my grandkids. Now I can't get on the floor with them at all.\""],
-        allocutions: ["\"I believed in what I was doing. I never meant for anyone to get hurt.\""],
+        victimImpacts: ["{V}: \"I wanted to keep playing with my grandkids. I paid four thousand dollars for relief from joint pain, and what I got was a swelling that left me in a hospital bed. Now I can't get on the floor with them at all. I believed that white coat, and I'm still angry at myself.\""],
+        allocutions: ["\"I believed in what I was doing, and I never meant for anyone to get hurt. I told people I was a doctor of naturopathy, and I think people heard what they wanted to hear. Someone set up my paperwork, and I didn't check it. The injections came from a company I thought was reputable. I'm sorry for every person who was harmed.\""],
         guiltyTruths: ["An email {DL} sent a supplier read: \"Don't worry about sterility certificates, my patients don't ask.\""],
         innocentTruths: ["The supplier later admitted relabeling a recalled lot and shipping it to {DL} as a new, tested batch."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -397,7 +397,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Did you say you were a medical doctor?", "\"I said I was a doctor of naturopathy. People heard what they wanted.\""),
                 .direct("The license number?", "\"Someone set up my paperwork. I didn't check it.\""),
-                .cross("Your coat said 'Dr.' and your intake forms said 'physician.'", "\"That's a title.\""),
+                .cross("Your coat said 'Dr.' and your intake forms said 'physician.'", "\"My coat said 'Dr.' because that's a title.\""),
                 .cross("You ordered the vials from a website with no sterility testing.", "\"It was a reputable company.\"")
             ],
             objections: [
@@ -451,7 +451,7 @@ extension StoryCases {
                         exam: [
                             .direct("Tell us about your son.", "\"He was killed in Afghanistan. I wanted a place with his name on it where people could sit and remember him.\""),
                             .direct("Why did you give {DL} $8,000?", "\"He came to my house in uniform. He said he'd lost friends over there like my son. He said the bench would be in the park by Memorial Day.\""),
-                            .direct("Was the bench ever built?", "\"No. There's no bench.\""),
+                            .direct("Was the bench ever built?", "\"No. There's no bench. The bench was never built.\""),
                             .cross("You never asked to see a receipt?", "\"You don't ask a soldier for a receipt.\""),
                             .cross("You've heard the fund did help some veterans' families?", "\"I've heard that, yes. It didn't help mine.\"")
                         ]),
@@ -483,8 +483,8 @@ extension StoryCases {
         defenseTheory: ["The lies about service were shameful but protected speech. The charity did real good; disputes over how money was spent are civil matters."],
         aggravating: ["The offense involved multiple victims", "The defendant took advantage of a position of trust"],
         mitigating: [],
-        victimImpacts: ["{V}: \"He used my son's name to take my money. There's no bench. There's nothing.\""],
-        allocutions: ["\"I wanted to be somebody. I did some good. I'll pay it back.\""],
+        victimImpacts: ["{V}: \"{D.He} used my son's name to take my money. I gave to that fund because my boy served, and I wanted a bench with his name on it in the park. There's no bench. There's nothing. I stood at a speech and shook {D.his} hand, and I'm ashamed that I was fooled.\""],
+        allocutions: ["\"I wanted to be somebody. I tried to enlist and failed the physical, and I've regretted it my whole life. I told those stories and wore those medals, and I did some good with the charity, but I lied to the people who gave. Most went to veterans, and some went to my own living expenses.\""],
         guiltyTruths: ["A storage unit rented by {DL} held boxes of unused donated goods and receipts showing he resold some online."],
         innocentTruths: ["The bench {VL} paid for turned up in a city warehouse, delivered and paid for by {DL} but never installed by the parks department."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],

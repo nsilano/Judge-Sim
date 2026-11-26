@@ -44,7 +44,7 @@ enum TrackRecords {
             : "This court suppressed evidence from your search in \(caption), didn't it?"
         let answer = rng.pick(["\"It did. Every case is different, and I followed procedure in this one.\"",
                                "\"Yes. I've changed how I write my affidavits since then.\"",
-                               "\"It did. I disagreed with the ruling, but I respect it.\""])
+                               "\"It did. I disagreed with the ruling, but I respect it.\"", "\"It did, and I took that seriously. I've changed how I document what I see before applying for a warrant.\"", "\"Yes. The court found my affidavit fell short, and I accept that.\"", "\"It did. I testified at that hearing and answered every question the court asked.\"", "\"Yes, Your Honor. I've since gone through additional training on warrant applications.\"", "\"It did. That case was different from this one, and I've learned from it.\"", "\"Yes. I believe I acted in good faith, but the court ruled otherwise and I abide by that.\""])
         return (question, answer)
     }
 }

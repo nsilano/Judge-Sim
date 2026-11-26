@@ -24,6 +24,8 @@ struct DeveloperDashboardView: View {
                 row("People on file", "\(game.people.count)")
                 row("Case log entries", "\(game.caseLog.count)")
                 row("News items", "\(game.news.count)")
+                row("Stock wordings used", "\(Variety.counts.count) different")
+                Text(Variety.summary).font(.caption2).foregroundStyle(.secondary)
             }
             Section("Saves") {
                 ForEach(SaveStore.summary(), id: \.self) { line in

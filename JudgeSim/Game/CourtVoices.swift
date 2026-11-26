@@ -58,10 +58,10 @@ enum VictimStatement {
         switch kind {
         case .firstAppearance:
             return rng.pick(["\(victim)'s family left the courtroom without speaking after \(defendant) was released.",
-                             "\(victim) told the clerk afterward that \(victim) is afraid of what happens when \(defendant) gets home."])
+                             "\(victim) told the clerk afterward that \(victim) is afraid of what happens when \(defendant) gets home.", "\(victim) asked the bailiff whether anyone would be told when \(defendant) was let out, and was told to ask the clerk.", "\(victim)'s family sat in the hallway for several minutes after \(defendant)'s bond was set, saying nothing.", "\(victim) left the courtroom in tears after the release conditions were read.", "\(victim)'s family asked a victim advocate whether the order would really keep \(defendant) away.", "\(victim) walked out quickly and did not stop to talk to the prosecutor.", "A relative of \(victim) said the family had hoped \(defendant) would be held until trial."])
         case .quickPlea:
             return rng.pick(["\(victim) shook \(victim)'s head at the sentence and left before the next case was called.",
-                             "\(victim)'s family said afterward that the plea did not feel like justice."])
+                             "\(victim)'s family said afterward that the plea did not feel like justice.", "\(victim) left the courtroom quietly while the next defendant was brought in, saying nothing to the prosecutor.", "\(victim)'s family said afterward they had expected a trial and felt shut out of the plea.", "\(victim) asked the prosecutor why the plea was offered, and the prosecutor explained the evidence problems in the hallway.", "A relative of \(victim) said it all happened too fast for anyone to understand what was being decided.", "\(victim) stood in the hallway for a long time after the plea was entered.", "\(victim)'s family told the advocate that the sentence did not match what they had been through."])
         default:
             return "\(victim) left the courtroom visibly frustrated by another delay."
         }

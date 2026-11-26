@@ -285,7 +285,7 @@ enum Exhibits {
             else if titled(["phone", "cell", "bystander", "facebook", "live", "snapchat", "instagram", "tiktok"]) { r.look = .phoneVideo; r.source = "Phone video" }
             else {
                 r.look = .cctv
-                r.source = named ?? rng.pick(["Harbor Mart", "Gas & Go #17", "Cane Creek Apartments", "Bayard Storage", "Coastal Plaza", "Wexley Package Store"])
+                r.source = named ?? rng.pick(["Harbor Mart", "Gas & Go #17", "Cane Creek Apartments", "Bayard Storage", "Coastal Plaza", "Wexley Package Store", "Bayard Pharmacy", "Port Hollis Dollar Stop", "Dunmore Mills Tire & Lube", "Wexley Quick Mart", "Shoreline Convenience"])
             }
         case .messages:
             if has(["email", "e-mail"]) { r.look = .email }
@@ -314,11 +314,11 @@ enum Exhibits {
             } else if has(["gps", "ankle monitor", "tracking", "location history", "geofence"]) {
                 r.look = .gps; r.source = named ?? (has(["ankle"]) ? "Probation electronic monitoring vendor" : "Google location history (via warrant)")
             } else if has(["call log", "phone record", "cell-site", "cell site", "tower", "call detail", "carrier", "subscriber"]) {
-                r.look = .phoneRecords; r.source = named ?? rng.pick(["Carolina Wireless", "Tidewater Mobile", "Piedmont Cellular"])
+                r.look = .phoneRecords; r.source = named ?? rng.pick(["Carolina Wireless", "Tidewater Mobile", "Piedmont Cellular", "Cape Fear Mobile", "Palmetto Cellular", "Coastal Link Wireless", "Blue Ridge Mobile", "Carolina Cellular One", "Triangle Wireless", "Outer Banks Mobile", "Hollis Telecom"])
             } else if titled(["receipt", "pawn", "purchase", "sales slip", "register", "ticket"]) {
-                r.look = .receipt; r.source = named ?? rng.pick(["Harbor Mart", "Cane Creek Hardware", "Gas & Go #17", "Hollis Pawn & Gold", "Bayard Feed & Supply"])
+                r.look = .receipt; r.source = named ?? rng.pick(["Harbor Mart", "Cane Creek Hardware", "Gas & Go #17", "Hollis Pawn & Gold", "Bayard Feed & Supply", "Wexley Lumber & Supply", "Bayard Dollar General", "Port Hollis Tire & Auto", "Dunmore Mills Pawn", "Port Hollis Hardware", "Cane Creek Quick Stop", "Wexley Auto Parts", "Bayard Pharmacy", "Harbor Point Sporting Goods"])
             } else if has(["bank", "account", "wire", "deposit", "withdrawal", "atm", "credit union", "checking", "savings", "ledger", "transaction", "cashier's check"]) {
-                r.look = .bank; r.source = named ?? rng.pick(["Tidewater Community Bank", "Hollis Federal Credit Union", "Coastal Carolina Savings", "First Piedmont Bank"])
+                r.look = .bank; r.source = named ?? rng.pick(["Tidewater Community Bank", "Hollis Federal Credit Union", "Coastal Carolina Savings", "First Piedmont Bank", "Cape Fear Federal Credit Union", "Carolina Community Savings", "Hollis Savings & Loan", "Piedmont Federal Credit Union", "Coastal Plains Bank", "Carolina Trust Bank", "Cane Creek Community Bank", "Port Hollis Federal Savings"])
             } else if has(["hospital", "medical", "emergency room", "discharge", "clinic", "doctor", "nurse", "x-ray", "injur"]) && !titled(["order"]) {
                 r.look = .medical; r.source = named ?? "Hollis Regional Medical Center"
             } else if titled(["email", "e-mail"]) {
@@ -329,13 +329,13 @@ enum Exhibits {
                            "time card", "schedule", "company", "business", "work order", "inspection", "appraisal", "permit", "audit", "report"]) {
                 r.look = .letterhead
                 r.source = named ?? rng.pick(["Tidewater Freight Logistics", "Carolina Mutual Insurance", "Hollis Property Management", "Coastal Plains Construction",
-                                              "Bayard Auto Body", "Piedmont Staffing"])
+                                              "Bayard Auto Body", "Piedmont Staffing", "Wexley Roofing Supply", "Coastal Home Health", "Harbor Freight Terminal"])
             } else {
                 r.look = e.side == .defense ? .letterhead : .courtPaper
                 if r.look == .letterhead { r.source = named ?? c.defenseAttorney.components(separatedBy: ",").first.map { "Law office of \($0)" } ?? "Defense counsel" }
             }
         }
-        r.sourceDetail = "\(rng.int(100...4_800)) \(rng.pick(["Main Street", "Market Street", "Commerce Drive", "Harbor Road", "Highway 17", "Front Street"])), \(town), N.C."
+        r.sourceDetail = "\(rng.int(100...4_800)) \(rng.pick(["Main Street", "Market Street", "Commerce Drive", "Harbor Road", "Highway 17", "Front Street", "Church Street", "Mill Road", "Old Stage Road", "Marsh Landing Road"])), \(town), N.C."
 
         // Ledgers and logs read with real dates, counting up to the day it happened.
         if r.look == .receipt {

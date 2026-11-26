@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Responses available at a probation violation hearing under the Justice Reinvestment Act.
 enum HearingDecision: String, CaseIterable, Hashable {
-    case continueAsIs, modify, quickDip, crv, revoke, terminate
+    case continueAsIs, modify, quickDip, crv, revoke, terminate, holdForNewCase
 
     var label: String {
         switch self {
@@ -13,6 +13,7 @@ enum HearingDecision: String, CaseIterable, Hashable {
         case .crv: return "Find a violation; order a CRV"
         case .revoke: return "Revoke probation and activate the suspended sentence"
         case .terminate: return "Terminate probation unsuccessfully"
+        case .holdForNewCase: return "Hold the violation until the new case is decided"
         }
     }
 
@@ -24,6 +25,7 @@ enum HearingDecision: String, CaseIterable, Hashable {
         case .crv: return "Confinement in response to violation: 90 days for a felony, up to 90 days for a misdemeanor, then probation resumes. The time is credited to the suspended sentence (G.S. 15A-1344(d2))."
         case .revoke: return "The statute permits revocation for a new criminal offense, absconding, or after two prior CRVs (G.S. 15A-1344(a))."
         case .terminate: return "Ends supervision now. Unpaid money becomes a civil judgment."
+        case .holdForNewCase: return "The usual course for a new arrest: the probationer stays in the county jail on a probation hold, the new case is tried first, and the violation is heard right after it."
         }
     }
 }
@@ -74,6 +76,8 @@ struct HearingOutcome {
     var newPriors: [PriorConviction] = []
     /// A felony sentence activated: post-release supervision that follows release (G.S. 15A-1368.2).
     var pendingPostRelease: PostReleaseTerm? = nil
+    /// The probationer is held in the jail on a probation hold until the new case is decided.
+    var holdForNewCase = false
 }
 
 extension ProbationTerm {
@@ -126,10 +130,13 @@ extension String {
     /// Lowercased for use mid-sentence, except acronyms and names with inner capitals ("HVAC", "IT", "McDonald's").
     var lowercasedPhrase: String {
         split(separator: " ", omittingEmptySubsequences: false).map { word -> String in
-            let letters = word.filter(\.isLetter)
-            let capitals = letters.filter(\.isUppercase).count
-            if capitals >= 2 || (capitals == 1 && letters.first?.isUppercase == false) { return String(word) }
-            return word.lowercased()
+            // "Second-Degree" is two words joined by a hyphen: each is judged on its own.
+            word.split(separator: "-", omittingEmptySubsequences: false).map { part -> String in
+                let letters = part.filter(\.isLetter)
+                let capitals = letters.filter(\.isUppercase).count
+                if capitals >= 2 || (capitals == 1 && letters.first?.isUppercase == false) { return String(part) }
+                return part.lowercased()
+            }.joined(separator: "-")
         }.joined(separator: " ")
     }
 }
@@ -222,7 +229,7 @@ enum ViolationHearings {
     /// `newCharge` is a new arrest the officer is reporting, described after "New criminal offense: "; `contact` when
     /// the conduct was contact with the victim. The hearing is then about that conduct first.
     static func make(person: PersonRecord, county: County, date: Date, seed: UInt64,
-                     newCharge: (text: String, contact: Bool)? = nil) -> ViolationHearing? {
+                     newCharge: (text: String, contact: Bool)? = nil, newCaseDocket: String? = nil) -> ViolationHearing? {
         guard var term = person.probation else { return nil }
         var rng = SeededRNG(seed: seed)
         var used = Set([person.name])
@@ -244,9 +251,9 @@ enum ViolationHearings {
         if need.substance || conditions.contains("drug") {
             let count = rng.int(2...4)
             candidates.append(rng.pick([
-                ("Tested positive for \(rng.pick(["cocaine", "methamphetamine", "fentanyl", "marijuana"])) on \(count) occasions.", need.substance ? 0.45 : 0.8, Kind.drugs),
+                ("Tested positive for \(rng.pick(["cocaine", "methamphetamine", "fentanyl", "marijuana", "heroin", "oxycodone", "opiates", "benzodiazepines", "amphetamine", "MDMA"])) on \(count) occasions.", need.substance ? 0.45 : 0.8, Kind.drugs),
                 ("Failed to appear for \(count) random drug screens.", 0.65, Kind.drugs),
-                ("Submitted a diluted urine sample, then admitted using \(rng.pick(["cocaine", "methamphetamine", "pills"])) the weekend before.", 0.7, Kind.drugs)
+                ("Submitted a diluted urine sample, then admitted using \(rng.pick(["cocaine", "methamphetamine", "pills", "heroin", "fentanyl", "marijuana", "oxycodone", "crack", "opiates"])) the weekend before.", 0.7, Kind.drugs)
             ]))
         }
         if conditions.contains("alcohol") {
@@ -300,7 +307,7 @@ enum ViolationHearings {
                 candidates.append(("Moved out of the approved residence without telling the officer; found living in \(town).", 0.65, .moved))
             }
             if rng.chance(0.15) {
-                candidates.append(("Left the state without permission: \(rng.pick(["a week in Myrtle Beach", "a trip to Atlanta", "four days in Virginia", "a cousin's wedding in Georgia"])), shown on social media.", 0.7, .travel))
+                candidates.append(("Left the state without permission: \(Variety.pick(["a week in Myrtle Beach", "a trip to Atlanta", "four days in Virginia", "a cousin's wedding in Georgia", "a weekend in Charleston", "a fishing trip in Florida", "a concert in Raleigh and a stay with friends", "a family reunion in Tennessee", "a job interview in Ohio"], rng: &rng)), shown on social media.", 0.7, .travel))
             }
             if rng.chance(0.15) {
                 candidates.append(rng.pick([
@@ -327,7 +334,7 @@ enum ViolationHearings {
                 ]))
             }
             if rng.chance(0.15) {
-                candidates.append(("Did not report police contact: cited for \(rng.pick(["driving without a license", "an open container", "trespassing at a closed park", "driving while license revoked", "shoplifting $38 in groceries", "a noise violation at a party", "littering from a car window"])) and never told the officer.", 0.6, .arrest))
+                candidates.append(("Did not report police contact: cited for \(Variety.pick(["driving without a license", "an open container", "trespassing at a closed park", "driving while license revoked", "shoplifting $38 in groceries", "a noise violation at a party", "littering from a car window", "a broken taillight", "walking in a roadway", "a verbal argument at a gas station", "an expired registration", "sleeping in a parked car"], rng: &rng)) and never told the officer.", 0.6, .arrest))
             }
         }
 
@@ -376,14 +383,14 @@ enum ViolationHearings {
         let mainKind = picked.first?.kind ?? .visits
         let circumstances = ViolationExcuses.pick(for: mainKind, name: dl, supervised: supervised, town: town, kids: kids, rng: &rng)
         let explanation = willful
-            ? rng.pick(["My client admits the violations. \(dl) got off track and is asking for one more chance.",
+            ? Variety.pick(["My client admits the violations. \(dl) got off track and is asking for one more chance.",
                         "My client doesn't contest the report, Judge, but asks the court to consider what's been going on.",
                         "My client knows nobody else is to blame for this, Judge. We're asking for a sanction short of prison.",
-                        "My client admits it and has already enrolled in a program without being told to. We'd ask the court to let that work."])
-            : rng.pick(["These violations weren't willful, Judge. \(circumstances)",
+                        "My client admits it and has already enrolled in a program without being told to. We'd ask the court to let that work.", "My client accepts responsibility, Judge, and is asking the court to see the effort behind the setbacks.", "Judge, my client isn't going to argue with the report. I'm asking for a structure that works.", "My client understands why we're here and hasn't offered an excuse. The request is for another chance with tighter conditions.", "The violations are admitted. What my client needs now is treatment, not a longer sentence.", "My client admits the violations, Judge, and isn't here to explain them away. We're asking the court to find a way to keep this on track.", "My client has read the report and agrees with most of it. The request is for a sanction that includes treatment.", "Judge, my client made mistakes and says so. We ask for a chance to show that the last few weeks were different.", "My client isn't contesting what's in the report. The question is what comes next, and we'd ask for something short of prison.", "We're not going to dispute the violations, Judge. My client is asking for another chance and has a plan.", "My client has no excuses, Judge. What my client has is a job, a family, and a willingness to follow stricter terms."], rng: &rng)
+            : Variety.pick(["These violations weren't willful, Judge. \(circumstances)",
                         "My client has been trying. \(circumstances) That's not the same as defiance.",
                         "Judge, this is a life falling apart, not someone thumbing their nose at the court. \(circumstances)",
-                        "\(circumstances) My client is asking for help with that, not a cell."])
+                        "\(circumstances) My client is asking for help with that, not a cell.", "Judge, my client had no way to get to the appointment and called to say so. \(circumstances)", "These weren't acts of defiance. \(circumstances) My client is asking to be given the means to comply.", "My client tried to follow every condition. \(circumstances) The court can fix that without a prison term.", "Judge, these violations come from circumstances outside my client's control. \(circumstances)", "My client never meant to violate anything. \(circumstances) The court can address that without prison.", "\(circumstances) My client needs help meeting the conditions, not punishment for missing them.", "This isn't defiance, Judge. \(circumstances) My client has stayed in touch with the officer.", "My client wants to comply. \(circumstances) Give my client the chance.", "Judge, my client hasn't given up on this. \(circumstances) That's why it happened, and it's something the court can fix."], rng: &rng)
 
         let count = picked.count == 1 ? "one alleged violation" : "\(picked.count) alleged violations"
         let report = supervised
@@ -420,7 +427,7 @@ enum ViolationHearings {
                                         : "On cross, the witness concedes the hardship: \(circumstances)",
                                     newCrime ? "The witness admits having no personal knowledge of the new offense and that the charge hasn't been tried." : (supervised ? "The officer agrees \(person.lastName) was never rude or threatening." : "The clerk agrees \(person.lastName) was never contacted about the shortfall.")
                                 ],
-                                priorViolationCount: priorViolations)
+                                priorViolationCount: priorViolations, newCaseDocket: newCaseDocket)
     }
 
     // MARK: Questions
@@ -545,6 +552,8 @@ enum ViolationHearings {
             } else {
                 status = .free
             }
+        case .holdForNewCase:
+            lines.insert("The court finds probable cause that the probationer committed the new offense, holds the violation until that case is decided, and orders the probationer held in the Hollis County jail on a probation hold. The probation clock stays stopped.", at: 0)
         case .terminate:
             lines.insert("Probation is terminated unsuccessfully. Any unpaid monetary obligations are docketed as a civil judgment.", at: 0)
             status = .free
@@ -562,13 +571,13 @@ enum ViolationHearings {
         let appeals = appealRNG.chance(0.6)
         let finding = r.finding ?? .established
         // A violation goes on the record only when the court finds one, whatever it then orders.
-        let violation: SupervisionViolation? = finding == .established
+        let violation: SupervisionViolation? = finding == .established && decision != .holdForNewCase
             ? SupervisionViolation(docket: term.docket, date: date, kind: "Probation violation",
                                    conduct: h.violations.map(\.trimmingTrailingPeriods).joined(separator: "; "),
                                    result: decision.label)
             : nil
         let sanction = [HearingDecision.quickDip, .crv, .revoke].contains(decision)
-        if finding != .established {
+        if finding != .established && decision != .holdForNewCase {
             lines.insert(finding == .excused
                 ? "The court finds the probationer has shown lawful excuse for the alleged violations."
                 : "The court finds the State has not proven the alleged violations.", at: 1)
@@ -606,6 +615,7 @@ enum ViolationHearings {
         case .crv where crvDays(h) > 0: headline = "\(h.personName) ordered to \(crvDays(h)) days for probation violations"
         case .quickDip: headline = "\(h.personName) ordered to three days in jail for probation violations"
         case .terminate: headline = "Judge ends probation for \(h.personName)"
+        case .holdForNewCase: headline = "\(h.personName) held on probation hold pending new case"
         default: headline = "\(h.personName) remains on probation after violation hearing"
         }
         let body = "At a probation violation hearing in Hollis County Superior Court, Judge \(judgeLast) heard a report that \(h.personName), \(h.personAge), " +
@@ -619,7 +629,8 @@ enum ViolationHearings {
                               pending: pending,
                               violation: violation,
                               newPriors: newPriors,
-                              pendingPostRelease: pendingPostRelease)
+                              pendingPostRelease: pendingPostRelease,
+                              holdForNewCase: decision == .holdForNewCase)
     }
 
     /// A short summary of the order for the person's record, e.g. "violation found; 45-day CRV".
@@ -643,6 +654,7 @@ enum ViolationHearings {
             return found + (days > 0 ? "\(days)-day CRV" : "probation continued")
         case .revoke: return found + (term.isConditionalDischarge ? "conditional discharge revoked; judgment entered" : "probation revoked")
         case .terminate: return found + "probation terminated unsuccessfully"
+        case .holdForNewCase: return "violation held until the new case is decided; held on a probation hold"
         }
     }
 }

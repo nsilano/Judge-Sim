@@ -7,30 +7,15 @@ struct CountyDirectoryView: View {
 
     var body: some View {
         List {
-            regularsSection
             eventsSection
             officersSection
             lawyersSection
-            familiarSection
             ForEach(Gazetteer.towns, id: \.name) { town in
                 TownSection(town: town)
             }
         }
         .navigationTitle("Hollis County")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    @ViewBuilder private var regularsSection: some View {
-        if let county = game.county {
-            let regulars = Gazetteer.regulars(for: county)
-            Section("The people you'll see again") {
-                ForEach(Self.regularTitles, id: \.0) { pair in
-                    if let name = regulars[pair.0] {
-                        NameLine(title: name, detail: pair.1)
-                    }
-                }
-            }
-        }
     }
 
     @ViewBuilder private var eventsSection: some View {
@@ -61,17 +46,6 @@ struct CountyDirectoryView: View {
             Section("Lawyers before you") {
                 ForEach(notes, id: \.self) { note in
                     Text(note).font(.caption)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder private var familiarSection: some View {
-        let familiar: [Resident] = Array(game.residents.filter { $0.roles.count >= 2 }.sorted { $0.roles.count > $1.roles.count }.prefix(40))
-        if !familiar.isEmpty {
-            Section("Familiar faces") {
-                ForEach(familiar) { r in
-                    ResidentLine(resident: r)
                 }
             }
         }

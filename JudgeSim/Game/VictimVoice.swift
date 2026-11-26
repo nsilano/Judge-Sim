@@ -62,7 +62,13 @@ enum VictimVoice {
             "Our victim-witness coordinator has been in touch with \(who) since the arrest.",
             "\(who) wrote our office a letter; it's in the sentencing packet.",
             "I sat down with \(who) after the last hearing.",
-            "\(who) \(s.v("has", "have")) been at every setting in this case."
+            "\(who) \(s.v("has", "have")) been at every setting in this case.",
+        "I called \(who) on Tuesday to go over the plea and what to expect today.",
+        "\(who) stopped by my office and left a written statement.",
+        "\(who) and I talked for almost an hour yesterday afternoon.",
+        "I have had several conversations with \(who) since the case was filed.",
+        "Our advocate sat with \(who) before court this morning.",
+        "\(who) asked me to pass along some thoughts to the court."
         ])
         var wants: [String]
         switch stance {
@@ -147,7 +153,7 @@ enum VictimVoice {
         let subj = s.subject
         let low = subj.lowercasedIfPronoun
         let serious = cls.map { [.A, .B1, .B2, .C, .D].contains($0) } ?? false
-        let told = rng.pick(["told me", "said to me", "kept saying", "asked me to tell you"])
+        let told = rng.pick(["told me", "said to me", "kept saying", "asked me to tell you", "wanted me to say", "said again and again", "made a point of telling me", "repeated to me", "told me directly", "said plainly"])
         var out: [String] = []
         switch stance {
         case .wantsMaximum:
@@ -186,14 +192,18 @@ enum VictimVoice {
     /// Impact statements that demand punishment, so the closing never turns around and asks for mercy.
     static func asksHarsh(_ impact: String?) -> Bool {
         guard let text = impact?.lowercased() else { return false }
-        return ["make them pay", "make him pay", "make her pay", "to rot", "rot in", "never forgive", "the maximum", "lock him", "lock her",
-                "lock them", "locked up for", "throw away the key", "every day the law"].contains { text.contains($0) }
+        // Asking for the opposite ("I don't want them to rot") is not asking for harshness.
+        let negated = ["don't want them to rot", "do not want them to rot", "don't want him to rot", "don't want her to rot", "not to rot",
+                       "don't want to see them locked", "don't want them locked", "no need to lock", "don't want anyone locked"].contains { text.contains($0) }
+        if negated { return false }
+        return ["make them pay", "make him pay", "make her pay", "to rot", "rot in", "never forgive", "the maximum", "lock him up", "lock her up",
+                "lock them up", "locked up for", "throw away the key", "every day the law"].contains { text.contains($0) }
     }
 
     /// The State's account when one person who isn't the named victim wrote to the court.
     static func singlePosition(rng: inout SeededRNG) -> String {
         rng.pick(["One person this hurt wrote to the court, Judge. The statement is in the sentencing file.",
-                  "There's one statement from someone affected. It's in the file, and it's worth reading before you decide."])
+                  "There's one statement from someone affected. It's in the file, and it's worth reading before you decide.", "A single person affected by this wrote to the court, Judge. Their statement is in the sentencing file.", "We received one letter from someone this touched, Judge, and it's in the file for you to read.", "Only one person came forward, but the statement is detailed, and the State asks the court to read it.", "One person affected has asked that their words be included in the record, Judge. They're in the file.", "There's a statement in the file from one person who was harmed. They asked that the court read it before sentencing.", "One person submitted a statement. It isn't long, but it's the only account we have of how this landed on someone."])
     }
 
     /// The State's account when the people hurt aren't one named victim.
@@ -203,7 +213,13 @@ enum VictimVoice {
             "Several people were affected. Three of them wrote to the court; they ask that the sentence reflect how many lives this touched.",
             "The people harmed here didn't all want to come forward, Judge. The ones who did ask for a sentence that's taken seriously.",
             "We've heard from a handful of those affected. They don't agree on a number, but they all want it on the record that this mattered.",
-            "The statements from those affected are in the file. Most ask for accountability; one asks the court for treatment over prison."
+            "The statements from those affected are in the file. Most ask for accountability; one asks the court for treatment over prison.",
+        "A number of people were affected by this, Judge. Their statements are in the file, and they ask the court to weigh them together.",
+        "The people harmed here are not one household. Several wrote letters, and the State asks the court to read each of them.",
+        "Two of those affected spoke to our office. Neither wanted a particular number. Both wanted the court to understand the cost.",
+        "We have statements from those who lost money, time, and peace of mind. They're in the file, Judge.",
+        "The harm here was spread across many people. A few came forward, and the State is speaking for the rest.",
+        "Those affected asked our office to say one thing: that this wasn't a victimless offense."
         ])
     }
 
@@ -242,7 +258,8 @@ enum VictimVoice {
         let speaker = base.components(separatedBy: ":").first?.lowercased() ?? ""
         let official = ["guardian", "director", "commissioner", "manager", "deacon", "pastor", "teacher", "volunteer",
                         "principal", "owner"].contains(where: speaker.contains)
-        guard base.hasSuffix("\""), !official, !base.contains("don't want to talk"), !asksMercy(base), !asksHarsh(base),
+        // A full statement already says what its speaker has to say; a closing ask is only added to a short one.
+        guard base.split(separator: " ").count < 22, base.hasSuffix("\""), !official, !base.contains("don't want to talk"), !asksMercy(base), !asksHarsh(base),
               let close = closing(stance: stance, defendant: defendant, died: died, rng: &rng) else { return base }
         return String(base.dropLast()) + " " + close + "\""
     }

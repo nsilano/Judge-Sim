@@ -36,7 +36,7 @@ extension StoryCases {
                             .direct("Did you agree to {KID} leaving North Carolina?", "\"No. The order says no travel out of state without my written consent, and I never gave it.\""),
                             .direct("What happened that weekend?", "\"{DL} was supposed to bring {KID} back Sunday at six. By eight I'd called fifteen times. The phone was off.\""),
                             .cross("You told {DL} {D.he}'d never see {KID} again?", "\"I said it after {D.he} stopped answering. I was terrified.\""),
-                            .cross("{KID} came home unharmed?", "\"Yes, thank God.\"")
+                            .cross("{KID} came home unharmed?", "\"Yes, thank God. {KID} came home unharmed.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective, missing persons",
                         direct: ["\"{DL} asked the clerk about weekly rates.\""],
@@ -58,8 +58,8 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} tell you?", "\"That {D.he} was taking {KID} to the beach for a few days and would be back by Wednesday.\""),
                             .direct("Did {DL} say why?", "\"{D.He} said {D.he} needed a few days away from everything.\""),
-                            .direct("Did {DL} ever say anything to you about moving?", "\"No. Just the beach.\""),
-                            .cross("Wednesday is three days past the end of the visit?", "\"I guess it is.\""),
+                            .direct("Did {DL} ever say anything to you about moving?", "\"No. Just the beach. {DL} never said anything to me about moving, only about the beach.\""),
+                            .cross("Wednesday is three days past the end of the visit?", "\"I guess it is. Wednesday is three days past the end of the visit.\""),
                             .cross("You didn't know the order barred taking {KID} out of state?", "\"No, I didn't know that.\"")
                         ])
         ],
@@ -67,8 +67,8 @@ extension StoryCases {
         defenseTheory: ["A badly judged beach trip by a parent being threatened with losing {D.his} child. {DL} planned to come back."],
         aggravating: [],
         mitigating: ["The child was unharmed", "The defendant has no prior criminal record"],
-        victimImpacts: ["{V}: \"Three days I didn't know if my child was alive.\""],
-        allocutions: ["\"I was scared of losing {KID}. I know I did it the wrong way.\""],
+        victimImpacts: ["{V}: \"Three days I didn't know if my child was alive. I called every friend and every hospital, and the phone was off. I sat by the window and watched the road. When police found them in Daytona Beach, I fell to my knees. I haven't let my child out of my sight since.\""],
+        allocutions: ["\"I was scared of losing {KID}, and I know I did it the wrong way. I needed a few days away from everything, and I said a lot of things to a stranger. I should have returned on Sunday and told {V} the truth. I'm sorry for the three days of fear, and I'll follow the order exactly from now on.\""],
         guiltyTruths: ["{DL} had applied for jobs in Daytona Beach the week before the visit."],
         innocentTruths: ["{DL} had bought return bus tickets for Wednesday, found later in the motel safe."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -80,7 +80,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Did you mean to keep {KID} in Florida?", "\"No. I needed a few days away from everything.\""),
                 .cross("You told the clerk you were moving for good.", "\"I said a lot of things to a stranger.\""),
-                .cross("Why turn off your phone?", "\"Because of {VL}'s messages.\"")
+                .cross("Why turn off your phone?", "\"I turned off my phone because of {VL}'s messages.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Defense: \"You'd been trying to get {DL}'s visits taken away entirely, hadn't you?\"",
@@ -162,8 +162,8 @@ extension StoryCases {
         defenseTheory: ["A father saw grown men beating his son against a fence and acted to stop it. That's defense of another."],
         aggravating: [],
         mitigating: ["The defendant acted to protect a family member", "No prior criminal record"],
-        victimImpacts: ["{V}: \"It was a high school football game. I was there with my brother.\""],
-        allocutions: ["\"I'd do anything for my son. I'm sorry the chair hit someone who wasn't part of it.\""],
+        victimImpacts: ["{V}: \"It was a high school football game. I was there with my brother, and the fight started behind us. A chair came down, and I was struck and had to be taken to the hospital. I didn't know anyone in that fight. I won't be going to games for a while.\""],
+        allocutions: ["\"I'd do anything for my son, and I couldn't get to him through that crowd. Men had him against the fence, and I swung that chair to clear a way. I'm sorry that it hit someone who wasn't part of it. I'm a parent, and I wasn't thinking.\""],
         guiltyTruths: ["A fourth video shows the fight at the fence had broken up before {DL} picked up the chair."],
         innocentTruths: ["Another fan later identified {VL} as one of the men holding {DL}'s son."],
         moods: [.divided], doctrines: ["selfDefense", "burdenOfProof"],
@@ -230,7 +230,7 @@ extension StoryCases {
                             .direct("What did you see at the light?", "\"Two cars revving side by side, people lined up on the curb. Somebody counted it down. They took off.\""),
                             .direct("Did you record it?", "\"Yes. My video shows both cars launching side by side.\""),
                             .cross("You didn't see the crash?", "\"I heard it. I was filming the start.\""),
-                            .cross("From the curb, you couldn't see who was driving either car?", "\"No. Just the cars.\"")
+                            .cross("From the curb, you couldn't see who was driving either car?", "\"No. Just the cars. From the curb I couldn't see who was driving either car.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -250,7 +250,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["The defendant stayed at the scene and rendered aid", "The defendant has accepted responsibility", "The defendant was young at the time of the offense"],
         victimImpacts: ["{VL}'s spouse: \"{V.He} worked nights so we could save for a house. {V.He} was ten minutes from home.\""],
-        allocutions: ["\"I killed someone for a stupid race. I'll carry that every day.\""],
+        allocutions: ["\"I killed someone for a stupid race, and I'll carry that every day. I lied before about it, and I'm ashamed. We were racing at a hundred and four miles an hour with people on both sidewalks. There's nothing I can say that makes it right, and I accept what comes.\""],
         guiltyTruths: ["{DL}'s messages show {D.he} had raced on Industrial Boulevard almost every weekend that summer."],
         innocentTruths: ["The warehouse camera's later enhancement showed {VL}'s headlights were off as {V.he} pulled out."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -323,7 +323,7 @@ extension StoryCases {
         defenseTheory: ["Ownership isn't the question, but knowledge and intent to control are. {DL} drove {D.his} uncle's gun and deer back to camp as a favor. {D.He} never handled it."],
         aggravating: [],
         mitigating: ["The prior felony is old and nonviolent", "The defendant has been gainfully employed"],
-        allocutions: ["\"I haven't been in trouble in fourteen years. I was helping my uncle.\""],
+        allocutions: ["\"I haven't been in trouble in fourteen years, and I was helping my uncle that morning. He put that rifle in the back seat, and I knew it was there, and I should have said something. I moved a box to reach my sunglasses. I'm sorry for the mistake, and I'll never go near a firearm again.\""],
         guiltyTruths: ["A trail camera at the stand showed {DL}, not the uncle, carrying the rifle into the woods at dawn."],
         innocentTruths: ["The uncle's hunting partner confirmed the uncle carried the rifle all morning and loaded it into the truck."],
         moods: [.sympathetic], doctrines: ["burdenOfProof"],
@@ -377,7 +377,7 @@ extension StoryCases {
                             .direct("What is your role with the team?", "\"I'm the volunteer head coach of a 12-and-under travel team.\""),
                             .direct("What kind of messages did you receive?", "\"Dozens over three weeks. Insults about my coaching, then my home address, then 'Coach better watch the parking lot after practice.'\""),
                             .direct("How did the messages affect you?", "\"I stopped letting my kids play in the front yard. When the parking lot message came, I had a deputy at practice.\""),
-                            .cross("You'd benched several players for missing practice?", "\"Yes, several.\""),
+                            .cross("You'd benched several players for missing practice?", "\"Yes. I'd benched several players for missing practice.\""),
                             .cross("You don't know who typed them?", "\"No. I know which family was angriest about the benching.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective, cyber unit",
@@ -409,8 +409,8 @@ extension StoryCases {
         defenseTheory: ["A teenage nephew, an open router, and a misspelling half the country makes. The State hasn't put {DL} at the keyboard."],
         aggravating: [],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{V}: \"I volunteered to coach twelve-year-olds. I quit after this season.\""],
-        allocutions: ["\"I was angry about my kid. I'm sorry for all of it.\""],
+        victimImpacts: ["{V}: \"I volunteered to coach twelve-year-olds. I quit after this season. Messages came in from anonymous accounts for three weeks, insulting me and posting my home address. I moved the kids' equipment into a friend's garage. I loved those boys, and I don't think I'll coach again.\""],
+        allocutions: ["\"I was angry about my kid, and I complained to the league director by email under my own name. I never threatened anyone. I know others in my family were upset too. I'm sorry for all of it, and I'm sorry that the coach felt unsafe. I'll let the league handle things from now on.\""],
         guiltyTruths: ["The third account was later traced to {DL}'s work computer."],
         innocentTruths: ["The nephew admitted to his school counselor that he wrote every message."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],

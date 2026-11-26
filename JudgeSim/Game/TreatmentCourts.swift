@@ -44,7 +44,7 @@ enum TreatmentCourts {
                 kind: .treatmentGraduation, personID: person.id, personName: person.name, personAge: person.age(on: date), occupation: person.occupation,
                 docket: term.docket,
                 summary: "\(person.name) finished all four phases of \(program), clean since phase two. The team recommends graduation.\(term.conditionalDischarge == true ? " Conditional discharge: the charge is dismissed on completion." : "")",
-                stateAsk: rng.pick(["The State joins the recommendation.", "The State agrees, Judge. This is what the program is for."]),
+                stateAsk: rng.pick(["The State joins the recommendation.", "The State agrees, Judge. This is what the program is for.", "The State joins the team's recommendation to graduate.", "The State has watched this participant's progress and has no objection.", "The State has reviewed the file and supports graduation.", "No objection, Judge. The State is pleased with this participant's work.", "The State agrees with the team, and appreciates what it took to get here.", "The State joins in the recommendation and congratulates the participant.", "The State supports the team's recommendation without reservation.", "The State has no concerns about graduation, Judge."]),
                 defenseAsk: "\(last) would like to say a few words to the court.\(veteran ? " \(last)'s mentor is here too." : "")",
                 options: ["Graduate \(last): end probation now\(term.conditionalDischarge == true ? " and dismiss the charge" : "")",
                           "Graduate \(last); probation continues to its end date", "Hold graduation another month"],
@@ -53,17 +53,17 @@ enum TreatmentCourts {
         let period: String
         switch report {
         case .clean:
-            period = rng.pick(["Every screen clean, every session attended, and \(last) started a new job at \(rng.pick(["the poultry plant", "a lumber yard", "a body shop", "the hospital laundry"])).",
+            period = rng.pick(["Every screen clean, every session attended, and \(last) started a new job at \(rng.pick(["the poultry plant", "a lumber yard", "a body shop", "the hospital laundry", "a furniture warehouse", "the nursing home kitchen", "a roofing crew", "an auto detail shop", "a seafood packing house", "a tire shop"])).",
                                "Clean screens and perfect attendance. \(last) is leading the newcomers' group on Tuesdays.",
-                               "All screens negative. \(last) paid off the court costs and moved into a sober-living house."])
+                               "All screens negative. \(last) paid off the court costs and moved into a sober-living house.", "Every screen clean and every session attended; \(last) has started mentoring a newer participant.", "All screens negative, steady work, and \(last) is two months ahead on restitution.", "Perfect attendance. \(last) reconnected with family and got a driver's license back.", "Every screen was negative and every session attended. \(last) has been asked to speak at the next orientation.", "Clean screens all month. \(last) enrolled in classes at the community college.", "All screens negative. \(last) reconciled with a sibling and is back in contact with family.", "Perfect attendance and clean screens; \(last) got a promotion at work.", "No missed sessions and no positive screens. \(last) has found an apartment.", "All clean. \(last) celebrated another milestone with the group on Thursday."])
         case .slip:
-            period = rng.pick(["One positive screen for \(rng.pick(["methamphetamine", "fentanyl", "cocaine", "alcohol"])). \(last) told the case manager before the result came back.",
+            period = rng.pick(["One positive screen for \(rng.pick(["methamphetamine", "fentanyl", "cocaine", "alcohol", "heroin", "oxycodone", "marijuana", "benzodiazepines", "opiates", "amphetamine"])). \(last) told the case manager before the result came back.",
                                "\(last) relapsed after a death in the family: one positive screen, admitted, and back in treatment the next day.",
-                               "A positive screen and a diluted one the week after. \(last) denies using."])
+                               "A positive screen and a diluted one the week after. \(last) denies using.", "One positive screen, reported by \(last) within the hour; counseling the same day.", "A positive screen after a rough week at work, followed by a full week of extra meetings.", "One positive screen after a weekend away. \(last) came to the next meeting early and talked about what happened.", "A positive screen on Monday. \(last) called the case manager that afternoon and asked for extra support.", "\(last) tested positive once, after a family argument, and recommitted to the program the same week.", "One dirty screen, and \(last) volunteered to add a second weekly meeting.", "A positive screen followed by two clean ones; \(last) says it was a mistake made in a bad moment.", "A single positive result. \(last) has attended every session since and asked about a sponsor."])
         case .missed:
             period = rng.pick(["\(last) missed two group sessions and one screen, and didn't call the case manager.",
                                "No-show for a screen, then two days late to the next. \(last) says the car broke down.",
-                               "\(last) missed a week of treatment and wasn't at the address on file when the officer checked."])
+                               "\(last) missed a week of treatment and wasn't at the address on file when the officer checked.", "\(last) missed three screens and stopped returning the case manager's calls.", "No-shows for two group sessions; the officer found the address on file empty.", "\(last) missed a week of treatment and gave a different explanation each time.", "\(last) skipped the last two sessions and the case manager couldn't reach \(last) by phone.", "No-show for a screen on Tuesday and again on Friday. \(last) hasn't given a reason.", "\(last) missed a group meeting and arrived late to the next with no explanation.", "A missed screen and a missed appointment with the counselor; \(last) says work ran long.", "\(last) hasn't been to treatment in ten days, and the officer has been unable to find \(last) at home.", "Two missed sessions in one week. \(last) says there was a problem with the ride."])
         }
         let summary = "\(program), phase \(phase) of 4. \(period)\(strikes > 0 ? " Earlier setbacks in the program: \(strikes)." : "")"
         let options: [String] = report == .clean
@@ -76,11 +76,11 @@ enum TreatmentCourts {
             summary: summary,
             stateAsk: report == .clean ? "The State is pleased, Judge."
                 : (strikes >= 2 ? "The State asks the court to terminate. This is the \(strikes + 1)\(strikes + 1 == 3 ? "rd" : "th") setback."
-                                : rng.pick(["The State asks for a jail sanction. The team needs to see consequences.", "The State defers to the team's recommendation."])),
+                                : rng.pick(["The State asks for a jail sanction. The team needs to see consequences.", "The State defers to the team's recommendation.", "The State asks for a short jail sanction to protect the program's credibility.", "The State asks for two days in jail and a return to the previous phase.", "The State asks for a weekend in jail as a response, and then a return to the program.", "The State asks the court to increase testing and keep the participant in the program.", "The State asks for a short sanction that the team can use as a reminder.", "The State supports a graduated response, Judge, starting with a day in jail.", "The State is not asking to terminate, but it does want a clear consequence.", "The State asks that the team's plan be followed, with a warning that the next setback will have a harsher response."])),
             defenseAsk: report == .clean ? "\(last) wants the court to know the team has made the difference."
                 : rng.pick(["Relapse is part of recovery, Judge. \(last) came in honest. We ask the court to keep \(last) in.",
                             "The team recommends more treatment, not jail.",
-                            "\(last) knows this is serious. One more chance."]),
+                            "\(last) knows this is serious. One more chance.", "\(last) has done the hardest part of this program. A setback shouldn't end it.", "The team sees progress and recommends added treatment.", "Setbacks are expected in recovery, Judge. \(last) has been honest with the team and asks to stay.", "\(last) is working the program, and the team's own report says so.", "Jail won't help \(last) stay in treatment. More support will.", "\(last) takes responsibility for the slip and asks for another chance.", "The defense asks that the court follow the team's recommendation and keep \(last) in the program.", "\(last) has a job, a home, and a sponsor, and wants to keep all three."]),
             options: options,
             review: facts)
     }

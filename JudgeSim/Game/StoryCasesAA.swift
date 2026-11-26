@@ -38,7 +38,7 @@ extension StoryCases {
                             .direct("How long had {DL} prepared your taxes?", "\"Six years. Every spring I gave {D.him} my Social Security number and birth date for the return.\""),
                             .direct("How did you learn about the cards?", "\"My grandson pulled my credit report. Three cards I'd never heard of, and bills for things I'd never bought.\""),
                             .direct("Did you give anyone permission to open those accounts?", "\"No. I never applied for any credit card.\""),
-                            .cross("You don't know who actually filled out those applications, do you?", "\"No, I don't.\""),
+                            .cross("You don't know who actually filled out those applications, do you?", "\"No. I don't know who filled out those applications.\""),
                             .cross("You dealt with more than one person at the office?", "\"There was a young woman at the front desk some years.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Financial crimes detective",
@@ -70,8 +70,8 @@ extension StoryCases {
         defenseTheory: ["A fired employee with the same files and a key to the same box. The video is too blurry to identify anyone."],
         aggravating: ["The victim was very old"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{V}: \"I was paying {D.him} to help me with my taxes.\""],
-        allocutions: ["\"I've done honest returns for hundreds of families. I didn't do this.\""],
+        victimImpacts: ["{V}: \"I was paying {D.him} to help me with my taxes, and I'd gone to that storefront for six years. When I saw three credit cards in my report that I never opened, I couldn't believe it. I'm seventy-nine. I spent months making calls and filling in forms.\""],
+        allocutions: ["\"I've done honest returns for hundreds of families in this community. Our business box was shared, and two of us had keys. I did not do this to {V}. I'm sorry for the cards {V} found in a credit report. I stand by my work.\""],
         guiltyTruths: ["The laptop bought with the card was registered online to {DL}'s nephew the next day."],
         innocentTruths: ["The former employee was later convicted of the same scheme against clients of another tax office."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -146,18 +146,18 @@ extension StoryCases {
                         weight: 1, lay: false,
                         exam: [
                             .direct("What is a player's card?", "\"A card players put in the machine so we can track their play and their jackpots.\""),
-                            .direct("Is there a player's card in {DL}'s name?", "\"Yes, there is.\""),
+                            .direct("Is there a player's card in {DL}'s name?", "\"Yes, there is. There's a player's card in {DL}'s name.\""),
                             .direct("What do your records show?", "\"A $4,500 jackpot on {DL}'s player card the month before.\""),
                             .cross("Do the records show losses?", "\"Not reliably. Most people don't win overall.\""),
-                            .cross("And $4,500 is less than the $6,000 that paid off the car loan?", "\"Yes, it's less.\"")
+                            .cross("And $4,500 is less than the $6,000 that paid off the car loan?", "\"Yes. $4,500 is less than the $6,000 that paid off the car loan.\"")
                         ])
         ],
         prosecutionTheory: ["{D} knew the pay schedule, was recognized on the video, and paid off {D.his} car in cash six days later."],
         defenseTheory: ["Everyone at the plant knew the schedule. A grudge-holding supervisor identified a hood from a one-second clip, and a slot win explains the money."],
         aggravating: [],
         mitigating: ["The defendant was young at the time of the offense"],
-        victimImpacts: ["{V}: \"I can't carry the bag anymore. I can't even carry groceries with that hand some days.\""],
-        allocutions: ["\"I didn't rob anybody.\""],
+        victimImpacts: ["{V}: \"I can't carry the bag anymore. I can't even carry groceries with that hand some days. I carried the payroll every other Friday for years, and I never imagined it would end with me on the ground. I lost my job, and the hand won't close all the way.\""],
+        allocutions: ["\"I didn't rob anybody. I had a jackpot win and savings, and everybody on the floor knew I had cash. It wasn't a secret. I'm sorry for what happened to {V} that Friday.\""],
         guiltyTruths: ["Bills from the payroll bag, recorded by serial number at the bank, turned up in the car dealer's deposit."],
         innocentTruths: ["Another former worker was caught with the payroll bag and the gray hoodie the following month."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -166,8 +166,8 @@ extension StoryCases {
             howIdentified: "A supervisor's identification from gate video.",
             notDone: ["The bank's serial-number list for the payroll cash was not compared with the car dealer's deposit."],
             defendantExam: [
-                .direct("Where did the car money come from?", "\"A jackpot, and savings.\""),
-                .cross("$6,000 in cash six days after the robbery.", "\"I had it saved.\""),
+                .direct("Where did the car money come from?", "\"The car money came from a jackpot and from savings.\""),
+                .cross("$6,000 in cash six days after the robbery.", "\"I had it saved. The $6,000 was money I'd saved up over time.\""),
                 .cross("You knew exactly when the payroll was carried.", "\"Everybody on the floor knew. It wasn't a secret.\"")
             ],
             objections: [
@@ -229,8 +229,8 @@ extension StoryCases {
                             .direct("Where were the pills?", "\"On the nightstand, uncovered, eighteen inches from where {KID} napped.\""),
                             .direct("Was anything else found?", "\"A pill bottle with no label, in a drawer.\""),
                             .direct("What did {DL}'s phone show?", "\"A text the day before: 'got 10 blues, need anything?'\""),
-                            .cross("A houseguest slept in that room the night before?", "\"So we were told.\""),
-                            .cross("And {DL} called 911 within a minute of finding {KID}?", "\"That's my understanding, yes.\"")
+                            .cross("A houseguest slept in that room the night before?", "\"So we were told. A houseguest slept in that room the night before, as I understand it.\""),
+                            .cross("And {DL} called 911 within a minute of finding {KID}?", "\"That's my understanding, yes. {DL} called 911 within a minute of finding {KID}.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -239,7 +239,7 @@ extension StoryCases {
                         cross: ["\"Those weren't my pills.\""],
                         weight: 1, lay: true,
                         exam: [
-                            .direct("How do you know {DL}?", "\"We're friends.\""),
+                            .direct("How do you know {DL}?", "\"We're friends. We've been friends for a long time, and I know {D.him} well.\""),
                             .direct("When did you stay at the apartment?", "\"The night before {KID} got sick. I slept over.\""),
                             .direct("Where did you sleep?", "\"In that bedroom. {DL} slept on the couch with {KID}.\""),
                             .cross("Were the pills yours?", "\"No. I don't touch that stuff.\""),
@@ -250,7 +250,7 @@ extension StoryCases {
         defenseTheory: ["{DL} didn't know the pills were there. The houseguest slept in that room, and {DL} saved {KID}'s life with a fast call."],
         aggravating: ["The victim was very young"],
         mitigating: ["The defendant called for help immediately and rendered aid", "The defendant has entered substance use treatment"],
-        allocutions: ["\"I almost lost my baby because of me. I'm in treatment every day now.\""],
+        allocutions: ["\"My friend stayed in that room, and I never knew those pills were there. When I found {KID} limp, I called 911 right away. I almost lost my baby because of me. I'm in treatment every day now, and I'm sorry beyond words.\""],
         guiltyTruths: ["{DL}'s own drug screen at intake was positive for fentanyl."],
         innocentTruths: ["The houseguest's fingerprints, not {DL}'s, were on the pill bottle in the drawer."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -304,7 +304,7 @@ extension StoryCases {
                             .direct("Had you dealt with {DL} before that day?", "\"Yes. {D.He}'d been in for road tests before.\""),
                             .direct("What happened when {DL} came back in?", "\"{D.He} threw the clipboard, then reached across and grabbed my collar and shoved me into the wall, yelling that I was rigging the test.\""),
                             .direct("How long did {D.he} hold you there?", "\"About three seconds, until my coworker pulled {D.his} arm away.\""),
-                            .cross("{DL} was upset about failing the test?", "\"Yes, {D.he} was upset.\""),
+                            .cross("{DL} was upset about failing the test?", "\"Yes. {D.He} was upset about failing the test.\""),
                             .cross("The floor was wet that day?", "\"By the door. Not at my counter.\"")
                         ]),
             WitnessSeed(name: nil, role: "Second examiner",
@@ -337,7 +337,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has expressed remorse"],
         victimImpacts: ["{V}: \"I asked to move to a back office. I don't want to be at that counter anymore.\""],
-        allocutions: ["\"I needed that license for a job. I lost my temper. I'm sorry.\""],
+        allocutions: ["\"I slipped and grabbed the first thing to keep from falling, and then I threw the clipboard. I was upset about the test. I needed that license for a job. I lost my temper, and that part is on me. I'm sorry to the clerks at the counter.\""],
         guiltyTruths: ["{DL} posted that night: \"Finally put hands on that DMV clown.\""],
         innocentTruths: ["A second camera angle shows {DL}'s foot sliding on a wet patch at the counter as {D.he} reached forward."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -414,16 +414,16 @@ extension StoryCases {
                             .direct("What do you do for the company?", "\"I keep the company's trucks running.\""),
                             .direct("How old was {VL}'s truck?", "\"Fourteen years, and there's no record of the brake lines ever being replaced.\""),
                             .direct("What was the condition of {VL}'s truck?", "\"Old and overdue. I'd told {VL} the brakes needed looking at.\""),
-                            .cross("Did you ever look at the brake lines?", "\"No. Just the pads.\""),
-                            .cross("So you can't say whether those lines were rusted or cut?", "\"No, I can't.\"")
+                            .cross("Did you ever look at the brake lines?", "\"No. Just the pads. I never looked at the brake lines.\""),
+                            .cross("So you can't say whether those lines were rusted or cut?", "\"No. I can't say whether those lines were rusted or cut.\"")
                         ])
         ],
         prosecutionTheory: ["{D} stood to gain a million dollars, was caught on camera at {VL}'s truck after hours, and the lines were cut, not worn."],
         defenseTheory: ["An old truck with overdue brakes, and a partner checking on {D.his} own tool box. A grudge isn't an attempted murder."],
         aggravating: [],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{V}: \"I drive my kids to school down that hill.\""],
-        allocutions: ["\"I didn't touch his truck.\""],
+        victimImpacts: ["{V}: \"I drive my kids to school down that hill. The brakes went out at the bottom, and I went into a ditch with my hands locked on the wheel. I walked away, but I can't use that road. I think about my kids every time I touch a pedal.\""],
+        allocutions: ["\"I was at that truck getting my tool box out of the bed, because {VL} had borrowed it. I dropped my keys beside the wheel. I didn't touch {V.his} truck's brake lines. The company would collect on that policy, and I never thought about that.\""],
         guiltyTruths: ["A tubing cutter with brake fluid residue was found in {DL}'s home workshop."],
         innocentTruths: ["A disgruntled former employee later admitted cutting the lines to get back at {VL}."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -433,7 +433,7 @@ extension StoryCases {
             notDone: ["Former employees with access to the yard were not interviewed."],
             defendantExam: [
                 .direct("What were you doing at the truck?", "\"Getting my tool box out of the bed. {VL} had borrowed it.\""),
-                .cross("Six minutes crouched by the wheel, not the bed.", "\"I dropped my keys.\""),
+                .cross("Six minutes crouched by the wheel, not the bed.", "\"I was crouched by the wheel because I dropped my keys.\""),
                 .cross("You'd get a million dollars if {VL} died.", "\"The company would. I didn't even think about that.\"")
             ],
             prosecutionOpening: "A million-dollar motive and six minutes crouched at the wheel.",

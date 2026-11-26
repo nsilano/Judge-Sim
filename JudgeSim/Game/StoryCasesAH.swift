@@ -34,7 +34,7 @@ extension StoryCases {
                             .direct("Why did you flag the envelope?", "\"A return address that doesn't exist, heavy tape on every seam, a handwritten label, and cash postage from a kiosk. A dog alerted on it, and we got a federal warrant.\""),
                             .direct("What was inside?", "\"A child's coloring book with a hole cut through the pages, and a bag of 100 blue pills stamped M30. They're made to look like oxycodone. They're fentanyl.\""),
                             .direct("What did {DL} do in the lobby?", "\"Opened the box with a key, looked over both shoulders, and put the envelope inside {D.his} jacket instead of carrying it.\""),
-                            .cross("You don't know who mailed the package.", "\"No.\""),
+                            .cross("You don't know who mailed the package.", "\"No. I don't know who mailed the package.\""),
                             .cross("Lots of people look around in a post office lobby.", "\"And most of them carry their mail in their hand.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Narcotics detective",
@@ -46,7 +46,7 @@ extension StoryCases {
                             .direct("What did {DL} say when arrested?", "\"That a friend named T paid {D.him} fifty dollars to get the mail. {D.He} wouldn't tell us who T was.\""),
                             .direct("Is $50 to pick up mail normal?", "\"Not for a box across the county. People get paid to pick up packages because the sender wants someone else holding them.\""),
                             .cross("You never found T.", "\"{DL} wouldn't give us a last name or a number beyond the text.\""),
-                            .cross("The handwriting examiner couldn't tie {DL} to the label.", "\"That's right.\"")
+                            .cross("The handwriting examiner couldn't tie {DL} to the label.", "\"That's right. The handwriting examiner couldn't tie {DL} to the label.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -56,8 +56,8 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("What did you see that morning?", "\"A little key under the mat. {DL} picked it up and said a buddy needed {D.him} to grab his mail.\""),
-                            .direct("Had you ever seen that key before?", "\"Never.\""),
-                            .cross("You don't know who T is either?", "\"No.\""),
+                            .direct("Had you ever seen that key before?", "\"Never. I had never seen that key before this case.\""),
+                            .cross("You don't know who T is either?", "\"No. I don't know who T is either.\""),
                             .cross("Did {DL} have extra cash around that time?", "\"I don't know about that.\"")
                         ])
         ],
@@ -66,7 +66,7 @@ extension StoryCases {
         aggravating: [],
         mitigating: ["The defendant has accepted responsibility", "The defendant is young"],
         victimImpacts: [],
-        allocutions: ["\"I didn't ask what was in it because I didn't want to know. I know that's not an excuse.\""],
+        allocutions: ["\"I didn't ask what was in that envelope because I didn't want to know, and I understand that's no excuse. A man I trusted offered me fifty dollars to pick up his mail, and I was behind on everything. I let the money do my thinking for me. I'm ashamed of that, and it will not happen again.\""],
         guiltyTruths: ["{DL}'s phone later showed {D.he} had tracked the package's postal tracking number six times in the two days before pickup."],
         innocentTruths: ["A man named Tavon Moore was arrested in a second county months later with three more P.O. box keys and a fake license in the name Jay Moore with his own photo on it."],
         moods: [.wantsConviction], doctrines: ["searchSeizure", "burdenOfProof", "lesserIncluded"],
@@ -122,7 +122,7 @@ extension StoryCases {
                             .direct("What did the SUV do then?", "\"It swerved a little and kept going. It never even tapped the brakes. I was screaming.\"", "\"Kept going. I saw the brake lights flash for a second, maybe, and then it was gone.\""),
                             .direct("Did you know {V}?", "\"Every parent at that school knew {V}. {V.He} knew every kid's name. {V.He} had candy canes at Christmas.\""),
                             .cross("The sun was right behind the crosswalk that morning.", "\"It was. I had my visor down.\""),
-                            .cross("You said the brake lights might have flashed.", "\"Maybe. For a second.\"")
+                            .cross("You said the brake lights might have flashed.", "\"Maybe. For a second. The brake lights might have flashed, but I can't be sure.\"")
                         ]),
             WitnessSeed(name: "{TROOPER}", role: "State Highway Patrol trooper",
                         direct: ["\"That dent is a body, not a sign post.\""],
@@ -153,7 +153,7 @@ extension StoryCases {
         aggravating: ["The victim was very old"],
         mitigating: ["No prior criminal record", "The defendant has accepted responsibility", "The defendant has been a person of good character"],
         victimImpacts: ["\"That corner was {V.his} for twelve years. {V.He} said it kept {V.him} young. The kids made a banner of handprints for the funeral. You didn't even stop to see if {V.he} was alive.\"", "\"{V.He} wouldn't take the money they paid {V.him}. {V.He} said {V.he}'d do it for free. {V.He} lay in that street while you drove to a meeting.\""],
-        allocutions: ["\"I didn't know. I swear to God I didn't know. I'd have stopped. I'm so sorry.\""],
+        allocutions: ["\"I did not know I had hit a person. The sun was straight in my eyes and I heard a bang, and I thought it was a sign post. If I had known, I would have stopped and stayed. My heart goes out to {V.his} family. I'm so sorry for their loss, and I pray they can forgive me.\""],
         guiltyTruths: ["{DL}'s car's crash data recorder showed {D.he} braked hard for half a second after the impact, then accelerated."],
         innocentTruths: ["The SUV's crash data recorder showed no braking at all, consistent with a driver who never saw what was hit."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof", "mistakeOfFact"],
@@ -188,7 +188,7 @@ extension StoryCases {
         specification: "Obtained $18,500 from {V} by falsely representing that {D.he} owned and could sell a mobile home at Lot 9, Pine Haven Mobile Home Park, on or about {DATE}.",
         ageRange: 35...62, occupations: ["handyman", "used car salesman", "property manager"], hasVictim: true,
         summaries: [
-            "On {DATE}, {V} paid {D} $18,500 in cash for a 2004 single-wide at Lot 9 of Pine Haven Mobile Home Park, saved over three years. {D} handed over a bill of sale and said the title would come in the mail. It never did. Two months later a bank repossessed the home: the title was in {D}'s late mother's name, with a lien of $22,000 that hadn't been paid in a year. Records show {D} had sold the same home a year earlier to another buyer, who backed out and got half the money back. {DL} says {D.he} was the heir, believed {D.he} could sell it, and spent the money paying down the lien before the bank \"jumped the gun.\""
+            "On {DATE}, {V} paid {D} $18,500 in cash for a 2004 single-wide at Lot 9 of Pine Haven Mobile Home Park, saved over three years. {DL} handed over a bill of sale and said the title would come in the mail. It never did. Two months later a bank repossessed the home: the title was in {DL}'s late mother's name, with a lien of $22,000 that hadn't been paid in a year. Records show {DL} had sold the same home a year earlier to another buyer, who backed out and got half the money back. {DL} says {D.he} was the heir, believed {D.he} could sell it, and spent the money paying down the lien before the bank \"jumped the gun.\""
         ],
         prosecutionEvidence: [
             E(.document, 3, "Title and Lien", "The DMV title in the name of {DL}'s late mother, with a $22,000 bank lien and no payment in twelve months."),
@@ -231,7 +231,7 @@ extension StoryCases {
                         exam: [
                             .direct("Could {DL} sell the home?", "\"As the only heir, with the estate's authority and the lien paid off at closing, yes.\""),
                             .direct("Is it common for heirs to get this wrong?", "\"All the time. People think 'heir' means 'owner, free and clear.'\""),
-                            .cross("Did {DL} pay off the lien at closing?", "\"No.\""),
+                            .cross("Did {DL} pay off the lien at closing?", "\"No. {DL} didn't pay off the lien at closing.\""),
                             .cross("Did {DL} tell the buyer about the lien?", "\"Not that I'm aware of.\"")
                         ])
         ],
@@ -240,7 +240,7 @@ extension StoryCases {
         aggravating: ["The victim suffered serious financial loss"],
         mitigating: ["The defendant has made partial restitution"],
         victimImpacts: ["\"My kids asked if we're ever going home. I don't know what to tell them. That was every dollar we had.\""],
-        allocutions: ["\"I thought I could make it right before anybody got hurt. I was wrong.\""],
+        allocutions: ["\"I truly believed that home was mine to sell. It was my late mother's, and I'm all that's left of her family. I meant to clear the lien from the sale money before anybody got hurt, but the bank moved first. I'm sorry for the savings that were lost, and I want to make it right.\""],
         guiltyTruths: ["{DL} had listed the same home on Marketplace again the week after {V}'s sale."],
         innocentTruths: ["{DL} had an appointment with the lender to pay off the lien from an insurance payout that was delayed by a month."],
         moods: [.sympathetic], doctrines: ["burdenOfProof"],
@@ -274,7 +274,7 @@ extension StoryCases {
         specification: "Obtained $7,400 from donors, including {V}, by falsely representing that the money would go to a family whose home burned, on or about {DATE}.",
         ageRange: 28...55, occupations: ["event planner", "church volunteer coordinator", "salon owner"], hasVictim: true,
         summaries: [
-            "After a house fire in {HOOD} left a family of five with nothing, {D} set up an online fundraiser with photos of the burned house and organized a pancake breakfast at the fire hall on {DATE}. Donors gave $7,400 in all. {V}, a retired teacher, gave $500. The family received $600 in gift cards and was told the rest \"went to costs.\" Bank records show the online money and the breakfast cash went to {D}'s personal account, then to {D.his} rent, a car repair, and a beach weekend. {DL} says {D.he} was holding the rest for a deposit on a rental house for the family and spent some by mistake from the same account."
+            "After a house fire in {HOOD} left a family of five with nothing, {D} set up an online fundraiser with photos of the burned house and organized a pancake breakfast at the fire hall on {DATE}. Donors gave $7,400 in all. {V}, a retired teacher, gave $500. The family received $600 in gift cards and was told the rest \"went to costs.\" Bank records show the online money and the breakfast cash went to {DL}'s personal account, then to {D.his} rent, a car repair, and a beach weekend. {DL} says {D.he} was holding the rest for a deposit on a rental house for the family and spent some by mistake from the same account."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Bank Records", "$7,400 in donations deposited to {DL}'s personal account. Withdrawals: rent, a $1,100 car repair, a beach rental, and $600 in gift cards.", .search),
@@ -306,7 +306,7 @@ extension StoryCases {
                             .direct("What were the event costs?", "\"About $380 in receipts. The fire hall was donated.\""),
                             .direct("Did {DL} ever pay a rental deposit for the family?", "\"No. {D.He} asked one landlord about it once.\""),
                             .cross("{DL} gave the family $600.", "\"{D.He} did, out of $7,400.\""),
-                            .cross("{DL} has no prior record.", "\"None.\"")
+                            .cross("{DL} has no prior record.", "\"None. {DL} has no prior record that I'm aware of.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -317,8 +317,8 @@ extension StoryCases {
                         exam: [
                             .direct("What was {DL}'s role?", "\"{D.He} did everything: flyers, the page, the food, setup. {D.He} was there at five in the morning.\""),
                             .direct("Did {D.he} talk about the family?", "\"All the time. {D.He} said {D.he} wanted to get them into a real house, not a motel.\""),
-                            .cross("You never saw where the money went.", "\"No.\""),
-                            .cross("Did you know about the beach trip?", "\"No.\"")
+                            .cross("You never saw where the money went.", "\"No. I never saw where the money went.\""),
+                            .cross("Did you know about the beach trip?", "\"No. I didn't know about the beach trip.\"")
                         ])
         ],
         prosecutionTheory: ["{D} used a family's fire to raise $7,400, told donors every penny was theirs, and spent most of it on {D.him}self."],
@@ -339,7 +339,7 @@ extension StoryCases {
                 .direct("Why did it go into your own account?", "\"I didn't have another one. I thought I'd keep track.\""),
                 .cross("A beach rental, {DL}.", "\"I know. I told myself I'd put it back.\""),
                 .cross("Every penny goes to the family. Your words.", "\"I meant it when I wrote it.\""),
-                .cross("Seven months later, they've gotten $600.", "\"Yes.\"")
+                .cross("Seven months later, they've gotten $600.", "\"Yes. Seven months later, they've gotten $600.\"")
             ],
             prosecutionOpening: "A burned-out family, a promise of every penny, and a beach weekend.",
             defenseOpening: "A volunteer who mixed money that should have been kept separate.",
@@ -362,7 +362,7 @@ extension StoryCases {
         ],
         ageRange: 23...40, occupations: ["dental assistant", "dental office receptionist"], hasVictim: false,
         summaries: [
-            "A pharmacist at {PHARM} noticed something wrong on {DATE}: a prescription for 30 oxycodone tablets from a dentist, for a patient who'd supposedly had a root canal, written in a dentist's name for a dose dentists almost never write. The pharmacist called the office. The dentist had never seen the patient. The state's prescription database showed six such scripts on the same dentist's pad in two months, at four pharmacies, for four different patient names, all picked up by a person who matched {D}, a receptionist at the practice. Pharmacy cameras at two stores show {D}. {DL} says a former coworker forged them and asked {D.him} to pick them up for \"family members who couldn't drive.\""
+            "A pharmacist at {PHARM} noticed something wrong on {DATE}: a prescription for 30 oxycodone tablets from a dentist, for a patient who'd supposedly had a root canal, written in a dentist's name for a dose dentists almost never write. The pharmacist called the office. The dentist had never seen the patient. The state's prescription database showed six such scripts on the same dentist's pad in two months, at four pharmacies, for four different patient names, all picked up by a person who matched {D}, a receptionist at the practice. Pharmacy cameras at two stores show {D.him}. {DL} says a former coworker forged them and asked {D.him} to pick them up for \"family members who couldn't drive.\""
         ],
         prosecutionEvidence: [
             E(.video, 3, "Pharmacy Cameras", "{D} at the counter at two pharmacies picking up oxycodone prescriptions in other people's names."),
@@ -382,7 +382,7 @@ extension StoryCases {
                             .direct("What made you call the dentist?", "\"Thirty oxycodone for a root canal. Most dentists write a few days of something weaker, if that. And the handwriting was too neat.\""),
                             .direct("What did the dentist tell you?", "\"Never heard of the patient. Never wrote it.\""),
                             .direct("Who picked it up?", "\"The same person who had picked up two others I found in our records, under different names. I recognized {D.him} from the camera.\""),
-                            .cross("You didn't see who wrote the script.", "\"No.\""),
+                            .cross("You didn't see who wrote the script.", "\"No. I didn't see who wrote the script.\""),
                             .cross("People pick up prescriptions for family all the time.", "\"They do. Not for four different families.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Narcotics detective",
@@ -405,8 +405,8 @@ extension StoryCases {
                         exam: [
                             .direct("What did you compare?", "\"The six forged signatures against twenty of {DL}'s writing samples. Letter forms, slant, pressure. Not consistent.\""),
                             .direct("What does 'not consistent' mean?", "\"I found no evidence {DL} wrote them.\""),
-                            .cross("Can a writer disguise their hand?", "\"Yes. Forgers often do.\""),
-                            .cross("Your opinion says nothing about who picked up the pills.", "\"That's right.\"")
+                            .cross("Can a writer disguise their hand?", "\"Yes. Forgers often do, and that's something I take into account.\""),
+                            .cross("Your opinion says nothing about who picked up the pills.", "\"That's right. My opinion says nothing about who picked up the pills.\"")
                         ])
         ],
         prosecutionTheory: ["{D} took a pad from the front desk, filled out scripts in fake and borrowed names, and picked up 180 oxycodone tablets at four pharmacies."],
@@ -425,7 +425,7 @@ extension StoryCases {
             notDone: ["The pad was never found.", "No one checked the fingerprints on the forged scripts."],
             defendantExam: [
                 .direct("Who asked you to pick up the prescriptions?", "\"Someone I trusted. I don't want to say more than that.\""),
-                .direct("Did you write any of them?", "\"No.\""),
+                .direct("Did you write any of them?", "\"No. I didn't write any of them.\""),
                 .cross("Four different names at four different pharmacies.", "\"I was told they were family.\""),
                 .cross("You work at a dental office. You know dentists don't write thirty oxycodone.", "\"I'm an assistant, not a dentist.\""),
                 .cross("Where did the pills go?", "\"I handed them over.\"", "\"Some of them I took. I'm not going to lie about that.\"")

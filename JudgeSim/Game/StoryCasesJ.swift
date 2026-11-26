@@ -41,8 +41,8 @@ extension StoryCases {
                             .direct("What did you notice about them?", "\"Three had bright, fresh cuts and white paint on the pipe. The saw on the seat had a warm battery.\""),
                             .direct("What did {DL} say?", "\"'Those aren't mine, I'm just driving them.'\""),
                             .cross("You didn't see {DL} at the church?", "\"I didn't. I was on patrol out on 17; I never went by the church.\""),
-                            .cross("Was anyone else in the car?", "\"No. Just {DL}.\""),
-                            .cross("A battery stays warm after charging, too?", "\"For a while, sure.\"")
+                            .cross("Was anyone else in the car?", "\"No. Just {DL}. There was no one else in the car.\""),
+                            .cross("A battery stays warm after charging, too?", "\"For a while, sure. A battery stays warm for a while after charging.\"")
                         ]),
             WitnessSeed(name: nil, role: "Church facilities manager",
                         direct: ["\"The vans were fine at 10 p.m.\""],
@@ -65,7 +65,7 @@ extension StoryCases {
                             .direct("Do you know someone called Tank?", "\"Yeah. Big guy, hangs around the scrap yards. He pays people to haul stuff so his name isn't on anything.\""),
                             .direct("Did {DL} work for him?", "\"{DL} drove for him a couple of times when {D.he} needed money. Hauling, that's all.\""),
                             .cross("You don't know Tank's real name?", "\"Just Tank. I never asked for more than that.\""),
-                            .cross("You've been convicted of larceny yourself?", "\"Two years ago.\"")
+                            .cross("You've been convicted of larceny yourself?", "\"I was convicted of larceny two years ago.\"")
                         ])
         ],
         prosecutionTheory: ["Twenty minutes after the theft, {D} was alone with the church's converters, fresh paint on them, and a warm saw. Possession of recently stolen property is evidence of theft."],
@@ -73,7 +73,7 @@ extension StoryCases {
         aggravating: ["The offense harmed a charitable organization"],
         mitigating: [],
         victimImpacts: ["The church's pastor: \"Forty seniors missed dialysis rides and doctor's appointments. People had to choose between groceries and a cab.\""],
-        allocutions: ["\"I needed a hundred dollars. I should have asked what I was hauling.\""],
+        allocutions: ["\"A man named Tank met me at a gas station and loaded those converters into my car. I didn't look at what he put in. I wondered, but I needed the money more than I wanted to know. I needed a hundred dollars. I should have asked what I was hauling.\""],
         guiltyTruths: ["A gas station camera near the church later showed {DL}'s hatchback pulling out of the church's street at 4:44 a.m."],
         innocentTruths: ["A scrap yard later identified a regular seller called Tank who had sent three different drivers in with converters that month."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -167,8 +167,8 @@ extension StoryCases {
         defenseTheory: ["{DL} reported everything, engraving included, to the police the same day and held the tools the full period. A fence doesn't hand the police the evidence."],
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
-        victimImpacts: ["{V}: \"I paid to rent tools for a month while mine sat on a shelf with my name on them.\""],
-        allocutions: ["\"I did what the law told me to do. I should have called the number on the tools.\""],
+        victimImpacts: ["{V}: \"I paid to rent tools for a month while mine sat on a shelf with my name on them. I couldn't finish a deck job and lost the contract. I'd engraved every one of them myself. I had to ask a lawyer how to get them back, and it cost me.\""],
+        allocutions: ["\"Used tools don't move, and I have a wall of drills I can't sell. I wrote the sale in the police report, as the law requires. The ID was valid, and I don't drive to people's houses. I did what the law told me to do. I should have called the number on the tools.\""],
         guiltyTruths: ["The seller, later arrested, said {DL} told him \"bring me more, just no names next time.\""],
         innocentTruths: ["The seller, later arrested, said he picked {DL}'s shop because it paid fast and \"doesn't ask much,\" and that {DL} never knew."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -245,7 +245,7 @@ extension StoryCases {
                             .direct("What did you conclude?", "\"That the signature is probably not genuine. The line quality is slow and hesitant, and three letter forms differ from twenty known samples.\""),
                             .direct("What does 'probably' mean on your scale?", "\"It's the second-strongest finding below 'identified.' I'm confident, not certain.\""),
                             .cross("Could an elderly, ill person's signature also be slow and hesitant?", "\"Yes. Illness and age can cause tremor.\""),
-                            .cross("The date line is in a different ink than the signature?", "\"Yes, a different pen.\"")
+                            .cross("The date line is in a different ink than the signature?", "\"Yes, a different pen. The date line is in a different ink than the signature.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -256,15 +256,15 @@ extension StoryCases {
                         exam: [
                             .direct("What did you hear?", "\"About a month before the coma, sitting on the porch, {PARENT} said, 'I'm going to take care of {DL} for everything. That child gave up two years.'\""),
                             .cross("You never saw a check signed?", "\"I wasn't in the room for any of that.\""),
-                            .cross("'Take care of' could mean in the will?", "\"It could.\"")
+                            .cross("'Take care of' could mean in the will?", "\"'Take care of' could mean in the will.\"")
                         ])
         ],
         prosecutionTheory: ["The check is dated while {PARENT} was on a ventilator, the signature is probably forged, and {DL} cashed it three days after the death."],
         defenseTheory: ["{PARENT} signed the check weeks earlier to repay two years of caregiving and left the date blank. The different ink shows exactly that. A shaky signature is what illness looks like."],
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant provided caregiving to the family member"],
-        victimImpacts: ["{V}: \"Our parent's last wishes were in the will. This made us strangers at the funeral.\""],
-        allocutions: ["\"I never forged anything. I took care of our parent when nobody else would.\""],
+        victimImpacts: ["{V}: \"Our parent's last wishes were in the will. This made us strangers at the funeral. I'd cared for our parent through the last year, and my sibling's check came out of the account three days after we lost them. I'm the executor, and I'm tired.\""],
+        allocutions: ["\"My parent signed that check about two weeks before the coma, at the kitchen table, and told me to fill in the date later. I couldn't afford the funeral deposit and the bank held the funds. I didn't know what date to put. I was grieving and stupid. I never forged anything.\""],
         guiltyTruths: ["A practice sheet with repeated signatures of {PARENT} was later found in {DL}'s desk."],
         innocentTruths: ["A bank teller later remembered {PARENT} asking, weeks before the coma, how to write a check \"for a big gift.\""],
         moods: [.divided], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -310,7 +310,7 @@ extension StoryCases {
         secondary: [SecondaryCharge(lawID: "firearmStorage", specification: "Stored a loaded firearm in a manner that a minor could gain access to it, and a minor did gain access.", chance: 1.0, threshold: 0)],
         ageRange: 28...42, occupations: ["sales manager", "welder"], hasVictim: true,
         summaries: [
-            "On {DATE}, during a birthday party at {D}'s house on {STREET} in {HOOD}, {D}'s eight-year-old found a loaded 9mm handgun in an unlocked nightstand drawer in the main bedroom. While showing it to cousins, the child fired once, killing {V}, 6. {DL} kept the gun loaded with a round in the chamber for home protection, had a lockbox in the closet that was not used, and had told family the drawer was \"off limits.\" {DL} says the bedroom door was closed and the children had been told to stay in the yard."
+            "On {DATE}, during a birthday party at {D}'s house on {STREET} in {HOOD}, {DL}'s eight-year-old found a loaded 9mm handgun in an unlocked nightstand drawer in the main bedroom. While showing it to cousins, the child fired once, killing {V}, 6. {DL} kept the gun loaded with a round in the chamber for home protection, had a lockbox in the closet that was not used, and had told family the drawer was \"off limits.\" {DL} says the bedroom door was closed and the children had been told to stay in the yard."
         ],
         prosecutionEvidence: [
             E(.physical, 3, "Handgun", "A loaded 9mm with a round chambered and no external safety, found on the bedroom floor."),
@@ -340,7 +340,7 @@ extension StoryCases {
                         exam: [
                             .direct("What happened at the party?", "\"The kids were in the yard. I went to get the cake from the car. I heard one pop and screaming from inside.\""),
                             .direct("Did you know about the gun?", "\"I knew {DL} had one. I didn't know where. I would never have let my child in that house.\""),
-                            .cross("You'd been to that house many times with your child?", "\"Every holiday.\""),
+                            .cross("You'd been to that house many times with your child?", "\"Every holiday. I'd been to that house many times with my child.\""),
                             .cross("You've told people you don't want {DL} to go to prison?", "\"I don't know what I want. I want my baby back.\"")
                         ])
         ],
@@ -353,14 +353,14 @@ extension StoryCases {
                             .direct("Were the children told to stay out of the house?", "\"Twice. {DL} said bathrooms only, stay in the yard. The bedroom door was shut.\""),
                             .direct("How is {DL} doing?", "\"{D.He} hasn't slept in the bedroom since. {D.He} sold the gun the next week.\""),
                             .cross("Children at a birthday party don't always listen?", "\"Not at that age. You tell them twice and then you watch.\""),
-                            .cross("Was the bedroom door locked?", "\"Just closed.\"")
+                            .cross("Was the bedroom door locked?", "\"The bedroom door wasn't locked, just closed.\"")
                         ])
         ],
         prosecutionTheory: ["A loaded, chambered handgun in an unlocked drawer, a party with twelve children, and a lockbox never taken out of its box. That's culpable negligence."],
         defenseTheory: ["{DL} kept the gun in a closed room, told every child to stay outside, and never imagined {D.his} child would go in. This is a tragedy, not a crime."],
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has accepted responsibility", "The defendant's family suffered the same loss"],
-        victimImpacts: ["{VL}'s parent: \"Every birthday party, every family dinner, there's an empty chair, and the gun belonged to my own sibling.\""],
+        victimImpacts: ["{VL}'s parent: \"Every birthday party, every family dinner, there's an empty chair, and the gun belonged to my own sibling. My child was six. I wasn't in the house when it happened, and I'll never get that day out of my head. We still don't speak. I want that gun locked up forever.\""],
         allocutions: ["\"I bought that lockbox and never opened it. There's nothing a court can do to me that's worse than that.\""],
         guiltyTruths: ["A relative later told police the children had found the gun in that drawer once before and {DL} had laughed it off."],
         innocentTruths: ["{DL}'s child later said an older cousin had gone into the bedroom to find a phone charger and saw the drawer open."],
@@ -407,7 +407,7 @@ extension StoryCases {
         ],
         ageRange: 24...40, occupations: ["personal trainer"], hasVictim: true,
         summaries: [
-            "For four months beginning on {DATE}, {V} received more than 200 messages from nine different social media accounts calling {V.him} names, mocking {V.his} weight, and saying {V.his} new partner \"will leave you like he left me.\" The new partner is {D}'s ex. Four of the accounts were created from an IP address at {D}'s gym; two used an email recovery address with {DL}'s initials. Many messages misspelled \"definitely\" as \"definately,\" which {DL} also does in texts. {DL} says {D.he} has never contacted {VL}, that hundreds of people use that gym's Wi-Fi, and that half the internet can't spell \"definitely.\" {DL} was convicted in district court and appealed."
+            "For four months beginning on {DATE}, {V} received more than 200 messages from nine different social media accounts calling {V.him} names, mocking {V.his} weight, and saying {V.his} new partner \"will leave you like he left me.\" The new partner is {D}'s ex. Four of the accounts were created from an IP address at {DL}'s gym; two used an email recovery address with {DL}'s initials. Many messages misspelled \"definitely\" as \"definately,\" which {DL} also does in texts. {DL} says {D.he} has never contacted {VL}, that hundreds of people use that gym's Wi-Fi, and that half the internet can't spell \"definitely.\" {DL} was convicted in district court and appealed."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Account Records", "Four of the nine accounts were created from the IP address of {GYM}, where {DL} trains clients; three at times {DL} was on the schedule."),
@@ -450,15 +450,15 @@ extension StoryCases {
                         exam: [
                             .direct("Who uses the gym's Wi-Fi?", "\"Members, guests, delivery drivers, people in the parking lot. It's not password protected.\""),
                             .cross("{DL} is there most days?", "\"{D.He} trains clients six days a week.\""),
-                            .cross("Did you know the other member with those initials?", "\"A little. Quiet person.\"")
+                            .cross("Did you know the other member with those initials?", "\"Quiet person. I knew the other member with those initials a little.\"")
                         ])
         ],
         prosecutionTheory: ["{D}'s gym, {D.his} initials, {D.his} spelling, and only one person with a reason to say 'he'll leave you like he left me.'"],
         defenseTheory: ["An open network used by hundreds, initials shared by another member, accounts made when {DL} wasn't there, and a common misspelling. That's a theory, not proof."],
         aggravating: [],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
-        victimImpacts: ["{V}: \"I still flinch when my phone buzzes.\""],
-        allocutions: ["\"I was hurt when the relationship ended. I didn't spend four months harassing anybody.\""],
+        victimImpacts: ["{V}: \"I still flinch when my phone buzzes. Two hundred messages from nine accounts, calling me names and mocking where I live. I stopped checking at night. I blocked everything and still waited for the next. I'd like to be able to open my phone again.\""],
+        allocutions: ["\"I've never sent {V.him} a single message, and I misspell the name like my clients and my mother do. I don't have an email like that. I was hurt when the relationship ended, but I didn't spend four months harassing anybody. I'm sorry for what {V} is going through.\""],
         guiltyTruths: ["A later warrant for {DL}'s cloud backup found screenshots of {VL}'s profile saved the night each new account was created."],
         innocentTruths: ["The other member with the same initials was later found to have dated the same ex years earlier."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -475,7 +475,7 @@ extension StoryCases {
                 .direct("Did you create those accounts?", "\"No. I've never sent {VL} a single message.\""),
                 .direct("What about the misspelling?", "\"I misspell it. So do my clients, my mother, and half the comments on any post.\""),
                 .cross("Two accounts used your initials and birth year.", "\"And someone else's. I don't have an email like that.\""),
-                .cross("'He'll leave you like he left me.' Who else would say that?", "\"Anyone he's ever dated.\"")
+                .cross("'He'll leave you like he left me.' Who else would say that?", "\"Anyone he's ever dated could say that.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Defense: \"You'd like {DL} convicted so the messages stop?\"",

@@ -117,6 +117,20 @@ private struct MatterCard: View {
             // A warrant application has no case yet; it names the person whose property would be searched.
             Text(matter.caption).font(.system(.subheadline, design: .serif).weight(.bold))
             Text(matter.summary).font(.callout).fixedSize(horizontal: false, vertical: true)
+            ReadAloudButton(id: "matter|\(matter.id)", lines: {
+                var lines = [SpeechReader.Line(text: matter.summary, speaker: "Clerk")]
+                if !matter.stateAsk.isEmpty { lines.append(SpeechReader.Line(text: "The State. " + matter.stateAsk, speaker: matter.pendingCase?.prosecutor ?? "State's lawyer")) }
+                if !matter.defenseAsk.isEmpty { lines.append(SpeechReader.Line(text: "The defense. " + matter.defenseAsk, speaker: matter.pendingCase?.defenseAttorney ?? "Defense lawyer")) }
+                return lines
+            }, title: "Read this matter aloud")
+            // The defendant's age is in the summary; the alleged victim's age and sex belong beside it.
+            if let c = matter.pendingCase, c.victimName != nil, let victim = VictimProfiles.make(c, county: game.county) {
+                Label("Alleged victim: \(victim.name), \(victim.description)\(victim.deceased ? ", who died" : "")",
+                      systemImage: "person.crop.circle.badge.exclamationmark")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let c = matter.pendingCase, !c.prosecutor.isEmpty, !c.defenseAttorney.isEmpty {
                 Text("\(c.prosecutor) for the State · \(c.defenseAttorney) for the defense")
                     .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)

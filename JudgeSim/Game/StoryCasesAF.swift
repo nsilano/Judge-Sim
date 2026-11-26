@@ -17,7 +17,7 @@ extension StoryCases {
         ],
         ageRange: 24...48, occupations: ["boat mechanic", "marine engine repairman"], hasVictim: true,
         summaries: [
-            "At 2:10 a.m. on {DATE}, the camera on the fuel dock at {FAC} recorded a jon boat with its running lights off tie up between slips 14 and 15. Forty minutes later it left, riding low. In the morning, {V} found the twin Yamaha 150s gone from {V.his} center console, and the slip next door had lost one more. Nine days later a Facebook Marketplace listing for a Yamaha 150, \"lower unit rebuilt, $3,900 cash,\" was posted from {D}'s account. A detective answered it, and at {D}'s repair shop on {STREET} in {HOOD} found the advertised motor and a second one with its serial plate ground off. The serial number stamped on the inside of the engine block matched {V}'s. {DL} says {D.he} bought both from a man named Wade at the Cane Creek flea market for parts and didn't know they were stolen."
+            "At 2:10 a.m. on {DATE}, the camera on the fuel dock at {FAC} recorded a jon boat with its running lights off tie up between slips 14 and 15. Forty minutes later it left, riding low. In the morning, {V} found the twin Yamaha 150s gone from {V.his} center console, and the slip next door had lost one more. Nine days later a Facebook Marketplace listing for a Yamaha 150, \"lower unit rebuilt, $3,900 cash,\" was posted from {D}'s account. A detective answered it, and at {DL}'s repair shop on {STREET} in {HOOD} found the advertised motor and a second one with its serial plate ground off. The serial number stamped on the inside of the engine block matched {V}'s. {DL} says {D.he} bought both from a man named Wade at the Cane Creek flea market for parts and didn't know they were stolen."
         ],
         prosecutionEvidence: [
             E(.video, 2, "Fuel Dock Camera", "Two figures in dark hooded jackets tie a jon boat between slips 14 and 15 at 2:10 a.m. and leave at 2:51 a.m. Faces are not visible."),
@@ -61,7 +61,7 @@ extension StoryCases {
                         exam: [
                             .direct("How do you know {DL}?", "\"{D.He}'s fixed my boat for six years. Fair price, never tried to cheat me.\""),
                             .direct("Have you bought a used motor from {D.him}?", "\"Two. Both times {D.he} gave me a bill of sale and the old registration.\""),
-                            .cross("Did you know {D.he} paid $1,800 for two motors worth $14,600?", "\"I didn't know that.\""),
+                            .cross("Did you know {D.he} paid $1,800 for two motors worth $14,600?", "\"I didn't know that. No one told me {D.he} paid $1,800 for motors worth $14,600.\""),
                             .cross("Would you buy two 150s for $1,800 without asking questions?", "\"I'd probably ask some questions.\"")
                         ])
         ],
@@ -70,7 +70,7 @@ extension StoryCases {
         aggravating: ["The property was taken for resale"],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
         victimImpacts: ["\"I work two jobs to pay for that boat. My boy and I haven't been out on the water since.\""],
-        allocutions: ["\"I should have walked away from a deal that cheap. I know that now.\""],
+        allocutions: ["\"A man named Wade at the Cane Creek flea market sold me those motors. It was already gone when I bought the one, and I figured it was a cheap deal. He said they were seized up. I should have walked away from a deal that cheap. I know that now.\""],
         guiltyTruths: ["{DL}'s phone was later shown to have connected to the marina's guest Wi-Fi at 2:22 a.m. that night."],
         innocentTruths: ["A man named Wade Pittman was arrested in Carteret County months later with four motors and a notebook of receipts in the same handwriting."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "searchSeizure"],
@@ -106,7 +106,7 @@ extension StoryCases {
         specification: "Embezzled $11,300 belonging to {STORE}, by loading gift cards at register 3 and voiding the cash tenders, between four months before {DATE} and {DATE}.",
         ageRange: 20...34, occupations: ["cashier"], hasVictim: false,
         summaries: [
-            "Over four months, {STORE}'s register 3 recorded 46 gift card loads, each paid in cash and then voided within a minute after the card was activated. The cards, worth $11,300 in all, were drained through online orders shipped to an address on {STREET} in {HOOD}, where {D}'s cousin lives. Every load ran under {D}'s register login. {DL}, a cashier there for two years, says managers used {D.his} login whenever theirs locked, which happened weekly, and that {D.he} never loaded a card {D.he} didn't sell."
+            "Over four months, {STORE}'s register 3 recorded 46 gift card loads, each paid in cash and then voided within a minute after the card was activated. The cards, worth $11,300 in all, were drained through online orders shipped to an address on {STREET} in {HOOD}, where {D}'s cousin lives. Every load ran under {DL}'s register login. {DL}, a cashier there for two years, says managers used {D.his} login whenever theirs locked, which happened weekly, and that {D.he} never loaded a card {D.he} didn't sell."
         ],
         prosecutionEvidence: [
             E(.document, 3, "Register Journal", "46 gift card loads under {DL}'s login, each followed within a minute by a voided cash tender. Total: $11,300."),
@@ -124,10 +124,10 @@ extension StoryCases {
                         weight: 3, lay: false,
                         exam: [
                             .direct("How did the store find this?", "\"Our system flags a cash tender voided right after a gift card is activated. Register 3 had 46 of them in four months.\"", "\"An exception report. Gift card activated, cash voided a minute later. Forty-six times on register 3.\""),
-                            .direct("Whose login?", "\"{DL}'s, every time.\""),
+                            .direct("Whose login?", "\"{DL}'s, every time. It was {DL}'s login each time.\""),
                             .direct("What about the camera?", "\"We keep footage thirty days. For the eleven dates we still had, {DL} is at register 3 when the loads run.\""),
                             .cross("Managers used cashiers' logins when theirs locked?", "\"It happened. It's against policy.\""),
-                            .cross("For the other 35 loads, you have no video at all?", "\"No. It was overwritten.\"")
+                            .cross("For the other 35 loads, you have no video at all?", "\"No. It was overwritten. The video for those loads was overwritten.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Financial crimes detective",
                         direct: ["\"The orders went to {DL}'s cousin's address.\""],
@@ -157,7 +157,7 @@ extension StoryCases {
         aggravating: ["Abuse of a position of trust"],
         mitigating: ["No prior criminal record"],
         victimImpacts: ["Store manager: \"We had to cut hours for the whole front end after the loss. People who did nothing wrong lost shifts.\""],
-        allocutions: ["\"I'll pay it back. I just want to keep working.\""],
+        allocutions: ["\"I sold gift cards to customers who paid, and I never voided any. Any manager whose login locked could have done it, usually the night manager. I worked register three most days, and that's my register. I just want to keep working.\""],
         guiltyTruths: ["Text messages later recovered from the cousin's phone showed {DL} sending order lists: \"this week: 2 ipads and the jordans.\""],
         innocentTruths: ["A night manager was fired a year later after the same pattern appeared on a different register under a different cashier's login."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -190,7 +190,7 @@ extension StoryCases {
         specification: "Obtained $1,840 from six buyers, including {V}, by selling them counterfeit tickets to a college football game, on or about {DATE}.",
         ageRange: 19...30, occupations: ["sporting goods clerk", "delivery driver", "community college student"], hasVictim: true,
         summaries: [
-            "In the week before a sold-out rivalry game, {D} posted in a {HOOD} community Facebook group: \"4 tickets sec 22 row M, can't go, face value.\" Six buyers, including {V}, paid a total of $1,840 through a payment app to {D}'s account and received PDF tickets by message. At the stadium gate, all six sets scanned as invalid; several shared the same barcode. {DL} says {D.he} bought the tickets from an online reseller called TixKing, was scammed too, and showed deputies a $300 payment to that account."
+            "In the week before a sold-out rivalry game, {D} posted in a {HOOD} community Facebook group: \"4 tickets sec 22 row M, can't go, face value.\" Six buyers, including {V}, paid a total of $1,840 through a payment app to {DL}'s account and received PDF tickets by message. At the stadium gate, all six sets scanned as invalid; several shared the same barcode. {DL} says {D.he} bought the tickets from an online reseller called TixKing, was scammed too, and showed deputies a $300 payment to that account."
         ],
         prosecutionEvidence: [
             E(.digital, 3, "Payment Records", "Six payments totaling $1,840 to {DL}'s payment app account in four days, each with a note like \"sec 22 tix.\""),
@@ -211,7 +211,7 @@ extension StoryCases {
                             .direct("What happened at the stadium?", "\"Every one scanned red. The man at the gate said a family ahead of us had the exact same barcode.\"", "\"Red light, all four. The gate man said he'd seen that barcode already that night.\""),
                             .direct("How did that feel?", "\"I'd promised my son that game for his birthday. We drove two hours and sat in the parking lot listening on the radio.\""),
                             .cross("{DL} contacted you afterward?", "\"The next day. Said {D.he}'d been scammed too and would try to make it right.\""),
-                            .cross("Did {D.he} pay you back?", "\"No.\"")
+                            .cross("Did {D.he} pay you back?", "\"No. {D.He} didn't pay me back.\"")
                         ]),
             WitnessSeed(name: nil, role: "Digital forensic examiner, Sheriff's Office",
                         direct: ["\"The PDFs were edited on {DL}'s phone.\""],
@@ -229,8 +229,8 @@ extension StoryCases {
         defenseTheory: ["{D} was scammed by TixKing first, and tried to make it right with the buyers. Being taken by a scammer isn't the same as being one."],
         aggravating: ["The offense involved multiple victims"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["\"It was his birthday. He still asks why someone would lie to us like that.\""],
-        allocutions: ["\"I got greedy. I'm sorry to all of them.\""],
+        victimImpacts: ["\"It was his birthday, and we'd saved for months for four seats. We drove an hour to find out they were fake. He still asks why someone would lie to us like that. We paid face value, and the person who sold them smiled when he took the money.\""],
+        allocutions: ["\"I bought those tickets from TixKing for three hundred dollars, and he told me to put each buyer's name on them. I didn't know they were fake. He said I could resell at face, and I didn't think about the match. I got greedy. I'm sorry to all of them.\""],
         guiltyTruths: ["The TixKing account belonged to {DL}'s roommate, who said {DL} paid him $300 for a single real ticket that {DL} then copied."],
         innocentTruths: ["TixKing was traced to a man in Georgia who had sold the same edited PDFs to dozens of resellers across three states."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "searchSeizure"],
@@ -304,8 +304,8 @@ extension StoryCases {
         defenseTheory: ["{D} borrowed a car that belonged to a convicted fraudster. The State can't put {D.him} at the pump."],
         aggravating: ["The offense involved multiple victims", "The offense involved planning and sophistication"],
         mitigating: [],
-        victimImpacts: ["\"My rent bounced and I paid a $75 late fee for something I didn't do.\""],
-        allocutions: ["\"I used the cards. I didn't build anything. I'm sorry.\""],
+        victimImpacts: ["\"My rent bounced and I paid a seventy-five dollar late fee for something I didn't do. I filled up at that pump on my way to work, and then my card was drained at a mall in another state. I spent three weeks on hold with the bank. I'm still not fully refunded.\""],
+        allocutions: ["\"Those cards were my cousin's, because my truck was in the shop that week. My cousin asked me to pick some up, and I used them. I didn't build anything, and I don't know how skimmers work. I used the cards.\""],
         guiltyTruths: ["A search of {DL}'s phone months later found the skimmer's Bluetooth pairing app and data downloads from pump 6."],
         innocentTruths: ["The cousin was arrested in a neighboring county installing a skimmer in a gray cap a month later."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "searchSeizure"],
@@ -382,7 +382,7 @@ extension StoryCases {
                         weight: 2, lay: false,
                         exam: [
                             .direct("What does the route log show?", "\"{DL}'s handheld read meters in Cane Creek from 9:40 to 11:55, every three to five minutes. No gaps.\""),
-                            .direct("How far is Cane Creek from {STREET}?", "\"Twenty-five minutes, at least.\""),
+                            .direct("How far is Cane Creek from {STREET}?", "\"Cane Creek is at least twenty-five minutes from {STREET}.\""),
                             .cross("The log shows the device, not who held it?", "\"That's right. But readers don't hand those off. It's against policy.\""),
                             .cross("Has anyone ever shared a device?", "\"It's happened. I've written people up for it.\"")
                         ])
@@ -392,7 +392,7 @@ extension StoryCases {
         aggravating: ["The victim was very old", "The defendant took advantage of a position of trust"],
         mitigating: [],
         victimImpacts: ["\"That ring was the last thing I had of him that he wore every day. I'd give them the pearls if I could just have the ring back.\""],
-        allocutions: ["\"I didn't do this. I'm sorry for what happened to her.\""],
+        allocutions: ["\"I read meters on my route in Cane Creek, and my handheld shows where I was. I never go in houses, since meters are outside. Every meter reader in the county wears an orange vest. I didn't do this.\""],
         guiltyTruths: ["The ring turned up at a pawn shop in another county, pawned under {DL}'s driver's license two days after the theft."],
         innocentTruths: ["A man arrested a year later for the same vest-and-clipboard scheme in two counties admitted the {STREET} theft and led deputies to the pearls."],
         moods: [.wantsConviction], doctrines: ["eyewitnessID", "burdenOfProof"],
@@ -404,7 +404,7 @@ extension StoryCases {
                 .direct("Where were you that morning?", "\"On my route in Cane Creek, reading meters. My handheld shows it.\""),
                 .direct("Have you ever been inside {V}'s home?", "\"Never. I don't go in houses. Meters are outside.\""),
                 .cross("You drive a white pickup and own an orange vest.", "\"So does every meter reader in the county.\""),
-                .cross("Did anyone else carry your handheld that day?", "\"No.\"")
+                .cross("Did anyone else carry your handheld that day?", "\"No. Nobody else carried my handheld that day.\"")
             ],
             prosecutionOpening: "A vest, a clipboard, and a widow who let him in.",
             defenseOpening: "A route log that puts {DL} twenty-five minutes away.",

@@ -4,6 +4,7 @@ One file per release or phase, newest first. Start a new career after installing
 
 | File | Covers |
 |---|---|
+| [2026-11-26 Story depth, consistency and read-aloud](2026-11-26-story-depth-and-consistency.md) | Full testimony in all 2,371 stories, about 550 new openings and closings, contradictions and scene fixes, and read-aloud |
 | [2026-11-23 Crash fix and developer dashboard](2026-11-23-crash-fix-and-developer-dashboard.md) | Fixes the freeze iOS closed the game for (case building, saving and text search 4-10x faster), plus a developer dashboard with crash reports |
 | [2026-11-22 Safer saves and a faster start](2026-11-22-saves-testimony-timelines-and-faster-start.md) | File-based saves with backups, natural testimony, realistic drunk-driving timelines, first bond hearing within days |
 | [2026-11-20 Consistent bond figures and story credits](2026-11-20-bond-consistency-and-story-credits.md) | Defense ask matches the client's cash, lawyer reputations spread across the roster, unread written stories go back on the list |

@@ -21,6 +21,16 @@ struct VictimProfile {
     var inTheFile: [String]
 }
 
+extension VictimProfile {
+    /// "a 34-year-old woman", "a 9-year-old boy": the age and the sex, the way the court would say them.
+    var description: String {
+        let child = (age ?? 30) < 18
+        let person = gender == .female ? (child ? "girl" : "woman") : (child ? "boy" : "man")
+        guard let age else { return "a \(person)" }
+        return "a \(age)-year-old \(person)"
+    }
+}
+
 enum VictimProfiles {
 
     static func make(_ c: CourtCase, county: County?) -> VictimProfile? {
@@ -52,12 +62,12 @@ enum VictimProfiles {
         if let job = told?.occupation ?? statedOccupation(summary, name: name, last: last) {
             occupation = job.capitalizedFirst
         } else if age < 18 { occupation = age < 6 ? "Not yet in school" : "Student at a Hollis County school" }
-        else if age >= 68 { occupation = "Retired " + rng.pick(["schoolteacher", "textile mill worker", "postal carrier", "farmer", "nurse", "machinist", "church secretary"]) }
+        else if age >= 68 { occupation = "Retired " + rng.pick(["schoolteacher", "textile mill worker", "postal carrier", "farmer", "nurse", "machinist", "church secretary", "mail clerk", "welder", "bus driver", "seamstress", "tobacco farmer", "shipyard worker", "cafeteria cook", "bookkeeper"]) }
         else {
             occupation = rng.pick(["Warehouse supervisor", "Nursing assistant", "Elementary school teacher", "Line cook", "Bank teller",
                                    "Truck driver", "Hair stylist", "Pharmacy technician", "Auto mechanic", "Cashier at a grocery store",
                                    "Community college student", "Landscaper", "Office manager at a dental practice", "Welder",
-                                   "Home health aide", "Restaurant server", "Sheet metal worker", "Real estate agent"])
+                                   "Home health aide", "Restaurant server", "Sheet metal worker", "Real estate agent", "Dental assistant", "Electrician's apprentice", "Child care worker", "Delivery driver", "Hotel front desk clerk", "Plumber", "Bus driver", "Carpenter", "Pharmacist", "Bakery counter worker", "School bus driver", "Hospital custodian"])
         }
         let town = rng.pick(county?.towns ?? ["Port Hollis"])
         let years = age < 18 ? age : rng.int(2...max(3, min(age, 50)))
@@ -69,12 +79,12 @@ enum VictimProfiles {
             family = stated
         } else if age < 18 {
             family = rng.pick(["Lives with a mother and two siblings.", "Raised by grandparents.", "Lives with both parents and a younger brother.",
-                               "Lives with a father who works nights; a grandmother helps."])
+                               "Lives with a father who works nights; a grandmother helps.", "Lives with an aunt and two cousins.", "Splits time between a mother and a father.", "Lives with a stepfather and a mother who works two jobs.", "Raised by an older sister.", "Lives with a mother and a stepfather.", "Lives with a grandmother and an uncle.", "Lives with a father and an older half-sister.", "Lives with a foster family.", "Lives with an aunt; the mother lives out of state.", "Lives with both grandparents."])
         } else {
-            let partner = rng.pick(["Married", "Married", "Divorced", "Single", "Widowed", "Engaged"])
+            let partner = rng.pick(["Married", "Married", "Divorced", "Single", "Widowed", "Engaged", "Separated", "Living with a partner", "In a long relationship"])
             let kids = age < 24 ? 0 : rng.int(0...3)
             family = partner + (kids == 0 ? ", no children." : ", \(kids) child\(kids == 1 ? "" : "ren").")
-                + (deceased ? " " + rng.pick(["The family has attended every setting.", "A sister has spoken for the family.", "The family asked the court for privacy."]) : "")
+                + (deceased ? " " + rng.pick(["The family has attended every setting.", "A sister has spoken for the family.", "The family asked the court for privacy.", "A cousin has spoken for the family.", "The family has asked to be told before any plea is accepted.", "The family has asked to speak at sentencing.", "The family has asked to be notified of every hearing.", "A brother has spoken for the family.", "The family has said it wants the case resolved quickly.", "The family has asked for restitution to be considered.", "The family has asked that the victim's name not be used in the paper.", "A parent has spoken for the family at each setting."]) : "")
         }
 
         // Only what the file says about the victim decides the relationship, not every word in it.
@@ -94,7 +104,7 @@ enum VictimProfiles {
             : rng.pick(["One misdemeanor conviction (worthless check), more than ten years ago.",
                         "A dismissed simple assault charge from a decade ago.",
                         "A prior conviction for misdemeanor possession of marijuana.",
-                        "One prior conviction for driving while license revoked."]))
+                        "One prior conviction for driving while license revoked.", "A speeding ticket and nothing else.", "No record of any kind.", "A trespass charge from 2009 that was dismissed.", "A DWI conviction from fifteen years ago.", "A 2012 misdemeanor larceny conviction.", "One conviction for simple affray more than a decade ago.", "A single misdemeanor trespassing conviction.", "One traffic-related citation and nothing since.", "A misdemeanor DWI conviction from twenty years ago.", "A disorderly conduct charge that was dismissed."]))
 
         let testified: String
         if c.witnesses.contains(where: { $0.name == name }) {
@@ -180,8 +190,8 @@ enum VictimProfiles {
         }
         switch c.category {
         case .family: return "Family or household member of the defendant."
-        case .robbery, .property: return rng.pick(["No known relationship; the investigation found no prior contact.", "Strangers before the incident."])
-        default: return rng.pick(["Knew the defendant slightly before the incident.", "No known relationship before the incident."])
+        case .robbery, .property: return rng.pick(["No known relationship; the investigation found no prior contact.", "Strangers before the incident.", "No known relationship; a stranger on the street.", "Never met the defendant before.", "No known relationship; the two never crossed paths before.", "Had never seen the defendant before the incident.", "A stranger; no connection found in the investigation.", "No relationship of any kind between them before that day.", "Never spoke to the defendant before the incident.", "Complete strangers, according to both sides."])
+        default: return rng.pick(["Knew the defendant slightly before the incident.", "No known relationship before the incident.", "Had met the defendant at work.", "Knew the defendant from the neighborhood.", "Had known the defendant a short while through mutual friends.", "Lived on the same street as the defendant.", "Knew the defendant from church.", "Had worked in the same building as the defendant.", "Had seen the defendant around town but never spoken to them.", "Was an acquaintance of the defendant through a family member."])
         }
     }
 
@@ -196,7 +206,7 @@ enum VictimProfiles {
         } else if contactless {
             lines.append(rng.pick(["Not physically hurt. Has changed routines, phone numbers, and the route to work.",
                                    "No physical injury. Started counseling and sleeps with the lights on.",
-                                   "Not touched, but says the fear hasn't let up; moved in with family for a time."]))
+                                   "Not touched, but says the fear hasn't let up; moved in with family for a time.", "Not injured physically, but quit a second job to be home more.", "No injuries. Stopped answering the door.", "No physical injury. Stopped going to the places the defendant is known to be.", "Not hurt, but has stopped answering unknown numbers and checks the mirror driving home.", "Not injured. Installed cameras and keeps the phone charged at all times.", "No injuries. Has missed days of work out of worry.", "Not touched, but says the messages made home feel unsafe.", "No physical harm. Started carrying a whistle and varies the route home."]))
         } else if c.templateKey.hasPrefix("story.") {
             // A written case says what happened to the victim; nothing is invented. The State's medical exhibit is the
             // injury, and with none, there was no physical injury.
@@ -214,7 +224,7 @@ enum VictimProfiles {
             }
             if [.violent, .family, .robbery].contains(c.category) {
                 lines.append(rng.pick(["Has trouble sleeping and has started counseling.", "Says the fear is worse than anything else.",
-                                       "Avoids the place where it happened."]))
+                                       "Avoids the place where it happened.", "Wakes at night and checks the locks.", "Doesn't go out alone after dark anymore.", "Hasn't been back to the place since.", "Gets nervous when the phone rings.", "Jumps at loud noises and has trouble in crowds.", "Keeps the lights on at night.", "Says every unfamiliar car feels like a threat.", "Has started seeing a therapist twice a month."]))
             }
         } else {
             switch c.category {
@@ -222,22 +232,22 @@ enum VictimProfiles {
                 lines.append(rng.pick(["Treated at Hollis Regional Medical Center and released the same night.",
                                        "Hospitalized for four days; still in physical therapy.",
                                        "Stitches and a fractured orbital bone; the vision in one eye hasn't fully returned.",
-                                       "Bruising and a sprained wrist; missed two weeks of work."]))
+                                       "Bruising and a sprained wrist; missed two weeks of work.", "Treated and released with a cast and follow-up visits.", "Surgery on the hand and eight weeks off work.", "Broken nose and a concussion; released after observation.", "Cracked ribs and a collapsed lung; two nights in the hospital.", "A deep cut that needed twenty stitches; the scar will remain.", "Fractured jaw, wired shut for six weeks.", "Dislocated shoulder and bruising; physical therapy twice a week.", "Treated for a concussion and released with instructions to rest for a month."]))
                 lines.append(rng.pick(["Has trouble sleeping and has started counseling.", "Moved in with relatives for a time afterward.",
-                                       "Had the locks changed and installed cameras.", "Says the fear is worse than the injuries."]))
+                                       "Had the locks changed and installed cameras.", "Says the fear is worse than the injuries.", "Stopped going out in the evening.", "Missed a month of work and fell behind on rent.", "Has nightmares and avoids driving at night.", "Stopped attending church and social events for months.", "Had trouble returning to work and took a lower-paying position.", "Says the injuries healed faster than the memory.", "Started carrying a phone everywhere in case of an emergency.", "Has panic attacks in unfamiliar places."]))
             case .robbery:
                 let armed = c.charges.contains { $0.lawID == "dangerousRobbery" }
                 lines.append(rng.pick((armed ? ["Not physically hurt, but had a weapon pointed at them."] : ["Knocked down; scrapes and bruises."])
                                       + ["Quit the job where it happened.", "Now carries pepper spray and won't go out after dark alone."]))
             case .property:
                 lines.append(rng.pick(["Lost items of sentimental value that were never recovered.", "Paid an insurance deductible and lost a week of work dealing with it.",
-                                       "Says the home doesn't feel safe anymore."]))
+                                       "Says the home doesn't feel safe anymore.", "Replaced the locks and a stolen laptop at their own expense.", "Lost a family heirloom.", "Had to replace a stolen television and a bicycle.", "Lost tools used for work and had to borrow money to replace them.", "Found the back door forced open and has not slept well since.", "Lost a collection that had been in the family for decades.", "Spent a weekend cleaning up and repairing the damage.", "Filed an insurance claim that has not yet been paid."]))
             case .whiteCollar:
                 lines.append(rng.pick(["Lost savings meant for retirement.", "Had to take a second job to cover the loss.",
-                                       "Credit was damaged and took months to repair."]))
+                                       "Credit was damaged and took months to repair.", "Closed a bank account and spent months on the phone sorting it out.", "Delayed a medical procedure because of the lost money.", "Drained a savings account that was meant for tuition.", "Fell behind on the mortgage after the loss.", "Spent months disputing charges and filing reports.", "Had to sell a car to recover from the loss.", "Lost a down payment on a first home.", "Took on credit card debt to make up for the stolen money."]))
             case .traffic:
                 lines.append(rng.pick(["Broken leg and months of rehabilitation.", "The car was totaled; still paying off the loan.",
-                                       "A concussion with lingering headaches."]))
+                                       "A concussion with lingering headaches.", "Back pain that has not gone away and a long recovery.", "Missed a semester of school.", "Whiplash and months of physical therapy.", "A broken collarbone and three weeks off work.", "The car was a total loss and there was no rental coverage.", "Facial lacerations that required surgery.", "A fractured wrist that has not fully healed.", "Now afraid to drive on the highway."]))
             default:
                 lines.append("Affected by the offense; details are in the victim impact statement.")
             }

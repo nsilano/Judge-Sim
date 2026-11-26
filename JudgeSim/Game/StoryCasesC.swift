@@ -51,7 +51,7 @@ extension StoryCases {
                             .direct("Is that dangerous?", "\"At four feet, a steel BB at that speed can penetrate skin and can cause permanent eye injury. I've seen hospital records of both.\""),
                             .direct("Could it kill?", "\"Death is rare, but there are documented deaths from BB guns, usually from eye or head wounds, especially in children.\""),
                             .cross("It isn't a firearm?", "\"It doesn't use gunpowder, so it's not a firearm.\""),
-                            .cross("Death is rare even when someone is hit?", "\"Very rare.\""),
+                            .cross("Death is rare even when someone is hit?", "\"Death is very rare even when someone is hit.\""),
                             .cross("The person never fired it in the store?", "\"Correct, as far as I know.\"")
                         ])
         ],
@@ -150,7 +150,7 @@ extension StoryCases {
                             .direct("What did {DL} tell you?", "\"That {INFANT} rolled off the changing table while {DL} turned to get a diaper, hit the floor, cried, and then went limp a few minutes later.\""),
                             .direct("Why does the sequence of accounts matter?", "\"Dispatch first, then the ER, then me. 'Went limp,' then 'fell,' then 'rolled while I turned.' Each version got more detailed. That concerned me.\""),
                             .cross("{DL} called 911 within a minute?", "\"Within about two minutes, yes.\""),
-                            .cross("People in a panic often give fuller accounts as they calm down?", "\"That happens.\""),
+                            .cross("People in a panic often give fuller accounts as they calm down?", "\"That happens. People in a panic often give fuller accounts as they calm down.\""),
                             .cross("You never interviewed the parents about the night before?", "\"I asked about the morning. Not in detail about the night before.\"")
                         ])
         ],
@@ -171,7 +171,7 @@ extension StoryCases {
         defenseTheory: ["An older bleed, a sick baby the night before, and a short fall. The science of 'shaken baby' is not as certain as the State says, and {DL} has six spotless years."],
         aggravating: ["The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record or licensing complaints", "{DL} immediately called 911"],
-        victimImpacts: ["{INFANT}'s parent: \"Our baby will be one soon and still can't sit up. We trusted you.\""],
+        victimImpacts: ["{INFANT}'s parent: \"Our baby will be one soon and still can't sit up. We trusted you to keep our child safe. We left our infant at a licensed home because we believed it was the best choice. Now we take turns going to therapy appointments three times a week. I don't know what the future holds.\""],
         allocutions: ["\"I would never hurt a child. I've cared for dozens. I'll think about that changing table for the rest of my life.\""],
         guiltyTruths: ["A neighbor later said they heard {DL} yelling \"stop crying\" and a thud through the window that morning."],
         innocentTruths: ["Genetic testing a year later found {INFANT} had a rare clotting disorder that makes the brain bleed easily."],
@@ -189,7 +189,7 @@ extension StoryCases {
                 .direct("Why did your story seem to change?", "\"It didn't change. I was screaming at the dispatcher. I said 'limp' because that's what scared me. Later I could say the whole thing.\""),
                 .direct("Did you shake {INFANT}?", "\"No. I picked the baby up and patted the back when the breathing got strange. That's all.\""),
                 .cross("You left a seven-month-old alone on a changing table.", "\"For a second. I'll regret it forever. It's a mistake, not abuse.\""),
-                .cross("You were caring for four other children that morning.", "\"Three others. All napping.\"")
+                .cross("You were caring for four other children that morning.", "\"Three others. All napping. Three other children were napping that morning.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Prosecutor: \"Doctor, in your opinion was this child abused?\"",
@@ -239,8 +239,8 @@ extension StoryCases {
                             .direct("Who signed for this one?", "\"{DL}. At 1:40 p.m. Four bags, all seals intact.\""),
                             .direct("What happened at close?", "\"Three bags. The missing one was $38,000. We searched every drawer, every trash can, the carrier's truck. Nothing.\""),
                             .direct("Why was the vault camera down?", "\"A failed hard drive. I'd put in a ticket. The vendor was backlogged. I should have pushed harder.\""),
-                            .cross("The vault can be opened with a manager override code that leaves no badge record?", "\"Yes. For emergencies.\""),
-                            .cross("Your assistant manager knew that code?", "\"All managers do.\""),
+                            .cross("The vault can be opened with a manager override code that leaves no badge record?", "\"Yes. For emergencies. A manager override code opens the vault without a badge record.\""),
+                            .cross("Your assistant manager knew that code?", "\"All managers do. Every manager knows that code, including the assistant manager.\""),
                             .cross("The assistant manager resigned two weeks later?", "\"For personal reasons, the letter said.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Financial crimes detective",
@@ -271,7 +271,7 @@ extension StoryCases {
         defenseTheory: ["A broken camera, a manager override code that leaves no trace, a manager with gambling debts who quit, and a real check from a grandparent. That's reasonable doubt."],
         aggravating: [],
         mitigating: ["No prior criminal record"],
-        allocutions: ["\"I didn't take that money. I've worked at that bank since I was nineteen.\""],
+        allocutions: ["\"I didn't take that money. I've worked at that bank since I was nineteen. I handled the shipment to restock my drawer and help customers, and I guessed at the count. I'm sorry for the missing thirty-eight thousand dollars, and I hope the truth is found.\""],
         guiltyTruths: ["The bank's armored carrier later found a torn shipment seal in a storm drain behind {DL}'s apartment."],
         innocentTruths: ["The assistant manager was later charged with taking cash from another branch using the override code."],
         moods: [.indifferent], doctrines: ["burdenOfProof"],
@@ -337,7 +337,7 @@ extension StoryCases {
                             .direct("What about the bike light?", "\"It was on and blinking when we found it. A driver paying attention would have seen it for several hundred feet.\""),
                             .cross("Deer strikes routinely shatter windshields?", "\"They do, when the deer goes over the hood.\""),
                             .cross("In heavy rain at night, at 55, a driver could see the impact as a gray shape for a fraction of a second?", "\"A fraction of a second, yes. But then you stop and look.\""),
-                            .cross("The law requires knowledge or reason to know, not certainty?", "\"That's my understanding.\"")
+                            .cross("The law requires knowledge or reason to know, not certainty?", "\"That's my understanding. The law requires knowledge or reason to know, not certainty.\"")
                         ]),
             WitnessSeed(name: nil, role: "Body shop owner",
                         direct: ["\"{DL} wanted it fixed fast and quiet.\""],
@@ -346,8 +346,8 @@ extension StoryCases {
                         exam: [
                             .direct("What happened when {DL} came in?", "\"Silver sedan, windshield smashed on the passenger side, a dent in the hood. {DL} asked how fast I could do it and if I needed to file with insurance.\""),
                             .direct("Why did you call the police?", "\"I'd seen the news about the cyclist. There were threads of dark fabric in the glass. Deer don't wear jackets.\""),
-                            .cross("{DL} told you it was a deer?", "\"Yes. Right away.\""),
-                            .cross("{DL} gave you {D.his} real name and phone number?", "\"Real name, real number.\"")
+                            .cross("{DL} told you it was a deer?", "\"Yes. Right away. {DL} told me it was a deer as soon as I got there.\""),
+                            .cross("{DL} gave you {D.his} real name and phone number?", "\"{DL} gave me {D.his} real name and phone number without hesitation.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -366,7 +366,7 @@ extension StoryCases {
         defenseTheory: ["A bang in the rain on the county's worst deer road. {DL} truly believed it was a deer. The law punishes knowing flight, not a terrible mistake."],
         aggravating: ["{DL} sought to conceal the damage"],
         mitigating: ["No prior criminal or driving record", "{DL} gave the body shop {D.his} real name"],
-        victimImpacts: ["{VL}'s partner: \"{VL} lay in that ditch alive, maybe for a while. Somebody could have called.\""],
+        victimImpacts: ["{VL}'s partner: \"{V.He} lay in that ditch alive, maybe for a while. Somebody could have called. {V} was twenty-nine and riding home from work. I keep thinking about every minute. Whoever it was might have saved {V.him} just by making a call.\""],
         allocutions: ["\"If I'd known it was a person, I'd have stopped. I didn't know. I'll never forgive myself for not looking.\""],
         guiltyTruths: ["A dashcam in a passing truck later showed {DL}'s brake lights coming on and the car slowing for several seconds before driving away."],
         innocentTruths: ["A deer carcass was found by a road crew a quarter mile further that week, with silver paint transfer on its hide."],
@@ -448,7 +448,7 @@ extension StoryCases {
                         exam: [
                             .direct("What were the pills?", "\"Counterfeit oxycodone tablets containing fentanyl. Total weight 121 grams. Each pill is a potentially lethal dose for someone without tolerance.\""),
                             .cross("You can't say who owned them?", "\"Ownership isn't something chemistry can tell you.\""),
-                            .cross("The receipt in the bag came from a store that's a mile from many apartments?", "\"I wouldn't know.\"")
+                            .cross("The receipt in the bag came from a store that's a mile from many apartments?", "\"I wouldn't know. I haven't looked at where the apartments are in relation to that store.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -466,7 +466,7 @@ extension StoryCases {
         defenseTheory: ["The bag belonged to {ALT}, whose prints are on the pills, who has trafficked before, and who blamed {DL} and fled. Renting a car isn't trafficking."],
         aggravating: ["The quantity of fentanyl posed a risk of mass overdose"],
         mitigating: ["No prior criminal record", "Steady five-year employment"],
-        allocutions: ["\"I gave someone I thought was a friend a ride. I didn't know what was in that bag.\""],
+        allocutions: ["\"I gave someone I thought was a friend a ride to a birthday. I didn't know what was in that bag, and I never touched it. I panicked with the dog circling the car, and I named them later. I'll tell the court everything I know.\""],
         guiltyTruths: ["Messages recovered later showed {DL} arranging a 'pickup' in Charlotte for the same day."],
         innocentTruths: ["{ALT} was arrested a year later in another state and admitted the pills were {ALT.hers}."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "searchSeizure"],
@@ -481,7 +481,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why were you driving to Charlotte?", "\"My cousin's kid's birthday on Saturday. {ALT} heard I was going and asked for a ride. We'd known each other since high school.\""),
                 .direct("Why a prepaid card?", "\"My credit card was maxed. I used the prepaid one I use for gas.\""),
-                .direct("Whose bag was it?", "\"{ALT}'s. {ALT} put it behind the seat. I never touched it.\""),
+                .direct("Whose bag was it?", "\"{ALT} put it behind the seat. I never touched it.\""),
                 .cross("You couldn't name the cousin at the roadside.", "\"I was panicking with a dog circling the car. I named them later.\""),
                 .cross("The receipt in the bag came from a store near your apartment.", "\"{ALT} stayed at my place the night before.\"")
             ],

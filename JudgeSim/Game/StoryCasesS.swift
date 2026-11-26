@@ -61,14 +61,14 @@ extension StoryCases {
                         exam: [
                             .direct("What does the shooting pattern suggest?", "\"Two different weapons, two different positions, fired within moments. That suggests two shooters.\""),
                             .cross("You reviewed photos; you never went to the scene?", "\"Photos and reports. I was hired after the scene was released.\""),
-                            .cross("One person can carry two guns?", "\"It's possible.\"")
+                            .cross("One person can carry two guns?", "\"It's possible. One person can carry two guns.\"")
                         ])
         ],
         prosecutionTheory: ["The day his thefts were about to come out, {D} killed his wife and son to buy sympathy and time. He lied about being at the kennels until the video caught his voice."],
         defenseTheory: ["{DL} is a thief and a liar, and he's admitted it. But no weapon, no blood, and a father who loved his son. Someone else, with a grudge from the boat crash, was at those kennels."],
         aggravating: ["The offense involved multiple victims", "The defendant took advantage of a position of trust"],
         mitigating: ["No prior criminal record"],
-        victimImpacts: ["{VIC2}'s sister: \"He took my sister and my nephew, and then he stood at their funeral and accepted our hugs.\""],
+        victimImpacts: ["{VIC2}'s sister: \"{D.He} took my sister and my nephew, and then {D.he} stood at their funeral and accepted our hugs. I sat beside {D.his} family at the service without knowing. My nephew was just a child. I want every person who hears this to know what we lost.\""],
         allocutions: ["\"I lied about the kennels because I was paranoid from pills. I did not kill my wife and my son. I would never.\""],
         guiltyTruths: ["A blue raincoat recovered at {DL}'s mother's house was found to have gunshot residue on its lining."],
         innocentTruths: ["A man later charged in another killing told a cellmate he and a friend had gone to the kennels that night over the boat crash."],
@@ -144,7 +144,7 @@ extension StoryCases {
                         exam: [
                             .direct("What did the messages show in the last two weeks?", "\"A countdown. She helped him research methods, pushed him when he hesitated, and asked over and over when he'd do it.\""),
                             .direct("And the text to her friend?", "\"That he got out of the truck because he was scared, and she told him to get back in.\""),
-                            .cross("Months earlier, {DL} begged him to get help?", "\"She did. That changed.\""),
+                            .cross("Months earlier, {DL} begged him to get help?", "\"She did. That changed. {DL} begged him to get help months earlier, but that changed.\""),
                             .cross("There's no recording of what was actually said on that call?", "\"No. We have the call records and her own text describing it.\"")
                         ]),
             WitnessSeed(name: nil, role: "Friend who received the text",
@@ -175,8 +175,8 @@ extension StoryCases {
         defenseTheory: ["{VL} chose to end his life, as he had tried before. {DL} was a confused, medicated teenager. Words alone, however cruel, aren't manslaughter."],
         aggravating: ["The victim was especially vulnerable"],
         mitigating: ["{DL} was 18 with no prior record", "The defendant suffered from a mental condition that significantly reduced culpability"],
-        victimImpacts: ["{VL}'s mother: \"He was getting better. He had plans for college. She talked him out of living.\""],
-        allocutions: ["\"I loved him. I will regret that night for the rest of my life.\""],
+        victimImpacts: ["{VL}'s mother: \"{V.He} was getting better. {V.He} had plans for college and a drawing pad full of ideas for a truck of {V.his} own. Then someone who said {D.he} loved {V.him} talked {V.him} out of living, over hundreds of messages. I read them on a detective's screen. I'll never understand how anyone could do that.\""],
+        allocutions: ["\"{V} had been suffering so long, and {V.he} said it was the only way to stop it. I don't remember exactly what I wrote. I was panicking, and I wrote things I don't remember. I loved {V.him}. I will regret that night for the rest of my life.\""],
         guiltyTruths: ["A deleted note on {DL}'s phone, recovered later, drafted a social media post about grieving her boyfriend, written two days before his death."],
         innocentTruths: ["A suicide note {VL} wrote weeks before the texts began, found later in a book in his room, described the exact plan."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -247,7 +247,7 @@ extension StoryCases {
                             .direct("Who set up the gauntlet?", "\"{DL}. {D.He} was pledge master. {D.He} planned the drinking stations.\""),
                             .direct("Did anyone suggest calling for help?", "\"Around midnight a brother said we should call 911. {DL} said no, it'd get the house shut down, and he'd be fine.\""),
                             .cross("You didn't call either?", "\"No. I'll live with that.\""),
-                            .cross("You've been promised leniency?", "\"My charges were reduced.\"")
+                            .cross("You've been promised leniency?", "\"I've been promised leniency, and my charges were reduced.\"")
                         ]),
             WitnessSeed(name: nil, role: "Forensic pathologist",
                         direct: ["\"He could have been saved.\""],
@@ -271,7 +271,7 @@ extension StoryCases {
                             .direct("Were pledges forced to drink?", "\"They said we could stop. Nobody held anybody down.\""),
                             .direct("Did you see {DL} do anything for {VL}?", "\"I saw {D.him} put {VL} on his side and stick a backpack behind him so he wouldn't roll.\""),
                             .cross("Did anyone stop?", "\"No. You don't, if you want to get in.\""),
-                            .cross("And nobody called 911 that night?", "\"No. Nobody did.\"")
+                            .cross("And nobody called 911 that night?", "\"No. Nobody did. Nobody called 911 that night.\"")
                         ])
         ],
         prosecutionTheory: ["{D} designed a drinking gauntlet that left a nineteen-year-old with a deadly blood alcohol level, then refused to call for help to protect the house. Twelve hours of video show what culpable negligence looks like."],
@@ -279,7 +279,7 @@ extension StoryCases {
         aggravating: ["The victim was especially vulnerable"],
         mitigating: ["No prior criminal record", "The defendant has expressed remorse"],
         victimImpacts: ["{VL}'s father: \"Twelve hours. Any one of them could have picked up a phone. He was alone in a house full of people.\""],
-        allocutions: ["\"I think about it every hour of every day. I should have called. I'm so sorry.\""],
+        allocutions: ["\"I thought {V} was just drunk, since everyone had seen people pass out at that house. I said wait, and I didn't think it was serious. I don't know who deleted the footage, and I didn't. I think about it every hour of every day. I should have called.\""],
         guiltyTruths: ["A recovered message showed {DL} texting a brother at 7 a.m., before anyone called 911: \"delete the basement camera.\""],
         innocentTruths: ["A recording found later showed {DL} pleading with the chapter president at 1 a.m. to call an ambulance and being overruled."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -373,7 +373,7 @@ extension StoryCases {
                         exam: [
                             .direct("What is {DL}'s history?", "\"A long history of depression and dissociative episodes. It's all through her records.\""),
                             .direct("What explains her account?", "\"A severe dissociative episode. She may have partly believed the story she told.\""),
-                            .cross("She arranged a prepaid phone and a pickup weeks in advance?", "\"Yes. That's planning.\""),
+                            .cross("She arranged a prepaid phone and a pickup weeks in advance?", "\"Yes. That's planning. She arranged a prepaid phone and a pickup weeks in advance.\""),
                             .cross("And she filed a $30,000 compensation claim citing the abduction?", "\"She did. I can't tell you what she believed when she filed it.\"")
                         ])
         ],
@@ -382,7 +382,7 @@ extension StoryCases {
         aggravating: ["The offense involved the taking of property of great monetary value (G.S. 15A-1340.16(d)(14))"],
         mitigating: ["No prior criminal record", "The defendant suffered from a mental condition that significantly reduced culpability"],
         victimImpacts: ["A volunteer searcher: \"I took two weeks off work to walk ditches looking for her. My kids were afraid to go outside.\""],
-        allocutions: ["\"I'm ashamed of the pain I caused. I'm getting help. I'll pay back every dollar.\""],
+        allocutions: ["\"I wasn't kidnapped by those women, and I've had to accept that. When I told the story, part of me believed it. I planned to leave, but I didn't plan the rest. I'm ashamed of the pain I caused my family and the volunteers. I'm getting help, and I'll pay back every dollar.\""],
         guiltyTruths: ["A search history on the prepaid phone, recovered later, included \"how long do brands take to heal.\""],
         innocentTruths: ["A treating psychiatrist's notes from before the disappearance describe {DL} reporting fears of being taken by two women, years before any of this."],
         moods: [.wantsConviction], doctrines: ["burdenOfProof"],
@@ -465,7 +465,7 @@ extension StoryCases {
                             .direct("What do the dashcams and data show?", "\"After the brake, the pickup accelerated to 97 mph and closed four miles on the car. The car was in the right lane, slowing, when the shots were fired.\""),
                             .direct("Where were the shots fired from?", "\"From the pickup, pulled alongside, through the car's passenger window. Four casings were recovered from the truck bed.\""),
                             .cross("Both drivers were driving aggressively?", "\"Before the brake check, yes. After it, one of them was chasing the other.\""),
-                            .cross("And another clip shows {VL}'s car braking hard in front of the pickup twice?", "\"Yes, it does.\"")
+                            .cross("And another clip shows {VL}'s car braking hard in front of the pickup twice?", "\"Yes, it does. Another clip shows {VL}'s car braking hard in front of the pickup twice.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -485,8 +485,8 @@ extension StoryCases {
         defenseTheory: ["{VL} started a dangerous confrontation at highway speed. {DL} feared being forced off the road and fired in a split second. At most, this is manslaughter."],
         aggravating: ["The defendant knowingly created a great risk of death to more than one person"],
         mitigating: ["No prior criminal record", "The defendant has been gainfully employed"],
-        victimImpacts: ["{VL}'s mother: \"Everybody's been brake-checked. Nobody should die for it.\""],
-        allocutions: ["\"I lost my temper. I'll never forgive myself.\""],
+        victimImpacts: ["{VL}'s mother: \"Everybody's been brake-checked. Nobody should die for it. I was in that car with {V}, and I watched the truck pull up beside us. I heard the shots, and then everything was spinning. I can't stand the sound of tires on a highway.\""],
+        allocutions: ["\"That car braked on me three times and then swerved at my truck, and I was scared. I wasn't chasing, only trying to get past. I lost my temper. I'll never forgive myself, and I'm sorry to {V}'s family. I don't expect to be forgiven.\""],
         guiltyTruths: ["A text {DL} sent his brother from the road, recovered later, read: \"this guy is about to learn.\""],
         innocentTruths: ["A third dashcam surfaced showing {VL}'s car swerving hard toward the truck a moment before the shots."],
         moods: [.wantsConviction], doctrines: ["selfDefense", "imperfectSelfDefense", "lesserIncluded"],
@@ -501,7 +501,7 @@ extension StoryCases {
             defendantExam: [
                 .direct("Why did you fire?", "\"The car braked on me three times, then swerved at my truck. I thought he was trying to put me into the guardrail at seventy miles an hour.\""),
                 .direct("Why chase them?", "\"I wasn't chasing. I was trying to get past.\""),
-                .cross("At 97 miles an hour, for four miles.", "\"I was scared.\""),
+                .cross("At 97 miles an hour, for four miles.", "\"I was going 97 miles an hour for four miles because I was scared.\""),
                 .cross("And then you hid the truck under a tarp.", "\"My lawyer said to keep it safe for evidence.\"")
             ],
             objections: [

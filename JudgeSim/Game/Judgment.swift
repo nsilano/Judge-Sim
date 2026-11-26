@@ -801,7 +801,7 @@ enum Judgment {
             guard let cls = law.ncClass else { return false }
             return !cls.isFelony || cls == .H || cls == .I
         }
-        let impaired = laws.contains { ["dwi", "habitualDWI", "felonyDBV", "misdDBV"].contains($0.id) }
+        let impaired = laws.contains { ["dwi", "habitualDWI", "felonyDBV", "misdDBV", "seriousInjuryVehicle"].contains($0.id) }
         return lowEnough && !impaired && !c.defendant.priors.contains { $0.ncClass.isFelony }
     }
 
@@ -1946,7 +1946,7 @@ enum Judgment {
         if convicted && !plea && !c.headline.hasPrefix("New trial:") && rng.chance(truthGuilty ? 0.03 : 0.2) {
             var retrial = retrialCase(c, r, relief: true)
             let evidence = truthGuilty
-                ? "\(rng.pick(["A State witness", "The State's main eyewitness", "A co-defendant"])) has signed an affidavit recanting \(rng.pick(["their", "the"])) trial testimony and saying \(d.lastName) wasn't involved."
+                ? "\(rng.pick(["A State witness", "The State's main eyewitness", "A co-defendant", "The State's second eyewitness", "A cooperating witness", "The State's key witness", "A witness who testified for the State", "A former friend who testified for the State", "A neighbor who testified for the State"])) has signed an affidavit recanting \(rng.pick(["their", "the", "that"])) trial testimony and saying \(d.lastName) wasn't involved."
                 : c.truth.revelation
             retrial.evidence.append(Evidence(exhibit: "Defendant's Exhibit \(c.evidence.filter { $0.side == .defense }.count + 1)",
                                              title: "Newly Discovered Evidence", detail: evidence, side: .defense,
@@ -2358,13 +2358,13 @@ enum Judgment {
         }
         let topic: String
         switch c.category {
-        case .violent, .robbery: topic = rng.pick(["violence in our community", "the people who were hurt", "public safety"])
-        case .drugs: topic = rng.pick(["the drug trade in Hollis County", "the overdoses this county has buried", "addiction"])
-        case .property: topic = rng.pick(["homeowners and small businesses", "people's sense of being safe at home", "property crime"])
-        case .whiteCollar, .cyber: topic = rng.pick(["people who trusted the wrong person with their money", "financial crime", "public trust"])
-        case .traffic: topic = rng.pick(["safety on our roads", "families who share the highway", "impaired driving"])
-        case .family: topic = rng.pick(["children and families", "the most vulnerable people we serve", "family violence"])
-        default: topic = rng.pick(["public safety", "the rule of law", "our community"])
+        case .violent, .robbery: topic = rng.pick(["violence in our community", "the people who were hurt", "public safety", "violent crime in Hollis County", "the safety of every family in this county", "victims who have to live with what happened", "the fear that violent crime leaves behind", "crimes of violence", "neighbors who were hurt"])
+        case .drugs: topic = rng.pick(["the drug trade in Hollis County", "the overdoses this county has buried", "addiction", "the damage drugs do to families here", "the opioid crisis in our county", "drug trafficking in our communities", "the families who lose someone to drugs", "substance abuse and the crime that follows it", "what drugs have done to this county"])
+        case .property: topic = rng.pick(["homeowners and small businesses", "people's sense of being safe at home", "property crime", "burglary and theft in our neighborhoods", "people who work for what they own", "break-ins in Hollis County", "the shops and homes that get hit", "people who have had their property stolen", "the safety of people's homes"])
+        case .whiteCollar, .cyber: topic = rng.pick(["people who trusted the wrong person with their money", "financial crime", "public trust", "fraud against ordinary people", "people who lose their savings to someone they trusted", "protecting the money of working families", "financial crimes against our residents", "the elderly and other targets of fraud", "scams that prey on our neighbors"])
+        case .traffic: topic = rng.pick(["safety on our roads", "families who share the highway", "impaired driving", "drunk and reckless drivers", "keeping our highways safe", "the lives lost on county roads", "crashes caused by impaired drivers", "the safety of every driver in Hollis County", "people who just want to get home safely"])
+        case .family: topic = rng.pick(["children and families", "the most vulnerable people we serve", "family violence", "protecting children", "the safety of children and families in this county", "domestic violence", "people who can't protect themselves", "victims of abuse", "keeping families safe at home"])
+        default: topic = rng.pick(["public safety", "the rule of law", "our community", "justice in Hollis County", "accountability", "the safety of our neighbors", "the integrity of our courts", "the people we serve", "fairness for everyone who comes through this courthouse"])
         }
         var lines: [String] = []
 
@@ -2373,14 +2373,14 @@ enum Judgment {
             lines.append("\(da): " + rng.pick([
                 "\"We're disappointed and reviewing our options for appeal.\"",
                 "\"We disagree with the ruling. Our office will decide in the coming days whether to appeal.\"",
-                "\"Delay is never acceptable, and we'll look hard at how this case moved through our office.\""]))
+                "\"Delay is never acceptable, and we'll look hard at how this case moved through our office.\"", "\"We're reviewing the order carefully, and we'll decide soon whether to ask a higher court to look at it.\"", "\"This case should have been decided on the evidence. We're not happy that it wasn't.\"", "\"Our office takes responsibility for how long this took, and we're reviewing what went wrong.\"", "\"The people who were harmed deserved a trial. We're talking with them about what comes next.\"", "\"We respectfully disagree with the court, and we're weighing an appeal.\"", "\"We'll be talking to the investigators before we decide anything.\""]))
         } else if !convicted {
             lines.append("\(da): " + rng.pick([
                 "\"We respect the court's decision, though we see the evidence differently.\"",
                 "\"The court has spoken. Our office will keep standing up for \(topic).\"",
                 "\"We presented the evidence we had. We accept the verdict.\"",
                 "\"A bench trial is a judge's call to make. We made our case and we'll move on to the next one.\"",
-                "\"We'll be talking with the investigators about what we could have done differently.\""]))
+                "\"We'll be talking with the investigators about what we could have done differently.\"", "\"We brought this case in good faith. The court didn't find it proved, and we accept that.\"", "\"The verdict is the verdict. We'll learn from it and keep working.\"", "\"I'm grateful to the officers who worked this case, even though the result wasn't what we wanted.\"", "\"Our office will review the trial before we decide anything else.\"", "\"We believe in the process, including when it doesn't go our way.\"", "\"The burden is ours, and the court found we didn't meet it today.\""]))
         } else if plea != nil {
             lines.append("\(da): " + rng.pick([
                 "\"This plea holds \(dl) accountable and spares the witnesses from having to testify.\"",
@@ -2393,18 +2393,18 @@ enum Judgment {
                 lines.append("\(da): " + rng.pick([
                     "\"The sentence reflects how seriously this court takes \(topic).\"",
                     "\"We asked the court to look at the whole picture. It did.\"",
-                    "\"Our assistant district attorneys tried this case the right way, and the result speaks for itself.\""]))
+                    "\"Our assistant district attorneys tried this case the right way, and the result speaks for itself.\"", "\"This is a strong sentence, and it sends a message about \(topic).\"", "\"The court gave this case the attention it deserved. We're satisfied.\"", "\"We're pleased with the outcome, and we thank the officers and witnesses who made it possible.\"", "\"We asked for accountability, and the court delivered it.\"", "\"This result matters for \(topic), and we're glad the court saw it that way.\"", "\"The sentence fits the conduct, and we're satisfied with it.\""]))
             case -1:
                 lines.append("\(da): " + rng.pick([
                     "\"We respect the court's authority, but we asked for more, and we think the facts called for it.\"",
                     "\"The conviction matters. We'd hoped the sentence would say more about \(topic).\"",
-                    "\"We'll be watching closely to make sure every condition of that probation is enforced.\""]))
+                    "\"We'll be watching closely to make sure every condition of that probation is enforced.\"", "\"We would have asked for more, but we respect the court's decision.\"", "\"The court heard our recommendation and went another way. We'll keep working on \(topic).\"", "\"We believed the facts supported a longer sentence, and we said so.\"", "\"A conviction is a conviction, but we hoped the sentence would be stronger.\"", "\"Our office will review the sentence, though we recognize this was the court's call to make.\"", "\"The court found guilt, and we're glad for that, even though the sentence was lighter than we asked for.\""]))
             default:
                 lines.append("\(da): " + rng.pick([
                     "\"We're grateful to the officers and witnesses who saw this case through.\"",
                     "\"The evidence was clear, and the court followed it.\"",
                     "\"No verdict undoes the harm. But this one says it mattered.\"",
-                    "\"This is a fair result under the sentencing laws, and it's about \(topic).\""]))
+                    "\"This is a fair result under the sentencing laws, and it's about \(topic).\"", "\"This sentence is what the law calls for, and we're comfortable with it.\"", "\"The court weighed everything and landed where we expected.\"", "\"We asked for a fair sentence and got one.\"", "\"This result reflects the work of the whole team, from the deputies to the lab.\"", "\"We're thankful the court took the time to hear everyone.\"", "\"Justice was done today, and it's a result our office can stand behind.\""]))
             }
         }
 
@@ -2412,13 +2412,13 @@ enum Judgment {
         if dismissed {
             lines.append("\(defenseName): " + rng.pick([
                 "\"The Constitution doesn't let the State hold someone in limbo indefinitely.\"",
-                "\"\(dl) waited years for a trial that never came. The court did what the law requires.\""]))
+                "\"\(dl) waited years for a trial that never came. The court did what the law requires.\"", "\"A speedy trial isn't a technicality. It's a right, and today the court enforced it.\"", "\"The delay wasn't \(dl)'s doing. The court recognized that.\"", "\"\(dl) has been waiting for this day for a very long time.\"", "\"The case is over, and \(dl) can finally start getting back to normal.\"", "\"The law gave \(dl) a right to a timely trial, and the court honored it.\"", "\"We're grateful the court looked at how long this sat.\""]))
         } else if !convicted {
             lines.append("\(defenseName): " + rng.pick([
                 "\"The court held the State to its burden. That's how it's supposed to work.\"",
                 "\"\(dl) can finally go home.\"",
                 "\"Suspicion isn't proof. Today the system worked.\"",
-                "\"\(dl) has lived under this charge for a long time. It's over.\"" ]))
+                "\"\(dl) has lived under this charge for a long time. It's over.\"", "\"The evidence wasn't there, and the court said so. That's all we asked for.\"", "\"\(dl) never should have had to go through this, but today the court got it right.\"", "\"We're grateful to the court, and \(dl) is grateful to the people who stood by through all of it.\"", "\"This is what it looks like when the State has to prove its case.\"", "\"\(dl) can go back to work and back to family now.\"", "\"The court looked at the evidence, and the evidence didn't add up. That's the right result.\""]))
         } else if plea == .alford {
             lines.append("\(defenseName): \"My client still maintains their innocence. This plea was about certainty, not guilt.\"")
         } else {
@@ -2437,7 +2437,7 @@ enum Judgment {
                 lines.append("\(defenseName): " + rng.pick([
                     "\"\(dl) has already served this sentence in the county jail. It's time to go home.\"",
                     "\"The time in jail was punishment enough, and the court recognized that.\"",
-                    "\"\(dl) walks out today with the time already done. Now comes the hard part: staying out.\""]))
+                    "\"\(dl) walks out today with the time already done. Now comes the hard part: staying out.\"", "\"The sentence matches the time \(dl) has already spent in the county jail. No more is needed.\"", "\"\(dl) can walk out of this courthouse today and start rebuilding.\"", "\"This is a fair resolution. \(dl) has paid a real price already.\"", "\"The court looked at what \(dl) has already been through and decided it was enough.\"", "\"\(dl) has been counting the days, and today the count ends.\"", "\"We're glad \(dl) gets to go home tonight.\""]))
             case (false, _):
                 lines.append("\(defenseName): " + rng.pick([
                     "\"My client has a chance to put this behind them, and intends to take it.\"",
@@ -2451,23 +2451,23 @@ enum Judgment {
         if let victim = c.victimName {
             let family = victim.components(separatedBy: " ").last ?? victim
             let stance = c.background?.victimStance ?? .wantsAccountability
-            let speaker = rng.pick(["A member of the \(family) family", "\(victim)'s sister", "A relative of \(victim)", "\(victim)'s father", "A family friend of the \(family) family"])
+            let speaker = rng.pick(["A member of the \(family) family", "\(victim)'s sister", "A relative of \(victim)", "\(victim)'s father", "A family friend of the \(family) family", "\(victim)'s brother", "\(victim)'s mother", "\(victim)'s cousin", "\(victim)'s aunt", "A close friend of \(victim)", "A neighbor of \(victim)"])
             // Grief and loss only when someone died; otherwise the words fit what the victim lived through.
             let died = Consequences.victimDied(c)
             var line: String?
             switch (convicted, active, stance) {
             case (false, _, .wantsLeniency):
-                line = rng.pick(["\"We never wanted this case. Maybe now everyone can heal.\"", "\"We just want to be left alone now.\""])
+                line = rng.pick(["\"We never wanted this case. Maybe now everyone can heal.\"", "\"We just want to be left alone now.\"", "\"We're relieved it's over. We never wanted anyone's life ruined.\"", "\"I hope everybody can get some rest now.\"", "\"We told them what we wanted. I'm glad the court listened.\"", "\"All we wanted was for this to be over, and now it is.\"", "\"We're not angry. We just want to move on.\"", "\"Nobody won here, but at least it's finished.\""])
             case (false, _, _):
                 line = rng.pick(["\"So that's it? That's justice?\"", "\"We'll be living with this. \(dl) gets to walk away.\"",
                                  "\"We sat through every day of this. I don't know what else we could have done.\"",
-                                 "\"The judge didn't hear what we heard that night.\""])
+                                 "\"The judge didn't hear what we heard that night.\"", "\"We trusted the system to listen to us. I don't know what to say now.\"", "\"All this time, and we still don't have an answer.\"", "\"I don't understand how that's possible after everything we told them.\"", "\"Somebody out there knows what happened, and we'll keep hoping they speak up.\"", "\"We'll be thinking about this long after everyone else has moved on.\"", "\"We did everything we were asked to do, and it still wasn't enough.\""])
             case (true, true, .wantsLeniency):
                 line = rng.pick(["\"We didn't want this. Prison won't fix anything.\"", "\"We asked for mercy. I hope \(dl) gets help in there.\"",
-                                 "\"I told the court what I wanted. I'm sorry it came to this.\"", "\"I hope there's real help for \(dl) where \(dl) is going.\""])
+                                 "\"I told the court what I wanted. I'm sorry it came to this.\"", "\"I hope there's real help for \(dl) where \(dl) is going.\"", "\"I wanted \(dl) to get help, not just time. I hope that part happens.\"", "\"This isn't what we asked for, but I hope \(dl) comes out better than \(dl) went in.\"", "\"None of us wanted prison. I hope there's something in there that helps.\"", "\"We'll be thinking of \(dl) even now.\"", "\"I asked for mercy, and the judge made a decision. I'll respect that.\"", "\"All we ever wanted was for \(dl) to stop and get help. I hope that's what happens.\""])
             case (true, false, .wantsLeniency):
                 line = rng.pick(["\"We asked for mercy, and the judge listened. That's what we wanted.\"", "\"This is the right outcome. Everybody gets a second chance.\"",
-                                 "\"The judge heard what we said. We're grateful for that.\"", "\"I hope \(dl) takes this chance and does something with it.\""])
+                                 "\"The judge heard what we said. We're grateful for that.\"", "\"I hope \(dl) takes this chance and does something with it.\"", "\"This gives \(dl) a real chance, and we're glad.\"", "\"We're thankful. I hope \(dl) makes the most of it.\"", "\"We didn't want jail, and the judge understood that.\"", "\"The judge gave \(dl) room to do right, and I hope \(dl) takes it.\"", "\"This is a fair outcome, and I hope everyone can heal from here.\"", "\"We got what we asked for, and I hope it works.\""])
             case (true, true, .wantsMaximum):
                 line = severity > 0
                     ? rng.pick(["\"Finally someone listened to us.\"", died ? "\"It won't bring back what we lost, but the judge got it right.\"" : "\"The judge got it right. Now we can stop looking over our shoulders.\""])
@@ -2488,11 +2488,11 @@ enum Judgment {
             case (true, false, _) where timeServed && !onProbation:
                 line = rng.pick(["\"\(dl) already sat in jail for it. I guess that's the sentence.\"",
                                  "\"At least it's on the record now. If it happens again, everyone will know.\"",
-                                 "\"We just want to be left alone now.\""])
+                                 "\"We just want to be left alone now.\"", "\"Time served. I guess that has to be enough.\"", "\"It's finished. We're going to try to put it behind us.\"", "\"I wish there were more to it, but at least the judge heard us.\"", "\"We'll go home, and we'll keep going. That's what we do.\"", "\"I hope \(dl) remembers every day in that jail.\"", "\"The case is over, and now we find a way to live with it.\""])
             case (true, false, _):
                 line = rng.pick(["\"We'll be watching to make sure every condition is followed.\"",
                                  "\"At least there's a record now. If it happens again, everyone will know.\"",
-                                 "\"I hope \(dl) understands how close that was.\""])
+                                 "\"I hope \(dl) understands how close that was.\"", "\"We'll be paying attention. If \(dl) slips, someone will hear about it.\"", "\"I hope \(dl) takes probation seriously, because we're going to.\"", "\"It's not what we pictured, but we'll see how \(dl) does.\"", "\"All of this is on the record now, and that has to count for something.\"", "\"We'll be hoping we never have to come back to this courthouse.\"", "\"The judge made a decision. Now it's up to \(dl) to prove it was the right one.\""])
             }
             if let line { lines.append("\(speaker), outside the courtroom: \(line)") }
         }
@@ -2510,16 +2510,16 @@ enum Judgment {
             switch (convicted, active) {
             case (false, _):
                 words = rng.pick(["\"I knew it. I knew the truth would come out.\"", "\"Thank God. It's over.\"", "\"We can finally breathe. Thank you for listening.\"",
-                                  "\"Nobody gets that time back, but it's over.\""]
+                                  "\"Nobody gets that time back, but it's over.\"", "\"I never doubted it for a second. We're all just glad it's done.\"", "\"We've been waiting a long time to hear those words.\"", "\"Thank you, Judge. You don't know what this means for us.\"", "\"It's been months of not sleeping. I think I can sleep tonight.\"", "\"We'll never forget what this cost us, but today we get to put it behind us.\"", "\"All I wanted was for someone to look at the facts. Somebody finally did.\""]
                                  + (support.contains("mother") ? ["\"I'm taking my baby home.\""] : [])
                                  + (support.contains("employer") ? ["\"There's a place for \(dl) on Monday morning.\""] : []))
             case (true, true):
                 words = severity > 0 && years
                     ? rng.pick(["\"Years? For this? I don't understand.\"", (c.defendant.profile?.childCount ?? 0) > 0 && c.defendant.profile?.familyIsVictim != true ? "\"The kids won't know their parent when this is over.\"" : "\"Years. I'll be old when this is over.\"", "\"We'll be there every visiting day. Every one.\""])
-                    : rng.pick(["\"We'll be waiting when it's over.\"", "\"It's hard. But it could have been worse, and we know it.\""])
+                    : rng.pick(["\"We'll be waiting when it's over.\"", "\"It's hard. But it could have been worse, and we know it.\"", "\"It's less than we feared, and we're going to hold on to that.\"", "\"We'll get through this part, and we'll be here when it's done.\"", "\"We'll make sure \(dl) knows we haven't gone anywhere.\"", "\"It's a hard day, but there's an end to it.\"", "\"We'll write every week. That's something we can do.\"", "\"The time will pass. We'll just keep showing up.\""])
             case (true, false) where timeServed:
                 words = rng.pick(["\"\(dl) is coming home tonight. It's been a long few months.\"", "\"We've got the car out front. We're going home.\"",
-                                  "\"The time's done. Now we make sure \(dl) never sees the inside of that jail again.\""])
+                                  "\"The time's done. Now we make sure \(dl) never sees the inside of that jail again.\"", "\"Home tonight. That's all anybody here wanted.\"", "\"It's been a long road, and today it ends. We're taking \(dl) home.\"", "\"We're going to get something to eat and go home. That's the whole plan.\"", "\"Time served means the jail part is over, and I'm thankful for that.\"", "\"\(dl) did the time. Now we start putting this back together.\"", "\"No more visiting hours. We get to just be together tonight.\""])
             case (true, false):
                 words = rng.pick(["\"Now the work starts. We'll make sure every appointment gets kept.\"", "\"We're just grateful to have \(dl) home tonight.\"",
                                   job.map { _ in "\"Keeping that job is everything. The judge understood.\"" } ?? "\"This is the last time. It has to be.\""])
@@ -2527,14 +2527,14 @@ enum Judgment {
             lines.append("\(who): \(words)")
         } else if convicted && active && c.defendant.isReturning {
             lines.append(rng.pick(["A courthouse regular in the gallery: \"Seen \(dl) in here before. Hope this is the last time.\"",
-                                   "A deputy, escorting \(dl) out: \"Let's go.\" \(dl) didn't look back."]))
+                                   "A deputy, escorting \(dl) out: \"Let's go.\" \(dl) didn't look back.", "A longtime courthouse employee, quietly: \"We keep seeing \(dl) in this building. Maybe now that stops.\"", "A deputy by the door: \"Hands in front, please.\" \(dl) complied without a word.", "A woman in the gallery, to no one in particular: \"That's what happens when you keep coming back.\"", "A court officer, as \(dl) was led out: \"Watch your step.\" \(dl) nodded and kept walking.", "Someone in the back row murmured that it wasn't the first time \(dl) had been through those doors.", "A deputy, taking \(dl) by the arm: \"This way.\" \(dl) went quietly."]))
         }
 
         // Cameras, when the case drew them
         if c.mediaAttention >= 3 {
             lines.append(rng.pick(["A crowd of reporters waited on the courthouse steps; neither side stopped to talk beyond brief statements.",
                                    "WHCN-TV carried the announcement live from the courthouse steps.",
-                                   "The case drew a full gallery, and several people left in tears."]))
+                                   "The case drew a full gallery, and several people left in tears.", "Satellite trucks lined the street outside the courthouse as the hearing let out.", "A reporter from the Port Hollis paper was the first one through the doors after the announcement.", "Photographers crowded the courthouse steps, and deputies kept a path open to the parking lot.", "Reporters stood three deep on the sidewalk, calling out questions that neither side answered.", "Several camera crews waited across the street, and the courthouse lobby stayed packed until well after the hearing ended.", "The courtroom was standing room only, and a line was still outside when the judge left the bench."]))
         }
         _ = sentence
         return lines
@@ -2556,19 +2556,19 @@ enum Judgment {
         var body: String
         if dismissed {
             headline = rng.pick(["Charges against \(d.name) dismissed over trial delays", "Too long a wait: judge tosses \(d.lastName) case",
-                                 "Speedy-trial ruling ends \(d.lastName) prosecution"])
+                                 "Speedy-trial ruling ends \(d.lastName) prosecution", "\(d.lastName) case thrown out after long delay", "Judge dismisses \(d.name) charges, citing speedy-trial violation", "Delays doom prosecution of \(d.lastName)", "\(d.name) walks as court rules the State waited too long", "Court ends \(d.lastName) case over delay in bringing it to trial", "State took too long, judge rules, and \(d.lastName) charges are gone"])
             body = "Superior Court Judge \(judgeLast) dismissed the \(title.lowercased()) case against \(d.name), \(d.age), finding the delay in bringing it to trial violated the constitutional right to a speedy trial."
         } else if let plea, convicted {
             let offense = (pleaLaw?.title ?? title).lowercased()
             switch plea {
             case .guilty:
-                headline = rng.pick(["\(d.name) pleads guilty to \(offense)", "\(d.lastName) admits \(offense) in plea deal", "Plea ends \(d.lastName) case before trial"])
+                headline = rng.pick(["\(d.name) pleads guilty to \(offense)", "\(d.lastName) admits \(offense) in plea deal", "Plea ends \(d.lastName) case before trial", "\(d.name) pleads guilty in \(offense) case", "\(d.lastName) admits guilt on \(offense) charge", "Guilty plea resolves \(d.lastName) case", "\(d.lastName) takes plea deal on \(offense)", "\(d.name) accepts plea agreement, admits \(offense)", "No trial for \(d.lastName) after guilty plea"])
                 body = "\(d.name), \(d.age), pleaded guilty to \(offense) before Judge \(judgeLast) in Hollis County Superior Court"
             case .alford:
-                headline = rng.pick(["\(d.name) enters Alford plea to \(offense)", "Maintaining innocence, \(d.lastName) takes Alford plea"])
+                headline = rng.pick(["\(d.name) enters Alford plea to \(offense)", "Maintaining innocence, \(d.lastName) takes Alford plea", "\(d.name) takes Alford plea, avoiding trial on \(offense)", "\(d.lastName) enters Alford plea without admitting guilt", "Alford plea ends \(d.lastName) case", "\(d.lastName) accepts deal but denies \(offense) in Alford plea", "Alford plea in \(offense) case: \(d.lastName) says innocence stands", "\(d.name) chooses Alford plea over a trial on \(offense)"])
                 body = "\(d.name), \(d.age), entered an Alford plea to \(offense) before Judge \(judgeLast), maintaining innocence while conceding the State's evidence would likely convict"
             case .noContest:
-                headline = rng.pick(["\(d.name) pleads no contest to \(offense)", "No contest plea from \(d.lastName)"])
+                headline = rng.pick(["\(d.name) pleads no contest to \(offense)", "No contest plea from \(d.lastName)", "\(d.lastName) pleads no contest in \(offense) case", "\(d.name) takes no-contest plea to \(offense)", "No contest: \(d.lastName) accepts plea in \(offense) case", "\(d.lastName) won't contest \(offense) charge, plea deal entered", "Plea of no contest closes \(d.lastName) case", "\(d.name) declines to fight \(offense) charge, pleads no contest"])
                 body = "\(d.name), \(d.age), pleaded no contest to \(offense) before Judge \(judgeLast) in Hollis County Superior Court"
             }
             body += sentence.isEmpty ? "." : ", and was sentenced to \(sentence)."
@@ -2584,26 +2584,27 @@ enum Judgment {
             var names = Set((c.witnesses.map(\.name) + [d.name, c.victimName ?? "", county.name] + county.towns)
                 .flatMap { $0.components(separatedBy: " ") })
             names.remove("")
-            body += " " + rng.pick(["Prosecutors said that ", "According to court records, ", ""])
+            body += " " + rng.pick(["Prosecutors said that ", "According to court records, ", "", "According to the charging documents, ", "Court filings said that ", "Investigators said that ", "The State's evidence showed that ", "Records filed in the case said that ", "According to testimony, "])
                 .capitalizedFirstIfStart(of: first, names: names, context: c.summary)
         }
         switch (c.mood, convicted) {
         case (.wantsConviction, false):
-            body += " " + rng.pick(["The verdict drew angry reactions from the gallery.", "Someone in the back row shouted as the verdict was read.", "Several people walked out before the judge finished."])
+            body += " " + rng.pick(["The verdict drew angry reactions from the gallery.", "Someone in the back row shouted as the verdict was read.", "Several people walked out before the judge finished.", "The courtroom erupted when the ruling was announced, and the bailiff had to call for order.", "A few people in the gallery stood up and left in anger.", "Muttering spread through the gallery as the ruling came down.", "Several spectators had to be reminded to keep their voices down.", "The ruling was met with groans from the gallery.", "Some in the audience shook their heads openly as the judge spoke."])
         case (.wantsConviction, true) where !active && !timeServed:
-            body += " " + rng.pick(["Some in the community questioned whether the sentence was enough.", "Outside, a small group said probation wasn't justice."])
+            body += " " + rng.pick(["Some in the community questioned whether the sentence was enough.", "Outside, a small group said probation wasn't justice.", "Several people in the hallway said they expected more.", "A few residents called the sentence a slap on the wrist.", "People waiting outside said they'd hoped for prison.", "Some said the sentence didn't match the harm.", "Feelings ran high outside, with a few saying they'd hoped for jail time.", "Talk on the courthouse steps turned on whether probation was enough."])
         case (.sympathetic, true) where active:
-            body += " " + rng.pick(["Several supporters wept as deputies led the defendant away.", "A row of supporters in matching T-shirts sat silent."])
+            body += " " + rng.pick(["Several supporters wept as deputies led the defendant away.", "A row of supporters in matching T-shirts sat silent.", "A small group of supporters stood together in the hallway, quiet and red-eyed.", "Family and friends filled two rows behind the defense table, and many were crying.", "Supporters held one another as deputies took the defendant out through the side door.", "A woman in the gallery called out words of encouragement as the defendant was led away.", "Several supporters stayed in their seats long after the courtroom emptied.", "The sound of quiet crying could be heard from the gallery."])
         case (.sympathetic, false):
-            body += " " + rng.pick(["Supporters cheered outside the courthouse.", "Supporters hugged on the courthouse steps."])
+            body += " " + rng.pick(["Supporters cheered outside the courthouse.", "Supporters hugged on the courthouse steps.", "Supporters wiped away tears and thanked the judge on their way out.", "A cheer went up in the hallway when word spread.", "Friends and family embraced in the lobby.", "People who had packed the gallery for days applauded softly in the corridor.", "Several supporters were still smiling on the courthouse lawn an hour later.", "A line of well-wishers formed in the hallway to shake the defendant's hand."])
         case (.divided, _):
-            body += " " + rng.pick(["Reaction outside the courthouse was split.", "Two groups gathered on opposite sides of the courthouse steps.", "Opinions in the hallway afterward were as divided as the evidence."])
+            body += " " + rng.pick(["Reaction outside the courthouse was split.", "Two groups gathered on opposite sides of the courthouse steps.", "Opinions in the hallway afterward were as divided as the evidence.", "Observers left in clusters, arguing quietly about what the ruling meant.", "In the hallway, people took sides within minutes of the ruling.", "Residents leaving the courthouse offered very different views of what had just happened.", "The gallery split down the middle, and tension followed people out into the corridor.", "Neither side seemed satisfied, and each had its say on the steps.", "Some left nodding and others shaking their heads."])
         default:
             break
         }
         // Two or three voices, not one.
         var quotes = reactions
-        let take = min(quotes.count, c.mediaAttention >= 2 ? 3 : 2)
+        // The hallway reactions are switched off for now, in the paper as well as on the ruling screen.
+        let take = 0 * min(quotes.count, c.mediaAttention >= 2 ? 3 : 2)
         for _ in 0..<take {
             let index = Int(rng.next() % UInt64(max(1, quotes.count)))
             body += " " + quotes.remove(at: index)

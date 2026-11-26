@@ -38,7 +38,7 @@ extension StoryCases {
                             .direct("How did you come to own the lot?", "\"I inherited it. I live in Ohio and get down to see it about once a year.\""),
                             .direct("What did you find when you drove down?", "\"A house foundation being poured on my land.\""),
                             .direct("Did you sign this deed?", "\"No. I've never sold that lot and I was at work in Ohio the day it says I signed.\""),
-                            .cross("{DL} used to mow that lot for you?", "\"Years ago, yes.\""),
+                            .cross("{DL} used to mow that lot for you?", "\"Years ago, yes. {DL} used to mow that lot for me.\""),
                             .cross("You once sent {DL} a copy of your driver's license?", "\"Years ago, so {D.he} could pay the property tax for me.\"")
                         ]),
             WitnessSeed(name: "{BUYER}", role: "Buyer of the lot",
@@ -46,7 +46,7 @@ extension StoryCases {
                         cross: ["\"I never met the owner.\""],
                         weight: 2, lay: true,
                         exam: [
-                            .direct("How much did you pay for the lot?", "\"Sixty-two thousand dollars.\""),
+                            .direct("How much did you pay for the lot?", "\"I paid sixty-two thousand dollars for the lot.\""),
                             .direct("Who did you deal with?", "\"Only {DL}. {D.He} said {D.he} managed the lot for an owner up north who wanted a quick cash sale.\""),
                             .direct("What did you do with the land after closing?", "\"Started building. We'd poured the foundation when the owner showed up.\""),
                             .cross("You never met the owner before closing?", "\"No. I never met the owner.\""),
@@ -61,9 +61,9 @@ extension StoryCases {
                         exam: [
                             .direct("What did {DL} do for you?", "\"Managed my rental property, since I don't live here.\""),
                             .direct("How did {DL} handle your property?", "\"Rent on time, receipts for everything. Six years, never a problem.\""),
-                            .direct("Did you ever have reason to doubt {D.his} honesty?", "\"No, never.\""),
-                            .cross("You know nothing about this sale?", "\"Nothing.\""),
-                            .cross("And you can't say what became of the $58,000 {DL} withdrew in cash?", "\"No, I can't.\"")
+                            .direct("Did you ever have reason to doubt {D.his} honesty?", "\"No. I never had reason to doubt {D.his} honesty.\""),
+                            .cross("You know nothing about this sale?", "\"Nothing. I know nothing about this sale.\""),
+                            .cross("And you can't say what became of the $58,000 {DL} withdrew in cash?", "\"No. I can't say what became of the $58,000 {DL} withdrew in cash.\"")
                         ])
         ],
         prosecutionTheory: ["{D} knew the lot, had the owner's license, opened an account for the money, and took nearly all of it out in cash."],
@@ -71,7 +71,7 @@ extension StoryCases {
         aggravating: ["The offense involved a large monetary loss"],
         mitigating: ["The defendant has a record of honest work for other owners"],
         victimImpacts: ["{BUYER}: \"That was my retirement. I paid a builder too, and now the foundation sits on land I don't own.\""],
-        allocutions: ["\"I trusted the wrong man.\""],
+        allocutions: ["\"I trusted the wrong man. He told me he was the owner's nephew, and I gave him the money without asking enough questions. I'm sorry for {V} and for what that lot meant to {V.him}. I'm not a person who forges names, and I hope the court will look for the man I handed that money to.\""],
         guiltyTruths: ["The prepaid phone used by \"Ray\" was bought with {DL}'s debit card."],
         innocentTruths: ["A man using the name Ray Pruett was later arrested in South Carolina for the same scheme on four other lots, using local handymen as fronts."],
         moods: [.indifferent], doctrines: ["burdenOfProof", "expertTestimony"],
@@ -106,7 +106,7 @@ extension StoryCases {
         ],
         ageRange: 55...78, occupations: ["retired welder", "retired trucker", "farmer"], hasVictim: true,
         summaries: [
-            "On Halloween night, {DATE}, a group of teenagers walked up {D}'s driveway in {HOOD}. {D}'s house had been egged on Halloween the two previous years. {DL} came out onto the porch with a pump shotgun. {V}, 15, says {DL} pointed it at {V.his} chest and said, \"Next one of you on my porch gets buried.\" A neighbor's doorbell camera recorded the audio and part of the porch. {DL} says the shotgun was unloaded, that {D.he} held it pointed at the ground, and that {D.he} only wanted to scare off kids who had come to vandalize {D.his} house."
+            "On Halloween night, {DATE}, a group of teenagers walked up {D}'s driveway in {HOOD}. {DL}'s house had been egged on Halloween the two previous years. {DL} came out onto the porch with a pump shotgun. {V}, 15, says {DL} pointed it at {V.his} chest and said, \"Next one of you on my porch gets buried.\" A neighbor's doorbell camera recorded the audio and part of the porch. {DL} says the shotgun was unloaded, that {D.he} held it pointed at the ground, and that {D.he} only wanted to scare off kids who had come to vandalize {D.his} house."
         ],
         prosecutionEvidence: [
             E(.video, 3, "Doorbell Camera", "Audio of a voice saying \"Next one of you on my porch gets buried\"; the frame shows the barrel rising toward the teens before the porch post blocks the view.", .search),
@@ -138,7 +138,7 @@ extension StoryCases {
                             .direct("What did you find?", "\"A pump shotgun leaning by the door, unloaded, and a box of shells on the kitchen table.\""),
                             .direct("What does the doorbell video show?", "\"You hear 'Next one of you on my porch gets buried,' and you see the barrel rise toward the teens before the porch post blocks the view.\""),
                             .cross("You can't say whether it was loaded on the porch?", "\"No. An hour had gone by.\""),
-                            .cross("There was a carton of eggs in the ditch by the driveway?", "\"Yes, there was.\"")
+                            .cross("There was a carton of eggs in the ditch by the driveway?", "\"Yes. There was a carton of eggs in the ditch by the driveway.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -150,7 +150,7 @@ extension StoryCases {
                             .direct("Did you see that damage yourself?", "\"Yes, both years. I live right next door.\""),
                             .direct("What happened the two years before?", "\"Eggs all over the siding and paint on the mailbox. He cleaned it up himself, both times.\""),
                             .direct("What did you notice this Halloween?", "\"Yelling over at {DL}'s place.\""),
-                            .cross("You didn't see the porch that night?", "\"Only heard yelling.\""),
+                            .cross("You didn't see the porch that night?", "\"Only heard yelling. I didn't see the porch that night, but I heard yelling.\""),
                             .cross("So you can't say where the gun was pointed?", "\"No. I didn't see where it was pointed.\"")
                         ])
         ],
@@ -158,8 +158,8 @@ extension StoryCases {
         defenseTheory: ["{DL} held an unloaded gun pointed at the ground and spoke harshly to vandals. The doorbell camera never shows the gun aimed at anyone."],
         aggravating: ["The victim was very young"],
         mitigating: ["The defendant was provoked by repeated vandalism", "No prior criminal record"],
-        victimImpacts: ["{VL}'s parent: \"My child sleeps with the light on now. Over eggs.\""],
-        allocutions: ["\"I'm too old for this. I wanted them to leave me alone. I'd never shoot a child.\""],
+        victimImpacts: ["{VL}'s parent: \"My child sleeps with the light on now, and all because of a few eggs. We've talked about it a dozen times. {V.He} had never been afraid at a stranger's door before that night. I'd like {V.him} to be able to go trick-or-treating again without looking over {V.his} shoulder.\""],
+        allocutions: ["\"I'm too old for this, and I wanted to be left alone on Halloween. My house had been egged two years running, and I lost my temper. I held that shotgun low, and I'd never shoot a child. I'm sorry those kids were scared, and I'm sorry for how I spoke to them.\""],
         guiltyTruths: ["{DL} told a neighbor the next morning, \"I put the bead right on that kid's chest. They won't be back.\""],
         innocentTruths: ["A second doorbell camera across the street, found later, shows the barrel pointed at the porch floor throughout."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -169,7 +169,7 @@ extension StoryCases {
             notDone: ["Not every teen in the group was interviewed."],
             defendantExam: [
                 .direct("Did you point the gun at anyone?", "\"No. I held it low. I wanted them to see it.\""),
-                .cross("\"Next one of you on my porch gets buried.\" Those were your words?", "\"I was angry.\""),
+                .cross("\"Next one of you on my porch gets buried.\" Those were your words?", "\"Those were my words, and I said them because I was angry.\""),
                 .cross("The camera shows the barrel rising.", "\"I lifted it up off the floor. Not at anybody.\"")
             ],
             objections: [
@@ -223,7 +223,7 @@ extension StoryCases {
                             .direct("What did you observe?", "\"Strong odor of alcohol, red glassy eyes, and swaying. {DL} refused the walk-and-turn and one-leg stand.\""),
                             .direct("And the breath test?", "\"0.09, after the required observation period, at 7:52.\""),
                             .cross("You never tested the tractor's steering?", "\"No. I watched it cross the line twice.\""),
-                            .cross("The breath test came an hour and forty minutes after the driving?", "\"Yes.\"")
+                            .cross("The breath test came an hour and forty minutes after the driving?", "\"Yes. The breath test came an hour and forty minutes after the driving.\"")
                         ]),
             WitnessSeed(name: nil, role: "Driver forced off the road",
                         direct: ["\"It came right into my lane.\""],
@@ -245,15 +245,15 @@ extension StoryCases {
                         exam: [
                             .direct("Did you put that in writing?", "\"Yes. My invoice from last spring says it pulls hard left and needs kingpins.\""),
                             .direct("What's wrong with the tractor?", "\"Worn kingpins. It pulls hard left, and I told {DL} so last spring.\""),
-                            .cross("You didn't look at the tractor after the stop?", "\"No, I didn't.\""),
-                            .cross("Can a careful, sober driver keep it in the lane?", "\"With effort, yes.\"")
+                            .cross("You didn't look at the tractor after the stop?", "\"No. I didn't look at the tractor after the stop.\""),
+                            .cross("Can a careful, sober driver keep it in the lane?", "\"With effort, yes. A careful, sober driver can keep it in the lane with effort.\"")
                         ])
         ],
         prosecutionTheory: ["A tractor on a highway is a vehicle, and {D} drove it there at 0.09 and across the center line twice."],
         defenseTheory: ["Two beers with food, a breath test long after driving, and a tractor whose steering pulls left. The State can't prove impairment while driving."],
         aggravating: [],
         mitigating: ["No prior impaired driving convictions", "The defendant has completed a substance abuse assessment"],
-        allocutions: ["\"I've farmed that road forty years. I shouldn't have had anything to drink. It won't happen again.\""],
+        allocutions: ["\"I've farmed that road for forty years, and I shouldn't have had anything to drink before I drove home. I had two beers with my barbecue, and I thought that was fine. I'm sorry for the people who had to swerve into that ditch. It won't happen again, I promise the court.\""],
         guiltyTruths: ["The barbecue host later admitted {DL} drank most of a bottle of bourbon."],
         innocentTruths: ["The Intox instrument failed its next scheduled calibration check, reading high by 0.02."],
         moods: [.divided], doctrines: ["burdenOfProof"],
@@ -329,17 +329,17 @@ extension StoryCases {
                         weight: 1, lay: true,
                         exam: [
                             .direct("Can you see that garage from your house?", "\"Yes. I can see the garage light from my window.\""),
-                            .direct("Did the roommate live at the house?", "\"Yes, he did.\""),
+                            .direct("Did the roommate live at the house?", "\"Yes, he did. The roommate lived at the house.\""),
                             .direct("Who used the garage?", "\"The roommate. Light on until two or three in the morning.\""),
                             .cross("You never saw what anyone was doing inside?", "\"No. Just the light on.\""),
-                            .cross("Did you ever see {DL} go in?", "\"Sometimes, yes.\"")
+                            .cross("Did you ever see {DL} go in?", "\"Sometimes, yes. I sometimes saw {DL} go in.\"")
                         ])
         ],
         prosecutionTheory: ["{D} leased the house, {D.his} prints were on the press and the scale, and the garage made thousands of fentanyl pills."],
         defenseTheory: ["The roommate ran the garage and vanished. Prints on a machine {DL} moved don't prove {D.he} knew what it made."],
         aggravating: ["The offense endangered public safety"],
         mitigating: [],
-        allocutions: ["\"I knew he was doing something out there. I didn't know it was that.\""],
+        allocutions: ["\"I knew my roommate was doing something out in that garage, and I chose not to look closely. He told me it made vitamins for his gym, and I wanted to believe him. I'm sorry for those families and for everyone who got hurt. I should have asked, and I should have told someone.\""],
         guiltyTruths: ["{DL}'s phone held a photo of a finished batch with the caption \"2k ready.\""],
         innocentTruths: ["The roommate was arrested in Georgia with a second press and admitted {DL} never knew what he was making."],
         moods: [.wantsConviction], doctrines: ["searchSeizure", "burdenOfProof"],
@@ -393,7 +393,7 @@ extension StoryCases {
                             .direct("How and when did {VF} die?", "\"Heart disease. The condition of the remains puts death about eight months before discovery.\""),
                             .direct("What kind of heart disease?", "\"Atherosclerotic heart disease. Hardening of the arteries.\""),
                             .cross("No sign of injury or neglect causing death?", "\"None. This was a natural death.\""),
-                            .cross("So nothing {DL} did caused {D.his} mother's death?", "\"Nothing I found.\"")
+                            .cross("So nothing {DL} did caused {D.his} mother's death?", "\"Nothing {DL} did caused {D.his} mother's death, as far as I found.\"")
                         ]),
             WitnessSeed(name: "{DET}", role: "Detective",
                         direct: ["\"The bedroom door was locked and the vents taped.\""],
@@ -423,8 +423,8 @@ extension StoryCases {
         defenseTheory: ["Grief and severe depression, not a scheme. {DL} lived on a joint account {D.he} had always used for the household."],
         aggravating: [],
         mitigating: ["The defendant suffered from a mental or physical condition that reduced culpability", "No prior criminal record"],
-        victimImpacts: ["{VF}'s sister: \"Nobody got to say goodbye. Nobody got to bury her.\""],
-        allocutions: ["\"I couldn't lose her. So I pretended I hadn't.\""],
+        victimImpacts: ["{VF}'s sister: \"Nobody got to say goodbye, and nobody got to bury {V.him} properly. {V.He} was a teacher who knew half the county, and {V.he} waited eight months in a back bedroom. We could have been there. I keep wondering why no one called us.\""],
+        allocutions: ["\"I couldn't lose {V.him}, so I pretended I hadn't. After my mother passed I just kept going, and every day I told myself tomorrow I'd call someone. Then it was months. I used {V.his} money to keep the house going because I didn't know how else to live. I'm sorry for what I did.\""],
         guiltyTruths: ["{DL} had searched online, the week after the death, \"how long can pension keep paying after death.\""],
         innocentTruths: ["{DL}'s treating doctor recorded a psychotic depressive episode that month, with {DL} believing {D.his} mother was still alive."],
         moods: [.sympathetic], doctrines: ["burdenOfProof"],

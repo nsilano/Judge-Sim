@@ -89,7 +89,7 @@ extension StoryCases {
             notDone: ["The State did not interview the providers who saw {DL} in the months before."],
             defendantExam: [
                 .direct("How were you after the baby was born?", "\"I stopped sleeping. I started seeing a darkness around the house, like a stain. I knew, I just knew, something was coming for the older two, something that would make them suffer their whole lives.\""),
-                .direct("Did you tell anyone?", "\"My doctor. I said it was a darkness. The doctor changed my medicine and sent me home. My psychiatry appointment was in five weeks.\""),
+                .direct("Did you tell anyone?", "\"I said it was a darkness. The doctor changed my medicine and sent me home. My psychiatry appointment was in five weeks.\""),
                 .direct("Why ask your spouse to stay late?", "\"I don't remember deciding it. I remember thinking it had to be tonight, while they were asleep, so they wouldn't be afraid.\""),
                 .direct("Did you think it was wrong?", "\"I thought it was the only way to keep them safe. I knew other people wouldn't understand. I didn't think it was wrong. I know now.\""),
                 .cross("You wrote that you had to do it while they were asleep. That's a plan.", "\"It was. It was a plan to save them. That's how it felt.\""),
@@ -178,8 +178,8 @@ extension StoryCases {
         defenseTheory: ["The injuries don't fit a car, the mirror pieces showed up eleven days later, and the investigator was a friend of the homeowner who mocked {DL}. The answer is inside that house."],
         aggravating: ["{DL} left {VL} in freezing conditions"],
         mitigating: ["No prior criminal record", "{DL} searched for {VL} and attempted CPR"],
-        victimImpacts: ["{VL}'s parent: \"Whatever happened, my child lay out there all night. Somebody knows.\""],
-        allocutions: ["\"I loved {VL}. I didn't hit {VL}. I've spent every day since wondering what happened in that house.\""],
+        victimImpacts: ["{VL}'s parent: \"Whatever happened that night, my child lay out in that ditch in the ice until morning. Nobody called, nobody went looking, and somebody knows what happened. We buried {VL} that week, and the house has been silent since. I only want somebody to say what they know.\""],
+        allocutions: ["\"I loved {VL}. I did not hit {V.him}, and I've spent every day since wondering what happened in that house while I sat outside in the ice. I let {V.him} out of the car after an argument, and I will carry that for the rest of my life. I only ask the court to keep looking for the truth.\""],
         guiltyTruths: ["A neighbor's trail camera, found years later, showed the SUV's mirror striking a figure at 12:24 a.m."],
         innocentTruths: ["A party guest later admitted {VL} had been in a fight in the garage and was carried outside."],
         moods: [.divided], doctrines: ["burdenOfProof", "lesserIncluded"],
@@ -263,7 +263,7 @@ extension StoryCases {
                             .direct("What did {VL} ask you?", "\"On Tuesday, {VL} asked for copies of the loan and deposit statements. {VL} said 'something doesn't add up.' I told {V.him} {DL} handled those.\""),
                             .direct("What happened Friday afternoon?", "\"The bank called at 3:15 and froze everything. I called {DL}. {DL} said, 'I'll take care of it, don't tell anybody.'\""),
                             .cross("{VL} never said {V.he} was afraid of {DL}?", "\"No. {VL} was worried about the business.\""),
-                            .cross("Stealing from a business isn't the same as killing someone.", "\"I know that.\"")
+                            .cross("Stealing from a business isn't the same as killing someone.", "\"I know that. Stealing from a business isn't the same as killing someone.\"")
                         ])
         ],
         defenseWitnesses: [
@@ -274,7 +274,7 @@ extension StoryCases {
                         exam: [
                             .direct("What do the bullets tell you?", "\"Two .243 caliber bullets from a rifle with six-groove, right-twist rifling. The farmhand's rifle is a .243 with that rifling.\""),
                             .direct("Was it ever tested?", "\"No. Nobody asked for it.\""),
-                            .cross("Thousands of rifles in this county share that caliber and rifling?", "\"Thousands.\"")
+                            .cross("Thousands of rifles in this county share that caliber and rifling?", "\"Thousands. Thousands of rifles in this county share that caliber and rifling.\"")
                         ])
         ],
         prosecutionTheory: ["{D} was caught stealing that afternoon and killed {V} before {V.he} could find out, then lied about being at the barn."],
@@ -500,7 +500,7 @@ extension StoryCases {
                 .direct("Why the post?", "\"It was stupid. I was trying to scare people off so nobody would come.\""),
                 .direct("What happened with {VL}?", "\"{VL} got in my face, then grabbed the barrel with both hands and said {V.he} was going to take it and use it on me. I couldn't pull it away. I fired.\""),
                 .cross("You invited people to 'come find out.'", "\"I regret that every day.\""),
-                .cross("You were out after curfew with a rifle.", "\"Guarding my family's store.\"")
+                .cross("You were out after curfew with a rifle.", "\"I was out after curfew with a rifle to guard my family's store.\"")
             ],
             objections: [
                 (0, ObjectionSeed(question: "Defense attorney: \"Isn't it true {VL} had been arrested for robbery before?\"",

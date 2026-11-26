@@ -48,22 +48,22 @@ enum DailyNews {
                 add("Trial date set in \(caption)",
                     "\(judge) set \(defendant)'s trial for \(SentenceFormat.shortDate(date))."
                         + (jailed ? " \(defendant) remains in the \(c.name) Detention Center." : "")
-                        + rng.pick([" Both sides say they'll be ready.", " The defense said it may ask for more time.", ""]),
+                        + rng.pick([" Both sides say they'll be ready.", " The defense said it may ask for more time.", "", " The prosecutor said the State has no objection to the date.", " The clerk's office said notices went out Monday.", " The defense said it will be ready on that date.", " The prosecutor said the State expects to call several witnesses.", " Court officials said the date was agreed to by both sides.", " The clerk's office said no further continuances are expected.", " Counsel for both sides said they had conferred on the schedule.", " The district attorney's office said witnesses had been told to keep the date open."]),
                     prominence: prominent ? 1 : 0, section: "Courts")
             case .reassigned(let caption, let defendant, let toJudge):
                 add("\(caption) moves to \(toJudge)",
                     "\(judge) reassigned the case against \(defendant) to \(toJudge), citing a crowded calendar. " +
                     rng.pick(["Courthouse regulars say it happens more than people think.", "The district attorney's office said it had no objection.",
-                              "Defense counsel said a new judge means a fresh look."]), section: "Courts")
+                              "Defense counsel said a new judge means a fresh look.", "Clerks said reassignments are usually a matter of calendar math.", "A court spokesperson said the move had been planned for weeks.", "Court officials said the reassignment does not change the schedule of any hearing.", "The clerk's office said lawyers on both sides have been notified.", "The district attorney said the office will be ready regardless of who hears it.", "Defense counsel said the change would not slow the case down.", "Clerks said this kind of change is routine when a docket is full.", "A court employee said the new judge has already received the file."]), section: "Courts")
             case .moved(let caption, let to):
                 guard rng.chance(0.4) else { continue }
                 add("\(caption) pushed to \(SentenceFormat.shortDate(to))",
-                    "\(judge) moved the trial to clear a crowded day. " + rng.pick(["Witnesses were notified by the clerk's office.", "The victim's family said they'll be there either way."]),
+                    "\(judge) moved the trial to clear a crowded day. " + rng.pick(["Witnesses were notified by the clerk's office.", "The victim's family said they'll be there either way.", "The clerk said every lawyer on the case was called.", "The new date had been cleared with both sides.", "Both lawyers said they had agreed to the new date.", "The clerk's office said new notices went out by mail and phone.", "A court spokesperson said the move was only about space on the calendar.", "The defendant's lawyer said the case would still be ready for trial.", "The prosecutor said the State's witnesses were told as soon as the change was made.", "The district attorney's office said the new date does not change its plans."]),
                     section: "Courts")
             case .timeOffBooked(let from, let to, let days):
                 add(days > 3 ? "\(judge) to be off the bench \(SentenceFormat.shortDate(from))–\(SentenceFormat.shortDate(to))" : "\(judge) out of court \(SentenceFormat.shortDate(from))",
                     "Matters set for those days will move to the next days with room on the calendar, Clerk of Court \(c.clerk)'s office said."
-                        + (days > 5 ? " " + rng.pick(["Lawyers joked they'd finally catch up on paperwork.", "The DA's office said it would use the time to prepare for trials."]) : ""),
+                        + (days > 5 ? " " + rng.pick(["Lawyers joked they'd finally catch up on paperwork.", "The DA's office said it would use the time to prepare for trials.", "The clerk's office said the calendar would be reshuffled in the first week back.", "The district attorney said new cases would not wait.", "A court employee said the break would give everyone a chance to catch up on filings.", "The clerk's office said no one should expect new hearings during the break.", "Lawyers said the break would let them work on cases that have stalled.", "The district attorney's office said calls would be answered as usual during that week.", "Court staff said the quiet week would be used for record-keeping and training.", "The sheriff's office said bailiffs would be reassigned to other courtrooms."]) : ""),
                     section: "Courts")
             case .scheduleChanged(let weekly):
                 add("\(judge) changes the trial calendar",
@@ -97,7 +97,7 @@ enum DailyNews {
                 guard matters >= 4, rng.chance(0.35) else { continue }
                 add("Busy calendar call: \(matters) matters in one morning",
                     "Pleas, bond hearings and motions filled \(judge)'s administrative session. " +
-                    rng.pick(["The hallway was standing room only by 9.", "One defendant brought a grandmother, a pastor and a former teacher to vouch for him.", "Court ran through lunch."]),
+                    rng.pick(["The hallway was standing room only by 9.", "One defendant brought a grandmother, a pastor and a former teacher to vouch for him.", "Court ran through lunch.", "Deputies opened a second overflow room.", "The clerk's office ran out of docket sheets by 10.", "Several lawyers were still in the hallway at lunch trying to get in front of the judge.", "The bailiff said it was the biggest crowd of the month.", "Defendants waited on benches in the hallway, and some sat on the stairs.", "Two attorneys were seen swapping files in the corridor before their cases were called.", "The courtroom was warm and crowded all morning, and the bailiff opened a window.", "The clerk called names all morning without a break."]),
                     section: "Courts")
             case .hearingHeld:
                 // The hearing's own story already ran the day it was decided.
